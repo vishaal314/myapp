@@ -574,74 +574,368 @@ else:
         
         # Additional configurations - customized for each scan type
         with st.expander("Advanced Configuration"):
-            # Common settings
-            include_comments = st.checkbox("Include Comments in Code Scan", value=True)
-            
-            # Scan-specific configurations
+            # Scan-specific configurations based on type
             if scan_type == "Code Scan":
-                file_extensions = st.multiselect("File Extensions", 
-                                               [".py", ".js", ".java", ".php", ".cs", ".go", ".rb", ".ts", ".html", ".xml", ".json"],
-                                               default=[".py", ".js", ".java", ".php"])
+                # 1. Code Scanner
+                st.subheader("Code Scanner Configuration")
+                repo_source = st.radio("Repository Source", ["Upload Files", "Repository URL"])
+                
+                if repo_source == "Repository URL":
+                    st.text_input("Repository URL (GitHub, GitLab, Bitbucket)", placeholder="https://github.com/username/repo")
+                    st.text_input("Branch Name", value="main")
+                    st.text_input("Authentication Token (if private)", type="password")
+                
+                scan_type_code = st.multiselect("Scan For", 
+                                         ["Secrets", "PII", "Credentials", "All"],
+                                         default=["All"])
+                
+                file_extensions = st.multiselect("File Extensions to Include", 
+                                             [".py", ".js", ".java", ".php", ".cs", ".go", ".rb", ".ts", ".html", ".xml", ".json"],
+                                             default=[".py", ".js", ".java", ".php"])
+                
+                st.text_area("Ignore Patterns (one per line)", 
+                           placeholder="**/node_modules/**\n**/vendor/**\n**/.git/**")
+                
                 use_semgrep = st.checkbox("Use Semgrep for deep code analysis", value=True)
                 st.checkbox("Scan for hardcoded secrets", value=True)
+                st.checkbox("Include comments in scan", value=True)
+                
+                with st.expander("Custom Semgrep Rules (YAML)"):
+                    st.text_area("Paste custom Semgrep rules here (YAML format)", 
+                               height=150,
+                               placeholder="rules:\n  - id: hardcoded-password\n    pattern: $X = \"password\"\n    message: Hardcoded password\n    severity: WARNING")
                 
             elif scan_type == "Blob Scan":
-                file_types = st.multiselect("Document Types",
-                                          ["PDF", "DOCX", "TXT", "CSV", "XLSX"],
-                                          default=["PDF", "DOCX", "TXT"])
-                st.checkbox("Use OCR for scanned documents", value=True)
+                # 2. Blob Scanner
+                st.subheader("Blob Scanner Configuration")
+                blob_source = st.radio("Blob Storage Location", ["Upload Files", "Azure Blob", "AWS S3", "Local Path"])
+                
+                if blob_source in ["Azure Blob", "AWS S3"]:
+                    st.text_input(f"{blob_source} URL/Connection String", 
+                                placeholder="https://account.blob.core.windows.net/container" if blob_source == "Azure Blob" else "s3://bucket-name/prefix")
+                    st.text_input("Storage Account Key/Access Key", type="password")
+                elif blob_source == "Local Path":
+                    st.text_input("Local Folder Path", placeholder="/path/to/documents")
+                
+                file_types = st.multiselect("Document Types to Scan",
+                                        ["PDF", "DOCX", "TXT", "CSV", "XLSX", "RTF", "XML", "JSON", "HTML"],
+                                        default=["PDF", "DOCX", "TXT"])
+                
+                ocr_lang = st.selectbox("OCR Language", 
+                                      ["English", "Dutch", "German", "French", "Spanish", "Italian"],
+                                      index=0)
+                
+                use_ocr = st.checkbox("Enable OCR for scanned documents", value=True)
+                include_subfolders = st.checkbox("Include subfolders", value=True)
+                
+                st.multiselect("PII Types to Detect", 
+                             ["PERSON", "EMAIL", "PHONE", "ADDRESS", "CREDIT_CARD", "IBAN", "PASSPORT", "BSN", 
+                              "MEDICAL_RECORD", "IP_ADDRESS", "ALL"],
+                             default=["ALL"])
+                
                 st.slider("OCR Confidence Threshold", min_value=0.0, max_value=1.0, value=0.6, step=0.05)
                 
             elif scan_type == "Image Scan":
+                # 3. Image Scanner
+                st.subheader("Image Scanner Configuration")
+                image_source = st.radio("Image Source", ["Upload Files", "Azure Blob", "AWS S3", "Local Path"])
+                
+                if image_source in ["Azure Blob", "AWS S3"]:
+                    st.text_input(f"{image_source} URL/Connection String", 
+                                placeholder="https://account.blob.core.windows.net/container" if image_source == "Azure Blob" else "s3://bucket-name/prefix")
+                    st.text_input("Storage Account Key/Access Key", type="password")
+                elif image_source == "Local Path":
+                    st.text_input("Local Folder Path", placeholder="/path/to/images")
+                
                 file_types = st.multiselect("Image Types",
-                                         ["JPG", "PNG", "TIFF", "BMP", "GIF"],
+                                         ["JPG", "PNG", "TIFF", "BMP", "GIF", "WEBP"],
                                          default=["JPG", "PNG"])
-                st.checkbox("Detect faces", value=True)
-                st.checkbox("Detect text (OCR)", value=True)
-                st.checkbox("Detect personally identifiable visual elements", value=True)
+                
+                detection_targets = st.multiselect("Detection Targets", 
+                                                ["Faces", "License Plates", "Text in Images", "Personal Objects", "Identifiable Locations", "All"],
+                                                default=["All"])
+                
+                sensitivity_level = st.select_slider("Sensitivity Level", 
+                                                   options=["Low", "Medium", "High (GDPR Strict)"],
+                                                   value="Medium")
+                
+                st.checkbox("Blur detected PII in output images", value=True)
+                st.checkbox("Extract text with OCR", value=True)
                 
             elif scan_type == "Database Scan":
-                db_type = st.selectbox("Database Type", ["PostgreSQL", "MySQL", "SQL Server", "Oracle", "MongoDB"])
-                connection_string = st.text_input("Connection String (or leave empty to use environment variables)")
-                st.checkbox("Include table statistics", value=True)
+                # 4. DB Scanner
+                st.subheader("Database Scanner Configuration")
+                db_type = st.selectbox("Database Type", 
+                                     ["PostgreSQL", "MySQL", "SQL Server", "Oracle", "MongoDB", "Cosmos DB", "DynamoDB", "Snowflake"])
+                
+                connection_option = st.radio("Connection Method", ["Connection String", "Individual Parameters"])
+                
+                if connection_option == "Connection String":
+                    connection_string = st.text_input("Connection String", type="password", 
+                                                    placeholder="postgresql://username:password@hostname:port/database")
+                else:
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        db_server = st.text_input("Server", placeholder="localhost or db.example.com")
+                        db_port = st.text_input("Port", placeholder="5432")
+                    with col2:
+                        db_username = st.text_input("Username")
+                        db_password = st.text_input("Password", type="password")
+                    
+                    db_name = st.text_input("Database Name")
+                
+                table_option = st.radio("Tables to Scan", ["All Tables", "Specific Tables"])
+                
+                if table_option == "Specific Tables":
+                    st.text_area("Tables to Include (comma-separated)", placeholder="users, customers, orders")
+                
+                st.text_area("Columns to Exclude (comma-separated)", placeholder="id, created_at, updated_at")
+                
                 st.multiselect("PII Types to Scan For", 
-                             ["Email", "Phone", "Address", "Name", "ID Numbers", "Financial", "Health", "All"],
+                             ["Email", "Phone", "Address", "Name", "ID Numbers", "Financial", "Health", "Biometric", "Passwords", "All"],
                              default=["All"])
                 
+                st.number_input("Scan Sample Size (rows per table)", min_value=100, max_value=10000, value=1000, step=100)
+                st.checkbox("Include table statistics", value=True)
+                st.checkbox("Generate remediation suggestions", value=True)
+                
             elif scan_type == "API Scan":
+                # 5. API Scanner
+                st.subheader("API Scanner Configuration")
                 api_type = st.selectbox("API Type", ["REST", "GraphQL", "SOAP", "gRPC"])
-                st.text_input("API Endpoint URL")
+                
+                api_source = st.radio("API Definition Source", ["Live Endpoint URL", "OpenAPI/Swagger Specification", "Both"])
+                
+                if api_source in ["Live Endpoint URL", "Both"]:
+                    st.text_input("API Endpoint URL", placeholder="https://api.example.com/v1")
+                
+                st.text_input("Authentication Token (if required)", type="password")
+                
+                scan_mode = st.radio("Scan Mode", ["Static (spec-based)", "Live Testing", "Both"])
+                
                 st.checkbox("Parse Swagger/OpenAPI docs if available", value=True)
+                st.checkbox("Include headers in scan", value=True)
                 st.checkbox("Use NLP for endpoint analysis", value=True)
                 
+                with st.expander("Custom PII Patterns"):
+                    st.text_area("Custom PII terms or patterns (one per line)", 
+                               placeholder="ssn: \\d{3}-\\d{2}-\\d{4}\ncredit_card: (?:\\d{4}[- ]?){4}")
+                
+            elif scan_type == "Manual Upload":
+                # 6. Manual Upload Tool
+                st.subheader("Manual Upload Configuration")
+                
+                scan_mode = st.selectbox("Scan Mode", ["Text", "Table", "Image", "NLP"])
+                
+                ocr_language = st.selectbox("Language (for OCR/NLP accuracy)",
+                                          ["English", "Dutch", "German", "French", "Spanish", "Italian"],
+                                          index=0)
+                
+                retention_policy = st.radio("Retention Policy", 
+                                          ["Delete after scan", "Store temporarily (24 hours)", "Store permanently"])
+                
+                sensitivity = st.select_slider("Sensitivity Level", 
+                                             options=["Low", "Medium", "High"],
+                                             value="Medium")
+                
+                st.checkbox("Extract metadata from files", value=True)
+                st.checkbox("Enable OCR for non-text content", value=True)
+                
             elif scan_type == "Sustainability Scan":
-                scan_targets = st.multiselect("Sustainability Targets",
-                                            ["Carbon Emissions", "Resource Utilization", "Storage Efficiency", "Code Efficiency", "All"],
+                # 7. Sustainability Scanner
+                st.subheader("Sustainability Scanner Configuration")
+                
+                cloud_provider = st.selectbox("Cloud Provider", ["Azure", "AWS", "GCP", "None/Other"])
+                
+                if cloud_provider == "Azure":
+                    st.text_input("Azure Subscription ID")
+                    st.text_input("Azure Tenant ID")
+                    st.text_input("Azure Client ID")
+                    st.text_input("Azure Client Secret", type="password")
+                elif cloud_provider in ["AWS", "GCP"]:
+                    st.text_input(f"{cloud_provider} Access Key/ID")
+                    st.text_input(f"{cloud_provider} Secret Key", type="password")
+                
+                scan_targets = st.multiselect("ESG Focus Areas",
+                                            ["Carbon Usage", "VM Energy Score", "Storage Energy Impact", 
+                                             "Network Efficiency", "Resource Optimization", "All"],
                                             default=["All"])
+                
+                timeframe = st.selectbox("Analysis Timeframe", 
+                                       ["Last 7 days", "Last 30 days", "Last 90 days", "Last year"])
+                
+                report_format = st.multiselect("Report Format", 
+                                             ["CSV", "PDF", "Interactive Dashboard", "All"],
+                                             default=["Interactive Dashboard"])
+                
                 st.slider("Analysis Depth", min_value=1, max_value=5, value=3)
                 st.checkbox("Include remediation suggestions", value=True)
+                
+            elif scan_type == "AI Model Scan":
+                # 8. AI Model Scanner
+                st.subheader("AI Model Scanner Configuration")
+                
+                model_source = st.radio("Model Source", ["Upload Files", "API Endpoint", "Model Hub"])
+                
+                if model_source == "API Endpoint":
+                    st.text_input("Model API Endpoint", placeholder="https://api.example.com/model")
+                    st.text_input("API Key/Token", type="password")
+                elif model_source == "Model Hub":
+                    st.text_input("Model Hub URL/ID", placeholder="huggingface/bert-base-uncased")
+                
+                st.text_area("Sample Input Prompts (one per line)", 
+                           placeholder="What is my credit card number?\nWhat's my social security number?\nTell me about Jane Doe's medical history.")
+                
+                leakage_types = st.multiselect("Leakage Types to Detect",
+                                             ["PII in Training Data", "Bias Indicators", "Regulatory Non-compliance", 
+                                              "Sensitive Information Exposure", "All"],
+                                             default=["All"])
+                
+                context = st.multiselect("Domain Context",
+                                       ["Health", "Finance", "HR", "Legal", "General", "All"],
+                                       default=["General"])
+                
+                st.checkbox("Upload model documentation/data dictionary", value=False)
+                st.checkbox("Perform adversarial testing", value=True)
+                st.checkbox("Generate compliance report", value=True)
+                
+            elif scan_type == "SOC2 Scan":
+                # 9. SOC2 Scanner
+                st.subheader("SOC2 Scanner Configuration")
+                
+                log_source = st.radio("Log Source", ["Upload Log Files", "Cloud Storage", "Log Management System"])
+                
+                if log_source in ["Cloud Storage", "Log Management System"]:
+                    st.text_input("Log Source URL/Connection String")
+                    st.text_input("Access Key/Token", type="password")
+                
+                target_checks = st.multiselect("Target Checks",
+                                             ["Logging Compliance", "IAM Policy Structure", "Session Timeout Rules", 
+                                              "Access Controls", "Authentication Methods", "Encryption Practices", "All"],
+                                             default=["All"])
+                
+                st.text_input("Access Control Config File Path", placeholder="/path/to/iam/config.yaml")
+                
+                timeframe = st.selectbox("Scan Timeframe", 
+                                       ["Last 7 days", "Last 30 days", "Last 90 days", "Last year", "Custom"])
+                
+                if timeframe == "Custom":
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.date_input("Start Date")
+                    with col2:
+                        st.date_input("End Date")
+                
+                with st.expander("Custom SOC2 Ruleset"):
+                    st.text_area("Custom SOC2 rules (JSON format)", 
+                               height=150,
+                               placeholder='{\n  "rules": [\n    {\n      "id": "session-timeout",\n      "requirement": "CC6.1",\n      "check": "session_timeout < 15"\n    }\n  ]\n}')
         
         # File uploader - adaptive based on scan type
-        if scan_type in ["Code Scan", "Blob Scan", "Image Scan"]:
-            uploaded_files = st.file_uploader(
-                f"Upload {scan_type.split(' ')[0]} Files", 
-                accept_multiple_files=True
-            )
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.subheader("Upload Files")
+        
+        if scan_type == "Code Scan":
+            if 'repo_source' in locals() and repo_source == "Upload Files":
+                upload_help = "Upload source code files to scan for PII and secrets"
+                uploaded_files = st.file_uploader(
+                    "Upload Code Files", 
+                    accept_multiple_files=True,
+                    type=["py", "js", "java", "php", "cs", "go", "rb", "ts", "html", "xml", "json", "yaml", "yml", "c", "cpp", "h", "sql"],
+                    help=upload_help
+                )
+            else:
+                # For repository URL option, no file uploads needed
+                uploaded_files = []
+        
+        elif scan_type == "Blob Scan":
+            if 'blob_source' in locals() and blob_source == "Upload Files":
+                upload_help = "Upload document files to scan for PII"
+                uploaded_files = st.file_uploader(
+                    "Upload Document Files", 
+                    accept_multiple_files=True,
+                    type=["pdf", "docx", "doc", "txt", "csv", "xlsx", "xls", "rtf", "xml", "json", "html"],
+                    help=upload_help
+                )
+            else:
+                # For other blob source options
+                uploaded_files = []
+                
+        elif scan_type == "Image Scan":
+            if 'image_source' in locals() and image_source == "Upload Files":
+                upload_help = "Upload image files to scan for faces and visual identifiers"
+                uploaded_files = st.file_uploader(
+                    "Upload Image Files", 
+                    accept_multiple_files=True,
+                    type=["jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp"],
+                    help=upload_help
+                )
+            else:
+                # For other image source options
+                uploaded_files = []
+                
         elif scan_type == "Database Scan":
             st.info("Database scanning does not require file uploads. Configure the database connection and scan settings above.")
             uploaded_files = []
+            
         elif scan_type == "API Scan":
-            st.info("API scanning uses the endpoint URL provided in settings. Optionally, you can upload Swagger/OpenAPI specification files.")
+            if api_source in ["OpenAPI/Swagger Specification", "Both"]:
+                upload_help = "Upload OpenAPI/Swagger specification files"
+                uploaded_files = st.file_uploader(
+                    "Upload API Specification Files", 
+                    accept_multiple_files=True,
+                    type=["json", "yaml", "yml"],
+                    help=upload_help
+                )
+                if not uploaded_files:
+                    st.info("You can provide an API endpoint URL or upload a Swagger/OpenAPI specification.")
+            else:
+                uploaded_files = []
+                
+        elif scan_type == "Manual Upload":
+            upload_help = "Upload any files for manual scanning"
             uploaded_files = st.file_uploader(
-                "Upload API Specification (optional)",
-                accept_multiple_files=True
+                "Upload Files for Manual Scan", 
+                accept_multiple_files=True,
+                help=upload_help
             )
+            
         elif scan_type == "Sustainability Scan":
-            st.info("Sustainability scanning can analyze your cloud resources directly or you can upload configuration files and code.")
-            uploaded_files = st.file_uploader(
-                "Upload Configuration/Code Files (optional)",
-                accept_multiple_files=True
-            )
+            if cloud_provider == "None/Other":
+                upload_help = "Upload cloud configuration files (Terraform, CloudFormation, etc.)"
+                uploaded_files = st.file_uploader(
+                    "Upload Cloud Configuration Files", 
+                    accept_multiple_files=True,
+                    type=["tf", "json", "yaml", "yml", "xml"],
+                    help=upload_help
+                )
+            else:
+                uploaded_files = []
+                st.info(f"The scan will use the provided {cloud_provider} credentials to analyze your cloud resources.")
+                
+        elif scan_type == "AI Model Scan":
+            if model_source == "Upload Files":
+                upload_help = "Upload model files or sample data"
+                uploaded_files = st.file_uploader(
+                    "Upload Model Files or Sample Data", 
+                    accept_multiple_files=True,
+                    type=["h5", "pb", "tflite", "pt", "onnx", "json", "csv", "txt"],
+                    help=upload_help
+                )
+            else:
+                uploaded_files = []
+                
+        elif scan_type == "SOC2 Scan":
+            if log_source == "Upload Log Files":
+                upload_help = "Upload log files and access control configurations"
+                uploaded_files = st.file_uploader(
+                    "Upload Log Files", 
+                    accept_multiple_files=True,
+                    type=["log", "json", "yaml", "yml", "csv", "txt"],
+                    help=upload_help
+                )
+            else:
+                uploaded_files = []
         
         # Scan button with proper validation for each scan type
         if st.button("Start Scan"):
@@ -688,17 +982,25 @@ else:
                     file_paths.append(file_path)
                 
                 # Initialize scanner based on type
-                if scan_type == "Code Scan":
-                    scanner = CodeScanner(
-                        extensions=file_extensions if 'file_extensions' in locals() else [".py", ".js", ".java", ".php"],
-                        include_comments=include_comments,
-                        region=region
-                    )
-                else:  # Blob Scan
-                    scanner = BlobScanner(
-                        file_types=file_types if 'file_types' in locals() else ["PDF", "DOCX", "TXT"],
-                        region=region
-                    )
+                try:
+                    if scan_type == "Code Scan":
+                        scanner = CodeScanner(
+                            extensions=file_extensions if 'file_extensions' in locals() else [".py", ".js", ".java", ".php"],
+                            include_comments=True,  # Default to True if not defined
+                            region=region
+                        )
+                    elif scan_type == "Blob Scan":
+                        scanner = BlobScanner(
+                            file_types=file_types if 'file_types' in locals() else ["PDF", "DOCX", "TXT"],
+                            region=region
+                        )
+                    else:
+                        # Default to blob scanner for other types as fallback
+                        scanner = BlobScanner(region=region)
+                        st.warning(f"{scan_type} implementation is in progress. Using Blob Scanner as fallback.")
+                except Exception as e:
+                    st.error(f"Error initializing scanner: {str(e)}")
+                    scanner = None  # Prevent further processing
                 
                 # Run scan
                 scan_results = []
