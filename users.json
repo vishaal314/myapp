@@ -16,5 +16,11 @@
     "password_hash": "65375049b9e4d7cad6c9ba286fdeb9394b28135a3e84136404cfccfdcc438894",
     "role": "viewer",
     "email": "viewer@example.com"
+  },
+  "vishaal": {
+    "username": "vishaal",
+    "password_hash": "531ffc17cd645ccb7578ea6d18ce459dab088ad66125bff36c90033715f8cf64",
+    "role": "analyst",
+    "email": "vishaal314@gmail.com"
   }
 }

@@ -1,0 +1,72 @@
+gdpr-scan-engine/
+├── services/
+│   ├── code-scanner/
+│   │   ├── app.py
+│   │   ├── scanner.py
+│   │   └── Dockerfile
+│   ├── blob-scanner/
+│   │   ├── app.py
+│   │   ├── file_scanner.py
+│   │   └── ocr_presidio.py
+│   ├── image-scanner/
+│   │   ├── app.py
+│   │   ├── vision_client.py
+│   │   └── face_analyzer.py
+│   ├── db-scanner/
+│   │   ├── app.py
+│   │   ├── adf_pipeline_trigger.py
+│   │   └── presidio_structured_scan.py
+│   ├── api-scanner/
+│   │   ├── app.py
+│   │   ├── swagger_parser.py
+│   │   └── nlp_detector.py
+│   ├── manual-upload-tool/
+│   │   ├── app.py
+│   │   └── ui_streamlit.py
+│   ├── sustainability-scanner/
+│   │   ├── app.py
+│   │   ├── azure_emission_check.py
+│   │   ├── idle_resource_scanner.py
+│   │   ├── code_efficiency_checker.py
+│   │   ├── storage_bloat_analyzer.py
+│   │   └── report_generator.py
+│   ├── dsr-orchestrator/
+│   │   ├── app.py
+│   │   ├── orchestrator.py
+│   │   └── config.py
+│   └── results-aggregator/
+│       ├── app.py
+│       ├── db_writer.py
+│       └── schema_validator.py
+├── dashboard/
+│   ├── streamlit_app.py
+│   └── powerbi_report.pbix
+├── shared/
+│   ├── utils/
+│   │   ├── azure.py
+│   │   ├── logging.py
+│   │   └── risk_scoring.py
+│   ├── schemas/
+│   │   └── result_schema.json
+├── scripts/
+│   ├── deploy_all.sh
+│   ├── test_all_services.py
+│   └── seed_data.py
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
+
+
+Key Services – Breakdown & Purpose to be developed 
+
+Service	Stack	Purpose
+code-scanner/	Python + TruffleHog/Semgrep	Secrets & PII in source code
+blob-scanner/	Python + Presidio + OCR	Scan PDFs, DOCs for PII
+image-scanner/	Azure Vision API	OCR, face, visual identity
+db-scanner/	ADF + Python	Structured DB PII scanning
+api-scanner/	FastAPI + OpenAPI/NLP	Scan endpoints & traffic
+manual-upload-tool/	Streamlit	Upload files manually for scanning
+sustainability-scanner/	Azure API + Python	ESG compliance: emissions, idle, bloat, etc.
+dsr-orchestrator/	Azure Function	Coordinates all services, collects results
+results-aggregator/	Python + Cosmos/Postgres	Normalize & store results
+dashboard/	Streamlit + Power BI	ESG/PII compliance dashboard

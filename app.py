@@ -211,30 +211,87 @@ if not st.session_state.logged_in:
                     else:
                         st.error(message)
     
-    # Show features in boxes
+    # Show scanning services in boxes
     st.markdown("---")
+    st.markdown("<h2 style='text-align: center; margin: 2rem 0;'>Comprehensive Scanning Services</h2>", unsafe_allow_html=True)
+    
+    # First row of services
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
+            <h3 style="color: #1E40AF;">💻 Code Scanner</h3>
+            <p style="font-size: 0.9rem;">Detect secrets & PII in source code using TruffleHog/Semgrep integration.</p>
+            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">Python + TruffleHog/Semgrep</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
+            <h3 style="color: #1E40AF;">📄 Blob Scanner</h3>
+            <p style="font-size: 0.9rem;">Scan PDFs, Word docs & text files for PII with advanced OCR technology.</p>
+            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">Python + Presidio + OCR</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
+            <h3 style="color: #1E40AF;">🖼️ Image Scanner</h3>
+            <p style="font-size: 0.9rem;">Analyze images for faces, text & visual identity information.</p>
+            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">Azure Vision API</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Second row of services
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
+            <h3 style="color: #1E40AF;">🗄️ DB Scanner</h3>
+            <p style="font-size: 0.9rem;">Structured database scanning for PII across tables & schemas.</p>
+            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">ADF + Python</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
+            <h3 style="color: #1E40AF;">🔌 API Scanner</h3>
+            <p style="font-size: 0.9rem;">Scan API endpoints & traffic for PII exposure with NLP analysis.</p>
+            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">FastAPI + OpenAPI/NLP</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
+            <h3 style="color: #1E40AF;">🌱 Sustainability</h3>
+            <p style="font-size: 0.9rem;">ESG compliance: carbon emissions, idle resources, storage bloat.</p>
+            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">Azure API + Python</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    # Key features section after services
     st.markdown("<h2 style='text-align: center; margin: 2rem 0;'>Key Features</h2>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown("""
-        <div style="padding: 20px; border-radius: 10px; background-color: #EFF6FF; height: 200px; text-align: center;">
-            <h3 style="color: #1E40AF;">🔍 PII Detection</h3>
-            <p>Scan code, documents, and more for personal information with our advanced detection algorithms.</p>
+        <div style="padding: 15px; border-radius: 10px; background-color: #DBEAFE; height: 150px; text-align: center;">
+            <h3 style="color: #1E40AF;">🔍 Comprehensive Detection</h3>
+            <p>Unified scanning across code, docs, images, DBs, APIs with a single orchestrated workflow.</p>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
-        <div style="padding: 20px; border-radius: 10px; background-color: #EFF6FF; height: 200px; text-align: center;">
-            <h3 style="color: #1E40AF;">📊 Risk Assessment</h3>
-            <p>Get detailed reports on GDPR compliance risks with severity classification and remediation advice.</p>
+        <div style="padding: 15px; border-radius: 10px; background-color: #DBEAFE; height: 150px; text-align: center;">
+            <h3 style="color: #1E40AF;">📊 Advanced Analysis</h3>
+            <p>Risk scoring, compliance reporting, and remediation advice with region-specific GDPR rules.</p>
         </div>
         """, unsafe_allow_html=True)
     with col3:
         st.markdown("""
-        <div style="padding: 20px; border-radius: 10px; background-color: #EFF6FF; height: 200px; text-align: center;">
-            <h3 style="color: #1E40AF;">🇳🇱 Region-Specific</h3>
-            <p>Support for Dutch GDPR regulations (UAVG) including BSN handling and special category data requirements.</p>
+        <div style="padding: 15px; border-radius: 10px; background-color: #DBEAFE; height: 150px; text-align: center;">
+            <h3 style="color: #1E40AF;">🇳🇱 Dutch GDPR Compliance</h3>
+            <p>Special handling for BSN, medical data, and UAVG-specific requirements included.</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -340,34 +397,108 @@ else:
     elif selected_nav == "New Scan":
         st.title("Start a New GDPR Scan")
         
-        # Scan configuration form
-        scan_type = st.selectbox("Scan Type", ["Code Scan", "Document Scan"])
+        # Scan configuration form - expanded with all scanner types
+        scan_type = st.selectbox("Scan Type", [
+            "Code Scan", 
+            "Document Scan", 
+            "Image Scan", 
+            "Database Scan",
+            "API Scan", 
+            "Sustainability Scan"
+        ])
         region = st.selectbox("Region", list(REGIONS.keys()))
         
-        # Additional configurations
+        # Additional configurations - customized for each scan type
         with st.expander("Advanced Configuration"):
+            # Common settings
             include_comments = st.checkbox("Include Comments in Code Scan", value=True)
             
+            # Scan-specific configurations
             if scan_type == "Code Scan":
                 file_extensions = st.multiselect("File Extensions", 
                                                [".py", ".js", ".java", ".php", ".cs", ".go", ".rb", ".ts", ".html", ".xml", ".json"],
                                                default=[".py", ".js", ".java", ".php"])
-            else:  # Document Scan
+                use_semgrep = st.checkbox("Use Semgrep for deep code analysis", value=True)
+                st.checkbox("Scan for hardcoded secrets", value=True)
+                
+            elif scan_type == "Document Scan":
                 file_types = st.multiselect("Document Types",
                                           ["PDF", "DOCX", "TXT", "CSV", "XLSX"],
                                           default=["PDF", "DOCX", "TXT"])
+                st.checkbox("Use OCR for scanned documents", value=True)
+                st.slider("OCR Confidence Threshold", min_value=0.0, max_value=1.0, value=0.6, step=0.05)
+                
+            elif scan_type == "Image Scan":
+                file_types = st.multiselect("Image Types",
+                                         ["JPG", "PNG", "TIFF", "BMP", "GIF"],
+                                         default=["JPG", "PNG"])
+                st.checkbox("Detect faces", value=True)
+                st.checkbox("Detect text (OCR)", value=True)
+                st.checkbox("Detect personally identifiable visual elements", value=True)
+                
+            elif scan_type == "Database Scan":
+                db_type = st.selectbox("Database Type", ["PostgreSQL", "MySQL", "SQL Server", "Oracle", "MongoDB"])
+                connection_string = st.text_input("Connection String (or leave empty to use environment variables)")
+                st.checkbox("Include table statistics", value=True)
+                st.multiselect("PII Types to Scan For", 
+                             ["Email", "Phone", "Address", "Name", "ID Numbers", "Financial", "Health", "All"],
+                             default=["All"])
+                
+            elif scan_type == "API Scan":
+                api_type = st.selectbox("API Type", ["REST", "GraphQL", "SOAP", "gRPC"])
+                st.text_input("API Endpoint URL")
+                st.checkbox("Parse Swagger/OpenAPI docs if available", value=True)
+                st.checkbox("Use NLP for endpoint analysis", value=True)
+                
+            elif scan_type == "Sustainability Scan":
+                scan_targets = st.multiselect("Sustainability Targets",
+                                            ["Carbon Emissions", "Resource Utilization", "Storage Efficiency", "Code Efficiency", "All"],
+                                            default=["All"])
+                st.slider("Analysis Depth", min_value=1, max_value=5, value=3)
+                st.checkbox("Include remediation suggestions", value=True)
         
-        # File uploader
-        uploaded_files = st.file_uploader(
-            f"Upload {'Code Files' if scan_type == 'Code Scan' else 'Documents'}", 
-            accept_multiple_files=True
-        )
+        # File uploader - adaptive based on scan type
+        if scan_type in ["Code Scan", "Document Scan", "Image Scan"]:
+            uploaded_files = st.file_uploader(
+                f"Upload {scan_type.split(' ')[0]} Files", 
+                accept_multiple_files=True
+            )
+        elif scan_type == "Database Scan":
+            st.info("Database scanning does not require file uploads. Configure the database connection and scan settings above.")
+            uploaded_files = []
+        elif scan_type == "API Scan":
+            st.info("API scanning uses the endpoint URL provided in settings. Optionally, you can upload Swagger/OpenAPI specification files.")
+            uploaded_files = st.file_uploader(
+                "Upload API Specification (optional)",
+                accept_multiple_files=True
+            )
+        elif scan_type == "Sustainability Scan":
+            st.info("Sustainability scanning can analyze your cloud resources directly or you can upload configuration files and code.")
+            uploaded_files = st.file_uploader(
+                "Upload Configuration/Code Files (optional)",
+                accept_multiple_files=True
+            )
         
-        # Scan button
+        # Scan button with proper validation for each scan type
         if st.button("Start Scan"):
-            if not uploaded_files:
-                st.error("Please upload at least one file to scan.")
+            proceed_with_scan = False
+            
+            if scan_type in ["Code Scan", "Document Scan", "Image Scan"] and not uploaded_files:
+                st.error(f"Please upload at least one file to scan for {scan_type}.")
+            elif scan_type == "Database Scan" and 'connection_string' in locals() and not connection_string and 'db_type' in locals():
+                # For database scans without connection string, we'll use environment variables
+                st.info(f"Starting {db_type} scan using environment variables...")
+                proceed_with_scan = True
+            elif scan_type == "API Scan" and 'api_type' in locals():
+                # For API scans
+                proceed_with_scan = True
+            elif scan_type == "Sustainability Scan":
+                # For sustainability scans
+                proceed_with_scan = True
             else:
+                proceed_with_scan = bool(uploaded_files)
+                
+            if proceed_with_scan:
                 # Generate a unique scan ID
                 scan_id = str(uuid.uuid4())
                 st.session_state.current_scan_id = scan_id
