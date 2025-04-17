@@ -38,32 +38,96 @@ st.set_page_config(
 # Authentication sidebar
 with st.sidebar:
     st.title("GDPR Scan Engine")
+    st.markdown('<img src="https://img.icons8.com/fluency/96/shield-lock.png" alt="GDPR Shield" style="display: block; margin-left: auto; margin-right: auto; width: 80px;">', unsafe_allow_html=True)
     
     if not st.session_state.logged_in:
-        st.subheader("Login")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        login_button = st.button("Login")
+        st.markdown('### Secure Login')
         
-        if login_button:
-            user_data = authenticate(username, password)
-            if user_data:
-                st.session_state.logged_in = True
-                st.session_state.username = user_data["username"]
-                st.session_state.role = user_data["role"]
-                st.success(f"Logged in as {username}")
-                st.rerun()
-            else:
-                st.error("Invalid credentials")
+        # Tabs for Login and Register
+        login_tab, register_tab = st.tabs(["Login", "Register"])
+        
+        with login_tab:
+            st.markdown("""
+            <div style="background-color: #EFF6FF; padding: 10px; border-radius: 5px; margin-bottom: 10px">
+                <p style="color: #1E40AF; margin: 0">Enter your email or username</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            username_or_email = st.text_input("Email/Username", key="login_username")
+            password = st.text_input("Password", type="password", key="login_password")
+            login_button = st.button("Login", use_container_width=True)
+            
+            if login_button:
+                if not username_or_email or not password:
+                    st.error("Please enter both email/username and password.")
+                else:
+                    user_data = authenticate(username_or_email, password)
+                    if user_data:
+                        st.session_state.logged_in = True
+                        st.session_state.username = user_data["username"]
+                        st.session_state.role = user_data["role"]
+                        st.session_state.email = user_data.get("email", "")
+                        st.success(f"Logged in successfully!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials. Please try again.")
+        
+        with register_tab:
+            st.markdown("""
+            <div style="background-color: #ECFDF5; padding: 10px; border-radius: 5px; margin-bottom: 10px">
+                <p style="color: #065F46; margin: 0">Create a new account</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            new_username = st.text_input("Username", key="register_username")
+            new_email = st.text_input("Email", key="register_email", 
+                                     placeholder="Enter a valid email address")
+            new_password = st.text_input("Password", type="password", key="register_password")
+            confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
+            
+            # Role selection with default
+            role_options = ["viewer", "analyst", "admin"]
+            new_role = st.selectbox("Role", role_options, index=0)
+            
+            register_button = st.button("Register", use_container_width=True)
+            
+            if register_button:
+                if not new_username or not new_email or not new_password:
+                    st.error("Please fill out all fields.")
+                elif new_password != confirm_password:
+                    st.error("Passwords do not match.")
+                else:
+                    success, message = create_user(new_username, new_password, new_role, new_email)
+                    if success:
+                        st.success(message)
+                    else:
+                        st.error(message)
     else:
-        st.success(f"Logged in as {st.session_state.username}")
-        st.write(f"Role: {st.session_state.role}")
-        if st.button("Logout"):
+        st.markdown(f"""
+        <div style="background-color: #1E293B; padding: 15px; border-radius: 5px; color: white;">
+            <h3 style="margin: 0; color: white;">Welcome back</h3>
+            <p style="margin: 5px 0 0 0;">{st.session_state.username}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div style="margin-top: 10px;">
+            <p><strong>Role:</strong> {st.session_state.role}</p>
+            <p><strong>Email:</strong> {st.session_state.email}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("Logout", use_container_width=True):
             logout()
             st.rerun()
     
     st.markdown("---")
-    st.write("© 2023 GDPR Scan Engine")
+    st.markdown("""
+    <div style="text-align: center; color: #6B7280; font-size: 0.8em;">
+        <p>© 2025 GDPR Scan Engine</p>
+        <p>Secure • Compliant • Reliable</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Main content
 if not st.session_state.logged_in:

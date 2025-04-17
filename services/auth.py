@@ -1,7 +1,8 @@
 import hashlib
 import json
 import os
-from typing import Dict, Any, Optional
+import re
+from typing import Dict, Any, Optional, Tuple
 
 # Simple user store (in a real app, this would be a database)
 # For demo purposes, we'll store users in a JSON file
@@ -64,12 +65,25 @@ def _save_users(users: Dict[str, Dict[str, Any]]) -> None:
     except Exception as e:
         print(f"Error saving users: {str(e)}")
 
-def authenticate(username: str, password: str) -> Optional[Dict[str, Any]]:
+def validate_email(email: str) -> bool:
     """
-    Authenticate a user with username and password.
+    Validates if a string is a proper email address.
     
     Args:
-        username: The username to authenticate
+        email: Email string to validate
+        
+    Returns:
+        True if valid email format, False otherwise
+    """
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(email_pattern, email))
+
+def authenticate(username_or_email: str, password: str) -> Optional[Dict[str, Any]]:
+    """
+    Authenticate a user with username/email and password.
+    
+    Args:
+        username_or_email: The username or email to authenticate
         password: The password to check
         
     Returns:
@@ -77,13 +91,26 @@ def authenticate(username: str, password: str) -> Optional[Dict[str, Any]]:
     """
     users = _load_users()
     
-    if username in users:
+    # Check if direct username match
+    if username_or_email in users:
         password_hash = hashlib.sha256(password.encode()).hexdigest()
-        if users[username]["password_hash"] == password_hash:
+        if users[username_or_email]["password_hash"] == password_hash:
             # Return user data without password hash
-            user_data = users[username].copy()
+            user_data = users[username_or_email].copy()
             user_data.pop("password_hash", None)
             return user_data
+    
+    # Check if email match
+    is_email = validate_email(username_or_email)
+    if is_email:
+        for username, user_data in users.items():
+            if user_data.get("email") == username_or_email:
+                password_hash = hashlib.sha256(password.encode()).hexdigest()
+                if user_data["password_hash"] == password_hash:
+                    # Return user data without password hash
+                    result = user_data.copy()
+                    result.pop("password_hash", None)
+                    return result
     
     return None
 
@@ -107,9 +134,9 @@ def get_user(username: str) -> Optional[Dict[str, Any]]:
     
     return None
 
-def create_user(username: str, password: str, role: str, email: str) -> bool:
+def create_user(username: str, password: str, role: str, email: str) -> Tuple[bool, str]:
     """
-    Create a new user.
+    Create a new user with validation.
     
     Args:
         username: The username for the new user
@@ -118,13 +145,33 @@ def create_user(username: str, password: str, role: str, email: str) -> bool:
         email: The email for the new user
         
     Returns:
-        True if user was created, False if username already exists
+        Tuple of (success, message) where success is True if user was created, 
+        False otherwise, and message provides details
     """
     users = _load_users()
     
-    if username in users:
-        return False
+    # Validate username
+    if not username or len(username) < 3:
+        return False, "Username must be at least 3 characters"
     
+    # Check if username exists
+    if username in users:
+        return False, "Username already exists"
+    
+    # Check for email format
+    if not validate_email(email):
+        return False, "Invalid email format"
+    
+    # Check if email is already used
+    for existing_user in users.values():
+        if existing_user.get("email") == email:
+            return False, "Email address is already registered"
+    
+    # Validate password
+    if not password or len(password) < 6:
+        return False, "Password must be at least 6 characters"
+    
+    # Create user
     password_hash = hashlib.sha256(password.encode()).hexdigest()
     
     users[username] = {
@@ -135,7 +182,7 @@ def create_user(username: str, password: str, role: str, email: str) -> bool:
     }
     
     _save_users(users)
-    return True
+    return True, "User created successfully"
 
 def update_user(username: str, updates: Dict[str, Any]) -> bool:
     """
