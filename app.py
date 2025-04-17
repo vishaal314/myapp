@@ -351,26 +351,78 @@ if not st.session_state.logged_in:
                             max_chars=500)
     st.button("Submit Feedback", use_container_width=True)
     
-    # Scanning services section - cleaner format
+    # Scanning services section - comprehensive list of all services
     st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
     st.header("Our Scanning Services")
     
-    # Simplified service display - first row
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("💻 Code Scanner")
-        st.write("Detect secrets & PII in source code using secure scanning tools")
-    with col2:
-        st.subheader("📄 Document Scanner")
-        st.write("Scan PDFs, Word docs & text files for PII with OCR technology")
+    # Create 3 columns for better organization of all services
+    col1, col2, col3 = st.columns(3)
     
-    col1, col2 = st.columns(2)
     with col1:
-        st.subheader("🖼️ Image Scanner")
-        st.write("Analyze images for faces, text & visual identity information")
+        st.markdown("""
+        <div style="border-left: 4px solid #3B82F6; padding: 10px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #1E40AF;">💻 Code Scanner</h4>
+            <p style="margin: 5px 0 0 0; font-size: 14px;">Detect secrets & PII in source code</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="border-left: 4px solid #3B82F6; padding: 10px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #1E40AF;">📄 Blob Scanner</h4>
+            <p style="margin: 5px 0 0 0; font-size: 14px;">Scan documents & files with OCR</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="border-left: 4px solid #3B82F6; padding: 10px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #1E40AF;">🖼️ Image Scanner</h4>
+            <p style="margin: 5px 0 0 0; font-size: 14px;">Analyze images for PII content</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
     with col2:
-        st.subheader("🗄️ Database Scanner")
-        st.write("Structured database scanning for PII across tables & schemas")
+        st.markdown("""
+        <div style="border-left: 4px solid #10B981; padding: 10px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #047857;">🗄️ DB Scanner</h4>
+            <p style="margin: 5px 0 0 0; font-size: 14px;">Database tables & schema scanning</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="border-left: 4px solid #10B981; padding: 10px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #047857;">🔌 API Scanner</h4>
+            <p style="margin: 5px 0 0 0; font-size: 14px;">Scan API endpoints for PII exposure</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="border-left: 4px solid #10B981; padding: 10px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #047857;">📤 Manual Upload Tool</h4>
+            <p style="margin: 5px 0 0 0; font-size: 14px;">Upload & scan custom data files</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div style="border-left: 4px solid #F59E0B; padding: 10px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #92400E;">🌱 Sustainability Scanner</h4>
+            <p style="margin: 5px 0 0 0; font-size: 14px;">ESG compliance monitoring</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="border-left: 4px solid #F59E0B; padding: 10px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #92400E;">🤖 AI Model Scanner</h4>
+            <p style="margin: 5px 0 0 0; font-size: 14px;">AI/ML model compliance scanning</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="border-left: 4px solid #F59E0B; padding: 10px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #92400E;">📊 SOC2 Scanner</h4>
+            <p style="margin: 5px 0 0 0; font-size: 14px;">SOC2 compliance assessment</p>
+        </div>
+        """, unsafe_allow_html=True)
         
     # Key features in clean format
     st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
@@ -491,11 +543,14 @@ else:
         # Scan configuration form - expanded with all scanner types
         scan_type = st.selectbox("Scan Type", [
             "Code Scan", 
-            "Document Scan", 
+            "Blob Scan", 
             "Image Scan", 
             "Database Scan",
             "API Scan", 
-            "Sustainability Scan"
+            "Manual Upload",
+            "Sustainability Scan",
+            "AI Model Scan",
+            "SOC2 Scan"
         ])
         region = st.selectbox("Region", list(REGIONS.keys()))
         
@@ -512,7 +567,7 @@ else:
                 use_semgrep = st.checkbox("Use Semgrep for deep code analysis", value=True)
                 st.checkbox("Scan for hardcoded secrets", value=True)
                 
-            elif scan_type == "Document Scan":
+            elif scan_type == "Blob Scan":
                 file_types = st.multiselect("Document Types",
                                           ["PDF", "DOCX", "TXT", "CSV", "XLSX"],
                                           default=["PDF", "DOCX", "TXT"])
@@ -549,7 +604,7 @@ else:
                 st.checkbox("Include remediation suggestions", value=True)
         
         # File uploader - adaptive based on scan type
-        if scan_type in ["Code Scan", "Document Scan", "Image Scan"]:
+        if scan_type in ["Code Scan", "Blob Scan", "Image Scan"]:
             uploaded_files = st.file_uploader(
                 f"Upload {scan_type.split(' ')[0]} Files", 
                 accept_multiple_files=True
@@ -574,7 +629,7 @@ else:
         if st.button("Start Scan"):
             proceed_with_scan = False
             
-            if scan_type in ["Code Scan", "Document Scan", "Image Scan"] and not uploaded_files:
+            if scan_type in ["Code Scan", "Blob Scan", "Image Scan"] and not uploaded_files:
                 st.error(f"Please upload at least one file to scan for {scan_type}.")
             elif scan_type == "Database Scan" and 'connection_string' in locals() and not connection_string and 'db_type' in locals():
                 # For database scans without connection string, we'll use environment variables
@@ -621,7 +676,7 @@ else:
                         include_comments=include_comments,
                         region=region
                     )
-                else:  # Document Scan
+                else:  # Blob Scan
                     scanner = BlobScanner(
                         file_types=file_types if 'file_types' in locals() else ["PDF", "DOCX", "TXT"],
                         region=region
