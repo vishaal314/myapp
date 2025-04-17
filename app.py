@@ -607,12 +607,23 @@ else:
             if scan_type == "Code Scan":
                 # 1. Code Scanner
                 st.subheader("Code Scanner Configuration")
-                repo_source = st.radio("Repository Source", ["Upload Files", "Repository URL"])
+                
+                # Use session state to remember the selection
+                if 'repo_source' not in st.session_state:
+                    st.session_state.repo_source = "Upload Files"
+                
+                # Create the radio button and update session state
+                repo_source = st.radio("Repository Source", ["Upload Files", "Repository URL"], 
+                                      index=0 if st.session_state.repo_source == "Upload Files" else 1,
+                                      key="repo_source_radio")
+                
+                # Update the session state
+                st.session_state.repo_source = repo_source
                 
                 if repo_source == "Repository URL":
-                    st.text_input("Repository URL (GitHub, GitLab, Bitbucket)", placeholder="https://github.com/username/repo")
-                    st.text_input("Branch Name", value="main")
-                    st.text_input("Authentication Token (if private)", type="password")
+                    repo_url = st.text_input("Repository URL (GitHub, GitLab, Bitbucket)", placeholder="https://github.com/username/repo", key="repo_url")
+                    branch_name = st.text_input("Branch Name", value="main", key="branch_name")
+                    auth_token = st.text_input("Authentication Token (if private)", type="password", key="auth_token")
                 
                 scan_type_code = st.multiselect("Scan For", 
                                          ["Secrets", "PII", "Credentials", "All"],
@@ -868,14 +879,10 @@ else:
         st.subheader("Upload Files")
         
         if scan_type == "Code Scan":
-            # Store repository settings in session state for persistence
-            if 'repo_source' not in st.session_state:
-                st.session_state.repo_source = "Upload Files"
-            
-            # Set repo_source from session state to avoid 'possibly unbound' errors
-            repo_source = st.session_state.repo_source
+            # Use what was already set in the Advanced Configuration section
+            # repo_source is now directly in st.session_state from the radio button
                 
-            if repo_source == "Upload Files":
+            if st.session_state.repo_source == "Upload Files":
                 upload_help = "Upload source code files to scan for PII and secrets"
                 uploaded_files = st.file_uploader(
                     "Upload Code Files", 
@@ -884,14 +891,24 @@ else:
                     help=upload_help
                 )
             else:
-                # For repository URL option, create a placeholder for the 'uploaded_files'
+                # For repository URL option, show a button to start scan directly
                 st.info("Using repository URL for scanning. No file uploads required.")
-                uploaded_files = []
                 
-                # Repository URL details to use in the scan - read from top section
+                # Display repository information
                 st.subheader("Repository Details")
-                repo_url = st.text_input("Confirm Repository URL", placeholder="https://github.com/username/repo")
-                repo_branch = st.text_input("Confirm Branch", value="main")
+                
+                # Get values from session state if available
+                repo_url = st.session_state.get('repo_url', '')
+                branch_name = st.session_state.get('branch_name', 'main')
+                
+                # Show the information
+                st.markdown(f"""
+                **Repository URL:** {repo_url if repo_url else 'Not specified'}  
+                **Branch:** {branch_name}
+                """)
+                
+                # Empty upload files list - will be handled differently
+                uploaded_files = []
         
         elif scan_type == "Blob Scan":
             if 'blob_source' in locals() and blob_source == "Upload Files":
