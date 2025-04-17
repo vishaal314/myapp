@@ -29,7 +29,7 @@ if 'scan_results' not in st.session_state:
 
 # Set page config
 st.set_page_config(
-    page_title="GDPR Scan Engine",
+    page_title="DataGuardian Pro",
     page_icon="🔒",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -37,13 +37,13 @@ st.set_page_config(
 
 # Authentication sidebar with professional colorful design
 with st.sidebar:
-    # Header with gradient background and GDPR theme
+    # Header with gradient background and professional name
     st.markdown("""
     <div style="background-image: linear-gradient(120deg, #3B82F6, #1E40AF); 
                padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center;
                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: white; margin: 0; font-weight: bold;">GDPR Scan Engine</h2>
-        <p style="color: #E0F2FE; margin: 5px 0 0 0; font-size: 0.9em;">Data Privacy Compliance Platform</p>
+        <h2 style="color: white; margin: 0; font-weight: bold;">DataGuardian Pro</h2>
+        <p style="color: #E0F2FE; margin: 5px 0 0 0; font-size: 0.9em;">Enterprise Privacy Compliance Platform</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -300,9 +300,9 @@ with st.sidebar:
 
 # Main content
 if not st.session_state.logged_in:
-    # Simple clean hero section
-    st.title("GDPR Scan Engine")
-    st.write("Comprehensive GDPR compliance scanning and reporting platform")
+    # Simple clean hero section with professional name
+    st.title("DataGuardian Pro")
+    st.write("Enterprise Privacy Compliance Platform for GDPR and International Data Standards")
     
     # Add simple divider
     st.markdown("<hr style='margin: 20px 0;'>", unsafe_allow_html=True)
@@ -465,7 +465,7 @@ else:
     selected_nav = st.sidebar.radio("Navigation", nav_options)
     
     if selected_nav == "Dashboard":
-        st.title("GDPR Compliance Dashboard")
+        st.title("DataGuardian Pro - Compliance Dashboard")
         
         # Summary metrics
         all_scans = results_aggregator.get_all_scans(st.session_state.username)
