@@ -12,7 +12,7 @@ from services.code_scanner import CodeScanner
 from services.blob_scanner import BlobScanner
 from services.results_aggregator import ResultsAggregator
 from services.report_generator import generate_report
-from services.auth import authenticate, is_authenticated, logout
+from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
 from utils.gdpr_rules import REGIONS, get_region_rules
 
 # Initialize session state variables
@@ -104,8 +104,8 @@ with st.sidebar:
                         st.error(message)
     else:
         st.markdown(f"""
-        <div style="background-color: #1E293B; padding: 15px; border-radius: 5px; color: white;">
-            <h3 style="margin: 0; color: white;">Welcome back</h3>
+        <div style="background-color: #EFF6FF; padding: 15px; border-radius: 5px; color: #1E40AF;">
+            <h3 style="margin: 0; color: #1E40AF;">Welcome back</h3>
             <p style="margin: 5px 0 0 0;">{st.session_state.username}</p>
         </div>
         """, unsafe_allow_html=True)
@@ -131,27 +131,130 @@ with st.sidebar:
 
 # Main content
 if not st.session_state.logged_in:
-    st.title("Welcome to GDPR Scan Engine")
-    st.write("Please login to access the dashboard")
+    # Create a hero section with prominent login
+    st.markdown("""
+    <div style="text-align: center; padding: 2rem 0;">
+        <h1 style="font-size: 2.5rem;">GDPR Scan Engine</h1>
+        <p style="font-size: 1.2rem; margin-bottom: 2rem;">Comprehensive GDPR compliance scanning and reporting</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Show product info
+    # Main login/signup area in the center
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        # Tabs for Login and Register in the main content area
+        main_login_tab, main_register_tab = st.tabs(["Login", "Register"])
+        
+        with main_login_tab:
+            st.markdown("""
+            <div style="background-color: #EFF6FF; padding: 15px; border-radius: 5px; margin-bottom: 15px">
+                <h3 style="color: #1E40AF; margin: 0 0 10px 0">Login to your account</h3>
+                <p style="color: #3B82F6; margin: 0">Access all GDPR scanning features</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            username_or_email_main = st.text_input("Email/Username", key="main_login_username")
+            password_main = st.text_input("Password", type="password", key="main_login_password")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                remember_me = st.checkbox("Remember me")
+            
+            login_button_main = st.button("Login", key="main_login_button", use_container_width=True)
+            
+            if login_button_main:
+                if not username_or_email_main or not password_main:
+                    st.error("Please enter both email/username and password.")
+                else:
+                    user_data = authenticate(username_or_email_main, password_main)
+                    if user_data:
+                        st.session_state.logged_in = True
+                        st.session_state.username = user_data["username"]
+                        st.session_state.role = user_data["role"]
+                        st.session_state.email = user_data.get("email", "")
+                        st.success(f"Logged in successfully!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials. Please try again.")
+        
+        with main_register_tab:
+            st.markdown("""
+            <div style="background-color: #ECFDF5; padding: 15px; border-radius: 5px; margin-bottom: 15px">
+                <h3 style="color: #065F46; margin: 0 0 10px 0">Create a new account</h3>
+                <p style="color: #10B981; margin: 0">Get started with GDPR compliance today</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            new_username_main = st.text_input("Username", key="main_register_username")
+            new_email_main = st.text_input("Email", key="main_register_email", 
+                                     placeholder="Enter a valid email address")
+            new_password_main = st.text_input("Password", type="password", key="main_register_password", 
+                                       help="Password must be at least 6 characters")
+            confirm_password_main = st.text_input("Confirm Password", type="password", key="main_confirm_password")
+            
+            # Role selection with default
+            role_options = ["viewer", "analyst", "admin"]
+            new_role_main = st.selectbox("Role", role_options, index=0, key="main_role")
+            
+            register_button_main = st.button("Register", key="main_register_button", use_container_width=True)
+            
+            if register_button_main:
+                if not new_username_main or not new_email_main or not new_password_main:
+                    st.error("Please fill out all fields.")
+                elif new_password_main != confirm_password_main:
+                    st.error("Passwords do not match.")
+                else:
+                    success, message = create_user(new_username_main, new_password_main, new_role_main, new_email_main)
+                    if success:
+                        st.success(message)
+                    else:
+                        st.error(message)
+    
+    # Show features in boxes
+    st.markdown("---")
+    st.markdown("<h2 style='text-align: center; margin: 2rem 0;'>Key Features</h2>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("""
+        <div style="padding: 20px; border-radius: 10px; background-color: #EFF6FF; height: 200px; text-align: center;">
+            <h3 style="color: #1E40AF;">🔍 PII Detection</h3>
+            <p>Scan code, documents, and more for personal information with our advanced detection algorithms.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("""
+        <div style="padding: 20px; border-radius: 10px; background-color: #EFF6FF; height: 200px; text-align: center;">
+            <h3 style="color: #1E40AF;">📊 Risk Assessment</h3>
+            <p>Get detailed reports on GDPR compliance risks with severity classification and remediation advice.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
+        st.markdown("""
+        <div style="padding: 20px; border-radius: 10px; background-color: #EFF6FF; height: 200px; text-align: center;">
+            <h3 style="color: #1E40AF;">🇳🇱 Region-Specific</h3>
+            <p>Support for Dutch GDPR regulations (UAVG) including BSN handling and special category data requirements.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # About section
+    st.markdown("---")
     st.subheader("About GDPR Scan Engine")
     st.write("""
     Our GDPR Scan Engine identifies and reports on GDPR-relevant Personally Identifiable Information (PII) 
     across multiple sources, with a focus on Dutch-specific rules (UAVG), consent management, and legal 
     basis documentation.
-    """)
     
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("### 🔍 PII Detection")
-        st.write("Scan code, documents, and more for personal information")
-    with col2:
-        st.markdown("### 📊 Risk Assessment")
-        st.write("Get detailed reports on GDPR compliance risks")
-    with col3:
-        st.markdown("### 🇳🇱 Region-Specific")
-        st.write("Support for Dutch GDPR regulations (UAVG)")
+    The tool fully implements all seven core GDPR principles:
+    - Lawfulness, Fairness, and Transparency
+    - Purpose Limitation
+    - Data Minimization
+    - Accuracy
+    - Storage Limitation
+    - Integrity and Confidentiality
+    - Accountability
+    """)
 
 else:
     # Initialize aggregator
