@@ -300,175 +300,108 @@ with st.sidebar:
 
 # Main content
 if not st.session_state.logged_in:
-    # Create a hero section with title
-    st.markdown("""
-    <div style="text-align: center; padding: 1rem 0;">
-        <h1 style="font-size: 2.5rem;">GDPR Scan Engine</h1>
-        <p style="font-size: 1.2rem; margin-bottom: 1rem;">Comprehensive GDPR compliance scanning and reporting</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Simple clean hero section
+    st.title("GDPR Scan Engine")
+    st.write("Comprehensive GDPR compliance scanning and reporting platform")
     
-    # GDPR Compliance Images in a colorful grid
-    st.markdown("<h2 style='text-align: center; margin: 1rem 0;'>GDPR Compliance Dashboard</h2>", unsafe_allow_html=True)
+    # Add simple divider
+    st.markdown("<hr style='margin: 20px 0;'>", unsafe_allow_html=True)
     
-    # Add colorful GDPR compliance images
+    # Simplified compliance dashboard
+    st.header("Compliance Status")
+    
+    # Streamlined metrics in cards
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #DBEAFE; height: 200px; text-align: center; 
-                     background-image: linear-gradient(120deg, #DBEAFE, #93C5FD); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-            <h3 style="color: #1E40AF;">🔒 Data Protection</h3>
-            <p style="color: #1E3A8A; font-weight: bold;">Compliance Score</p>
-            <div style="font-size: 2rem; margin: 10px 0; color: #1E3A8A;">85%</div>
-            <div style="background-color: #BFDBFE; border-radius: 10px; padding: 5px; width: 85%; margin: 0 auto;">
-                <div style="background-color: #3B82F6; width: 85%; height: 10px; border-radius: 10px;"></div>
-            </div>
+        <div style="padding: 20px; border-radius: 8px; background-color: #EFF6FF; border-left: 5px solid #3B82F6;">
+            <p style="font-size: 16px; margin: 0; color: #1E40AF;">Data Protection</p>
+            <h2 style="font-size: 36px; margin: 10px 0; color: #1E3A8A;">85%</h2>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #F0FDF4; height: 200px; text-align: center; 
-                    background-image: linear-gradient(120deg, #F0FDF4, #86EFAC); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-            <h3 style="color: #166534;">🛡️ GDPR Readiness</h3>
-            <p style="color: #166534; font-weight: bold;">Organization Score</p>
-            <div style="font-size: 2rem; margin: 10px 0; color: #166534;">78%</div>
-            <div style="background-color: #BBF7D0; border-radius: 10px; padding: 5px; width: 85%; margin: 0 auto;">
-                <div style="background-color: #16A34A; width: 78%; height: 10px; border-radius: 10px;"></div>
-            </div>
+        <div style="padding: 20px; border-radius: 8px; background-color: #F0FDF4; border-left: 5px solid #16A34A;">
+            <p style="font-size: 16px; margin: 0; color: #166534;">GDPR Readiness</p>
+            <h2 style="font-size: 36px; margin: 10px 0; color: #166534;">78%</h2>
         </div>
         """, unsafe_allow_html=True)
     with col3:
         st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #FEF3C7; height: 200px; text-align: center; 
-                    background-image: linear-gradient(120deg, #FEF3C7, #FCD34D); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-            <h3 style="color: #92400E;">⚠️ Risk Assessment</h3>
-            <p style="color: #92400E; font-weight: bold;">Risk Mitigation</p>
-            <div style="font-size: 2rem; margin: 10px 0; color: #92400E;">92%</div>
-            <div style="background-color: #FDE68A; border-radius: 10px; padding: 5px; width: 85%; margin: 0 auto;">
-                <div style="background-color: #F59E0B; width: 92%; height: 10px; border-radius: 10px;"></div>
-            </div>
+        <div style="padding: 20px; border-radius: 8px; background-color: #FEF3C7; border-left: 5px solid #F59E0B;">
+            <p style="font-size: 16px; margin: 0; color: #92400E;">Risk Mitigation</p>
+            <h2 style="font-size: 36px; margin: 10px 0; color: #92400E;">92%</h2>
         </div>
         """, unsafe_allow_html=True)
     
-    # Add app rating section
-    st.markdown("---")
-    st.markdown("<h3 style='text-align: center;'>Rate Our Application</h3>", unsafe_allow_html=True)
+    # Application rating - simplified
+    st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
+    st.header("Rate Our Application")
     
-    rating_col1, rating_col2, rating_col3, rating_col4, rating_col5 = st.columns(5)
-    with rating_col1:
-        st.button("⭐ 1", use_container_width=True)
-    with rating_col2:
-        st.button("⭐⭐ 2", use_container_width=True)
-    with rating_col3:
-        st.button("⭐⭐⭐ 3", use_container_width=True)
-    with rating_col4:
-        st.button("⭐⭐⭐⭐ 4", use_container_width=True)
-    with rating_col5:
-        st.button("⭐⭐⭐⭐⭐ 5", use_container_width=True)
+    # Simplified rating UI
+    cols = st.columns(5)
+    for i, col in enumerate(cols, 1):
+        with col:
+            stars = "⭐" * i
+            st.button(stars, key=f"rate_{i}", use_container_width=True)
     
-    feedback = st.text_area("Additional Feedback", placeholder="Share your thoughts on our GDPR Scan Engine...")
+    # Simplified feedback form
+    feedback = st.text_area("Your Feedback", 
+                            placeholder="Share your thoughts on the GDPR Scan Engine...",
+                            max_chars=500)
     st.button("Submit Feedback", use_container_width=True)
     
-    # Show scanning services in boxes
-    st.markdown("---")
-    st.markdown("<h2 style='text-align: center; margin: 2rem 0;'>Comprehensive Scanning Services</h2>", unsafe_allow_html=True)
+    # Scanning services section - cleaner format
+    st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
+    st.header("Our Scanning Services")
     
-    # First row of services
-    col1, col2, col3 = st.columns(3)
+    # Simplified service display - first row
+    col1, col2 = st.columns(2)
     with col1:
-        st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
-            <h3 style="color: #1E40AF;">💻 Code Scanner</h3>
-            <p style="font-size: 0.9rem;">Detect secrets & PII in source code using TruffleHog/Semgrep integration.</p>
-            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">Python + TruffleHog/Semgrep</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.subheader("💻 Code Scanner")
+        st.write("Detect secrets & PII in source code using secure scanning tools")
     with col2:
-        st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
-            <h3 style="color: #1E40AF;">📄 Blob Scanner</h3>
-            <p style="font-size: 0.9rem;">Scan PDFs, Word docs & text files for PII with advanced OCR technology.</p>
-            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">Python + Presidio + OCR</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
-            <h3 style="color: #1E40AF;">🖼️ Image Scanner</h3>
-            <p style="font-size: 0.9rem;">Analyze images for faces, text & visual identity information.</p>
-            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">Azure Vision API</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Second row of services
-    col1, col2, col3 = st.columns(3)
+        st.subheader("📄 Document Scanner")
+        st.write("Scan PDFs, Word docs & text files for PII with OCR technology")
+    
+    col1, col2 = st.columns(2)
     with col1:
-        st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
-            <h3 style="color: #1E40AF;">🗄️ DB Scanner</h3>
-            <p style="font-size: 0.9rem;">Structured database scanning for PII across tables & schemas.</p>
-            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">ADF + Python</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.subheader("🖼️ Image Scanner")
+        st.write("Analyze images for faces, text & visual identity information")
     with col2:
-        st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
-            <h3 style="color: #1E40AF;">🔌 API Scanner</h3>
-            <p style="font-size: 0.9rem;">Scan API endpoints & traffic for PII exposure with NLP analysis.</p>
-            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">FastAPI + OpenAPI/NLP</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #EFF6FF; height: 180px; text-align: center;">
-            <h3 style="color: #1E40AF;">🌱 Sustainability</h3>
-            <p style="font-size: 0.9rem;">ESG compliance: carbon emissions, idle resources, storage bloat.</p>
-            <p style="font-style: italic; font-size: 0.8rem; color: #4B5563;">Azure API + Python</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.subheader("🗄️ Database Scanner")
+        st.write("Structured database scanning for PII across tables & schemas")
         
-    # Key features section after services
-    st.markdown("<h2 style='text-align: center; margin: 2rem 0;'>Key Features</h2>", unsafe_allow_html=True)
+    # Key features in clean format
+    st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
+    st.header("Key Features")
     
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #DBEAFE; height: 150px; text-align: center;">
-            <h3 style="color: #1E40AF;">🔍 Comprehensive Detection</h3>
-            <p>Unified scanning across code, docs, images, DBs, APIs with a single orchestrated workflow.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #DBEAFE; height: 150px; text-align: center;">
-            <h3 style="color: #1E40AF;">📊 Advanced Analysis</h3>
-            <p>Risk scoring, compliance reporting, and remediation advice with region-specific GDPR rules.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-        <div style="padding: 15px; border-radius: 10px; background-color: #DBEAFE; height: 150px; text-align: center;">
-            <h3 style="color: #1E40AF;">🇳🇱 Dutch GDPR Compliance</h3>
-            <p>Special handling for BSN, medical data, and UAVG-specific requirements included.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # About section
-    st.markdown("---")
-    st.subheader("About GDPR Scan Engine")
     st.write("""
-    Our GDPR Scan Engine identifies and reports on GDPR-relevant Personally Identifiable Information (PII) 
-    across multiple sources, with a focus on Dutch-specific rules (UAVG), consent management, and legal 
-    basis documentation.
+    * **Comprehensive Detection**: Unified scanning across multiple data sources
+    * **Advanced Analysis**: Risk scoring and compliance reporting with remediation advice
+    * **Dutch GDPR Compliance**: Special handling for BSN, medical data, and UAVG requirements
+    * **Complete GDPR Principles**: All seven core GDPR principles fully implemented
+    * **Customizable Scanning**: Configure scans based on your specific compliance needs
+    """)
     
-    The tool fully implements all seven core GDPR principles:
-    - Lawfulness, Fairness, and Transparency
-    - Purpose Limitation
-    - Data Minimization
-    - Accuracy
-    - Storage Limitation
-    - Integrity and Confidentiality
-    - Accountability
+    # About section - simplified
+    st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
+    st.header("About GDPR Scan Engine")
+    
+    st.write("""
+    Our GDPR Scan Engine provides comprehensive identification and reporting of 
+    Personally Identifiable Information (PII) across multiple sources, with a focus on 
+    Dutch GDPR (UAVG) compliance requirements.
+    
+    The platform supports all seven core GDPR principles:
+    
+    1. Lawfulness, Fairness, and Transparency
+    2. Purpose Limitation
+    3. Data Minimization
+    4. Accuracy
+    5. Storage Limitation
+    6. Integrity and Confidentiality
+    7. Accountability
     """)
 
 else:
