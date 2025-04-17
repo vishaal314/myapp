@@ -362,21 +362,27 @@ if not st.session_state.logged_in:
         st.markdown("""
         <div style="border-left: 4px solid #3B82F6; padding: 10px; margin-bottom: 15px;">
             <h4 style="margin: 0; color: #1E40AF;">💻 Code Scanner</h4>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">Detect secrets & PII in source code</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px;"><span style="color: #1E40AF; font-weight: bold;">Tech:</span> Python + TruffleHog/Semgrep</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #1E40AF; font-weight: bold;">Purpose:</span> Detect PII/secrets in code</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #1E40AF; font-weight: bold;">Input:</span> Source code files (.py, .js, .java, etc.)</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div style="border-left: 4px solid #3B82F6; padding: 10px; margin-bottom: 15px;">
             <h4 style="margin: 0; color: #1E40AF;">📄 Blob Scanner</h4>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">Scan documents & files with OCR</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px;"><span style="color: #1E40AF; font-weight: bold;">Tech:</span> Python + Presidio + OCR</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #1E40AF; font-weight: bold;">Purpose:</span> Scan PDFs/DOCs for PII</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #1E40AF; font-weight: bold;">Input:</span> Document files (PDF, DOCX, TXT, etc.)</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div style="border-left: 4px solid #3B82F6; padding: 10px; margin-bottom: 15px;">
             <h4 style="margin: 0; color: #1E40AF;">🖼️ Image Scanner</h4>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">Analyze images for PII content</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px;"><span style="color: #1E40AF; font-weight: bold;">Tech:</span> Azure Vision API</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #1E40AF; font-weight: bold;">Purpose:</span> Visual identity, faces</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #1E40AF; font-weight: bold;">Input:</span> Image files (JPG, PNG, GIF, etc.)</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -384,21 +390,27 @@ if not st.session_state.logged_in:
         st.markdown("""
         <div style="border-left: 4px solid #10B981; padding: 10px; margin-bottom: 15px;">
             <h4 style="margin: 0; color: #047857;">🗄️ DB Scanner</h4>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">Database tables & schema scanning</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px;"><span style="color: #047857; font-weight: bold;">Tech:</span> ADF + Presidio</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #047857; font-weight: bold;">Purpose:</span> Structured DB scan</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #047857; font-weight: bold;">Input:</span> Database connection string</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div style="border-left: 4px solid #10B981; padding: 10px; margin-bottom: 15px;">
             <h4 style="margin: 0; color: #047857;">🔌 API Scanner</h4>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">Scan API endpoints for PII exposure</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px;"><span style="color: #047857; font-weight: bold;">Tech:</span> FastAPI + Swagger + NLP</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #047857; font-weight: bold;">Purpose:</span> API input/output scanning</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #047857; font-weight: bold;">Input:</span> API endpoint URL or Swagger docs</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div style="border-left: 4px solid #10B981; padding: 10px; margin-bottom: 15px;">
             <h4 style="margin: 0; color: #047857;">📤 Manual Upload Tool</h4>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">Upload & scan custom data files</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px;"><span style="color: #047857; font-weight: bold;">Tech:</span> Streamlit</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #047857; font-weight: bold;">Purpose:</span> Upload manual files</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #047857; font-weight: bold;">Input:</span> Any file types for manual scanning</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -406,21 +418,27 @@ if not st.session_state.logged_in:
         st.markdown("""
         <div style="border-left: 4px solid #F59E0B; padding: 10px; margin-bottom: 15px;">
             <h4 style="margin: 0; color: #92400E;">🌱 Sustainability Scanner</h4>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">ESG compliance monitoring</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px;"><span style="color: #92400E; font-weight: bold;">Tech:</span> Azure APIs</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #92400E; font-weight: bold;">Purpose:</span> ESG compliance check</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #92400E; font-weight: bold;">Input:</span> Configuration files or cloud access</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div style="border-left: 4px solid #F59E0B; padding: 10px; margin-bottom: 15px;">
             <h4 style="margin: 0; color: #92400E;">🤖 AI Model Scanner</h4>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">AI/ML model compliance scanning</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px;"><span style="color: #92400E; font-weight: bold;">Tech:</span> Azure AI Content/NLP</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #92400E; font-weight: bold;">Purpose:</span> Scan AI models for data leakage</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #92400E; font-weight: bold;">Input:</span> Model files or API access</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div style="border-left: 4px solid #F59E0B; padding: 10px; margin-bottom: 15px;">
             <h4 style="margin: 0; color: #92400E;">📊 SOC2 Scanner</h4>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">SOC2 compliance assessment</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px;"><span style="color: #92400E; font-weight: bold;">Tech:</span> Python rule engine</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #92400E; font-weight: bold;">Purpose:</span> SOC2-specific logging/access rules</p>
+            <p style="margin: 0; font-size: 12px;"><span style="color: #92400E; font-weight: bold;">Input:</span> Log files and access control configs</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -438,10 +456,10 @@ if not st.session_state.logged_in:
     
     # About section - simplified
     st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
-    st.header("About GDPR Scan Engine")
+    st.header("About DataGuardian Pro")
     
     st.write("""
-    Our GDPR Scan Engine provides comprehensive identification and reporting of 
+    DataGuardian Pro provides comprehensive identification and reporting of 
     Personally Identifiable Information (PII) across multiple sources, with a focus on 
     Dutch GDPR (UAVG) compliance requirements.
     
@@ -538,7 +556,7 @@ else:
             st.info("No scan data available yet. Start a new scan to see results.")
     
     elif selected_nav == "New Scan":
-        st.title("Start a New GDPR Scan")
+        st.title("Start a New DataGuardian Pro Scan")
         
         # Scan configuration form - expanded with all scanner types
         scan_type = st.selectbox("Scan Type", [
