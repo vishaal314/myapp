@@ -37,24 +37,41 @@ st.set_page_config(
 
 # Authentication sidebar with professional colorful design
 with st.sidebar:
-    # Header with gradient background
+    # Header with gradient background and GDPR theme
     st.markdown("""
     <div style="background-image: linear-gradient(120deg, #3B82F6, #1E40AF); 
                padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center;
                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
         <h2 style="color: white; margin: 0; font-weight: bold;">GDPR Scan Engine</h2>
-        <p style="color: #E0F2FE; margin: 5px 0 0 0; font-size: 0.9em;">Professional Compliance Platform</p>
+        <p style="color: #E0F2FE; margin: 5px 0 0 0; font-size: 0.9em;">Data Privacy Compliance Platform</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Centered shield icon with glow effect
+    # Meaningful GDPR theme with privacy-focused visual
     st.markdown("""
-    <div style="text-align: center; margin-bottom: 20px;">
-        <div style="display: inline-block; 
-                   background: radial-gradient(circle, rgba(239,246,255,0.8) 0%, rgba(219,234,254,0) 70%); 
-                   border-radius: 50%; padding: 15px;">
-            <img src="https://img.icons8.com/fluency/96/shield-lock.png" alt="GDPR Shield" 
-                 style="width: 60px; height: 60px; display: block;">
+    <div style="text-align: center; margin-bottom: 25px; padding: 0 10px;">
+        <div style="background-image: linear-gradient(120deg, #EFF6FF, #DBEAFE); 
+                   border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+                <div style="background-image: linear-gradient(120deg, #3B82F6, #1E40AF); 
+                           width: 40px; height: 40px; border-radius: 8px; display: flex; 
+                           justify-content: center; align-items: center; margin-right: 10px;">
+                    <span style="color: white; font-size: 20px;">🔒</span>
+                </div>
+                <div style="background-image: linear-gradient(120deg, #10B981, #047857); 
+                           width: 40px; height: 40px; border-radius: 8px; display: flex; 
+                           justify-content: center; align-items: center; margin-right: 10px;">
+                    <span style="color: white; font-size: 20px;">📊</span>
+                </div>
+                <div style="background-image: linear-gradient(120deg, #F59E0B, #B45309); 
+                           width: 40px; height: 40px; border-radius: 8px; display: flex; 
+                           justify-content: center; align-items: center;">
+                    <span style="color: white; font-size: 20px;">📋</span>
+                </div>
+            </div>
+            <p style="color: #1E40AF; font-size: 0.9em; margin: 0; text-align: center;">
+                Privacy • Compliance • Transparency
+            </p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -227,7 +244,7 @@ with st.sidebar:
             <div style="display: flex; align-items: center; justify-content: center; 
                        width: 70px; height: 70px; background-color: #3B82F6; 
                        border-radius: 50%; margin: 0 auto 15px auto;">
-                <span style="color: white; font-size: 1.8rem; font-weight: bold;">{st.session_state.username[0].upper()}</span>
+                <span style="color: white; font-size: 1.8rem; font-weight: bold;">{st.session_state.username[0].upper() if st.session_state.username else 'U'}</span>
             </div>
             <h3 style="margin: 0; color: #1E40AF; text-align: center;">Welcome back</h3>
             <p style="margin: 5px 0 0 0; text-align: center; font-weight: bold;">{st.session_state.username}</p>
