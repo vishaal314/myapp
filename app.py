@@ -41,67 +41,73 @@ with st.sidebar:
     st.markdown('<img src="https://img.icons8.com/fluency/96/shield-lock.png" alt="GDPR Shield" style="display: block; margin-left: auto; margin-right: auto; width: 80px;">', unsafe_allow_html=True)
     
     if not st.session_state.logged_in:
-        st.markdown('### Secure Login')
+        st.markdown('### Login or Register')
         
-        # Tabs for Login and Register
-        login_tab, register_tab = st.tabs(["Login", "Register"])
+        # Enhanced login section with better styling
+        st.markdown("""
+        <div style="background-color: #EFF6FF; padding: 15px; border-radius: 10px; margin-bottom: 15px; 
+                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <h4 style="color: #1E40AF; margin: 0 0 10px 0; text-align: center;">Login</h4>
+        </div>
+        """, unsafe_allow_html=True)
         
-        with login_tab:
-            st.markdown("""
-            <div style="background-color: #EFF6FF; padding: 10px; border-radius: 5px; margin-bottom: 10px">
-                <p style="color: #1E40AF; margin: 0">Enter your email or username</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            username_or_email = st.text_input("Email/Username", key="login_username")
-            password = st.text_input("Password", type="password", key="login_password")
-            login_button = st.button("Login", use_container_width=True)
-            
-            if login_button:
-                if not username_or_email or not password:
-                    st.error("Please enter both email/username and password.")
+        username_or_email = st.text_input("Email/Username", key="login_username")
+        password = st.text_input("Password", type="password", key="login_password")
+        remember = st.checkbox("Remember me", key="remember_login")
+        login_button = st.button("Login", use_container_width=True, key="sidebar_login")
+        
+        if login_button:
+            if not username_or_email or not password:
+                st.error("Please enter both email/username and password.")
+            else:
+                user_data = authenticate(username_or_email, password)
+                if user_data:
+                    st.session_state.logged_in = True
+                    st.session_state.username = user_data["username"]
+                    st.session_state.role = user_data["role"]
+                    st.session_state.email = user_data.get("email", "")
+                    st.success(f"Logged in successfully!")
+                    st.rerun()
                 else:
-                    user_data = authenticate(username_or_email, password)
-                    if user_data:
-                        st.session_state.logged_in = True
-                        st.session_state.username = user_data["username"]
-                        st.session_state.role = user_data["role"]
-                        st.session_state.email = user_data.get("email", "")
-                        st.success(f"Logged in successfully!")
-                        st.rerun()
-                    else:
-                        st.error("Invalid credentials. Please try again.")
+                    st.error("Invalid credentials. Please try again.")
         
-        with register_tab:
-            st.markdown("""
-            <div style="background-color: #ECFDF5; padding: 10px; border-radius: 5px; margin-bottom: 10px">
-                <p style="color: #065F46; margin: 0">Create a new account</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            new_username = st.text_input("Username", key="register_username")
-            new_email = st.text_input("Email", key="register_email", 
-                                     placeholder="Enter a valid email address")
-            new_password = st.text_input("Password", type="password", key="register_password")
-            confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
-            
-            # Role selection with default
-            role_options = ["viewer", "analyst", "admin"]
-            new_role = st.selectbox("Role", role_options, index=0)
-            
-            register_button = st.button("Register", use_container_width=True)
-            
-            if register_button:
-                if not new_username or not new_email or not new_password:
-                    st.error("Please fill out all fields.")
-                elif new_password != confirm_password:
-                    st.error("Passwords do not match.")
+        st.markdown("<div style='text-align: center; margin: 15px 0;'>OR</div>", unsafe_allow_html=True)
+        
+        # Enhanced register section
+        st.markdown("""
+        <div style="background-color: #ECFDF5; padding: 15px; border-radius: 10px; margin-bottom: 15px;
+                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <h4 style="color: #065F46; margin: 0 0 10px 0; text-align: center;">Create Account</h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        new_username = st.text_input("Username", key="register_username")
+        new_email = st.text_input("Email", key="register_email", 
+                                 placeholder="Enter a valid email address")
+        new_password = st.text_input("Password", type="password", key="register_password",
+                               help="Password must be at least 6 characters")
+        confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
+        
+        # Role selection with default
+        role_options = ["viewer", "analyst", "admin"]
+        new_role = st.selectbox("Role", role_options, index=0)
+        
+        terms = st.checkbox("I agree to the Terms of Service and Privacy Policy")
+        register_button = st.button("Create Account", use_container_width=True, key="sidebar_register")
+        
+        if register_button:
+            if not new_username or not new_email or not new_password:
+                st.error("Please fill out all fields.")
+            elif new_password != confirm_password:
+                st.error("Passwords do not match.")
+            elif not terms:
+                st.error("You must agree to the Terms of Service and Privacy Policy.")
+            else:
+                success, message = create_user(new_username, new_password, new_role, new_email)
+                if success:
+                    st.success(message)
                 else:
-                    success, message = create_user(new_username, new_password, new_role, new_email)
-                    if success:
-                        st.success(message)
-                    else:
-                        st.error(message)
+                    st.error(message)
     else:
         st.markdown(f"""
         <div style="background-color: #EFF6FF; padding: 15px; border-radius: 5px; color: #1E40AF;">
@@ -131,85 +137,74 @@ with st.sidebar:
 
 # Main content
 if not st.session_state.logged_in:
-    # Create a hero section with prominent login
+    # Create a hero section with title
     st.markdown("""
-    <div style="text-align: center; padding: 2rem 0;">
+    <div style="text-align: center; padding: 1rem 0;">
         <h1 style="font-size: 2.5rem;">GDPR Scan Engine</h1>
-        <p style="font-size: 1.2rem; margin-bottom: 2rem;">Comprehensive GDPR compliance scanning and reporting</p>
+        <p style="font-size: 1.2rem; margin-bottom: 1rem;">Comprehensive GDPR compliance scanning and reporting</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Main login/signup area in the center
-    col1, col2, col3 = st.columns([1, 2, 1])
+    # GDPR Compliance Images in a colorful grid
+    st.markdown("<h2 style='text-align: center; margin: 1rem 0;'>GDPR Compliance Dashboard</h2>", unsafe_allow_html=True)
     
+    # Add colorful GDPR compliance images
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #DBEAFE; height: 200px; text-align: center; 
+                     background-image: linear-gradient(120deg, #DBEAFE, #93C5FD); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <h3 style="color: #1E40AF;">🔒 Data Protection</h3>
+            <p style="color: #1E3A8A; font-weight: bold;">Compliance Score</p>
+            <div style="font-size: 2rem; margin: 10px 0; color: #1E3A8A;">85%</div>
+            <div style="background-color: #BFDBFE; border-radius: 10px; padding: 5px; width: 85%; margin: 0 auto;">
+                <div style="background-color: #3B82F6; width: 85%; height: 10px; border-radius: 10px;"></div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     with col2:
-        # Tabs for Login and Register in the main content area
-        main_login_tab, main_register_tab = st.tabs(["Login", "Register"])
-        
-        with main_login_tab:
-            st.markdown("""
-            <div style="background-color: #EFF6FF; padding: 15px; border-radius: 5px; margin-bottom: 15px">
-                <h3 style="color: #1E40AF; margin: 0 0 10px 0">Login to your account</h3>
-                <p style="color: #3B82F6; margin: 0">Access all GDPR scanning features</p>
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #F0FDF4; height: 200px; text-align: center; 
+                    background-image: linear-gradient(120deg, #F0FDF4, #86EFAC); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <h3 style="color: #166534;">🛡️ GDPR Readiness</h3>
+            <p style="color: #166534; font-weight: bold;">Organization Score</p>
+            <div style="font-size: 2rem; margin: 10px 0; color: #166534;">78%</div>
+            <div style="background-color: #BBF7D0; border-radius: 10px; padding: 5px; width: 85%; margin: 0 auto;">
+                <div style="background-color: #16A34A; width: 78%; height: 10px; border-radius: 10px;"></div>
             </div>
-            """, unsafe_allow_html=True)
-            
-            username_or_email_main = st.text_input("Email/Username", key="main_login_username")
-            password_main = st.text_input("Password", type="password", key="main_login_password")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                remember_me = st.checkbox("Remember me")
-            
-            login_button_main = st.button("Login", key="main_login_button", use_container_width=True)
-            
-            if login_button_main:
-                if not username_or_email_main or not password_main:
-                    st.error("Please enter both email/username and password.")
-                else:
-                    user_data = authenticate(username_or_email_main, password_main)
-                    if user_data:
-                        st.session_state.logged_in = True
-                        st.session_state.username = user_data["username"]
-                        st.session_state.role = user_data["role"]
-                        st.session_state.email = user_data.get("email", "")
-                        st.success(f"Logged in successfully!")
-                        st.rerun()
-                    else:
-                        st.error("Invalid credentials. Please try again.")
-        
-        with main_register_tab:
-            st.markdown("""
-            <div style="background-color: #ECFDF5; padding: 15px; border-radius: 5px; margin-bottom: 15px">
-                <h3 style="color: #065F46; margin: 0 0 10px 0">Create a new account</h3>
-                <p style="color: #10B981; margin: 0">Get started with GDPR compliance today</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #FEF3C7; height: 200px; text-align: center; 
+                    background-image: linear-gradient(120deg, #FEF3C7, #FCD34D); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <h3 style="color: #92400E;">⚠️ Risk Assessment</h3>
+            <p style="color: #92400E; font-weight: bold;">Risk Mitigation</p>
+            <div style="font-size: 2rem; margin: 10px 0; color: #92400E;">92%</div>
+            <div style="background-color: #FDE68A; border-radius: 10px; padding: 5px; width: 85%; margin: 0 auto;">
+                <div style="background-color: #F59E0B; width: 92%; height: 10px; border-radius: 10px;"></div>
             </div>
-            """, unsafe_allow_html=True)
-            
-            new_username_main = st.text_input("Username", key="main_register_username")
-            new_email_main = st.text_input("Email", key="main_register_email", 
-                                     placeholder="Enter a valid email address")
-            new_password_main = st.text_input("Password", type="password", key="main_register_password", 
-                                       help="Password must be at least 6 characters")
-            confirm_password_main = st.text_input("Confirm Password", type="password", key="main_confirm_password")
-            
-            # Role selection with default
-            role_options = ["viewer", "analyst", "admin"]
-            new_role_main = st.selectbox("Role", role_options, index=0, key="main_role")
-            
-            register_button_main = st.button("Register", key="main_register_button", use_container_width=True)
-            
-            if register_button_main:
-                if not new_username_main or not new_email_main or not new_password_main:
-                    st.error("Please fill out all fields.")
-                elif new_password_main != confirm_password_main:
-                    st.error("Passwords do not match.")
-                else:
-                    success, message = create_user(new_username_main, new_password_main, new_role_main, new_email_main)
-                    if success:
-                        st.success(message)
-                    else:
-                        st.error(message)
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Add app rating section
+    st.markdown("---")
+    st.markdown("<h3 style='text-align: center;'>Rate Our Application</h3>", unsafe_allow_html=True)
+    
+    rating_col1, rating_col2, rating_col3, rating_col4, rating_col5 = st.columns(5)
+    with rating_col1:
+        st.button("⭐ 1", use_container_width=True)
+    with rating_col2:
+        st.button("⭐⭐ 2", use_container_width=True)
+    with rating_col3:
+        st.button("⭐⭐⭐ 3", use_container_width=True)
+    with rating_col4:
+        st.button("⭐⭐⭐⭐ 4", use_container_width=True)
+    with rating_col5:
+        st.button("⭐⭐⭐⭐⭐ 5", use_container_width=True)
+    
+    feedback = st.text_area("Additional Feedback", placeholder="Share your thoughts on our GDPR Scan Engine...")
+    st.button("Submit Feedback", use_container_width=True)
     
     # Show scanning services in boxes
     st.markdown("---")
