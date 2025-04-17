@@ -35,95 +35,241 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Authentication sidebar
+# Authentication sidebar with professional colorful design
 with st.sidebar:
-    st.title("GDPR Scan Engine")
-    st.markdown('<img src="https://img.icons8.com/fluency/96/shield-lock.png" alt="GDPR Shield" style="display: block; margin-left: auto; margin-right: auto; width: 80px;">', unsafe_allow_html=True)
+    # Header with gradient background
+    st.markdown("""
+    <div style="background-image: linear-gradient(120deg, #3B82F6, #1E40AF); 
+               padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center;
+               box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <h2 style="color: white; margin: 0; font-weight: bold;">GDPR Scan Engine</h2>
+        <p style="color: #E0F2FE; margin: 5px 0 0 0; font-size: 0.9em;">Professional Compliance Platform</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Centered shield icon with glow effect
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 20px;">
+        <div style="display: inline-block; 
+                   background: radial-gradient(circle, rgba(239,246,255,0.8) 0%, rgba(219,234,254,0) 70%); 
+                   border-radius: 50%; padding: 15px;">
+            <img src="https://img.icons8.com/fluency/96/shield-lock.png" alt="GDPR Shield" 
+                 style="width: 60px; height: 60px; display: block;">
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     if not st.session_state.logged_in:
-        st.markdown('### Login or Register')
-        
-        # Enhanced login section with better styling
+        # Tab UI for login/register with colorful styling
         st.markdown("""
-        <div style="background-color: #EFF6FF; padding: 15px; border-radius: 10px; margin-bottom: 15px; 
-                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-            <h4 style="color: #1E40AF; margin: 0 0 10px 0; text-align: center;">Login</h4>
-        </div>
+        <style>
+        .tab-selected {
+            background-color: #3B82F6 !important;
+            color: white !important;
+            font-weight: bold;
+            border-radius: 5px;
+            padding: 10px 0;
+        }
+        .tab-not-selected {
+            background-color: #EFF6FF;
+            color: #1E40AF;
+            border-radius: 5px;
+            padding: 10px 0;
+        }
+        </style>
         """, unsafe_allow_html=True)
         
-        username_or_email = st.text_input("Email/Username", key="login_username")
-        password = st.text_input("Password", type="password", key="login_password")
-        remember = st.checkbox("Remember me", key="remember_login")
-        login_button = st.button("Login", use_container_width=True, key="sidebar_login")
+        tab1, tab2 = st.columns(2)
         
-        if login_button:
-            if not username_or_email or not password:
-                st.error("Please enter both email/username and password.")
-            else:
-                user_data = authenticate(username_or_email, password)
-                if user_data:
-                    st.session_state.logged_in = True
-                    st.session_state.username = user_data["username"]
-                    st.session_state.role = user_data["role"]
-                    st.session_state.email = user_data.get("email", "")
-                    st.success(f"Logged in successfully!")
-                    st.rerun()
+        with tab1:
+            if st.button("Login", key="tab_login", use_container_width=True):
+                st.session_state.active_tab = "login"
+        
+        with tab2:
+            if st.button("Register", key="tab_register", use_container_width=True):
+                st.session_state.active_tab = "register"
+        
+        # Default to login tab if not set
+        if "active_tab" not in st.session_state:
+            st.session_state.active_tab = "login"
+            
+        # Apply custom styling to selected tab
+        if st.session_state.active_tab == "login":
+            st.markdown("""
+            <style>
+            [data-testid="stButton"] button:nth-child(1) {
+                background-color: #3B82F6;
+                color: white;
+                font-weight: bold;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <style>
+            [data-testid="stButton"] button:nth-child(2) {
+                background-color: #3B82F6;
+                color: white;
+                font-weight: bold;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+        st.markdown("<hr style='margin: 0; padding: 0; margin-bottom: 15px;'>", unsafe_allow_html=True)
+        
+        # Login Form with colorful styling
+        if st.session_state.active_tab == "login":
+            st.markdown("""
+            <div style="background-image: linear-gradient(to right, #DBEAFE, #EFF6FF); 
+                       padding: 15px; border-radius: 10px; margin-bottom: 15px;
+                       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                <h4 style="color: #1E40AF; margin: 0 0 10px 0; text-align: center;">
+                    <i>Sign In</i>
+                </h4>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            username_or_email = st.text_input("Email/Username", key="login_username")
+            password = st.text_input("Password", type="password", key="login_password")
+            
+            cols = st.columns([3, 2])
+            with cols[0]:
+                remember = st.checkbox("Remember me", key="remember_login")
+            with cols[1]:
+                st.markdown("<p style='text-align: right; font-size: 0.8em;'><a href='#'>Forgot?</a></p>", unsafe_allow_html=True)
+                
+            # Blue gradient login button
+            st.markdown("""
+            <style>
+            div[data-testid="stButton"] button[kind="primaryButton"] {
+                background-image: linear-gradient(to right, #3B82F6, #2563EB);
+                border: none;
+                font-weight: bold;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            login_button = st.button("Sign In", use_container_width=True, key="sidebar_login", type="primary")
+            
+            if login_button:
+                if not username_or_email or not password:
+                    st.error("Please enter both email/username and password.")
                 else:
-                    st.error("Invalid credentials. Please try again.")
+                    user_data = authenticate(username_or_email, password)
+                    if user_data:
+                        st.session_state.logged_in = True
+                        st.session_state.username = user_data["username"]
+                        st.session_state.role = user_data["role"]
+                        st.session_state.email = user_data.get("email", "")
+                        st.success(f"Logged in successfully!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials. Please try again.")
         
-        st.markdown("<div style='text-align: center; margin: 15px 0;'>OR</div>", unsafe_allow_html=True)
-        
-        # Enhanced register section
-        st.markdown("""
-        <div style="background-color: #ECFDF5; padding: 15px; border-radius: 10px; margin-bottom: 15px;
-                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-            <h4 style="color: #065F46; margin: 0 0 10px 0; text-align: center;">Create Account</h4>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        new_username = st.text_input("Username", key="register_username")
-        new_email = st.text_input("Email", key="register_email", 
-                                 placeholder="Enter a valid email address")
-        new_password = st.text_input("Password", type="password", key="register_password",
-                               help="Password must be at least 6 characters")
-        confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
-        
-        # Role selection with default
-        role_options = ["viewer", "analyst", "admin"]
-        new_role = st.selectbox("Role", role_options, index=0)
-        
-        terms = st.checkbox("I agree to the Terms of Service and Privacy Policy")
-        register_button = st.button("Create Account", use_container_width=True, key="sidebar_register")
-        
-        if register_button:
-            if not new_username or not new_email or not new_password:
-                st.error("Please fill out all fields.")
-            elif new_password != confirm_password:
-                st.error("Passwords do not match.")
-            elif not terms:
-                st.error("You must agree to the Terms of Service and Privacy Policy.")
-            else:
-                success, message = create_user(new_username, new_password, new_role, new_email)
-                if success:
-                    st.success(message)
+        # Registration Form with green colorful styling
+        else:
+            st.markdown("""
+            <div style="background-image: linear-gradient(to right, #D1FAE5, #ECFDF5); 
+                       padding: 15px; border-radius: 10px; margin-bottom: 15px;
+                       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                <h4 style="color: #065F46; margin: 0 0 10px 0; text-align: center;">
+                    <i>Create New Account</i>
+                </h4>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            new_username = st.text_input("Username", key="register_username")
+            new_email = st.text_input("Email", key="register_email", 
+                                    placeholder="Enter a valid email address")
+            new_password = st.text_input("Password", type="password", key="register_password",
+                                help="Password must be at least 6 characters")
+            confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
+            
+            # Role selection with custom styling
+            role_options = ["viewer", "analyst", "admin"]
+            new_role = st.selectbox("Role", role_options, index=0)
+            
+            # Green checkmark for terms
+            terms = st.checkbox("I agree to the Terms of Service and Privacy Policy")
+            
+            # Green gradient register button
+            st.markdown("""
+            <style>
+            div[data-testid="stButton"] button[kind="primaryButton"] {
+                background-image: linear-gradient(to right, #10B981, #059669);
+                border: none;
+                font-weight: bold;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            register_button = st.button("Create Account", use_container_width=True, key="sidebar_register", type="primary")
+            
+            if register_button:
+                if not new_username or not new_email or not new_password:
+                    st.error("Please fill out all fields.")
+                elif new_password != confirm_password:
+                    st.error("Passwords do not match.")
+                elif not terms:
+                    st.error("You must agree to the Terms of Service and Privacy Policy.")
                 else:
-                    st.error(message)
+                    success, message = create_user(new_username, new_password, new_role, new_email)
+                    if success:
+                        st.success(message)
+                    else:
+                        st.error(message)
     else:
+        # Colorful user profile section when logged in
         st.markdown(f"""
-        <div style="background-color: #EFF6FF; padding: 15px; border-radius: 5px; color: #1E40AF;">
-            <h3 style="margin: 0; color: #1E40AF;">Welcome back</h3>
-            <p style="margin: 5px 0 0 0;">{st.session_state.username}</p>
+        <div style="background-image: linear-gradient(to right, #DBEAFE, #93C5FD); 
+                   padding: 20px; border-radius: 15px; margin-bottom: 15px;
+                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <div style="display: flex; align-items: center; justify-content: center; 
+                       width: 70px; height: 70px; background-color: #3B82F6; 
+                       border-radius: 50%; margin: 0 auto 15px auto;">
+                <span style="color: white; font-size: 1.8rem; font-weight: bold;">{st.session_state.username[0].upper()}</span>
+            </div>
+            <h3 style="margin: 0; color: #1E40AF; text-align: center;">Welcome back</h3>
+            <p style="margin: 5px 0 0 0; text-align: center; font-weight: bold;">{st.session_state.username}</p>
         </div>
         """, unsafe_allow_html=True)
         
+        # User details with icons
         st.markdown(f"""
-        <div style="margin-top: 10px;">
-            <p><strong>Role:</strong> {st.session_state.role}</p>
-            <p><strong>Email:</strong> {st.session_state.email}</p>
+        <div style="margin: 15px 0; background-color: white; padding: 15px; border-radius: 10px; 
+                   border-left: 4px solid #3B82F6;">
+            <p><span style="color: #3B82F6;">👤</span> <strong>Role:</strong> {st.session_state.role}</p>
+            <p><span style="color: #3B82F6;">✉️</span> <strong>Email:</strong> {st.session_state.email}</p>
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("Logout", use_container_width=True):
+        # Quick actions section
+        st.markdown("""
+        <p style="font-size: 0.9rem; color: #6B7280; margin-bottom: 5px;">Quick Actions</p>
+        """, unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.button("🔎 My Scans", use_container_width=True)
+        with col2:
+            st.button("⚙️ Settings", use_container_width=True)
+        
+        # Styled logout button
+        st.markdown("""
+        <style>
+        div[data-testid="stButton"] button.logout {
+            background-color: transparent;
+            color: #DC2626;
+            border: 1px solid #DC2626;
+            margin-top: 15px;
+        }
+        div[data-testid="stButton"] button.logout:hover {
+            background-color: #FEE2E2;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        if st.button("🚪 Logout", use_container_width=True, key="logout_btn"):
             logout()
             st.rerun()
     
