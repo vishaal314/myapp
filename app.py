@@ -13,6 +13,7 @@ from services.blob_scanner import BlobScanner
 from services.results_aggregator import ResultsAggregator
 from services.report_generator import generate_report
 from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
+from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES
 from utils.gdpr_rules import REGIONS, get_region_rules
 
 # Initialize session state variables
@@ -26,6 +27,14 @@ if 'current_scan_id' not in st.session_state:
     st.session_state.current_scan_id = None
 if 'scan_results' not in st.session_state:
     st.session_state.scan_results = None
+if 'payment_successful' not in st.session_state:
+    st.session_state.payment_successful = False
+if 'payment_details' not in st.session_state:
+    st.session_state.payment_details = None
+if 'checkout_session_id' not in st.session_state:
+    st.session_state.checkout_session_id = None
+if 'email' not in st.session_state:
+    st.session_state.email = None
 
 # Set page config
 st.set_page_config(
@@ -999,38 +1008,30 @@ else:
             else:
                 uploaded_files = []
         
-        # Scan button with proper validation for each scan type
+        # Scan button with payment flow and validation
         if st.button("Start Scan"):
+            # Check if user is logged in first
+            if not st.session_state.logged_in:
+                st.error("Please log in to perform a scan.")
+                st.info("Login with your account or register a new one from the sidebar.")
+                st.stop()
+                
+            # Check if user email is available
+            user_email = st.session_state.email
+            if not user_email:
+                user_email = "sapreatel@example.com"  # Default for demo purposes
+                
+            # Basic scan validation
             proceed_with_scan = False
             
             # Special case for Repository URL option
             if scan_type == "Code Scan" and st.session_state.repo_source == "Repository URL":
                 proceed_with_scan = True
-                # Instead of relying on file upload, we'll handle the repository URL scanning differently
-                st.info("Starting repository URL scan...")
-                
-                # Create a placeholder file for demonstration
-                temp_dir = f"temp_{str(uuid.uuid4())}"
-                os.makedirs(temp_dir, exist_ok=True)
-                mock_file_path = os.path.join(temp_dir, "repo_scan_placeholder.txt")
-                with open(mock_file_path, "w") as f:
-                    f.write("Repository URL scan placeholder")
-                
-                # Create a mock list of files to satisfy the code expectations
-                class MockFile:
-                    def __init__(self, name):
-                        self.name = name
-                    def getbuffer(self):
-                        return b"Repository URL scan"
-                
-                uploaded_files = [MockFile("github_repo.txt")]
-                
             # Other validation logic
             elif scan_type in ["Code Scan", "Blob Scan", "Image Scan"] and not uploaded_files:
                 st.error(f"Please upload at least one file to scan for {scan_type}.")
             elif scan_type == "Database Scan":
                 # For database scans, always allow
-                st.info(f"Starting database scan...")
                 proceed_with_scan = True
             elif scan_type == "API Scan":
                 # For API scans
@@ -1049,30 +1050,129 @@ else:
             else:
                 proceed_with_scan = bool(uploaded_files)
                 
+            # If we can proceed with the scan based on validation, show payment information
             if proceed_with_scan:
-                # Generate a unique scan ID
-                scan_id = str(uuid.uuid4())
-                st.session_state.current_scan_id = scan_id
+                # Handle payment flow
+                st.markdown("---")
+                st.subheader("Payment Required")
+                
+                # Display information about the scan type
+                st.markdown(f"""
+                #### {scan_type} Details
+                
+                Your scan is ready to begin. To proceed, please complete the payment below.
+                """)
+                
+                # Show payment options
+                payment_container = st.container()
+                
+                with payment_container:
+                    # Create metadata for this scan
+                    metadata = {
+                        "scan_type": scan_type,
+                        "region": region,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    
+                    # Display payment button
+                    checkout_id = display_payment_button(scan_type, user_email, metadata)
+                    
+                    # Show alternative payment option - mock flow for testing
+                    st.markdown("---")
+                    st.markdown("### For Testing/Demo Purposes")
+                    if st.button("Simulate Successful Payment (Demo Only)"):
+                        # Generate a unique scan ID
+                        scan_id = str(uuid.uuid4())
+                        st.session_state.current_scan_id = scan_id
+                        
+                        # Mark payment as successful in session state
+                        st.session_state.payment_successful = True
+                        st.session_state.payment_details = {
+                            "status": "succeeded",
+                            "amount": SCAN_PRICES[scan_type] / 100,
+                            "scan_type": scan_type,
+                            "user_email": user_email
+                        }
+                        
+                        # Log the successful payment
+                        try:
+                            results_aggregator.log_audit_event(
+                                username=st.session_state.username,
+                                action="PAYMENT_SIMULATED",
+                                details={
+                                    "scan_type": scan_type,
+                                    "amount": SCAN_PRICES[scan_type] / 100,
+                                    "user_email": user_email,
+                                    "timestamp": datetime.now().isoformat()
+                                }
+                            )
+                        except Exception as e:
+                            st.warning(f"Audit logging failed: {str(e)}")
+                        
+                        # Refresh to start the scan
+                        st.rerun()
+                
+                # Stop execution here to wait for payment
+                st.stop()
+                
+            # If we have a successful payment or are in demo mode, proceed with the scan
+            if proceed_with_scan and st.session_state.payment_successful:
+                # Generate a unique scan ID if not already set
+                if not st.session_state.current_scan_id:
+                    scan_id = str(uuid.uuid4())
+                    st.session_state.current_scan_id = scan_id
+                else:
+                    scan_id = st.session_state.current_scan_id
+                
+                st.success(f"Payment successful! Starting scan...")
                 
                 # Show progress
                 progress_bar = st.progress(0)
                 status_text = st.empty()
+                
+                # Handle Repository URL special case
+                if scan_type == "Code Scan" and st.session_state.repo_source == "Repository URL":
+                    # Instead of relying on file upload, we'll handle the repository URL scanning differently
+                    st.info("Starting repository URL scan...")
+                    
+                    # Create a placeholder file for demonstration
+                    temp_dir = f"temp_{str(uuid.uuid4())}"
+                    os.makedirs(temp_dir, exist_ok=True)
+                    mock_file_path = os.path.join(temp_dir, "repo_scan_placeholder.txt")
+                    with open(mock_file_path, "w") as f:
+                        f.write("Repository URL scan placeholder")
+                    
+                    # Create a mock list of files to satisfy the code expectations
+                    class MockFile:
+                        def __init__(self, name):
+                            self.name = name
+                        def getbuffer(self):
+                            return b"Repository URL scan"
+                    
+                    uploaded_files = [MockFile("github_repo.txt")]
                 
                 # Save uploaded files to temp directory
                 temp_dir = f"temp_{scan_id}"
                 os.makedirs(temp_dir, exist_ok=True)
                 
                 file_paths = []
-                for i, uploaded_file in enumerate(uploaded_files):
-                    progress = (i + 1) / (2 * len(uploaded_files))
-                    progress_bar.progress(progress)
-                    status_text.text(f"Processing file {i+1}/{len(uploaded_files)}: {uploaded_file.name}")
-                    
-                    # Save file
-                    file_path = os.path.join(temp_dir, uploaded_file.name)
-                    with open(file_path, "wb") as f:
-                        f.write(uploaded_file.getbuffer())
-                    file_paths.append(file_path)
+                if uploaded_files:
+                    for i, uploaded_file in enumerate(uploaded_files):
+                        progress = (i + 1) / (2 * len(uploaded_files))
+                        progress_bar.progress(progress)
+                        status_text.text(f"Processing file {i+1}/{len(uploaded_files)}: {uploaded_file.name}")
+                        
+                        # Save file
+                        file_path = os.path.join(temp_dir, uploaded_file.name)
+                        with open(file_path, "wb") as f:
+                            f.write(uploaded_file.getbuffer())
+                        file_paths.append(file_path)
+                else:
+                    # For scan types without file uploads
+                    dummy_file = os.path.join(temp_dir, "scan_configuration.txt")
+                    with open(dummy_file, "w") as f:
+                        f.write(f"Scan type: {scan_type}\nRegion: {region}\nTimestamp: {datetime.now().isoformat()}")
+                    file_paths = [dummy_file]
                 
                 # Initialize scanner based on type
                 # Implement mock scanning functionality for all scan types
@@ -1118,9 +1218,9 @@ else:
                         details={
                             "scan_type": scan_type,
                             "region": region,
-                            "user_email": "sapreatel@example.com",  # Track specific user for audit
+                            "user_email": user_email,  # Track specific user for audit
                             "timestamp": datetime.now().isoformat(),
-                            "user_role": "Enterprise Admin"
+                            "user_role": st.session_state.role
                         }
                     )
                 except Exception as e:
@@ -1128,6 +1228,10 @@ else:
                 
                 # Show informational message about the mock implementation
                 st.info(f"Running demonstration scan for {scan_type}. Results are simulated for demonstration purposes.")
+                
+                # Reset payment information after scan is started
+                st.session_state.payment_successful = False
+                st.session_state.payment_details = None
                 
                 # Run scan
                 scan_results = []
