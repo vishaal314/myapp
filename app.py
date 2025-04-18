@@ -740,27 +740,166 @@ else:
                     repo_url = st.text_input("Repository URL (GitHub, GitLab, Bitbucket)", placeholder="https://github.com/username/repo", key="repo_url")
                     branch_name = st.text_input("Branch Name", value="main", key="branch_name")
                     auth_token = st.text_input("Authentication Token (if private)", type="password", key="auth_token")
+                    
+                    # Git metadata collection options
+                    st.subheader("Git Metadata")
+                    collect_git_metadata = st.checkbox("Collect Git metadata", value=True)
+                    st.markdown("""
+                    <small>Includes commit hash, author, and last modified date for better traceability of findings.</small>
+                    """, unsafe_allow_html=True)
+                    
+                    with st.expander("Git History Options"):
+                        st.slider("History Depth (commits)", min_value=1, max_value=100, value=10)
+                        st.checkbox("Include commit messages in analysis", value=True)
+                        st.number_input("Age limit (days)", min_value=1, max_value=365, value=90)
                 
-                scan_type_code = st.multiselect("Scan For", 
-                                         ["Secrets", "PII", "Credentials", "All"],
-                                         default=["All"])
+                # Multi-language support
+                lang_support = st.multiselect(
+                    "Languages to Scan", 
+                    ["Python", "JavaScript", "Java", "Go", "Ruby", "PHP", "C#", "C/C++", "TypeScript", "Kotlin", "Swift", 
+                     "Terraform", "YAML", "JSON", "HTML", "CSS", "SQL", "Bash", "PowerShell", "Rust"],
+                    default=["Python", "JavaScript", "Java", "Terraform", "YAML"]
+                )
                 
-                file_extensions = st.multiselect("File Extensions to Include", 
-                                             [".py", ".js", ".java", ".php", ".cs", ".go", ".rb", ".ts", ".html", ".xml", ".json"],
-                                             default=[".py", ".js", ".java", ".php"])
+                # File extensions automatically mapped from languages
+                file_extensions = []
+                for lang in lang_support:
+                    if lang == "Python":
+                        file_extensions.extend([".py", ".pyw", ".pyx", ".pxd", ".pyi"])
+                    elif lang == "JavaScript":
+                        file_extensions.extend([".js", ".jsx", ".mjs"])
+                    elif lang == "Java":
+                        file_extensions.extend([".java", ".jsp", ".jav"])
+                    elif lang == "Go":
+                        file_extensions.extend([".go"])
+                    elif lang == "Ruby":
+                        file_extensions.extend([".rb", ".rhtml", ".erb"])
+                    elif lang == "PHP":
+                        file_extensions.extend([".php", ".phtml", ".php3", ".php4", ".php5"])
+                    elif lang == "C#":
+                        file_extensions.extend([".cs", ".cshtml", ".csx"])
+                    elif lang == "C/C++":
+                        file_extensions.extend([".c", ".cpp", ".cc", ".h", ".hpp"])
+                    elif lang == "TypeScript":
+                        file_extensions.extend([".ts", ".tsx"])
+                    elif lang == "Kotlin":
+                        file_extensions.extend([".kt", ".kts"])
+                    elif lang == "Swift":
+                        file_extensions.extend([".swift"])
+                    elif lang == "Terraform":
+                        file_extensions.extend([".tf", ".tfvars"])
+                    elif lang == "YAML":
+                        file_extensions.extend([".yml", ".yaml"])
+                    elif lang == "JSON":
+                        file_extensions.extend([".json"])
+                    elif lang == "HTML":
+                        file_extensions.extend([".html", ".htm", ".xhtml"])
+                    elif lang == "CSS":
+                        file_extensions.extend([".css", ".scss", ".sass", ".less"])
+                    elif lang == "SQL":
+                        file_extensions.extend([".sql"])
+                    elif lang == "Bash":
+                        file_extensions.extend([".sh", ".bash"])
+                    elif lang == "PowerShell":
+                        file_extensions.extend([".ps1", ".psm1"])
+                    elif lang == "Rust":
+                        file_extensions.extend([".rs"])
                 
-                st.text_area("Ignore Patterns (one per line)", 
-                           placeholder="**/node_modules/**\n**/vendor/**\n**/.git/**")
+                # Show the automatically selected extensions
+                with st.expander("Selected File Extensions"):
+                    st.write(", ".join(file_extensions))
                 
-                use_semgrep = st.checkbox("Use Semgrep for deep code analysis", value=True)
-                st.checkbox("Scan for hardcoded secrets", value=True)
+                # Scan targets
+                scan_targets = st.multiselect(
+                    "Scan For", 
+                    ["Secrets", "API Keys", "PII", "Credentials", "Tokens", "Connection Strings", "All"],
+                    default=["All"]
+                )
+                
+                # Advanced Secret Detection
+                st.subheader("Secret Detection Configuration")
+                col1, col2 = st.columns(2)
+                with col1:
+                    use_entropy = st.checkbox("Use entropy analysis", value=True)
+                    st.markdown("<small>Detects random strings that may be secrets</small>", unsafe_allow_html=True)
+                    
+                    use_regex = st.checkbox("Use regex patterns", value=True)
+                    st.markdown("<small>Detects known patterns like API keys</small>", unsafe_allow_html=True)
+                
+                with col2:
+                    use_known_providers = st.checkbox("Detect known providers", value=True)
+                    st.markdown("<small>AWS, Azure, GCP, Stripe, etc.</small>", unsafe_allow_html=True)
+                    
+                    use_semgrep = st.checkbox("Use Semgrep for deep code analysis", value=True)
+                    st.markdown("<small>Advanced pattern matching</small>", unsafe_allow_html=True)
+                
+                # Regional PII tagging options
+                st.subheader("Regional PII Tagging")
+                col1, col2 = st.columns(2)
+                with col1:
+                    regional_options = st.multiselect(
+                        "Regional Regulations", 
+                        ["GDPR (EU)", "UAVG (NL)", "BDSG (DE)", "CNIL (FR)", "DPA (UK)", "LGPD (BR)", "CCPA (US)", "PIPEDA (CA)"],
+                        default=["GDPR (EU)", "UAVG (NL)"]
+                    )
+                
+                with col2:
+                    include_article_refs = st.checkbox("Include regulation article references", value=True)
+                    st.markdown("<small>e.g., GDPR Art. 9 for sensitive data</small>", unsafe_allow_html=True)
+                
+                # False positive suppression
+                st.subheader("False Positive Management")
+                
+                false_positive_method = st.radio(
+                    "False Positive Suppression Method",
+                    ["Baseline Diffing", "Ignore Rules", "Manual Review", "None"],
+                    index=1
+                )
+                
+                if false_positive_method == "Baseline Diffing":
+                    st.file_uploader("Upload baseline results JSON", type=["json"], key="baseline_file")
+                elif false_positive_method == "Ignore Rules":
+                    st.text_area("Ignore Rules (one per line)", 
+                               placeholder="*.test.js\n**/vendor/**\n**/.git/**\nSECRET_*=*\nTEST_*=*")
+                
+                # CI/CD Compatibility
+                st.subheader("CI/CD Integration")
+                ci_cd_options = st.multiselect(
+                    "CI/CD Output Formats",
+                    ["JSON", "SARIF", "CSV", "JUnit XML", "HTML", "Markdown"],
+                    default=["JSON", "SARIF"]
+                )
+                
+                exit_on_failure = st.checkbox("Exit on critical findings", value=False)
+                st.markdown("<small>Causes pipeline failure when critical issues are found</small>", unsafe_allow_html=True)
+                
+                # Custom rules
+                with st.expander("Custom Rules Configuration"):
+                    rule_source = st.radio(
+                        "Custom Rules Source",
+                        ["Upload File", "Enter Manually", "Git Repository"],
+                        index=1
+                    )
+                    
+                    if rule_source == "Upload File":
+                        st.file_uploader("Upload custom rules file", type=["yaml", "yml"], key="custom_rules_file")
+                    elif rule_source == "Enter Manually":
+                        st.text_area("Custom Semgrep Rules (YAML format)", 
+                                   height=150,
+                                   placeholder="rules:\n  - id: hardcoded-password\n    pattern: $X = \"password\"\n    message: Hardcoded password\n    severity: WARNING")
+                    elif rule_source == "Git Repository":
+                        st.text_input("Rules Git Repository URL", placeholder="https://github.com/username/custom-rules")
+                        st.text_input("Repository Path", placeholder="path/to/rules", value="rules")
+                        
+                    # Custom presidio recognizers
+                    st.checkbox("Use custom Presidio recognizers", value=False)
+                    st.text_area("Custom Presidio Recognizers (Python)", 
+                               placeholder="from presidio_analyzer import PatternRecognizer\n\nmy_recognizer = PatternRecognizer(\n    supported_entity='CUSTOM_ENTITY',\n    patterns=[{\"name\": \"custom pattern\", \"regex\": r'pattern_here'}]\n)")
+                    
+                # Code inclusion options
                 include_comments = st.checkbox("Include comments in scan", value=True)
-                
-                # Moved out of the nested expander
-                st.subheader("Custom Semgrep Rules")
-                st.text_area("Custom Semgrep Rules (YAML format)", 
-                           height=150,
-                           placeholder="rules:\n  - id: hardcoded-password\n    pattern: $X = \"password\"\n    message: Hardcoded password\n    severity: WARNING")
+                include_strings = st.checkbox("Scan string literals", value=True)
+                include_variables = st.checkbox("Analyze variable names", value=True)
                 
             elif scan_type == "Blob Scan":
                 # 2. Blob Scanner
