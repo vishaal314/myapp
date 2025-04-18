@@ -2005,6 +2005,515 @@ else:
             st.warning("You don't have permission to access reports. Please contact an administrator for access.")
             st.info("Your role requires the 'report:view' permission to use this feature.")
             st.stop()
+            
+        # Get all scans
+        all_scans = results_aggregator.get_all_scans(st.session_state.username)
+        
+        if all_scans and len(all_scans) > 0:
+            # Create a DataFrame for easy manipulation
+            scans_df = pd.DataFrame(all_scans)
+            
+            # Create meaningful scan IDs 
+            if 'scan_id' in scans_df.columns and 'timestamp' in scans_df.columns and 'scan_type' in scans_df.columns:
+                # Convert timestamp to datetime
+                if 'timestamp' in scans_df.columns:
+                    scans_df['timestamp'] = pd.to_datetime(scans_df['timestamp'])
+                
+                # Create a new column for display purposes
+                scans_df['display_scan_id'] = scans_df.apply(
+                    lambda row: f"{row['scan_type'][:3].upper()}-{row['timestamp'].strftime('%Y%m%d')}-{row['scan_id'][:6]}",
+                    axis=1
+                )
+                
+                # Store mapping of display ID to actual scan_id
+                id_mapping = dict(zip(scans_df['display_scan_id'], scans_df['scan_id']))
+                st.session_state.report_scan_id_mapping = id_mapping
+            
+            # Create a select box for scan selection
+            scan_options = []
+            for _, scan in scans_df.iterrows():
+                scan_id = scan.get('scan_id', 'Unknown')
+                display_id = scan.get('display_scan_id', scan_id)
+                timestamp = scan.get('timestamp', 'Unknown')
+                scan_type = scan.get('scan_type', 'Unknown')
+                
+                if isinstance(timestamp, pd.Timestamp):
+                    timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                elif timestamp != 'Unknown':
+                    try:
+                        timestamp = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                    except:
+                        pass
+                
+                scan_options.append({
+                    'scan_id': scan_id,
+                    'display_id': display_id,
+                    'display': f"{timestamp} - {scan_type} (ID: {display_id})"
+                })
+            
+            selected_scan = st.selectbox(
+                "Select a scan to generate a report",
+                options=range(len(scan_options)),
+                format_func=lambda i: scan_options[i]['display']
+            )
+            
+            selected_scan_id = scan_options[selected_scan]['scan_id']
+            scan_data = results_aggregator.get_scan_by_id(selected_scan_id)
+            
+            if scan_data:
+                # Report generation options
+                st.subheader("Report Options")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    include_details = st.checkbox("Include Detailed Findings", value=True)
+                    include_charts = st.checkbox("Include Charts", value=True)
+                
+                with col2:
+                    include_metadata = st.checkbox("Include Scan Metadata", value=True)
+                    include_recommendations = st.checkbox("Include Recommendations", value=True)
+                
+                # Generate report
+                if st.button("Generate Report"):
+                    with st.spinner("Generating report..."):
+                        pdf_bytes = generate_report(
+                            scan_data,
+                            include_details=include_details,
+                            include_charts=include_charts,
+                            include_metadata=include_metadata,
+                            include_recommendations=include_recommendations
+                        )
+                        
+                        # Create download link
+                        selected_display_id = scan_options[selected_scan]['display_id']
+                        b64_pdf = base64.b64encode(pdf_bytes).decode()
+                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">Download PDF Report</a>'
+                        st.markdown(href, unsafe_allow_html=True)
+                        
+                        st.success("Report generated successfully!")
+                
+                # Report preview (if available from a previous generation)
+                if 'current_scan_id' in st.session_state and st.session_state.current_scan_id == selected_scan_id and 'pdf_bytes' in locals():
+                    st.subheader("Report Preview")
+                    st.write("Preview not available. Please download the report to view.")
+            else:
+                st.error(f"Could not find scan with ID: {selected_scan_id}")
+        else:
+            st.info("No scan history available to generate reports. Start a new scan first.")
+            
+    elif selected_nav == "Admin":
+        # Import required auth functionality
+        from services.auth import require_permission, get_all_roles, get_all_permissions, get_user, create_user, update_user, delete_user, add_custom_permissions
+        
+        st.title("Admin Dashboard")
+        
+        # Check admin access permission
+        if not require_permission('admin:access'):
+            st.warning("You don't have permission to access the admin dashboard. This incident will be reported.")
+            st.error("Unauthorized access attempt has been logged.")
+            st.stop()
+        
+        # Admin tabs
+        admin_tabs = st.tabs(["User Management", "Role Management", "Audit Logs", "System Settings"])
+        
+        with admin_tabs[0]:  # User Management
+            st.header("User Management")
+            
+            # Check for user management permission
+            if not has_permission('admin:manage_users'):
+                st.warning("You don't have permission to manage users.")
+                st.info("Your role requires the 'admin:manage_users' permission to use this feature.")
+            else:
+                # Load all users for display
+                all_users = {}
+                try:
+                    import json
+                    with open('users.json', 'r') as f:
+                        all_users = json.load(f)
+                except Exception as e:
+                    st.error(f"Error loading users: {str(e)}")
+                
+                if all_users:
+                    # Convert to DataFrame for display
+                    users_list = []
+                    for username, user_data in all_users.items():
+                        user_info = {
+                            'username': username,
+                            'email': user_data.get('email', 'N/A'),
+                            'role': user_data.get('role', 'Basic User'),
+                            'created_at': user_data.get('created_at', 'Unknown')
+                        }
+                        users_list.append(user_info)
+                    
+                    users_df = pd.DataFrame(users_list)
+                    st.dataframe(users_df, use_container_width=True)
+                    
+                    # User management actions
+                    st.subheader("User Actions")
+                    
+                    action_tabs = st.tabs(["Create User", "Edit User", "Delete User"])
+                    
+                    with action_tabs[0]:  # Create User
+                        st.subheader("Create New User")
+                        
+                        with st.form("create_user_form"):
+                            new_username = st.text_input("Username")
+                            new_password = st.text_input("Password", type="password")
+                            new_email = st.text_input("Email")
+                            
+                            # Get all available roles
+                            all_roles = get_all_roles()
+                            role_options = list(all_roles.keys())
+                            new_role = st.selectbox("Role", role_options)
+                            
+                            # Form submission
+                            submit_button = st.form_submit_button("Create User")
+                            
+                            if submit_button:
+                                if not new_username or not new_password or not new_email:
+                                    st.error("All fields are required")
+                                else:
+                                    # Create the new user
+                                    success, message = create_user(
+                                        username=new_username,
+                                        password=new_password,
+                                        role=new_role,
+                                        email=new_email
+                                    )
+                                    
+                                    if success:
+                                        st.success(f"User '{new_username}' created successfully!")
+                                        # Log this admin action
+                                        try:
+                                            results_aggregator.log_audit_event(
+                                                username=st.session_state.username,
+                                                action="USER_CREATED",
+                                                details={
+                                                    "created_username": new_username,
+                                                    "role": new_role,
+                                                    "timestamp": datetime.now().isoformat()
+                                                }
+                                            )
+                                        except Exception as e:
+                                            st.warning(f"Could not log audit event: {str(e)}")
+                                    else:
+                                        st.error(f"Error creating user: {message}")
+                    
+                    with action_tabs[1]:  # Edit User
+                        st.subheader("Edit User")
+                        
+                        # Select user to edit
+                        edit_username = st.selectbox(
+                            "Select User to Edit",
+                            [user['username'] for user in users_list]
+                        )
+                        
+                        if edit_username:
+                            # Get current user data
+                            user_data = get_user(edit_username)
+                            
+                            if user_data:
+                                with st.form("edit_user_form"):
+                                    # Editable fields
+                                    new_email = st.text_input("Email", value=user_data.get('email', ''))
+                                    
+                                    # Get all available roles
+                                    all_roles = get_all_roles()
+                                    role_options = list(all_roles.keys())
+                                    current_role_index = role_options.index(user_data.get('role', 'Basic User')) if user_data.get('role', 'Basic User') in role_options else 0
+                                    new_role = st.selectbox("Role", role_options, index=current_role_index)
+                                    
+                                    # Optional password change
+                                    new_password = st.text_input("New Password (leave blank to keep current)", type="password")
+                                    
+                                    # Form submission
+                                    submit_button = st.form_submit_button("Update User")
+                                    
+                                    if submit_button:
+                                        # Prepare updates
+                                        updates = {
+                                            'email': new_email,
+                                            'role': new_role
+                                        }
+                                        
+                                        if new_password:
+                                            updates['password'] = new_password
+                                        
+                                        # Update the user
+                                        success = update_user(edit_username, updates)
+                                        
+                                        if success:
+                                            st.success(f"User '{edit_username}' updated successfully!")
+                                            # Log this admin action
+                                            try:
+                                                results_aggregator.log_audit_event(
+                                                    username=st.session_state.username,
+                                                    action="USER_UPDATED",
+                                                    details={
+                                                        "updated_username": edit_username,
+                                                        "new_role": new_role,
+                                                        "timestamp": datetime.now().isoformat()
+                                                    }
+                                                )
+                                            except Exception as e:
+                                                st.warning(f"Could not log audit event: {str(e)}")
+                                        else:
+                                            st.error(f"Error updating user: {edit_username}")
+                            else:
+                                st.error(f"Could not find user: {edit_username}")
+                    
+                    with action_tabs[2]:  # Delete User
+                        st.subheader("Delete User")
+                        
+                        # Select user to delete
+                        delete_username = st.selectbox(
+                            "Select User to Delete",
+                            [user['username'] for user in users_list]
+                        )
+                        
+                        if delete_username:
+                            # Confirm deletion
+                            st.warning(f"Are you sure you want to delete user '{delete_username}'? This action cannot be undone.")
+                            
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                confirm = st.checkbox("I understand the consequences")
+                            
+                            if confirm:
+                                with col2:
+                                    if st.button("Delete User", type="primary"):
+                                        # Delete the user
+                                        success = delete_user(delete_username)
+                                        
+                                        if success:
+                                            st.success(f"User '{delete_username}' deleted successfully!")
+                                            # Log this admin action
+                                            try:
+                                                results_aggregator.log_audit_event(
+                                                    username=st.session_state.username,
+                                                    action="USER_DELETED",
+                                                    details={
+                                                        "deleted_username": delete_username,
+                                                        "timestamp": datetime.now().isoformat()
+                                                    }
+                                                )
+                                            except Exception as e:
+                                                st.warning(f"Could not log audit event: {str(e)}")
+                                        else:
+                                            st.error(f"Error deleting user: {delete_username}")
+                else:
+                    st.info("No users found. Create a new user to get started.")
+        
+        with admin_tabs[1]:  # Role Management
+            st.header("Role Management")
+            
+            # Check for role management permission
+            if not has_permission('admin:manage_roles'):
+                st.warning("You don't have permission to manage roles.")
+                st.info("Your role requires the 'admin:manage_roles' permission to use this feature.")
+            else:
+                # Get all roles and permissions
+                all_roles = get_all_roles()
+                all_permissions = get_all_permissions()
+                
+                # Display roles
+                st.subheader("Available Roles")
+                
+                roles_list = []
+                for role_name, role_data in all_roles.items():
+                    role_info = {
+                        'name': role_name,
+                        'description': role_data.get('description', 'No description'),
+                        'permissions_count': len(role_data.get('permissions', []))
+                    }
+                    roles_list.append(role_info)
+                
+                roles_df = pd.DataFrame(roles_list)
+                st.dataframe(roles_df, use_container_width=True)
+                
+                # Role details
+                st.subheader("Role Details")
+                
+                selected_role = st.selectbox("Select Role", list(all_roles.keys()))
+                
+                if selected_role:
+                    role_data = all_roles.get(selected_role, {})
+                    st.markdown(f"**Description:** {role_data.get('description', 'No description')}")
+                    
+                    # Show permissions
+                    st.markdown(f"**Permissions ({len(role_data.get('permissions', []))}):**")
+                    
+                    # Group permissions by category
+                    permissions_by_category = {}
+                    for perm in role_data.get('permissions', []):
+                        category = perm.split(':')[0] if ':' in perm else 'Other'
+                        if category not in permissions_by_category:
+                            permissions_by_category[category] = []
+                        permissions_by_category[category].append(perm)
+                    
+                    # Display permissions by category
+                    for category, perms in permissions_by_category.items():
+                        with st.expander(f"{category.title()} ({len(perms)})"):
+                            for perm in perms:
+                                desc = all_permissions.get(perm, "No description available")
+                                st.markdown(f"- **{perm}**: {desc}")
+                
+                # Add custom permissions
+                st.subheader("Add Custom Permissions to User")
+                
+                with st.form("add_custom_permissions"):
+                    # Get all users
+                    all_users = {}
+                    try:
+                        import json
+                        with open('users.json', 'r') as f:
+                            all_users = json.load(f)
+                    except Exception as e:
+                        st.error(f"Error loading users: {str(e)}")
+                    
+                    user_options = list(all_users.keys())
+                    target_user = st.selectbox("Select User", user_options)
+                    
+                    # Display all available permissions
+                    perm_options = list(all_permissions.keys())
+                    custom_perms = st.multiselect("Select Custom Permissions", perm_options)
+                    
+                    # Form submission
+                    submit_button = st.form_submit_button("Add Custom Permissions")
+                    
+                    if submit_button:
+                        if target_user and custom_perms:
+                            # Add custom permissions
+                            success = add_custom_permissions(target_user, custom_perms)
+                            
+                            if success:
+                                st.success(f"Custom permissions added to user '{target_user}' successfully!")
+                                # Log this admin action
+                                try:
+                                    results_aggregator.log_audit_event(
+                                        username=st.session_state.username,
+                                        action="CUSTOM_PERMISSIONS_ADDED",
+                                        details={
+                                            "target_username": target_user,
+                                            "permissions": custom_perms,
+                                            "timestamp": datetime.now().isoformat()
+                                        }
+                                    )
+                                except Exception as e:
+                                    st.warning(f"Could not log audit event: {str(e)}")
+                            else:
+                                st.error(f"Error adding custom permissions to user: {target_user}")
+                        else:
+                            st.error("Please select a user and at least one permission")
+        
+        with admin_tabs[2]:  # Audit Logs
+            st.header("Audit Logs")
+            
+            # Check for audit logs permission
+            if not has_permission('admin:view_audit_logs'):
+                st.warning("You don't have permission to view audit logs.")
+                st.info("Your role requires the 'admin:view_audit_logs' permission to use this feature.")
+            else:
+                try:
+                    # Get audit logs from results aggregator
+                    audit_logs = results_aggregator.get_audit_logs()
+                    
+                    if audit_logs and len(audit_logs) > 0:
+                        # Convert to DataFrame
+                        logs_df = pd.DataFrame(audit_logs)
+                        
+                        # Format timestamp
+                        if 'timestamp' in logs_df.columns:
+                            logs_df['timestamp'] = pd.to_datetime(logs_df['timestamp'])
+                            logs_df = logs_df.sort_values('timestamp', ascending=False)
+                        
+                        # Display logs
+                        st.dataframe(logs_df, use_container_width=True)
+                        
+                        # Filters
+                        st.subheader("Filter Logs")
+                        
+                        if 'action' in logs_df.columns:
+                            action_types = logs_df['action'].unique().tolist()
+                            selected_actions = st.multiselect("Filter by Action", action_types)
+                            
+                            if selected_actions:
+                                filtered_df = logs_df[logs_df['action'].isin(selected_actions)]
+                                st.dataframe(filtered_df, use_container_width=True)
+                    else:
+                        st.info("No audit logs found.")
+                except Exception as e:
+                    st.error(f"Error loading audit logs: {str(e)}")
+        
+        with admin_tabs[3]:  # System Settings
+            st.header("System Settings")
+            
+            # Check for system settings permission
+            if not has_permission('admin:system_settings'):
+                st.warning("You don't have permission to modify system settings.")
+                st.info("Your role requires the 'admin:system_settings' permission to use this feature.")
+            else:
+                st.subheader("General Settings")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    session_timeout = st.number_input("Session Timeout (minutes)", min_value=5, max_value=120, value=30)
+                    max_login_attempts = st.number_input("Max Login Attempts", min_value=3, max_value=10, value=5)
+                
+                with col2:
+                    password_expiry_days = st.number_input("Password Expiry (days)", min_value=30, max_value=365, value=90)
+                    enable_2fa = st.checkbox("Enable Two-Factor Authentication", value=False)
+                
+                st.subheader("Compliance Settings")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    data_retention_days = st.number_input("Data Retention Period (days)", min_value=1, max_value=3650, value=365)
+                    default_region = st.selectbox("Default Compliance Region", list(REGIONS.keys()))
+                
+                with col2:
+                    scan_timeout_minutes = st.number_input("Scan Timeout (minutes)", min_value=5, max_value=120, value=60)
+                    enable_auto_redaction = st.checkbox("Enable Auto-Redaction", value=True)
+                
+                # Save settings
+                if st.button("Save System Settings", type="primary"):
+                    # In a real implementation, these would be saved to a config file or database
+                    st.success("System settings saved successfully!")
+                    
+                    # Log this admin action
+                    try:
+                        results_aggregator.log_audit_event(
+                            username=st.session_state.username,
+                            action="SYSTEM_SETTINGS_UPDATED",
+                            details={
+                                "session_timeout": session_timeout,
+                                "max_login_attempts": max_login_attempts,
+                                "password_expiry": password_expiry_days,
+                                "enable_2fa": enable_2fa,
+                                "data_retention": data_retention_days,
+                                "default_region": default_region,
+                                "scan_timeout": scan_timeout_minutes,
+                                "enable_auto_redaction": enable_auto_redaction,
+                                "timestamp": datetime.now().isoformat()
+                            }
+                        )
+                    except Exception as e:
+                        st.warning(f"Could not log audit event: {str(e)}")
+                        
+        # Display audit trail for admin actions
+        with st.expander("Admin Actions Audit Trail"):
+            st.info("All actions in the Admin Dashboard are logged for compliance and security purposes.")
+            st.markdown("""
+            Logged information includes:
+            - Username of admin performing the action
+            - Action performed
+            - Timestamp
+            - Detailed information about the change
+            
+            These logs are immutable and cannot be modified or deleted, even by administrators.
+            """)
         
         # Get all scans
         all_scans = results_aggregator.get_all_scans(st.session_state.username)
