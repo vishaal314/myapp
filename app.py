@@ -614,12 +614,12 @@ else:
                 permissions_by_category[category] = []
             permissions_by_category[category].append(perm)
         
-        # Display permissions by category
+        # Display permissions by category without nested expanders
         for category, perms in permissions_by_category.items():
-            with st.expander(f"{category.title()} ({len(perms)})"):
-                for perm in perms:
-                    desc = all_permissions.get(perm, "No description available")
-                    st.markdown(f"- **{perm}**: {desc}")
+            st.markdown(f"**{category.title()} ({len(perms)})**")
+            for perm in perms:
+                desc = all_permissions.get(perm, "No description available")
+                st.markdown(f"- **{perm}**: {desc}")
     
     # Membership information
     with st.sidebar.expander("Membership Benefits"):
@@ -2351,12 +2351,12 @@ else:
                             permissions_by_category[category] = []
                         permissions_by_category[category].append(perm)
                     
-                    # Display permissions by category
+                    # Display permissions by category without nested expanders
                     for category, perms in permissions_by_category.items():
-                        with st.expander(f"{category.title()} ({len(perms)})"):
-                            for perm in perms:
-                                desc = all_permissions.get(perm, "No description available")
-                                st.markdown(f"- **{perm}**: {desc}")
+                        st.markdown(f"**{category.title()} ({len(perms)})**")
+                        for perm in perms:
+                            desc = all_permissions.get(perm, "No description available")
+                            st.markdown(f"- **{perm}**: {desc}")
                 
                 # Add custom permissions
                 st.subheader("Add Custom Permissions to User")
@@ -2514,99 +2514,4 @@ else:
             
             These logs are immutable and cannot be modified or deleted, even by administrators.
             """)
-        
-        # Get all scans
-        all_scans = results_aggregator.get_all_scans(st.session_state.username)
-        
-        if all_scans and len(all_scans) > 0:
-            # Create a DataFrame for easy manipulation
-            scans_df = pd.DataFrame(all_scans)
-            
-            # Create meaningful scan IDs 
-            if 'scan_id' in scans_df.columns and 'timestamp' in scans_df.columns and 'scan_type' in scans_df.columns:
-                # Convert timestamp to datetime
-                if 'timestamp' in scans_df.columns:
-                    scans_df['timestamp'] = pd.to_datetime(scans_df['timestamp'])
-                
-                # Create a new column for display purposes
-                scans_df['display_scan_id'] = scans_df.apply(
-                    lambda row: f"{row['scan_type'][:3].upper()}-{row['timestamp'].strftime('%Y%m%d')}-{row['scan_id'][:6]}",
-                    axis=1
-                )
-                
-                # Store mapping of display ID to actual scan_id
-                id_mapping = dict(zip(scans_df['display_scan_id'], scans_df['scan_id']))
-                st.session_state.report_scan_id_mapping = id_mapping
-            
-            # Create a select box for scan selection
-            scan_options = []
-            for _, scan in scans_df.iterrows():
-                scan_id = scan.get('scan_id', 'Unknown')
-                display_id = scan.get('display_scan_id', scan_id)
-                timestamp = scan.get('timestamp', 'Unknown')
-                scan_type = scan.get('scan_type', 'Unknown')
-                
-                if isinstance(timestamp, pd.Timestamp):
-                    timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
-                elif timestamp != 'Unknown':
-                    try:
-                        timestamp = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M:%S')
-                    except:
-                        pass
-                
-                scan_options.append({
-                    'scan_id': scan_id,
-                    'display_id': display_id,
-                    'display': f"{timestamp} - {scan_type} (ID: {display_id})"
-                })
-            
-            selected_scan = st.selectbox(
-                "Select a scan to generate a report",
-                options=range(len(scan_options)),
-                format_func=lambda i: scan_options[i]['display']
-            )
-            
-            selected_scan_id = scan_options[selected_scan]['scan_id']
-            scan_data = results_aggregator.get_scan_by_id(selected_scan_id)
-            
-            if scan_data:
-                # Report generation options
-                st.subheader("Report Options")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    include_details = st.checkbox("Include Detailed Findings", value=True)
-                    include_charts = st.checkbox("Include Charts", value=True)
-                
-                with col2:
-                    include_metadata = st.checkbox("Include Scan Metadata", value=True)
-                    include_recommendations = st.checkbox("Include Recommendations", value=True)
-                
-                # Generate report
-                if st.button("Generate Report"):
-                    with st.spinner("Generating report..."):
-                        pdf_bytes = generate_report(
-                            scan_data,
-                            include_details=include_details,
-                            include_charts=include_charts,
-                            include_metadata=include_metadata,
-                            include_recommendations=include_recommendations
-                        )
-                        
-                        # Create download link
-                        selected_display_id = scan_options[selected_scan]['display_id']
-                        b64_pdf = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">Download PDF Report</a>'
-                        st.markdown(href, unsafe_allow_html=True)
-                        
-                        st.success("Report generated successfully!")
-                
-                # Report preview (if available from a previous generation)
-                if 'current_scan_id' in st.session_state and st.session_state.current_scan_id == selected_scan_id and 'pdf_bytes' in locals():
-                    st.subheader("Report Preview")
-                    st.write("Preview not available. Please download the report to view.")
-            else:
-                st.error(f"Could not find scan with ID: {selected_scan_id}")
-        else:
-            st.info("No scan history available to generate reports. Start a new scan first.")
 
