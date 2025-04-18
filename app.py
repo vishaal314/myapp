@@ -541,7 +541,16 @@ else:
     free_trial_active = free_trial_days_left > 0 and st.session_state.free_trial_scans_used < 5
     
     # Navigation 
+    # Import auth functions for permission checks
+    from services.auth import has_permission
+    
+    # Define base navigation options
     nav_options = ["New Scan", "Dashboard", "Scan History", "Reports"]
+    
+    # Add Admin section if user has admin permissions
+    if has_permission('admin:access'):
+        nav_options.append("Admin")
+    
     selected_nav = st.sidebar.radio("Navigation", nav_options)
     
     # Membership section
@@ -576,6 +585,42 @@ else:
             # Set a flag for payment flow
             st.session_state.show_membership_payment = True
             
+    # User Permissions Section
+    from services.auth import get_user_permissions, get_all_permissions, get_user, get_all_roles
+    
+    with st.sidebar.expander("Your Profile & Permissions"):
+        # Get current user data and permissions
+        current_user = get_user(st.session_state.username)
+        user_role = current_user.get('role', 'Basic User') if current_user else 'Basic User'
+        user_permissions = get_user_permissions()
+        all_permissions = get_all_permissions()
+        all_roles = get_all_roles()
+        
+        # Display current role
+        st.markdown(f"**Current Role:** {user_role}")
+        
+        # Find role description
+        role_desc = all_roles.get(user_role, {}).get('description', 'No description available')
+        st.markdown(f"*{role_desc}*")
+        
+        # Display permissions section
+        st.markdown("#### Your Permissions:")
+        
+        # Group permissions by category
+        permissions_by_category = {}
+        for perm in user_permissions:
+            category = perm.split(':')[0] if ':' in perm else 'Other'
+            if category not in permissions_by_category:
+                permissions_by_category[category] = []
+            permissions_by_category[category].append(perm)
+        
+        # Display permissions by category
+        for category, perms in permissions_by_category.items():
+            with st.expander(f"{category.title()} ({len(perms)})"):
+                for perm in perms:
+                    desc = all_permissions.get(perm, "No description available")
+                    st.markdown(f"- **{perm}**: {desc}")
+    
     # Membership information
     with st.sidebar.expander("Membership Benefits"):
         st.markdown("""
@@ -638,7 +683,16 @@ else:
             st.sidebar.error(payment_message)
     
     if selected_nav == "Dashboard":
+        # Import permission checking functionality
+        from services.auth import require_permission, has_permission
+        
         st.title("DataGuardian Pro - Compliance Dashboard")
+        
+        # Check if user has permission to view dashboard
+        if not require_permission('dashboard:view'):
+            st.warning("You don't have permission to access the dashboard. Please contact an administrator for access.")
+            st.info("Your role requires the 'dashboard:view' permission to use this feature.")
+            st.stop()
         
         # Display user information for audit
         with st.expander("User Information for Audit"):
