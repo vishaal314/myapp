@@ -555,18 +555,48 @@ else:
         # Mock payment form for membership
         with st.sidebar.form("membership_payment_form"):
             st.write("Enter Payment Details")
-            st.text_input("Card Number", value="4242 4242 4242 4242", disabled=True)
+            card_number = st.text_input("Card Number", placeholder="Enter 16-digit card number")
             col1, col2 = st.columns(2)
             with col1:
-                st.text_input("Expiry", value="12/25", disabled=True)
+                expiry = st.text_input("Expiry", placeholder="MM/YY")
             with col2:
-                st.text_input("CVC", value="123", disabled=True)
-                
+                cvc = st.text_input("CVC", placeholder="123", type="password")
+            
+            name_on_card = st.text_input("Name on Card", placeholder="Enter name on card")
+            
+            # Payment validation
+            payment_valid = False
+            payment_message = ""
+            
             # Submit button for payment
             if st.form_submit_button("Complete Purchase", type="primary"):
-                st.session_state.premium_member = True
-                st.session_state.show_membership_payment = False
-                st.rerun()
+                # Validate inputs
+                if not card_number or len(card_number.replace(" ", "")) != 16:
+                    payment_message = "Please enter a valid 16-digit card number"
+                elif not expiry or "/" not in expiry:
+                    payment_message = "Please enter a valid expiry date (MM/YY)"
+                elif not cvc or len(cvc) != 3:
+                    payment_message = "Please enter a valid 3-digit CVC"
+                elif not name_on_card:
+                    payment_message = "Please enter the name on your card"
+                else:
+                    payment_valid = True
+                    
+                if payment_valid:
+                    # Complete the purchase (simulated)
+                    st.session_state.premium_member = True
+                    st.session_state.show_membership_payment = False
+                    st.session_state.payment_confirmation = {
+                        "id": f"mem_{uuid.uuid4().hex[:8]}",
+                        "amount": membership_option.split("$")[1].split(")")[0],
+                        "status": "succeeded",
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    st.rerun()
+        
+        # Show payment error message if any
+        if 'payment_message' in locals() and payment_message:
+            st.sidebar.error(payment_message)
     
     if selected_nav == "Dashboard":
         st.title("DataGuardian Pro - Compliance Dashboard")
