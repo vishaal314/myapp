@@ -748,7 +748,9 @@ else:
                     <small>Includes commit hash, author, and last modified date for better traceability of findings.</small>
                     """, unsafe_allow_html=True)
                     
-                    with st.expander("Git History Options"):
+                    # Git History Options as regular fields instead of an expander
+                    if collect_git_metadata:
+                        st.markdown("##### Git History Options")
                         st.slider("History Depth (commits)", min_value=1, max_value=100, value=10)
                         st.checkbox("Include commit messages in analysis", value=True)
                         st.number_input("Age limit (days)", min_value=1, max_value=365, value=90)
@@ -806,8 +808,8 @@ else:
                         file_extensions.extend([".rs"])
                 
                 # Show the automatically selected extensions
-                with st.expander("Selected File Extensions"):
-                    st.write(", ".join(file_extensions))
+                st.caption("Selected File Extensions:")
+                st.code(", ".join(file_extensions), language="text")
                 
                 # Scan targets
                 scan_targets = st.multiselect(

@@ -2,9 +2,13 @@ import os
 import re
 import json
 import math
+import time
 import hashlib
+import threading
+import multiprocessing
 import subprocess
-from datetime import datetime
+import signal
+from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Set
 from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
@@ -17,7 +21,8 @@ class CodeScanner:
     
     def __init__(self, extensions: Optional[List[str]] = None, include_comments: bool = True, 
                  region: str = "Netherlands", use_entropy: bool = True, 
-                 use_git_metadata: bool = False, include_article_refs: bool = True):
+                 use_git_metadata: bool = False, include_article_refs: bool = True,
+                 max_timeout: int = 3600, checkpoint_interval: int = 300):
         """
         Initialize the code scanner with advanced detection capabilities.
         
@@ -28,7 +33,16 @@ class CodeScanner:
             use_entropy: Whether to use entropy analysis for secret detection
             use_git_metadata: Whether to collect Git metadata for findings
             include_article_refs: Whether to include regulatory article references
+            max_timeout: Maximum runtime in seconds before timeout (default: 1 hour)
+            checkpoint_interval: Interval in seconds for saving scan checkpoints (default: 5 minutes)
         """
+        # Long-running scan settings
+        self.max_timeout = max_timeout
+        self.checkpoint_interval = checkpoint_interval
+        self.start_time = None
+        self.scan_checkpoint_data = {}
+        self.is_running = False
+        self.progress_callback = None
         # Support for multiple languages
         self.extensions = extensions or [
             # Core programming languages
@@ -307,6 +321,247 @@ class CodeScanner:
                 r'facebook_client_secret'
             ]
         }
+        
+    def set_progress_callback(self, callback_function):
+        """
+        Set a callback function to report progress during long-running scans.
+        
+        Args:
+            callback_function: Function that takes (current_progress, total_files, current_file_name)
+        """
+        self.progress_callback = callback_function
+        
+    def scan_directory(self, directory_path: str, progress_callback=None, 
+                      ignore_patterns=None, max_file_size_mb=50, 
+                      continue_from_checkpoint=False) -> Dict[str, Any]:
+        """
+        Scan a directory of files with timeout protection and checkpoints.
+        
+        Args:
+            directory_path: Path to the directory to scan
+            progress_callback: Optional callback to report progress
+            ignore_patterns: List of glob patterns to ignore
+            max_file_size_mb: Max file size to scan in MB
+            continue_from_checkpoint: Whether to continue from last checkpoint if available
+            
+        Returns:
+            Dictionary containing scan results
+        """
+        if progress_callback:
+            self.progress_callback = progress_callback
+            
+        # Setup for long-running scan
+        self.start_time = datetime.now()
+        self.is_running = True
+        scan_id = hashlib.md5(f"{directory_path}:{self.start_time.isoformat()}".encode()).hexdigest()[:10]
+        
+        # Prepare checkpoint file path
+        checkpoint_path = f"scan_checkpoint_{scan_id}.json"
+        
+        # Try to restore from checkpoint if requested
+        if continue_from_checkpoint and os.path.exists(checkpoint_path):
+            try:
+                with open(checkpoint_path, 'r') as f:
+                    self.scan_checkpoint_data = json.load(f)
+                print(f"Restored scan from checkpoint, {len(self.scan_checkpoint_data.get('completed_files', []))} files already processed")
+            except Exception as e:
+                print(f"Failed to load checkpoint: {str(e)}")
+                self.scan_checkpoint_data = {
+                    'scan_id': scan_id,
+                    'start_time': self.start_time.isoformat(),
+                    'directory': directory_path,
+                    'completed_files': [],
+                    'findings': [],
+                    'stats': {'files_scanned': 0, 'files_skipped': 0, 'total_findings': 0}
+                }
+        else:
+            # Initialize checkpoint data
+            self.scan_checkpoint_data = {
+                'scan_id': scan_id,
+                'start_time': self.start_time.isoformat(),
+                'directory': directory_path,
+                'completed_files': [],
+                'findings': [],
+                'stats': {'files_scanned': 0, 'files_skipped': 0, 'total_findings': 0}
+            }
+        
+        # Compile ignore patterns
+        ignore_regexes = []
+        if ignore_patterns:
+            for pattern in ignore_patterns:
+                # Convert glob pattern to regex
+                regex_pattern = pattern.replace('.', '\\.').replace('*', '.*').replace('?', '.?')
+                if '/' in pattern:
+                    # Path pattern
+                    ignore_regexes.append(re.compile(regex_pattern))
+                else:
+                    # File pattern
+                    ignore_regexes.append(re.compile(f".*{regex_pattern}$"))
+        
+        # Walk directory and get all files
+        all_files = []
+        for root, _, files in os.walk(directory_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                rel_path = os.path.relpath(file_path, directory_path)
+                
+                # Skip already processed files
+                if rel_path in self.scan_checkpoint_data['completed_files']:
+                    continue
+                
+                # Check if should ignore
+                skip = False
+                for ignore_regex in ignore_regexes:
+                    if ignore_regex.match(rel_path):
+                        skip = True
+                        break
+                
+                if skip:
+                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
+                    continue
+                
+                # Check file size
+                try:
+                    if os.path.getsize(file_path) > max_file_size_mb * 1024 * 1024:
+                        self.scan_checkpoint_data['stats']['files_skipped'] += 1
+                        continue
+                except:
+                    # If we can't get file size, skip
+                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
+                    continue
+                
+                all_files.append(file_path)
+        
+        # Set up multiprocessing pool for parallel scanning
+        num_workers = max(1, multiprocessing.cpu_count() - 1)  # Leave one CPU free
+        
+        # Use threading for I/O bound tasks
+        with multiprocessing.Pool(processes=num_workers) as pool:
+            # Process files in batches to allow checkpointing
+            batch_size = 50  # Adjust this based on avg. file size and memory constraints
+            
+            for i in range(0, len(all_files), batch_size):
+                batch = all_files[i:i+batch_size]
+                
+                # Check if timeout reached
+                elapsed_time = (datetime.now() - self.start_time).total_seconds()
+                if elapsed_time >= self.max_timeout:
+                    print(f"Scan timeout reached after {elapsed_time:.1f} seconds. Saving checkpoint.")
+                    break
+                
+                # Process batch of files
+                results = []
+                for j, file_path in enumerate(batch):
+                    # Report progress
+                    if self.progress_callback:
+                        progress = i + j
+                        total = len(all_files)
+                        file_name = os.path.basename(file_path)
+                        self.progress_callback(progress, total, file_name)
+                    
+                    # Scan file with timeout protection
+                    try:
+                        result = self._scan_file_with_timeout(file_path)
+                        results.append(result)
+                        
+                        # Mark as completed
+                        rel_path = os.path.relpath(file_path, directory_path)
+                        self.scan_checkpoint_data['completed_files'].append(rel_path)
+                        
+                        # Update stats
+                        self.scan_checkpoint_data['stats']['files_scanned'] += 1
+                        if result.get('pii_count', 0) > 0:
+                            self.scan_checkpoint_data['findings'].append(result)
+                            self.scan_checkpoint_data['stats']['total_findings'] += result.get('pii_count', 0)
+                    except Exception as e:
+                        print(f"Error scanning {file_path}: {str(e)}")
+                
+                # Save checkpoint after each batch
+                if (datetime.now() - self.start_time).total_seconds() % self.checkpoint_interval < batch_size:
+                    try:
+                        with open(checkpoint_path, 'w') as f:
+                            json.dump(self.scan_checkpoint_data, f)
+                        print(f"Saved checkpoint at {datetime.now().isoformat()}")
+                    except Exception as e:
+                        print(f"Failed to save checkpoint: {str(e)}")
+        
+        # Mark scan as complete
+        self.is_running = False
+        
+        # Create final result
+        result = {
+            'scan_id': scan_id,
+            'scan_type': 'directory',
+            'directory': directory_path,
+            'start_time': self.start_time.isoformat(),
+            'end_time': datetime.now().isoformat(),
+            'duration_seconds': (datetime.now() - self.start_time).total_seconds(),
+            'files_scanned': self.scan_checkpoint_data['stats']['files_scanned'],
+            'files_skipped': self.scan_checkpoint_data['stats']['files_skipped'],
+            'total_findings': self.scan_checkpoint_data['stats']['total_findings'],
+            'findings': self.scan_checkpoint_data['findings'],
+            'status': 'completed' if len(all_files) == len(self.scan_checkpoint_data['completed_files']) else 'partial',
+            'completion_percentage': int(100 * len(self.scan_checkpoint_data['completed_files']) / max(1, len(all_files)))
+        }
+        
+        # Clean up checkpoint file if scan completed successfully
+        if result['status'] == 'completed' and os.path.exists(checkpoint_path):
+            try:
+                os.remove(checkpoint_path)
+            except:
+                pass
+        
+        return result
+    
+    def _scan_file_with_timeout(self, file_path: str, timeout=60) -> Dict[str, Any]:
+        """
+        Scan a file with a timeout to prevent hanging.
+        
+        Args:
+            file_path: Path to the file to scan
+            timeout: Timeout in seconds
+            
+        Returns:
+            Scan result dictionary
+        """
+        # Check elapsed time for overall scan timeout
+        if self.start_time:
+            elapsed_time = (datetime.now() - self.start_time).total_seconds()
+            if elapsed_time >= self.max_timeout:
+                raise TimeoutError(f"Overall scan timeout reached after {elapsed_time:.1f} seconds")
+        
+        # Create a event for timeout notification
+        event = threading.Event()
+        result = {"status": "timeout", "file_name": os.path.basename(file_path)}
+        
+        def scan_target():
+            nonlocal result
+            try:
+                result = self.scan_file(file_path)
+            except Exception as e:
+                result = {
+                    "status": "error",
+                    "error": str(e),
+                    "file_name": os.path.basename(file_path)
+                }
+            finally:
+                event.set()
+        
+        # Start scan in a separate thread
+        scan_thread = threading.Thread(target=scan_target)
+        scan_thread.daemon = True
+        scan_thread.start()
+        
+        # Wait for scan to complete or timeout
+        if not event.wait(timeout):
+            # Timeout occurred
+            return {
+                "status": "timeout",
+                "file_name": os.path.basename(file_path),
+                "error": f"Scan timed out after {timeout} seconds"
+            }
+        
+        return result
         
     def scan_file(self, file_path: str) -> Dict[str, Any]:
         """
