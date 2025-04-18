@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.express as px
 import os
 import uuid
+import random
+import string
 from datetime import datetime
 import json
 import base64
@@ -1413,8 +1415,15 @@ else:
             # If either free trial is active or payment is successful, proceed with the scan
             if proceed_with_scan and st.session_state.payment_successful:
                 # Generate a unique scan ID if not already set
+                # Generate a more meaningful scan ID
+                scan_date = datetime.now().strftime('%Y%m%d')
+                scan_type_prefix = scan_type[:3].upper()
+                # Use a shorter random component
+                random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+                
                 if not st.session_state.current_scan_id:
-                    scan_id = str(uuid.uuid4())
+                    # Format: COD-20230815-a1b2c3
+                    scan_id = f"{scan_type_prefix}-{scan_date}-{random_suffix}"
                     st.session_state.current_scan_id = scan_id
                 else:
                     scan_id = st.session_state.current_scan_id
@@ -1469,41 +1478,63 @@ else:
                         f.write(f"Scan type: {scan_type}\nRegion: {region}\nTimestamp: {datetime.now().isoformat()}")
                     file_paths = [dummy_file]
                 
-                # Initialize scanner based on type
-                # Implement mock scanning functionality for all scan types
-                scanner_mock = {
-                    'scan_file': lambda file_path: {
-                        'file_name': os.path.basename(file_path),
-                        'file_size': os.path.getsize(file_path),
-                        'scan_timestamp': datetime.now().isoformat(),
-                        'pii_found': [
-                            {
-                                'type': 'EMAIL',
-                                'value': '[REDACTED EMAIL]',
-                                'location': 'Line 42',
-                                'risk_level': 'Medium',
-                                'reason': 'Email addresses are personal identifiers under GDPR'
-                            },
-                            {
-                                'type': 'CREDIT_CARD',
-                                'value': '[REDACTED CREDIT CARD]',
-                                'location': 'Line 78',
-                                'risk_level': 'High',
-                                'reason': 'Financial information requires special protection under GDPR'
-                            },
-                            {
-                                'type': 'PHONE',
-                                'value': '[REDACTED PHONE]',
-                                'location': 'Line 125',
-                                'risk_level': 'Low',
-                                'reason': 'Phone numbers are personal identifiers under GDPR'
-                            }
-                        ]
+                # Initialize actual scanner based on scan type
+                if scan_type == "Code Scan":
+                    # Use the real code scanner with long-running protection
+                    file_extensions = [".py", ".js", ".java", ".tf", ".yaml", ".yml"]  # Default extensions
+                    
+                    # Create scanner with long-running scan resilience
+                    scanner = CodeScanner(
+                        extensions=file_extensions,
+                        include_comments=True,
+                        region=region,
+                        use_entropy=True,
+                        use_git_metadata=True,
+                        include_article_refs=True,
+                        max_timeout=3600,  # 1 hour maximum timeout
+                        checkpoint_interval=300  # Save checkpoint every 5 minutes
+                    )
+                    
+                    # Set up progress reporting callback
+                    def update_progress(current, total, current_file):
+                        progress = 0.5 + (current / total / 2)  # Scale to 50%-100% range
+                        progress_bar.progress(min(progress, 1.0))
+                        status_text.text(f"Scanning file {current}/{total}: {current_file}")
+                    
+                    scanner.set_progress_callback(update_progress)
+                else:
+                    # For other scan types, use mock implementation
+                    scanner_mock = {
+                        'scan_file': lambda file_path: {
+                            'file_name': os.path.basename(file_path),
+                            'file_size': os.path.getsize(file_path),
+                            'scan_timestamp': datetime.now().isoformat(),
+                            'pii_found': [
+                                {
+                                    'type': 'EMAIL',
+                                    'value': '[REDACTED EMAIL]',
+                                    'location': 'Line 42',
+                                    'risk_level': 'Medium',
+                                    'reason': 'Email addresses are personal identifiers under GDPR'
+                                },
+                                {
+                                    'type': 'CREDIT_CARD',
+                                    'value': '[REDACTED CREDIT CARD]',
+                                    'location': 'Line 78',
+                                    'risk_level': 'High',
+                                    'reason': 'Financial information requires special protection under GDPR'
+                                },
+                                {
+                                    'type': 'PHONE',
+                                    'value': '[REDACTED PHONE]',
+                                    'location': 'Line 125',
+                                    'risk_level': 'Low',
+                                    'reason': 'Phone numbers are personal identifiers under GDPR'
+                                }
+                            ]
+                        }
                     }
-                }
-                
-                # Always set scanner to our mock implementation to ensure all scan types work
-                scanner = scanner_mock
+                    scanner = scanner_mock
                 
                 # Log the scan attempt with user details
                 try:
@@ -1528,19 +1559,68 @@ else:
                 st.session_state.payment_successful = False
                 st.session_state.payment_details = None
                 
-                # Run scan
+                # Run scan based on scanner type
                 scan_results = []
-                for i, file_path in enumerate(file_paths):
-                    progress = 0.5 + (i + 1) / (2 * len(file_paths))
-                    progress_bar.progress(progress)
-                    status_text.text(f"Scanning file {i+1}/{len(file_paths)}: {os.path.basename(file_path)}")
-                    
+                
+                if scan_type == "Code Scan":
+                    # For code scan, use the directory-level scan with resilience features
                     try:
-                        # Call scan_file method directly on the dictionary object
-                        result = scanner_mock['scan_file'](file_path)
-                        scan_results.append(result)
+                        # Check if we have a directory of files or individual files
+                        if len(file_paths) == 1 and os.path.isdir(file_paths[0]):
+                            # Scan entire directory with resilient method
+                            directory_path = file_paths[0]
+                            status_text.text(f"Starting directory scan of: {directory_path}")
+                            
+                            # Configure ignore patterns
+                            ignore_patterns = [
+                                "node_modules/**", 
+                                "**/.git/**", 
+                                "**/__pycache__/**",
+                                "**/venv/**",
+                                "**/vendor/**",
+                                "**/dist/**",
+                                "**/build/**"
+                            ]
+                            
+                            # Run the resilient scan with checkpointing
+                            result = scanner.scan_directory(
+                                directory_path=directory_path,
+                                progress_callback=update_progress,
+                                ignore_patterns=ignore_patterns,
+                                max_file_size_mb=50,
+                                continue_from_checkpoint=True
+                            )
+                            
+                            # Store directory scan result
+                            scan_results = result.get('findings', [])
+                            
+                            # Show status update
+                            status_text.text(f"Completed scan with {result.get('completion_percentage', 0)}% coverage.")
+                        else:
+                            # Scan individual files
+                            for i, file_path in enumerate(file_paths):
+                                progress = 0.5 + (i + 1) / (2 * len(file_paths))
+                                progress_bar.progress(progress)
+                                status_text.text(f"Scanning file {i+1}/{len(file_paths)}: {os.path.basename(file_path)}")
+                                
+                                # Use timeout-protected scan
+                                result = scanner._scan_file_with_timeout(file_path)
+                                scan_results.append(result)
                     except Exception as e:
-                        st.error(f"Error scanning {os.path.basename(file_path)}: {str(e)}")
+                        st.error(f"Error during code scan: {str(e)}")
+                else:
+                    # For other scan types, use the mock scanner
+                    for i, file_path in enumerate(file_paths):
+                        progress = 0.5 + (i + 1) / (2 * len(file_paths))
+                        progress_bar.progress(progress)
+                        status_text.text(f"Scanning file {i+1}/{len(file_paths)}: {os.path.basename(file_path)}")
+                        
+                        try:
+                            # Call scan_file method directly on the dictionary object
+                            result = scanner_mock['scan_file'](file_path)
+                            scan_results.append(result)
+                        except Exception as e:
+                            st.error(f"Error scanning {os.path.basename(file_path)}: {str(e)}")
                 
                 # Aggregate and save results
                 timestamp = datetime.now().isoformat()
