@@ -1007,23 +1007,23 @@ else:
                 exit_on_failure = st.checkbox("Exit on critical findings", value=False)
                 st.markdown("<small>Causes pipeline failure when critical issues are found</small>", unsafe_allow_html=True)
                 
-                # Custom rules
-                with st.expander("Custom Rules Configuration"):
-                    rule_source = st.radio(
-                        "Custom Rules Source",
-                        ["Upload File", "Enter Manually", "Git Repository"],
-                        index=1
-                    )
-                    
-                    if rule_source == "Upload File":
-                        st.file_uploader("Upload custom rules file", type=["yaml", "yml"], key="custom_rules_file")
-                    elif rule_source == "Enter Manually":
-                        st.text_area("Custom Semgrep Rules (YAML format)", 
-                                   height=150,
-                                   placeholder="rules:\n  - id: hardcoded-password\n    pattern: $X = \"password\"\n    message: Hardcoded password\n    severity: WARNING")
-                    elif rule_source == "Git Repository":
-                        st.text_input("Rules Git Repository URL", placeholder="https://github.com/username/custom-rules")
-                        st.text_input("Repository Path", placeholder="path/to/rules", value="rules")
+                # Custom rules (without using expander to avoid nesting issues)
+                st.subheader("Custom Rules Configuration")
+                rule_source = st.radio(
+                    "Custom Rules Source",
+                    ["Upload File", "Enter Manually", "Git Repository"],
+                    index=1
+                )
+                
+                if rule_source == "Upload File":
+                    st.file_uploader("Upload custom rules file", type=["yaml", "yml"], key="custom_rules_file")
+                elif rule_source == "Enter Manually":
+                    st.text_area("Custom Semgrep Rules (YAML format)", 
+                               height=150,
+                               placeholder="rules:\n  - id: hardcoded-password\n    pattern: $X = \"password\"\n    message: Hardcoded password\n    severity: WARNING")
+                elif rule_source == "Git Repository":
+                    st.text_input("Rules Git Repository URL", placeholder="https://github.com/username/custom-rules")
+                    st.text_input("Repository Path", placeholder="path/to/rules", value="rules")
                         
                     # Custom presidio recognizers
                     st.checkbox("Use custom Presidio recognizers", value=False)
@@ -1821,12 +1821,12 @@ else:
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
-        st.title("Scan History")
+        st.title("Scan History & Analytics")
         
         # Check if user has permission to view scan history
-        if not require_permission('scan:view'):
+        if not require_permission('history:view'):
             st.warning("You don't have permission to view scan history. Please contact an administrator for access.")
-            st.info("Your role requires the 'scan:view' permission to use this feature.")
+            st.info("Your role requires the 'history:view' permission to use this feature.")
             st.stop()
         
         # Get all scans for the user
@@ -1868,20 +1868,111 @@ else:
             }
             display_df.rename(columns=column_map, inplace=True)
             
-            # Add styling to the dataframe
-            def highlight_risk(val):
-                if isinstance(val, (int, float)):
-                    if val > 10:
-                        return 'background-color: #FFCCCB'  # Light red for high risk
-                    elif val > 5:
-                        return 'background-color: #FFE5B4'  # Light orange for medium risk
-                return ''
+            # Add some key metrics at the top
+            total_scans = len(all_scans)
+            total_pii = sum(scan.get('total_pii_found', 0) for scan in all_scans)
+            high_risk = sum(scan.get('high_risk_count', 0) for scan in all_scans)
             
-            # Apply styling
-            styled_df = display_df.style.applymap(highlight_risk, subset=['High Risk Items', 'Total PII Found'])
+            # Display metrics in a dashboard-like layout
+            st.markdown("### Compliance Overview")
+            metric_col1, metric_col2, metric_col3 = st.columns(3)
             
-            # Display scan history table with styled data
-            st.dataframe(styled_df, use_container_width=True)
+            metric_col1.markdown(f"""
+            <div style="padding: 10px; background-color: #f0f5ff; border-radius: 5px; text-align: center;">
+                <h4 style="margin: 0;">Total Scans</h4>
+                <p style="font-size: 28px; font-weight: bold; margin: 0;">{total_scans}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            metric_col2.markdown(f"""
+            <div style="padding: 10px; background-color: #f0fff0; border-radius: 5px; text-align: center;">
+                <h4 style="margin: 0;">Total PII Found</h4>
+                <p style="font-size: 28px; font-weight: bold; margin: 0;">{total_pii}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            metric_col3.markdown(f"""
+            <div style="padding: 10px; background-color: #fff0f0; border-radius: 5px; text-align: center;">
+                <h4 style="margin: 0;">High Risk Items</h4>
+                <p style="font-size: 28px; font-weight: bold; margin: 0;">{high_risk}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Add visualization tabs
+            st.markdown("### Scan Analysis")
+            viz_tabs = st.tabs(["Timeline", "Risk Analysis", "Scan History"])
+            
+            with viz_tabs[0]:  # Timeline
+                if 'timestamp' in scans_df.columns:
+                    # Create a date field
+                    scans_df['date'] = scans_df['timestamp'].dt.date
+                    
+                    # Group by date and count
+                    date_counts = scans_df.groupby('date').size().reset_index(name='count')
+                    
+                    # Create timeline chart
+                    fig = px.line(date_counts, x='date', y='count', 
+                                  title="Scan Activity Over Time",
+                                  labels={'count': 'Number of Scans', 'date': 'Date'})
+                    
+                    fig.update_layout(margin=dict(l=20, r=20, t=30, b=20))
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Add trend analysis
+                    if len(date_counts) > 1:
+                        st.info("📈 Scan activity trend analysis shows your team is actively monitoring for compliance issues.")
+                else:
+                    st.info("Timeline data not available.")
+            
+            with viz_tabs[1]:  # Risk Analysis
+                # Collect total counts by risk level
+                risk_data = {
+                    "Risk Level": ["High", "Medium", "Low"],
+                    "Count": [
+                        sum(scan.get('high_risk_count', 0) for scan in all_scans),
+                        sum(scan.get('medium_risk_count', 0) for scan in all_scans),
+                        sum(scan.get('low_risk_count', 0) for scan in all_scans)
+                    ]
+                }
+                risk_df = pd.DataFrame(risk_data)
+                
+                # Create donut chart
+                fig = px.pie(risk_df, values='Count', names='Risk Level', hole=0.4,
+                           title="Risk Level Distribution",
+                           color='Risk Level',
+                           color_discrete_map={'High': '#ff4136', 'Medium': '#ff851b', 'Low': '#2ecc40'})
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Add PII types aggregated from all scans
+                pii_counts = {}
+                for scan in all_scans:
+                    if 'pii_types' in scan and scan['pii_types']:
+                        for pii_type, count in scan['pii_types'].items():
+                            pii_counts[pii_type] = pii_counts.get(pii_type, 0) + count
+                
+                if pii_counts:
+                    pii_df = pd.DataFrame(list(pii_counts.items()), columns=['PII Type', 'Count'])
+                    pii_df = pii_df.sort_values('Count', ascending=False)
+                    
+                    fig = px.bar(pii_df, x='PII Type', y='Count', title="Most Common PII Types Found",
+                                color='Count', color_continuous_scale='Blues')
+                    st.plotly_chart(fig, use_container_width=True)
+            
+            with viz_tabs[2]:  # Scan History Table
+                # Add styling to the dataframe
+                def highlight_risk(val):
+                    if isinstance(val, (int, float)):
+                        if val > 10:
+                            return 'background-color: #FFCCCB'  # Light red for high risk
+                        elif val > 5:
+                            return 'background-color: #FFE5B4'  # Light orange for medium risk
+                    return ''
+                
+                # Apply styling
+                styled_df = display_df.style.applymap(highlight_risk, subset=['High Risk Items', 'Total PII Found'])
+                
+                # Display scan history table with styled data
+                st.dataframe(styled_df, use_container_width=True)
             
             # Allow user to select a scan to view details
             selected_display_id = st.selectbox(
