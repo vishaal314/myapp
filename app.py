@@ -740,10 +740,19 @@ else:
             st.info("No scan data available yet. Start a new scan to see results.")
     
     elif selected_nav == "New Scan":
+        # Import permission checking functionality
+        from services.auth import require_permission, has_permission
+        
         st.title("Start a New DataGuardian Pro Scan")
         
+        # Check if user has permission to create scans
+        if not require_permission('scan:create'):
+            st.warning("You don't have permission to create new scans. Please contact an administrator for access.")
+            st.info("Your role requires the 'scan:create' permission to use this feature.")
+            st.stop()
+        
         # Scan configuration form - expanded with all scanner types
-        scan_type = st.selectbox("Scan Type", [
+        scan_type_options = [
             "Code Scan", 
             "Blob Scan", 
             "Image Scan", 
@@ -753,7 +762,37 @@ else:
             "Sustainability Scan",
             "AI Model Scan",
             "SOC2 Scan"
-        ])
+        ]
+        
+        # Add premium tag to premium features
+        if not has_permission('scan:premium'):
+            scan_type_options_with_labels = []
+            premium_scans = ["Image Scan", "API Scan", "Sustainability Scan", "AI Model Scan", "SOC2 Scan"]
+            
+            for option in scan_type_options:
+                if option in premium_scans:
+                    scan_type_options_with_labels.append(f"{option} 💎")
+                else:
+                    scan_type_options_with_labels.append(option)
+                    
+            scan_type = st.selectbox("Scan Type", scan_type_options_with_labels)
+            # Remove the premium tag for processing
+            scan_type = scan_type.replace(" 💎", "")
+            
+            # Show premium feature message if needed
+            if scan_type in premium_scans:
+                st.warning("This is a premium scan type. Please upgrade your membership to use this feature.")
+                with st.expander("Premium Feature Details"):
+                    st.markdown("""
+                    Premium scan types provide advanced detection capabilities and comprehensive reporting.
+                    Upgrade your membership to access all premium features.
+                    """)
+                    if st.button("View Upgrade Options"):
+                        st.session_state.selected_nav = "Membership"
+                        st.rerun()
+        else:
+            scan_type = st.selectbox("Scan Type", scan_type_options)
+        
         region = st.selectbox("Region", list(REGIONS.keys()))
         
         # Additional configurations - customized for each scan type
@@ -1725,7 +1764,16 @@ else:
                 st.info("Navigate to 'Scan History' to view detailed results")
         
     elif selected_nav == "Scan History":
+        # Import permission checking functionality
+        from services.auth import require_permission, has_permission
+        
         st.title("Scan History")
+        
+        # Check if user has permission to view scan history
+        if not require_permission('scan:view'):
+            st.warning("You don't have permission to view scan history. Please contact an administrator for access.")
+            st.info("Your role requires the 'scan:view' permission to use this feature.")
+            st.stop()
         
         # Get all scans for the user
         all_scans = results_aggregator.get_all_scans(st.session_state.username)
@@ -1893,7 +1941,16 @@ else:
             st.info("No scan history available. Start a new scan to see results here.")
     
     elif selected_nav == "Reports":
+        # Import permission checking functionality
+        from services.auth import require_permission, has_permission
+        
         st.title("GDPR Compliance Reports")
+        
+        # Check if user has permission to view reports
+        if not require_permission('report:view'):
+            st.warning("You don't have permission to access reports. Please contact an administrator for access.")
+            st.info("Your role requires the 'report:view' permission to use this feature.")
+            st.stop()
         
         # Get all scans
         all_scans = results_aggregator.get_all_scans(st.session_state.username)
