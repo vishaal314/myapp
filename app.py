@@ -505,6 +505,69 @@ else:
     nav_options = ["New Scan", "Dashboard", "Scan History", "Reports"]
     selected_nav = st.sidebar.radio("Navigation", nav_options)
     
+    # Membership section
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Membership Options")
+    
+    # Display current membership status
+    if 'premium_member' not in st.session_state:
+        st.session_state.premium_member = False
+        
+    membership_status = "Premium Member ✓" if st.session_state.premium_member else "Free Trial"
+    membership_expiry = "Unlimited" if st.session_state.premium_member else f"{free_trial_days_left} days left"
+    
+    # Display membership info
+    st.sidebar.markdown(f"""
+    <div style="padding: 10px; background-color: {'#e6f7e6' if st.session_state.premium_member else '#f7f7e6'}; border-radius: 5px; margin-bottom: 15px;">
+        <h4 style="margin: 0; color: {'#2e7d32' if st.session_state.premium_member else '#7d6c2e'};">{membership_status}</h4>
+        <p><strong>Status:</strong> {'Active' if st.session_state.premium_member or free_trial_active else 'Expired'}</p>
+        <p><strong>Expires:</strong> {membership_expiry}</p>
+        <p><strong>Scans Used:</strong> {st.session_state.free_trial_scans_used}/5 (Free Trial)</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Membership purchase options
+    if not st.session_state.premium_member:
+        membership_option = st.sidebar.selectbox(
+            "Select Membership Plan", 
+            ["Monthly ($29.99)", "Quarterly ($79.99)", "Annual ($299.99)"]
+        )
+        
+        if st.sidebar.button("Upgrade to Premium", type="primary"):
+            # Set a flag for payment flow
+            st.session_state.show_membership_payment = True
+            
+    # Membership information
+    with st.sidebar.expander("Membership Benefits"):
+        st.markdown("""
+        - **Unlimited scans** across all scan types
+        - **Priority support** for compliance issues
+        - **Advanced reporting** with recommendations
+        - **API access** for automated scanning
+        - **Team collaboration** features
+        """)
+            
+    # Handle membership payment display
+    if 'show_membership_payment' in st.session_state and st.session_state.show_membership_payment:
+        st.sidebar.markdown("---")
+        st.sidebar.subheader("Complete Membership Purchase")
+        
+        # Mock payment form for membership
+        with st.sidebar.form("membership_payment_form"):
+            st.write("Enter Payment Details")
+            st.text_input("Card Number", value="4242 4242 4242 4242", disabled=True)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.text_input("Expiry", value="12/25", disabled=True)
+            with col2:
+                st.text_input("CVC", value="123", disabled=True)
+                
+            # Submit button for payment
+            if st.form_submit_button("Complete Purchase", type="primary"):
+                st.session_state.premium_member = True
+                st.session_state.show_membership_payment = False
+                st.rerun()
+    
     if selected_nav == "Dashboard":
         st.title("DataGuardian Pro - Compliance Dashboard")
         
@@ -1366,7 +1429,11 @@ else:
                 progress_bar.progress(1.0)
                 status_text.text("Scan completed!")
                 
-                st.success(f"Scan completed successfully! Scan ID: {scan_id}")
+                # Create a meaningful scan ID for display
+                scan_date = datetime.now().strftime('%Y%m%d')
+                display_scan_id = f"{scan_type[:3].upper()}-{scan_date}-{scan_id[:6]}"
+                
+                st.success(f"Scan completed successfully! Scan ID: {display_scan_id}")
                 st.info("Navigate to 'Scan History' to view detailed results")
         
     elif selected_nav == "Scan History":
@@ -1382,14 +1449,26 @@ else:
                 scans_df['timestamp'] = pd.to_datetime(scans_df['timestamp'])
                 scans_df = scans_df.sort_values('timestamp', ascending=False)
             
+            # Create meaningful scan IDs 
+            if 'scan_id' in scans_df.columns:
+                # Create a new column for display purposes
+                scans_df['display_scan_id'] = scans_df.apply(
+                    lambda row: f"{row['scan_type'][:3].upper()}-{row['timestamp'].strftime('%Y%m%d')}-{row['scan_id'][:6]}",
+                    axis=1
+                )
+            
             # Select columns to display
-            display_cols = ['scan_id', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count']
+            display_cols = ['display_scan_id', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count']
             display_cols = [col for col in display_cols if col in scans_df.columns]
+            
+            # Store mapping of display ID to actual scan_id
+            id_mapping = dict(zip(scans_df['display_scan_id'], scans_df['scan_id']))
+            st.session_state.scan_id_mapping = id_mapping
             
             # Rename columns for better display
             display_df = scans_df[display_cols].copy()
             column_map = {
-                'scan_id': 'Scan ID',
+                'display_scan_id': 'Scan ID',
                 'timestamp': 'Date & Time',
                 'scan_type': 'Scan Type',
                 'region': 'Region',
@@ -1399,22 +1478,37 @@ else:
             }
             display_df.rename(columns=column_map, inplace=True)
             
-            # Display scan history table
-            st.dataframe(display_df, use_container_width=True)
+            # Add styling to the dataframe
+            def highlight_risk(val):
+                if isinstance(val, (int, float)):
+                    if val > 10:
+                        return 'background-color: #FFCCCB'  # Light red for high risk
+                    elif val > 5:
+                        return 'background-color: #FFE5B4'  # Light orange for medium risk
+                return ''
+            
+            # Apply styling
+            styled_df = display_df.style.applymap(highlight_risk, subset=['High Risk Items', 'Total PII Found'])
+            
+            # Display scan history table with styled data
+            st.dataframe(styled_df, use_container_width=True)
             
             # Allow user to select a scan to view details
-            selected_scan_id = st.selectbox(
+            selected_display_id = st.selectbox(
                 "Select a scan to view details",
-                options=scans_df['scan_id'].tolist(),
-                format_func=lambda x: f"{x} - {scans_df[scans_df['scan_id']==x]['timestamp'].iloc[0]} ({scans_df[scans_df['scan_id']==x]['scan_type'].iloc[0]})"
+                options=scans_df['display_scan_id'].tolist(),
+                format_func=lambda x: f"{x} - {scans_df[scans_df['display_scan_id']==x]['timestamp'].iloc[0].strftime('%b %d, %Y %H:%M')}"
             )
+            
+            # Convert display ID back to actual scan_id
+            selected_scan_id = id_mapping.get(selected_display_id)
             
             if selected_scan_id:
                 # Get the selected scan details
                 selected_scan = results_aggregator.get_scan_by_id(selected_scan_id)
                 
                 if selected_scan:
-                    st.subheader(f"Scan Details: {selected_scan_id}")
+                    st.subheader(f"Scan Details: {selected_display_id}")
                     
                     # Display metadata
                     col1, col2, col3 = st.columns(3)
@@ -1505,7 +1599,7 @@ else:
                         
                         # Create download link
                         b64_pdf = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_scan_id}.pdf">Download PDF Report</a>'
+                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">Download PDF Report</a>'
                         st.markdown(href, unsafe_allow_html=True)
         else:
             st.info("No scan history available. Start a new scan to see results here.")
@@ -1517,14 +1611,36 @@ else:
         all_scans = results_aggregator.get_all_scans(st.session_state.username)
         
         if all_scans and len(all_scans) > 0:
+            # Create a DataFrame for easy manipulation
+            scans_df = pd.DataFrame(all_scans)
+            
+            # Create meaningful scan IDs 
+            if 'scan_id' in scans_df.columns and 'timestamp' in scans_df.columns and 'scan_type' in scans_df.columns:
+                # Convert timestamp to datetime
+                if 'timestamp' in scans_df.columns:
+                    scans_df['timestamp'] = pd.to_datetime(scans_df['timestamp'])
+                
+                # Create a new column for display purposes
+                scans_df['display_scan_id'] = scans_df.apply(
+                    lambda row: f"{row['scan_type'][:3].upper()}-{row['timestamp'].strftime('%Y%m%d')}-{row['scan_id'][:6]}",
+                    axis=1
+                )
+                
+                # Store mapping of display ID to actual scan_id
+                id_mapping = dict(zip(scans_df['display_scan_id'], scans_df['scan_id']))
+                st.session_state.report_scan_id_mapping = id_mapping
+            
             # Create a select box for scan selection
             scan_options = []
-            for scan in all_scans:
+            for _, scan in scans_df.iterrows():
                 scan_id = scan.get('scan_id', 'Unknown')
+                display_id = scan.get('display_scan_id', scan_id)
                 timestamp = scan.get('timestamp', 'Unknown')
                 scan_type = scan.get('scan_type', 'Unknown')
                 
-                if timestamp != 'Unknown':
+                if isinstance(timestamp, pd.Timestamp):
+                    timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                elif timestamp != 'Unknown':
                     try:
                         timestamp = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M:%S')
                     except:
@@ -1532,7 +1648,8 @@ else:
                 
                 scan_options.append({
                     'scan_id': scan_id,
-                    'display': f"{timestamp} - {scan_type} (ID: {scan_id})"
+                    'display_id': display_id,
+                    'display': f"{timestamp} - {scan_type} (ID: {display_id})"
                 })
             
             selected_scan = st.selectbox(
@@ -1569,8 +1686,9 @@ else:
                         )
                         
                         # Create download link
+                        selected_display_id = scan_options[selected_scan]['display_id']
                         b64_pdf = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_scan_id}.pdf">Download PDF Report</a>'
+                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">Download PDF Report</a>'
                         st.markdown(href, unsafe_allow_html=True)
                         
                         st.success("Report generated successfully!")
