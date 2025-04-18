@@ -487,6 +487,9 @@ else:
     # Initialize aggregator
     results_aggregator = ResultsAggregator()
     
+    # Handle any payment callbacks (success/cancel)
+    handle_payment_callback(results_aggregator)
+    
     # Navigation
     nav_options = ["Dashboard", "New Scan", "Scan History", "Reports"]
     selected_nav = st.sidebar.radio("Navigation", nav_options)
