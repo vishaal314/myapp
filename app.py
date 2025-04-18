@@ -189,6 +189,13 @@ with st.sidebar:
                         st.session_state.username = user_data["username"]
                         st.session_state.role = user_data["role"]
                         st.session_state.email = user_data.get("email", "")
+                        # Add permissions to session state
+                        st.session_state.permissions = user_data.get("permissions", [])
+                        # If permissions not found, get from role
+                        if not st.session_state.permissions and "role" in user_data:
+                            from services.auth import ROLE_PERMISSIONS
+                            if user_data["role"] in ROLE_PERMISSIONS:
+                                st.session_state.permissions = ROLE_PERMISSIONS[user_data["role"]]["permissions"]
                         st.success(f"Logged in successfully!")
                         st.rerun()
                     else:
@@ -262,7 +269,7 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
         
-        # User details with icons
+        # User details with icons including permissions
         st.markdown(f"""
         <div style="margin: 15px 0; background-color: white; padding: 15px; border-radius: 10px; 
                    border-left: 4px solid #3B82F6;">
@@ -270,6 +277,36 @@ with st.sidebar:
             <p><span style="color: #3B82F6;">✉️</span> <strong>Email:</strong> {st.session_state.email}</p>
         </div>
         """, unsafe_allow_html=True)
+        
+        # Include a "My Permissions" collapsible section
+        with st.expander("My Permissions"):
+            from services.auth import ROLE_PERMISSIONS, get_user_permissions
+            
+            # Get user's permissions
+            user_permissions = st.session_state.get("permissions", [])
+            
+            # Get role description
+            role = st.session_state.get("role", "")
+            role_description = ROLE_PERMISSIONS.get(role, {}).get("description", "Custom role")
+            
+            st.markdown(f"**Role:** {role.title()}")
+            st.markdown(f"**Description:** {role_description}")
+            
+            # Display permissions in categorized sections
+            permissions_by_category = {}
+            for perm in user_permissions:
+                if ":" in perm:
+                    category = perm.split(":")[0]
+                    if category not in permissions_by_category:
+                        permissions_by_category[category] = []
+                    permissions_by_category[category].append(perm)
+            
+            # Show permissions by category
+            for category, perms in permissions_by_category.items():
+                st.subheader(f"{category.title()} Permissions")
+                for perm in perms:
+                    st.markdown(f"- {perm}")
+                st.markdown("---")
         
         # Quick actions section
         st.markdown("""

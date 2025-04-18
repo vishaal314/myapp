@@ -2,11 +2,81 @@ import hashlib
 import json
 import os
 import re
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List, Set
 
 # Simple user store (in a real app, this would be a database)
 # For demo purposes, we'll store users in a JSON file
 USERS_FILE = "users.json"
+
+# Define permission structure
+# Each permission is a string like 'scan:create' or 'user:delete'
+# Format: resource:action
+PERMISSIONS = {
+    'scan:create': 'Ability to create new scans',
+    'scan:view': 'Ability to view scan results',
+    'scan:export': 'Ability to export scan results',
+    'scan:delete': 'Ability to delete scan results',
+    'scan:premium': 'Ability to use premium scan features',
+    'user:create': 'Ability to create new users',
+    'user:view': 'Ability to view user information',
+    'user:update': 'Ability to update user information',
+    'user:delete': 'Ability to delete users',
+    'report:create': 'Ability to create reports',
+    'report:view': 'Ability to view reports',
+    'report:export': 'Ability to export reports',
+    'system:settings': 'Ability to modify system settings',
+    'system:logs': 'Ability to view system logs',
+    'payment:manage': 'Ability to manage payment settings',
+    'audit:view': 'Ability to view audit logs',
+}
+
+# Define roles and their permissions
+ROLE_PERMISSIONS = {
+    'admin': {
+        'description': 'Full system access',
+        'permissions': [
+            'scan:create', 'scan:view', 'scan:export', 'scan:delete', 'scan:premium',
+            'user:create', 'user:view', 'user:update', 'user:delete',
+            'report:create', 'report:view', 'report:export',
+            'system:settings', 'system:logs',
+            'payment:manage',
+            'audit:view',
+        ]
+    },
+    'analyst': {
+        'description': 'Can create and analyze scans',
+        'permissions': [
+            'scan:create', 'scan:view', 'scan:export', 'scan:premium',
+            'report:create', 'report:view', 'report:export',
+            'user:view',
+            'audit:view',
+        ]
+    },
+    'viewer': {
+        'description': 'Read-only access to scans and reports',
+        'permissions': [
+            'scan:view',
+            'report:view',
+        ]
+    },
+    'security_officer': {
+        'description': 'Focused on security compliance',
+        'permissions': [
+            'scan:create', 'scan:view', 'scan:export',
+            'report:view', 'report:export',
+            'audit:view',
+            'system:logs',
+        ]
+    },
+    'data_protection_officer': {
+        'description': 'Focused on data protection',
+        'permissions': [
+            'scan:view', 'scan:export',
+            'report:view', 'report:export',
+            'audit:view',
+        ]
+    }
+}
 
 # Default users to create if the file doesn't exist
 DEFAULT_USERS = [
@@ -14,19 +84,36 @@ DEFAULT_USERS = [
         "username": "admin",
         "password_hash": hashlib.sha256("admin123".encode()).hexdigest(),
         "role": "admin",
-        "email": "admin@example.com"
+        "email": "admin@example.com",
+        "permissions": ROLE_PERMISSIONS["admin"]["permissions"]
     },
     {
         "username": "analyst",
         "password_hash": hashlib.sha256("analyst123".encode()).hexdigest(),
         "role": "analyst",
-        "email": "analyst@example.com"
+        "email": "analyst@example.com",
+        "permissions": ROLE_PERMISSIONS["analyst"]["permissions"]
     },
     {
         "username": "viewer",
         "password_hash": hashlib.sha256("viewer123".encode()).hexdigest(),
         "role": "viewer",
-        "email": "viewer@example.com"
+        "email": "viewer@example.com",
+        "permissions": ROLE_PERMISSIONS["viewer"]["permissions"]
+    },
+    {
+        "username": "security",
+        "password_hash": hashlib.sha256("security123".encode()).hexdigest(),
+        "role": "security_officer",
+        "email": "security@example.com",
+        "permissions": ROLE_PERMISSIONS["security_officer"]["permissions"]
+    },
+    {
+        "username": "dpo",
+        "password_hash": hashlib.sha256("dpo123".encode()).hexdigest(),
+        "role": "data_protection_officer",
+        "email": "dpo@example.com",
+        "permissions": ROLE_PERMISSIONS["data_protection_officer"]["permissions"]
     }
 ]
 
@@ -171,6 +258,10 @@ def create_user(username: str, password: str, role: str, email: str) -> Tuple[bo
     if not password or len(password) < 6:
         return False, "Password must be at least 6 characters"
     
+    # Validate role
+    if role not in ROLE_PERMISSIONS:
+        return False, f"Invalid role. Valid roles are: {', '.join(ROLE_PERMISSIONS.keys())}"
+    
     # Create user
     password_hash = hashlib.sha256(password.encode()).hexdigest()
     
@@ -178,7 +269,8 @@ def create_user(username: str, password: str, role: str, email: str) -> Tuple[bo
         "username": username,
         "password_hash": password_hash,
         "role": role,
-        "email": email
+        "email": email,
+        "permissions": ROLE_PERMISSIONS[role]["permissions"]
     }
     
     _save_users(users)
@@ -246,6 +338,124 @@ def logout() -> None:
     Log out the current user by clearing session state.
     """
     import streamlit as st
-    for key in ["logged_in", "username", "role"]:
+    for key in ["logged_in", "username", "role", "permissions"]:
         if key in st.session_state:
             del st.session_state[key]
+
+def has_permission(permission: str) -> bool:
+    """
+    Check if the current user has a specific permission.
+    
+    Args:
+        permission: The permission to check (e.g., 'scan:create')
+        
+    Returns:
+        True if the user has the permission, False otherwise
+    """
+    import streamlit as st
+    
+    # Admin bypass - admins have all permissions
+    if st.session_state.get("role") == "admin":
+        return True
+    
+    # Check if user has explicit permission
+    user_permissions = st.session_state.get("permissions", [])
+    return permission in user_permissions
+
+def require_permission(permission: str) -> bool:
+    """
+    Check if the user has the required permission and show an error if not.
+    
+    Args:
+        permission: The permission to check
+        
+    Returns:
+        True if the user has the permission, False otherwise
+    """
+    import streamlit as st
+    
+    if not is_authenticated():
+        st.error("You must be logged in to access this feature.")
+        return False
+        
+    if not has_permission(permission):
+        st.error(f"You don't have permission to access this feature ({permission}).")
+        return False
+        
+    return True
+    
+def get_user_permissions(username: str = None) -> List[str]:
+    """
+    Get permissions for a specific user or the current user.
+    
+    Args:
+        username: Optional username to get permissions for.
+                 If None, returns permissions for the current user.
+                 
+    Returns:
+        List of permission strings
+    """
+    import streamlit as st
+    
+    if username is None:
+        # Get current user's permissions from session
+        return st.session_state.get("permissions", [])
+    
+    # Get specific user's permissions
+    user_data = get_user(username)
+    if user_data and "permissions" in user_data:
+        return user_data["permissions"]
+    
+    # If role exists but no permissions, derive from role
+    if user_data and "role" in user_data and user_data["role"] in ROLE_PERMISSIONS:
+        return ROLE_PERMISSIONS[user_data["role"]]["permissions"]
+    
+    return []
+
+def get_all_permissions() -> Dict[str, str]:
+    """
+    Get all available permissions with descriptions.
+    
+    Returns:
+        Dictionary of permission keys to descriptions
+    """
+    return PERMISSIONS
+
+def get_all_roles() -> Dict[str, Dict[str, Any]]:
+    """
+    Get all available roles with descriptions and permissions.
+    
+    Returns:
+        Dictionary of roles with their descriptions and permissions
+    """
+    return ROLE_PERMISSIONS
+
+def add_custom_permissions(username: str, permissions: List[str]) -> bool:
+    """
+    Add custom permissions to a user beyond their role.
+    
+    Args:
+        username: The username to add permissions to
+        permissions: List of permissions to add
+        
+    Returns:
+        True if permissions were added, False if user doesn't exist
+    """
+    users = _load_users()
+    
+    if username not in users:
+        return False
+    
+    # Get current permissions
+    current_permissions = users[username].get("permissions", [])
+    
+    # Add new permissions
+    for permission in permissions:
+        if permission in PERMISSIONS and permission not in current_permissions:
+            current_permissions.append(permission)
+    
+    # Update user
+    users[username]["permissions"] = current_permissions
+    _save_users(users)
+    
+    return True
