@@ -490,8 +490,19 @@ else:
     # Handle any payment callbacks (success/cancel)
     handle_payment_callback(results_aggregator)
     
-    # Navigation
-    nav_options = ["Dashboard", "New Scan", "Scan History", "Reports"]
+    # Add free trial check
+    if 'free_trial_start' not in st.session_state:
+        # Initialize free trial when user first logs in
+        st.session_state.free_trial_start = datetime.now()
+        st.session_state.free_trial_scans_used = 0
+    
+    # Calculate days remaining in free trial (3 days total)
+    days_elapsed = (datetime.now() - st.session_state.free_trial_start).days
+    free_trial_days_left = max(0, 3 - days_elapsed)
+    free_trial_active = free_trial_days_left > 0 and st.session_state.free_trial_scans_used < 5
+    
+    # Navigation 
+    nav_options = ["New Scan", "Dashboard", "Scan History", "Reports"]
     selected_nav = st.sidebar.radio("Navigation", nav_options)
     
     if selected_nav == "Dashboard":
@@ -1011,8 +1022,17 @@ else:
             else:
                 uploaded_files = []
         
-        # Scan button with payment flow and validation
-        if st.button("Start Scan"):
+        # Prominent "Start Scan" button with free trial info
+        scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
+        with scan_btn_col1:
+            start_scan = st.button("Start Scan", use_container_width=True, type="primary")
+        with scan_btn_col2:
+            if free_trial_active:
+                st.success(f"Free Trial: {free_trial_days_left} days left")
+            else:
+                st.warning("Premium Features")
+        
+        if start_scan:
             # Check if user is logged in first
             if not st.session_state.logged_in:
                 st.error("Please log in to perform a scan.")
@@ -1052,73 +1072,111 @@ else:
                 st.error("Please upload at least one file for manual scanning.")
             else:
                 proceed_with_scan = bool(uploaded_files)
-                
-            # If we can proceed with the scan based on validation, show payment information
+            
+            # If we can proceed with the scan based on validation
             if proceed_with_scan:
-                # Handle payment flow
-                st.markdown("---")
-                st.subheader("Payment Required")
-                
-                # Display information about the scan type
-                st.markdown(f"""
-                #### {scan_type} Details
-                
-                Your scan is ready to begin. To proceed, please complete the payment below.
-                """)
-                
-                # Show payment options
-                payment_container = st.container()
-                
-                with payment_container:
-                    # Create metadata for this scan
-                    metadata = {
+                # Check if free trial is active
+                if free_trial_active:
+                    st.success(f"Using free trial (Days left: {free_trial_days_left}, Scans used: {st.session_state.free_trial_scans_used}/5)")
+                    
+                    # Generate a unique scan ID
+                    scan_id = str(uuid.uuid4())
+                    st.session_state.current_scan_id = scan_id
+                    
+                    # Increment free trial scan count
+                    st.session_state.free_trial_scans_used += 1
+                    
+                    # Set payment as "free"
+                    st.session_state.payment_successful = True
+                    st.session_state.payment_details = {
+                        "status": "succeeded",
+                        "amount": 0,
                         "scan_type": scan_type,
-                        "region": region,
-                        "timestamp": datetime.now().isoformat()
+                        "user_email": user_email,
+                        "is_free_trial": True
                     }
                     
-                    # Display payment button
-                    checkout_id = display_payment_button(scan_type, user_email, metadata)
+                    # Log the free trial scan
+                    try:
+                        results_aggregator.log_audit_event(
+                            username=st.session_state.username,
+                            action="FREE_TRIAL_SCAN",
+                            details={
+                                "scan_type": scan_type,
+                                "trial_days_left": free_trial_days_left,
+                                "trial_scans_used": st.session_state.free_trial_scans_used,
+                                "user_email": user_email,
+                                "timestamp": datetime.now().isoformat()
+                            }
+                        )
+                    except Exception as e:
+                        st.warning(f"Audit logging failed: {str(e)}")
                     
-                    # Show alternative payment option - mock flow for testing
+                else:
+                    # Handle payment flow
                     st.markdown("---")
-                    st.markdown("### For Testing/Demo Purposes")
-                    if st.button("Simulate Successful Payment (Demo Only)"):
-                        # Generate a unique scan ID
-                        scan_id = str(uuid.uuid4())
-                        st.session_state.current_scan_id = scan_id
-                        
-                        # Mark payment as successful in session state
-                        st.session_state.payment_successful = True
-                        st.session_state.payment_details = {
-                            "status": "succeeded",
-                            "amount": SCAN_PRICES[scan_type] / 100,
+                    st.subheader("Payment Required")
+                    
+                    # Display information about the scan type
+                    st.markdown(f"""
+                    #### {scan_type} Details
+                    
+                    Your scan is ready to begin. To proceed, please complete the payment below.
+                    """)
+                    
+                    # Show payment options
+                    payment_container = st.container()
+                    
+                    with payment_container:
+                        # Create metadata for this scan
+                        metadata = {
                             "scan_type": scan_type,
-                            "user_email": user_email
+                            "region": region,
+                            "timestamp": datetime.now().isoformat()
                         }
                         
-                        # Log the successful payment
-                        try:
-                            results_aggregator.log_audit_event(
-                                username=st.session_state.username,
-                                action="PAYMENT_SIMULATED",
-                                details={
-                                    "scan_type": scan_type,
-                                    "amount": SCAN_PRICES[scan_type] / 100,
-                                    "user_email": user_email,
-                                    "timestamp": datetime.now().isoformat()
-                                }
-                            )
-                        except Exception as e:
-                            st.warning(f"Audit logging failed: {str(e)}")
+                        # Display payment button
+                        checkout_id = display_payment_button(scan_type, user_email, metadata)
                         
-                        # Refresh to start the scan
-                        st.rerun()
+                        # Show alternative payment option for easy testing
+                        st.markdown("---")
+                        st.markdown("### Test Payment Option")
+                        if st.button("Complete Payment (Demo Mode)"):
+                            # Generate a unique scan ID
+                            scan_id = str(uuid.uuid4())
+                            st.session_state.current_scan_id = scan_id
+                            
+                            # Mark payment as successful in session state
+                            st.session_state.payment_successful = True
+                            st.session_state.payment_details = {
+                                "status": "succeeded",
+                                "amount": SCAN_PRICES[scan_type] / 100,
+                                "scan_type": scan_type,
+                                "user_email": user_email
+                            }
+                            
+                            # Log the successful payment
+                            try:
+                                results_aggregator.log_audit_event(
+                                    username=st.session_state.username,
+                                    action="PAYMENT_SIMULATED",
+                                    details={
+                                        "scan_type": scan_type,
+                                        "amount": SCAN_PRICES[scan_type] / 100,
+                                        "user_email": user_email,
+                                        "timestamp": datetime.now().isoformat()
+                                    }
+                                )
+                            except Exception as e:
+                                st.warning(f"Audit logging failed: {str(e)}")
+                            
+                            # Continue directly to scan without requiring a page reload
+                        
+                    # If payment is not completed, stop execution here
+                    if not st.session_state.payment_successful:
+                        st.stop()
                 
-                # Stop execution here to wait for payment
-                st.stop()
-                
-            # If we have a successful payment or are in demo mode, proceed with the scan
+            # If either free trial is active or payment is successful, proceed with the scan
             if proceed_with_scan and st.session_state.payment_successful:
                 # Generate a unique scan ID if not already set
                 if not st.session_state.current_scan_id:
