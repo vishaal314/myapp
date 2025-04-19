@@ -379,220 +379,73 @@ if not st.session_state.logged_in:
     # Our landing page already has metric cards, no need to duplicate them
     st.write("")
     
-    # Simplified scanning services section with responsive tiles
-    st.markdown("""
-    <div style="margin: 30px 0 20px 0;">
-        <h2 style="margin: 0 0 15px 0; color: #1e3a8a; font-weight: 600;">Our Scanning Services</h2>
+    # Removed HTML-based scanning services section that was causing issues
+    st.subheader("Our Scanning Services")
+    
+    # Display clean list of scanning services without HTML
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("**Code Scanner**")
+        st.markdown("Detects PII and secrets in source code")
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-            <!-- Code Scanner -->
-            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
-                <div style="height: 5px; background-color: #3B82F6; margin-bottom: 15px;"></div>
-                <h3 style="margin: 0 0 10px 0; color: #1E40AF; font-size: 17px;">Code Scanner</h3>
-                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
-                    Detects PII and secrets in source code
-                </p>
-                <div style="padding: 0 10px;">
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #EFF6FF; color: #1E40AF; border-radius: 4px; font-size: 11px; font-weight: 500;">TruffleHog</span>
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #EFF6FF; color: #1E40AF; border-radius: 4px; font-size: 11px; font-weight: 500;">Semgrep</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Document Scanner -->
-            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
-                <div style="height: 5px; background-color: #10B981; margin-bottom: 15px;"></div>
-                <h3 style="margin: 0 0 10px 0; color: #047857; font-size: 17px;">Document Scanner</h3>
-                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
-                    Scans PDFs and docs for sensitive data
-                </p>
-                <div style="padding: 0 10px;">
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #ECFDF5; color: #047857; border-radius: 4px; font-size: 11px; font-weight: 500;">OCR</span>
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #ECFDF5; color: #047857; border-radius: 4px; font-size: 11px; font-weight: 500;">PDF</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Image Scanner -->
-            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
-                <div style="height: 5px; background-color: #F59E0B; margin-bottom: 15px;"></div>
-                <h3 style="margin: 0 0 10px 0; color: #92400E; font-size: 17px;">Image Scanner</h3>
-                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
-                    Detects faces and visual PII in images
-                </p>
-                <div style="padding: 0 10px;">
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #FEF3C7; color: #92400E; border-radius: 4px; font-size: 11px; font-weight: 500;">Azure Vision</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Database Scanner -->
-            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
-                <div style="height: 5px; background-color: #6366F1; margin-bottom: 15px;"></div>
-                <h3 style="margin: 0 0 10px 0; color: #4F46E5; font-size: 17px;">Database Scanner</h3>
-                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
-                    Column-level detection for databases
-                </p>
-                <div style="padding: 0 10px;">
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #EEF2FF; color: #4F46E5; border-radius: 4px; font-size: 11px; font-weight: 500;">PostgreSQL</span>
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #EEF2FF; color: #4F46E5; border-radius: 4px; font-size: 11px; font-weight: 500;">MySQL</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- API Scanner -->
-            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
-                <div style="height: 5px; background-color: #EC4899; margin-bottom: 15px;"></div>
-                <h3 style="margin: 0 0 10px 0; color: #BE185D; font-size: 17px;">API Scanner</h3>
-                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
-                    Finds PII in API requests/responses
-                </p>
-                <div style="padding: 0 10px;">
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #FCE7F3; color: #BE185D; border-radius: 4px; font-size: 11px; font-weight: 500;">REST</span>
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #FCE7F3; color: #BE185D; border-radius: 4px; font-size: 11px; font-weight: 500;">Swagger</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- AI Model Scanner -->
-            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
-                <div style="height: 5px; background-color: #8B5CF6; margin-bottom: 15px;"></div>
-                <h3 style="margin: 0 0 10px 0; color: #6D28D9; font-size: 17px;">AI Model Scanner</h3>
-                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
-                    Detects PII leakage in ML models
-                </p>
-                <div style="padding: 0 10px;">
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #EDE9FE; color: #6D28D9; border-radius: 4px; font-size: 11px; font-weight: 500;">ML Models</span>
-                        <span style="display: inline-block; padding: 2px 6px; background-color: #EDE9FE; color: #6D28D9; border-radius: 4px; font-size: 11px; font-weight: 500;">LLMs</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown("**Document Scanner**")
+        st.markdown("Scans PDFs and docs for sensitive data")
         
-    # Modern key features section with visual elements
-    st.markdown("""
-    <div style="margin: 40px 0 30px 0;">
-        <div style="display: flex; align-items: center; margin-bottom: 20px;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 12px;">
-                <path d="M5 3l1 1m0 0l-2 2L2 4m3 0h16M5 3V2m0 1v15a2 2 0 002 2h10a2 2 0 002-2V3m0 0h1m-1 0V2" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M10 10h4m-2-2v4" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <h2 style="margin: 0; color: #1e3a8a; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 600;">Enterprise Features</h2>
-        </div>
+    with col2:
+        st.markdown("**Image Scanner**")
+        st.markdown("Detects faces and visual PII in images")
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-top: 24px;">
-            <!-- Feature 1 -->
-            <div style="display: flex; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03); overflow: hidden; border: 1px solid #e5e7eb; padding: 20px;">
-                <div style="margin-right: 16px; padding-top: 3px;">
-                    <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #EFF6FF; display: flex; justify-content: center; align-items: center;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                </div>
-                <div>
-                    <h3 style="margin: 0 0 8px 0; color: #1E3A8A; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px; font-weight: 600;">Comprehensive Detection</h3>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0;">
-                        Unified scanning across multiple data sources with intelligent pattern recognition and contextual analysis.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Feature 2 -->
-            <div style="display: flex; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03); overflow: hidden; border: 1px solid #e5e7eb; padding: 20px;">
-                <div style="margin-right: 16px; padding-top: 3px;">
-                    <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #F0FDF4; display: flex; justify-content: center; align-items: center;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" stroke="#10B981" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-                </div>
-                <div>
-                    <h3 style="margin: 0 0 8px 0; color: #047857; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px; font-weight: 600;">Advanced Analysis</h3>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0;">
-                        AI-powered risk scoring and compliance reporting with actionable remediation advice and impact assessments.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Feature 3 -->
-            <div style="display: flex; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03); overflow: hidden; border: 1px solid #e5e7eb; padding: 20px;">
-                <div style="margin-right: 16px; padding-top: 3px;">
-                    <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #FEF3C7; display: flex; justify-content: center; align-items: center;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 6l9 6 9-6M3 6v12l9 6 9-6V6L12 0 3 6z" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                </div>
-                <div>
-                    <h3 style="margin: 0 0 8px 0; color: #92400E; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px; font-weight: 600;">Dutch GDPR Compliance</h3>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0;">
-                        Special handling for BSN, medical data, and UAVG requirements with Dutch-specific compliance guardrails.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Feature 4 -->
-            <div style="display: flex; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03); overflow: hidden; border: 1px solid #e5e7eb; padding: 20px;">
-                <div style="margin-right: 16px; padding-top: 3px;">
-                    <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #EEF2FF; display: flex; justify-content: center; align-items: center;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-9.618 5.04L12 21.416l9.618-13.432A11.955 11.955 0 0112 2.944z" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                </div>
-                <div>
-                    <h3 style="margin: 0 0 8px 0; color: #4F46E5; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px; font-weight: 600;">Complete GDPR Principles</h3>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0;">
-                        All seven core GDPR principles fully implemented with auditable processes and documentation.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Feature 5 -->
-            <div style="display: flex; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03); overflow: hidden; border: 1px solid #e5e7eb; padding: 20px;">
-                <div style="margin-right: 16px; padding-top: 3px;">
-                    <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #FCE7F3; display: flex; justify-content: center; align-items: center;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" stroke="#EC4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                </div>
-                <div>
-                    <h3 style="margin: 0 0 8px 0; color: #BE185D; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px; font-weight: 600;">Customizable Scanning</h3>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0;">
-                        Configure scans based on your specific compliance needs with industry-specific templates and rules.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Feature 6 -->
-            <div style="display: flex; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03); overflow: hidden; border: 1px solid #e5e7eb; padding: 20px;">
-                <div style="margin-right: 16px; padding-top: 3px;">
-                    <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #EDE9FE; display: flex; justify-content: center; align-items: center;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-                </div>
-                <div>
-                    <h3 style="margin: 0 0 8px 0; color: #6D28D9; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px; font-weight: 600;">Comprehensive Reporting</h3>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0;">
-                        Generate detailed compliance reports with executive summaries, risk matrices, and remediation plans.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown("**Database Scanner**")
+        st.markdown("Column-level detection for databases")
+        
+    with col3:
+        st.markdown("**API Scanner**")
+        st.markdown("Finds PII in API requests/responses")
+        
+        st.markdown("**AI Model Scanner**")
+        st.markdown("Detects PII leakage in ML models")
+        
+    # Enterprise Features section with a cleaner, more maintainable approach
+    st.subheader("Enterprise Features")
+    
+    # Create a clean grid layout using Streamlit columns
+    features = [
+        {
+            "title": "Comprehensive Detection",
+            "description": "Unified scanning across multiple data sources with intelligent pattern recognition and contextual analysis."
+        },
+        {
+            "title": "Advanced Analysis",
+            "description": "AI-powered risk scoring and compliance reporting with actionable remediation advice and impact assessments."
+        },
+        {
+            "title": "Dutch GDPR Compliance",
+            "description": "Special handling for BSN, medical data, and UAVG requirements with Dutch-specific compliance guardrails."
+        },
+        {
+            "title": "Complete GDPR Principles",
+            "description": "All seven core GDPR principles fully implemented with auditable processes and documentation."
+        },
+        {
+            "title": "Customizable Scanning",
+            "description": "Configure scans based on your specific compliance needs with industry-specific templates and rules."
+        },
+        {
+            "title": "Comprehensive Reporting",
+            "description": "Generate detailed compliance reports with executive summaries, risk matrices, and remediation plans."
+        }
+    ]
+    
+    # Display features in a 2-column grid
+    col1, col2 = st.columns(2)
+    
+    for i, feature in enumerate(features):
+        # Alternate between columns
+        with col1 if i % 2 == 0 else col2:
+            st.markdown(f"**{feature['title']}**")
+            st.markdown(feature['description'])
+            st.write("")  # Add some spacing
     
     # About section - simplified
     st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
