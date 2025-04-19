@@ -17,6 +17,8 @@ from services.report_generator import generate_report
 from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
 from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES
 from utils.gdpr_rules import REGIONS, get_region_rules
+from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_finding, get_risk_color_gradient
+from utils.i18n import load_translations, get_text, set_language, LANGUAGES, _
 
 # Initialize session state variables
 if 'logged_in' not in st.session_state:
@@ -37,6 +39,8 @@ if 'checkout_session_id' not in st.session_state:
     st.session_state.checkout_session_id = None
 if 'email' not in st.session_state:
     st.session_state.email = None
+if 'language' not in st.session_state:
+    st.session_state.language = 'en'  # Default language is English
 
 # Set page config
 st.set_page_config(
@@ -48,18 +52,22 @@ st.set_page_config(
 
 # Authentication sidebar with professional colorful design
 with st.sidebar:
+    # Initialize translations
+    from utils.i18n import initialize, language_selector
+    initialize()
+    
     # Header with gradient background and professional name
-    st.markdown("""
+    st.markdown(f"""
     <div style="background-image: linear-gradient(120deg, #3B82F6, #1E40AF); 
                padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center;
                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: white; margin: 0; font-weight: bold;">DataGuardian Pro</h2>
-        <p style="color: #E0F2FE; margin: 5px 0 0 0; font-size: 0.9em;">Enterprise Privacy Compliance Platform</p>
+        <h2 style="color: white; margin: 0; font-weight: bold;">{_("app.title")}</h2>
+        <p style="color: #E0F2FE; margin: 5px 0 0 0; font-size: 0.9em;">{_("app.subtitle")}</p>
     </div>
     """, unsafe_allow_html=True)
     
     # Meaningful GDPR theme with privacy-focused visual
-    st.markdown("""
+    st.markdown(f"""
     <div style="text-align: center; margin-bottom: 25px; padding: 0 10px;">
         <div style="background-image: linear-gradient(120deg, #EFF6FF, #DBEAFE); 
                    border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
@@ -81,11 +89,15 @@ with st.sidebar:
                 </div>
             </div>
             <p style="color: #1E40AF; font-size: 0.9em; margin: 0; text-align: center;">
-                Privacy • Compliance • Transparency
+                {_("app.tagline")}
             </p>
         </div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Language selector
+    with st.expander("🌐 " + _("settings.language"), expanded=False):
+        language_selector()
     
     if not st.session_state.logged_in:
         # Tab UI for login/register with colorful styling

@@ -1,10 +1,11 @@
 """
-Internationalization (i18n) utility for DataGuardian Pro.
-Supports multiple languages for the application.
+Internationalization module for DataGuardian Pro.
+Provides multilingual support for the application UI.
 """
-import json
 import os
+import json
 from typing import Dict, Any, Optional
+import streamlit as st
 
 # Available languages
 LANGUAGES = {
@@ -12,135 +13,164 @@ LANGUAGES = {
     'nl': 'Nederlands'
 }
 
-# Default language
-DEFAULT_LANGUAGE = 'en'
+# Global variable to hold translations
+_translations = {}
+_current_language = 'en'
 
-# Path to translations directory
-TRANSLATIONS_DIR = 'translations'
-
-# Cached translations
-_translations: Dict[str, Dict[str, str]] = {}
-
-def load_translations(lang_code: str) -> Dict[str, str]:
+def load_translations(lang_code: str) -> Dict[str, Any]:
     """
-    Load translations for the specified language code.
+    Load translation strings for the specified language.
     
     Args:
-        lang_code: The language code to load
+        lang_code: The language code (e.g., 'en', 'nl')
         
     Returns:
-        Dictionary of translations for the language
+        Dictionary of translation strings
     """
-    global _translations
+    global _translations, _current_language
     
-    # Return from cache if already loaded
+    # Default to English if the language is not supported
+    if lang_code not in LANGUAGES:
+        lang_code = 'en'
+    
+    # Set current language
+    _current_language = lang_code
+    
+    # If translations already loaded, return them
     if lang_code in _translations:
         return _translations[lang_code]
     
-    # Ensure translations directory exists
-    os.makedirs(TRANSLATIONS_DIR, exist_ok=True)
+    # Define path to translation file
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    translation_file = os.path.join(base_dir, 'translations', f'{lang_code}.json')
     
-    # Path to translation file
-    file_path = os.path.join(TRANSLATIONS_DIR, f"{lang_code}.json")
-    
-    # Create default file if it doesn't exist
-    if not os.path.exists(file_path):
-        if lang_code == DEFAULT_LANGUAGE:
-            # Create an empty English file as the base
-            with open(file_path, 'w') as f:
-                json.dump({}, f, indent=2)
+    # Check if translation file exists
+    if not os.path.exists(translation_file):
+        # Create empty translation file for language
+        if lang_code != 'en':
+            # First load English as fallback
+            english_file = os.path.join(base_dir, 'translations', 'en.json')
+            if os.path.exists(english_file):
+                with open(english_file, 'r', encoding='utf-8') as f:
+                    _translations['en'] = json.load(f)
+            else:
+                _translations['en'] = {}
+            
+            # Create directory if it doesn't exist
+            os.makedirs(os.path.dirname(translation_file), exist_ok=True)
+            
+            # Create empty file with same keys as English
+            with open(translation_file, 'w', encoding='utf-8') as f:
+                json.dump(_translations['en'], f, ensure_ascii=False, indent=2)
+            
+            # Return English translations as fallback
+            return _translations['en']
+        else:
+            # Create empty English translation file
+            os.makedirs(os.path.dirname(translation_file), exist_ok=True)
+            with open(translation_file, 'w', encoding='utf-8') as f:
+                json.dump({}, f, ensure_ascii=False, indent=2)
             _translations[lang_code] = {}
             return {}
-        else:
-            # For non-default languages, return the default language translations
-            return load_translations(DEFAULT_LANGUAGE)
     
     # Load translations from file
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            translations = json.load(f)
-            _translations[lang_code] = translations
-            return translations
-    except Exception as e:
-        print(f"Error loading translations for {lang_code}: {str(e)}")
-        # Fall back to default language
-        if lang_code != DEFAULT_LANGUAGE:
-            return load_translations(DEFAULT_LANGUAGE)
-        else:
-            return {}
+        with open(translation_file, 'r', encoding='utf-8') as f:
+            _translations[lang_code] = json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError):
+        _translations[lang_code] = {}
+    
+    return _translations[lang_code]
 
-def save_translations(lang_code: str, translations: Dict[str, str]) -> None:
-    """
-    Save translations for the specified language code.
-    
-    Args:
-        lang_code: The language code to save
-        translations: Dictionary of translations to save
-    """
-    # Ensure translations directory exists
-    os.makedirs(TRANSLATIONS_DIR, exist_ok=True)
-    
-    # Path to translation file
-    file_path = os.path.join(TRANSLATIONS_DIR, f"{lang_code}.json")
-    
-    # Save translations to file
-    try:
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(translations, f, indent=2, ensure_ascii=False)
-        # Update cache
-        _translations[lang_code] = translations
-    except Exception as e:
-        print(f"Error saving translations for {lang_code}: {str(e)}")
-
-def get_text(key: str, lang_code: Optional[str] = None) -> str:
-    """
-    Get translated text for a key in the specified language.
-    
-    Args:
-        key: The text key to translate
-        lang_code: The language code (defaults to current language)
-        
-    Returns:
-        Translated text or the key itself if not found
-    """
-    if lang_code is None:
-        import streamlit as st
-        # Get language from session state or default
-        lang_code = st.session_state.get('language', DEFAULT_LANGUAGE)
-    
-    # Get translations for language
-    translations = load_translations(lang_code)
-    
-    # Return translation or key if not found
-    if key in translations:
-        return translations[key]
-    else:
-        # If not found in selected language, try default language
-        if lang_code != DEFAULT_LANGUAGE:
-            default_translations = load_translations(DEFAULT_LANGUAGE)
-            if key in default_translations:
-                return default_translations[key]
-        
-        # Add missing key to default language
-        if lang_code == DEFAULT_LANGUAGE:
-            default_translations = load_translations(DEFAULT_LANGUAGE)
-            if key not in default_translations:
-                default_translations[key] = key
-                save_translations(DEFAULT_LANGUAGE, default_translations)
-        
-        return key
-
-def set_language(lang_code: str) -> None:
+def set_language(lang_code: Optional[str] = None) -> None:
     """
     Set the current language for the application.
     
     Args:
-        lang_code: The language code to set
+        lang_code: The language code (e.g., 'en', 'nl')
     """
-    import streamlit as st
+    if not lang_code:
+        # Get language from session state if available
+        lang_code = st.session_state.get('language', 'en')
     
-    if lang_code in LANGUAGES:
-        st.session_state['language'] = lang_code
+    # Load translations for the language
+    load_translations(lang_code)
+    
+    # Update session state
+    st.session_state.language = lang_code
 
-# Alias for get_text for shorter usage
-_ = get_text
+def get_text(key: str, default: Optional[str] = None) -> str:
+    """
+    Get the translated text for a key.
+    
+    Args:
+        key: The translation key (e.g., 'app.title')
+        default: Default text if translation is not found
+        
+    Returns:
+        Translated text
+    """
+    global _translations, _current_language
+    
+    # If translations are not loaded, load them
+    if _current_language not in _translations:
+        load_translations(_current_language)
+    
+    # Get translation for key
+    text = _translations.get(_current_language, {}).get(key)
+    
+    # If not found, try English as fallback
+    if text is None and _current_language != 'en':
+        if 'en' not in _translations:
+            load_translations('en')
+        text = _translations.get('en', {}).get(key)
+    
+    # If still not found, use default or key itself
+    if text is None:
+        text = default if default is not None else key
+    
+    return text
+
+# Shorthand function for get_text
+def _(key: str, default: Optional[str] = None) -> str:
+    """
+    Shorthand function for get_text.
+    
+    Args:
+        key: The translation key (e.g., 'app.title')
+        default: Default text if translation is not found
+        
+    Returns:
+        Translated text
+    """
+    return get_text(key, default)
+
+def language_selector() -> None:
+    """
+    Display a language selector in the Streamlit UI.
+    Updates the language when changed.
+    """
+    # Create a selectbox for language selection
+    current_lang = st.session_state.get('language', 'en')
+    selected_lang = st.selectbox(
+        "🌐 Language / Taal",
+        options=list(LANGUAGES.keys()),
+        format_func=lambda x: LANGUAGES.get(x, x),
+        index=list(LANGUAGES.keys()).index(current_lang) if current_lang in LANGUAGES else 0,
+        key="language_selector"
+    )
+    
+    # Update language if changed
+    if selected_lang != current_lang:
+        st.session_state.language = selected_lang
+        set_language(selected_lang)
+        st.rerun()
+
+# Initialize translations
+def initialize() -> None:
+    """
+    Initialize the internationalization module.
+    Load translations for the current language.
+    """
+    current_lang = st.session_state.get('language', 'en')
+    set_language(current_lang)
