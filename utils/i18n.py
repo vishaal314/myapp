@@ -151,26 +151,35 @@ def _(key: str, default: Optional[str] = None) -> str:
     """
     return get_text(key, default)
 
-def language_selector() -> None:
+def language_selector(key_suffix: str = "main") -> None:
     """
     Display a language selector in the Streamlit UI.
-    Updates the language when changed.
+    Updates the language when changed immediately.
+    
+    Args:
+        key_suffix: A suffix to ensure unique keys for multiple language selectors
     """
     # Create a selectbox for language selection
     current_lang = st.session_state.get('language', 'en')
+    selector_key = f"language_selector_{key_suffix}"
+    
+    # Define callback for language change
+    def on_language_change():
+        new_lang = st.session_state[selector_key]
+        if new_lang != current_lang:
+            st.session_state.language = new_lang
+            set_language(new_lang)
+            st.rerun()
+    
+    # Use the selectbox with on_change parameter to trigger immediate update
     selected_lang = st.selectbox(
         "🌐 Language / Taal",
         options=list(LANGUAGES.keys()),
         format_func=lambda x: LANGUAGES.get(x, x),
         index=list(LANGUAGES.keys()).index(current_lang) if current_lang in LANGUAGES else 0,
-        key="language_selector"
+        key=selector_key,
+        on_change=on_language_change
     )
-    
-    # Update language if changed
-    if selected_lang != current_lang:
-        st.session_state.language = selected_lang
-        set_language(selected_lang)
-        st.rerun()
 
 # Initialize translations
 def initialize() -> None:

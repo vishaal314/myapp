@@ -52,6 +52,11 @@ st.set_page_config(
 
 # Authentication sidebar with professional colorful design
 with st.sidebar:
+    # Add sidebar language selector at the top
+    st.markdown("### 🌐 Language / Taal")
+    from utils.i18n import language_selector
+    # Use the language selector with a unique key
+    language_selector(key_suffix="sidebar")
     # Initialize translations
     initialize()
     
@@ -94,9 +99,10 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    # Language selector
+    # Language selector in sidebar expander
     with st.expander("🌐 " + _("settings.language"), expanded=False):
-        language_selector()
+        # Use the language selector with a unique key for the expander
+        language_selector(key_suffix="expander")
     
     if not st.session_state.logged_in:
         # Tab UI for login/register with colorful styling
