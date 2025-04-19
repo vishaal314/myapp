@@ -213,32 +213,41 @@ def animated_language_switcher(
     with st.container():
         # Optional title
         if show_title:
-            st.markdown('<p class="language-title">🌐 Select Your Language / Selecteer je taal</p>', unsafe_allow_html=True)
+            st.markdown('<p class="language-title">🌐 Select Your Language</p>', unsafe_allow_html=True)
         
         # Use simple radio buttons (more reliable than custom buttons)
         if use_buttons:
-            cols = st.columns(len(LANGUAGES))
+            # Create a more compact layout with horizontal radio buttons
+            lang_options = []
+            lang_display = {}
             
-            # Create a simple layout with flags and language names
-            for i, (lang_code, lang_name) in enumerate(LANGUAGES.items()):
-                with cols[i]:
-                    flag_emoji = FLAG_EMOJIS.get(lang_code, '🌐')
-                    if st.button(
-                        f"{flag_emoji} {lang_name}", 
-                        key=f"lang_btn_{lang_code}_{key_suffix}",
-                        use_container_width=True,
-                        type="primary" if current_lang == lang_code else "secondary"
-                    ):
-                        # Update language in session state and force it to persist
-                        st.session_state.language = lang_code
-                        st.session_state['language'] = lang_code  # Ensure it's set both ways
-                        
-                        # Load translations for new language
-                        from utils.i18n import set_language
-                        set_language(lang_code)
-                        
-                        # Force rerun of app
-                        st.rerun()
+            for lang_code, lang_name in LANGUAGES.items():
+                flag_emoji = FLAG_EMOJIS.get(lang_code, '🌐')
+                lang_options.append(lang_code)
+                lang_display[lang_code] = f"{flag_emoji} {lang_name}"
+            
+            # Use a horizontal radio button instead of individual buttons
+            selected_lang = st.radio(
+                label="",
+                options=lang_options,
+                format_func=lambda x: lang_display[x],
+                horizontal=True,
+                index=lang_options.index(current_lang) if current_lang in lang_options else 0,
+                key=f"lang_radio_{key_suffix}",
+                label_visibility="collapsed"
+            )
+            
+            # If language changed, update it
+            if selected_lang != current_lang:
+                # Update language in session state
+                st.session_state.language = selected_lang
+                
+                # Load translations for new language
+                from utils.i18n import set_language
+                set_language(selected_lang)
+                
+                # Force rerun of app to update all UI elements
+                st.rerun()
         
         # Dropdown-based selector (fallback)
         else:

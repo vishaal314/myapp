@@ -647,71 +647,85 @@ if not st.session_state.logged_in:
     st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
         
     # Modern Enterprise Features section with sleek design
-    st.markdown("""
+    # We'll create these cards using Python variables for better maintainability
+    enterprise_features = [
+        {
+            "bg_gradient": "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)",
+            "icon_bg": "#3B82F6",
+            "icon": "🔍",
+            "title": "Comprehensive Detection",
+            "title_color": "#1E40AF",
+            "description": "Unified scanning across multiple data sources with intelligent pattern recognition."
+        },
+        {
+            "bg_gradient": "linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)",
+            "icon_bg": "#10B981",
+            "icon": "🔒",
+            "title": "Dutch GDPR Compliance",
+            "title_color": "#065F46",
+            "description": "Special handling for BSN, medical data, and health records with Dutch UAVG requirements."
+        },
+        {
+            "bg_gradient": "linear-gradient(135deg, #FEF3F2 0%, #FEE2E2 100%)",
+            "icon_bg": "#EF4444",
+            "icon": "⚙️",
+            "title": "Customizable Scanning",
+            "title_color": "#991B1B",
+            "description": "Configure scans based on your specific compliance needs with industry templates."
+        },
+        {
+            "bg_gradient": "linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)",
+            "icon_bg": "#8B5CF6",
+            "icon": "📊",
+            "title": "Advanced Analysis",
+            "title_color": "#5B21B6",
+            "description": "AI-powered risk scoring and compliance reporting with actionable remediation advice."
+        },
+        {
+            "bg_gradient": "linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)",
+            "icon_bg": "#059669",
+            "icon": "📄",
+            "title": "Complete GDPR Principles",
+            "title_color": "#065F46",
+            "description": "All seven core GDPR principles fully implemented with auditable processes."
+        },
+        {
+            "bg_gradient": "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)",
+            "icon_bg": "#F59E0B",
+            "icon": "📝",
+            "title": "Comprehensive Reporting",
+            "title_color": "#92400E",
+            "description": "Generate detailed compliance reports with executive summaries and remediation plans."
+        }
+    ]
+    
+    # Build the HTML for the features grid
+    features_html = """
     <h2 class="section-heading">Enterprise Features</h2>
     
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
-        <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); 
-                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.08);">
-            <div style="background-color: #3B82F6; width: 50px; height: 50px; border-radius: 50%; 
+    """
+    
+    # Iterate through the features and generate the cards
+    for feature in enterprise_features:
+        features_html += f"""
+        <div style="background: {feature['bg_gradient']}; 
+                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);">
+            <div style="background-color: {feature['icon_bg']}; width: 50px; height: 50px; border-radius: 50%; 
                       display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-                <span style="color: white; font-size: 20px; font-weight: bold;">🔍</span>
+                <span style="color: white; font-size: 20px; font-weight: bold;">{feature['icon']}</span>
             </div>
-            <h3 style="color: #1E40AF; margin-top: 0; font-size: 18px; font-weight: 600;">Comprehensive Detection</h3>
-            <p style="color: #3B4151; margin-bottom: 0;">Unified scanning across multiple data sources with intelligent pattern recognition.</p>
+            <h3 style="color: {feature['title_color']}; margin-top: 0; font-size: 18px; font-weight: 600;">{feature['title']}</h3>
+            <p style="color: #3B4151; margin-bottom: 0;">{feature['description']}</p>
         </div>
-        
-        <div style="background: linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%); 
-                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.08);">
-            <div style="background-color: #10B981; width: 50px; height: 50px; border-radius: 50%; 
-                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-                <span style="color: white; font-size: 20px; font-weight: bold;">🔒</span>
-            </div>
-            <h3 style="color: #065F46; margin-top: 0; font-size: 18px; font-weight: 600;">Dutch GDPR Compliance</h3>
-            <p style="color: #3B4151; margin-bottom: 0;">Special handling for BSN, medical data, and health records with Dutch UAVG requirements.</p>
-        </div>
-        
-        <div style="background: linear-gradient(135deg, #FEF3F2 0%, #FEE2E2 100%); 
-                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.08);">
-            <div style="background-color: #EF4444; width: 50px; height: 50px; border-radius: 50%; 
-                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-                <span style="color: white; font-size: 20px; font-weight: bold;">⚙️</span>
-            </div>
-            <h3 style="color: #991B1B; margin-top: 0; font-size: 18px; font-weight: 600;">Customizable Scanning</h3>
-            <p style="color: #3B4151; margin-bottom: 0;">Configure scans based on your specific compliance needs with industry templates.</p>
-        </div>
-        
-        <div style="background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%); 
-                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.08);">
-            <div style="background-color: #8B5CF6; width: 50px; height: 50px; border-radius: 50%; 
-                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-                <span style="color: white; font-size: 20px; font-weight: bold;">📊</span>
-            </div>
-            <h3 style="color: #5B21B6; margin-top: 0; font-size: 18px; font-weight: 600;">Advanced Analysis</h3>
-            <p style="color: #3B4151; margin-bottom: 0;">AI-powered risk scoring and compliance reporting with actionable remediation advice.</p>
-        </div>
-        
-        <div style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); 
-                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.08);">
-            <div style="background-color: #059669; width: 50px; height: 50px; border-radius: 50%; 
-                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-                <span style="color: white; font-size: 20px; font-weight: bold;">📄</span>
-            </div>
-            <h3 style="color: #065F46; margin-top: 0; font-size: 18px; font-weight: 600;">Complete GDPR Principles</h3>
-            <p style="color: #3B4151; margin-bottom: 0;">All seven core GDPR principles fully implemented with auditable processes.</p>
-        </div>
-        
-        <div style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); 
-                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.08);">
-            <div style="background-color: #F59E0B; width: 50px; height: 50px; border-radius: 50%; 
-                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-                <span style="color: white; font-size: 20px; font-weight: bold;">📊</span>
-            </div>
-            <h3 style="color: #92400E; margin-top: 0; font-size: 18px; font-weight: 600;">Comprehensive Reporting</h3>
-            <p style="color: #3B4151; margin-bottom: 0;">Generate detailed compliance reports with executive summaries and remediation plans.</p>
-        </div>
+        """
+    
+    features_html += """
     </div>
-    """, unsafe_allow_html=True)
+    """
+    
+    # Display the features grid
+    st.markdown(features_html, unsafe_allow_html=True)
     
     # We're removing the About section as requested
     
