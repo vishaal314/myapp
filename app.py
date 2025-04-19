@@ -389,8 +389,10 @@ if not st.session_state.logged_in:
     # Display the sustainability banner
     st.markdown(get_sustainability_banner_html(sustainability_analyzer), unsafe_allow_html=True)
     
-    # Streamlined metrics in cards
-    col1, col2, col3, col4 = st.columns(4)
+    # Create card metrics in an even grid
+    col1, col2 = st.columns(2)
+    col3, col4 = st.columns(2)
+    
     with col1:
         st.markdown("""
         <div style="padding: 20px; border-radius: 8px; background-color: #EFF6FF; border-left: 5px solid #3B82F6;">
@@ -415,7 +417,7 @@ if not st.session_state.logged_in:
     with col4:
         st.markdown(f"""
         <div style="padding: 20px; border-radius: 8px; background-color: {sustainability_score['color']}; border-left: 5px solid {sustainability_score['color']};">
-            <p style="font-size: 16px; margin: 0; color: white;">Sustainability</p>
+            <p style="font-size: 16px; margin: 0; color: white;">Sustainability Score</p>
             <h2 style="font-size: 36px; margin: 10px 0; color: white;">{sustainability_score['overall_score']}%</h2>
         </div>
         """, unsafe_allow_html=True)
