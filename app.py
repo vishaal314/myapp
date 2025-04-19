@@ -640,8 +640,8 @@ else:
         # Clean dashboard header with professional styling
         st.markdown(f"""
         <div style="padding: 15px 0; text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #2563EB; font-weight: 600; margin-bottom: 5px;">Compliance Dashboard</h1>
-            <p style="color: #64748b; font-size: 16px;">Monitor your privacy compliance status and risk assessments</p>
+            <h1 style="color: #2563EB; font-weight: 600; margin-bottom: 5px;">{_("dashboard.title")}</h1>
+            <p style="color: #64748b; font-size: 16px;">{_("dashboard.subtitle")}</p>
         </div>
         """, unsafe_allow_html=True)
             
@@ -664,41 +664,41 @@ else:
             high_risk_items = sum(scan.get('high_risk_count', 0) for scan in all_scans)
             
             col1, col2, col3 = st.columns(3)
-            col1.metric("Total Scans", total_scans)
-            col2.metric("Total PII Found", total_pii)
-            col3.metric("High Risk Items", high_risk_items)
+            col1.metric(_("dashboard.metric.total_scans"), total_scans)
+            col2.metric(_("dashboard.metric.total_pii"), total_pii)
+            col3.metric(_("dashboard.metric.high_risk"), high_risk_items)
             
             # Privacy & Compliance Analytics Dashboard Section
-            st.markdown("""
+            st.markdown(f"""
             <h3 style="margin: 20px 0 15px 0; color: #1e3a8a; font-weight: 600;">
-                Privacy & Compliance Analytics
+                {_("dashboard.analytics_title")}
             </h3>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                 <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
-                    <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">Annual Cost Efficiency</h4>
+                    <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">{_("dashboard.cost_efficiency")}</h4>
                     <p style="font-size: 24px; font-weight: 600; color: #2E7D32; margin: 10px 0 5px 0;">€104,800.01</p>
-                    <p style="margin: 0; color: #6b7280; font-size: 0.85em;">Potential annual savings</p>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.85em;">{_("dashboard.potential_savings")}</p>
                 </div>
             
                 <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
-                    <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">Sustainability Score</h4>
+                    <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">{_("dashboard.sustainability_score")}</h4>
                     <div style="width: 70px; height: 70px; margin: 10px auto; background-color: #8BC34A; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
                         <span style="color: white; font-size: 24px; font-weight: 600;">71</span>
                     </div>
-                    <p style="margin: 0; color: #6b7280; font-size: 0.85em;">Status: <span style="color: #8BC34A; font-weight: 600;">Good</span></p>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.85em;">{_("dashboard.status")}: <span style="color: #8BC34A; font-weight: 600;">{_("dashboard.status_good")}</span></p>
                 </div>
             
                 <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
-                    <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">GDPR Fine Protection</h4>
+                    <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">{_("dashboard.fine_protection")}</h4>
                     <p style="font-size: 24px; font-weight: 600; color: #9C27B0; margin: 10px 0 5px 0;">92%</p>
-                    <p style="margin: 0; color: #6b7280; font-size: 0.85em;">Risk mitigation coverage</p>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.85em;">{_("dashboard.risk_mitigation")}</p>
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
             # Recent scans
-            st.subheader("Recent Scans")
+            st.subheader(_("dashboard.recent_scans"))
             recent_scans = all_scans[-5:] if len(all_scans) > 5 else all_scans
             recent_scans_df = pd.DataFrame(recent_scans)
             if 'timestamp' in recent_scans_df.columns:
@@ -711,7 +711,7 @@ else:
                 st.dataframe(recent_scans_df[display_cols])
             
                 # PII Types Distribution
-                st.subheader("PII Types Distribution")
+                st.subheader(_("dashboard.pii_distribution"))
                 
                 # Aggregate PII types from all scans
                 pii_counts = {}
@@ -721,38 +721,43 @@ else:
                             pii_counts[pii_type] = pii_counts.get(pii_type, 0) + count
                 
                 if pii_counts:
-                    pii_df = pd.DataFrame(list(pii_counts.items()), columns=['PII Type', 'Count'])
-                    fig = px.bar(pii_df, x='PII Type', y='Count', color='PII Type')
+                    pii_df = pd.DataFrame(list(pii_counts.items()), columns=[_("dashboard.pii_type"), _("dashboard.count")])
+                    fig = px.bar(pii_df, x=_("dashboard.pii_type"), y=_("dashboard.count"), color=_("dashboard.pii_type"))
                     st.plotly_chart(fig, use_container_width=True)
                 
                 # Risk Level Distribution
-                st.subheader("Risk Level Distribution")
-                risk_counts = {'Low': 0, 'Medium': 0, 'High': 0}
+                st.subheader(_("dashboard.risk_distribution"))
+                risk_counts = {_("severity.low"): 0, _("severity.medium"): 0, _("severity.high"): 0}
                 for scan in all_scans:
                     if 'risk_levels' in scan:
                         for risk, count in scan['risk_levels'].items():
-                            if risk in risk_counts:
-                                risk_counts[risk] += count
+                            # Map English risk levels to translated values
+                            if risk == 'Low':
+                                risk_counts[_("severity.low")] += count
+                            elif risk == 'Medium':
+                                risk_counts[_("severity.medium")] += count
+                            elif risk == 'High':
+                                risk_counts[_("severity.high")] += count
                 
-                risk_df = pd.DataFrame(list(risk_counts.items()), columns=['Risk Level', 'Count'])
-                fig = px.pie(risk_df, values='Count', names='Risk Level', color='Risk Level',
-                             color_discrete_map={'Low': 'green', 'Medium': 'orange', 'High': 'red'})
+                risk_df = pd.DataFrame(list(risk_counts.items()), columns=[_("dashboard.risk_level"), _("dashboard.count")])
+                fig = px.pie(risk_df, values=_("dashboard.count"), names=_("dashboard.risk_level"), color=_("dashboard.risk_level"),
+                             color_discrete_map={_("severity.low"): 'green', _("severity.medium"): 'orange', _("severity.high"): 'red'})
                 st.plotly_chart(fig, use_container_width=True)
                 
                 # Scan Types
-                st.subheader("Scan Types")
+                st.subheader(_("dashboard.scan_distribution"))
                 scan_type_counts = {}
                 for scan in all_scans:
-                    scan_type = scan.get('scan_type', 'Unknown')
+                    scan_type = scan.get('scan_type', _("dashboard.unknown"))
                     scan_type_counts[scan_type] = scan_type_counts.get(scan_type, 0) + 1
                 
-                scan_type_df = pd.DataFrame(list(scan_type_counts.items()), columns=['Scan Type', 'Count'])
-                fig = px.bar(scan_type_df, x='Scan Type', y='Count', color='Scan Type')
+                scan_type_df = pd.DataFrame(list(scan_type_counts.items()), columns=[_("dashboard.scan_type"), _("dashboard.count")])
+                fig = px.bar(scan_type_df, x=_("dashboard.scan_type"), y=_("dashboard.count"), color=_("dashboard.scan_type"))
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.info("No scan data available yet. Start a new scan to see results.")
+                st.info(_("dashboard.no_scan_data"))
         else:
-            st.info("No scan data available yet. Start a new scan to see results.")
+            st.info(_("dashboard.no_scan_data"))
     
     elif selected_nav == "New Scan":
         # Import permission checking functionality
