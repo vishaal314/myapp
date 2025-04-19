@@ -285,29 +285,50 @@ def display_landing_page_grid() -> None:
         </div>
         """, unsafe_allow_html=True)
         
-        # Feature highlight box
+        # Feature highlight box with proper bullet lists
         st.markdown("""
         <div style="background-color: white; border-radius: 10px; padding: 20px; 
                    box-shadow: 0 2px 12px rgba(0,0,0,0.1); border: 1px solid #f0f0f0;">
             <h3 style="color: #4f46e5; margin-top: 0; font-weight: 600; font-size: 18px;">Key Features</h3>
             <div style="margin-top: 15px;">
-                <div style="margin-bottom: 12px;">
+                <div style="margin-bottom: 15px;">
                     <div style="font-weight: 600; color: #111827; font-size: 15px;">Multi-source scanning</div>
-                    <p style="margin-top: 4px; margin-bottom: 0; font-size: 14px; color: #4b5563;">
-                        PII detection across code, documents, databases and APIs
+                    <p style="margin-top: 4px; margin-bottom: 4px; font-size: 14px; color: #4b5563;">
+                        PII detection across multiple data sources:
                     </p>
+                    <ul style="margin-top: 5px; padding-left: 20px; font-size: 14px; color: #4b5563;">
+                        <li>Code repositories (Python, Java, JavaScript, etc.)</li>
+                        <li>Documents (PDF, DOC, XLSX, TXT, etc.)</li>
+                        <li>Databases (MySQL, PostgreSQL, MongoDB)</li>
+                        <li>APIs (REST, GraphQL, SOAP)</li>
+                        <li>Images and media files</li>
+                    </ul>
                 </div>
-                <div style="margin-bottom: 12px;">
+                <div style="margin-bottom: 15px;">
                     <div style="font-weight: 600; color: #111827; font-size: 15px;">Advanced AI Analysis</div>
-                    <p style="margin-top: 4px; margin-bottom: 0; font-size: 14px; color: #4b5563;">
-                        Smart risk assessment and automated remediation advice
+                    <p style="margin-top: 4px; margin-bottom: 4px; font-size: 14px; color: #4b5563;">
+                        Smart detection methods:
                     </p>
+                    <ul style="margin-top: 5px; padding-left: 20px; font-size: 14px; color: #4b5563;">
+                        <li>Pattern matching with regular expressions</li>
+                        <li>Machine learning classification</li>
+                        <li>Natural language processing</li>
+                        <li>Computer vision for document and image analysis</li>
+                        <li>Context-aware risk assessment</li>
+                    </ul>
                 </div>
                 <div style="margin-bottom: 0px;">
-                    <div style="font-weight: 600; color: #111827; font-size: 15px;">Compliance Dashboards</div>
-                    <p style="margin-top: 4px; margin-bottom: 0; font-size: 14px; color: #4b5563;">
-                        Visualize compliance status and track progress over time
+                    <div style="font-weight: 600; color: #111827; font-size: 15px;">International Support</div>
+                    <p style="margin-top: 4px; margin-bottom: 4px; font-size: 14px; color: #4b5563;">
+                        Multi-language capabilities:
                     </p>
+                    <ul style="margin-top: 5px; padding-left: 20px; font-size: 14px; color: #4b5563;">
+                        <li>English, Dutch, German, French, Spanish</li>
+                        <li>Italian, Portuguese, Swedish, Danish</li>
+                        <li>Polish, Czech, Hungarian, Romanian</li>
+                        <li>Japanese, Chinese, Korean</li>
+                        <li>And 10+ more languages</li>
+                    </ul>
                 </div>
             </div>
         </div>

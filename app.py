@@ -559,7 +559,7 @@ if not st.session_state.logged_in:
             </div>
             """
         
-        # Add JavaScript for scanner selection
+        # Add JavaScript for scanner selection with improved styling
         js_code = """
         <script>
         function selectScanner(scannerKey) {
@@ -574,16 +574,23 @@ if not st.session_state.logged_in:
         }
         </script>
         <style>
+        /* Base card styles with consistent transitions */
+        .scanner-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-left 0.3s ease !important;
+            cursor: pointer !important;
+            border-left: 4px solid transparent !important;
+        }
+        
+        /* Hover state */
         .scanner-card:hover {
             transform: translateX(8px) !important;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
         }
+        
+        /* Selected state */
         .scanner-card.selected {
             transform: translateX(10px) !important;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important;
-        }
-        .scanner-card {
-            transition: all 0.3s ease !important;
         }
         </style>
         """
