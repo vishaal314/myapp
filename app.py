@@ -2837,9 +2837,9 @@ else:
             st.header("User Management")
             
             # Check for user management permission
-            if not has_permission('admin:manage_users'):
+            if not has_permission('user:create') and not has_permission('user:update') and not has_permission('user:delete'):
                 st.warning("You don't have permission to manage users.")
-                st.info("Your role requires the 'admin:manage_users' permission to use this feature.")
+                st.info("Your role requires 'user:create', 'user:update', or 'user:delete' permissions to use this feature.")
             else:
                 # Load all users for display
                 all_users = {}
@@ -3027,7 +3027,7 @@ else:
             # Check for role management permission
             if not has_permission('admin:manage_roles'):
                 st.warning("You don't have permission to manage roles.")
-                st.info("Your role requires the 'admin:manage_roles' permission to use this feature.")
+                st.info("Your role requires the 'admin:manage_roles' permission to use this feature. This is typically available to administrators only.")
             else:
                 # Get all roles and permissions
                 all_roles = get_all_roles()
@@ -3075,61 +3075,255 @@ else:
                             desc = all_permissions.get(perm, "No description available")
                             st.markdown(f"- **{perm}**: {desc}")
                 
-                # Add custom permissions
-                st.subheader("Add Custom Permissions to User")
+                # User Role Management
+                st.subheader("User Role & Permission Management")
                 
-                with st.form("add_custom_permissions"):
-                    # Get all users
-                    all_users = {}
-                    try:
-                        import json
-                        with open('users.json', 'r') as f:
-                            all_users = json.load(f)
-                    except Exception as e:
-                        st.error(f"Error loading users: {str(e)}")
+                # Get all users
+                all_users = {}
+                try:
+                    import json
+                    with open('users.json', 'r') as f:
+                        all_users = json.load(f)
+                except Exception as e:
+                    st.error(f"Error loading users: {str(e)}")
+                
+                if all_users:
+                    # Create tabs for different permission management actions
+                    role_tabs = st.tabs(["Change User Role", "Add Custom Permissions", "Remove Custom Permissions", "Reset Permissions"])
                     
-                    user_options = list(all_users.keys())
-                    target_user = st.selectbox("Select User", user_options)
-                    
-                    # Display all available permissions
-                    perm_options = list(all_permissions.keys())
-                    custom_perms = st.multiselect("Select Custom Permissions", perm_options)
-                    
-                    # Form submission
-                    submit_button = st.form_submit_button("Add Custom Permissions")
-                    
-                    if submit_button:
-                        if target_user and custom_perms:
-                            # Add custom permissions
-                            success = add_custom_permissions(target_user, custom_perms)
+                    # Tab 1: Change User Role
+                    with role_tabs[0]:
+                        with st.form("change_role_form"):
+                            user_options = list(all_users.keys())
+                            target_user = st.selectbox("Select User", user_options, key="change_role_user")
                             
-                            if success:
-                                st.success(f"Custom permissions added to user '{target_user}' successfully!")
-                                # Log this admin action
-                                try:
-                                    results_aggregator.log_audit_event(
-                                        username=st.session_state.username,
-                                        action="CUSTOM_PERMISSIONS_ADDED",
-                                        details={
-                                            "target_username": target_user,
-                                            "permissions": custom_perms,
-                                            "timestamp": datetime.now().isoformat()
-                                        }
-                                    )
-                                except Exception as e:
-                                    st.warning(f"Could not log audit event: {str(e)}")
-                            else:
-                                st.error(f"Error adding custom permissions to user: {target_user}")
-                        else:
-                            st.error("Please select a user and at least one permission")
+                            # Get role options
+                            role_options = list(all_roles.keys())
+                            
+                            # Get current role
+                            current_role = "unknown"
+                            if target_user and target_user in all_users:
+                                current_role = all_users[target_user].get("role", "unknown")
+                            
+                            st.info(f"Current role: **{current_role}**")
+                            
+                            # Select new role
+                            new_role = st.selectbox("Select New Role", role_options, 
+                                                   index=role_options.index(current_role) if current_role in role_options else 0)
+                            
+                            # Form submission
+                            submit_button = st.form_submit_button("Change Role")
+                            
+                            if submit_button:
+                                if target_user and new_role:
+                                    # Only process if role is actually changing
+                                    if new_role != current_role:
+                                        # Change role
+                                        from services.auth import change_user_role
+                                        success = change_user_role(target_user, new_role)
+                                        
+                                        if success:
+                                            st.success(f"User '{target_user}' role changed from '{current_role}' to '{new_role}' successfully!")
+                                            # Log this admin action
+                                            try:
+                                                results_aggregator.log_audit_event(
+                                                    username=st.session_state.username,
+                                                    action="USER_ROLE_CHANGED",
+                                                    details={
+                                                        "target_username": target_user,
+                                                        "old_role": current_role,
+                                                        "new_role": new_role,
+                                                        "timestamp": datetime.now().isoformat()
+                                                    }
+                                                )
+                                            except Exception as e:
+                                                st.warning(f"Could not log audit event: {str(e)}")
+                                        else:
+                                            st.error(f"Error changing role for user: {target_user}")
+                                    else:
+                                        st.info(f"No change: User already has the role '{current_role}'")
+                                else:
+                                    st.error("Please select a user and a role")
+                    
+                    # Tab 2: Add Custom Permissions
+                    with role_tabs[1]:
+                        with st.form("add_custom_permissions"):
+                            user_options = list(all_users.keys())
+                            target_user = st.selectbox("Select User", user_options, key="add_perm_user")
+                            
+                            # Show user's role and current permissions
+                            if target_user and target_user in all_users:
+                                current_role = all_users[target_user].get("role", "unknown")
+                                st.info(f"Current role: **{current_role}**")
+                                
+                                # Get user's current permissions
+                                from services.auth import get_user_role_details
+                                role_details = get_user_role_details(target_user)
+                                
+                                if role_details:
+                                    # Display any custom permissions
+                                    if role_details.get("custom_permissions"):
+                                        st.write("**Current Custom Permissions:**")
+                                        for perm in role_details.get("custom_permissions", []):
+                                            desc = all_permissions.get(perm, "No description available")
+                                            st.write(f"- **{perm}**: {desc}")
+                            
+                            # Display all available permissions
+                            perm_options = list(all_permissions.keys())
+                            custom_perms = st.multiselect("Select Custom Permissions to Add", perm_options, key="add_perms")
+                            
+                            # Form submission
+                            submit_button = st.form_submit_button("Add Custom Permissions")
+                            
+                            if submit_button:
+                                if target_user and custom_perms:
+                                    # Add custom permissions
+                                    from services.auth import add_custom_permissions
+                                    success = add_custom_permissions(target_user, custom_perms)
+                                    
+                                    if success:
+                                        st.success(f"Custom permissions added to user '{target_user}' successfully!")
+                                        # Log this admin action
+                                        try:
+                                            results_aggregator.log_audit_event(
+                                                username=st.session_state.username,
+                                                action="CUSTOM_PERMISSIONS_ADDED",
+                                                details={
+                                                    "target_username": target_user,
+                                                    "permissions": custom_perms,
+                                                    "timestamp": datetime.now().isoformat()
+                                                }
+                                            )
+                                        except Exception as e:
+                                            st.warning(f"Could not log audit event: {str(e)}")
+                                    else:
+                                        st.error(f"Error adding custom permissions to user: {target_user}")
+                                else:
+                                    st.error("Please select a user and at least one permission")
+                    
+                    # Tab 3: Remove Custom Permissions
+                    with role_tabs[2]:
+                        with st.form("remove_custom_permissions"):
+                            user_options = list(all_users.keys())
+                            target_user = st.selectbox("Select User", user_options, key="remove_perm_user")
+                            
+                            # Show user's role and current custom permissions
+                            custom_permissions = []
+                            if target_user and target_user in all_users:
+                                current_role = all_users[target_user].get("role", "unknown")
+                                st.info(f"Current role: **{current_role}**")
+                                
+                                # Get user's custom permissions
+                                from services.auth import get_user_role_details
+                                role_details = get_user_role_details(target_user)
+                                
+                                if role_details:
+                                    custom_permissions = role_details.get("custom_permissions", [])
+                                    
+                                    if custom_permissions:
+                                        st.write("**Current Custom Permissions:**")
+                                        for perm in custom_permissions:
+                                            desc = all_permissions.get(perm, "No description available")
+                                            st.write(f"- **{perm}**: {desc}")
+                                    else:
+                                        st.info(f"User '{target_user}' has no custom permissions beyond their '{current_role}' role.")
+                            
+                            # Display custom permissions for removal
+                            perms_to_remove = st.multiselect("Select Custom Permissions to Remove", 
+                                                           custom_permissions, 
+                                                           key="remove_perms")
+                            
+                            # Form submission
+                            submit_button = st.form_submit_button("Remove Custom Permissions")
+                            
+                            if submit_button:
+                                if target_user and perms_to_remove:
+                                    # Remove custom permissions
+                                    from services.auth import remove_custom_permissions
+                                    success = remove_custom_permissions(target_user, perms_to_remove)
+                                    
+                                    if success:
+                                        st.success(f"Custom permissions removed from user '{target_user}' successfully!")
+                                        # Log this admin action
+                                        try:
+                                            results_aggregator.log_audit_event(
+                                                username=st.session_state.username,
+                                                action="CUSTOM_PERMISSIONS_REMOVED",
+                                                details={
+                                                    "target_username": target_user,
+                                                    "permissions": perms_to_remove,
+                                                    "timestamp": datetime.now().isoformat()
+                                                }
+                                            )
+                                        except Exception as e:
+                                            st.warning(f"Could not log audit event: {str(e)}")
+                                    else:
+                                        st.error(f"Error removing custom permissions from user: {target_user}")
+                                elif target_user and not custom_permissions:
+                                    st.info(f"User '{target_user}' has no custom permissions to remove.")
+                                else:
+                                    st.error("Please select a user and at least one permission to remove")
+                    
+                    # Tab 4: Reset Permissions
+                    with role_tabs[3]:
+                        with st.form("reset_permissions"):
+                            user_options = list(all_users.keys())
+                            target_user = st.selectbox("Select User", user_options, key="reset_perm_user")
+                            
+                            # Show user's role and whether they have custom permissions
+                            if target_user and target_user in all_users:
+                                current_role = all_users[target_user].get("role", "unknown")
+                                st.info(f"Current role: **{current_role}**")
+                                
+                                # Check if user has custom permissions
+                                from services.auth import get_user_role_details
+                                role_details = get_user_role_details(target_user)
+                                
+                                if role_details and role_details.get("custom_permissions"):
+                                    st.warning(f"User '{target_user}' has {len(role_details.get('custom_permissions', []))} custom permissions that will be reset.")
+                                else:
+                                    st.info(f"User '{target_user}' has standard permissions matching their '{current_role}' role.")
+                            
+                            st.warning("This will reset the user's permissions to match their role's default permissions. Any custom permissions will be removed.")
+                            
+                            # Form submission
+                            submit_button = st.form_submit_button("Reset Permissions")
+                            
+                            if submit_button:
+                                if target_user:
+                                    # Reset permissions
+                                    from services.auth import reset_user_permissions
+                                    success = reset_user_permissions(target_user)
+                                    
+                                    if success:
+                                        st.success(f"Permissions for user '{target_user}' reset to default '{current_role}' permissions successfully!")
+                                        # Log this admin action
+                                        try:
+                                            results_aggregator.log_audit_event(
+                                                username=st.session_state.username,
+                                                action="USER_PERMISSIONS_RESET",
+                                                details={
+                                                    "target_username": target_user,
+                                                    "role": current_role,
+                                                    "timestamp": datetime.now().isoformat()
+                                                }
+                                            )
+                                        except Exception as e:
+                                            st.warning(f"Could not log audit event: {str(e)}")
+                                    else:
+                                        st.error(f"Error resetting permissions for user: {target_user}")
+                                else:
+                                    st.error("Please select a user")
+                else:
+                    st.info("No users found. Create users first to manage their roles and permissions.")
         
         with admin_tabs[2]:  # Audit Logs
             st.header("Audit Logs")
             
             # Check for audit logs permission
-            if not has_permission('admin:view_audit_logs'):
+            if not has_permission('audit:view'):
                 st.warning("You don't have permission to view audit logs.")
-                st.info("Your role requires the 'admin:view_audit_logs' permission to use this feature.")
+                st.info("Your role requires the 'audit:view' permission to use this feature.")
             else:
                 try:
                     # Get audit logs from results aggregator
@@ -3166,9 +3360,9 @@ else:
             st.header("System Settings")
             
             # Check for system settings permission
-            if not has_permission('admin:system_settings'):
+            if not has_permission('system:settings'):
                 st.warning("You don't have permission to modify system settings.")
-                st.info("Your role requires the 'admin:system_settings' permission to use this feature.")
+                st.info("Your role requires the 'system:settings' permission to use this feature.")
             else:
                 st.subheader("General Settings")
                 
