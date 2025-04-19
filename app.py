@@ -1762,8 +1762,15 @@ else:
                             status_text.text(f"Starting repository scan of: {repo_url} (branch: {branch_name})")
                             progress_bar.progress(0.1)
                             
-                            # Initialize the RepoScanner with our existing code scanner
-                            repo_scanner = RepoScanner(code_scanner=scanner)
+                            # Make sure we're using a proper CodeScanner instance for the RepoScanner
+                            from services.code_scanner import CodeScanner
+                            
+                            # Create a dedicated CodeScanner for the repository scanning
+                            # This ensures we're not passing a dict or invalid scanner object
+                            code_scanner_instance = CodeScanner(region=region)
+                            
+                            # Initialize the RepoScanner with a proper CodeScanner instance
+                            repo_scanner = RepoScanner(code_scanner=code_scanner_instance)
                             
                             # Define a custom progress callback for repository scanning
                             def repo_progress_callback(current, total, current_file):
