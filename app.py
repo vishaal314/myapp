@@ -1813,8 +1813,19 @@ else:
                                 "**/venv/**"            # Virtual environments
                             ]
                             
+                            # Define progress callback for directory scanning
+                            def update_progress(current, total, current_file):
+                                progress = 0.1 + (current / total * 0.8)  # Scale to 10%-90% range
+                                progress_bar.progress(min(progress, 0.9))
+                                status_text.text(f"Scanning file {current}/{total}: {current_file}")
+                            
+                            # Create a dedicated CodeScanner instance for directory scanning
+                            # This ensures we're not using a potentially invalid scanner object
+                            from services.code_scanner import CodeScanner
+                            directory_scanner = CodeScanner(region=region)
+                            
                             # Run the resilient scan with checkpointing
-                            result = scanner.scan_directory(
+                            result = directory_scanner.scan_directory(
                                 directory_path=directory_path,
                                 progress_callback=update_progress,
                                 ignore_patterns=ignore_patterns,
@@ -1834,8 +1845,12 @@ else:
                                 progress_bar.progress(progress)
                                 status_text.text(f"Scanning file {i+1}/{len(file_paths)}: {os.path.basename(file_path)}")
                                 
+                                # Create a dedicated CodeScanner instance for individual file scanning
+                                from services.code_scanner import CodeScanner
+                                file_scanner = CodeScanner(region=region)
+                                
                                 # Use timeout-protected scan
-                                result = scanner._scan_file_with_timeout(file_path)
+                                result = file_scanner._scan_file_with_timeout(file_path)
                                 scan_results.append(result)
                     except Exception as e:
                         st.error(f"Error during code scan: {str(e)}")
@@ -1901,15 +1916,46 @@ else:
                         import traceback
                         st.code(traceback.format_exc())
                 else:
-                    # For other scan types, use the mock scanner
+                    # For other scan types, create appropriate scanner based on scan type
+                    from services.blob_scanner import BlobScanner
+                    from services.image_scanner import ImageScanner
+                    from services.db_scanner import DatabaseScanner
+                    
+                    # Initialize the appropriate scanner based on scan type
+                    if scan_type == _("scan.document"):
+                        scanner_instance = BlobScanner(region=region)
+                    elif scan_type == _("scan.image"):
+                        scanner_instance = ImageScanner(region=region)
+                    elif scan_type == _("scan.database"):
+                        scanner_instance = DatabaseScanner(region=region)
+                    else:
+                        # Generic mock scanner for other types
+                        scanner_instance = {
+                            'scan_file': lambda file_path: {
+                                'pii_found': [
+                                    {'type': 'Demo PII', 'value': f'Sample in {os.path.basename(file_path)}', 'location': file_path, 'risk_level': 'Medium'}
+                                ],
+                                'file_path': file_path,
+                                'status': 'success',
+                                'scan_time': datetime.now().isoformat()
+                            }
+                        }
+                    
+                    # Scan each file with the appropriate scanner
                     for i, file_path in enumerate(file_paths):
                         progress = 0.5 + (i + 1) / (2 * len(file_paths))
                         progress_bar.progress(progress)
                         status_text.text(f"Scanning file {i+1}/{len(file_paths)}: {os.path.basename(file_path)}")
                         
                         try:
-                            # Call scan_file method directly on the dictionary object
-                            result = scanner_mock['scan_file'](file_path)
+                            # Call scan_file method on the appropriate scanner
+                            if isinstance(scanner_instance, dict):
+                                # For mock scanners
+                                result = scanner_instance['scan_file'](file_path)
+                            else:
+                                # For real scanner instances with method
+                                result = scanner_instance.scan_file(file_path)
+                                
                             scan_results.append(result)
                         except Exception as e:
                             st.error(f"Error scanning {os.path.basename(file_path)}: {str(e)}")
