@@ -779,16 +779,16 @@ else:
             _("scan.database"),
             _("scan.api"),
             _("scan.website"),
-            "Manual Upload",  # This needs a translation key
-            "Sustainability Scan",  # This needs a translation key
+            _("scan.manual_upload"),
+            _("scan.sustainability"),
             _("scan.ai_model"),
-            "SOC2 Scan"  # This needs a translation key
+            _("scan.soc2")
         ]
         
         # Add premium tag to premium features
         if not has_permission('scan:premium'):
             scan_type_options_with_labels = []
-            premium_scans = [_("scan.image"), _("scan.api"), "Sustainability Scan", _("scan.ai_model"), "SOC2 Scan"]
+            premium_scans = [_("scan.image"), _("scan.api"), _("scan.sustainability"), _("scan.ai_model"), _("scan.soc2")]
             
             for option in scan_type_options:
                 if option in premium_scans:
