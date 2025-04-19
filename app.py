@@ -1617,24 +1617,26 @@ else:
                 
                 # Handle Repository URL special case
                 if scan_type == _("scan.code") and st.session_state.repo_source == _("scan.repository_url"):
-                    # Instead of relying on file upload, we'll handle the repository URL scanning differently
+                    # We'll handle the repository URL scanning differently using our RepoScanner
                     st.info("Starting repository URL scan...")
                     
-                    # Create a placeholder file for demonstration
-                    temp_dir = f"temp_{str(uuid.uuid4())}"
-                    os.makedirs(temp_dir, exist_ok=True)
-                    mock_file_path = os.path.join(temp_dir, "repo_scan_placeholder.txt")
-                    with open(mock_file_path, "w") as f:
-                        f.write("Repository URL scan placeholder")
+                    # Get repository URL parameters from session state
+                    repo_url = st.session_state.get('repo_url', '')
+                    branch_name = st.session_state.get('branch_name', 'main')
+                    auth_token = st.session_state.get('auth_token', None)
                     
-                    # Create a mock list of files to satisfy the code expectations
+                    if not repo_url:
+                        st.error("Repository URL not provided. Please enter a valid repository URL.")
+                        st.stop()
+                    
+                    # Create a placeholder list of files to satisfy the code structure
                     class MockFile:
                         def __init__(self, name):
                             self.name = name
                         def getbuffer(self):
                             return b"Repository URL scan"
                     
-                    uploaded_files = [MockFile("github_repo.txt")]
+                    uploaded_files = [MockFile("repository.scan")]
                 
                 # Save uploaded files to temp directory
                 temp_dir = f"temp_{scan_id}"
@@ -1746,8 +1748,52 @@ else:
                 if scan_type == _("scan.code"):
                     # For code scan, use the directory-level scan with resilience features
                     try:
-                        # Check if we have a directory of files or individual files
-                        if len(file_paths) == 1 and os.path.isdir(file_paths[0]):
+                        # Special handling for repository URL scanning
+                        if st.session_state.repo_source == _("scan.repository_url"):
+                            # Get repository URL parameters from session state
+                            repo_url = st.session_state.get('repo_url', '')
+                            branch_name = st.session_state.get('branch_name', 'main')
+                            auth_token = st.session_state.get('auth_token', None)
+                            
+                            if not repo_url:
+                                st.error("Repository URL not provided. Please enter a valid repository URL.")
+                                st.stop()
+                                
+                            status_text.text(f"Starting repository scan of: {repo_url} (branch: {branch_name})")
+                            progress_bar.progress(0.1)
+                            
+                            # Initialize the RepoScanner with our existing code scanner
+                            repo_scanner = RepoScanner(code_scanner=scanner)
+                            
+                            # Define a custom progress callback for repository scanning
+                            def repo_progress_callback(current, total, current_file):
+                                progress = 0.1 + (current / total * 0.8)  # Scale to 10%-90% range
+                                progress_bar.progress(min(progress, 0.9))
+                                status_text.text(f"Scanning repository file {current}/{total}: {current_file}")
+                            
+                            # Scan the repository
+                            result = repo_scanner.scan_repository(
+                                repo_url=repo_url,
+                                branch=branch_name,
+                                auth_token=auth_token,
+                                progress_callback=repo_progress_callback
+                            )
+                            
+                            # Check if scan was successful
+                            if result.get('status') == 'error':
+                                st.error(f"Repository scan failed: {result.get('message', 'Unknown error')}")
+                                st.stop()
+                            
+                            # Store findings from repository scan
+                            scan_results = result.get('findings', [])
+                            
+                            # Show completion status
+                            progress_bar.progress(1.0)
+                            file_count = len(scan_results)
+                            status_text.text(f"Completed repository scan. Scanned {file_count} files.")
+                            
+                        # Standard directory or file scanning
+                        elif len(file_paths) == 1 and os.path.isdir(file_paths[0]):
                             # Scan entire directory with resilient method
                             directory_path = file_paths[0]
                             status_text.text(f"Starting directory scan of: {directory_path}")
@@ -1786,6 +1832,10 @@ else:
                                 scan_results.append(result)
                     except Exception as e:
                         st.error(f"Error during code scan: {str(e)}")
+                        # Show detailed error information for debugging
+                        st.error(f"Error type: {type(e).__name__}")
+                        import traceback
+                        st.code(traceback.format_exc())
                 elif scan_type == _("scan.website"):
                     # For website scan, use our WebsiteScanner class
                     try:
