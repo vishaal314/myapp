@@ -512,11 +512,11 @@ else:
     # Membership purchase options
     if not st.session_state.premium_member:
         membership_option = st.sidebar.selectbox(
-            "Select Membership Plan", 
-            ["Monthly ($29.99)", "Quarterly ($79.99)", "Annual ($299.99)"]
+            _("sidebar.select_plan"), 
+            [_("sidebar.plan_monthly"), _("sidebar.plan_quarterly"), _("sidebar.plan_annual")]
         )
         
-        if st.sidebar.button("Upgrade to Premium", type="primary"):
+        if st.sidebar.button(_("sidebar.upgrade_button"), type="primary"):
             # Set a flag for payment flow
             st.session_state.show_membership_payment = True
             
@@ -569,35 +569,35 @@ else:
     # Handle membership payment display
     if 'show_membership_payment' in st.session_state and st.session_state.show_membership_payment:
         st.sidebar.markdown("---")
-        st.sidebar.subheader("Complete Membership Purchase")
+        st.sidebar.subheader(_("sidebar.complete_purchase"))
         
-        # Mock payment form for membership
+        # Payment form for membership
         with st.sidebar.form("membership_payment_form"):
-            st.write("Enter Payment Details")
-            card_number = st.text_input("Card Number", placeholder="Enter 16-digit card number")
+            st.write(_("sidebar.enter_payment_details"))
+            card_number = st.text_input(_("sidebar.card_number"), placeholder=_("sidebar.card_number_placeholder"))
             col1, col2 = st.columns(2)
             with col1:
-                expiry = st.text_input("Expiry", placeholder="MM/YY")
+                expiry = st.text_input(_("sidebar.expiry"), placeholder=_("sidebar.expiry_placeholder"))
             with col2:
-                cvc = st.text_input("CVC", placeholder="123", type="password")
+                cvc = st.text_input(_("sidebar.cvc"), placeholder=_("sidebar.cvc_placeholder"), type="password")
             
-            name_on_card = st.text_input("Name on Card", placeholder="Enter name on card")
+            name_on_card = st.text_input(_("sidebar.name_on_card"), placeholder=_("sidebar.name_on_card_placeholder"))
             
             # Payment validation
             payment_valid = False
             payment_message = ""
             
             # Submit button for payment
-            if st.form_submit_button("Complete Purchase", type="primary"):
+            if st.form_submit_button(_("sidebar.complete_purchase_button"), type="primary"):
                 # Validate inputs
                 if not card_number or len(card_number.replace(" ", "")) != 16:
-                    payment_message = "Please enter a valid 16-digit card number"
+                    payment_message = _("sidebar.error.card_number")
                 elif not expiry or "/" not in expiry:
-                    payment_message = "Please enter a valid expiry date (MM/YY)"
+                    payment_message = _("sidebar.error.expiry")
                 elif not cvc or len(cvc) != 3:
-                    payment_message = "Please enter a valid 3-digit CVC"
+                    payment_message = _("sidebar.error.cvc")
                 elif not name_on_card:
-                    payment_message = "Please enter the name on your card"
+                    payment_message = _("sidebar.error.name_on_card")
                 else:
                     payment_valid = True
                     
@@ -605,9 +605,19 @@ else:
                     # Complete the purchase (simulated)
                     st.session_state.premium_member = True
                     st.session_state.show_membership_payment = False
+                    
+                    # Get price from the selected plan
+                    amount = ""
+                    if _("sidebar.plan_monthly") == membership_option:
+                        amount = "29.99"
+                    elif _("sidebar.plan_quarterly") == membership_option:
+                        amount = "79.99"
+                    elif _("sidebar.plan_annual") == membership_option:
+                        amount = "299.99"
+                        
                     st.session_state.payment_confirmation = {
                         "id": f"mem_{uuid.uuid4().hex[:8]}",
-                        "amount": membership_option.split("$")[1].split(")")[0],
+                        "amount": amount,
                         "status": "succeeded",
                         "timestamp": datetime.now().isoformat()
                     }
