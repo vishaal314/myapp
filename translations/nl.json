@@ -124,6 +124,7 @@
   "scan.select_model": "Selecteer AI Model Provider",
   "scan.select_log": "Selecteer Logbron",
   "scan.select_type": "Scan Type",
+  "scan.advanced_configuration": "Geavanceerde Configuratie",
   
   "scan.start_button": "Start Scan",
   "scan.cancel_button": "Annuleren",

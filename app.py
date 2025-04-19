@@ -814,9 +814,9 @@ else:
         region = st.selectbox(_("scan.select_region"), list(REGIONS.keys()))
         
         # Additional configurations - customized for each scan type
-        with st.expander("Advanced Configuration"):
+        with st.expander(_("scan.advanced_configuration")):
             # Scan-specific configurations based on type
-            if scan_type == "Code Scan":
+            if scan_type == _("scan.code"):
                 # 1. Code Scanner
                 st.subheader("Code Scanner Configuration")
                 
@@ -999,7 +999,7 @@ else:
                 include_strings = st.checkbox("Scan string literals", value=True)
                 include_variables = st.checkbox("Analyze variable names", value=True)
                 
-            elif scan_type == "Blob Scan":
+            elif scan_type == _("scan.document"):
                 # 2. Blob Scanner
                 st.subheader("Blob Scanner Configuration")
                 blob_source = st.radio("Blob Storage Location", ["Upload Files", "Azure Blob", "AWS S3", "Local Path"])
@@ -1029,7 +1029,7 @@ else:
                 
                 st.slider("OCR Confidence Threshold", min_value=0.0, max_value=1.0, value=0.6, step=0.05)
                 
-            elif scan_type == "Image Scan":
+            elif scan_type == _("scan.image"):
                 # 3. Image Scanner
                 st.subheader("Image Scanner Configuration")
                 image_source = st.radio("Image Source", ["Upload Files", "Azure Blob", "AWS S3", "Local Path"])
@@ -1056,7 +1056,7 @@ else:
                 st.checkbox("Blur detected PII in output images", value=True)
                 st.checkbox("Extract text with OCR", value=True)
                 
-            elif scan_type == "Database Scan":
+            elif scan_type == _("scan.database"):
                 # 4. DB Scanner
                 st.subheader("Database Scanner Configuration")
                 db_type = st.selectbox("Database Type", 
