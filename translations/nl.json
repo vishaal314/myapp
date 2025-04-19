@@ -120,11 +120,16 @@
   "scan.select_cloud": "Selecteer Cloud Provider",
   "scan.select_model": "Selecteer AI Model Provider",
   "scan.select_log": "Selecteer Logbron",
+  "scan.select_type": "Scan Type",
   
   "scan.start_button": "Start Scan",
   "scan.cancel_button": "Annuleren",
   "scan.progress": "Scan bezig... {0}%",
   "scan.generating_report": "Rapport genereren...",
+  "scan.premium_warning": "Dit is een premium scantype. Upgrade je lidmaatschap om deze functie te gebruiken.",
+  "scan.premium_details_title": "Premium Functie Details",
+  "scan.premium_details_description": "Premium scantypes bieden geavanceerde detectiemogelijkheden en uitgebreide rapportage. Upgrade je lidmaatschap om toegang te krijgen tot alle premium functies.",
+  "scan.view_upgrade_options": "Bekijk Upgrade Opties",
   
   "permission.no_scan_create": "U heeft geen toestemming om nieuwe scans te maken. Neem contact op met een beheerder voor toegang.",
   "permission.requires_scan_create": "Uw rol vereist de 'scan:create' toestemming om deze functie te gebruiken.",

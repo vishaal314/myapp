@@ -123,11 +123,16 @@
   "scan.select_cloud": "Select Cloud Provider",
   "scan.select_model": "Select AI Model Provider",
   "scan.select_log": "Select Log Source",
+  "scan.select_type": "Scan Type",
   
   "scan.start_button": "Start Scan",
   "scan.cancel_button": "Cancel",
   "scan.progress": "Scan in progress... {0}%",
   "scan.generating_report": "Generating report...",
+  "scan.premium_warning": "This is a premium scan type. Please upgrade your membership to use this feature.",
+  "scan.premium_details_title": "Premium Feature Details",
+  "scan.premium_details_description": "Premium scan types provide advanced detection capabilities and comprehensive reporting. Upgrade your membership to access all premium features.",
+  "scan.view_upgrade_options": "View Upgrade Options",
   
   "results.title": "Scan Results",
   "results.scan_id": "Scan ID",

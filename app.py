@@ -773,22 +773,22 @@ else:
         
         # Scan configuration form - expanded with all scanner types
         scan_type_options = [
-            "Code Scan", 
-            "Blob Scan", 
-            "Image Scan", 
-            "Database Scan",
-            "API Scan",
-            "Website Scan",
-            "Manual Upload",
-            "Sustainability Scan",
-            "AI Model Scan",
-            "SOC2 Scan"
+            _("scan.code"), 
+            _("scan.document"),  # Blob Scan
+            _("scan.image"), 
+            _("scan.database"),
+            _("scan.api"),
+            _("scan.website"),
+            "Manual Upload",  # This needs a translation key
+            "Sustainability Scan",  # This needs a translation key
+            _("scan.ai_model"),
+            "SOC2 Scan"  # This needs a translation key
         ]
         
         # Add premium tag to premium features
         if not has_permission('scan:premium'):
             scan_type_options_with_labels = []
-            premium_scans = ["Image Scan", "API Scan", "Sustainability Scan", "AI Model Scan", "SOC2 Scan"]
+            premium_scans = [_("scan.image"), _("scan.api"), "Sustainability Scan", _("scan.ai_model"), "SOC2 Scan"]
             
             for option in scan_type_options:
                 if option in premium_scans:
@@ -796,7 +796,7 @@ else:
                 else:
                     scan_type_options_with_labels.append(option)
                     
-            scan_type = st.selectbox("Scan Type", scan_type_options_with_labels)
+            scan_type = st.selectbox(_("scan.select_type"), scan_type_options_with_labels)
             # Remove the premium tag for processing
             scan_type = scan_type.replace(" 💎", "")
             
@@ -809,9 +809,9 @@ else:
                         st.session_state.selected_nav = "Membership"
                         st.rerun()
         else:
-            scan_type = st.selectbox("Scan Type", scan_type_options)
+            scan_type = st.selectbox(_("scan.select_type"), scan_type_options)
         
-        region = st.selectbox("Region", list(REGIONS.keys()))
+        region = st.selectbox(_("scan.select_region"), list(REGIONS.keys()))
         
         # Additional configurations - customized for each scan type
         with st.expander("Advanced Configuration"):
