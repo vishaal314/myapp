@@ -382,23 +382,6 @@ if not st.session_state.logged_in:
         </div>
         """, unsafe_allow_html=True)
     
-    # Application rating - simplified
-    st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
-    st.header("Rate Our Application")
-    
-    # Simplified rating UI
-    cols = st.columns(5)
-    for i, col in enumerate(cols, 1):
-        with col:
-            stars = "⭐" * i
-            st.button(stars, key=f"rate_{i}", use_container_width=True)
-    
-    # Simplified feedback form
-    feedback = st.text_area("Your Feedback", 
-                            placeholder="Share your thoughts on the GDPR Scan Engine...",
-                            max_chars=500)
-    st.button("Submit Feedback", use_container_width=True)
-    
     # Scanning services section - comprehensive list of all services
     st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
     st.header("Our Scanning Services")
@@ -521,6 +504,23 @@ if not st.session_state.logged_in:
     6. Integrity and Confidentiality
     7. Accountability
     """)
+    
+    # Application rating - positioned at the bottom of the page
+    st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
+    st.header("Rate Our Application")
+    
+    # Simplified rating UI
+    cols = st.columns(5)
+    for i, col in enumerate(cols, 1):
+        with col:
+            stars = "⭐" * i
+            st.button(stars, key=f"rate_{i}", use_container_width=True)
+    
+    # Simplified feedback form
+    feedback = st.text_area("Your Feedback", 
+                         placeholder="Share your thoughts on the GDPR Scan Engine...",
+                         max_chars=500)
+    st.button("Submit Feedback", use_container_width=True)
 
 else:
     # Initialize aggregator
