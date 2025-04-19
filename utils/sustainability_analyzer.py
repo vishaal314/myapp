@@ -478,12 +478,13 @@ class SustainabilityAnalyzer:
 def get_sustainability_banner_html(analyzer: SustainabilityAnalyzer) -> str:
     """
     Generate an HTML banner highlighting sustainability and cost savings.
+    Uses creative SVG graphics instead of plain HTML for a more visually appealing display.
     
     Args:
         analyzer: SustainabilityAnalyzer instance with calculated metrics
         
     Returns:
-        HTML string for the banner
+        HTML string for the banner with embedded SVG graphics
     """
     # Calculate metrics
     sustainability = analyzer.calculate_sustainability_score()
@@ -494,41 +495,105 @@ def get_sustainability_banner_html(analyzer: SustainabilityAnalyzer) -> str:
     
     # Determine sustainability status color
     status_color = sustainability['color']
+    # Convert hex color to RGB for SVG gradient
+    status_color_rgb = status_color
     
-    # Create simplified HTML for the banner with responsive design
+    # Risk reduction percentage (calculate from compliance risk vs total)
+    risk_reduction = min(95, int((savings['compliance_risk'] / savings['total']) * 100))
+    
+    # Create SVG-based HTML for a more creative and visually appealing banner
     html = f"""
-    <div style="background: linear-gradient(120deg, #f7f9fa 0%, #e9f2f6 100%); padding: 20px; 
-               border-radius: 10px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #e0e6ed;">
+    <div style="background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); 
+               padding: 25px; border-radius: 12px; margin: 20px 0; 
+               box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1); border: 1px solid #e0e7ff;">
         
-        <h3 style="margin: 0 0 15px 0; color: #1e3a8a; font-weight: 600;">
-            Privacy & Compliance Analytics
-        </h3>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-            <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
-                <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">Annual Cost Efficiency</h4>
-                <p style="font-size: 24px; font-weight: 600; color: #2E7D32; margin: 10px 0 5px 0;">{total_savings_formatted}</p>
-                <p style="margin: 0; color: #6b7280; font-size: 0.85em;">Potential annual savings</p>
+        <div style="display: flex; align-items: center; margin-bottom: 20px; gap: 10px;">
+            <div style="background-color: #4f46e5; width: 40px; height: 40px; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-9.618 5.04L12 21.416l9.618-13.432A11.955 11.955 0 0112 2.944z" 
+                          stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </div>
-            
-            <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
-                <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">Sustainability Score</h4>
-                <div style="width: 70px; height: 70px; margin: 10px auto; background-color: {status_color}; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
-                    <span style="color: white; font-size: 24px; font-weight: 600;">{sustainability['overall_score']}</span>
+            <h3 style="margin: 0; color: #4338ca; font-weight: 600; font-size: 20px;">
+                Compliance & Sustainability Insights
+            </h3>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <!-- Cost Efficiency Card with SVG Chart -->
+            <div style="background-color: white; padding: 20px; border-radius: 12px; 
+                       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9; position: relative; overflow: hidden;">
+                <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"
+                     style="position: absolute; top: -20px; right: -20px; opacity: 0.07;">
+                    <path d="M85 50C85 69.33 69.33 85 50 85C30.67 85 15 69.33 15 50C15 30.67 30.67 15 50 15C69.33 15 85 30.67 85 50Z" 
+                          stroke="#2E7D32" stroke-width="12"/>
+                    <path d="M42.5 65V35H50M50 50H57.5M50 35H57.5M57.5 50V35" stroke="#2E7D32" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h4 style="margin: 0 0 10px 0; color: #2E7D32; font-size: 16px; font-weight: 600; letter-spacing: 0.5px;">Annual Cost Efficiency</h4>
+                <p style="font-size: 28px; font-weight: 700; color: #2E7D32; margin: 0 0 5px 0;">{total_savings_formatted}</p>
+                <div style="display: flex; align-items: center; margin-top: 5px;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 4V12M8 4L5 7M8 4L11 7" stroke="#2E7D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <p style="margin: 0 0 0 5px; color: #4b5563; font-size: 14px;">Projected annual savings</p>
                 </div>
-                <p style="margin: 0; color: #6b7280; font-size: 0.85em;">Status: <span style="color: {status_color}; font-weight: 600;">{sustainability['status']}</span></p>
+                <div style="height: 8px; background-color: #e6f4ea; border-radius: 4px; margin-top: 15px; overflow: hidden;">
+                    <div style="height: 100%; width: 85%; background-color: #2E7D32; border-radius: 4px;"></div>
+                </div>
             </div>
             
-            <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
-                <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">Compliance Risk</h4>
-                <p style="font-size: 24px; font-weight: 600; color: #E53935; margin: 10px 0 5px 0;">€{savings['compliance_risk']:,.2f}</p>
-                <p style="margin: 0; color: #6b7280; font-size: 0.85em;">GDPR fine reduction</p>
+            <!-- Sustainability Score Card with SVG Circle -->
+            <div style="background-color: white; padding: 20px; border-radius: 12px; 
+                       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9; text-align: center;">
+                <h4 style="margin: 0 0 15px 0; color: #1976D2; font-size: 16px; font-weight: 600; letter-spacing: 0.5px;">Sustainability Score</h4>
+                <div style="width: 100px; height: 100px; margin: 0 auto; position: relative;">
+                    <svg width="100" height="100" viewBox="0 0 100 100">
+                        <!-- Background circle -->
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="#e6e6e6" stroke-width="10" />
+                        <!-- Foreground circle -->
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="{status_color}" stroke-width="10"
+                                stroke-dasharray="282.7" stroke-dashoffset="{282.7 - (282.7 * sustainability['overall_score'] / 100)}"
+                                transform="rotate(-90 50 50)" />
+                        <!-- Text -->
+                        <text x="50" y="55" text-anchor="middle" font-size="24" font-weight="bold" fill="{status_color}">{sustainability['overall_score']}</text>
+                    </svg>
+                </div>
+                <p style="margin: 10px 0 0 0; color: #4b5563; font-size: 14px;">
+                    Status: <span style="color: {status_color}; font-weight: 600;">{sustainability['status']}</span>
+                </p>
+            </div>
+            
+            <!-- GDPR Fine Protection Card with SVG Shield -->
+            <div style="background-color: white; padding: 20px; border-radius: 12px; 
+                       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9; position: relative; overflow: hidden;">
+                <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"
+                     style="position: absolute; top: -20px; right: -20px; opacity: 0.07;">
+                    <path d="M15 40L50 15L85 40V60C85 73.3 74.05 85.05 50 95C25.95 85.05 15 73.3 15 60V40Z" 
+                          stroke="#9C27B0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M35 50L45 60L65 40" stroke="#9C27B0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h4 style="margin: 0 0 10px 0; color: #9C27B0; font-size: 16px; font-weight: 600; letter-spacing: 0.5px;">GDPR Fine Protection</h4>
+                <p style="font-size: 28px; font-weight: 700; color: #9C27B0; margin: 0 0 5px 0;">{risk_reduction}%</p>
+                <div style="display: flex; align-items: center; margin-top: 5px;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 8L7 11L12 5" stroke="#9C27B0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <p style="margin: 0 0 0 5px; color: #4b5563; font-size: 14px;">Risk mitigation coverage</p>
+                </div>
+                <div style="height: 8px; background-color: #f3e5f5; border-radius: 4px; margin-top: 15px; overflow: hidden;">
+                    <div style="height: 100%; width: {risk_reduction}%; background-color: #9C27B0; border-radius: 4px;"></div>
+                </div>
             </div>
         </div>
         
-        <div style="margin-top: 15px; text-align: center;">
-            <button style="background-color: #1E40AF; color: white; border: none; padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; cursor: pointer;">
-                View Full Analysis →
+        <div style="margin: 20px 0 0 0; text-align: center;">
+            <button style="background-color: #4f46e5; color: white; border: none; padding: 10px 20px; 
+                          font-size: 14px; font-weight: 500; border-radius: 8px; cursor: pointer;
+                          box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); display: inline-flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 3L11 8L6 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                View Full Compliance Analysis
             </button>
         </div>
     </div>
