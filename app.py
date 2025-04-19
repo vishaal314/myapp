@@ -12,6 +12,7 @@ from io import BytesIO
 
 from services.code_scanner import CodeScanner
 from services.blob_scanner import BlobScanner
+from services.website_scanner import WebsiteScanner
 from services.results_aggregator import ResultsAggregator
 from services.report_generator import generate_report
 from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
@@ -504,57 +505,7 @@ if not st.session_state.logged_in:
                 </div>
                 """, unsafe_allow_html=True)
     
-    # Enhanced About section with Azure deployment information
-    st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
-    st.header("About DataGuardian Pro")
-    
-    # Main description and principles
-    col1, col2 = st.columns([3, 2])
-    
-    with col1:
-        st.markdown("""
-        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef;">
-            <h4 style="color: #1E3A8A; margin-top: 0;">Overview</h4>
-            <p>DataGuardian Pro provides comprehensive identification and reporting of Personally Identifiable Information (PII) across multiple sources, with a focus on Dutch GDPR (UAVG) compliance requirements.</p>
-            
-            <h4 style="color: #1E3A8A;">Core GDPR Principles</h4>
-            <ol>
-                <li><strong>Lawfulness, Fairness, and Transparency</strong></li>
-                <li><strong>Purpose Limitation</strong></li>
-                <li><strong>Data Minimization</strong></li>
-                <li><strong>Accuracy</strong></li>
-                <li><strong>Storage Limitation</strong></li>
-                <li><strong>Integrity and Confidentiality</strong></li>
-                <li><strong>Accountability</strong></li>
-            </ol>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Deployment options with Azure highlighted
-    with col2:
-        st.markdown("""
-        <div style="background-color: #f0f7ff; padding: 20px; border-radius: 8px; border: 1px solid #d1e3ff;">
-            <h4 style="color: #0078D4; margin-top: 0;">Deployment Options</h4>
-            
-            <div style="margin-bottom: 15px;">
-                <h5 style="margin: 0; color: #0078D4; font-size: 16px;">
-                    <span style="background-color: #0078D4; width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px; border-radius: 2px;"></span>
-                    Azure Cloud
-                </h5>
-                <p>Enterprise-grade deployment with Azure App Service, Azure SQL, and Azure Key Vault for secure credential management.</p>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <h5 style="margin: 0; color: #555; font-size: 16px;">On-Premises</h5>
-                <p>Deploy within your private network for maximum data sovereignty using Docker containers.</p>
-            </div>
-            
-            <div>
-                <h5 style="margin: 0; color: #555; font-size: 16px;">Hybrid Options</h5>
-                <p>Flexible deployment with scanning components on-premises and analytics in the cloud.</p>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    # We're removing the About section as requested
     
     # Application rating - positioned at the bottom of the page
     st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
@@ -1915,6 +1866,63 @@ else:
                                 scan_results.append(result)
                     except Exception as e:
                         st.error(f"Error during code scan: {str(e)}")
+                elif scan_type == "Website Scan":
+                    # For website scan, use our WebsiteScanner class
+                    try:
+                        # Display scanning information
+                        status_text.text(f"Starting website scan of: {website_url}")
+                        
+                        # Define progress callback for real-time updates
+                        def website_progress_callback(current, total, url):
+                            progress = 0.5 + (current / total / 2)  # Scale to 50%-100% range
+                            progress_bar.progress(min(progress, 1.0))
+                            status_text.text(f"Scanning page {current}/{total}: {url}")
+                        
+                        # Initialize websitescanner with proper configuration
+                        languages = website_languages if 'website_languages' in locals() else ["English"]
+                        rate_limit = requests_per_minute if 'requests_per_minute' in locals() else 10
+                        max_pages = max_pages if 'max_pages' in locals() else 20
+                        
+                        website_scanner = WebsiteScanner(
+                            languages=languages,
+                            region=region,
+                            rate_limit=rate_limit,
+                            max_pages=max_pages,
+                            cookies_enabled=True,
+                            js_enabled=True
+                        )
+                        
+                        # Set progress callback
+                        website_scanner.set_progress_callback(website_progress_callback)
+                        
+                        # Run the website scan
+                        result = website_scanner.scan_website(
+                            url=website_url,
+                            include_text=include_text if 'include_text' in locals() else True,
+                            include_images=include_images if 'include_images' in locals() else True,
+                            include_forms=include_forms if 'include_forms' in locals() else True,
+                            include_metadata=include_metadata if 'include_metadata' in locals() else True,
+                            detect_pii=detect_pii if 'detect_pii' in locals() else True,
+                            detect_cookies=detect_cookies if 'detect_cookies' in locals() else True,
+                            detect_trackers=detect_trackers if 'detect_trackers' in locals() else True,
+                            analyze_privacy_policy=analyze_privacy_policy if 'analyze_privacy_policy' in locals() else True
+                        )
+                        
+                        # Get findings from result
+                        if 'findings' in result:
+                            # The result already contains all necessary information
+                            # Just store it for the aggregator
+                            scan_results = [result]
+                        else:
+                            scan_results = []
+                            st.error("No findings returned from website scan")
+                        
+                    except Exception as e:
+                        st.error(f"Error during website scan: {str(e)}")
+                        # Display error details
+                        st.error(f"Error details: {type(e).__name__}")
+                        import traceback
+                        st.code(traceback.format_exc())
                 else:
                     # For other scan types, use the mock scanner
                     for i, file_path in enumerate(file_paths):
@@ -1937,18 +1945,65 @@ else:
                 risk_levels = {"Low": 0, "Medium": 0, "High": 0}
                 total_pii_found = 0
                 high_risk_count = 0
+                medium_risk_count = 0 
+                low_risk_count = 0
                 
-                for result in scan_results:
-                    for pii_item in result.get('pii_found', []):
-                        pii_type = pii_item.get('type', 'Unknown')
-                        risk_level = pii_item.get('risk_level', 'Medium')
+                # Handle different formats based on scan type
+                if scan_type == "Website Scan" and len(scan_results) > 0:
+                    # Website scan has a different format - findings are directly in the result
+                    result = scan_results[0]  # Website scanner returns a single comprehensive result
+                    
+                    # Extract findings directly 
+                    if 'findings' in result:
+                        findings = result.get('findings', [])
+                        for finding in findings:
+                            pii_type = finding.get('type', 'Unknown')
+                            risk_level = finding.get('risk_level', 'Medium')
+                            
+                            # Update counts
+                            pii_types[pii_type] = pii_types.get(pii_type, 0) + 1
+                            risk_levels[risk_level] = risk_levels.get(risk_level, 0) + 1
+                            total_pii_found += 1
+                            
+                            if risk_level == "High":
+                                high_risk_count += 1
+                            elif risk_level == "Medium":
+                                medium_risk_count += 1
+                            elif risk_level == "Low":
+                                low_risk_count += 1
                         
-                        pii_types[pii_type] = pii_types.get(pii_type, 0) + 1
-                        risk_levels[risk_level] = risk_levels.get(risk_level, 0) + 1
-                        total_pii_found += 1
-                        
-                        if risk_level == "High":
-                            high_risk_count += 1
+                        # If result has pre-calculated counts, use those
+                        if all(key in result for key in ['total_pii_found', 'high_risk_count', 'medium_risk_count', 'low_risk_count']):
+                            # These might be more accurate as they include analyzed security issues
+                            total_pii_found = result.get('total_pii_found', total_pii_found)
+                            high_risk_count = result.get('high_risk_count', high_risk_count)
+                            medium_risk_count = result.get('medium_risk_count', medium_risk_count)
+                            low_risk_count = result.get('low_risk_count', low_risk_count)
+                            
+                            # Use pre-calculated risk levels if provided
+                            if 'risk_levels' in result:
+                                risk_levels = result.get('risk_levels', risk_levels)
+                            
+                            # Use pre-calculated PII types if provided
+                            if 'pii_types' in result:
+                                pii_types = result.get('pii_types', pii_types)
+                else:
+                    # Standard format for other scan types
+                    for result in scan_results:
+                        for pii_item in result.get('pii_found', []):
+                            pii_type = pii_item.get('type', 'Unknown')
+                            risk_level = pii_item.get('risk_level', 'Medium')
+                            
+                            pii_types[pii_type] = pii_types.get(pii_type, 0) + 1
+                            risk_levels[risk_level] = risk_levels.get(risk_level, 0) + 1
+                            total_pii_found += 1
+                            
+                            if risk_level == "High":
+                                high_risk_count += 1
+                            elif risk_level == "Medium":
+                                medium_risk_count += 1
+                            elif risk_level == "Low":
+                                low_risk_count += 1
                 
                 # Create aggregated scan result
                 aggregated_result = {

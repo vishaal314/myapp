@@ -178,7 +178,7 @@ def language_selector(key_suffix: str = None) -> None:
             # Load translations for new language immediately
             set_language(new_lang)
             # Force rerun of app to update all UI elements
-            st.experimental_rerun()  # Force immediate rerun
+            st.rerun()  # Force immediate rerun
     
     # Create a compact container for the language selector
     with st.container():
@@ -199,7 +199,7 @@ def language_selector(key_suffix: str = None) -> None:
                 if st.button("✓ Apply", key=f"apply_lang_{key_suffix}"):
                     st.session_state.language = selected_lang
                     set_language(selected_lang)
-                    st.experimental_rerun()
+                    st.rerun()
 
 # Initialize translations
 def initialize() -> None:

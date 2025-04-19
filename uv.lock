@@ -341,6 +341,15 @@ wheels = [
 ]
 
 [[package]]
+name = "filelock"
+version = "3.18.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/10/c23352565a6544bdc5353e0b15fc1c563352101f30e24bf500207a54df9a/filelock-3.18.0.tar.gz", hash = "sha256:adbc88eabb99d2fec8c9c1b229b171f18afa655400173ddc653d5d01501fb9f2", size = 18075 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4d/36/2a115987e2d8c300a974597416d9de88f2444426de9571f4b59b2cca3acc/filelock-3.18.0-py3-none-any.whl", hash = "sha256:c401f4f8377c4464e6db25fff06205fd89bdd83b65eb0488ed1b160f780e21de", size = 16215 },
+]
+
+[[package]]
 name = "fonttools"
 version = "4.57.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1366,6 +1375,7 @@ name = "repl-nix-workspace"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "beautifulsoup4" },
     { name = "dnspython" },
     { name = "matplotlib" },
     { name = "openai" },
@@ -1375,14 +1385,17 @@ dependencies = [
     { name = "pypdf2" },
     { name = "python-whois" },
     { name = "reportlab" },
+    { name = "requests" },
     { name = "streamlit" },
     { name = "stripe" },
     { name = "textract" },
+    { name = "tldextract" },
     { name = "trafilatura" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "beautifulsoup4", specifier = ">=4.8.2" },
     { name = "dnspython", specifier = ">=2.7.0" },
     { name = "matplotlib", specifier = ">=3.10.1" },
     { name = "openai", specifier = ">=1.75.0" },
@@ -1392,9 +1405,11 @@ requires-dist = [
     { name = "pypdf2", specifier = ">=3.0.1" },
     { name = "python-whois", specifier = ">=0.9.5" },
     { name = "reportlab", specifier = ">=4.4.0" },
+    { name = "requests", specifier = ">=2.32.3" },
     { name = "streamlit", specifier = ">=1.44.1" },
     { name = "stripe", specifier = ">=12.0.0" },
     { name = "textract", specifier = ">=1.6.5" },
+    { name = "tldextract", specifier = ">=5.2.0" },
     { name = "trafilatura", specifier = ">=2.0.0" },
 ]
 
@@ -1423,6 +1438,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/63/70/2bf7780ad2d390a8d301ad0b550f1581eadbd9a20f896afe06353c2a2913/requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760", size = 131218 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f9/9b/335f9764261e915ed497fcdeb11df5dfd6f7bf257d4a6a2a686d80da4d54/requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6", size = 64928 },
+]
+
+[[package]]
+name = "requests-file"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/72/97/bf44e6c6bd8ddbb99943baf7ba8b1a8485bcd2fe0e55e5708d7fee4ff1ae/requests_file-2.1.0.tar.gz", hash = "sha256:0f549a3f3b0699415ac04d167e9cb39bccfb730cb832b4d20be3d9867356e658", size = 6891 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d7/25/dd878a121fcfdf38f52850f11c512e13ec87c2ea72385933818e5b6c15ce/requests_file-2.1.0-py2.py3-none-any.whl", hash = "sha256:cf270de5a4c5874e84599fc5778303d496c10ae5e870bfa378818f35d21bda5c", size = 4244 },
 ]
 
 [[package]]
@@ -1628,6 +1655,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/19/2b/678082222bc1d2823ea8384c6806085b85226ff73885c703fe0c7143ef64/tld-0.13.tar.gz", hash = "sha256:93dde5e1c04bdf1844976eae440706379d21f4ab235b73c05d7483e074fb5629", size = 446824 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ea/75/779ddeaf4d847ba0021ad99d1b615a853f2a5762bd5d118273c7f7673c38/tld-0.13-py2.py3-none-any.whl", hash = "sha256:f75b2be080f767ed17c2338a339eaa4fab5792586319ca819119da252f9f3749", size = 263789 },
+]
+
+[[package]]
+name = "tldextract"
+version = "5.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "filelock" },
+    { name = "idna" },
+    { name = "requests" },
+    { name = "requests-file" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/20/7a/e469c4f71231a848492da31a7be6921a6cd04ecc8eed58e924bece0fb6de/tldextract-5.2.0.tar.gz", hash = "sha256:c3a8c4daf2c25a57f54d6ef6762aeac7eff5ac3da04cdb607130be757b8457ab", size = 126839 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5e/20/b400e99827439eb91d5aa283e09d43e7e46aba66b07edf6f09404cb741da/tldextract-5.2.0-py3-none-any.whl", hash = "sha256:59509cbf99628c9440f4d19d3a1fd8488d50297ea23879c136576263c5a04eba", size = 106308 },
 ]
 
 [[package]]
