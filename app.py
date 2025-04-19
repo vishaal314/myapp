@@ -2103,7 +2103,7 @@ else:
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
-        st.title("Scan History & Analytics")
+        st.title(_("history.title"))
         
         # Check if user has permission to view scan history
         if not require_permission('history:view'):
@@ -2443,7 +2443,7 @@ else:
         import glob
         import os
         
-        st.title("Saved GDPR Compliance Reports")
+        st.title(_("results.title"))
         
         # Check if user has permission to view reports
         if not require_permission('report:view'):
@@ -2613,7 +2613,7 @@ else:
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
-        st.title("GDPR Compliance Reports")
+        st.title(_("reports.title"))
         
         # Check if user has permission to view reports
         if not require_permission('report:view'):
@@ -2689,7 +2689,7 @@ else:
                     include_recommendations = st.checkbox("Include Recommendations", value=True)
                 
                 # Generate report
-                if st.button("Generate Report"):
+                if st.button(_("report.generate")):
                     with st.spinner("Generating report..."):
                         pdf_bytes = generate_report(
                             scan_data,
@@ -2720,7 +2720,7 @@ else:
         # Import required auth functionality
         from services.auth import require_permission, get_all_roles, get_all_permissions, get_user, create_user, update_user, delete_user, add_custom_permissions
         
-        st.title("Admin Dashboard")
+        st.title(_("admin.title"))
         
         # Check admin access permission
         if not require_permission('admin:access'):
