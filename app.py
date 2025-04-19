@@ -2194,8 +2194,8 @@ else:
                     
                     # Create timeline chart
                     fig = px.line(date_counts, x='date', y='count', 
-                                  title="Scan Activity Over Time",
-                                  labels={'count': 'Number of Scans', 'date': 'Date'})
+                                  title=_("dashboard.scan_activity_over_time"),
+                                  labels={'count': _("dashboard.number_of_scans"), 'date': _("dashboard.date")})
                     
                     fig.update_layout(margin=dict(l=20, r=20, t=30, b=20))
                     st.plotly_chart(fig, use_container_width=True)
@@ -2220,7 +2220,7 @@ else:
                 
                 # Create donut chart
                 fig = px.pie(risk_df, values='Count', names='Risk Level', hole=0.4,
-                           title="Risk Level Distribution",
+                           title=_("dashboard.risk_level_distribution"),
                            color='Risk Level',
                            color_discrete_map={'High': '#ff4136', 'Medium': '#ff851b', 'Low': '#2ecc40'})
                 st.plotly_chart(fig, use_container_width=True)
@@ -2236,7 +2236,7 @@ else:
                     pii_df = pd.DataFrame(list(pii_counts.items()), columns=['PII Type', 'Count'])
                     pii_df = pii_df.sort_values('Count', ascending=False)
                     
-                    fig = px.bar(pii_df, x='PII Type', y='Count', title="Most Common PII Types Found",
+                    fig = px.bar(pii_df, x='PII Type', y='Count', title=_("dashboard.most_common_pii_types"),
                                 color='Count', color_continuous_scale='Blues')
                     st.plotly_chart(fig, use_container_width=True)
             
@@ -2275,7 +2275,7 @@ else:
             
             # Allow user to select a scan to view details
             selected_display_id = st.selectbox(
-                "Select a scan to view details",
+                _("dashboard.select_scan_to_view"),
                 options=scans_df['display_scan_id'].tolist(),
                 format_func=lambda x: f"{x} - {scans_df[scans_df['display_scan_id']==x]['timestamp'].iloc[0].strftime('%b %d, %Y %H:%M')}"
             )
@@ -2288,35 +2288,35 @@ else:
                 selected_scan = results_aggregator.get_scan_by_id(selected_scan_id)
                 
                 if selected_scan:
-                    st.subheader(f"Scan Details: {selected_display_id}")
+                    st.subheader(f"{_('dashboard.scan_details')}: {selected_display_id}")
                     
                     # Display metadata
                     col1, col2, col3 = st.columns(3)
-                    col1.metric("Scan Type", selected_scan.get('scan_type', 'N/A'))
-                    col2.metric("Region", selected_scan.get('region', 'N/A'))
-                    col3.metric("Files Scanned", selected_scan.get('file_count', 0))
+                    col1.metric(_("dashboard.scan_type"), selected_scan.get('scan_type', 'N/A'))
+                    col2.metric(_("dashboard.region"), selected_scan.get('region', 'N/A'))
+                    col3.metric(_("dashboard.files_scanned"), selected_scan.get('file_count', 0))
                     
                     col1, col2, col3 = st.columns(3)
-                    col1.metric("Total PII Found", selected_scan.get('total_pii_found', 0))
-                    col2.metric("High Risk Items", selected_scan.get('high_risk_count', 0))
+                    col1.metric(_("dashboard.total_pii"), selected_scan.get('total_pii_found', 0))
+                    col2.metric(_("dashboard.high_risk_items"), selected_scan.get('high_risk_count', 0))
                     timestamp = selected_scan.get('timestamp', 'N/A')
                     if timestamp != 'N/A':
                         try:
                             timestamp = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M:%S')
                         except:
                             pass
-                    col3.metric("Date & Time", timestamp)
+                    col3.metric(_("dashboard.date_time"), timestamp)
                     
                     # PII Types breakdown
                     if 'pii_types' in selected_scan and selected_scan['pii_types']:
-                        st.subheader("PII Types Found")
+                        st.subheader(_("dashboard.pii_types_found"))
                         pii_df = pd.DataFrame(list(selected_scan['pii_types'].items()), columns=['PII Type', 'Count'])
                         fig = px.bar(pii_df, x='PII Type', y='Count', color='PII Type')
                         st.plotly_chart(fig, use_container_width=True)
                     
                     # Risk levels breakdown
                     if 'risk_levels' in selected_scan and selected_scan['risk_levels']:
-                        st.subheader("Risk Level Distribution")
+                        st.subheader(_("dashboard.risk_level_distribution"))
                         risk_df = pd.DataFrame(list(selected_scan['risk_levels'].items()), columns=['Risk Level', 'Count'])
                         fig = px.pie(risk_df, values='Count', names='Risk Level', color='Risk Level',
                                     color_discrete_map={'Low': 'green', 'Medium': 'orange', 'High': 'red'})
@@ -2324,7 +2324,7 @@ else:
                     
                     # Detailed findings
                     if 'detailed_results' in selected_scan and selected_scan['detailed_results']:
-                        st.subheader("Detailed Findings")
+                        st.subheader(_("dashboard.detailed_findings"))
                         
                         # Extract all PII items from all files
                         all_pii_items = []
@@ -2376,29 +2376,29 @@ else:
                             else:
                                 st.dataframe(pii_items_df, use_container_width=True)
                         else:
-                            st.info("No PII items found in this scan.")
+                            st.info(_("dashboard.no_pii_found"))
                     
                     # Generate report buttons
                     report_col1, report_col2 = st.columns(2)
                     
                     with report_col1:
-                        if st.button("Generate PDF Report", key="gen_pdf_report"):
+                        if st.button(_("dashboard.generate_pdf_report"), key="gen_pdf_report"):
                             st.session_state.current_scan_id = selected_scan_id
                             
-                            with st.spinner("Generating PDF report..."):
+                            with st.spinner(_("dashboard.generating_pdf_report")):
                                 pdf_bytes = generate_report(selected_scan)
                                 
                                 # Create download link
                                 b64_pdf = base64.b64encode(pdf_bytes).decode()
-                                href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">Download PDF Report</a>'
+                                href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">{_("dashboard.download_pdf_report")}</a>'
                                 st.markdown(href, unsafe_allow_html=True)
                     
                     with report_col2:
-                        if st.button("Generate Interactive HTML Report", key="gen_html_report"):
+                        if st.button(_("dashboard.generate_html_report"), key="gen_html_report"):
                             # Import HTML report generator
                             from services.html_report_generator import save_html_report, get_html_report_as_base64
                             
-                            with st.spinner("Generating interactive HTML report..."):
+                            with st.spinner(_("dashboard.generating_html_report")):
                                 # Create reports directory if it doesn't exist
                                 reports_dir = "reports"
                                 os.makedirs(reports_dir, exist_ok=True)
@@ -2407,8 +2407,8 @@ else:
                                 file_path = save_html_report(selected_scan, reports_dir)
                                 
                                 # Create download link
-                                st.success(f"HTML report saved to {file_path}")
-                                st.info(f"You can view and download the report from the '{_('results.title')}' page.")
+                                st.success(_("dashboard.html_report_saved").format(file_path=file_path))
+                                st.info(_("dashboard.view_report_from_results").format(results_page=_('results.title')))
                                 
                                 # View the report immediately
                                 # Using a container to display the report 
@@ -2426,7 +2426,7 @@ else:
                                         # Display in an iframe with proper styling and size
                                         st.markdown(f"""
                                         <div style="border:1px solid #ddd; padding:10px; border-radius:8px; margin-top:20px; background-color:#f9f9f9;">
-                                            <h3 style="margin-top:0; margin-bottom:10px; color:#1E40AF;">Generated HTML Report</h3>
+                                            <h3 style="margin-top:0; margin-bottom:10px; color:#1E40AF;">{_("dashboard.generated_html_report")}</h3>
                                             <iframe src="{data_url}" width="100%" height="700px" style="border:1px solid #ddd; border-radius:4px;"></iframe>
                                         </div>
                                         """, unsafe_allow_html=True)
