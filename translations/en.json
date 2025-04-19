@@ -110,9 +110,10 @@
   "scan.cloud": "Cloud Services Scan",
   "scan.ai_model": "AI Model Scan",
   "scan.log": "Log Files Scan",
-  "scan.manual_upload": "Manual Upload",
+  "scan.manual": "Manual Upload",
   "scan.sustainability": "Sustainability Scan",
   "scan.soc2": "SOC2 Scan",
+  "scan.repository_url": "Repository URL",
   "scan.new_scan_title": "Start a New DataGuardian Pro Scan",
   
   "permission.no_scan_create": "You don't have permission to create new scans. Please contact an administrator for access.",

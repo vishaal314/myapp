@@ -1317,7 +1317,7 @@ else:
             # Use what was already set in the Advanced Configuration section
             # repo_source is now directly in st.session_state from the radio button
                 
-            if st.session_state.repo_source == "Upload Files":
+            if st.session_state.repo_source == _("scan.upload_files"):
                 upload_help = "Upload source code files to scan for PII and secrets"
                 uploaded_files = st.file_uploader(
                     "Upload Code Files", 
@@ -1460,7 +1460,7 @@ else:
             proceed_with_scan = False
             
             # Special case for Repository URL option
-            if scan_type == _("scan.code") and st.session_state.repo_source == "Repository URL":
+            if scan_type == _("scan.code") and st.session_state.repo_source == _("scan.repository_url"):
                 proceed_with_scan = True
             # Other validation logic
             elif scan_type in [_("scan.code"), _("scan.blob"), _("scan.image")] and not uploaded_files:
