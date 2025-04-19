@@ -545,13 +545,27 @@ else:
     from services.auth import has_permission
     
     # Define base navigation options
-    nav_options = ["New Scan", "Dashboard", "Scan History", "Reports"]
+    nav_options = ["New Scan", "Dashboard", "Scan History", "Reports", "Saved Reports"]
     
     # Add Admin section if user has admin permissions
     if has_permission('admin:access'):
         nav_options.append("Admin")
     
     selected_nav = st.sidebar.radio("Navigation", nav_options)
+    
+    # Add quick access buttons
+    st.sidebar.markdown("### Quick Access")
+    quick_col1, quick_col2 = st.sidebar.columns(2)
+    
+    with quick_col1:
+        if st.button("📊 Dashboard", key="quick_dashboard", help="View your compliance dashboard"):
+            st.session_state.selected_nav = "Dashboard"
+            st.rerun()
+    
+    with quick_col2:
+        if st.button("📑 Reports", key="quick_reports", help="View your saved reports"):
+            st.session_state.selected_nav = "Saved Reports"
+            st.rerun()
     
     # Membership section
     st.sidebar.markdown("---")
@@ -2153,17 +2167,224 @@ else:
                         else:
                             st.info("No PII items found in this scan.")
                     
-                    # Generate report button
-                    if st.button("Generate PDF Report"):
-                        st.session_state.current_scan_id = selected_scan_id
-                        pdf_bytes = generate_report(selected_scan)
-                        
-                        # Create download link
-                        b64_pdf = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">Download PDF Report</a>'
-                        st.markdown(href, unsafe_allow_html=True)
+                    # Generate report buttons
+                    report_col1, report_col2 = st.columns(2)
+                    
+                    with report_col1:
+                        if st.button("Generate PDF Report", key="gen_pdf_report"):
+                            st.session_state.current_scan_id = selected_scan_id
+                            
+                            with st.spinner("Generating PDF report..."):
+                                pdf_bytes = generate_report(selected_scan)
+                                
+                                # Create download link
+                                b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">Download PDF Report</a>'
+                                st.markdown(href, unsafe_allow_html=True)
+                    
+                    with report_col2:
+                        if st.button("Generate Interactive HTML Report", key="gen_html_report"):
+                            # Import HTML report generator
+                            from services.html_report_generator import save_html_report, get_html_report_as_base64
+                            
+                            with st.spinner("Generating interactive HTML report..."):
+                                # Create reports directory if it doesn't exist
+                                reports_dir = "reports"
+                                os.makedirs(reports_dir, exist_ok=True)
+                                
+                                # Save the HTML report
+                                file_path = save_html_report(selected_scan, reports_dir)
+                                
+                                # Create download link
+                                st.success(f"HTML report saved to {file_path}")
+                                st.info("You can view and download the report from the 'Saved Reports' page.")
+                                
+                                # Option to view the report immediately
+                                if st.button("View Report Now", key="view_html_now"):
+                                    # Read the HTML content
+                                    with open(file_path, 'r', encoding='utf-8') as f:
+                                        html_content = f.read()
+                                    
+                                    # Create a data URL for the iframe
+                                    encoded_content = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+                                    data_url = f"data:text/html;base64,{encoded_content}"
+                                    
+                                    # Display in an iframe
+                                    st.markdown(f"""
+                                    <div style="border:1px solid #ddd; padding:5px; border-radius:5px;">
+                                        <iframe src="{data_url}" width="100%" height="600px"></iframe>
+                                    </div>
+                                    """, unsafe_allow_html=True)
         else:
             st.info("No scan history available. Start a new scan to see results here.")
+    
+    elif selected_nav == "Saved Reports":
+        # Import permission checking functionality
+        from services.auth import require_permission, has_permission
+        from services.html_report_generator import get_html_report_as_base64, save_html_report
+        import glob
+        import os
+        
+        st.title("Saved GDPR Compliance Reports")
+        
+        # Check if user has permission to view reports
+        if not require_permission('report:view'):
+            st.warning("You don't have permission to access saved reports. Please contact an administrator for access.")
+            st.info("Your role requires the 'report:view' permission to use this feature.")
+            st.stop()
+        
+        # Create reports directory if it doesn't exist
+        reports_dir = "reports"
+        os.makedirs(reports_dir, exist_ok=True)
+        
+        # Look for saved reports
+        report_files = glob.glob(os.path.join(reports_dir, "*.html"))
+        
+        if report_files:
+            st.success(f"Found {len(report_files)} saved reports")
+            
+            # Sort by modification time (newest first)
+            report_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+            
+            # Display in a table
+            report_data = []
+            for report_file in report_files:
+                filename = os.path.basename(report_file)
+                created_time = datetime.fromtimestamp(os.path.getmtime(report_file))
+                size_kb = os.path.getsize(report_file) / 1024
+                
+                # Extract scan ID from filename if possible
+                scan_id = "Unknown"
+                if "_" in filename:
+                    parts = filename.split("_")
+                    if len(parts) >= 3:
+                        scan_id = parts[2]
+                
+                report_data.append({
+                    "Filename": filename,
+                    "Scan ID": scan_id,
+                    "Created": created_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "Size (KB)": f"{size_kb:.1f}"
+                })
+            
+            # Create dataframe for display
+            reports_df = pd.DataFrame(report_data)
+            
+            # Add view button column
+            st.dataframe(reports_df)
+            
+            # Allow user to select a report to view
+            selected_report = st.selectbox("Select a report to view:", 
+                                        options=report_files,
+                                        format_func=lambda x: os.path.basename(x))
+            
+            if selected_report:
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    if st.button("🔍 View Report", key="view_report"):
+                        # Read the HTML content
+                        with open(selected_report, 'r', encoding='utf-8') as f:
+                            html_content = f.read()
+                        
+                        # Create a data URL for the iframe
+                        encoded_content = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+                        data_url = f"data:text/html;base64,{encoded_content}"
+                        
+                        # Display in an iframe
+                        st.markdown(f"""
+                        <div style="border:1px solid #ddd; padding:5px; border-radius:5px;">
+                            <iframe src="{data_url}" width="100%" height="600px"></iframe>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                with col2:
+                    if st.button("📥 Download Report", key="download_report"):
+                        # Read the HTML content
+                        with open(selected_report, 'r', encoding='utf-8') as f:
+                            html_content = f.read()
+                        
+                        # Create download link
+                        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+                        href = f'<a href="data:text/html;base64,{b64_html}" download="{os.path.basename(selected_report)}">Download HTML Report</a>'
+                        st.markdown(href, unsafe_allow_html=True)
+        else:
+            st.info("No saved reports found. Generate a report from the Scan History page to see it here.")
+            
+            # Add a demo report if needed
+            if st.button("Generate Demo Report"):
+                # Create a sample scan result
+                sample_scan = {
+                    "scan_id": f"demo-{uuid.uuid4().hex[:8]}",
+                    "scan_type": "Website Scan",
+                    "timestamp": datetime.now().isoformat(),
+                    "domain": "example.com",
+                    "region": "Netherlands",
+                    "total_pii_found": 24,
+                    "high_risk_count": 3,
+                    "medium_risk_count": 8,
+                    "low_risk_count": 13,
+                    "compliance_score": 78,
+                    "findings": [
+                        {
+                            "type": "Email",
+                            "value": "j***@example.com",
+                            "location": "https://example.com/contact",
+                            "risk_level": "Medium",
+                            "reason": "Email addresses are personal data under GDPR Art. 4."
+                        },
+                        {
+                            "type": "Phone",
+                            "value": "+31*******89",
+                            "location": "https://example.com/about",
+                            "risk_level": "Medium",
+                            "reason": "Phone numbers are personal data under GDPR Art. 4."
+                        },
+                        {
+                            "type": "Cookies",
+                            "value": "5 cookies found",
+                            "location": "https://example.com",
+                            "risk_level": "Medium",
+                            "reason": "Cookies require consent under GDPR."
+                        }
+                    ],
+                    "pii_types": {
+                        "Email": 5,
+                        "Phone": 3,
+                        "Address": 2,
+                        "Name": 8,
+                        "IP Address": 6
+                    },
+                    "recommendations": [
+                        {
+                            "title": "Implement Cookie Consent Banner",
+                            "priority": "High",
+                            "description": "Implement a cookie consent banner to comply with GDPR.",
+                            "steps": [
+                                "Add cookie consent banner",
+                                "Allow users to opt out of non-essential cookies",
+                                "Document cookie usage in privacy policy"
+                            ]
+                        },
+                        {
+                            "title": "Review Personal Data Collection",
+                            "priority": "Medium",
+                            "description": "Review personal data collection practices.",
+                            "steps": [
+                                "Inventory all personal data collected",
+                                "Document legal basis for collection",
+                                "Implement data minimization"
+                            ]
+                        }
+                    ]
+                }
+                
+                # Save the HTML report
+                file_path = save_html_report(sample_scan, reports_dir)
+                
+                # Confirm to the user
+                st.success(f"Demo report saved to {file_path}")
+                st.info("Refresh this page to see and interact with the report.")
     
     elif selected_nav == "Reports":
         # Import permission checking functionality
