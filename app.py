@@ -1325,6 +1325,9 @@ else:
                                               default=["English", "Dutch"],
                                               help="Select the languages used on the website for better extraction")
                 
+                # Website scan doesn't require file uploads
+                uploaded_files = []
+                
                 # Scan options
                 col1, col2 = st.columns(2)
                 
