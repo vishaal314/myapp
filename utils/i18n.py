@@ -169,23 +169,37 @@ def language_selector(key_suffix: str = None) -> None:
     current_lang = st.session_state.get('language', 'en')
     selector_key = f"lang_selector_{key_suffix}"
     
-    # Define callback for language change
+    # Define callback for language change - forcing stronger immediate update
     def on_language_change():
         new_lang = st.session_state[selector_key]
         if new_lang != current_lang:
+            # Update session state language
             st.session_state.language = new_lang
+            # Load translations for new language immediately
             set_language(new_lang)
-            st.rerun()
+            # Force rerun of app to update all UI elements
+            st.experimental_rerun()  # Force immediate rerun
     
-    # Use the selectbox with on_change parameter to trigger immediate update
-    selected_lang = st.selectbox(
-        "🌐 Language / Taal",
-        options=list(LANGUAGES.keys()),
-        format_func=lambda x: LANGUAGES.get(x, x),
-        index=list(LANGUAGES.keys()).index(current_lang) if current_lang in LANGUAGES else 0,
-        key=selector_key,
-        on_change=on_language_change
-    )
+    # Create a compact container for the language selector
+    with st.container():
+        # Use the selectbox with on_change parameter to trigger immediate update
+        selected_lang = st.selectbox(
+            "🌐 Language / Taal",
+            options=list(LANGUAGES.keys()),
+            format_func=lambda x: LANGUAGES.get(x, x),
+            index=list(LANGUAGES.keys()).index(current_lang) if current_lang in LANGUAGES else 0,
+            key=selector_key,
+            on_change=on_language_change
+        )
+        
+        # Add a secondary way to change language with a button for more reliable updates
+        cols = st.columns([3, 1])
+        with cols[1]:
+            if selected_lang != current_lang:
+                if st.button("✓ Apply", key=f"apply_lang_{key_suffix}"):
+                    st.session_state.language = selected_lang
+                    set_language(selected_lang)
+                    st.experimental_rerun()
 
 # Initialize translations
 def initialize() -> None:

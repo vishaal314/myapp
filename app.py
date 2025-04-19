@@ -538,11 +538,7 @@ if not st.session_state.logged_in:
             
             <div style="margin-bottom: 15px;">
                 <h5 style="margin: 0; color: #0078D4; font-size: 16px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" style="vertical-align: -2px; margin-right: 5px;">
-                        <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2z" fill="#0078D4"/>
-                        <path d="M10.21 3.46L6.08 11.83 9.75 14h3.5A0.75 0.75 0 0 0 14 13.25v-2.81l-3.79-6.98z" fill="#ffffff"/>
-                        <path d="M5.88 4.41L2 10.92l2.11 0.75 4.03-7.32L5.88 4.41z" fill="#ffffff"/>
-                    </svg>
+                    <span style="background-color: #0078D4; width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px; border-radius: 2px;"></span>
                     Azure Cloud
                 </h5>
                 <p>Enterprise-grade deployment with Azure App Service, Azure SQL, and Azure Key Vault for secure credential management.</p>
