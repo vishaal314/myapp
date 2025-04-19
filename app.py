@@ -806,7 +806,7 @@ else:
                 with st.expander(_("scan.premium_details_title")):
                     st.markdown(_("scan.premium_details_description"))
                     if st.button(_("scan.view_upgrade_options")):
-                        st.session_state.selected_nav = "Membership"
+                        st.session_state.selected_nav = _("nav.membership")
                         st.rerun()
         else:
             scan_type = st.selectbox(_("scan.select_type"), scan_type_options)
