@@ -1,0 +1,53 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "phone": "+31 20 555 1234",
+      "address": "Prinsengracht 123, 1015 Amsterdam, Netherlands",
+      "bsn": "123456782",
+      "credit_card": {
+        "number": "4111-1111-1111-1111",
+        "expiry": "12/25",
+        "cvv": "123"
+      },
+      "passport": "NW123456",
+      "date_of_birth": "1980-01-15",
+      "medical": {
+        "diagnosis": "Type 2 Diabetes",
+        "medication": "Metformin 500mg"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "email": "jane.smith@example.com",
+      "phone": "+31 20 555 5678",
+      "address": "Herengracht 456, 1017 Amsterdam, Netherlands",
+      "bsn": "876543210",
+      "credit_card": {
+        "number": "5555-5555-5555-4444",
+        "expiry": "06/26",
+        "cvv": "456"
+      },
+      "passport": "NW654321",
+      "date_of_birth": "1985-05-20",
+      "medical": {
+        "diagnosis": "Hypertension",
+        "medication": "Lisinopril 10mg"
+      }
+    }
+  ],
+  "api_keys": {
+    "stripe": "sk_test_51ABC123XYZ456",
+    "google_maps": "AIzaSyA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6",
+    "aws_secret": "AKIAIOSFODNN7EXAMPLE/wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+  },
+  "database": {
+    "host": "db.example.com",
+    "username": "dbuser",
+    "password": "password123",
+    "name": "userdata"
+  }
+}
