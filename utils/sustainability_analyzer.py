@@ -495,70 +495,41 @@ def get_sustainability_banner_html(analyzer: SustainabilityAnalyzer) -> str:
     # Determine sustainability status color
     status_color = sustainability['color']
     
-    # Create HTML for the banner with a more professional design
+    # Create simplified HTML for the banner with responsive design
     html = f"""
-    <div style="background: linear-gradient(120deg, #f7f9fa 0%, #e9f2f6 100%); padding: 25px; 
-               border-radius: 12px; margin: 20px 0; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08); border: 1px solid #e0e6ed;">
+    <div style="background: linear-gradient(120deg, #f7f9fa 0%, #e9f2f6 100%); padding: 20px; 
+               border-radius: 10px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #e0e6ed;">
         
-        <div style="display: flex; align-items: center; margin-bottom: 15px;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 10px;">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#1976D2"/>
-                <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="#1976D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <h3 style="margin: 0; color: #1e3a8a; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 600; letter-spacing: 0.3px;">
-                Privacy & Compliance Analytics
-            </h3>
-        </div>
+        <h3 style="margin: 0 0 15px 0; color: #1e3a8a; font-weight: 600;">
+            Privacy & Compliance Analytics
+        </h3>
         
-        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin-top: 15px;">
-            <div style="background-color: white; padding: 20px; border-radius: 10px; flex: 1; min-width: 220px; text-align: center; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
-                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
-                        <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#1976D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <h4 style="margin: 0; color: #1976D2; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px;">Annual Cost Efficiency</h4>
-                </div>
-                <p style="font-size: 26px; font-weight: 600; color: #2E7D32; margin: 15px 0 10px 0; font-family: 'Segoe UI', Arial, sans-serif;">{total_savings_formatted}</p>
-                <p style="margin-bottom: 0; color: #6b7280; font-size: 0.85em; font-family: 'Segoe UI', Arial, sans-serif;">Potential annual savings through privacy optimization</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
+                <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">Annual Cost Efficiency</h4>
+                <p style="font-size: 24px; font-weight: 600; color: #2E7D32; margin: 10px 0 5px 0;">{total_savings_formatted}</p>
+                <p style="margin: 0; color: #6b7280; font-size: 0.85em;">Potential annual savings</p>
             </div>
             
-            <div style="background-color: white; padding: 20px; border-radius: 10px; flex: 1; min-width: 220px; text-align: center; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
-                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
-                        <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#1976D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <h4 style="margin: 0; color: #1976D2; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px;">Sustainability Rating</h4>
+            <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
+                <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">Sustainability Score</h4>
+                <div style="width: 70px; height: 70px; margin: 10px auto; background-color: {status_color}; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+                    <span style="color: white; font-size: 24px; font-weight: 600;">{sustainability['overall_score']}</span>
                 </div>
-                <div style="position: relative; width: 90px; height: 90px; margin: 10px auto; background-color: {status_color}; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 3px 6px rgba(0,0,0,0.1);">
-                    <span style="color: white; font-size: 28px; font-weight: 600; font-family: 'Segoe UI', Arial, sans-serif;">{sustainability['overall_score']}</span>
-                </div>
-                <p style="margin-bottom: 0; color: #6b7280; font-size: 0.85em; font-family: 'Segoe UI', Arial, sans-serif;">Current rating: <span style="color: {status_color}; font-weight: 600;">{sustainability['status']}</span></p>
+                <p style="margin: 0; color: #6b7280; font-size: 0.85em;">Status: <span style="color: {status_color}; font-weight: 600;">{sustainability['status']}</span></p>
             </div>
             
-            <div style="background-color: white; padding: 20px; border-radius: 10px; flex: 1; min-width: 220px; text-align: center; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
-                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
-                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="#1976D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <h4 style="margin: 0; color: #1976D2; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px;">Compliance Risk</h4>
-                </div>
-                <p style="font-size: 26px; font-weight: 600; color: #E53935; margin: 15px 0 10px 0; font-family: 'Segoe UI', Arial, sans-serif;">€{savings['compliance_risk']:,.2f}</p>
-                <p style="margin-bottom: 0; color: #6b7280; font-size: 0.85em; font-family: 'Segoe UI', Arial, sans-serif;">Estimated GDPR fine exposure reduction</p>
+            <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
+                <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">Compliance Risk</h4>
+                <p style="font-size: 24px; font-weight: 600; color: #E53935; margin: 10px 0 5px 0;">€{savings['compliance_risk']:,.2f}</p>
+                <p style="margin: 0; color: #6b7280; font-size: 0.85em;">GDPR fine reduction</p>
             </div>
         </div>
         
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #4b5563; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; margin: 0;">
-                Improve your sustainability score to increase operational efficiency and reduce compliance risk.
-            </p>
-            <a href="#" style="text-decoration: none;">
-                <button style="background-color: #1E40AF; color: white; border: none; padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; cursor: pointer; font-family: 'Segoe UI', Arial, sans-serif; display: flex; align-items: center; transition: all 0.2s ease;">
-                    <span>View Full Analysis</span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 6px;">
-                        <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </button>
-            </a>
+        <div style="margin-top: 15px; text-align: center;">
+            <button style="background-color: #1E40AF; color: white; border: none; padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; cursor: pointer;">
+                View Full Analysis →
+            </button>
         </div>
     </div>
     """

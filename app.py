@@ -360,32 +360,20 @@ with st.sidebar:
 
 # Main content
 if not st.session_state.logged_in:
-    # Modern hero section with enhanced UI
+    # Simplified hero section with responsive design
     st.markdown("""
-    <div style="background: linear-gradient(120deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
-        <div style="display: flex; align-items: center; margin-bottom: 5px;">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 12px;">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="#ffffff" fill-opacity="0.9"/>
-            </svg>
-            <h1 style="margin: 0; color: white; font-size: 2.5rem; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 700;">DataGuardian Pro</h1>
-        </div>
-        <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.15rem; font-family: 'Segoe UI', Arial, sans-serif; margin: 5px 0 15px 44px;">
+    <div style="background: linear-gradient(120deg, #1e3a8a 0%, #3b82f6 100%); padding: 25px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+        <h1 style="margin: 0; color: white; font-size: 2.2rem; font-weight: 700;">DataGuardian Pro</h1>
+        <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.1rem; margin: 10px 0 20px 0;">
             Enterprise Privacy Compliance Platform for GDPR and International Data Standards
         </p>
         
-        <div style="display: flex; gap: 12px; margin-left: 44px;">
-            <button style="background-color: white; color: #1e3a8a; border: none; padding: 10px 20px; font-size: 15px; font-weight: 600; border-radius: 6px; cursor: pointer; font-family: 'Segoe UI', Arial, sans-serif; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span>Start Free Trial</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <button style="background-color: white; color: #1e3a8a; border: none; padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer;">
+                Start Free Trial ➔
             </button>
-            <button style="background-color: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3); padding: 10px 20px; font-size: 15px; font-weight: 500; border-radius: 6px; cursor: pointer; font-family: 'Segoe UI', Arial, sans-serif; display: flex; align-items: center;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                    <path d="M21 8v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M21 8l-10 7L1 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span>Request Demo</span>
+            <button style="background-color: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3); padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; cursor: pointer;">
+                Request Demo ✉
             </button>
         </div>
     </div>
@@ -413,236 +401,148 @@ if not st.session_state.logged_in:
     # Display the sustainability banner
     st.markdown(get_sustainability_banner_html(sustainability_analyzer), unsafe_allow_html=True)
     
-    # Create modern metric cards with a unified design
+    # Create simplified metric cards for better mobile responsiveness
     st.markdown("""
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin: 20px 0 30px 0;">
-        <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); padding: 20px; border: 1px solid #e5e7eb; position: relative; overflow: hidden;">
-            <div style="position: absolute; top: 0; left: 0; width: 6px; height: 100%; background-color: #3B82F6;"></div>
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-9.618 5.04L12 21.416l9.618-13.432A11.955 11.955 0 0112 2.944z" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <h4 style="margin: 0; color: #1E40AF; font-size: 16px; font-family: 'Segoe UI', Arial, sans-serif;">Data Protection</h4>
-            </div>
-            <p style="font-size: 38px; font-weight: 600; color: #1E3A8A; margin: 0; font-family: 'Segoe UI', Arial, sans-serif;">85%</p>
-            <p style="color: #6b7280; font-size: 13px; margin-top: 5px; font-family: 'Segoe UI', Arial, sans-serif;">
-                Based on 42 data points analyzed
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 15px 0 25px 0;">
+        <!-- Data Protection -->
+        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); padding: 15px; border: 1px solid #e5e7eb; text-align: center;">
+            <div style="height: 5px; background-color: #3B82F6; margin: -15px -15px 15px -15px; border-radius: 8px 8px 0 0;"></div>
+            <h4 style="margin: 0 0 5px 0; color: #1E40AF; font-size: 15px;">Data Protection</h4>
+            <p style="font-size: 32px; font-weight: 600; color: #1E3A8A; margin: 0;">85%</p>
+            <p style="color: #6b7280; font-size: 12px; margin-top: 5px;">
+                42 data points analyzed
             </p>
         </div>
 
-        <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); padding: 20px; border: 1px solid #e5e7eb; position: relative; overflow: hidden;">
-            <div style="position: absolute; top: 0; left: 0; width: 6px; height: 100%; background-color: #16A34A;"></div>
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <h4 style="margin: 0; color: #166534; font-size: 16px; font-family: 'Segoe UI', Arial, sans-serif;">GDPR Readiness</h4>
-            </div>
-            <p style="font-size: 38px; font-weight: 600; color: #16A34A; margin: 0; font-family: 'Segoe UI', Arial, sans-serif;">78%</p>
-            <p style="color: #6b7280; font-size: 13px; margin-top: 5px; font-family: 'Segoe UI', Arial, sans-serif;">
-                7 of 7 core principles implemented
+        <!-- GDPR Readiness -->
+        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); padding: 15px; border: 1px solid #e5e7eb; text-align: center;">
+            <div style="height: 5px; background-color: #16A34A; margin: -15px -15px 15px -15px; border-radius: 8px 8px 0 0;"></div>
+            <h4 style="margin: 0 0 5px 0; color: #166534; font-size: 15px;">GDPR Readiness</h4>
+            <p style="font-size: 32px; font-weight: 600; color: #16A34A; margin: 0;">78%</p>
+            <p style="color: #6b7280; font-size: 12px; margin-top: 5px;">
+                All principles covered
             </p>
         </div>
 
-        <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); padding: 20px; border: 1px solid #e5e7eb; position: relative; overflow: hidden;">
-            <div style="position: absolute; top: 0; left: 0; width: 6px; height: 100%; background-color: #F59E0B;"></div>
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <h4 style="margin: 0; color: #92400E; font-size: 16px; font-family: 'Segoe UI', Arial, sans-serif;">Risk Mitigation</h4>
-            </div>
-            <p style="font-size: 38px; font-weight: 600; color: #92400E; margin: 0; font-family: 'Segoe UI', Arial, sans-serif;">92%</p>
-            <p style="color: #6b7280; font-size: 13px; margin-top: 5px; font-family: 'Segoe UI', Arial, sans-serif;">
-                5 high-risk items resolved
+        <!-- Risk Mitigation -->
+        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); padding: 15px; border: 1px solid #e5e7eb; text-align: center;">
+            <div style="height: 5px; background-color: #F59E0B; margin: -15px -15px 15px -15px; border-radius: 8px 8px 0 0;"></div>
+            <h4 style="margin: 0 0 5px 0; color: #92400E; font-size: 15px;">Risk Mitigation</h4>
+            <p style="font-size: 32px; font-weight: 600; color: #92400E; margin: 0;">92%</p>
+            <p style="color: #6b7280; font-size: 12px; margin-top: 5px;">
+                5 high risks resolved
             </p>
         </div>
 
-        <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); padding: 20px; border: 1px solid #e5e7eb; position: relative; overflow: hidden;">
-            <div style="position: absolute; top: 0; left: 0; width: 6px; height: 100%; background-color: {sustainability_score['color']};"></div>
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                    <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" stroke="{sustainability_score['color']}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <h4 style="margin: 0; color: {sustainability_score['color']}; font-size: 16px; font-family: 'Segoe UI', Arial, sans-serif;">Sustainability Score</h4>
-            </div>
-            <p style="font-size: 38px; font-weight: 600; color: {sustainability_score['color']}; margin: 0; font-family: 'Segoe UI', Arial, sans-serif;">{sustainability_score['overall_score']}%</p>
-            <p style="color: #6b7280; font-size: 13px; margin-top: 5px; font-family: 'Segoe UI', Arial, sans-serif;">
-                Status: {sustainability_score['status']}
+        <!-- Sustainability Score -->
+        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); padding: 15px; border: 1px solid #e5e7eb; text-align: center;">
+            <div style="height: 5px; background-color: {sustainability_score['color']}; margin: -15px -15px 15px -15px; border-radius: 8px 8px 0 0;"></div>
+            <h4 style="margin: 0 0 5px 0; color: {sustainability_score['color']}; font-size: 15px;">Sustainability</h4>
+            <p style="font-size: 32px; font-weight: 600; color: {sustainability_score['color']}; margin: 0;">{sustainability_score['overall_score']}%</p>
+            <p style="color: #6b7280; font-size: 12px; margin-top: 5px;">
+                {sustainability_score['status']}
             </p>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Modern scanning services section with card design
+    # Simplified scanning services section with responsive tiles
     st.markdown("""
-    <div style="margin: 40px 0 30px 0;">
-        <div style="display: flex; align-items: center; margin-bottom: 20px;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 12px;">
-                <path d="M3 6l9 6 9-6M3 6v12l9 6 9-6V6L12 0 3 6z" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <h2 style="margin: 0; color: #1e3a8a; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 600;">Our Scanning Services</h2>
-        </div>
+    <div style="margin: 30px 0 20px 0;">
+        <h2 style="margin: 0 0 15px 0; color: #1e3a8a; font-weight: 600;">Our Scanning Services</h2>
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-top: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
             <!-- Code Scanner -->
-            <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; transition: transform 0.2s, box-shadow 0.2s;">
-                <div style="height: 8px; background: linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%);"></div>
-                <div style="padding: 20px;">
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #EFF6FF; display: flex; justify-content: center; align-items: center; margin-right: 14px;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M20 8v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h12a2 2 0 012 2z" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <h3 style="margin: 0; color: #1E40AF; font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px;">Code Scanner</h3>
-                    </div>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin-bottom: 16px;">
-                        Deep code inspection for PII detection using advanced pattern matching and ML-based identification.
-                    </p>
-                    <div style="margin-top: 12px;">
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #EFF6FF; color: #1E40AF; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">TruffleHog</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #EFF6FF; color: #1E40AF; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">Semgrep</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #EFF6FF; color: #1E40AF; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">Python</span>
-                        </div>
+            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
+                <div style="height: 5px; background-color: #3B82F6; margin-bottom: 15px;"></div>
+                <h3 style="margin: 0 0 10px 0; color: #1E40AF; font-size: 17px;">Code Scanner</h3>
+                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
+                    Detects PII and secrets in source code
+                </p>
+                <div style="padding: 0 10px;">
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #EFF6FF; color: #1E40AF; border-radius: 4px; font-size: 11px; font-weight: 500;">TruffleHog</span>
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #EFF6FF; color: #1E40AF; border-radius: 4px; font-size: 11px; font-weight: 500;">Semgrep</span>
                     </div>
                 </div>
             </div>
             
-            <!-- Blob Scanner -->
-            <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; transition: transform 0.2s, box-shadow 0.2s;">
-                <div style="height: 8px; background: linear-gradient(90deg, #10B981 0%, #34D399 100%);"></div>
-                <div style="padding: 20px;">
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #ECFDF5; display: flex; justify-content: center; align-items: center; margin-right: 14px;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M9 15h6M9 18h6" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <h3 style="margin: 0; color: #047857; font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px;">Document Scanner</h3>
-                    </div>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin-bottom: 16px;">
-                        Scans PDFs, Word documents and other file formats using OCR and pattern recognition to detect PII.
-                    </p>
-                    <div style="margin-top: 12px;">
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #ECFDF5; color: #047857; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">PDF</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #ECFDF5; color: #047857; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">OCR</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #ECFDF5; color: #047857; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">Presidio</span>
-                        </div>
+            <!-- Document Scanner -->
+            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
+                <div style="height: 5px; background-color: #10B981; margin-bottom: 15px;"></div>
+                <h3 style="margin: 0 0 10px 0; color: #047857; font-size: 17px;">Document Scanner</h3>
+                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
+                    Scans PDFs and docs for sensitive data
+                </p>
+                <div style="padding: 0 10px;">
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #ECFDF5; color: #047857; border-radius: 4px; font-size: 11px; font-weight: 500;">OCR</span>
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #ECFDF5; color: #047857; border-radius: 4px; font-size: 11px; font-weight: 500;">PDF</span>
                     </div>
                 </div>
             </div>
             
             <!-- Image Scanner -->
-            <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; transition: transform 0.2s, box-shadow 0.2s;">
-                <div style="height: 8px; background: linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%);"></div>
-                <div style="padding: 20px;">
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #FEF3C7; display: flex; justify-content: center; align-items: center; margin-right: 14px;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M21 15l-5-5L5 21" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <h3 style="margin: 0; color: #92400E; font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px;">Image Scanner</h3>
-                    </div>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin-bottom: 16px;">
-                        Analyzes images and photos for faces, IDs, and other visual PII using computer vision technologies.
-                    </p>
-                    <div style="margin-top: 12px;">
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #FEF3C7; color: #92400E; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">Azure Vision</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #FEF3C7; color: #92400E; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">Face Recognition</span>
-                        </div>
+            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
+                <div style="height: 5px; background-color: #F59E0B; margin-bottom: 15px;"></div>
+                <h3 style="margin: 0 0 10px 0; color: #92400E; font-size: 17px;">Image Scanner</h3>
+                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
+                    Detects faces and visual PII in images
+                </p>
+                <div style="padding: 0 10px;">
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #FEF3C7; color: #92400E; border-radius: 4px; font-size: 11px; font-weight: 500;">Azure Vision</span>
                     </div>
                 </div>
             </div>
             
             <!-- Database Scanner -->
-            <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; transition: transform 0.2s, box-shadow 0.2s;">
-                <div style="height: 8px; background: linear-gradient(90deg, #6366F1 0%, #818CF8 100%);"></div>
-                <div style="padding: 20px;">
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #EEF2FF; display: flex; justify-content: center; align-items: center; margin-right: 14px;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4 11.9V8m0 8V16m6-8V4.1M10 20v-8m6 4v3.9M16 8V4" stroke="#6366F1" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M12 12a4 4 0 100-8 4 4 0 000 8zM6 20a4 4 0 100-8 4 4 0 000 8zM18 20a4 4 0 100-8 4 4 0 000 8z" stroke="#6366F1" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <h3 style="margin: 0; color: #4F46E5; font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px;">Database Scanner</h3>
-                    </div>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin-bottom: 16px;">
-                        Identifies PII in structured database environments with column-level detection and classification.
-                    </p>
-                    <div style="margin-top: 12px;">
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #EEF2FF; color: #4F46E5; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">MySQL</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #EEF2FF; color: #4F46E5; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">PostgreSQL</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #EEF2FF; color: #4F46E5; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">MSSQL</span>
-                        </div>
+            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
+                <div style="height: 5px; background-color: #6366F1; margin-bottom: 15px;"></div>
+                <h3 style="margin: 0 0 10px 0; color: #4F46E5; font-size: 17px;">Database Scanner</h3>
+                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
+                    Column-level detection for databases
+                </p>
+                <div style="padding: 0 10px;">
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #EEF2FF; color: #4F46E5; border-radius: 4px; font-size: 11px; font-weight: 500;">PostgreSQL</span>
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #EEF2FF; color: #4F46E5; border-radius: 4px; font-size: 11px; font-weight: 500;">MySQL</span>
                     </div>
                 </div>
             </div>
             
             <!-- API Scanner -->
-            <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; transition: transform 0.2s, box-shadow 0.2s;">
-                <div style="height: 8px; background: linear-gradient(90deg, #EC4899 0%, #F472B6 100%);"></div>
-                <div style="padding: 20px;">
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #FCE7F3; display: flex; justify-content: center; align-items: center; margin-right: 14px;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#EC4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="#EC4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <h3 style="margin: 0; color: #BE185D; font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px;">API Scanner</h3>
-                    </div>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin-bottom: 16px;">
-                        Monitors API endpoints for PII in requests and responses, analyzing data flows for compliance risks.
-                    </p>
-                    <div style="margin-top: 12px;">
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #FCE7F3; color: #BE185D; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">REST</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #FCE7F3; color: #BE185D; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">Swagger</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #FCE7F3; color: #BE185D; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">OpenAPI</span>
-                        </div>
+            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
+                <div style="height: 5px; background-color: #EC4899; margin-bottom: 15px;"></div>
+                <h3 style="margin: 0 0 10px 0; color: #BE185D; font-size: 17px;">API Scanner</h3>
+                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
+                    Finds PII in API requests/responses
+                </p>
+                <div style="padding: 0 10px;">
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #FCE7F3; color: #BE185D; border-radius: 4px; font-size: 11px; font-weight: 500;">REST</span>
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #FCE7F3; color: #BE185D; border-radius: 4px; font-size: 11px; font-weight: 500;">Swagger</span>
                     </div>
                 </div>
             </div>
             
             <!-- AI Model Scanner -->
-            <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; transition: transform 0.2s, box-shadow 0.2s;">
-                <div style="height: 8px; background: linear-gradient(90deg, #8B5CF6 0%, #A78BFA 100%);"></div>
-                <div style="padding: 20px;">
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #EDE9FE; display: flex; justify-content: center; align-items: center; margin-right: 14px;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2v8m0 4v8M4.93 6.34l6.92 4M12.13 13.67l6.94 4.01M4.93 17.66l6.92-4M12.13 10.33l6.94-4.01" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <h3 style="margin: 0; color: #6D28D9; font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px;">AI Model Scanner</h3>
-                    </div>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Arial, sans-serif; margin-bottom: 16px;">
-                        Detects potential PII leakage in ML models through input/output inspection and model interrogation.
-                    </p>
-                    <div style="margin-top: 12px;">
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #EDE9FE; color: #6D28D9; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">ML Models</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #EDE9FE; color: #6D28D9; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">LLMs</span>
-                            <span style="display: inline-block; padding: 3px 8px; background-color: #EDE9FE; color: #6D28D9; border-radius: 4px; font-size: 12px; font-weight: 500; font-family: 'Segoe UI', Arial, sans-serif;">Azure AI</span>
-                        </div>
+            <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e5e7eb; text-align: center; padding-bottom: 15px;">
+                <div style="height: 5px; background-color: #8B5CF6; margin-bottom: 15px;"></div>
+                <h3 style="margin: 0 0 10px 0; color: #6D28D9; font-size: 17px;">AI Model Scanner</h3>
+                <p style="color: #6b7280; font-size: 13px; line-height: 1.4; margin: 0 10px 10px 10px;">
+                    Detects PII leakage in ML models
+                </p>
+                <div style="padding: 0 10px;">
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #EDE9FE; color: #6D28D9; border-radius: 4px; font-size: 11px; font-weight: 500;">ML Models</span>
+                        <span style="display: inline-block; padding: 2px 6px; background-color: #EDE9FE; color: #6D28D9; border-radius: 4px; font-size: 11px; font-weight: 500;">LLMs</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    """
-    , unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
         
     # Modern key features section with visual elements
     st.markdown("""
