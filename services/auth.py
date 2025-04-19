@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import re
+from datetime import datetime
 from typing import Dict, Any, Optional, Tuple, List, Set
 
 # Simple user store (in a real app, this would be a database)
@@ -12,80 +13,203 @@ USERS_FILE = "users.json"
 # Each permission is a string like 'scan:create' or 'user:delete'
 # Format: resource:action
 PERMISSIONS = {
+    # Scan permissions
     'scan:create': 'Ability to create new scans',
     'scan:view': 'Ability to view scan results',
     'scan:export': 'Ability to export scan results',
     'scan:delete': 'Ability to delete scan results',
     'scan:premium': 'Ability to use premium scan features',
+    'scan:configure': 'Ability to configure scan settings',
+    
+    # User management permissions
     'user:create': 'Ability to create new users',
     'user:view': 'Ability to view user information',
     'user:update': 'Ability to update user information',
     'user:delete': 'Ability to delete users',
+    
+    # Report permissions
     'report:create': 'Ability to create reports',
     'report:view': 'Ability to view reports',
     'report:export': 'Ability to export reports',
+    
+    # System permissions
     'system:settings': 'Ability to modify system settings',
     'system:logs': 'Ability to view system logs',
+    'system:backup': 'Ability to backup system data',
+    'system:restore': 'Ability to restore system data',
+    
+    # Admin permissions
+    'admin:manage_users': 'Ability to manage users',
+    'admin:manage_roles': 'Ability to manage roles',
+    'admin:view_metrics': 'Ability to view system metrics',
+    
+    # Payment management
     'payment:manage': 'Ability to manage payment settings',
+    'payment:view': 'Ability to view payment history',
+    
+    # Audit permissions
     'audit:view': 'Ability to view audit logs',
+    'audit:export': 'Ability to export audit logs',
+    
+    # View permissions
     'dashboard:view': 'Ability to view the dashboard',
     'history:view': 'Ability to view scan history',
+    
+    # API permissions
+    'api:access': 'Ability to access API endpoints',
+    'api:manage_keys': 'Ability to manage API keys',
+    
+    # Advanced scanning features
+    'scan:website': 'Ability to scan websites',
+    'scan:code': 'Ability to scan code repositories',
+    'scan:document': 'Ability to scan documents',
+    'scan:database': 'Ability to scan databases',
+    'scan:api': 'Ability to scan APIs',
 }
 
 # Define roles and their permissions
 ROLE_PERMISSIONS = {
     'admin': {
-        'description': 'Full system access',
+        'description': 'Full system access with all permissions',
         'permissions': [
-            'scan:create', 'scan:view', 'scan:export', 'scan:delete', 'scan:premium',
+            # Scan permissions
+            'scan:create', 'scan:view', 'scan:export', 'scan:delete', 'scan:premium', 'scan:configure',
+            'scan:website', 'scan:code', 'scan:document', 'scan:database', 'scan:api',
+            
+            # User management
             'user:create', 'user:view', 'user:update', 'user:delete',
+            
+            # Report permissions
             'report:create', 'report:view', 'report:export',
-            'system:settings', 'system:logs',
-            'payment:manage',
-            'audit:view',
-            'dashboard:view',
-            'history:view',
+            
+            # System management
+            'system:settings', 'system:logs', 'system:backup', 'system:restore',
+            
+            # Admin permissions
+            'admin:manage_users', 'admin:manage_roles', 'admin:view_metrics',
+            
+            # Payment management
+            'payment:manage', 'payment:view',
+            
+            # Audit permissions
+            'audit:view', 'audit:export',
+            
+            # View permissions
+            'dashboard:view', 'history:view',
+            
+            # API permissions
+            'api:access', 'api:manage_keys'
         ]
     },
     'analyst': {
-        'description': 'Can create and analyze scans',
+        'description': 'Can create and analyze scans, generate reports',
         'permissions': [
-            'scan:create', 'scan:view', 'scan:export', 'scan:premium',
+            # Scan permissions
+            'scan:create', 'scan:view', 'scan:export', 'scan:premium', 'scan:configure',
+            'scan:website', 'scan:code', 'scan:document', 'scan:database', 'scan:api',
+            
+            # Report permissions
             'report:create', 'report:view', 'report:export',
+            
+            # Limited user access
             'user:view',
+            
+            # Audit access
             'audit:view',
-            'dashboard:view',
-            'history:view',
+            
+            # View permissions
+            'dashboard:view', 'history:view',
+            
+            # API access
+            'api:access'
         ]
     },
     'viewer': {
         'description': 'Read-only access to scans and reports',
         'permissions': [
+            # Limited scan access
             'scan:view',
+            
+            # Limited report access
             'report:view',
-            'dashboard:view',
-            'history:view',
+            
+            # View permissions
+            'dashboard:view', 'history:view'
         ]
     },
     'security_officer': {
-        'description': 'Focused on security compliance',
+        'description': 'Focused on security compliance and auditing',
         'permissions': [
-            'scan:create', 'scan:view', 'scan:export',
-            'report:view', 'report:export',
-            'audit:view',
+            # Scan permissions
+            'scan:create', 'scan:view', 'scan:export', 'scan:configure',
+            'scan:website', 'scan:code', 'scan:document',
+            
+            # Report access
+            'report:view', 'report:export', 'report:create',
+            
+            # System monitoring
             'system:logs',
-            'dashboard:view',
-            'history:view',
+            
+            # Audit access
+            'audit:view', 'audit:export',
+            
+            # View permissions
+            'dashboard:view', 'history:view'
         ]
     },
     'data_protection_officer': {
-        'description': 'Focused on data protection',
+        'description': 'Focused on data protection and compliance reporting',
         'permissions': [
+            # Limited scan access
             'scan:view', 'scan:export',
-            'report:view', 'report:export',
+            
+            # Report access
+            'report:view', 'report:export', 'report:create',
+            
+            # Audit access
             'audit:view',
-            'dashboard:view',
-            'history:view',
+            
+            # View permissions
+            'dashboard:view', 'history:view'
+        ]
+    },
+    'developer': {
+        'description': 'Technical role for API integration and development',
+        'permissions': [
+            # Scan access
+            'scan:create', 'scan:view', 'scan:export',
+            'scan:website', 'scan:code', 'scan:api',
+            
+            # Limited report access
+            'report:view',
+            
+            # API access
+            'api:access', 'api:manage_keys',
+            
+            # View permissions
+            'dashboard:view', 'history:view'
+        ]
+    },
+    'manager': {
+        'description': 'Oversees operations with metric visibility',
+        'permissions': [
+            # Limited scan access
+            'scan:view', 'scan:export',
+            
+            # Report access
+            'report:view', 'report:export',
+            
+            # Limited admin access
+            'admin:view_metrics',
+            
+            # Limited payment access
+            'payment:view',
+            
+            # Audit access
+            'audit:view',
+            
+            # View permissions
+            'dashboard:view', 'history:view'
         ]
     }
 }
@@ -97,35 +221,56 @@ DEFAULT_USERS = [
         "password_hash": hashlib.sha256("admin123".encode()).hexdigest(),
         "role": "admin",
         "email": "admin@example.com",
-        "permissions": ROLE_PERMISSIONS["admin"]["permissions"]
+        "permissions": ROLE_PERMISSIONS["admin"]["permissions"],
+        "created_at": datetime.now().isoformat()
     },
     {
         "username": "analyst",
         "password_hash": hashlib.sha256("analyst123".encode()).hexdigest(),
         "role": "analyst",
         "email": "analyst@example.com",
-        "permissions": ROLE_PERMISSIONS["analyst"]["permissions"]
+        "permissions": ROLE_PERMISSIONS["analyst"]["permissions"],
+        "created_at": datetime.now().isoformat()
     },
     {
         "username": "viewer",
         "password_hash": hashlib.sha256("viewer123".encode()).hexdigest(),
         "role": "viewer",
         "email": "viewer@example.com",
-        "permissions": ROLE_PERMISSIONS["viewer"]["permissions"]
+        "permissions": ROLE_PERMISSIONS["viewer"]["permissions"],
+        "created_at": datetime.now().isoformat()
     },
     {
         "username": "security",
         "password_hash": hashlib.sha256("security123".encode()).hexdigest(),
         "role": "security_officer",
         "email": "security@example.com",
-        "permissions": ROLE_PERMISSIONS["security_officer"]["permissions"]
+        "permissions": ROLE_PERMISSIONS["security_officer"]["permissions"],
+        "created_at": datetime.now().isoformat()
     },
     {
         "username": "dpo",
         "password_hash": hashlib.sha256("dpo123".encode()).hexdigest(),
         "role": "data_protection_officer",
         "email": "dpo@example.com",
-        "permissions": ROLE_PERMISSIONS["data_protection_officer"]["permissions"]
+        "permissions": ROLE_PERMISSIONS["data_protection_officer"]["permissions"],
+        "created_at": datetime.now().isoformat()
+    },
+    {
+        "username": "developer",
+        "password_hash": hashlib.sha256("developer123".encode()).hexdigest(),
+        "role": "developer",
+        "email": "developer@example.com",
+        "permissions": ROLE_PERMISSIONS["developer"]["permissions"],
+        "created_at": datetime.now().isoformat()
+    },
+    {
+        "username": "manager",
+        "password_hash": hashlib.sha256("manager123".encode()).hexdigest(),
+        "role": "manager",
+        "email": "manager@example.com",
+        "permissions": ROLE_PERMISSIONS["manager"]["permissions"],
+        "created_at": datetime.now().isoformat()
     }
 ]
 
@@ -282,7 +427,8 @@ def create_user(username: str, password: str, role: str, email: str) -> Tuple[bo
         "password_hash": password_hash,
         "role": role,
         "email": email,
-        "permissions": ROLE_PERMISSIONS[role]["permissions"]
+        "permissions": ROLE_PERMISSIONS[role]["permissions"],
+        "created_at": datetime.now().isoformat()
     }
     
     _save_users(users)
@@ -480,3 +626,128 @@ def add_custom_permissions(username: str, permissions: List[str]) -> bool:
     _save_users(users)
     
     return True
+
+def remove_custom_permissions(username: str, permissions: List[str]) -> bool:
+    """
+    Remove custom permissions from a user.
+    
+    Args:
+        username: The username to remove permissions from
+        permissions: List of permissions to remove
+        
+    Returns:
+        True if permissions were removed, False if user doesn't exist
+    """
+    users = _load_users()
+    
+    if username not in users:
+        return False
+    
+    # Get current permissions
+    current_permissions = users[username].get("permissions", [])
+    
+    # Get the base permissions for the user's role
+    role = users[username].get("role")
+    if role not in ROLE_PERMISSIONS:
+        return False
+        
+    base_permissions = ROLE_PERMISSIONS[role]["permissions"]
+    
+    # Remove permissions if they're not in the base role permissions
+    for permission in permissions:
+        if permission in current_permissions and permission not in base_permissions:
+            current_permissions.remove(permission)
+    
+    # Update user
+    users[username]["permissions"] = current_permissions
+    _save_users(users)
+    
+    return True
+
+def reset_user_permissions(username: str) -> bool:
+    """
+    Reset a user's permissions to their role's default permissions.
+    
+    Args:
+        username: The username to reset permissions for
+        
+    Returns:
+        True if permissions were reset, False if user doesn't exist or role is invalid
+    """
+    users = _load_users()
+    
+    if username not in users:
+        return False
+    
+    # Get the user's role
+    role = users[username].get("role")
+    if role not in ROLE_PERMISSIONS:
+        return False
+    
+    # Reset permissions to role default
+    users[username]["permissions"] = ROLE_PERMISSIONS[role]["permissions"].copy()
+    _save_users(users)
+    
+    return True
+
+def change_user_role(username: str, new_role: str) -> bool:
+    """
+    Change a user's role and update their permissions accordingly.
+    
+    Args:
+        username: The username to change role for
+        new_role: The new role to assign
+        
+    Returns:
+        True if role was changed, False if user doesn't exist or role is invalid
+    """
+    users = _load_users()
+    
+    if username not in users:
+        return False
+    
+    # Validate role
+    if new_role not in ROLE_PERMISSIONS:
+        return False
+    
+    # Update role and permissions
+    users[username]["role"] = new_role
+    users[username]["permissions"] = ROLE_PERMISSIONS[new_role]["permissions"].copy()
+    _save_users(users)
+    
+    return True
+
+def get_user_role_details(username: str) -> Optional[Dict[str, Any]]:
+    """
+    Get details about a user's role and permissions.
+    
+    Args:
+        username: The username to get role details for
+        
+    Returns:
+        Dictionary with role details or None if user doesn't exist
+    """
+    user_data = get_user(username)
+    if not user_data:
+        return None
+    
+    role = user_data.get("role")
+    if not role or role not in ROLE_PERMISSIONS:
+        return None
+    
+    role_data = ROLE_PERMISSIONS[role].copy()
+    
+    # Get custom permissions (permissions not in the role)
+    user_permissions = set(user_data.get("permissions", []))
+    role_permissions = set(role_data.get("permissions", []))
+    
+    custom_permissions = list(user_permissions - role_permissions)
+    missing_permissions = list(role_permissions - user_permissions)
+    
+    return {
+        "role": role,
+        "role_description": role_data.get("description", ""),
+        "custom_permissions": custom_permissions,
+        "missing_permissions": missing_permissions,
+        "total_permissions": len(user_permissions)
+    }
