@@ -1093,7 +1093,7 @@ else:
                 st.checkbox("Include table statistics", value=True)
                 st.checkbox("Generate remediation suggestions", value=True)
                 
-            elif scan_type == "API Scan":
+            elif scan_type == _("scan.api"):
                 # 5. API Scanner
                 st.subheader("API Scanner Configuration")
                 api_type = st.selectbox("API Type", ["REST", "GraphQL", "SOAP", "gRPC"])
@@ -1116,7 +1116,7 @@ else:
                 st.text_area("Custom PII terms or patterns (one per line)", 
                            placeholder="ssn: \\d{3}-\\d{2}-\\d{4}\ncredit_card: (?:\\d{4}[- ]?){4}")
                            
-            elif scan_type == "Website Scan":
+            elif scan_type == _("scan.website"):
                 # Website Scanner
                 st.subheader("Website Scanner Configuration")
                 
@@ -1198,7 +1198,7 @@ else:
                 st.text_area("Custom PII patterns to detect", 
                            placeholder="email: [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\nphone_nl: (\\+31|0)\\s?[1-9][0-9]{8}")
                 
-            elif scan_type == "Manual Upload":
+            elif scan_type == _("scan.manual"):
                 # 6. Manual Upload Tool
                 st.subheader("Manual Upload Configuration")
                 
@@ -1218,7 +1218,7 @@ else:
                 st.checkbox("Extract metadata from files", value=True)
                 st.checkbox("Enable OCR for non-text content", value=True)
                 
-            elif scan_type == "Sustainability Scan":
+            elif scan_type == _("scan.sustainability"):
                 # 7. Sustainability Scanner
                 st.subheader("Sustainability Scanner Configuration")
                 
@@ -1248,7 +1248,7 @@ else:
                 st.slider("Analysis Depth", min_value=1, max_value=5, value=3)
                 st.checkbox("Include remediation suggestions", value=True)
                 
-            elif scan_type == "AI Model Scan":
+            elif scan_type == _("scan.ai_model"):
                 # 8. AI Model Scanner
                 st.subheader("AI Model Scanner Configuration")
                 
@@ -1276,7 +1276,7 @@ else:
                 st.checkbox("Perform adversarial testing", value=True)
                 st.checkbox("Generate compliance report", value=True)
                 
-            elif scan_type == "SOC2 Scan":
+            elif scan_type == _("scan.soc2"):
                 # 9. SOC2 Scanner
                 st.subheader("SOC2 Scanner Configuration")
                 
@@ -1460,12 +1460,12 @@ else:
             proceed_with_scan = False
             
             # Special case for Repository URL option
-            if scan_type == "Code Scan" and st.session_state.repo_source == "Repository URL":
+            if scan_type == _("scan.code") and st.session_state.repo_source == "Repository URL":
                 proceed_with_scan = True
             # Other validation logic
-            elif scan_type in ["Code Scan", "Blob Scan", "Image Scan"] and not uploaded_files:
+            elif scan_type in [_("scan.code"), _("scan.blob"), _("scan.image")] and not uploaded_files:
                 st.error(f"Please upload at least one file to scan for {scan_type}.")
-            elif scan_type == "Database Scan":
+            elif scan_type == _("scan.database"):
                 # For database scans, always allow
                 proceed_with_scan = True
             elif scan_type == "API Scan":
