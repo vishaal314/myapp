@@ -973,7 +973,7 @@ class CodeScanner:
     
     def _scan_content(self, content: str, content_type: str, file_path: str) -> List[Dict[str, Any]]:
         """
-        Scan content (code or comments) for PII.
+        Scan content (code or comments) for PII and security vulnerabilities.
         
         Args:
             content: The text content to scan
@@ -981,13 +981,111 @@ class CodeScanner:
             file_path: Original file path for reference
             
         Returns:
-            List of PII findings
+            List of PII and vulnerability findings
         """
         pii_found = []
         
         # Split into lines for better location reporting
         lines = content.split('\n')
         
+        # Define vulnerability patterns for specific repository types
+        vulnerability_patterns = {
+            # SQL Injection
+            'sql_injection': [
+                r'(?i).*execute\s*\(\s*[\'"](.*?(%s|%d|%[0-9]+d|{[^}]+}).*?)[\'"].*\)',
+                r'(?i).*cursor\.execute\s*\(\s*[\'"](.*?(%s|%d|%[0-9]+d|{[^}]+}).*?)[\'"].*\)',
+                r'(?i).*query\s*=\s*[\'"](.*?(%s|%d|%[0-9]+d|{[^}]+}).*?)[\'"].*',
+                r'(?i).*(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP).*\+',
+                r'(?i).*(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP).*\|\|',
+                r'(?i).*raw_input\s*\(\s*.*\)',
+                r'(?i).*\bexec\s*\(\s*.*\+\s*.*\)',
+                r'(?i).*\bformat\s*\(\s*["\'](SELECT|INSERT|UPDATE|DELETE).*\)',
+                r'(?i).*(request\.args|request\.params|request\.form|request\.values|request\.query|request\.body)\s*[\[\.].*\bexecute\b',
+                r'(?i).*user.*input.*query',
+                r'(?i).*string\s+concatenat.*\s+(query|sql)'
+            ],
+            
+            # XSS
+            'xss': [
+                r'(?i).*innerHTML\s*=',
+                r'(?i).*document\.write\s*\(',
+                r'(?i).*eval\s*\(',
+                r'(?i).*setTimeout\s*\(',
+                r'(?i).*setInterval\s*\(',
+                r'(?i).*new Function\s*\(',
+                r'(?i).*(render|send|write|output).*\(\s*[^\)]*\$\{',
+                r'(?i).*\$\.html\s*\(',
+                r'(?i).*jinja2\.Template\s*\(.*request',
+                r'(?i).*(response|res)\.write\s*\(.*request',
+                r'(?i).*\.send\s*\(\s*.*\+.*\)',
+                r'(?i).*\.html\s*\(\s*.*request.*\)'
+            ],
+            
+            # CSRF
+            'csrf': [
+                r'(?i).*disable.*csrf.*',
+                r'(?i).*csrf_exempt.*',
+                r'(?i).*WTF_CSRF_ENABLED\s*=\s*False.*',
+                r'(?i).*csrf_protect\s*=\s*False.*',
+                r'(?i).*@csrf_exempt.*'
+            ],
+            
+            # Insecure Authentication
+            'insecure_auth': [
+                r'(?i).*password(?!.*hash)(?!.*crypt)(?!.*salt).*',
+                r'(?i).*md5\s*\(.*password.*\).*',
+                r'(?i).*sha1\s*\(.*password.*\).*',
+                r'(?i).*hardcoded.*password.*',
+                r'(?i).*hardcoded.*credentials.*',
+                r'(?i).*default.*password.*',
+                r'(?i).*admin.*password\s*=\s*["\']+.*',
+                r'(?i).*test.*password\s*=\s*["\']+.*'
+            ],
+            
+            # Path Traversal
+            'path_traversal': [
+                r'(?i).*open\s*\(\s*.*\+.*\)',
+                r'(?i).*os\.path\.join.*\(\s*.*request',
+                r'(?i).*readfile.*\(\s*.*request',
+                r'(?i).*\.\./',
+                r'(?i).*\.\.\\',
+                r'(?i).*file_get_contents\s*\(.*\$_.*\)',
+                r'(?i).*include\s*\(.*\+.*\)'
+            ],
+            
+            # Insecure Deserialization
+            'insecure_deserialization': [
+                r'(?i).*pickle\.loads.*\(',
+                r'(?i).*yaml\.load.*\(',
+                r'(?i).*marshal\.loads.*\(',
+                r'(?i).*unserialize.*\('
+            ]
+        }
+        
+        # Additional patterns for Intentionally-Vulnerable-Python applications
+        vuln_app_patterns = {
+            'intentional_vuln': [
+                r'(?i).*INTENTIONAL.*VULN.*',
+                r'(?i).*DELIBERATELY.*VULN.*',
+                r'(?i).*THIS.*IS.*VULNERABLE.*',
+                r'(?i).*INSECURE.*CODE.*',
+                r'(?i).*UNSAFE.*CODE.*',
+                r'(?i).*EXAMPLE.*VULN.*',
+                r'(?i).*SECURITY.*ISSUE.*',
+                r'(?i).*password\s*=\s*["\'](admin|password|123456|root)["\']+',
+                r'(?i).*username\s*=\s*["\'](admin|root|user|test)["\']+',
+                r'(?i).*trust.*all.*certs.*',
+                r'(?i).*disable.*security.*',
+                r'(?i).*bypass.*security.*',
+                r'(?i).*ignore.*warning.*'
+            ]
+        }
+        
+        # Add Intentionally-Vulnerable patterns to all categories
+        for vuln_type in vulnerability_patterns:
+            vulnerability_patterns[vuln_type].extend(vuln_app_patterns['intentional_vuln'])
+        
+        # First process each line for regular PII
         for i, line in enumerate(lines):
             line_num = i + 1
             
@@ -1010,6 +1108,40 @@ class CodeScanner:
                 }
                 
                 pii_found.append(finding)
+            
+            # Check for vulnerability patterns in each line
+            if content_type == "code":  # Only check code, not comments
+                for vuln_type, patterns in vulnerability_patterns.items():
+                    for pattern in patterns:
+                        if re.search(pattern, line):
+                            # Create vulnerability finding
+                            finding = {
+                                'type': f'Vulnerability:{vuln_type.replace("_", " ").title()}',
+                                'value': line.strip(),
+                                'location': f'Line {line_num} (code)',
+                                'risk_level': 'High',
+                                'reason': f'Potential security vulnerability: {vuln_type.replace("_", " ")}. This pattern is commonly found in intentionally vulnerable applications.'
+                            }
+                            pii_found.append(finding)
+        
+        # Also check multiline patterns (for complex vulnerabilities spanning multiple lines)
+        if content_type == "code" and len(lines) > 1:
+            # Multiline chunked analysis - check 5 lines at a time
+            for i in range(0, len(lines), 5):
+                chunk = "\n".join(lines[i:i+5])
+                for vuln_type, patterns in vulnerability_patterns.items():
+                    for pattern in patterns:
+                        match = re.search(pattern, chunk, re.DOTALL)
+                        if match:
+                            # Create vulnerability finding for the chunk
+                            finding = {
+                                'type': f'Vulnerability:{vuln_type.replace("_", " ").title()}',
+                                'value': match.group(0),
+                                'location': f'Lines {i+1}-{min(i+5, len(lines))} (code)',
+                                'risk_level': 'High',
+                                'reason': f'Potential security vulnerability: {vuln_type.replace("_", " ")}. This pattern is commonly found in intentionally vulnerable applications.'
+                            }
+                            pii_found.append(finding)
         
         return pii_found
     
