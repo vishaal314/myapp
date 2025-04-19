@@ -228,13 +228,13 @@ def animated_language_switcher(
             
             # Use a horizontal radio button instead of individual buttons
             selected_lang = st.radio(
-                label="",
+                label="Language Selection",  # Provide a proper label
                 options=lang_options,
                 format_func=lambda x: lang_display[x],
-                horizontal=True,
+                horizontal=True, 
                 index=lang_options.index(current_lang) if current_lang in lang_options else 0,
                 key=f"lang_radio_{key_suffix}",
-                label_visibility="collapsed"
+                label_visibility="collapsed"  # Hide the label but still provide it for accessibility
             )
             
             # If language changed, update it

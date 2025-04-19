@@ -535,14 +535,15 @@ if not st.session_state.logged_in:
         for scanner_key, scanner in scanner_info.items():
             # Add hover effect and cursor pointer for better UX
             selected_class = "selected" if st.session_state.selected_scanner == scanner_key else ""
+            # Set border color based on selection
+            border_color = scanner["color"] if st.session_state.selected_scanner == scanner_key else "transparent"
             html_cards += f"""
             <div class="scanner-card {selected_class}" data-scanner="{scanner_key}" 
                  onclick="selectScanner('{scanner_key}')"
                  style="background-color: white; border-radius: 12px; overflow: hidden; 
                         margin-bottom: 15px;
-                        transition: all 0.3s ease; cursor: pointer;
-                        transform: {st.session_state.selected_scanner == scanner_key and 'translateX(10px)' or 'none'};
-                        border-left: {st.session_state.selected_scanner == scanner_key and f'4px solid {scanner["color"]}' or 'none'};
+                        cursor: pointer;
+                        border-left: 4px solid {border_color};
                         box-shadow: {st.session_state.selected_scanner == scanner_key and '0 6px 12px rgba(0, 0, 0, 0.1)' or '0 4px 6px rgba(0, 0, 0, 0.05)'};
                         position: relative;">
                 <div style="height: 8px; background: {scanner['gradient']};"></div>
@@ -599,7 +600,7 @@ if not st.session_state.logged_in:
         st.markdown(html_cards + js_code, unsafe_allow_html=True)
         
         # Use a hidden component to receive the selected scanner
-        selected_scanner_raw = st.text_input("Scanner Selection", "", key="selected_scanner_input", label_visibility="collapsed")
+        selected_scanner_raw = st.text_input("Scanner Selection", value="", key="selected_scanner_input", label_visibility="collapsed")
         if selected_scanner_raw and selected_scanner_raw != st.session_state.selected_scanner:
             st.session_state.selected_scanner = selected_scanner_raw
             st.rerun()
