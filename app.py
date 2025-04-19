@@ -832,7 +832,7 @@ else:
                 # Update the session state
                 st.session_state.repo_source = repo_source
                 
-                if repo_source == "Repository URL":
+                if repo_source == _("scan.repository_url"):
                     repo_url = st.text_input("Repository URL (GitHub, GitLab, Bitbucket)", placeholder="https://github.com/username/repo", key="repo_url")
                     branch_name = st.text_input("Branch Name", value="main", key="branch_name")
                     auth_token = st.text_input("Authentication Token (if private)", type="password", key="auth_token")
@@ -1002,7 +1002,7 @@ else:
             elif scan_type == _("scan.document"):
                 # 2. Blob Scanner
                 st.subheader("Blob Scanner Configuration")
-                blob_source = st.radio("Blob Storage Location", ["Upload Files", "Azure Blob", "AWS S3", "Local Path"])
+                blob_source = st.radio("Blob Storage Location", [_("scan.upload_files"), "Azure Blob", "AWS S3", "Local Path"])
                 
                 if blob_source in ["Azure Blob", "AWS S3"]:
                     st.text_input(f"{blob_source} URL/Connection String", 
@@ -1032,7 +1032,7 @@ else:
             elif scan_type == _("scan.image"):
                 # 3. Image Scanner
                 st.subheader("Image Scanner Configuration")
-                image_source = st.radio("Image Source", ["Upload Files", "Azure Blob", "AWS S3", "Local Path"])
+                image_source = st.radio("Image Source", [_("scan.upload_files"), "Azure Blob", "AWS S3", "Local Path"])
                 
                 if image_source in ["Azure Blob", "AWS S3"]:
                     st.text_input(f"{image_source} URL/Connection String", 
@@ -1311,7 +1311,7 @@ else:
         
         # File uploader - adaptive based on scan type
         st.markdown("<hr>", unsafe_allow_html=True)
-        st.subheader("Upload Files")
+        st.subheader(_("scan.upload_files"))
         
         if scan_type == _("scan.code"):
             # Use what was already set in the Advanced Configuration section
@@ -1330,7 +1330,7 @@ else:
                 st.info("Using repository URL for scanning. No file uploads required.")
                 
                 # Display repository information
-                st.subheader("Repository Details")
+                st.subheader(_("scan.repository_details"))
                 
                 # Get values from session state if available
                 repo_url = st.session_state.get('repo_url', '')
@@ -1346,7 +1346,7 @@ else:
                 uploaded_files = []
         
         elif scan_type == _("scan.blob"):
-            if 'blob_source' in locals() and blob_source == "Upload Files":
+            if 'blob_source' in locals() and blob_source == _("scan.upload_files"):
                 upload_help = "Upload document files to scan for PII"
                 uploaded_files = st.file_uploader(
                     "Upload Document Files", 
@@ -1359,7 +1359,7 @@ else:
                 uploaded_files = []
                 
         elif scan_type == _("scan.image"):
-            if 'image_source' in locals() and image_source == "Upload Files":
+            if 'image_source' in locals() and image_source == _("scan.upload_files"):
                 upload_help = "Upload image files to scan for faces and visual identifiers"
                 uploaded_files = st.file_uploader(
                     "Upload Image Files", 
@@ -1411,7 +1411,7 @@ else:
                 st.info(f"The scan will use the provided {cloud_provider} credentials to analyze your cloud resources.")
                 
         elif scan_type == _("scan.ai_model"):
-            if model_source == "Upload Files":
+            if model_source == _("scan.upload_files"):
                 upload_help = "Upload model files or sample data"
                 uploaded_files = st.file_uploader(
                     "Upload Model Files or Sample Data", 
