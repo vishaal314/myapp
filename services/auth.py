@@ -348,11 +348,20 @@ def is_authenticated() -> bool:
 def logout() -> None:
     """
     Log out the current user by clearing session state.
+    Preserves language preference.
     """
     import streamlit as st
+    
+    # Save the current language setting
+    current_language = st.session_state.get("language", "en")
+    
+    # Clear authentication-related session state
     for key in ["logged_in", "username", "role", "permissions"]:
         if key in st.session_state:
             del st.session_state[key]
+    
+    # Restore language setting
+    st.session_state["language"] = current_language
 
 def has_permission(permission: str) -> bool:
     """
