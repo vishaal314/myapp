@@ -57,37 +57,37 @@ with st.sidebar:
     
     # Header with gradient background and professional name
     st.markdown(f"""
-    <div style="background-image: linear-gradient(120deg, #3B82F6, #1E40AF); 
+    <div style="background-image: linear-gradient(120deg, #6200EA, #3700B3); 
                padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center;
                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
         <h2 style="color: white; margin: 0; font-weight: bold;">{_("app.title")}</h2>
-        <p style="color: #E0F2FE; margin: 5px 0 0 0; font-size: 0.9em;">{_("app.subtitle")}</p>
+        <p style="color: #E9DAFF; margin: 5px 0 0 0; font-size: 0.9em;">{_("app.subtitle")}</p>
     </div>
     """, unsafe_allow_html=True)
     
     # Meaningful GDPR theme with privacy-focused visual
     st.markdown(f"""
     <div style="text-align: center; margin-bottom: 25px; padding: 0 10px;">
-        <div style="background-image: linear-gradient(120deg, #EFF6FF, #DBEAFE); 
+        <div style="background-image: linear-gradient(120deg, #F5F0FF, #E9DAFF); 
                    border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
             <div style="display: flex; justify-content: center; margin-bottom: 10px;">
-                <div style="background-image: linear-gradient(120deg, #3B82F6, #1E40AF); 
+                <div style="background-image: linear-gradient(120deg, #6200EA, #3700B3); 
                            width: 40px; height: 40px; border-radius: 8px; display: flex; 
                            justify-content: center; align-items: center; margin-right: 10px;">
                     <span style="color: white; font-size: 20px;">🔒</span>
                 </div>
-                <div style="background-image: linear-gradient(120deg, #10B981, #047857); 
+                <div style="background-image: linear-gradient(120deg, #00BFA5, #00897B); 
                            width: 40px; height: 40px; border-radius: 8px; display: flex; 
                            justify-content: center; align-items: center; margin-right: 10px;">
                     <span style="color: white; font-size: 20px;">📊</span>
                 </div>
-                <div style="background-image: linear-gradient(120deg, #F59E0B, #B45309); 
+                <div style="background-image: linear-gradient(120deg, #FF6D00, #E65100); 
                            width: 40px; height: 40px; border-radius: 8px; display: flex; 
                            justify-content: center; align-items: center;">
                     <span style="color: white; font-size: 20px;">📋</span>
                 </div>
             </div>
-            <p style="color: #1E40AF; font-size: 0.9em; margin: 0; text-align: center;">
+            <p style="color: #4527A0; font-size: 0.9em; margin: 0; text-align: center;">
                 {_("app.tagline")}
             </p>
         </div>
@@ -103,15 +103,15 @@ with st.sidebar:
         st.markdown("""
         <style>
         .tab-selected {
-            background-color: #3B82F6 !important;
+            background-color: #6200EA !important;
             color: white !important;
             font-weight: bold;
             border-radius: 5px;
             padding: 10px 0;
         }
         .tab-not-selected {
-            background-color: #EFF6FF;
-            color: #1E40AF;
+            background-color: #F5F0FF;
+            color: #4527A0;
             border-radius: 5px;
             padding: 10px 0;
         }
@@ -137,7 +137,7 @@ with st.sidebar:
             st.markdown("""
             <style>
             [data-testid="stButton"] button:nth-child(1) {
-                background-color: #3B82F6;
+                background-color: #6200EA;
                 color: white;
                 font-weight: bold;
             }
@@ -147,7 +147,7 @@ with st.sidebar:
             st.markdown("""
             <style>
             [data-testid="stButton"] button:nth-child(2) {
-                background-color: #3B82F6;
+                background-color: #6200EA;
                 color: white;
                 font-weight: bold;
             }
@@ -159,10 +159,10 @@ with st.sidebar:
         # Login Form with colorful styling
         if st.session_state.active_tab == "login":
             st.markdown("""
-            <div style="background-image: linear-gradient(to right, #DBEAFE, #EFF6FF); 
+            <div style="background-image: linear-gradient(to right, #F5F0FF, #E9DAFF); 
                        padding: 15px; border-radius: 10px; margin-bottom: 15px;
                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-                <h4 style="color: #1E40AF; margin: 0 0 10px 0; text-align: center;">
+                <h4 style="color: #4527A0; margin: 0 0 10px 0; text-align: center;">
                     <i>Sign In</i>
                 </h4>
             </div>
@@ -207,6 +207,10 @@ with st.sidebar:
                             from services.auth import ROLE_PERMISSIONS
                             if user_data["role"] in ROLE_PERMISSIONS:
                                 st.session_state.permissions = ROLE_PERMISSIONS[user_data["role"]]["permissions"]
+                        
+                        # Preserve the current language across login
+                        current_language = st.session_state.get('language', 'en')
+                        
                         st.success(f"Logged in successfully!")
                         st.rerun()
                     else:
