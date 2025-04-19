@@ -20,6 +20,8 @@ from services.stripe_payment import display_payment_button, handle_payment_callb
 from utils.gdpr_rules import REGIONS, get_region_rules
 from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_finding, get_risk_color_gradient
 from utils.i18n import initialize, language_selector, get_text as _, set_language, LANGUAGES
+from utils.compliance_score import calculate_compliance_score, display_compliance_score_card
+from utils.animated_language_switcher import animated_language_switcher, get_welcome_message_animation
 
 # Initialize session state variables
 if 'logged_in' not in st.session_state:
@@ -53,11 +55,10 @@ st.set_page_config(
 
 # Authentication sidebar with professional colorful design
 with st.sidebar:
-    # Add sidebar language selector at the top
-    st.markdown("### 🌐 Language / Taal")
-    from utils.i18n import language_selector
-    # Use the language selector with a unique key
-    language_selector(key_suffix="sidebar")
+    # Add sidebar language switcher at the top with animated flags
+    st.markdown("### 🌐 Interactive Language")
+    # Use the animated language switcher with flags
+    animated_language_switcher(key_suffix="sidebar", show_title=True, use_buttons=True)
     # Initialize translations
     initialize()
     
@@ -100,10 +101,10 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    # Language selector in sidebar expander
+    # Language selector in sidebar expander with animated flags
     with st.expander("🌐 " + _("settings.language"), expanded=False):
-        # Use the language selector with a unique key for the expander
-        language_selector(key_suffix="expander")
+        # Use the animated language switcher with flags
+        animated_language_switcher(key_suffix="expander", show_title=False, use_buttons=True)
     
     if not st.session_state.logged_in:
         # Tab UI for login/register with colorful styling
@@ -370,6 +371,10 @@ with st.sidebar:
 
 # Main content
 if not st.session_state.logged_in:
+    # Add animated welcome message in multiple languages
+    st.markdown("## Welcome to DataGuardian Pro")
+    st.markdown(get_welcome_message_animation(), unsafe_allow_html=True)
+    
     # Use our new professional landing page module
     from utils.landing_page import display_landing_page_grid
     display_landing_page_grid()
@@ -2061,6 +2066,42 @@ else:
                     col1.metric("Total PII Found", total_pii_found)
                     col2.metric("High Risk Items", high_risk_count)
                     col3.metric("Files Scanned", len(file_paths))
+                    
+                    # Calculate compliance score based on scan results
+                    scan_type_specific_weights = {
+                        "Website Scan": {
+                            "privacy_policy": 0.25,
+                            "cookies_compliance": 0.20,
+                            "data_security": 0.25,
+                            "tracking_consent": 0.15,
+                            "data_minimization": 0.15
+                        },
+                        "Code Scan": {
+                            "data_security": 0.30,
+                            "sensitive_data_handling": 0.30,
+                            "data_minimization": 0.20,
+                            "purpose_limitation": 0.10,
+                            "lawful_basis": 0.10
+                        }
+                    }
+                    
+                    # Get the weights for the current scan type, or use defaults
+                    weights = scan_type_specific_weights.get(scan_type, None)
+                    
+                    # Calculate the compliance score
+                    compliance_score_result = calculate_compliance_score(
+                        scan_results=aggregated_result,
+                        weights=weights
+                    )
+                    
+                    # Display the compliance score card
+                    st.markdown("### Compliance Score")
+                    display_compliance_score_card(
+                        compliance_score=compliance_score_result,
+                        show_details=True,
+                        animate=True,
+                        key_suffix=f"scan_{scan_id}"
+                    )
                     
                     # Risk Assessment
                     st.markdown("### Risk Assessment")
