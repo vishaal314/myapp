@@ -735,42 +735,29 @@ else:
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
-        st.title("DataGuardian Pro - Compliance Dashboard")
-        
         # Check if user has permission to view dashboard
         if not require_permission('dashboard:view'):
             st.warning("You don't have permission to access the dashboard. Please contact an administrator for access.")
             st.info("Your role requires the 'dashboard:view' permission to use this feature.")
             st.stop()
         
-        # Display user information for audit
-        with st.expander("User Information for Audit"):
-            user_email = "sapreatel@example.com"  # Default for demonstration
-            user_role = "Enterprise Admin"
+        # Clean dashboard header with professional styling
+        st.markdown(f"""
+        <div style="padding: 15px 0; text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #2563EB; font-weight: 600; margin-bottom: 5px;">Compliance Dashboard</h1>
+            <p style="color: #64748b; font-size: 16px;">Monitor your privacy compliance status and risk assessments</p>
+        </div>
+        """, unsafe_allow_html=True)
             
-            st.markdown(f"""
-            <div style="padding: 10px; background-color: #f0f5ff; border-radius: 5px;">
-                <h4 style="margin: 0; color: #1E40AF;">User Details</h4>
-                <p><strong>Username:</strong> {st.session_state.username}</p>
-                <p><strong>Email:</strong> {user_email}</p>
-                <p><strong>Role:</strong> {user_role}</p>
-                <p><strong>Last Login:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-                <p><strong>Audit ID:</strong> {str(uuid.uuid4())[:8]}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Record this access for audit trail
-            st.info("Access to this dashboard has been recorded in the audit log.")
-            
-            try:
-                # Log this access for audit purposes
-                results_aggregator.log_audit_event(
-                    username=st.session_state.username,
-                    action="DASHBOARD_ACCESS",
-                    details={"access_time": datetime.now().isoformat(), "email": user_email}
-                )
-            except Exception as e:
-                st.warning(f"Could not log audit event: {str(e)}")
+        # Log this access silently without showing UI elements
+        try:
+            results_aggregator.log_audit_event(
+                username=st.session_state.username,
+                action="DASHBOARD_ACCESS",
+                details={"access_time": datetime.now().isoformat()}
+            )
+        except Exception:
+            pass
         
         # Summary metrics
         all_scans = results_aggregator.get_all_scans(st.session_state.username)

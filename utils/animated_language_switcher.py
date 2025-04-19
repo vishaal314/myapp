@@ -200,8 +200,11 @@ def animated_language_switcher(
     if key_suffix is None:
         key_suffix = str(uuid.uuid4())[:8]
     
-    # Current language from session state
+    # Current language from session state with fallback
     current_lang = st.session_state.get('language', 'en')
+    if current_lang not in LANGUAGES:
+        current_lang = 'en'
+        st.session_state['language'] = 'en'
     
     # Insert CSS for animations
     st.markdown(FLAG_ANIMATION_CSS, unsafe_allow_html=True)
@@ -212,103 +215,50 @@ def animated_language_switcher(
         if show_title:
             st.markdown('<p class="language-title">🌐 Select Your Language / Selecteer je taal</p>', unsafe_allow_html=True)
         
-        # Apply animations container
-        st.markdown('<div class="language-animation-container">', unsafe_allow_html=True)
-        
-        # Button-based selector
+        # Use simple radio buttons (more reliable than custom buttons)
         if use_buttons:
-            # Container for language buttons
-            st.markdown('<div class="lang-container animated-entry">', unsafe_allow_html=True)
-            
-            # Create column layout for buttons
             cols = st.columns(len(LANGUAGES))
             
-            # Keep track of selected language
-            if f"selected_lang_{key_suffix}" not in st.session_state:
-                st.session_state[f"selected_lang_{key_suffix}"] = current_lang
-            
-            # Create buttons for each language
+            # Create a simple layout with flags and language names
             for i, (lang_code, lang_name) in enumerate(LANGUAGES.items()):
                 with cols[i]:
-                    is_selected = st.session_state[f"selected_lang_{key_suffix}"] == lang_code
-                    selected_class = "selected" if is_selected else ""
-                    
-                    # Create button HTML
-                    button_html = f"""
-                    <button 
-                        class="lang-button {selected_class}" 
-                        onclick="document.getElementById('lang_input_{key_suffix}').value='{lang_code}'; document.dispatchEvent(new Event('input_change_{key_suffix}'));">
-                        {get_flag_icon(lang_code)}
-                        <span class="lang-name">{lang_name}</span>
-                    </button>
-                    """
-                    st.markdown(button_html, unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Hidden input to store selected language
-            st.markdown(
-                f"""
-                <input id="lang_input_{key_suffix}" type="hidden" value="{current_lang}">
-                <script>
-                    // Custom event handler to update Streamlit on button click
-                    document.addEventListener('input_change_{key_suffix}', function() {{
-                        var input = document.getElementById('lang_input_{key_suffix}');
-                        var event = new Event('change');
-                        input.dispatchEvent(event);
-                    }}, false);
-                </script>
-                """, 
-                unsafe_allow_html=True
-            )
-            
-            # Create a streamlit element that will be updated by JavaScript
-            language_value = st.text_input(
-                "Hidden Language Selector", 
-                value=current_lang,
-                label_visibility="collapsed",
-                key=f"hidden_lang_input_{key_suffix}"
-            )
-            
-            # Update session state when language changes
-            if language_value != current_lang:
-                st.session_state[f"selected_lang_{key_suffix}"] = language_value
+                    flag_emoji = FLAG_EMOJIS.get(lang_code, '🌐')
+                    if st.button(
+                        f"{flag_emoji} {lang_name}", 
+                        key=f"lang_btn_{lang_code}_{key_suffix}",
+                        use_container_width=True,
+                        type="primary" if current_lang == lang_code else "secondary"
+                    ):
+                        # Update language in session state
+                        st.session_state.language = lang_code
+                        # Load translations for new language
+                        set_language(lang_code)
+                        # Force rerun of app
+                        st.rerun()
         
         # Dropdown-based selector (fallback)
         else:
+            current_index = list(LANGUAGES.keys()).index(current_lang) if current_lang in LANGUAGES else 0
             selected_lang = st.selectbox(
-                "Select Language / Selecteer Taal",
+                "🌐 Language / Taal",
                 options=list(LANGUAGES.keys()),
                 format_func=lambda x: f"{FLAG_EMOJIS.get(x, '🌐')} {LANGUAGES.get(x, x)}",
-                index=list(LANGUAGES.keys()).index(current_lang) if current_lang in LANGUAGES else 0,
-                key=f"lang_dropdown_{key_suffix}",
-                label_visibility="collapsed"
+                index=current_index,
+                key=f"lang_dropdown_{key_suffix}"
             )
-            st.session_state[f"selected_lang_{key_suffix}"] = selected_lang
-        
-        # Apply button
-        if st.session_state[f"selected_lang_{key_suffix}"] != current_lang:
-            selected_lang = st.session_state[f"selected_lang_{key_suffix}"]
             
-            # Get language names for display
-            from_lang = LANGUAGES.get(current_lang, current_lang)
-            to_lang = LANGUAGES.get(selected_lang, selected_lang)
-            
-            # Show apply button
-            if st.button(
-                f"Apply: Change from {from_lang} to {to_lang}", 
-                key=f"apply_lang_change_{key_suffix}",
-                type="primary"
-            ):
-                # Update language in session state
-                st.session_state.language = selected_lang
-                # Load translations for new language
-                set_language(selected_lang)
-                # Force rerun of app
-                st.rerun()
-        
-        # Close animations container
-        st.markdown('</div>', unsafe_allow_html=True)
+            if selected_lang != current_lang:
+                if st.button(
+                    f"Apply Language Change", 
+                    key=f"apply_lang_change_{key_suffix}",
+                    type="primary"
+                ):
+                    # Update language in session state
+                    st.session_state.language = selected_lang
+                    # Load translations for new language
+                    set_language(selected_lang)
+                    # Force rerun of app
+                    st.rerun()
 
 def get_welcome_message_animation() -> str:
     """
@@ -327,29 +277,19 @@ def get_welcome_message_animation() -> str:
         'pt': 'Bem-vindo ao DataGuardian Pro'
     }
     
-    # Only show supported languages
-    welcome_html = '<div class="welcome-animation-container">'
-    
-    for lang_code, message in welcome_messages.items():
-        if lang_code in LANGUAGES:
-            flag = get_flag_icon(lang_code)
-            welcome_html += f'<div class="welcome-message" lang="{lang_code}">{flag} {message}</div>'
-    
-    welcome_html += '</div>'
-    
-    # Add CSS for animations
+    # CSS with embedded animation (no JavaScript needed)
     welcome_css = """
     <style>
         .welcome-animation-container {
             margin: 20px auto;
             max-width: 500px;
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(to right, #f8f9fa, #f1f3f5);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             position: relative;
-            height: 50px;
+            height: 60px;
         }
         
         .welcome-message {
@@ -361,37 +301,52 @@ def get_welcome_message_animation() -> str:
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
             color: #1e3a8a;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s ease;
         }
         
-        @keyframes welcome-cycle {
-            0%, 100% { opacity: 0; transform: translateY(20px); }
-            3%, 14% { opacity: 1; transform: translateY(0); }
-            17%, 97% { opacity: 0; transform: translateY(-20px); }
+        /* Animation for English */
+        .welcome-message[lang="en"] {
+            animation: fade-en 14s infinite;
+        }
+        
+        /* Animation for Dutch */
+        .welcome-message[lang="nl"] {
+            animation: fade-nl 14s infinite;
+        }
+        
+        @keyframes fade-en {
+            0%, 43%, 100% { opacity: 0; transform: translateY(20px); }
+            7%, 36% { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fade-nl {
+            50%, 93% { opacity: 0; transform: translateY(20px); }
+            57%, 86% { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Flag icon enhancements */
+        .welcome-message .flag-icon {
+            width: 28px;
+            height: 28px;
+            margin-right: 12px;
         }
     </style>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const messages = document.querySelectorAll('.welcome-message');
-            const duration = 3; // seconds per language
-            const totalDuration = duration * messages.length;
-            
-            messages.forEach((msg, index) => {
-                const delay = index * duration;
-                const percentage = (delay / totalDuration) * 100;
-                const percentageEnd = ((delay + duration) / totalDuration) * 100;
-                
-                msg.style.animation = `welcome-cycle ${totalDuration}s infinite`;
-                msg.style.animationDelay = `-${delay}s`;
-            });
-        });
-    </script>
     """
+    
+    # Only show the two main supported languages
+    welcome_html = '<div class="welcome-animation-container">'
+    
+    # Add only English and Dutch to prevent issues
+    lang_to_show = ['en', 'nl']
+    for lang_code in lang_to_show:
+        if lang_code in welcome_messages:
+            flag = get_flag_icon(lang_code)
+            message = welcome_messages[lang_code]
+            welcome_html += f'<div class="welcome-message" lang="{lang_code}">{flag} {message}</div>'
+    
+    welcome_html += '</div>'
     
     return welcome_css + welcome_html

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDPR Compliance Report - demo-32250e20</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tablesorter@2.31.3/dist/js/jquery.tablesorter.combined.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tablesorter@2.31.3/dist/css/theme.blue.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .chart-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+        }
+        .metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .risk-high {
+            color: #d32f2f;
+        }
+        .risk-medium {
+            color: #f57c00;
+        }
+        .risk-low {
+            color: #388e3c;
+        }
+        .tablesorter-blue .tablesorter-header {
+            background-color: #2c3e50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GDPR Compliance Scan Report</h1>
+        <p><strong>Generated on:</strong> 2025-04-19 16:23:29</p>
+        <p><strong>Scan ID:</strong> demo-32250e20</p>
+    </div>
+    
+    <div class="section">
+        <h2>Summary</h2>
+        <table>
+            <tr>
+                <th>Scan Type</th>
+                <td>Website Scan</td>
+            </tr>
+            <tr>
+                <th>Region</th>
+                <td>Netherlands</td>
+            </tr>
+            <tr>
+                <th>Date & Time</th>
+                <td>2025-04-19 16:23:29</td>
+            </tr>
+            <tr>
+                <th>URL/Domain</th>
+                <td>example.com</td>
+            </tr>
+            <tr>
+                <th>Total PII Items Found</th>
+                <td>24</td>
+            </tr>
+            <tr>
+                <th>High Risk Items</th>
+                <td>3</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>Risk Assessment</h2>
+        <div class="metrics">
+            <div class="metric-card">
+                <h3>Total PII</h3>
+                <div class="metric-value">24</div>
+                <p>Total PII items detected</p>
+            </div>
+            <div class="metric-card">
+                <h3>High Risk</h3>
+                <div class="metric-value risk-high">3</div>
+                <p>High risk items</p>
+            </div>
+            <div class="metric-card">
+                <h3>Medium Risk</h3>
+                <div class="metric-value risk-medium">8</div>
+                <p>Medium risk items</p>
+            </div>
+            <div class="metric-card">
+                <h3>Low Risk</h3>
+                <div class="metric-value risk-low">13</div>
+                <p>Low risk items</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Data Analysis</h2>
+        <div class="chart-container">
+            <h3>PII Types Distribution</h3>
+            <canvas id="piiTypesChart"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <h3>Risk Level Distribution</h3>
+            <canvas id="riskLevelsChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Findings</h2>
+        <table id="findingsTable" class="tablesorter">
+            <thead>
+                <tr>
+                    <th>PII Type</th>
+                    <th>Value</th>
+                    <th>Location</th>
+                    <th>Risk Level</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr style="background-color: #fff9c4">
+            <td>Email</td>
+            <td>j***@example.com</td>
+            <td>https://example.com/contact</td>
+            <td>Medium</td>
+            <td>Email addresses are personal data under GDPR Art. 4.</td>
+        </tr>
+        
+        <tr style="background-color: #fff9c4">
+            <td>Phone</td>
+            <td>+31*******89</td>
+            <td>https://example.com/about</td>
+            <td>Medium</td>
+            <td>Phone numbers are personal data under GDPR Art. 4.</td>
+        </tr>
+        
+        <tr style="background-color: #fff9c4">
+            <td>Cookies</td>
+            <td>5 cookies found</td>
+            <td>https://example.com</td>
+            <td>Medium</td>
+            <td>Cookies require consent under GDPR.</td>
+        </tr>
+        
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>Recommendations</h2>
+        
+        <div class="recommendation" style="margin-bottom: 20px; padding: 15px; border-radius: 4px; background-color: #ffcdd2;">
+            <h4>Implement Cookie Consent Banner</h4>
+            <p><strong>Priority:</strong> High</p>
+            <p>Implement a cookie consent banner to comply with GDPR.</p>
+            <h5>Steps:</h5>
+            <ul>
+                <li>Add cookie consent banner</li><li>Allow users to opt out of non-essential cookies</li><li>Document cookie usage in privacy policy</li>
+            </ul>
+        </div>
+        
+        <div class="recommendation" style="margin-bottom: 20px; padding: 15px; border-radius: 4px; background-color: #fff9c4;">
+            <h4>Review Personal Data Collection</h4>
+            <p><strong>Priority:</strong> Medium</p>
+            <p>Review personal data collection practices.</p>
+            <h5>Steps:</h5>
+            <ul>
+                <li>Inventory all personal data collected</li><li>Document legal basis for collection</li><li>Implement data minimization</li>
+            </ul>
+        </div>
+        
+        
+        <h3>General GDPR Recommendations</h3>
+        <ul>
+            <li>Ensure you have proper legal basis for processing all identified PII.</li>
+            <li>Document all processing activities as required by GDPR Article 30.</li>
+            <li>Review data retention policies to ensure PII is not kept longer than necessary.</li>
+            <li>Implement appropriate technical and organizational measures to secure PII.</li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>Metadata</h2>
+        <table>
+            <tr>
+                <th>Scan ID</th>
+                <td>demo-32250e20</td>
+            </tr>
+            <tr>
+                <th>Scan Type</th>
+                <td>Website Scan</td>
+            </tr>
+            <tr>
+                <th>Region</th>
+                <td>Netherlands</td>
+            </tr>
+            <tr>
+                <th>Timestamp</th>
+                <td>2025-04-19 16:23:29</td>
+            </tr>
+            <tr>
+                <th>URL/Domain</th>
+                <td>example.com</td>
+            </tr>
+        </table>
+        
+        <p style="font-size: 12px; color: #777; margin-top: 30px;">
+            Disclaimer: This report is provided for informational purposes only and should not 
+            be considered legal advice. The findings in this report are based on automated 
+            scanning and may not identify all GDPR-relevant personal data. We recommend 
+            consulting with a qualified legal professional for specific GDPR compliance guidance.
+        </p>
+    </div>
+    
+    <script>
+        // Initialize tablesorter
+        $(document).ready(function() { 
+            $("#findingsTable").tablesorter({
+                theme: 'blue',
+                widgets: ['zebra', 'filter'],
+                widgetOptions: {
+                    zebra: ['even', 'odd'],
+                }
+            }); 
+        });
+        
+        // Initialize charts
+        const piiTypesData = {"labels": ["Email", "Phone", "Address", "Name", "IP Address"], "values": [5, 3, 2, 8, 6]};
+        const riskLevelsData = {"labels": ["High", "Medium", "Low"], "values": [3, 8, 13]};
+        
+        // PII Types Chart
+        const piiTypesCtx = document.getElementById('piiTypesChart').getContext('2d');
+        new Chart(piiTypesCtx, {
+            type: 'bar',
+            data: {
+                labels: piiTypesData.labels,
+                datasets: [{
+                    label: 'Count',
+                    data: piiTypesData.values,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Risk Levels Chart
+        const riskLevelsCtx = document.getElementById('riskLevelsChart').getContext('2d');
+        new Chart(riskLevelsCtx, {
+            type: 'pie',
+            data: {
+                labels: riskLevelsData.labels,
+                datasets: [{
+                    label: 'Risk Levels',
+                    data: riskLevelsData.values,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(255, 205, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgb(255, 99, 132)',
+                        'rgb(255, 205, 86)',
+                        'rgb(75, 192, 192)'
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+</body>
+</html>
