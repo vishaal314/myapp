@@ -23,7 +23,7 @@ class ResultsAggregator:
     
     def _get_connection(self):
         """Get a database connection."""
-        return psycopg2.connect(self.db_url)
+        return psycopg2.connect(self.db_url, sslmode='prefer')
     
     def _init_db(self):
         """Initialize the database with required tables if they don't exist."""
