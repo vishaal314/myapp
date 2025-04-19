@@ -2690,7 +2690,7 @@ else:
                 
                 # Generate report
                 if st.button(_("report.generate")):
-                    with st.spinner("Generating report..."):
+                    with st.spinner(_("report.generating")):
                         pdf_bytes = generate_report(
                             scan_data,
                             include_details=include_details,
@@ -2702,19 +2702,19 @@ else:
                         # Create download link
                         selected_display_id = scan_options[selected_scan]['display_id']
                         b64_pdf = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">Download PDF Report</a>'
+                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">{_("report.download_pdf_report")}</a>'
                         st.markdown(href, unsafe_allow_html=True)
                         
-                        st.success("Report generated successfully!")
+                        st.success(_("report.generated_successfully"))
                 
                 # Report preview (if available from a previous generation)
                 if 'current_scan_id' in st.session_state and st.session_state.current_scan_id == selected_scan_id and 'pdf_bytes' in locals():
-                    st.subheader("Report Preview")
-                    st.write("Preview not available. Please download the report to view.")
+                    st.subheader(_("report.preview"))
+                    st.write(_("report.preview_not_available"))
             else:
-                st.error(f"Could not find scan with ID: {selected_scan_id}")
+                st.error(_("report.scan_not_found").format(scan_id=selected_scan_id))
         else:
-            st.info("No scan history available to generate reports. Start a new scan first.")
+            st.info(_("report.no_scan_history"))
             
     elif selected_nav == _("admin.title"):
         # Import required auth functionality
