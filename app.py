@@ -2168,9 +2168,26 @@ else:
                 def highlight_risk(val):
                     if isinstance(val, (int, float)):
                         if val > 10:
-                            return 'background-color: #FFCCCB'  # Light red for high risk
+                            # Critical risk (red)
+                            return 'background-color: #FFEBEE; color: #C62828; font-weight: bold'
                         elif val > 5:
-                            return 'background-color: #FFE5B4'  # Light orange for medium risk
+                            # High risk (orange)
+                            return 'background-color: #FFF8E1; color: #F57F17; font-weight: bold'
+                        elif val > 0:
+                            # Medium risk (yellow)
+                            return 'background-color: #FFFDE7; color: #FBC02D; font-weight: normal'
+                    elif isinstance(val, str):
+                        # Process string risk levels using the Smart AI risk analyzer color scheme
+                        if val == 'Critical':
+                            return 'background-color: #FFEBEE; color: #C62828; font-weight: bold'
+                        elif val == 'High':
+                            return 'background-color: #FFEBEE; color: #D32F2F; font-weight: bold'
+                        elif val == 'Medium':
+                            return 'background-color: #FFF8E1; color: #F57F17; font-weight: bold'
+                        elif val == 'Low':
+                            return 'background-color: #F1F8E9; color: #558B2F; font-weight: normal'
+                        elif val == 'Info':
+                            return 'background-color: #E3F2FD; color: #1976D2; font-weight: normal'
                     return ''
                 
                 # Apply styling
@@ -2259,14 +2276,20 @@ else:
                             }
                             pii_items_df = pii_items_df[cols_to_display].rename(columns=column_map)
                             
-                            # Apply styling based on risk level
+                            # Apply styling based on risk level using Smart AI risk severity color-coding system
                             def highlight_risk(val):
-                                if val == 'High':
-                                    return 'background-color: #ffcccc'
+                                if val == 'Critical':
+                                    return 'background-color: #FFEBEE; color: #C62828; font-weight: bold'
+                                elif val == 'High':
+                                    return 'background-color: #FFEBEE; color: #D32F2F; font-weight: bold'
                                 elif val == 'Medium':
-                                    return 'background-color: #ffffcc'
+                                    return 'background-color: #FFF8E1; color: #F57F17; font-weight: bold'
                                 elif val == 'Low':
-                                    return 'background-color: #ccffcc'
+                                    return 'background-color: #F1F8E9; color: #558B2F; font-weight: normal'
+                                elif val == 'Info':
+                                    return 'background-color: #E3F2FD; color: #1976D2; font-weight: normal'
+                                elif val == 'Safe':
+                                    return 'background-color: #E8F5E9; color: #388E3C; font-weight: normal'
                                 return ''
                             
                             # Display the styled DataFrame
