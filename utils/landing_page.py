@@ -205,23 +205,28 @@ def display_gdpr_principles_card() -> None:
 
 def display_landing_page_grid() -> None:
     """
-    Display a grid layout with all landing page components.
+    Display a simplified, professional grid layout for the landing page.
+    This design prioritizes clean presentation without exceptions or overlapping content.
     """
+    # Create a clean header with the platform title
+    st.markdown("""
+    <h1 style="color: #1e3a8a; margin-bottom: 5px;">DataGuardian Pro</h1>
+    <h3 style="color: #4b5563; font-weight: 500; margin-top: 0; margin-bottom: 20px;">Enterprise Privacy Compliance Platform</h3>
+    """, unsafe_allow_html=True)
+    
     # Create two columns with specific widths
     col1, col2 = st.columns([3, 2])
     
     with col1:
+        # Main description
         st.markdown("""
-        # DataGuardian Pro
-        ### Enterprise Privacy Compliance Platform
-        
         DataGuardian Pro is a comprehensive GDPR compliance platform that helps organizations identify, 
         analyze, and protect personally identifiable information (PII) across multiple data sources.
         """)
         
         # Create call-to-action buttons
         st.markdown("""
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 10px; margin: 20px 0;">
             <button style="background-color: #4f46e5; color: white; border: none; padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer;">
                 Start Free Trial ➔
             </button>
@@ -231,50 +236,79 @@ def display_landing_page_grid() -> None:
         </div>
         """, unsafe_allow_html=True)
         
-        # Service cards
-        st.markdown("""
-        ### Our Scanning Services
+        # Simple text-based scanning services section
+        st.markdown("### Our Scanning Services")
         
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; margin-bottom: 20px;">
-            <div style="background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;">
-                <div style="color: #4f46e5; font-weight: 600; margin-bottom: 10px;">Code Scanner</div>
-                <p style="font-size: 14px; color: #4b5563; margin: 0;">
-                    Detect PII and security vulnerabilities in your source code repositories.
-                </p>
-            </div>
-            
-            <div style="background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;">
-                <div style="color: #4f46e5; font-weight: 600; margin-bottom: 10px;">Document Scanner</div>
-                <p style="font-size: 14px; color: #4b5563; margin: 0;">
-                    Find sensitive information in PDFs, Word documents, and other files.
-                </p>
-            </div>
-            
-            <div style="background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;">
-                <div style="color: #4f46e5; font-weight: 600; margin-bottom: 10px;">Database Scanner</div>
-                <p style="font-size: 14px; color: #4b5563; margin: 0;">
-                    Identify PII stored in databases and data warehouses.
-                </p>
-            </div>
-            
-            <div style="background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;">
-                <div style="color: #4f46e5; font-weight: 600; margin-bottom: 10px;">API Scanner</div>
-                <p style="font-size: 14px; color: #4b5563; margin: 0;">
-                    Detect personal data transmitted through your APIs.
-                </p>
+        services = {
+            "Code Scanner": "Detect PII and security vulnerabilities in source code repositories.",
+            "Document Scanner": "Find sensitive information in PDFs, Word documents, and other files.",
+            "Database Scanner": "Identify PII stored in databases and data warehouses.",
+            "API Scanner": "Detect personal data transmitted through APIs.",
+            "Image Scanner": "Find faces and other PII in images using computer vision.",
+            "Website Scanner": "Analyze websites for cookie compliance and data collection."
+        }
+        
+        # Create a clean layout for services
+        service_cols = st.columns(2)
+        for i, (service, description) in enumerate(services.items()):
+            with service_cols[i % 2]:
+                st.markdown(f"""
+                <div style="background-color: white; padding: 15px; border-radius: 10px; 
+                           box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;
+                           margin-bottom: 15px;">
+                    <div style="color: #4f46e5; font-weight: 600; margin-bottom: 5px;">{service}</div>
+                    <p style="font-size: 14px; color: #4b5563; margin: 0;">
+                        {description}
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    with col2:
+        # Add the fine protection card only - keep it clean and simple
+        display_gdpr_fine_card()
+        
+        # Simple information box for GDPR principles
+        st.markdown("""
+        <div style="background-color: white; border-radius: 10px; padding: 20px; 
+                   box-shadow: 0 2px 12px rgba(0,0,0,0.1); border: 1px solid #f0f0f0; 
+                   margin-bottom: 20px;">
+            <h3 style="color: #4f46e5; margin-top: 0; font-weight: 600; font-size: 18px;">GDPR Core Principles</h3>
+            <ul style="margin: 0; padding-left: 20px;">
+                <li style="margin-bottom: 8px; font-size: 14px; color: #4b5563;">Lawfulness, Fairness and Transparency</li>
+                <li style="margin-bottom: 8px; font-size: 14px; color: #4b5563;">Purpose Limitation</li>
+                <li style="margin-bottom: 8px; font-size: 14px; color: #4b5563;">Data Minimization</li>
+                <li style="margin-bottom: 8px; font-size: 14px; color: #4b5563;">Accuracy</li>
+                <li style="margin-bottom: 8px; font-size: 14px; color: #4b5563;">Storage Limitation</li>
+                <li style="margin-bottom: 8px; font-size: 14px; color: #4b5563;">Integrity and Confidentiality</li>
+                <li style="margin-bottom: 0px; font-size: 14px; color: #4b5563;">Accountability</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Feature highlight box
+        st.markdown("""
+        <div style="background-color: white; border-radius: 10px; padding: 20px; 
+                   box-shadow: 0 2px 12px rgba(0,0,0,0.1); border: 1px solid #f0f0f0;">
+            <h3 style="color: #4f46e5; margin-top: 0; font-weight: 600; font-size: 18px;">Key Features</h3>
+            <div style="margin-top: 15px;">
+                <div style="margin-bottom: 12px;">
+                    <div style="font-weight: 600; color: #111827; font-size: 15px;">Multi-source scanning</div>
+                    <p style="margin-top: 4px; margin-bottom: 0; font-size: 14px; color: #4b5563;">
+                        PII detection across code, documents, databases and APIs
+                    </p>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <div style="font-weight: 600; color: #111827; font-size: 15px;">Advanced AI Analysis</div>
+                    <p style="margin-top: 4px; margin-bottom: 0; font-size: 14px; color: #4b5563;">
+                        Smart risk assessment and automated remediation advice
+                    </p>
+                </div>
+                <div style="margin-bottom: 0px;">
+                    <div style="font-weight: 600; color: #111827; font-size: 15px;">Compliance Dashboards</div>
+                    <p style="margin-top: 4px; margin-bottom: 0; font-size: 14px; color: #4b5563;">
+                        Visualize compliance status and track progress over time
+                    </p>
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
-    
-    with col2:
-        # Add the fine protection card
-        display_gdpr_fine_card()
-        
-        # Add the compliance status card
-        display_compliance_status_card()
-        
-        # Add the sustainability card
-        display_sustainability_simple_card()
-        
-        # Add the GDPR principles card
-        display_gdpr_principles_card()
