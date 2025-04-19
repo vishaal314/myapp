@@ -151,17 +151,23 @@ def _(key: str, default: Optional[str] = None) -> str:
     """
     return get_text(key, default)
 
-def language_selector(key_suffix: str = "main") -> None:
+def language_selector(key_suffix: str = None) -> None:
     """
     Display a language selector in the Streamlit UI.
     Updates the language when changed immediately.
     
     Args:
         key_suffix: A suffix to ensure unique keys for multiple language selectors
+                   If None, a random suffix will be generated
     """
-    # Create a selectbox for language selection
+    import uuid
+    # Create a unique key if none provided
+    if key_suffix is None:
+        key_suffix = str(uuid.uuid4())[:8]
+        
+    # Create a selectbox for language selection with guaranteed unique key
     current_lang = st.session_state.get('language', 'en')
-    selector_key = f"language_selector_{key_suffix}"
+    selector_key = f"lang_selector_{key_suffix}"
     
     # Define callback for language change
     def on_language_change():
