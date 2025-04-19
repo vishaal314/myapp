@@ -542,7 +542,7 @@ if not st.session_state.logged_in:
                  onclick="selectScanner('{scanner_key}')"
                  style="background-color: white; border-radius: 12px; overflow: hidden; 
                         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 15px;
-                        transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
+                        transition: all 0.3s ease; cursor: pointer;
                         transform: {st.session_state.selected_scanner == scanner_key and 'translateX(10px)' or 'none'};
                         border-left: {st.session_state.selected_scanner == scanner_key and f'4px solid {scanner["color"]}' or 'none'};
                         box-shadow: {st.session_state.selected_scanner == scanner_key and '0 6px 12px rgba(0, 0, 0, 0.1)' or '0 4px 6px rgba(0, 0, 0, 0.05)'};
@@ -619,7 +619,13 @@ if not st.session_state.logged_in:
             <div style="background-color: white; border-radius: 12px; padding: 18px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);">
                 <h4 style="margin: 0 0 15px 0; color: {selected['color']}; font-weight: 500;">Key Features</h4>
                 <div style="color: #4B5563;">
-                    {selected['details']}
+                    <ul style="padding-left: 20px; margin-top: 10px;">
+                        <li style="margin-bottom: 8px;"><strong>Languages supported</strong>: 20+ including Python, JavaScript, Java, C/C++</li>
+                        <li style="margin-bottom: 8px;"><strong>Detection methods</strong>: Pattern matching, entropy analysis, AST parsing</li>
+                        <li style="margin-bottom: 8px;"><strong>Secret types</strong>: API keys, tokens, credentials, connection strings</li>
+                        <li style="margin-bottom: 8px;"><strong>PII types</strong>: Personal data, financial data, health records</li>
+                        <li style="margin-bottom: 8px;"><strong>Integration</strong>: CI/CD, Git hooks, IDE plugins</li>
+                    </ul>
                 </div>
                 
                 <div style="margin-top: 25px; text-align: center;">
