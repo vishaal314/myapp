@@ -369,91 +369,15 @@ with st.sidebar:
 
 # Main content
 if not st.session_state.logged_in:
-    # Simplified hero section with responsive design
-    st.markdown("""
-    <div style="background: linear-gradient(120deg, #1e3a8a 0%, #3b82f6 100%); padding: 25px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
-        <h1 style="margin: 0; color: white; font-size: 2.2rem; font-weight: 700;">DataGuardian Pro</h1>
-        <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.1rem; margin: 10px 0 20px 0;">
-            Enterprise Privacy Compliance Platform for GDPR and International Data Standards
-        </p>
-        
-        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-            <button style="background-color: white; color: #1e3a8a; border: none; padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer;">
-                Start Free Trial ➔
-            </button>
-            <button style="background-color: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3); padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; cursor: pointer;">
-                Request Demo ✉
-            </button>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Use our new professional landing page module
+    from utils.landing_page import display_landing_page_grid
+    display_landing_page_grid()
     
-    # Import sustainability analyzer
-    from utils.sustainability_analyzer import SustainabilityAnalyzer, get_sustainability_banner_html
+    # Add spacing
+    st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Simplified compliance dashboard
-    st.header("Compliance Status")
-    
-    # Create a sustainability analyzer instance with default values for the demo dashboard
-    sustainability_analyzer = SustainabilityAnalyzer(
-        scan_results={
-            'total_pii_found': 42,
-            'high_risk_count': 5,
-            'medium_risk_count': 15
-        }, 
-        industry='technology'
-    )
-    
-    sustainability_score = sustainability_analyzer.calculate_sustainability_score()
-    cost_savings = sustainability_analyzer.calculate_cost_savings()
-    
-    # Display the sustainability banner
-    st.markdown(get_sustainability_banner_html(sustainability_analyzer), unsafe_allow_html=True)
-    
-    # Create simplified metric cards for better mobile responsiveness
-    st.markdown("""
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 15px 0 25px 0;">
-        <!-- Data Protection -->
-        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); padding: 15px; border: 1px solid #e5e7eb; text-align: center;">
-            <div style="height: 5px; background-color: #3B82F6; margin: -15px -15px 15px -15px; border-radius: 8px 8px 0 0;"></div>
-            <h4 style="margin: 0 0 5px 0; color: #1E40AF; font-size: 15px;">Data Protection</h4>
-            <p style="font-size: 32px; font-weight: 600; color: #1E3A8A; margin: 0;">85%</p>
-            <p style="color: #6b7280; font-size: 12px; margin-top: 5px;">
-                42 data points analyzed
-            </p>
-        </div>
-
-        <!-- GDPR Readiness -->
-        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); padding: 15px; border: 1px solid #e5e7eb; text-align: center;">
-            <div style="height: 5px; background-color: #16A34A; margin: -15px -15px 15px -15px; border-radius: 8px 8px 0 0;"></div>
-            <h4 style="margin: 0 0 5px 0; color: #166534; font-size: 15px;">GDPR Readiness</h4>
-            <p style="font-size: 32px; font-weight: 600; color: #16A34A; margin: 0;">78%</p>
-            <p style="color: #6b7280; font-size: 12px; margin-top: 5px;">
-                All principles covered
-            </p>
-        </div>
-
-        <!-- Risk Mitigation -->
-        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); padding: 15px; border: 1px solid #e5e7eb; text-align: center;">
-            <div style="height: 5px; background-color: #F59E0B; margin: -15px -15px 15px -15px; border-radius: 8px 8px 0 0;"></div>
-            <h4 style="margin: 0 0 5px 0; color: #92400E; font-size: 15px;">Risk Mitigation</h4>
-            <p style="font-size: 32px; font-weight: 600; color: #92400E; margin: 0;">92%</p>
-            <p style="color: #6b7280; font-size: 12px; margin-top: 5px;">
-                5 high risks resolved
-            </p>
-        </div>
-
-        <!-- Sustainability Score -->
-        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); padding: 15px; border: 1px solid #e5e7eb; text-align: center;">
-            <div style="height: 5px; background-color: {sustainability_score['color']}; margin: -15px -15px 15px -15px; border-radius: 8px 8px 0 0;"></div>
-            <h4 style="margin: 0 0 5px 0; color: {sustainability_score['color']}; font-size: 15px;">Sustainability</h4>
-            <p style="font-size: 32px; font-weight: 600; color: {sustainability_score['color']}; margin: 0;">{sustainability_score['overall_score']}%</p>
-            <p style="color: #6b7280; font-size: 12px; margin-top: 5px;">
-                {sustainability_score['status']}
-            </p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Our landing page already has metric cards, no need to duplicate them
+    st.write("")
     
     # Simplified scanning services section with responsive tiles
     st.markdown("""
