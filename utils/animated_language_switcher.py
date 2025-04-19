@@ -1,5 +1,5 @@
 """
-Interactive language switcher with country flag animations for DataGuardian Pro.
+Interactive language switcher with country flag animations for DataGuardian.
 Provides a visually appealing way to switch between supported languages.
 """
 import streamlit as st
@@ -229,10 +229,14 @@ def animated_language_switcher(
                         use_container_width=True,
                         type="primary" if current_lang == lang_code else "secondary"
                     ):
-                        # Update language in session state
+                        # Update language in session state and force it to persist
                         st.session_state.language = lang_code
+                        st.session_state['language'] = lang_code  # Ensure it's set both ways
+                        
                         # Load translations for new language
+                        from utils.i18n import set_language
                         set_language(lang_code)
+                        
                         # Force rerun of app
                         st.rerun()
         
@@ -253,10 +257,14 @@ def animated_language_switcher(
                     key=f"apply_lang_change_{key_suffix}",
                     type="primary"
                 ):
-                    # Update language in session state
+                    # Update language in session state and force it to persist
                     st.session_state.language = selected_lang
+                    st.session_state['language'] = selected_lang  # Ensure it's set both ways
+                    
                     # Load translations for new language
+                    from utils.i18n import set_language
                     set_language(selected_lang)
+                    
                     # Force rerun of app
                     st.rerun()
 
@@ -268,13 +276,13 @@ def get_welcome_message_animation() -> str:
         HTML string with animated welcome message
     """
     welcome_messages = {
-        'en': 'Welcome to DataGuardian Pro',
-        'nl': 'Welkom bij DataGuardian Pro',
-        'fr': 'Bienvenue à DataGuardian Pro',
-        'de': 'Willkommen bei DataGuardian Pro',
-        'es': 'Bienvenido a DataGuardian Pro',
-        'it': 'Benvenuto a DataGuardian Pro',
-        'pt': 'Bem-vindo ao DataGuardian Pro'
+        'en': 'Welcome to DataGuardian',
+        'nl': 'Welkom bij DataGuardian',
+        'fr': 'Bienvenue à DataGuardian',
+        'de': 'Willkommen bei DataGuardian',
+        'es': 'Bienvenido a DataGuardian',
+        'it': 'Benvenuto a DataGuardian',
+        'pt': 'Bem-vindo ao DataGuardian'
     }
     
     # CSS with embedded animation (no JavaScript needed)

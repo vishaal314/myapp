@@ -1,5 +1,5 @@
 """
-Internationalization module for DataGuardian Pro.
+Internationalization module for DataGuardian.
 Provides multilingual support for the application UI.
 """
 import os

@@ -660,7 +660,7 @@ if not st.session_state.logged_in:
                 <span style="color: white; font-size: 20px; font-weight: bold;">🔒</span>
             </div>
             <h3 style="color: #065F46; margin-top: 0; font-size: 18px; font-weight: 600;">Dutch GDPR Compliance</h3>
-            <p style="color: #3B4151; margin-bottom: 0;">Special handling for BSN, medical data, and UAVG requirements with Dutch guardrails.</p>
+            <p style="color: #3B4151; margin-bottom: 0;">Special handling for BSN, medical data, and health records with Dutch UAVG requirements.</p>
         </div>
         
         <div style="background: linear-gradient(135deg, #FEF3F2 0%, #FEE2E2 100%); 
