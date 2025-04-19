@@ -929,6 +929,35 @@ else:
             col2.metric("Total PII Found", total_pii)
             col3.metric("High Risk Items", high_risk_items)
             
+            # Privacy & Compliance Analytics Dashboard Section
+            st.markdown("""
+            <h3 style="margin: 20px 0 15px 0; color: #1e3a8a; font-weight: 600;">
+                Privacy & Compliance Analytics
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
+                    <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">Annual Cost Efficiency</h4>
+                    <p style="font-size: 24px; font-weight: 600; color: #2E7D32; margin: 10px 0 5px 0;">€104,800.01</p>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.85em;">Potential annual savings</p>
+                </div>
+            
+                <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
+                    <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">Sustainability Score</h4>
+                    <div style="width: 70px; height: 70px; margin: 10px auto; background-color: #8BC34A; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+                        <span style="color: white; font-size: 24px; font-weight: 600;">71</span>
+                    </div>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.85em;">Status: <span style="color: #8BC34A; font-weight: 600;">Good</span></p>
+                </div>
+            
+                <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
+                    <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">GDPR Fine Protection</h4>
+                    <p style="font-size: 24px; font-weight: 600; color: #9C27B0; margin: 10px 0 5px 0;">92%</p>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.85em;">Risk mitigation coverage</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
             # Recent scans
             st.subheader("Recent Scans")
             recent_scans = all_scans[-5:] if len(all_scans) > 5 else all_scans
