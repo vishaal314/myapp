@@ -289,7 +289,7 @@ with st.sidebar:
                        border-radius: 50%; margin: 0 auto 15px auto;">
                 <span style="color: white; font-size: 1.8rem; font-weight: bold;">{st.session_state.username[0].upper() if st.session_state.username else 'U'}</span>
             </div>
-            <h3 style="margin: 0; color: #1E40AF; text-align: center;">Welcome back</h3>
+            <h3 style="margin: 0; color: #1E40AF; text-align: center;">{_("sidebar.welcome")}</h3>
             <p style="margin: 5px 0 0 0; text-align: center; font-weight: bold;">{st.session_state.username}</p>
         </div>
         """, unsafe_allow_html=True)
