@@ -627,7 +627,7 @@ else:
         if 'payment_message' in locals() and payment_message:
             st.sidebar.error(payment_message)
     
-    if selected_nav == "Dashboard":
+    if selected_nav == _("dashboard.welcome"):
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
@@ -2099,7 +2099,7 @@ else:
                 st.markdown("---")
                 st.info("You can also access the full results in the 'Scan History' section.")
         
-    elif selected_nav == "Scan History":
+    elif selected_nav == _("history.title"):
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
@@ -2436,7 +2436,7 @@ else:
         else:
             st.info("No scan history available. Start a new scan to see results here.")
     
-    elif selected_nav == "Saved Reports":
+    elif selected_nav == _("results.title"):
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         from services.html_report_generator import get_html_report_as_base64, save_html_report
