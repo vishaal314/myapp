@@ -28,6 +28,8 @@ PERMISSIONS = {
     'system:logs': 'Ability to view system logs',
     'payment:manage': 'Ability to manage payment settings',
     'audit:view': 'Ability to view audit logs',
+    'dashboard:view': 'Ability to view the dashboard',
+    'history:view': 'Ability to view scan history',
 }
 
 # Define roles and their permissions
@@ -41,6 +43,8 @@ ROLE_PERMISSIONS = {
             'system:settings', 'system:logs',
             'payment:manage',
             'audit:view',
+            'dashboard:view',
+            'history:view',
         ]
     },
     'analyst': {
@@ -50,6 +54,8 @@ ROLE_PERMISSIONS = {
             'report:create', 'report:view', 'report:export',
             'user:view',
             'audit:view',
+            'dashboard:view',
+            'history:view',
         ]
     },
     'viewer': {
@@ -57,6 +63,8 @@ ROLE_PERMISSIONS = {
         'permissions': [
             'scan:view',
             'report:view',
+            'dashboard:view',
+            'history:view',
         ]
     },
     'security_officer': {
@@ -66,6 +74,8 @@ ROLE_PERMISSIONS = {
             'report:view', 'report:export',
             'audit:view',
             'system:logs',
+            'dashboard:view',
+            'history:view',
         ]
     },
     'data_protection_officer': {
@@ -74,6 +84,8 @@ ROLE_PERMISSIONS = {
             'scan:view', 'scan:export',
             'report:view', 'report:export',
             'audit:view',
+            'dashboard:view',
+            'history:view',
         ]
     }
 }
