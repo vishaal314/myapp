@@ -2156,26 +2156,26 @@ else:
             high_risk = sum(scan.get('high_risk_count', 0) for scan in all_scans)
             
             # Display metrics in a dashboard-like layout
-            st.markdown("### Compliance Overview")
+            st.markdown(f"### {_('dashboard.compliance_status')}")
             metric_col1, metric_col2, metric_col3 = st.columns(3)
             
             metric_col1.markdown(f"""
             <div style="padding: 10px; background-color: #f0f5ff; border-radius: 5px; text-align: center;">
-                <h4 style="margin: 0;">Total Scans</h4>
+                <h4 style="margin: 0;">{_('dashboard.total_scans')}</h4>
                 <p style="font-size: 28px; font-weight: bold; margin: 0;">{total_scans}</p>
             </div>
             """, unsafe_allow_html=True)
             
             metric_col2.markdown(f"""
             <div style="padding: 10px; background-color: #f0fff0; border-radius: 5px; text-align: center;">
-                <h4 style="margin: 0;">Total PII Found</h4>
+                <h4 style="margin: 0;">{_('dashboard.total_pii_found')}</h4>
                 <p style="font-size: 28px; font-weight: bold; margin: 0;">{total_pii}</p>
             </div>
             """, unsafe_allow_html=True)
             
             metric_col3.markdown(f"""
             <div style="padding: 10px; background-color: #fff0f0; border-radius: 5px; text-align: center;">
-                <h4 style="margin: 0;">High Risk Items</h4>
+                <h4 style="margin: 0;">{_('dashboard.high_risk_items')}</h4>
                 <p style="font-size: 28px; font-weight: bold; margin: 0;">{high_risk}</p>
             </div>
             """, unsafe_allow_html=True)
