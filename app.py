@@ -384,149 +384,178 @@ if not st.session_state.logged_in:
     # Our landing page already has metric cards, no need to duplicate them
     st.write("")
     
-    # Enhanced modern scanning services section
-    st.header("Our Scanning Services")
+    # Modern Scanning Services section with professional design
+    st.markdown("""
+    <h2 style="color: #2563EB; margin: 40px 0 20px 0; text-align: center; font-weight: 600;">Our Scanning Services</h2>
     
-    # Create a more attractive layout for scanning services with cards
-    # Use container for styling
-    with st.container():
-        # First row of scanners
-        col1, col2, col3 = st.columns(3)
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px;">
+        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <div style="height: 8px; background: linear-gradient(90deg, #2563EB, #93C5FD);"></div>
+            <div style="padding: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 42px; height: 42px; background-color: #EFF6FF; border-radius: 50%; 
+                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                        <span style="color: #2563EB; font-size: 18px;">💻</span>
+                    </div>
+                    <h3 style="margin: 0; color: #1E3A8A; font-size: 18px; font-weight: 600;">Code Scanner</h3>
+                </div>
+                <p style="color: #4B5563; margin: 0; font-size: 15px;">Detects PII and secrets in source code repositories with pattern detection and entropy analysis</p>
+            </div>
+        </div>
         
-        with col1:
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #f0f7ff; padding: 15px; border-radius: 8px; border-left: 5px solid #3B82F6; margin-bottom: 20px;">
-                    <h3 style="color: #1E40AF; margin-top: 0; font-size: 18px;">Code Scanner</h3>
-                    <p style="margin-bottom: 0;">Detects PII and secrets in source code repositories with pattern detection and entropy analysis</p>
+        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <div style="height: 8px; background: linear-gradient(90deg, #059669, #6EE7B7);"></div>
+            <div style="padding: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 42px; height: 42px; background-color: #ECFDF5; border-radius: 50%; 
+                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                        <span style="color: #059669; font-size: 18px;">📄</span>
+                    </div>
+                    <h3 style="margin: 0; color: #065F46; font-size: 18px; font-weight: 600;">Document Scanner</h3>
                 </div>
-                """, unsafe_allow_html=True)
+                <p style="color: #4B5563; margin: 0; font-size: 15px;">Scans PDFs, DOC, and text files for sensitive data with advanced OCR technology</p>
+            </div>
+        </div>
         
-        with col2:
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 5px solid #10B981; margin-bottom: 20px;">
-                    <h3 style="color: #047857; margin-top: 0; font-size: 18px;">Document Scanner</h3>
-                    <p style="margin-bottom: 0;">Scans PDFs, DOC, and text files for sensitive data with advanced OCR technology</p>
+        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <div style="height: 8px; background: linear-gradient(90deg, #D97706, #FBBF24);"></div>
+            <div style="padding: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 42px; height: 42px; background-color: #FFFBEB; border-radius: 50%; 
+                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                        <span style="color: #D97706; font-size: 18px;">🖼️</span>
+                    </div>
+                    <h3 style="margin: 0; color: #92400E; font-size: 18px; font-weight: 600;">Image Scanner</h3>
                 </div>
-                """, unsafe_allow_html=True)
-            
-        with col3:
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #fffbeb; padding: 15px; border-radius: 8px; border-left: 5px solid #F59E0B; margin-bottom: 20px;">
-                    <h3 style="color: #92400E; margin-top: 0; font-size: 18px;">Image Scanner</h3>
-                    <p style="margin-bottom: 0;">Detects faces, ID cards, and text-based PII in images using computer vision</p>
-                </div>
-                """, unsafe_allow_html=True)
+                <p style="color: #4B5563; margin: 0; font-size: 15px;">Detects faces, ID cards, and text-based PII in images using computer vision</p>
+            </div>
+        </div>
         
-        # Second row of scanners
-        col1, col2, col3 = st.columns(3)
+        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <div style="height: 8px; background: linear-gradient(90deg, #4F46E5, #A5B4FC);"></div>
+            <div style="padding: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 42px; height: 42px; background-color: #EEF2FF; border-radius: 50%; 
+                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                        <span style="color: #4F46E5; font-size: 18px;">🗄️</span>
+                    </div>
+                    <h3 style="margin: 0; color: #3730A3; font-size: 18px; font-weight: 600;">Database Scanner</h3>
+                </div>
+                <p style="color: #4B5563; margin: 0; font-size: 15px;">Column-level detection for databases with type and content analysis</p>
+            </div>
+        </div>
         
-        with col1:
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #eef2ff; padding: 15px; border-radius: 8px; border-left: 5px solid #6366F1; margin-bottom: 20px;">
-                    <h3 style="color: #4F46E5; margin-top: 0; font-size: 18px;">Database Scanner</h3>
-                    <p style="margin-bottom: 0;">Column-level detection for databases with type and content analysis</p>
+        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <div style="height: 8px; background: linear-gradient(90deg, #BE185D, #F472B6);"></div>
+            <div style="padding: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 42px; height: 42px; background-color: #FDF2F8; border-radius: 50%; 
+                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                        <span style="color: #BE185D; font-size: 18px;">🔌</span>
+                    </div>
+                    <h3 style="margin: 0; color: #9D174D; font-size: 18px; font-weight: 600;">API Scanner</h3>
                 </div>
-                """, unsafe_allow_html=True)
-                
-        with col2:
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #fdf2f8; padding: 15px; border-radius: 8px; border-left: 5px solid #EC4899; margin-bottom: 20px;">
-                    <h3 style="color: #BE185D; margin-top: 0; font-size: 18px;">API Scanner</h3>
-                    <p style="margin-bottom: 0;">Finds PII in API requests/responses by analyzing traffic and schemas</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-        with col3:
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #f5f3ff; padding: 15px; border-radius: 8px; border-left: 5px solid #8B5CF6; margin-bottom: 20px;">
-                    <h3 style="color: #6D28D9; margin-top: 0; font-size: 18px;">AI Model Scanner</h3>
-                    <p style="margin-bottom: 0;">Detects PII leakage in ML models and training data with advanced prompting</p>
-                </div>
-                """, unsafe_allow_html=True)
+                <p style="color: #4B5563; margin: 0; font-size: 15px;">Finds PII in API requests/responses by analyzing traffic and schemas</p>
+            </div>
+        </div>
         
-    # Enhanced Enterprise Features section with cards
-    st.header("Enterprise Features")
+        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <div style="height: 8px; background: linear-gradient(90deg, #7C3AED, #C4B5FD);"></div>
+            <div style="padding: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 42px; height: 42px; background-color: #F5F3FF; border-radius: 50%; 
+                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                        <span style="color: #7C3AED; font-size: 18px;">🧠</span>
+                    </div>
+                    <h3 style="margin: 0; color: #6D28D9; font-size: 18px; font-weight: 600;">AI Model Scanner</h3>
+                </div>
+                <p style="color: #4B5563; margin: 0; font-size: 15px;">Detects PII leakage in ML models and training data with advanced prompting</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+        
+    # Modern Enterprise Features section with sleek design
+    st.markdown("""
+    <h2 style="color: #2563EB; margin-bottom: 20px; text-align: center; font-weight: 600;">Enterprise Features</h2>
     
-    # Create a more visually appealing grid of feature cards
-    # Use a similar style to the scanning services for consistency
-    with st.container():
-        # Feature cards - row 1
-        col1, col2 = st.columns(2)
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+        <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); 
+                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.08);">
+            <div style="background-color: #3B82F6; width: 50px; height: 50px; border-radius: 50%; 
+                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                <span style="color: white; font-size: 20px; font-weight: bold;">🔍</span>
+            </div>
+            <h3 style="color: #1E40AF; margin-top: 0; font-size: 18px; font-weight: 600;">Comprehensive Detection</h3>
+            <p style="color: #3B4151; margin-bottom: 0;">Unified scanning across multiple data sources with intelligent pattern recognition.</p>
+        </div>
         
-        with col1:
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #f0f7ff; padding: 18px; border-radius: 8px; border-left: 5px solid #3B82F6; margin-bottom: 20px;">
-                    <h3 style="color: #1E40AF; margin-top: 0; font-size: 18px;">Comprehensive Detection</h3>
-                    <p style="margin-bottom: 0;">Unified scanning across multiple data sources with intelligent pattern recognition and contextual analysis.</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #fffbeb; padding: 18px; border-radius: 8px; border-left: 5px solid #F59E0B; margin-bottom: 20px;">
-                    <h3 style="color: #92400E; margin-top: 0; font-size: 18px;">Dutch GDPR Compliance</h3>
-                    <p style="margin-bottom: 0;">Special handling for BSN, medical data, and UAVG requirements with Dutch-specific compliance guardrails.</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #fdf2f8; padding: 18px; border-radius: 8px; border-left: 5px solid #EC4899; margin-bottom: 20px;">
-                    <h3 style="color: #BE185D; margin-top: 0; font-size: 18px;">Customizable Scanning</h3>
-                    <p style="margin-bottom: 0;">Configure scans based on your specific compliance needs with industry-specific templates and rules.</p>
-                </div>
-                """, unsafe_allow_html=True)
+        <div style="background: linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%); 
+                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.08);">
+            <div style="background-color: #10B981; width: 50px; height: 50px; border-radius: 50%; 
+                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                <span style="color: white; font-size: 20px; font-weight: bold;">🔒</span>
+            </div>
+            <h3 style="color: #065F46; margin-top: 0; font-size: 18px; font-weight: 600;">Dutch GDPR Compliance</h3>
+            <p style="color: #3B4151; margin-bottom: 0;">Special handling for BSN, medical data, and UAVG requirements with Dutch guardrails.</p>
+        </div>
         
-        with col2:
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #f0fdf4; padding: 18px; border-radius: 8px; border-left: 5px solid #10B981; margin-bottom: 20px;">
-                    <h3 style="color: #047857; margin-top: 0; font-size: 18px;">Advanced Analysis</h3>
-                    <p style="margin-bottom: 0;">AI-powered risk scoring and compliance reporting with actionable remediation advice and impact assessments.</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #eef2ff; padding: 18px; border-radius: 8px; border-left: 5px solid #6366F1; margin-bottom: 20px;">
-                    <h3 style="color: #4F46E5; margin-top: 0; font-size: 18px;">Complete GDPR Principles</h3>
-                    <p style="margin-bottom: 0;">All seven core GDPR principles fully implemented with auditable processes and documentation.</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-            with st.container():
-                st.markdown("""
-                <div style="background-color: #f5f3ff; padding: 18px; border-radius: 8px; border-left: 5px solid #8B5CF6; margin-bottom: 20px;">
-                    <h3 style="color: #6D28D9; margin-top: 0; font-size: 18px;">Comprehensive Reporting</h3>
-                    <p style="margin-bottom: 0;">Generate detailed compliance reports with executive summaries, risk matrices, and remediation plans.</p>
-                </div>
-                """, unsafe_allow_html=True)
+        <div style="background: linear-gradient(135deg, #FEF3F2 0%, #FEE2E2 100%); 
+                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.08);">
+            <div style="background-color: #EF4444; width: 50px; height: 50px; border-radius: 50%; 
+                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                <span style="color: white; font-size: 20px; font-weight: bold;">⚙️</span>
+            </div>
+            <h3 style="color: #991B1B; margin-top: 0; font-size: 18px; font-weight: 600;">Customizable Scanning</h3>
+            <p style="color: #3B4151; margin-bottom: 0;">Configure scans based on your specific compliance needs with industry templates.</p>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%); 
+                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.08);">
+            <div style="background-color: #8B5CF6; width: 50px; height: 50px; border-radius: 50%; 
+                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                <span style="color: white; font-size: 20px; font-weight: bold;">📊</span>
+            </div>
+            <h3 style="color: #5B21B6; margin-top: 0; font-size: 18px; font-weight: 600;">Advanced Analysis</h3>
+            <p style="color: #3B4151; margin-bottom: 0;">AI-powered risk scoring and compliance reporting with actionable remediation advice.</p>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); 
+                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.08);">
+            <div style="background-color: #059669; width: 50px; height: 50px; border-radius: 50%; 
+                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                <span style="color: white; font-size: 20px; font-weight: bold;">📄</span>
+            </div>
+            <h3 style="color: #065F46; margin-top: 0; font-size: 18px; font-weight: 600;">Complete GDPR Principles</h3>
+            <p style="color: #3B4151; margin-bottom: 0;">All seven core GDPR principles fully implemented with auditable processes.</p>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); 
+                  border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.08);">
+            <div style="background-color: #F59E0B; width: 50px; height: 50px; border-radius: 50%; 
+                      display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                <span style="color: white; font-size: 20px; font-weight: bold;">📊</span>
+            </div>
+            <h3 style="color: #92400E; margin-top: 0; font-size: 18px; font-weight: 600;">Comprehensive Reporting</h3>
+            <p style="color: #3B4151; margin-bottom: 0;">Generate detailed compliance reports with executive summaries and remediation plans.</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # We're removing the About section as requested
     
-    # Application rating - positioned at the bottom of the page
-    st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
-    st.header("Rate Our Application")
+    # Clean footer with professional styling
+    st.markdown("<hr style='margin: 30px 0 20px 0; border-color: #e0e0e0;'>", unsafe_allow_html=True)
     
-    # Simplified rating UI
-    cols = st.columns(5)
-    for i, col in enumerate(cols, 1):
-        with col:
-            stars = "⭐" * i
-            st.button(stars, key=f"rate_{i}", use_container_width=True)
-    
-    # Simplified feedback form
-    feedback = st.text_area("Your Feedback", 
-                         placeholder="Share your thoughts on the GDPR Scan Engine...",
-                         max_chars=500)
-    st.button("Submit Feedback", use_container_width=True)
+    # Professional footer with company info
+    st.markdown("""
+    <div style="text-align: center; padding: 20px; background: linear-gradient(to right, #f8f9fa, #f1f3f5); 
+               border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <h4 style="color: #3B82F6; margin-bottom: 15px;">DataGuardian Pro</h4>
+        <p style="color: #4b5563; margin-bottom: 5px;">Enterprise Privacy Compliance Platform</p>
+        <p style="color: #6b7280; font-size: 0.8em;">© 2025 GDPR Scan Engine. All rights reserved.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 else:
     # Initialize aggregator
