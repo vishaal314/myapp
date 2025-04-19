@@ -95,7 +95,15 @@ def display_sustainability_simple_card() -> None:
     """
     Display a simple, professional sustainability card.
     """
-    st.markdown("""
+    # Using fixed values for the landing page
+    sustainability_score = 78
+    annual_savings = 14500
+    
+    # Calculate circle metrics
+    circumference = 2 * 3.14159 * 35  # 2πr where r=35
+    dashoffset = circumference * (1 - sustainability_score/100)
+    
+    st.markdown(f"""
     <div style="background-color: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); border: 1px solid #f0f0f0; margin-bottom: 20px;">
         <h3 style="color: #4f46e5; margin-top: 0; font-weight: 600; font-size: 18px;">Sustainability Impact</h3>
         
@@ -104,13 +112,13 @@ def display_sustainability_simple_card() -> None:
                 <!-- SVG Circle Chart -->
                 <svg width="80" height="80" viewBox="0 0 80 80">
                     <circle cx="40" cy="40" r="35" fill="none" stroke="#e5e7eb" stroke-width="8"/>
-                    <circle cx="40" cy="40" r="35" fill="none" stroke="#4f46e5" stroke-width="8" stroke-dasharray="220" stroke-dashoffset="60" transform="rotate(-90 40 40)"/>
-                    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="bold" fill="#111827">78%</text>
+                    <circle cx="40" cy="40" r="35" fill="none" stroke="#4f46e5" stroke-width="8" stroke-dasharray="{circumference}" stroke-dashoffset="{dashoffset}" transform="rotate(-90 40 40)"/>
+                    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="bold" fill="#111827">{sustainability_score}%</text>
                 </svg>
             </div>
             <div>
                 <p style="font-size: 14px; color: #4b5563; margin: 0;">
-                    Your privacy practices contribute to a <strong>78% sustainability score</strong>, reducing digital waste and energy consumption.
+                    Your privacy practices contribute to a <strong>{sustainability_score}% sustainability score</strong>, reducing digital waste and energy consumption.
                 </p>
             </div>
         </div>
@@ -118,7 +126,7 @@ def display_sustainability_simple_card() -> None:
         <div style="background-color: #f9fafb; border-radius: 8px; padding: 10px 15px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 14px; color: #4b5563;">Estimated Annual Savings:</span>
-                <span style="font-size: 16px; font-weight: 600; color: #047857;">€14,500</span>
+                <span style="font-size: 16px; font-weight: 600; color: #047857;">€{annual_savings:,}</span>
             </div>
         </div>
     </div>
