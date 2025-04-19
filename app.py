@@ -1909,7 +1909,106 @@ else:
                 display_scan_id = f"{scan_type[:3].upper()}-{scan_date}-{scan_id[:6]}"
                 
                 st.success(f"Scan completed successfully! Scan ID: {display_scan_id}")
-                st.info("Navigate to 'Scan History' to view detailed results")
+                
+                # Immediate scan results preview
+                st.markdown("---")
+                st.subheader("Immediate Scan Results Preview")
+                
+                # Create a container for the preview
+                preview_container = st.container()
+                
+                with preview_container:
+                    # Summary metrics
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Total PII Found", total_pii_found)
+                    col2.metric("High Risk Items", high_risk_count)
+                    col3.metric("Files Scanned", len(file_paths))
+                    
+                    # Risk Assessment
+                    st.markdown("### Risk Assessment")
+                    risk_level = "High" if high_risk_count > 10 else "Medium" if high_risk_count > 0 else "Low" if total_pii_found > 0 else "None"
+                    risk_color = "red" if risk_level == "High" else "orange" if risk_level == "Medium" else "green"
+                    
+                    st.markdown(f"**Overall Risk Level:** <span style='color:{risk_color};'>{risk_level}</span>", unsafe_allow_html=True)
+                    
+                    # Create horizontal bar chart for PII types
+                    if pii_types:
+                        st.markdown("### PII Types Detected")
+                        
+                        # Convert to DataFrame for visualization
+                        pii_df = pd.DataFrame(list(pii_types.items()), columns=['PII Type', 'Count'])
+                        pii_df = pii_df.sort_values('Count', ascending=False)
+                        
+                        # Create a bar chart
+                        fig = px.bar(pii_df, x='Count', y='PII Type', orientation='h', 
+                                    color='Count', color_continuous_scale='blues')
+                        st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Preview of findings
+                    st.markdown("### Sample Findings")
+                    all_findings = []
+                    for result in scan_results:
+                        for item in result.get('pii_found', []):
+                            all_findings.append({
+                                'Type': item.get('type', 'Unknown'),
+                                'Value': item.get('value', 'Unknown'),
+                                'Risk Level': item.get('risk_level', 'Unknown'),
+                                'Location': item.get('location', 'Unknown')
+                            })
+                    
+                    # Display a sample of findings (up to 10 items)
+                    if all_findings:
+                        sample_findings = all_findings[:10]
+                        findings_df = pd.DataFrame(sample_findings)
+                        st.dataframe(findings_df, use_container_width=True)
+                        
+                        # Show how many more findings there are
+                        if len(all_findings) > 10:
+                            st.info(f"Showing 10 of {len(all_findings)} findings. See full results in Scan History.")
+                    else:
+                        st.info("No findings to display.")
+                    
+                    # Action buttons
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        if st.button("View Full Report", key="view_full_report"):
+                            st.session_state.selected_nav = "Scan History"
+                            st.rerun()
+                    
+                    with col2:
+                        # Quick PDF Report generation
+                        if st.button("Generate PDF Report", key="quick_pdf_report"):
+                            # Import report generator
+                            from services.report_generator import generate_report
+                            
+                            with st.spinner("Generating PDF report..."):
+                                pdf_bytes = generate_report(aggregated_result)
+                                
+                                # Create download link
+                                b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{display_scan_id}.pdf">Download PDF Report</a>'
+                                st.markdown(href, unsafe_allow_html=True)
+                                
+                    with col3:
+                        # Quick HTML Report generation
+                        if st.button("Generate HTML Report", key="quick_html_report"):
+                            # Import HTML report generator
+                            from services.html_report_generator import save_html_report
+                            
+                            with st.spinner("Generating HTML report..."):
+                                # Create reports directory if it doesn't exist
+                                reports_dir = "reports"
+                                os.makedirs(reports_dir, exist_ok=True)
+                                
+                                # Save the HTML report
+                                file_path = save_html_report(aggregated_result, reports_dir)
+                                
+                                # Success message
+                                st.success(f"HTML report saved. You can access it from the 'Saved Reports' page.")
+                
+                st.markdown("---")
+                st.info("You can also access the full results in the 'Scan History' section.")
         
     elif selected_nav == "Scan History":
         # Import permission checking functionality

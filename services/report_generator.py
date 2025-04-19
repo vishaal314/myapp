@@ -1,14 +1,26 @@
 import io
+import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from matplotlib.backends.backend_pdf import PdfPages
+import numpy as np
 import pandas as pd
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, A4
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
+from reportlab.lib.colors import HexColor, toColor
+from reportlab.lib.units import inch, cm
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, Flowable, KeepTogether, CondPageBreak, Image, Frame, FrameBreak, NextPageTemplate, PageTemplate
+from reportlab.graphics.shapes import Drawing, Circle, Rect, Line, String, Wedge
+from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
+from reportlab.graphics.charts.piecharts import Pie, LegendedPie
+from reportlab.graphics.charts.linecharts import HorizontalLineChart
+from reportlab.graphics.charts.textlabels import Label
+from reportlab.graphics import renderPDF
+from reportlab.graphics.widgets.markers import makeMarker
 
 def generate_report(scan_data: Dict[str, Any], 
                    include_details: bool = True,
