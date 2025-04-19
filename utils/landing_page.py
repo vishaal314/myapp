@@ -1,5 +1,5 @@
 """
-Landing page components for DataGuardian Pro.
+Landing page components for DataGuardian.
 Provides professionally designed UI components for the landing page.
 """
 
@@ -210,7 +210,7 @@ def display_landing_page_grid() -> None:
     """
     # Create a clean header with the platform title
     st.markdown("""
-    <h1 style="color: #1e3a8a; margin-bottom: 5px;">DataGuardian Pro</h1>
+    <h1 style="color: #1e3a8a; margin-bottom: 5px;">DataGuardian</h1>
     <h3 style="color: #4b5563; font-weight: 500; margin-top: 0; margin-bottom: 20px;">Enterprise Privacy Compliance Platform</h3>
     """, unsafe_allow_html=True)
     
@@ -220,7 +220,7 @@ def display_landing_page_grid() -> None:
     with col1:
         # Main description
         st.markdown("""
-        DataGuardian Pro is a comprehensive GDPR compliance platform that helps organizations identify, 
+        DataGuardian is a comprehensive GDPR compliance platform that helps organizations identify, 
         analyze, and protect personally identifiable information (PII) across multiple data sources.
         """)
         

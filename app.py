@@ -714,9 +714,9 @@ if not st.session_state.logged_in:
     st.markdown("""
     <div style="text-align: center; padding: 20px; background: linear-gradient(to right, #f8f9fa, #f1f3f5); 
                border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-        <h4 style="color: #3B82F6; margin-bottom: 15px;">DataGuardian Pro</h4>
+        <h4 style="color: #3B82F6; margin-bottom: 15px;">DataGuardian</h4>
         <p style="color: #4b5563; margin-bottom: 5px;">Enterprise Privacy Compliance Platform</p>
-        <p style="color: #6b7280; font-size: 0.8em;">© 2025 GDPR Scan Engine. All rights reserved.</p>
+        <p style="color: #6b7280; font-size: 0.8em;">© 2025 DataGuardian. All rights reserved.</p>
     </div>
     </div><!-- Close main-container -->
     """, unsafe_allow_html=True)
