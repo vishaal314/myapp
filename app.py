@@ -759,7 +759,7 @@ else:
         else:
             st.info(_("dashboard.no_scan_data"))
     
-    elif selected_nav == "New Scan":
+    elif selected_nav == _("scan.title"):
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
@@ -825,7 +825,7 @@ else:
                     st.session_state.repo_source = _("scan.upload_files")
                 
                 # Create the radio button and update session state
-                repo_source = st.radio("Repository Source", [_("scan.upload_files"), _("scan.repository_url")], 
+                repo_source = st.radio(_("scan.repository_details"), [_("scan.upload_files"), _("scan.repository_url")], 
                                       index=0 if st.session_state.repo_source == _("scan.upload_files") else 1,
                                       key="repo_source_radio")
                 
@@ -1002,7 +1002,7 @@ else:
             elif scan_type == _("scan.document"):
                 # 2. Blob Scanner
                 st.subheader("Blob Scanner Configuration")
-                blob_source = st.radio("Blob Storage Location", [_("scan.upload_files"), "Azure Blob", "AWS S3", "Local Path"])
+                blob_source = st.radio(_("scan.repository_details"), [_("scan.upload_files"), "Azure Blob", "AWS S3", "Local Path"])
                 
                 if blob_source in ["Azure Blob", "AWS S3"]:
                     st.text_input(f"{blob_source} URL/Connection String", 
@@ -1032,7 +1032,7 @@ else:
             elif scan_type == _("scan.image"):
                 # 3. Image Scanner
                 st.subheader("Image Scanner Configuration")
-                image_source = st.radio("Image Source", [_("scan.upload_files"), "Azure Blob", "AWS S3", "Local Path"])
+                image_source = st.radio(_("scan.repository_details"), [_("scan.upload_files"), "Azure Blob", "AWS S3", "Local Path"])
                 
                 if image_source in ["Azure Blob", "AWS S3"]:
                     st.text_input(f"{image_source} URL/Connection String", 
@@ -1098,7 +1098,7 @@ else:
                 st.subheader("API Scanner Configuration")
                 api_type = st.selectbox("API Type", ["REST", "GraphQL", "SOAP", "gRPC"])
                 
-                api_source = st.radio("API Definition Source", ["Live Endpoint URL", "OpenAPI/Swagger Specification", "Both"])
+                api_source = st.radio(_("scan.repository_details"), ["Live Endpoint URL", "OpenAPI/Swagger Specification", "Both"])
                 
                 if api_source in ["Live Endpoint URL", "Both"]:
                     st.text_input("API Endpoint URL", placeholder="https://api.example.com/v1")
