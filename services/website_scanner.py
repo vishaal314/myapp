@@ -3,6 +3,7 @@ Website Scanner for DataGuardian Pro.
 This scanner detects PII, cookies, trackers, and vulnerabilities in websites.
 """
 import re
+import os
 import requests
 from bs4 import BeautifulSoup
 import urllib.parse
@@ -51,11 +52,23 @@ class WebsiteScanner:
         # Rate limiting delay
         self.request_delay = 60.0 / self.rate_limit
         
-        # Tracking
+        # Tracking with enhanced capabilities
         self.visited_urls = set()
         self.progress_callback = None
         self.current_progress = 0
         self.total_pages = 0
+        
+        # File type patterns to explicitly scan
+        self.crawlable_file_types = [
+            '.html', '.htm', '.xhtml', '.php', '.asp', '.aspx', '.jsp',
+            '.json', '.xml', '.txt', '.md', '.csv', '.pdf'
+        ]
+        
+        # Define which file types should never be excluded during scanning
+        self.important_extensions = [
+            '.env', '.ini', '.conf', '.config', '.json', '.xml', '.txt', 
+            '.log', '.md', '.yml', '.yaml', '.csv', '.tsv'
+        ]
         
         # PII detection patterns
         self.pii_patterns = {
@@ -343,8 +356,16 @@ class WebsiteScanner:
                 # Extract domain of current URL
                 base_domain = tldextract.extract(url).registered_domain
                 
+                # Prioritize important file types that could contain sensitive information
+                prioritized_urls = []
+                standard_urls = []
+                
                 for link in links:
                     href = link['href']
+                    
+                    # Skip javascript, mailto links, anchors
+                    if href.startswith('javascript:') or href.startswith('mailto:') or href == '#':
+                        continue
                     
                     # Normalize URL
                     if href.startswith('/'):
@@ -354,16 +375,43 @@ class WebsiteScanner:
                         # Absolute URL
                         next_url = href
                     else:
-                        # Anchor or other non-URL
+                        # Try to resolve relative URL
+                        try:
+                            next_url = urllib.parse.urljoin(url, href)
+                        except:
+                            continue
+                    
+                    # Skip already visited URLs
+                    if next_url in self.visited_urls:
                         continue
                     
                     # Check if URL is in the same domain
                     link_domain = tldextract.extract(next_url).registered_domain
-                    if link_domain == base_domain and next_url not in self.visited_urls:
-                        # Recursively scan URL
-                        self._scan_url(next_url, results, include_text, include_images,
-                                      include_forms, include_metadata, detect_pii,
-                                      detect_cookies, detect_trackers)
+                    if link_domain != base_domain:
+                        continue
+                    
+                    # Check file extension
+                    _, ext = os.path.splitext(next_url.split('?')[0])
+                    ext = ext.lower()
+                    
+                    # Prioritize URLs with important file extensions
+                    if ext in self.important_extensions:
+                        prioritized_urls.append(next_url)
+                    elif ext in self.crawlable_file_types or not ext:
+                        standard_urls.append(next_url)
+                
+                # Process prioritized URLs first, then standard URLs
+                all_urls = prioritized_urls + standard_urls
+                
+                # Limit to prevent exceeding max_pages
+                remaining_slots = self.max_pages - len(self.visited_urls)
+                urls_to_scan = all_urls[:remaining_slots]
+                
+                # Recursively scan URLs
+                for next_url in urls_to_scan:
+                    self._scan_url(next_url, results, include_text, include_images,
+                                  include_forms, include_metadata, detect_pii,
+                                  detect_cookies, detect_trackers)
         
         except requests.RequestException as e:
             # Add error information
