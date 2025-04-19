@@ -1313,7 +1313,7 @@ else:
         st.markdown("<hr>", unsafe_allow_html=True)
         st.subheader("Upload Files")
         
-        if scan_type == "Code Scan":
+        if scan_type == _("scan.code"):
             # Use what was already set in the Advanced Configuration section
             # repo_source is now directly in st.session_state from the radio button
                 
@@ -1345,7 +1345,7 @@ else:
                 # Empty upload files list - will be handled differently
                 uploaded_files = []
         
-        elif scan_type == "Blob Scan":
+        elif scan_type == _("scan.blob"):
             if 'blob_source' in locals() and blob_source == "Upload Files":
                 upload_help = "Upload document files to scan for PII"
                 uploaded_files = st.file_uploader(
@@ -1611,7 +1611,7 @@ else:
                 status_text = st.empty()
                 
                 # Handle Repository URL special case
-                if scan_type == _("scan.code") and st.session_state.repo_source == "Repository URL":
+                if scan_type == _("scan.code") and st.session_state.repo_source == _("scan.repository_url"):
                     # Instead of relying on file upload, we'll handle the repository URL scanning differently
                     st.info("Starting repository URL scan...")
                     
@@ -2539,7 +2539,7 @@ else:
                 # Create a sample scan result
                 sample_scan = {
                     "scan_id": f"demo-{uuid.uuid4().hex[:8]}",
-                    "scan_type": "Website Scan",
+                    "scan_type": _("scan.website"),
                     "timestamp": datetime.now().isoformat(),
                     "domain": "example.com",
                     "region": "Netherlands",
