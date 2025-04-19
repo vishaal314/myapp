@@ -102,9 +102,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     # Language selector in sidebar expander with animated flags
-    with st.expander("🌐 " + _("settings.language"), expanded=False):
-        # Use the animated language switcher with flags
-        animated_language_switcher(key_suffix="expander", show_title=False, use_buttons=True)
+    # Removed duplicate language switcher
     
     if not st.session_state.logged_in:
         # Tab UI for login/register with colorful styling
