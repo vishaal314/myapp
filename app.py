@@ -1468,19 +1468,19 @@ else:
             elif scan_type == _("scan.database"):
                 # For database scans, always allow
                 proceed_with_scan = True
-            elif scan_type == "API Scan":
+            elif scan_type == _("scan.api"):
                 # For API scans
                 proceed_with_scan = True
-            elif scan_type == "Sustainability Scan":
+            elif scan_type == _("scan.sustainability"):
                 # For sustainability scans
                 proceed_with_scan = True
-            elif scan_type == "SOC2 Scan":
+            elif scan_type == _("scan.soc2"):
                 # For SOC2 scans
                 proceed_with_scan = True
-            elif scan_type == "AI Model Scan":
+            elif scan_type == _("scan.ai_model"):
                 # For AI Model scans
                 proceed_with_scan = True
-            elif scan_type == "Manual Upload" and not uploaded_files:
+            elif scan_type == _("scan.manual") and not uploaded_files:
                 st.error("Please upload at least one file for manual scanning.")
             else:
                 proceed_with_scan = bool(uploaded_files)
@@ -1611,7 +1611,7 @@ else:
                 status_text = st.empty()
                 
                 # Handle Repository URL special case
-                if scan_type == "Code Scan" and st.session_state.repo_source == "Repository URL":
+                if scan_type == _("scan.code") and st.session_state.repo_source == "Repository URL":
                     # Instead of relying on file upload, we'll handle the repository URL scanning differently
                     st.info("Starting repository URL scan...")
                     
@@ -1655,7 +1655,7 @@ else:
                     file_paths = [dummy_file]
                 
                 # Initialize actual scanner based on scan type
-                if scan_type == "Code Scan":
+                if scan_type == _("scan.code"):
                     # Use the real code scanner with long-running protection
                     file_extensions = [".py", ".js", ".java", ".tf", ".yaml", ".yml"]  # Default extensions
                     
@@ -1738,7 +1738,7 @@ else:
                 # Run scan based on scanner type
                 scan_results = []
                 
-                if scan_type == "Code Scan":
+                if scan_type == _("scan.code"):
                     # For code scan, use the directory-level scan with resilience features
                     try:
                         # Check if we have a directory of files or individual files
@@ -1781,7 +1781,7 @@ else:
                                 scan_results.append(result)
                     except Exception as e:
                         st.error(f"Error during code scan: {str(e)}")
-                elif scan_type == "Website Scan":
+                elif scan_type == _("scan.website"):
                     # For website scan, use our WebsiteScanner class
                     try:
                         # Display scanning information
@@ -1864,7 +1864,7 @@ else:
                 low_risk_count = 0
                 
                 # Handle different formats based on scan type
-                if scan_type == "Website Scan" and len(scan_results) > 0:
+                if scan_type == _("scan.website") and len(scan_results) > 0:
                     # Website scan has a different format - findings are directly in the result
                     result = scan_results[0]  # Website scanner returns a single comprehensive result
                     
@@ -1979,14 +1979,14 @@ else:
                     
                     # Calculate compliance score based on scan results
                     scan_type_specific_weights = {
-                        "Website Scan": {
+                        _("scan.website"): {
                             "privacy_policy": 0.25,
                             "cookies_compliance": 0.20,
                             "data_security": 0.25,
                             "tracking_consent": 0.15,
                             "data_minimization": 0.15
                         },
-                        "Code Scan": {
+                        _("scan.code"): {
                             "data_security": 0.30,
                             "sensitive_data_handling": 0.30,
                             "data_minimization": 0.20,
