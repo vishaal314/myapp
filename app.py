@@ -1397,7 +1397,7 @@ else:
                 help=upload_help
             )
             
-        elif scan_type == "Sustainability Scan":
+        elif scan_type == _("scan.sustainability"):
             if cloud_provider == "None/Other":
                 upload_help = "Upload cloud configuration files (Terraform, CloudFormation, etc.)"
                 uploaded_files = st.file_uploader(
@@ -1410,7 +1410,7 @@ else:
                 uploaded_files = []
                 st.info(f"The scan will use the provided {cloud_provider} credentials to analyze your cloud resources.")
                 
-        elif scan_type == "AI Model Scan":
+        elif scan_type == _("scan.ai_model"):
             if model_source == "Upload Files":
                 upload_help = "Upload model files or sample data"
                 uploaded_files = st.file_uploader(
@@ -1422,7 +1422,7 @@ else:
             else:
                 uploaded_files = []
                 
-        elif scan_type == "SOC2 Scan":
+        elif scan_type == _("scan.soc2"):
             if log_source == "Upload Log Files":
                 upload_help = "Upload log files and access control configurations"
                 uploaded_files = st.file_uploader(
