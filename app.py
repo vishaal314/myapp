@@ -372,7 +372,6 @@ with st.sidebar:
 # Main content
 if not st.session_state.logged_in:
     # Add animated welcome message in multiple languages
-    st.markdown("## Welcome to DataGuardian Pro")
     st.markdown(get_welcome_message_animation(), unsafe_allow_html=True)
     
     # Use our new professional landing page module
