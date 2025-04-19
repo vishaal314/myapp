@@ -2333,22 +2333,29 @@ else:
                                 st.success(f"HTML report saved to {file_path}")
                                 st.info("You can view and download the report from the 'Saved Reports' page.")
                                 
-                                # Option to view the report immediately
-                                if st.button("View Report Now", key="view_html_now"):
+                                # View the report immediately
+                                # Using a container to display the report 
+                                report_container = st.container()
+                                with report_container:
                                     # Read the HTML content
-                                    with open(file_path, 'r', encoding='utf-8') as f:
-                                        html_content = f.read()
-                                    
-                                    # Create a data URL for the iframe
-                                    encoded_content = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-                                    data_url = f"data:text/html;base64,{encoded_content}"
-                                    
-                                    # Display in an iframe
-                                    st.markdown(f"""
-                                    <div style="border:1px solid #ddd; padding:5px; border-radius:5px;">
-                                        <iframe src="{data_url}" width="100%" height="600px"></iframe>
-                                    </div>
-                                    """, unsafe_allow_html=True)
+                                    try:
+                                        with open(file_path, 'r', encoding='utf-8') as f:
+                                            html_content = f.read()
+                                        
+                                        # Create a data URL for the iframe
+                                        encoded_content = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+                                        data_url = f"data:text/html;base64,{encoded_content}"
+                                        
+                                        # Display in an iframe with proper styling and size
+                                        st.markdown(f"""
+                                        <div style="border:1px solid #ddd; padding:10px; border-radius:8px; margin-top:20px; background-color:#f9f9f9;">
+                                            <h3 style="margin-top:0; margin-bottom:10px; color:#1E40AF;">Generated HTML Report</h3>
+                                            <iframe src="{data_url}" width="100%" height="700px" style="border:1px solid #ddd; border-radius:4px;"></iframe>
+                                        </div>
+                                        """, unsafe_allow_html=True)
+                                    except Exception as e:
+                                        st.error(f"Error displaying report: {str(e)}")
+                                        st.info("Please go to the 'Saved Reports' page to view your report.")
         else:
             st.info("No scan history available. Start a new scan to see results here.")
     
@@ -2417,20 +2424,25 @@ else:
                 
                 with col1:
                     if st.button("🔍 View Report", key="view_report"):
-                        # Read the HTML content
-                        with open(selected_report, 'r', encoding='utf-8') as f:
-                            html_content = f.read()
-                        
-                        # Create a data URL for the iframe
-                        encoded_content = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-                        data_url = f"data:text/html;base64,{encoded_content}"
-                        
-                        # Display in an iframe
-                        st.markdown(f"""
-                        <div style="border:1px solid #ddd; padding:5px; border-radius:5px;">
-                            <iframe src="{data_url}" width="100%" height="600px"></iframe>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        try:
+                            # Read the HTML content
+                            with open(selected_report, 'r', encoding='utf-8') as f:
+                                html_content = f.read()
+                            
+                            # Create a data URL for the iframe
+                            encoded_content = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+                            data_url = f"data:text/html;base64,{encoded_content}"
+                            
+                            # Display in an iframe with improved styling
+                            st.markdown(f"""
+                            <div style="border:1px solid #ddd; padding:10px; border-radius:8px; margin-top:20px; background-color:#f9f9f9;">
+                                <h3 style="margin-top:0; margin-bottom:10px; color:#1E40AF;">GDPR Compliance Report</h3>
+                                <iframe src="{data_url}" width="100%" height="700px" style="border:1px solid #ddd; border-radius:4px;"></iframe>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        except Exception as e:
+                            st.error(f"Error displaying report: {str(e)}")
+                            st.info("Try downloading the report instead and view it in your browser.")
                 
                 with col2:
                     if st.button("📥 Download Report", key="download_report"):
