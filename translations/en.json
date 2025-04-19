@@ -169,10 +169,17 @@
   "results.filter.info": "Informational Only",
   
   "report.generate": "Generate Report",
+  "report.generating": "Generating report...",
   "report.download_pdf": "Download PDF Report",
   "report.download_csv": "Export to CSV",
   "report.download_json": "Export to JSON",
   "report.share": "Share Report",
+  "report.select_scan": "Select a scan to generate report",
+  "report.options": "Report Options",
+  "report.include_detailed_findings": "Include Detailed Findings",
+  "report.include_charts": "Include Charts and Graphs",
+  "report.include_scan_metadata": "Include Scan Metadata",
+  "report.include_recommendations": "Include Recommendations",
   
   "dashboard.title": "Compliance Dashboard",
   "dashboard.subtitle": "Monitor your privacy compliance status and risk assessments",

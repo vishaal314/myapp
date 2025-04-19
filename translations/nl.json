@@ -169,10 +169,17 @@
   "results.filter.info": "Alleen Informatief",
   
   "report.generate": "Rapport Genereren",
+  "report.generating": "Rapport genereren...",
   "report.download_pdf": "PDF Rapport Downloaden",
   "report.download_csv": "Exporteren naar CSV",
   "report.download_json": "Exporteren naar JSON",
   "report.share": "Rapport Delen",
+  "report.select_scan": "Selecteer een scan om rapport te genereren",
+  "report.options": "Rapport Opties",
+  "report.include_detailed_findings": "Inclusief Gedetailleerde Bevindingen",
+  "report.include_charts": "Inclusief Grafieken en Diagrammen",
+  "report.include_scan_metadata": "Inclusief Scan Metadata",
+  "report.include_recommendations": "Inclusief Aanbevelingen",
   
   "dashboard.title": "Compliance Dashboard",
   "dashboard.subtitle": "Monitor uw privacy compliance status en risicobeoordelingen",
