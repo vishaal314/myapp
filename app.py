@@ -2721,13 +2721,15 @@ else:
                     'display': f"{timestamp} - {scan_type} (ID: {display_id})"
                 })
             
-            selected_scan = st.selectbox(
-                _("report.select_scan"),
+            # Use get_text directly to avoid any potential naming conflicts with variables
+            select_scan_label = get_text("report.select_scan", "Select a scan to generate report")
+            selected_scan_index = st.selectbox(
+                select_scan_label,
                 options=range(len(scan_options)),
                 format_func=lambda i: scan_options[i]['display']
             )
             
-            selected_scan_id = scan_options[selected_scan]['scan_id']
+            selected_scan_id = scan_options[selected_scan_index]['scan_id']
             scan_data = results_aggregator.get_scan_by_id(selected_scan_id)
             
             if scan_data:
@@ -2755,9 +2757,9 @@ else:
                         )
                         
                         # Create download link
-                        selected_display_id = scan_options[selected_scan]['display_id']
+                        selected_display_id = scan_options[selected_scan_index]['display_id']
                         b64_pdf = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">{_("report.download_pdf_report")}</a>'
+                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">{get_text("report.download_pdf", "Download PDF Report")}</a>'
                         st.markdown(href, unsafe_allow_html=True)
                         
                         st.success(_("report.generated_successfully"))
