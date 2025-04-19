@@ -384,9 +384,42 @@ if not st.session_state.logged_in:
     # Our landing page already has metric cards, no need to duplicate them
     st.write("")
     
+    # Add a professional container with subtle background for the whole page
+    st.markdown("""
+    <style>
+    .main-container {
+        background-color: #fafbfd;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+        margin-bottom: 30px;
+    }
+    .section-heading {
+        color: #2563EB;
+        font-weight: 600;
+        text-align: center;
+        position: relative;
+        padding-bottom: 15px;
+        margin: 25px 0 30px 0;
+    }
+    .section-heading:after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        transform: translateX(-50%);
+        height: 3px;
+        width: 80px;
+        background: linear-gradient(90deg, #2563EB, #93C5FD);
+        border-radius: 3px;
+    }
+    </style>
+    <div class="main-container">
+    """, unsafe_allow_html=True)
+    
     # Modern Scanning Services section with enhanced interactive design
     st.markdown("""
-    <h2 style="color: #2563EB; margin: 40px 0 20px 0; text-align: center; font-weight: 600;">Our Scanning Services</h2>
+    <h2 class="section-heading">Our Scanning Services</h2>
     """, unsafe_allow_html=True)
     
     # Create two columns - left for services, right for details
@@ -533,16 +566,22 @@ if not st.session_state.logged_in:
         <script>
         function selectScanner(scannerKey) {
             // Send the selected scanner to Streamlit
-            window.parent.postMessage({
-                type: "streamlit:setComponentValue",
-                value: scannerKey
-            }, "*");
+            const textInput = window.parent.document.querySelector('input[key="selected_scanner_input"]');
+            if (textInput) {
+                textInput.value = scannerKey;
+                // Simulate an input event to trigger Streamlit's update mechanism
+                const event = new Event('input', { bubbles: true });
+                textInput.dispatchEvent(event);
+            }
         }
         </script>
         <style>
         .scanner-card:hover {
             transform: translateX(8px) !important;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
+        }
+        .scanner-card {
+            transition: all 0.3s ease;
         }
         </style>
         """
@@ -551,7 +590,7 @@ if not st.session_state.logged_in:
         st.markdown(html_cards + js_code, unsafe_allow_html=True)
         
         # Use a hidden component to receive the selected scanner
-        selected_scanner_raw = st.text_input("", "", key="selected_scanner_input", label_visibility="collapsed")
+        selected_scanner_raw = st.text_input("Scanner Selection", "", key="selected_scanner_input", label_visibility="collapsed")
         if selected_scanner_raw and selected_scanner_raw != st.session_state.selected_scanner:
             st.session_state.selected_scanner = selected_scanner_raw
             st.rerun()
@@ -601,7 +640,7 @@ if not st.session_state.logged_in:
         
     # Modern Enterprise Features section with sleek design
     st.markdown("""
-    <h2 style="color: #2563EB; margin-bottom: 20px; text-align: center; font-weight: 600;">Enterprise Features</h2>
+    <h2 class="section-heading">Enterprise Features</h2>
     
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
         <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); 
@@ -679,6 +718,7 @@ if not st.session_state.logged_in:
         <p style="color: #4b5563; margin-bottom: 5px;">Enterprise Privacy Compliance Platform</p>
         <p style="color: #6b7280; font-size: 0.8em;">© 2025 GDPR Scan Engine. All rights reserved.</p>
     </div>
+    </div><!-- Close main-container -->
     """, unsafe_allow_html=True)
 
 else:
