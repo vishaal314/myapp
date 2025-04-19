@@ -2181,8 +2181,8 @@ else:
             """, unsafe_allow_html=True)
             
             # Add visualization tabs
-            st.markdown("### Scan Analysis")
-            viz_tabs = st.tabs(["Timeline", "Risk Analysis", "Scan History"])
+            st.markdown(f"### {_('dashboard.scan_analysis')}")
+            viz_tabs = st.tabs([_("dashboard.timeline"), _("dashboard.risk_analysis"), _("dashboard.scan_history")])
             
             with viz_tabs[0]:  # Timeline
                 if 'timestamp' in scans_df.columns:
@@ -2609,11 +2609,11 @@ else:
                 st.success(f"Demo report saved to {file_path}")
                 st.info("Refresh this page to see and interact with the report.")
     
-    elif selected_nav == _("reports.title"):
+    elif selected_nav == _("report.generate") or selected_nav == _("reports.title"):
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
-        st.title(_("reports.title"))
+        st.title(_("report.generate"))
         
         # Check if user has permission to view reports
         if not require_permission('report:view'):
