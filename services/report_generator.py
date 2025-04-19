@@ -85,6 +85,10 @@ def generate_report(scan_data: Dict[str, Any],
     total_pii = scan_data.get('total_pii_found', 0)
     high_risk = scan_data.get('high_risk_count', 0)
     timestamp = scan_data.get('timestamp', 'Unknown')
+    
+    # Get URL information
+    url = scan_data.get('url', scan_data.get('domain', 'Not available'))
+    
     if timestamp != 'Unknown':
         try:
             timestamp = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M:%S')
@@ -96,6 +100,7 @@ def generate_report(scan_data: Dict[str, Any],
         ['Scan Type', scan_type],
         ['Region', region],
         ['Date & Time', timestamp],
+        ['Scanned URL/Domain', url],
         ['Total PII Items Found', str(total_pii)],
         ['High Risk Items', str(high_risk)]
     ]
@@ -326,6 +331,7 @@ def generate_report(scan_data: Dict[str, Any],
             'Scan Type': scan_type,
             'Region': region,
             'Timestamp': timestamp,
+            'URL/Domain': url,
             'Username': scan_data.get('username', 'Unknown'),
             'Files Scanned': scan_data.get('file_count', 0)
         }
