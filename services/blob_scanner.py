@@ -20,21 +20,48 @@ class BlobScanner:
             file_types: List of file types to scan (e.g., ['PDF', 'DOCX'])
             region: The region for which to apply GDPR rules
         """
-        self.file_types = file_types or ["PDF", "DOCX", "TXT", "RTF", "CSV"]
+        self.file_types = file_types or ["PDF", "DOCX", "TXT", "RTF", "CSV", "XLSX", "JSON", "XML", "HTML", "MD", "LOG", "CONF", "INI", "ENV"]
         self.region = region
         self.region_rules = get_region_rules(region)
         
-        # Mapping of file extensions to their types
+        # Expanded mapping of file extensions to their types
         self.extension_map = {
+            # Document formats
             '.pdf': 'PDF',
             '.docx': 'DOCX',
             '.doc': 'DOCX',
-            '.txt': 'TXT',
             '.rtf': 'RTF',
-            '.csv': 'CSV',
+            '.odt': 'DOCX',
+            
+            # Spreadsheet formats
             '.xlsx': 'XLSX',
             '.xls': 'XLSX',
-            '.odt': 'DOCX'
+            '.csv': 'CSV',
+            '.ods': 'XLSX',
+            
+            # Text formats
+            '.txt': 'TXT',
+            '.md': 'MD',
+            '.markdown': 'MD',
+            
+            # Data formats
+            '.json': 'JSON',
+            '.xml': 'XML',
+            '.html': 'HTML',
+            '.htm': 'HTML',
+            '.yaml': 'YAML',
+            '.yml': 'YAML',
+            
+            # Config files
+            '.conf': 'CONF',
+            '.config': 'CONF',
+            '.ini': 'INI',
+            '.cfg': 'CONF',
+            '.env': 'ENV',
+            '.properties': 'CONF',
+            
+            # Log files
+            '.log': 'LOG'
         }
     
     def scan_file(self, file_path: str) -> Dict[str, Any]:
@@ -121,24 +148,51 @@ class BlobScanner:
         Returns:
             Extracted text content
         """
-        if file_type == 'PDF':
-            return self._extract_pdf_text(file_path)
-        elif file_type == 'TXT':
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                return f.read()
-        elif file_type in ['DOCX', 'RTF', 'XLSX', 'CSV']:
-            try:
-                # Use textract to handle various document formats
-                return textract.process(file_path).decode('utf-8', errors='ignore')
-            except:
-                # Fallback method
+        # Group file types by extraction method
+        text_based_formats = ['TXT', 'JSON', 'XML', 'HTML', 'MD', 'LOG', 'CONF', 'INI', 'ENV', 'YAML']
+        document_formats = ['DOCX', 'RTF']
+        spreadsheet_formats = ['XLSX', 'CSV']
+        
+        try:
+            # Handle PDF documents with specialized extraction
+            if file_type == 'PDF':
+                return self._extract_pdf_text(file_path)
+                
+            # Handle plain text and config files
+            elif file_type in text_based_formats:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    return f.read()
+                    
+            # Handle document formats using textract
+            elif file_type in document_formats:
+                try:
+                    return textract.process(file_path).decode('utf-8', errors='ignore')
+                except:
+                    # Fallback to basic text reading
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        return f.read()
+                        
+            # Handle spreadsheet formats
+            elif file_type in spreadsheet_formats:
+                try:
+                    return textract.process(file_path).decode('utf-8', errors='ignore')
+                except:
+                    # Fallback for CSV files
+                    if file_type == 'CSV':
+                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            return f.read()
+                    return ""
+            
+            # Unknown format - try basic text extraction
+            else:
                 try:
                     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                         return f.read()
                 except:
                     return ""
-        
-        return ""
+        except Exception as e:
+            print(f"Error extracting text from {file_path}: {str(e)}")
+            return ""
     
     def _extract_pdf_text(self, pdf_path: str) -> str:
         """

@@ -1849,15 +1849,12 @@ else:
                             directory_path = file_paths[0]
                             status_text.text(f"Starting directory scan of: {directory_path}")
                             
-                            # Configure ignore patterns
+                            # Configure ignore patterns - only ignore truly unnecessary files
+                            # Reduced list to ensure we scan more files for better coverage
                             ignore_patterns = [
-                                "node_modules/**", 
-                                "**/.git/**", 
-                                "**/__pycache__/**",
-                                "**/venv/**",
-                                "**/vendor/**",
-                                "**/dist/**",
-                                "**/build/**"
+                                "**/.git/**",           # Git internals
+                                "**/__pycache__/**",    # Python cache files
+                                "**/venv/**"            # Virtual environments
                             ]
                             
                             # Run the resilient scan with checkpointing
