@@ -246,6 +246,9 @@ def animated_language_switcher(
                 from utils.i18n import set_language
                 set_language(selected_lang)
                 
+                # Set a flag to redirect to login
+                st.session_state.redirect_to_login = True
+                
                 # Force rerun of app to update all UI elements
                 st.rerun()
         
@@ -273,6 +276,9 @@ def animated_language_switcher(
                     # Load translations for new language
                     from utils.i18n import set_language
                     set_language(selected_lang)
+                    
+                    # Set a flag to redirect to login
+                    st.session_state.redirect_to_login = True
                     
                     # Force rerun of app
                     st.rerun()

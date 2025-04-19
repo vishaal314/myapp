@@ -3,6 +3,22 @@
   "app.subtitle": "Enterprise Privacy Compliance Platform",
   "app.tagline": "Privacy • Compliance • Transparantie",
   
+  "landing.industry_solutions": "Branche Oplossingen",
+  "landing.industry_description": "Uitgebreide PII-detectie oplossingen aangepast voor uw specifieke branche.",
+  "landing.financial": "Financiële Diensten",
+  "landing.government": "Overheid & Publieke Sector",
+  "landing.healthcare": "Gezondheidszorg",
+  "landing.retail": "Retail & E-commerce",
+  "landing.explore_solutions": "Verken Oplossingen",
+  
+  "landing.scanning_services": "Onze Scandiensten",
+  "landing.scanning_description": "Uitgebreide PII-detectie in uw volledige digitale omgeving met gespecialiseerde scanoplossingen.",
+  "landing.code_scanner": "Code Scanner",
+  "landing.document_scanner": "Document Scanner",
+  "landing.website_scanner": "Website Scanner",
+  "landing.database_scanner": "Database Scanner",
+  "landing.ai_scanner": "AI Modellen Scanner",
+  
   "sidebar.welcome": "Welkom terug",
   "sidebar.sign_in": "Inloggen",
   "sidebar.create_account": "Nieuw Account Aanmaken",

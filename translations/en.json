@@ -3,6 +3,22 @@
   "app.subtitle": "Enterprise Privacy Compliance Platform",
   "app.tagline": "Privacy • Compliance • Transparency",
   
+  "landing.industry_solutions": "Industry Solutions",
+  "landing.industry_description": "Comprehensive PII detection solutions tailored for your specific industry.",
+  "landing.financial": "Financial Services",
+  "landing.government": "Government & Public Sector",
+  "landing.healthcare": "Healthcare",
+  "landing.retail": "Retail & E-commerce",
+  "landing.explore_solutions": "Explore Solutions",
+  
+  "landing.scanning_services": "Our Scanning Services",
+  "landing.scanning_description": "Comprehensive PII detection across your entire digital footprint with specialized scanning solutions.",
+  "landing.code_scanner": "Code Scanner",
+  "landing.document_scanner": "Document Scanner",
+  "landing.website_scanner": "Website Scanner",
+  "landing.database_scanner": "Database Scanner",
+  "landing.ai_scanner": "AI Models Scanner",
+  
   "sidebar.welcome": "Welcome back",
   "sidebar.sign_in": "Sign In",
   "sidebar.create_account": "Create New Account",

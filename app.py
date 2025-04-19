@@ -45,6 +45,10 @@ if 'email' not in st.session_state:
 if 'language' not in st.session_state:
     st.session_state.language = 'en'  # Default language is English
 
+# Flag for redirecting to login after language change
+if 'redirect_to_login' not in st.session_state:
+    st.session_state.redirect_to_login = False
+
 # Set page config
 st.set_page_config(
     page_title="DataGuardian Pro",
@@ -369,6 +373,13 @@ with st.sidebar:
 
 # Main content
 if not st.session_state.logged_in:
+    # Check if we need to redirect to login after language change
+    if st.session_state.redirect_to_login:
+        # Reset the flag and show login page
+        st.session_state.redirect_to_login = False
+        st.session_state.active_tab = "login"
+        st.rerun()
+        
     # Add animated welcome message in multiple languages
     st.markdown(get_welcome_message_animation(), unsafe_allow_html=True)
     
@@ -654,312 +665,8 @@ if not st.session_state.logged_in:
     # Small spacing after the scanner section
     st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
         
-    # Business-specific interactive visuals
-    st.markdown("""
-    <h2 class="section-heading">Industry Solutions</h2>
-    """, unsafe_allow_html=True)
-    
-    # Create a more engaging interactive business section
-    industry_cols = st.columns(2)
-    
-    with industry_cols[0]:
-        # Financial Services Sector
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #E0F2FE, #BFDBFE); 
-                    border-radius: 16px; overflow: hidden; position: relative; height: 260px;
-                    box-shadow: 0 8px 16px rgba(30, 64, 175, 0.1); margin-bottom: 20px; cursor: pointer;"
-             onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 12px 24px rgba(30, 64, 175, 0.15)';"
-             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 8px 16px rgba(30, 64, 175, 0.1)';"
-             style="transition: transform 0.3s ease, box-shadow 0.3s ease;">
-            <div style="position: absolute; width: 100%; height: 100%; background: url('https://img.freepik.com/free-vector/gradient-stock-market-concept_23-2149166910.jpg?w=1380&t=st=1682341578~exp=1682342178~hmac=5f31aba4edc5a39b79294c227a8945c5c7c03cb2acac299963519b1a4981dbe7') no-repeat center center; background-size: cover; opacity: 0.25;"></div>
-            <div style="position: relative; z-index: 2; padding: 30px;">
-                <h3 style="color: #1E3A8A; font-size: 24px; margin-bottom: 15px;">Financial Services</h3>
-                <ul style="color: #1E3A8A; font-size: 16px; padding-left: 20px; margin-bottom: 20px;">
-                    <li>Customer data protection</li>
-                    <li>Transaction monitoring compliance</li>
-                    <li>PCI DSS requirements</li>
-                    <li>Secure customer onboarding</li>
-                </ul>
-                <div style="display: inline-block; background-color: #1E3A8A; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 500; font-size: 15px;">
-                    Explore Financial Solutions
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Government & Public Sector
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #DBEAFE, #93C5FD); 
-                    border-radius: 16px; overflow: hidden; position: relative; height: 260px;
-                    box-shadow: 0 8px 16px rgba(30, 64, 175, 0.1); cursor: pointer;"
-             onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 12px 24px rgba(30, 64, 175, 0.15)';"
-             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 8px 16px rgba(30, 64, 175, 0.1)';"
-             style="transition: transform 0.3s ease, box-shadow 0.3s ease;">
-            <div style="position: absolute; width: 100%; height: 100%; background: url('https://img.freepik.com/free-vector/gradient-network-connection-background_23-2149145298.jpg') no-repeat center center; background-size: cover; opacity: 0.2;"></div>
-            <div style="position: relative; z-index: 2; padding: 30px;">
-                <h3 style="color: #1E3A8A; font-size: 24px; margin-bottom: 15px;">Government & Public Sector</h3>
-                <ul style="color: #1E3A8A; font-size: 16px; padding-left: 20px; margin-bottom: 20px;">
-                    <li>Citizen data protection</li>
-                    <li>Public records compliance</li>
-                    <li>Dutch UAVG requirements</li>
-                    <li>Cross-border data transfers</li>
-                </ul>
-                <div style="display: inline-block; background-color: #1E3A8A; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 500; font-size: 15px;">
-                    Explore Public Sector Solutions
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with industry_cols[1]:
-        # Healthcare Industry
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #D1FAE5, #A7F3D0); 
-                    border-radius: 16px; overflow: hidden; position: relative; height: 260px;
-                    box-shadow: 0 8px 16px rgba(6, 95, 70, 0.1); margin-bottom: 20px; cursor: pointer;"
-             onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 12px 24px rgba(6, 95, 70, 0.15)';"
-             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 8px 16px rgba(6, 95, 70, 0.1)';"
-             style="transition: transform 0.3s ease, box-shadow 0.3s ease;">
-            <div style="position: absolute; width: 100%; height: 100%; background: url('https://img.freepik.com/free-vector/abstract-medical-wallpaper-template-design_53876-61802.jpg') no-repeat center center; background-size: cover; opacity: 0.2;"></div>
-            <div style="position: relative; z-index: 2; padding: 30px;">
-                <h3 style="color: #065F46; font-size: 24px; margin-bottom: 15px;">Healthcare</h3>
-                <ul style="color: #065F46; font-size: 16px; padding-left: 20px; margin-bottom: 20px;">
-                    <li>Medical records protection</li>
-                    <li>Patient data privacy</li>
-                    <li>Health information systems</li>
-                    <li>Special category data handling</li>
-                </ul>
-                <div style="display: inline-block; background-color: #065F46; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 500; font-size: 15px;">
-                    Explore Healthcare Solutions
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Retail & E-commerce
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #FEF3C7, #FDE68A); 
-                    border-radius: 16px; overflow: hidden; position: relative; height: 260px;
-                    box-shadow: 0 8px 16px rgba(146, 64, 14, 0.1); cursor: pointer;"
-             onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 12px 24px rgba(146, 64, 14, 0.15)';"
-             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 8px 16px rgba(146, 64, 14, 0.1)';"
-             style="transition: transform 0.3s ease, box-shadow 0.3s ease;">
-            <div style="position: absolute; width: 100%; height: 100%; background: url('https://img.freepik.com/free-vector/gradient-sales-background_23-2149146360.jpg') no-repeat center center; background-size: cover; opacity: 0.2;"></div>
-            <div style="position: relative; z-index: 2; padding: 30px;">
-                <h3 style="color: #92400E; font-size: 24px; margin-bottom: 15px;">Retail & E-commerce</h3>
-                <ul style="color: #92400E; font-size: 16px; padding-left: 20px; margin-bottom: 20px;">
-                    <li>Customer preferences & histories</li>
-                    <li>Payment information security</li>
-                    <li>Marketing consent management</li>
-                    <li>Cross-border customer data</li>
-                </ul>
-                <div style="display: inline-block; background-color: #92400E; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 500; font-size: 15px;">
-                    Explore Retail Solutions
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Add scanning services section with interactive design
+    # Simple footer spacer
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
-    st.markdown("""
-    <h2 class="section-heading">Our Scanning Services</h2>
-    <p style="color: #4B5563; margin-bottom: 30px; font-size: 18px; max-width: 800px;">
-    Comprehensive PII detection across your entire digital footprint with specialized scanning solutions.
-    </p>
-    """, unsafe_allow_html=True)
-    
-    # Create scrollable container for scanning services
-    st.markdown("""
-    <div style="overflow-x: auto; padding: 10px 0;">
-        <div style="display: flex; gap: 20px; width: max-content; padding: 10px;">
-            <!-- Code Scanner -->
-            <div style="width: 300px; background: linear-gradient(135deg, #EFF6FF, #DBEAFE); 
-                      border-radius: 16px; padding: 25px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-                      transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;"
-                 onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 24px rgba(59, 130, 246, 0.2)';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.15)';">
-                <div style="width: 60px; height: 60px; border-radius: 12px; 
-                          background-color: #3B82F6; display: flex; align-items: center; 
-                          justify-content: center; margin-bottom: 20px;">
-                    <span style="font-size: 28px; color: white;">💻</span>
-                </div>
-                <h3 style="font-size: 20px; font-weight: 600; color: #1E40AF; margin-bottom: 15px;">
-                    Code Scanner
-                </h3>
-                <p style="color: #3B4151; margin-bottom: 20px;">
-                    Detect PII and secrets in source code repositories with pattern matching, entropy analysis, and AST parsing.
-                </p>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
-                    <span style="background-color: rgba(59, 130, 246, 0.2); color: #1E40AF; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        Python
-                    </span>
-                    <span style="background-color: rgba(59, 130, 246, 0.2); color: #1E40AF; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        JavaScript
-                    </span>
-                    <span style="background-color: rgba(59, 130, 246, 0.2); color: #1E40AF; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        Java
-                    </span>
-                    <span style="background-color: rgba(59, 130, 246, 0.2); color: #1E40AF; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        +17 more
-                    </span>
-                </div>
-            </div>
-            
-            <!-- Blob Scanner -->
-            <div style="width: 300px; background: linear-gradient(135deg, #ECFDF5, #D1FAE5); 
-                      border-radius: 16px; padding: 25px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
-                      transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;"
-                 onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 24px rgba(5, 150, 105, 0.2)';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(5, 150, 105, 0.15)';">
-                <div style="width: 60px; height: 60px; border-radius: 12px; 
-                          background-color: #059669; display: flex; align-items: center; 
-                          justify-content: center; margin-bottom: 20px;">
-                    <span style="font-size: 28px; color: white;">📄</span>
-                </div>
-                <h3 style="font-size: 20px; font-weight: 600; color: #065F46; margin-bottom: 15px;">
-                    Document Scanner
-                </h3>
-                <p style="color: #3B4151; margin-bottom: 20px;">
-                    Extract and analyze text from documents with smart detection of PII patterns, data fields, and content structure.
-                </p>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
-                    <span style="background-color: rgba(5, 150, 105, 0.2); color: #065F46; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        PDF
-                    </span>
-                    <span style="background-color: rgba(5, 150, 105, 0.2); color: #065F46; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        DOCX
-                    </span>
-                    <span style="background-color: rgba(5, 150, 105, 0.2); color: #065F46; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        XLSX
-                    </span>
-                    <span style="background-color: rgba(5, 150, 105, 0.2); color: #065F46; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        +37 more
-                    </span>
-                </div>
-            </div>
-            
-            <!-- Website Scanner -->
-            <div style="width: 300px; background: linear-gradient(135deg, #F0FDFA, #CCFBF1); 
-                      border-radius: 16px; padding: 25px; box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);
-                      transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;"
-                 onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 24px rgba(20, 184, 166, 0.2)';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(20, 184, 166, 0.15)';">
-                <div style="width: 60px; height: 60px; border-radius: 12px; 
-                          background-color: #14B8A6; display: flex; align-items: center; 
-                          justify-content: center; margin-bottom: 20px;">
-                    <span style="font-size: 28px; color: white;">🌐</span>
-                </div>
-                <h3 style="font-size: 20px; font-weight: 600; color: #115E59; margin-bottom: 15px;">
-                    Website Scanner
-                </h3>
-                <p style="color: #3B4151; margin-bottom: 20px;">
-                    Crawl websites to detect PII in content, forms, cookies, and trackers with GDPR compliance analysis.
-                </p>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
-                    <span style="background-color: rgba(20, 184, 166, 0.2); color: #115E59; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        HTML
-                    </span>
-                    <span style="background-color: rgba(20, 184, 166, 0.2); color: #115E59; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        Forms
-                    </span>
-                    <span style="background-color: rgba(20, 184, 166, 0.2); color: #115E59; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        Cookies
-                    </span>
-                    <span style="background-color: rgba(20, 184, 166, 0.2); color: #115E59; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        API
-                    </span>
-                </div>
-            </div>
-            
-            <!-- Database Scanner -->
-            <div style="width: 300px; background: linear-gradient(135deg, #FEF3C7, #FDE68A); 
-                      border-radius: 16px; padding: 25px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
-                      transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;"
-                 onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 24px rgba(217, 119, 6, 0.2)';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(217, 119, 6, 0.15)';">
-                <div style="width: 60px; height: 60px; border-radius: 12px; 
-                          background-color: #D97706; display: flex; align-items: center; 
-                          justify-content: center; margin-bottom: 20px;">
-                    <span style="font-size: 28px; color: white;">🗃️</span>
-                </div>
-                <h3 style="font-size: 20px; font-weight: 600; color: #92400E; margin-bottom: 15px;">
-                    Database Scanner
-                </h3>
-                <p style="color: #3B4151; margin-bottom: 20px;">
-                    Identify PII data in structured databases with schema analysis, data sampling, and column classification.
-                </p>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
-                    <span style="background-color: rgba(217, 119, 6, 0.2); color: #92400E; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        PostgreSQL
-                    </span>
-                    <span style="background-color: rgba(217, 119, 6, 0.2); color: #92400E; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        MySQL
-                    </span>
-                    <span style="background-color: rgba(217, 119, 6, 0.2); color: #92400E; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        Oracle
-                    </span>
-                    <span style="background-color: rgba(217, 119, 6, 0.2); color: #92400E; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        +5 more
-                    </span>
-                </div>
-            </div>
-            
-            <!-- AI Models Scanner -->
-            <div style="width: 300px; background: linear-gradient(135deg, #F5F3FF, #EDE9FE); 
-                      border-radius: 16px; padding: 25px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
-                      transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;"
-                 onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 24px rgba(124, 58, 237, 0.2)';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(124, 58, 237, 0.15)';">
-                <div style="width: 60px; height: 60px; border-radius: 12px; 
-                          background-color: #7C3AED; display: flex; align-items: center; 
-                          justify-content: center; margin-bottom: 20px;">
-                    <span style="font-size: 28px; color: white;">🧠</span>
-                </div>
-                <h3 style="font-size: 20px; font-weight: 600; color: #5B21B6; margin-bottom: 15px;">
-                    AI Models Scanner
-                </h3>
-                <p style="color: #3B4151; margin-bottom: 20px;">
-                    Detect PII leakage in AI models with security testing, prompt analysis, and response validation.
-                </p>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
-                    <span style="background-color: rgba(124, 58, 237, 0.2); color: #5B21B6; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        LLMs
-                    </span>
-                    <span style="background-color: rgba(124, 58, 237, 0.2); color: #5B21B6; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        Vector DBs
-                    </span>
-                    <span style="background-color: rgba(124, 58, 237, 0.2); color: #5B21B6; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        Embeddings
-                    </span>
-                    <span style="background-color: rgba(124, 58, 237, 0.2); color: #5B21B6; 
-                               padding: 5px 10px; border-radius: 999px; font-size: 12px;">
-                        RAG
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
     
     # Clean footer with professional styling
     st.markdown("<hr style='margin: 30px 0 20px 0; border-color: #e0e0e0;'>", unsafe_allow_html=True)
