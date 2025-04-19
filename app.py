@@ -539,7 +539,7 @@ if not st.session_state.logged_in:
             <div class="scanner-card {selected_class}" data-scanner="{scanner_key}" 
                  onclick="selectScanner('{scanner_key}')"
                  style="background-color: white; border-radius: 12px; overflow: hidden; 
-                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 15px;
+                        margin-bottom: 15px;
                         transition: all 0.3s ease; cursor: pointer;
                         transform: {st.session_state.selected_scanner == scanner_key and 'translateX(10px)' or 'none'};
                         border-left: {st.session_state.selected_scanner == scanner_key and f'4px solid {scanner["color"]}' or 'none'};
@@ -578,8 +578,12 @@ if not st.session_state.logged_in:
             transform: translateX(8px) !important;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
         }
+        .scanner-card.selected {
+            transform: translateX(10px) !important;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important;
+        }
         .scanner-card {
-            transition: all 0.3s ease;
+            transition: all 0.3s ease !important;
         }
         </style>
         """
