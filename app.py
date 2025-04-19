@@ -2754,7 +2754,8 @@ else:
             
             # Create a select box for scan selection
             scan_options = []
-            for _, scan in scans_df.iterrows():
+            # Fixed issue: Renamed underscore variable to avoid conflict with translation function
+            for index, scan in scans_df.iterrows():
                 scan_id = scan.get('scan_id', 'Unknown')
                 display_id = scan.get('display_scan_id', scan_id)
                 timestamp = scan.get('timestamp', 'Unknown')
