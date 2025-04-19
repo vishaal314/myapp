@@ -379,93 +379,186 @@ if not st.session_state.logged_in:
     # Our landing page already has metric cards, no need to duplicate them
     st.write("")
     
-    # Removed HTML-based scanning services section that was causing issues
-    st.subheader("Our Scanning Services")
+    # Enhanced modern scanning services section
+    st.header("Our Scanning Services")
     
-    # Display clean list of scanning services without HTML
-    col1, col2, col3 = st.columns(3)
+    # Create a more attractive layout for scanning services with cards
+    # Use container for styling
+    with st.container():
+        # First row of scanners
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #f0f7ff; padding: 15px; border-radius: 8px; border-left: 5px solid #3B82F6; margin-bottom: 20px;">
+                    <h3 style="color: #1E40AF; margin-top: 0; font-size: 18px;">Code Scanner</h3>
+                    <p style="margin-bottom: 0;">Detects PII and secrets in source code repositories with pattern detection and entropy analysis</p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        with col2:
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 5px solid #10B981; margin-bottom: 20px;">
+                    <h3 style="color: #047857; margin-top: 0; font-size: 18px;">Document Scanner</h3>
+                    <p style="margin-bottom: 0;">Scans PDFs, DOC, and text files for sensitive data with advanced OCR technology</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+        with col3:
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #fffbeb; padding: 15px; border-radius: 8px; border-left: 5px solid #F59E0B; margin-bottom: 20px;">
+                    <h3 style="color: #92400E; margin-top: 0; font-size: 18px;">Image Scanner</h3>
+                    <p style="margin-bottom: 0;">Detects faces, ID cards, and text-based PII in images using computer vision</p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        # Second row of scanners
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #eef2ff; padding: 15px; border-radius: 8px; border-left: 5px solid #6366F1; margin-bottom: 20px;">
+                    <h3 style="color: #4F46E5; margin-top: 0; font-size: 18px;">Database Scanner</h3>
+                    <p style="margin-bottom: 0;">Column-level detection for databases with type and content analysis</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+        with col2:
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #fdf2f8; padding: 15px; border-radius: 8px; border-left: 5px solid #EC4899; margin-bottom: 20px;">
+                    <h3 style="color: #BE185D; margin-top: 0; font-size: 18px;">API Scanner</h3>
+                    <p style="margin-bottom: 0;">Finds PII in API requests/responses by analyzing traffic and schemas</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+        with col3:
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #f5f3ff; padding: 15px; border-radius: 8px; border-left: 5px solid #8B5CF6; margin-bottom: 20px;">
+                    <h3 style="color: #6D28D9; margin-top: 0; font-size: 18px;">AI Model Scanner</h3>
+                    <p style="margin-bottom: 0;">Detects PII leakage in ML models and training data with advanced prompting</p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+    # Enhanced Enterprise Features section with cards
+    st.header("Enterprise Features")
     
-    with col1:
-        st.markdown("**Code Scanner**")
-        st.markdown("Detects PII and secrets in source code")
+    # Create a more visually appealing grid of feature cards
+    # Use a similar style to the scanning services for consistency
+    with st.container():
+        # Feature cards - row 1
+        col1, col2 = st.columns(2)
         
-        st.markdown("**Document Scanner**")
-        st.markdown("Scans PDFs and docs for sensitive data")
+        with col1:
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #f0f7ff; padding: 18px; border-radius: 8px; border-left: 5px solid #3B82F6; margin-bottom: 20px;">
+                    <h3 style="color: #1E40AF; margin-top: 0; font-size: 18px;">Comprehensive Detection</h3>
+                    <p style="margin-bottom: 0;">Unified scanning across multiple data sources with intelligent pattern recognition and contextual analysis.</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #fffbeb; padding: 18px; border-radius: 8px; border-left: 5px solid #F59E0B; margin-bottom: 20px;">
+                    <h3 style="color: #92400E; margin-top: 0; font-size: 18px;">Dutch GDPR Compliance</h3>
+                    <p style="margin-bottom: 0;">Special handling for BSN, medical data, and UAVG requirements with Dutch-specific compliance guardrails.</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #fdf2f8; padding: 18px; border-radius: 8px; border-left: 5px solid #EC4899; margin-bottom: 20px;">
+                    <h3 style="color: #BE185D; margin-top: 0; font-size: 18px;">Customizable Scanning</h3>
+                    <p style="margin-bottom: 0;">Configure scans based on your specific compliance needs with industry-specific templates and rules.</p>
+                </div>
+                """, unsafe_allow_html=True)
         
-    with col2:
-        st.markdown("**Image Scanner**")
-        st.markdown("Detects faces and visual PII in images")
-        
-        st.markdown("**Database Scanner**")
-        st.markdown("Column-level detection for databases")
-        
-    with col3:
-        st.markdown("**API Scanner**")
-        st.markdown("Finds PII in API requests/responses")
-        
-        st.markdown("**AI Model Scanner**")
-        st.markdown("Detects PII leakage in ML models")
-        
-    # Enterprise Features section with a cleaner, more maintainable approach
-    st.subheader("Enterprise Features")
+        with col2:
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #f0fdf4; padding: 18px; border-radius: 8px; border-left: 5px solid #10B981; margin-bottom: 20px;">
+                    <h3 style="color: #047857; margin-top: 0; font-size: 18px;">Advanced Analysis</h3>
+                    <p style="margin-bottom: 0;">AI-powered risk scoring and compliance reporting with actionable remediation advice and impact assessments.</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #eef2ff; padding: 18px; border-radius: 8px; border-left: 5px solid #6366F1; margin-bottom: 20px;">
+                    <h3 style="color: #4F46E5; margin-top: 0; font-size: 18px;">Complete GDPR Principles</h3>
+                    <p style="margin-bottom: 0;">All seven core GDPR principles fully implemented with auditable processes and documentation.</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with st.container():
+                st.markdown("""
+                <div style="background-color: #f5f3ff; padding: 18px; border-radius: 8px; border-left: 5px solid #8B5CF6; margin-bottom: 20px;">
+                    <h3 style="color: #6D28D9; margin-top: 0; font-size: 18px;">Comprehensive Reporting</h3>
+                    <p style="margin-bottom: 0;">Generate detailed compliance reports with executive summaries, risk matrices, and remediation plans.</p>
+                </div>
+                """, unsafe_allow_html=True)
     
-    # Create a clean grid layout using Streamlit columns
-    features = [
-        {
-            "title": "Comprehensive Detection",
-            "description": "Unified scanning across multiple data sources with intelligent pattern recognition and contextual analysis."
-        },
-        {
-            "title": "Advanced Analysis",
-            "description": "AI-powered risk scoring and compliance reporting with actionable remediation advice and impact assessments."
-        },
-        {
-            "title": "Dutch GDPR Compliance",
-            "description": "Special handling for BSN, medical data, and UAVG requirements with Dutch-specific compliance guardrails."
-        },
-        {
-            "title": "Complete GDPR Principles",
-            "description": "All seven core GDPR principles fully implemented with auditable processes and documentation."
-        },
-        {
-            "title": "Customizable Scanning",
-            "description": "Configure scans based on your specific compliance needs with industry-specific templates and rules."
-        },
-        {
-            "title": "Comprehensive Reporting",
-            "description": "Generate detailed compliance reports with executive summaries, risk matrices, and remediation plans."
-        }
-    ]
-    
-    # Display features in a 2-column grid
-    col1, col2 = st.columns(2)
-    
-    for i, feature in enumerate(features):
-        # Alternate between columns
-        with col1 if i % 2 == 0 else col2:
-            st.markdown(f"**{feature['title']}**")
-            st.markdown(feature['description'])
-            st.write("")  # Add some spacing
-    
-    # About section - simplified
+    # Enhanced About section with Azure deployment information
     st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
     st.header("About DataGuardian Pro")
     
-    st.write("""
-    DataGuardian Pro provides comprehensive identification and reporting of 
-    Personally Identifiable Information (PII) across multiple sources, with a focus on 
-    Dutch GDPR (UAVG) compliance requirements.
+    # Main description and principles
+    col1, col2 = st.columns([3, 2])
     
-    The platform supports all seven core GDPR principles:
+    with col1:
+        st.markdown("""
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef;">
+            <h4 style="color: #1E3A8A; margin-top: 0;">Overview</h4>
+            <p>DataGuardian Pro provides comprehensive identification and reporting of Personally Identifiable Information (PII) across multiple sources, with a focus on Dutch GDPR (UAVG) compliance requirements.</p>
+            
+            <h4 style="color: #1E3A8A;">Core GDPR Principles</h4>
+            <ol>
+                <li><strong>Lawfulness, Fairness, and Transparency</strong></li>
+                <li><strong>Purpose Limitation</strong></li>
+                <li><strong>Data Minimization</strong></li>
+                <li><strong>Accuracy</strong></li>
+                <li><strong>Storage Limitation</strong></li>
+                <li><strong>Integrity and Confidentiality</strong></li>
+                <li><strong>Accountability</strong></li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
     
-    1. Lawfulness, Fairness, and Transparency
-    2. Purpose Limitation
-    3. Data Minimization
-    4. Accuracy
-    5. Storage Limitation
-    6. Integrity and Confidentiality
-    7. Accountability
-    """)
+    # Deployment options with Azure highlighted
+    with col2:
+        st.markdown("""
+        <div style="background-color: #f0f7ff; padding: 20px; border-radius: 8px; border: 1px solid #d1e3ff;">
+            <h4 style="color: #0078D4; margin-top: 0;">Deployment Options</h4>
+            
+            <div style="margin-bottom: 15px;">
+                <h5 style="margin: 0; color: #0078D4; font-size: 16px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" style="vertical-align: -2px; margin-right: 5px;">
+                        <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2z" fill="#0078D4"/>
+                        <path d="M10.21 3.46L6.08 11.83 9.75 14h3.5A0.75 0.75 0 0 0 14 13.25v-2.81l-3.79-6.98z" fill="#ffffff"/>
+                        <path d="M5.88 4.41L2 10.92l2.11 0.75 4.03-7.32L5.88 4.41z" fill="#ffffff"/>
+                    </svg>
+                    Azure Cloud
+                </h5>
+                <p>Enterprise-grade deployment with Azure App Service, Azure SQL, and Azure Key Vault for secure credential management.</p>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <h5 style="margin: 0; color: #555; font-size: 16px;">On-Premises</h5>
+                <p>Deploy within your private network for maximum data sovereignty using Docker containers.</p>
+            </div>
+            
+            <div>
+                <h5 style="margin: 0; color: #555; font-size: 16px;">Hybrid Options</h5>
+                <p>Flexible deployment with scanning components on-premises and analytics in the cloud.</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Application rating - positioned at the bottom of the page
     st.markdown("<hr style='margin: 30px 0 20px 0;'>", unsafe_allow_html=True)
