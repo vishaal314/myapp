@@ -2062,7 +2062,7 @@ else:
                     
                     with col1:
                         if st.button("View Full Report", key="view_full_report"):
-                            st.session_state.selected_nav = "Scan History"
+                            st.session_state.selected_nav = _("history.title")
                             st.rerun()
                     
                     with col2:
@@ -2094,10 +2094,10 @@ else:
                                 file_path = save_html_report(aggregated_result, reports_dir)
                                 
                                 # Success message
-                                st.success(f"HTML report saved. You can access it from the 'Saved Reports' page.")
+                                st.success(f"HTML report saved. You can access it from the '{_('results.title')}' page.")
                 
                 st.markdown("---")
-                st.info("You can also access the full results in the 'Scan History' section.")
+                st.info(f"You can also access the full results in the '{_('history.title')}' section.")
         
     elif selected_nav == _("history.title"):
         # Import permission checking functionality
@@ -2408,7 +2408,7 @@ else:
                                 
                                 # Create download link
                                 st.success(f"HTML report saved to {file_path}")
-                                st.info("You can view and download the report from the 'Saved Reports' page.")
+                                st.info(f"You can view and download the report from the '{_('results.title')}' page.")
                                 
                                 # View the report immediately
                                 # Using a container to display the report 
@@ -2432,7 +2432,7 @@ else:
                                         """, unsafe_allow_html=True)
                                     except Exception as e:
                                         st.error(f"Error displaying report: {str(e)}")
-                                        st.info("Please go to the 'Saved Reports' page to view your report.")
+                                        st.info(f"Please go to the '{_('results.title')}' page to view your report.")
         else:
             st.info("No scan history available. Start a new scan to see results here.")
     
@@ -2609,7 +2609,7 @@ else:
                 st.success(f"Demo report saved to {file_path}")
                 st.info("Refresh this page to see and interact with the report.")
     
-    elif selected_nav == "Reports":
+    elif selected_nav == _("reports.title"):
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
@@ -2716,7 +2716,7 @@ else:
         else:
             st.info("No scan history available to generate reports. Start a new scan first.")
             
-    elif selected_nav == "Admin":
+    elif selected_nav == _("admin.title"):
         # Import required auth functionality
         from services.auth import require_permission, get_all_roles, get_all_permissions, get_user, create_user, update_user, delete_user, add_custom_permissions
         
