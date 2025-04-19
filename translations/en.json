@@ -110,6 +110,10 @@
   "scan.cloud": "Cloud Services Scan",
   "scan.ai_model": "AI Model Scan",
   "scan.log": "Log Files Scan",
+  "scan.new_scan_title": "Start a New DataGuardian Pro Scan",
+  
+  "permission.no_scan_create": "You don't have permission to create new scans. Please contact an administrator for access.",
+  "permission.requires_scan_create": "Your role requires the 'scan:create' permission to use this feature.",
   
   "scan.select_region": "Select Region for GDPR Rules",
   "scan.select_files": "Select Files to Scan",

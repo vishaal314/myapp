@@ -110,6 +110,7 @@
   "scan.cloud": "Cloud Diensten Scan",
   "scan.ai_model": "AI Model Scan",
   "scan.log": "Logbestanden Scan",
+  "scan.new_scan_title": "Start een Nieuwe DataGuardian Pro Scan",
   
   "scan.select_region": "Selecteer Regio voor AVG-regels",
   "scan.select_files": "Selecteer Bestanden om te Scannen",
@@ -124,6 +125,9 @@
   "scan.cancel_button": "Annuleren",
   "scan.progress": "Scan bezig... {0}%",
   "scan.generating_report": "Rapport genereren...",
+  
+  "permission.no_scan_create": "U heeft geen toestemming om nieuwe scans te maken. Neem contact op met een beheerder voor toegang.",
+  "permission.requires_scan_create": "Uw rol vereist de 'scan:create' toestemming om deze functie te gebruiken.",
   
   "results.title": "Scanresultaten",
   "results.scan_id": "Scan ID",

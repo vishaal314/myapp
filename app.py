@@ -763,12 +763,12 @@ else:
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
-        st.title("Start a New DataGuardian Pro Scan")
+        st.title(_("scan.new_scan_title"))
         
         # Check if user has permission to create scans
         if not require_permission('scan:create'):
-            st.warning("You don't have permission to create new scans. Please contact an administrator for access.")
-            st.info("Your role requires the 'scan:create' permission to use this feature.")
+            st.warning(_("permission.no_scan_create"))
+            st.info(_("permission.requires_scan_create"))
             st.stop()
         
         # Scan configuration form - expanded with all scanner types
@@ -802,13 +802,10 @@ else:
             
             # Show premium feature message if needed
             if scan_type in premium_scans:
-                st.warning("This is a premium scan type. Please upgrade your membership to use this feature.")
-                with st.expander("Premium Feature Details"):
-                    st.markdown("""
-                    Premium scan types provide advanced detection capabilities and comprehensive reporting.
-                    Upgrade your membership to access all premium features.
-                    """)
-                    if st.button("View Upgrade Options"):
+                st.warning(_("scan.premium_warning"))
+                with st.expander(_("scan.premium_details_title")):
+                    st.markdown(_("scan.premium_details_description"))
+                    if st.button(_("scan.view_upgrade_options")):
                         st.session_state.selected_nav = "Membership"
                         st.rerun()
         else:
