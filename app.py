@@ -490,22 +490,22 @@ else:
     
     # Membership section
     st.sidebar.markdown("---")
-    st.sidebar.subheader("Membership Options")
+    st.sidebar.subheader(_("sidebar.membership_options"))
     
     # Display current membership status
     if 'premium_member' not in st.session_state:
         st.session_state.premium_member = False
         
-    membership_status = "Premium Member ✓" if st.session_state.premium_member else "Free Trial"
-    membership_expiry = "Unlimited" if st.session_state.premium_member else f"{free_trial_days_left} days left"
+    membership_status = _("sidebar.premium_member") if st.session_state.premium_member else _("sidebar.free_trial")
+    membership_expiry = _("sidebar.unlimited") if st.session_state.premium_member else f"{free_trial_days_left} {_('sidebar.days_left')}"
     
     # Display membership info
     st.sidebar.markdown(f"""
     <div style="padding: 10px; background-color: {'#e6f7e6' if st.session_state.premium_member else '#f7f7e6'}; border-radius: 5px; margin-bottom: 15px;">
         <h4 style="margin: 0; color: {'#2e7d32' if st.session_state.premium_member else '#7d6c2e'};">{membership_status}</h4>
-        <p><strong>Status:</strong> {'Active' if st.session_state.premium_member or free_trial_active else 'Expired'}</p>
-        <p><strong>Expires:</strong> {membership_expiry}</p>
-        <p><strong>Scans Used:</strong> {st.session_state.free_trial_scans_used}/5 (Free Trial)</p>
+        <p><strong>{_("sidebar.status")}:</strong> {_("sidebar.active") if st.session_state.premium_member or free_trial_active else _("sidebar.expired")}</p>
+        <p><strong>{_("sidebar.expires")}:</strong> {membership_expiry}</p>
+        <p><strong>{_("sidebar.scans_used")}:</strong> {st.session_state.free_trial_scans_used}/5 ({_("sidebar.free_trial")})</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -523,28 +523,28 @@ else:
     # User Permissions Section
     from services.auth import get_user_permissions, get_all_permissions, get_user, get_all_roles
     
-    with st.sidebar.expander("Your Profile & Permissions"):
+    with st.sidebar.expander(_("sidebar.profile_permissions")):
         # Get current user data and permissions
         current_user = get_user(st.session_state.username)
-        user_role = current_user.get('role', 'Basic User') if current_user else 'Basic User'
+        user_role = current_user.get('role', _("sidebar.basic_user")) if current_user else _("sidebar.basic_user")
         user_permissions = get_user_permissions()
         all_permissions = get_all_permissions()
         all_roles = get_all_roles()
         
         # Display current role
-        st.markdown(f"**Current Role:** {user_role}")
+        st.markdown(f"**{_('sidebar.current_role')}:** {user_role}")
         
         # Find role description
-        role_desc = all_roles.get(user_role, {}).get('description', 'No description available')
+        role_desc = all_roles.get(user_role, {}).get('description', _("sidebar.no_description"))
         st.markdown(f"*{role_desc}*")
         
         # Display permissions section
-        st.markdown("#### Your Permissions:")
+        st.markdown(f"#### {_('sidebar.your_permissions')}:")
         
         # Group permissions by category
         permissions_by_category = {}
         for perm in user_permissions:
-            category = perm.split(':')[0] if ':' in perm else 'Other'
+            category = perm.split(':')[0] if ':' in perm else _("sidebar.other")
             if category not in permissions_by_category:
                 permissions_by_category[category] = []
             permissions_by_category[category].append(perm)
@@ -553,17 +553,17 @@ else:
         for category, perms in permissions_by_category.items():
             st.markdown(f"**{category.title()} ({len(perms)})**")
             for perm in perms:
-                desc = all_permissions.get(perm, "No description available")
+                desc = all_permissions.get(perm, _("sidebar.no_description"))
                 st.markdown(f"- **{perm}**: {desc}")
     
     # Membership information
-    with st.sidebar.expander("Membership Benefits"):
-        st.markdown("""
-        - **Unlimited scans** across all scan types
-        - **Priority support** for compliance issues
-        - **Advanced reporting** with recommendations
-        - **API access** for automated scanning
-        - **Team collaboration** features
+    with st.sidebar.expander(_("sidebar.membership_benefits")):
+        st.markdown(f"""
+        - **{_("sidebar.benefit_unlimited_scans")}**
+        - **{_("sidebar.benefit_priority_support")}**
+        - **{_("sidebar.benefit_advanced_reporting")}**
+        - **{_("sidebar.benefit_api_access")}**
+        - **{_("sidebar.benefit_team_collaboration")}**
         """)
             
     # Handle membership payment display
