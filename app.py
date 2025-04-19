@@ -384,96 +384,220 @@ if not st.session_state.logged_in:
     # Our landing page already has metric cards, no need to duplicate them
     st.write("")
     
-    # Modern Scanning Services section with professional design
+    # Modern Scanning Services section with enhanced interactive design
     st.markdown("""
     <h2 style="color: #2563EB; margin: 40px 0 20px 0; text-align: center; font-weight: 600;">Our Scanning Services</h2>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px;">
-        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-            <div style="height: 8px; background: linear-gradient(90deg, #2563EB, #93C5FD);"></div>
-            <div style="padding: 20px;">
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <div style="width: 42px; height: 42px; background-color: #EFF6FF; border-radius: 50%; 
-                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                        <span style="color: #2563EB; font-size: 18px;">💻</span>
-                    </div>
-                    <h3 style="margin: 0; color: #1E3A8A; font-size: 18px; font-weight: 600;">Code Scanner</h3>
-                </div>
-                <p style="color: #4B5563; margin: 0; font-size: 15px;">Detects PII and secrets in source code repositories with pattern detection and entropy analysis</p>
-            </div>
-        </div>
-        
-        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-            <div style="height: 8px; background: linear-gradient(90deg, #059669, #6EE7B7);"></div>
-            <div style="padding: 20px;">
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <div style="width: 42px; height: 42px; background-color: #ECFDF5; border-radius: 50%; 
-                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                        <span style="color: #059669; font-size: 18px;">📄</span>
-                    </div>
-                    <h3 style="margin: 0; color: #065F46; font-size: 18px; font-weight: 600;">Document Scanner</h3>
-                </div>
-                <p style="color: #4B5563; margin: 0; font-size: 15px;">Scans PDFs, DOC, and text files for sensitive data with advanced OCR technology</p>
-            </div>
-        </div>
-        
-        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-            <div style="height: 8px; background: linear-gradient(90deg, #D97706, #FBBF24);"></div>
-            <div style="padding: 20px;">
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <div style="width: 42px; height: 42px; background-color: #FFFBEB; border-radius: 50%; 
-                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                        <span style="color: #D97706; font-size: 18px;">🖼️</span>
-                    </div>
-                    <h3 style="margin: 0; color: #92400E; font-size: 18px; font-weight: 600;">Image Scanner</h3>
-                </div>
-                <p style="color: #4B5563; margin: 0; font-size: 15px;">Detects faces, ID cards, and text-based PII in images using computer vision</p>
-            </div>
-        </div>
-        
-        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-            <div style="height: 8px; background: linear-gradient(90deg, #4F46E5, #A5B4FC);"></div>
-            <div style="padding: 20px;">
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <div style="width: 42px; height: 42px; background-color: #EEF2FF; border-radius: 50%; 
-                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                        <span style="color: #4F46E5; font-size: 18px;">🗄️</span>
-                    </div>
-                    <h3 style="margin: 0; color: #3730A3; font-size: 18px; font-weight: 600;">Database Scanner</h3>
-                </div>
-                <p style="color: #4B5563; margin: 0; font-size: 15px;">Column-level detection for databases with type and content analysis</p>
-            </div>
-        </div>
-        
-        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-            <div style="height: 8px; background: linear-gradient(90deg, #BE185D, #F472B6);"></div>
-            <div style="padding: 20px;">
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <div style="width: 42px; height: 42px; background-color: #FDF2F8; border-radius: 50%; 
-                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                        <span style="color: #BE185D; font-size: 18px;">🔌</span>
-                    </div>
-                    <h3 style="margin: 0; color: #9D174D; font-size: 18px; font-weight: 600;">API Scanner</h3>
-                </div>
-                <p style="color: #4B5563; margin: 0; font-size: 15px;">Finds PII in API requests/responses by analyzing traffic and schemas</p>
-            </div>
-        </div>
-        
-        <div style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-            <div style="height: 8px; background: linear-gradient(90deg, #7C3AED, #C4B5FD);"></div>
-            <div style="padding: 20px;">
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <div style="width: 42px; height: 42px; background-color: #F5F3FF; border-radius: 50%; 
-                             display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                        <span style="color: #7C3AED; font-size: 18px;">🧠</span>
-                    </div>
-                    <h3 style="margin: 0; color: #6D28D9; font-size: 18px; font-weight: 600;">AI Model Scanner</h3>
-                </div>
-                <p style="color: #4B5563; margin: 0; font-size: 15px;">Detects PII leakage in ML models and training data with advanced prompting</p>
-            </div>
-        </div>
-    </div>
     """, unsafe_allow_html=True)
+    
+    # Create two columns - left for services, right for details
+    scan_col1, scan_col2 = st.columns([3, 2])
+    
+    # Store scanner info in a dictionary for easy access
+    scanner_info = {
+        "code": {
+            "title": "Code Scanner",
+            "icon": "💻",
+            "color": "#2563EB",
+            "gradient": "linear-gradient(90deg, #2563EB, #93C5FD)",
+            "bg_color": "#EFF6FF",
+            "title_color": "#1E3A8A",
+            "description": "Detects PII and secrets in source code repositories with pattern detection and entropy analysis",
+            "details": """
+            - **Languages supported**: 20+ including Python, JavaScript, Java, C/C++
+            - **Detection methods**: Pattern matching, entropy analysis, AST parsing
+            - **Secret types**: API keys, tokens, credentials, connection strings
+            - **PII types**: Personal data, financial data, health records
+            - **Integration**: CI/CD, Git hooks, IDE plugins
+            """
+        },
+        "document": {
+            "title": "Document Scanner",
+            "icon": "📄",
+            "color": "#059669",
+            "gradient": "linear-gradient(90deg, #059669, #6EE7B7)",
+            "bg_color": "#ECFDF5",
+            "title_color": "#065F46",
+            "description": "Scans PDFs, DOC, and text files for sensitive data with advanced OCR technology",
+            "details": """
+            - **File types**: PDF, DOC, DOCX, TXT, RTF, ODT, and 30+ more
+            - **Detection methods**: OCR, text extraction, metadata analysis
+            - **PII types**: Personal data, legal documents, financial records
+            - **Features**: Form field detection, templated document recognition
+            - **Processing**: Batch processing, recursive folder scanning
+            """
+        },
+        "image": {
+            "title": "Image Scanner",
+            "icon": "🖼️",
+            "color": "#D97706",
+            "gradient": "linear-gradient(90deg, #D97706, #FBBF24)",
+            "bg_color": "#FFFBEB",
+            "title_color": "#92400E",
+            "description": "Detects faces, ID cards, and text-based PII in images using computer vision",
+            "details": """
+            - **Image types**: JPG, PNG, BMP, TIFF, WEBP and more
+            - **Detection methods**: Computer vision, OCR, facial recognition
+            - **Document types**: ID cards, passports, driver's licenses, credit cards
+            - **Features**: Automatic redaction, blurring of sensitive content
+            - **Performance**: High-accuracy detection with low false positives
+            """
+        },
+        "database": {
+            "title": "Database Scanner",
+            "icon": "🗄️",
+            "color": "#4F46E5",
+            "gradient": "linear-gradient(90deg, #4F46E5, #A5B4FC)",
+            "bg_color": "#EEF2FF",
+            "title_color": "#3730A3",
+            "description": "Column-level detection for databases with type and content analysis",
+            "details": """
+            - **Database support**: MySQL, PostgreSQL, Oracle, SQL Server, MongoDB
+            - **Analysis types**: Schema analysis, data sampling, full table scans
+            - **Features**: Data classification, tagging, field-level encryption recommendations
+            - **Performance**: Low-impact scanning with rate limiting
+            - **Reporting**: Detailed findings with severity ratings and remediation steps
+            """
+        },
+        "api": {
+            "title": "API Scanner",
+            "icon": "🔌",
+            "color": "#BE185D",
+            "gradient": "linear-gradient(90deg, #BE185D, #F472B6)",
+            "bg_color": "#FDF2F8",
+            "title_color": "#9D174D",
+            "description": "Finds PII in API requests/responses by analyzing traffic and schemas",
+            "details": """
+            - **API types**: REST, GraphQL, SOAP, gRPC
+            - **Methods**: Traffic analysis, schema parsing, payload inspection
+            - **Features**: Authentication token detection, PII data flow mapping
+            - **Integration**: API gateways, proxies, service meshes
+            - **Compliance**: GDPR, HIPAA, PCI DSS advisory checks
+            """
+        },
+        "ai": {
+            "title": "AI Model Scanner",
+            "icon": "🧠",
+            "color": "#7C3AED",
+            "gradient": "linear-gradient(90deg, #7C3AED, #C4B5FD)",
+            "bg_color": "#F5F3FF",
+            "title_color": "#6D28D9",
+            "description": "Detects PII leakage in ML models and training data with advanced prompting",
+            "details": """
+            - **Model types**: Neural networks, transformers, LLMs, computer vision
+            - **Analysis**: Training data audit, model output inspection, embedding analysis
+            - **Risks**: Memorization detection, output filtering, prompt injection testing
+            - **Mitigation**: Recommended guardrails, data minimization techniques
+            - **Compliance**: AI ethics checks, regulatory alignment
+            """
+        }
+    }
+    
+    # Track selected scanner
+    if 'selected_scanner' not in st.session_state:
+        st.session_state.selected_scanner = "code"
+    
+    # Display scanners in the left column with enhanced hover effect
+    with scan_col1:
+        # Use custom HTML/CSS for interactive card display
+        html_cards = ""
+        
+        for scanner_key, scanner in scanner_info.items():
+            # Add hover effect and cursor pointer for better UX
+            selected_class = "selected" if st.session_state.selected_scanner == scanner_key else ""
+            html_cards += f"""
+            <div class="scanner-card {selected_class}" data-scanner="{scanner_key}" 
+                 onclick="selectScanner('{scanner_key}')"
+                 style="background-color: white; border-radius: 12px; overflow: hidden; 
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 15px;
+                        transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
+                        transform: {st.session_state.selected_scanner == scanner_key and 'translateX(10px)' or 'none'};
+                        border-left: {st.session_state.selected_scanner == scanner_key and f'4px solid {scanner["color"]}' or 'none'};
+                        box-shadow: {st.session_state.selected_scanner == scanner_key and '0 6px 12px rgba(0, 0, 0, 0.1)' or '0 4px 6px rgba(0, 0, 0, 0.05)'};
+                        position: relative;">
+                <div style="height: 8px; background: {scanner['gradient']};"></div>
+                <div style="padding: 20px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <div style="width: 42px; height: 42px; background-color: {scanner['bg_color']}; border-radius: 50%; 
+                                 display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                            <span style="color: {scanner['color']}; font-size: 18px;">{scanner['icon']}</span>
+                        </div>
+                        <h3 style="margin: 0; color: {scanner['title_color']}; font-size: 18px; font-weight: 600;">{scanner['title']}</h3>
+                    </div>
+                    <p style="color: #4B5563; margin: 0; font-size: 15px;">{scanner['description']}</p>
+                </div>
+            </div>
+            """
+        
+        # Add JavaScript for scanner selection
+        js_code = """
+        <script>
+        function selectScanner(scannerKey) {
+            // Send the selected scanner to Streamlit
+            window.parent.postMessage({
+                type: "streamlit:setComponentValue",
+                value: scannerKey
+            }, "*");
+        }
+        </script>
+        <style>
+        .scanner-card:hover {
+            transform: translateX(8px) !important;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
+        }
+        </style>
+        """
+        
+        # Display the HTML cards
+        st.markdown(html_cards + js_code, unsafe_allow_html=True)
+        
+        # Use a hidden component to receive the selected scanner
+        selected_scanner_raw = st.text_input("", "", key="selected_scanner_input", label_visibility="collapsed")
+        if selected_scanner_raw and selected_scanner_raw != st.session_state.selected_scanner:
+            st.session_state.selected_scanner = selected_scanner_raw
+            st.rerun()
+    
+    # Display selected scanner details in the right column
+    with scan_col2:
+        selected = scanner_info[st.session_state.selected_scanner]
+        
+        # Create a visually appealing details panel
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, {selected['bg_color']}, white);
+                    border-radius: 16px; padding: 25px; height: 100%; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                    border: 1px solid #f0f0f0;">
+            <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                <div style="width: 52px; height: 52px; background-color: {selected['color']}; 
+                         border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                         margin-right: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);">
+                    <span style="color: white; font-size: 24px;">{selected['icon']}</span>
+                </div>
+                <h2 style="margin: 0; color: {selected['title_color']}; font-size: 24px; 
+                          font-weight: 600;">{selected['title']}</h2>
+            </div>
+            <div style="margin-bottom: 25px;">
+                <p style="color: #4B5563; font-size: 16px; margin: 0;">{selected['description']}</p>
+            </div>
+            <div style="background-color: white; border-radius: 12px; padding: 18px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);">
+                <h4 style="margin: 0 0 15px 0; color: {selected['color']}; font-weight: 500;">Key Features</h4>
+                <div style="color: #4B5563;">
+                    {selected['details']}
+                </div>
+                
+                <div style="margin-top: 25px; text-align: center;">
+                    <button style="background-color: {selected['color']}; color: white; border: none; 
+                               padding: 10px 20px; border-radius: 6px; font-weight: 500; cursor: pointer;
+                               transition: background-color 0.2s, transform 0.1s; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);"
+                            onmouseover="this.style.backgroundColor='{selected['title_color']}'; this.style.transform='translateY(-2px)';"
+                            onmouseout="this.style.backgroundColor='{selected['color']}'; this.style.transform='translateY(0)';">
+                        Run Scanner
+                    </button>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Small spacing after the scanner section
+    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
         
     # Modern Enterprise Features section with sleek design
     st.markdown("""
