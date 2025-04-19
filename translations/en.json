@@ -30,6 +30,7 @@
   "sidebar.settings": "Settings",
   "sidebar.admin": "Administration",
   "sidebar.help": "Help",
+  "sidebar.navigation": "Navigation",
   
   "login.email_username": "Email/Username",
   "login.password": "Password",

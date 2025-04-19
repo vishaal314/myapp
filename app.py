@@ -168,24 +168,24 @@ with st.sidebar:
         
         # Login Form with colorful styling
         if st.session_state.active_tab == "login":
-            st.markdown("""
+            st.markdown(f"""
             <div style="background-image: linear-gradient(to right, #F5F0FF, #E9DAFF); 
                        padding: 15px; border-radius: 10px; margin-bottom: 15px;
                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
                 <h4 style="color: #4527A0; margin: 0 0 10px 0; text-align: center;">
-                    <i>Sign In</i>
+                    <i>{_("sidebar.sign_in")}</i>
                 </h4>
             </div>
             """, unsafe_allow_html=True)
             
-            username_or_email = st.text_input("Email/Username", key="login_username")
-            password = st.text_input("Password", type="password", key="login_password")
+            username_or_email = st.text_input(_("login.email_username"), key="login_username")
+            password = st.text_input(_("login.password"), type="password", key="login_password")
             
             cols = st.columns([3, 2])
             with cols[0]:
-                remember = st.checkbox("Remember me", key="remember_login")
+                remember = st.checkbox(_("login.remember_me"), key="remember_login")
             with cols[1]:
-                st.markdown("<p style='text-align: right; font-size: 0.8em;'><a href='#'>Forgot?</a></p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='text-align: right; font-size: 0.8em;'><a href='#'>{_('login.forgot_password')}</a></p>", unsafe_allow_html=True)
                 
             # Blue gradient login button
             st.markdown("""
@@ -198,11 +198,11 @@ with st.sidebar:
             </style>
             """, unsafe_allow_html=True)
             
-            login_button = st.button("Sign In", use_container_width=True, key="sidebar_login", type="primary")
+            login_button = st.button(_("login.button"), use_container_width=True, key="sidebar_login", type="primary")
             
             if login_button:
                 if not username_or_email or not password:
-                    st.error("Please enter both email/username and password.")
+                    st.error(_("login.error.missing_fields"))
                 else:
                     user_data = authenticate(username_or_email, password)
                     if user_data:
@@ -221,36 +221,36 @@ with st.sidebar:
                         # Preserve the current language across login
                         current_language = st.session_state.get('language', 'en')
                         
-                        st.success(f"Logged in successfully!")
+                        st.success(_("login.success"))
                         st.rerun()
                     else:
-                        st.error("Invalid credentials. Please try again.")
+                        st.error(_("login.error.invalid_credentials"))
         
         # Registration Form with green colorful styling
         else:
-            st.markdown("""
+            st.markdown(f"""
             <div style="background-image: linear-gradient(to right, #D1FAE5, #ECFDF5); 
                        padding: 15px; border-radius: 10px; margin-bottom: 15px;
                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
                 <h4 style="color: #065F46; margin: 0 0 10px 0; text-align: center;">
-                    <i>Create New Account</i>
+                    <i>{_("sidebar.create_account")}</i>
                 </h4>
             </div>
             """, unsafe_allow_html=True)
             
-            new_username = st.text_input("Username", key="register_username")
-            new_email = st.text_input("Email", key="register_email", 
-                                    placeholder="Enter a valid email address")
-            new_password = st.text_input("Password", type="password", key="register_password",
-                                help="Password must be at least 6 characters")
-            confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
+            new_username = st.text_input(_("register.username"), key="register_username")
+            new_email = st.text_input(_("register.email"), key="register_email", 
+                                    placeholder=_("register.email_placeholder"))
+            new_password = st.text_input(_("register.password"), type="password", key="register_password",
+                                help=_("register.password_help"))
+            confirm_password = st.text_input(_("register.confirm_password"), type="password", key="confirm_password")
             
             # Role selection with custom styling
             role_options = ["viewer", "analyst", "admin"]
-            new_role = st.selectbox("Role", role_options, index=0)
+            new_role = st.selectbox(_("register.role"), role_options, index=0)
             
             # Green checkmark for terms
-            terms = st.checkbox("I agree to the Terms of Service and Privacy Policy")
+            terms = st.checkbox(_("register.terms"))
             
             # Green gradient register button
             st.markdown("""
@@ -263,15 +263,15 @@ with st.sidebar:
             </style>
             """, unsafe_allow_html=True)
             
-            register_button = st.button("Create Account", use_container_width=True, key="sidebar_register", type="primary")
+            register_button = st.button(_("register.button"), use_container_width=True, key="sidebar_register", type="primary")
             
             if register_button:
                 if not new_username or not new_email or not new_password:
-                    st.error("Please fill out all fields.")
+                    st.error(_("register.error.missing_fields"))
                 elif new_password != confirm_password:
-                    st.error("Passwords do not match.")
+                    st.error(_("register.error.passwords_mismatch"))
                 elif not terms:
-                    st.error("You must agree to the Terms of Service and Privacy Policy.")
+                    st.error(_("register.error.terms_required"))
                 else:
                     success, message = create_user(new_username, new_password, new_role, new_email)
                     if success:
@@ -466,26 +466,26 @@ else:
     from services.auth import has_permission
     
     # Define base navigation options
-    nav_options = ["New Scan", "Dashboard", "Scan History", "Reports", "Saved Reports"]
+    nav_options = [_("scan.title"), _("dashboard.welcome"), _("history.title"), _("results.title"), _("report.generate")]
     
     # Add Admin section if user has admin permissions
     if has_permission('admin:access'):
-        nav_options.append("Admin")
+        nav_options.append(_("admin.title"))
     
-    selected_nav = st.sidebar.radio("Navigation", nav_options)
+    selected_nav = st.sidebar.radio(_("sidebar.navigation"), nav_options)
     
     # Add quick access buttons
-    st.sidebar.markdown("### Quick Access")
+    st.sidebar.markdown(f"### {_('sidebar.quick_access')}")
     quick_col1, quick_col2 = st.sidebar.columns(2)
     
     with quick_col1:
-        if st.button("📊 Dashboard", key="quick_dashboard", help="View your compliance dashboard"):
-            st.session_state.selected_nav = "Dashboard"
+        if st.button(f"📊 {_('sidebar.dashboard')}", key="quick_dashboard", help=_("sidebar.dashboard_help")):
+            st.session_state.selected_nav = _("dashboard.welcome")
             st.rerun()
     
     with quick_col2:
-        if st.button("📑 Reports", key="quick_reports", help="View your saved reports"):
-            st.session_state.selected_nav = "Saved Reports"
+        if st.button(f"📑 {_('sidebar.reports')}", key="quick_reports", help=_("sidebar.reports_help")):
+            st.session_state.selected_nav = _("report.generate")
             st.rerun()
     
     # Membership section
