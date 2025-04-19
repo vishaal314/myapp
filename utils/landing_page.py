@@ -13,25 +13,29 @@ def display_gdpr_fine_card() -> None:
     """
     Display a professional, simple card showing GDPR fine information.
     """
-    st.markdown("""
+    # Using fixed values for the landing page demo
+    protection_percentage = 65
+    max_fine_millions = 20
+    
+    st.markdown(f"""
     <div style="background-color: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); border: 1px solid #f0f0f0; margin-bottom: 20px;">
         <h3 style="color: #4f46e5; margin-top: 0; font-weight: 600; font-size: 18px;">GDPR Fine Protection</h3>
         <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;">
-            The EU can impose fines up to <strong>€20 million</strong> or <strong>4% of global revenue</strong> for GDPR violations. 
+            The EU can impose fines up to <strong>€{max_fine_millions} million</strong> or <strong>4% of global revenue</strong> for GDPR violations. 
             Our platform helps mitigate these risks.
         </p>
         <div style="display: flex; align-items: center; gap: 15px;">
             <div style="background-color: #4f46e5; border-radius: 8px; height: 100px; width: 120px; display: flex; justify-content: center; align-items: center; flex-direction: column;">
-                <span style="color: white; font-size: 22px; font-weight: bold;">€20M</span>
+                <span style="color: white; font-size: 22px; font-weight: bold;">€{max_fine_millions}M</span>
                 <span style="color: white; font-size: 12px;">Maximum Fine</span>
             </div>
             <div style="flex-grow: 1;">
                 <div style="height: 8px; background-color: #e5e7eb; border-radius: 4px; margin-bottom: 10px; position: relative;">
-                    <div style="position: absolute; top: 0; left: 0; height: 8px; width: 65%; background-color: #4f46e5; border-radius: 4px;"></div>
+                    <div style="position: absolute; top: 0; left: 0; height: 8px; width: {protection_percentage}%; background-color: #4f46e5; border-radius: 4px;"></div>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 12px; color: #6b7280;">
                     <span>Lower Risk</span>
-                    <span style="font-weight: 600; color: #4f46e5;">Current Status: 65% Protected</span>
+                    <span style="font-weight: 600; color: #4f46e5;">Current Status: {protection_percentage}% Protected</span>
                     <span>Higher Risk</span>
                 </div>
             </div>
@@ -43,7 +47,13 @@ def display_compliance_status_card() -> None:
     """
     Display a professional card showing compliance status.
     """
-    st.markdown("""
+    # Using fixed values for the landing page demo
+    pii_detection = 87
+    data_processing = 79
+    data_security = 92
+    documentation = 65
+    
+    st.markdown(f"""
     <div style="background-color: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); border: 1px solid #f0f0f0; margin-bottom: 20px;">
         <h3 style="color: #4f46e5; margin-top: 0; font-weight: 600; font-size: 18px;">Compliance Status</h3>
         
@@ -51,9 +61,9 @@ def display_compliance_status_card() -> None:
             <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px;">
                 <div style="font-size: 13px; color: #6b7280; margin-bottom: 5px;">PII Detection</div>
                 <div style="display: flex; align-items: flex-end; justify-content: space-between;">
-                    <span style="font-size: 22px; font-weight: 600; color: #111827;">87%</span>
+                    <span style="font-size: 22px; font-weight: 600; color: #111827;">{pii_detection}%</span>
                     <div style="height: 30px; width: 60px;">
-                        <div style="background-color: #4f46e5; width: 87%; height: 6px; border-radius: 3px;"></div>
+                        <div style="background-color: #4f46e5; width: {pii_detection}%; height: 6px; border-radius: 3px;"></div>
                     </div>
                 </div>
             </div>
@@ -61,9 +71,9 @@ def display_compliance_status_card() -> None:
             <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px;">
                 <div style="font-size: 13px; color: #6b7280; margin-bottom: 5px;">Data Processing</div>
                 <div style="display: flex; align-items: flex-end; justify-content: space-between;">
-                    <span style="font-size: 22px; font-weight: 600; color: #111827;">79%</span>
+                    <span style="font-size: 22px; font-weight: 600; color: #111827;">{data_processing}%</span>
                     <div style="height: 30px; width: 60px;">
-                        <div style="background-color: #4f46e5; width: 79%; height: 6px; border-radius: 3px;"></div>
+                        <div style="background-color: #4f46e5; width: {data_processing}%; height: 6px; border-radius: 3px;"></div>
                     </div>
                 </div>
             </div>
@@ -71,9 +81,9 @@ def display_compliance_status_card() -> None:
             <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px;">
                 <div style="font-size: 13px; color: #6b7280; margin-bottom: 5px;">Data Security</div>
                 <div style="display: flex; align-items: flex-end; justify-content: space-between;">
-                    <span style="font-size: 22px; font-weight: 600; color: #111827;">92%</span>
+                    <span style="font-size: 22px; font-weight: 600; color: #111827;">{data_security}%</span>
                     <div style="height: 30px; width: 60px;">
-                        <div style="background-color: #4f46e5; width: 92%; height: 6px; border-radius: 3px;"></div>
+                        <div style="background-color: #4f46e5; width: {data_security}%; height: 6px; border-radius: 3px;"></div>
                     </div>
                 </div>
             </div>
@@ -81,9 +91,9 @@ def display_compliance_status_card() -> None:
             <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px;">
                 <div style="font-size: 13px; color: #6b7280; margin-bottom: 5px;">Documentation</div>
                 <div style="display: flex; align-items: flex-end; justify-content: space-between;">
-                    <span style="font-size: 22px; font-weight: 600; color: #111827;">65%</span>
+                    <span style="font-size: 22px; font-weight: 600; color: #111827;">{documentation}%</span>
                     <div style="height: 30px; width: 60px;">
-                        <div style="background-color: #4f46e5; width: 65%; height: 6px; border-radius: 3px;"></div>
+                        <div style="background-color: #4f46e5; width: {documentation}%; height: 6px; border-radius: 3px;"></div>
                     </div>
                 </div>
             </div>
