@@ -1358,7 +1358,7 @@ else:
                 # For other blob source options
                 uploaded_files = []
                 
-        elif scan_type == "Image Scan":
+        elif scan_type == _("scan.image"):
             if 'image_source' in locals() and image_source == "Upload Files":
                 upload_help = "Upload image files to scan for faces and visual identifiers"
                 uploaded_files = st.file_uploader(
@@ -1371,11 +1371,11 @@ else:
                 # For other image source options
                 uploaded_files = []
                 
-        elif scan_type == "Database Scan":
+        elif scan_type == _("scan.database"):
             st.info("Database scanning does not require file uploads. Configure the database connection and scan settings above.")
             uploaded_files = []
             
-        elif scan_type == "API Scan":
+        elif scan_type == _("scan.api"):
             if api_source in ["OpenAPI/Swagger Specification", "Both"]:
                 upload_help = "Upload OpenAPI/Swagger specification files"
                 uploaded_files = st.file_uploader(
@@ -1389,7 +1389,7 @@ else:
             else:
                 uploaded_files = []
                 
-        elif scan_type == "Manual Upload":
+        elif scan_type == _("scan.manual"):
             upload_help = "Upload any files for manual scanning"
             uploaded_files = st.file_uploader(
                 "Upload Files for Manual Scan", 
