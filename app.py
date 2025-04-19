@@ -2434,7 +2434,7 @@ else:
                                         st.error(f"Error displaying report: {str(e)}")
                                         st.info(f"Please go to the '{_('results.title')}' page to view your report.")
         else:
-            st.info("No scan history available. Start a new scan to see results here.")
+            st.info(_("dashboard.no_scan_history"))
     
     elif selected_nav == _("results.title"):
         # Import permission checking functionality
@@ -2492,7 +2492,7 @@ else:
             st.dataframe(reports_df)
             
             # Allow user to select a report to view
-            selected_report = st.selectbox("Select a report to view:", 
+            selected_report = st.selectbox(_("reports.select_report"), 
                                         options=report_files,
                                         format_func=lambda x: os.path.basename(x))
             
@@ -2500,7 +2500,7 @@ else:
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    if st.button("🔍 View Report", key="view_report"):
+                    if st.button(_("reports.view_report"), key="view_report"):
                         try:
                             # Read the HTML content
                             with open(selected_report, 'r', encoding='utf-8') as f:
@@ -2513,7 +2513,7 @@ else:
                             # Display in an iframe with improved styling
                             st.markdown(f"""
                             <div style="border:1px solid #ddd; padding:10px; border-radius:8px; margin-top:20px; background-color:#f9f9f9;">
-                                <h3 style="margin-top:0; margin-bottom:10px; color:#1E40AF;">GDPR Compliance Report</h3>
+                                <h3 style="margin-top:0; margin-bottom:10px; color:#1E40AF;">{_("reports.gdpr_compliance_report")}</h3>
                                 <iframe src="{data_url}" width="100%" height="700px" style="border:1px solid #ddd; border-radius:4px;"></iframe>
                             </div>
                             """, unsafe_allow_html=True)
@@ -2522,17 +2522,17 @@ else:
                             st.info("Try downloading the report instead and view it in your browser.")
                 
                 with col2:
-                    if st.button("📥 Download Report", key="download_report"):
+                    if st.button(_("reports.download_report"), key="download_report"):
                         # Read the HTML content
                         with open(selected_report, 'r', encoding='utf-8') as f:
                             html_content = f.read()
                         
                         # Create download link
                         b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-                        href = f'<a href="data:text/html;base64,{b64_html}" download="{os.path.basename(selected_report)}">Download HTML Report</a>'
+                        href = f'<a href="data:text/html;base64,{b64_html}" download="{os.path.basename(selected_report)}">{_("reports.download_html_report")}</a>'
                         st.markdown(href, unsafe_allow_html=True)
         else:
-            st.info("No saved reports found. Generate a report from the Scan History page to see it here.")
+            st.info(_("reports.no_saved_reports"))
             
             # Add a demo report if needed
             if st.button("Generate Demo Report"):
@@ -2667,7 +2667,7 @@ else:
                 })
             
             selected_scan = st.selectbox(
-                "Select a scan to generate a report",
+                _("report.select_scan"),
                 options=range(len(scan_options)),
                 format_func=lambda i: scan_options[i]['display']
             )
@@ -2677,16 +2677,16 @@ else:
             
             if scan_data:
                 # Report generation options
-                st.subheader("Report Options")
+                st.subheader(_("report.options"))
                 
                 col1, col2 = st.columns(2)
                 with col1:
-                    include_details = st.checkbox("Include Detailed Findings", value=True)
-                    include_charts = st.checkbox("Include Charts", value=True)
+                    include_details = st.checkbox(_("report.include_detailed_findings"), value=True)
+                    include_charts = st.checkbox(_("report.include_charts"), value=True)
                 
                 with col2:
-                    include_metadata = st.checkbox("Include Scan Metadata", value=True)
-                    include_recommendations = st.checkbox("Include Recommendations", value=True)
+                    include_metadata = st.checkbox(_("report.include_scan_metadata"), value=True)
+                    include_recommendations = st.checkbox(_("report.include_recommendations"), value=True)
                 
                 # Generate report
                 if st.button(_("report.generate")):
