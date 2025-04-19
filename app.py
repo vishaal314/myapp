@@ -367,11 +367,30 @@ if not st.session_state.logged_in:
     # Add simple divider
     st.markdown("<hr style='margin: 20px 0;'>", unsafe_allow_html=True)
     
+    # Import sustainability analyzer
+    from utils.sustainability_analyzer import SustainabilityAnalyzer, get_sustainability_banner_html
+    
     # Simplified compliance dashboard
     st.header("Compliance Status")
     
+    # Create a sustainability analyzer instance with default values for the demo dashboard
+    sustainability_analyzer = SustainabilityAnalyzer(
+        scan_results={
+            'total_pii_found': 42,
+            'high_risk_count': 5,
+            'medium_risk_count': 15
+        }, 
+        industry='technology'
+    )
+    
+    sustainability_score = sustainability_analyzer.calculate_sustainability_score()
+    cost_savings = sustainability_analyzer.calculate_cost_savings()
+    
+    # Display the sustainability banner
+    st.markdown(get_sustainability_banner_html(sustainability_analyzer), unsafe_allow_html=True)
+    
     # Streamlined metrics in cards
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("""
         <div style="padding: 20px; border-radius: 8px; background-color: #EFF6FF; border-left: 5px solid #3B82F6;">
@@ -391,6 +410,13 @@ if not st.session_state.logged_in:
         <div style="padding: 20px; border-radius: 8px; background-color: #FEF3C7; border-left: 5px solid #F59E0B;">
             <p style="font-size: 16px; margin: 0; color: #92400E;">Risk Mitigation</p>
             <h2 style="font-size: 36px; margin: 10px 0; color: #92400E;">92%</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    with col4:
+        st.markdown(f"""
+        <div style="padding: 20px; border-radius: 8px; background-color: {sustainability_score['color']}; border-left: 5px solid {sustainability_score['color']};">
+            <p style="font-size: 16px; margin: 0; color: white;">Sustainability</p>
+            <h2 style="font-size: 36px; margin: 10px 0; color: white;">{sustainability_score['overall_score']}%</h2>
         </div>
         """, unsafe_allow_html=True)
     
