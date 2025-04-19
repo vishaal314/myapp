@@ -14,6 +14,7 @@ from services.code_scanner import CodeScanner
 from services.blob_scanner import BlobScanner
 from services.website_scanner import WebsiteScanner
 from services.results_aggregator import ResultsAggregator
+from services.repo_scanner import RepoScanner
 from services.report_generator import generate_report
 from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
 from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES
