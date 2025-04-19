@@ -19,7 +19,11 @@ from services.auth import authenticate, is_authenticated, logout, create_user, v
 from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES
 from utils.gdpr_rules import REGIONS, get_region_rules
 from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_finding, get_risk_color_gradient
-from utils.i18n import initialize, language_selector, get_text as _, set_language, LANGUAGES
+from utils.i18n import initialize, language_selector, get_text, set_language, LANGUAGES
+
+# Define translation function
+def _(key, default=None):
+    return get_text(key, default)
 from utils.compliance_score import calculate_compliance_score, display_compliance_score_card
 from utils.animated_language_switcher import animated_language_switcher, get_welcome_message_animation
 
