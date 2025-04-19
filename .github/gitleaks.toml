@@ -1,0 +1,125 @@
+# Custom Gitleaks configuration for DataGuardian Pro
+title = "DataGuardian Pro Gitleaks Configuration"
+
+# Global rules
+[allowlist]
+description = "Global Allowlist"
+paths = [
+    '''node_modules''',
+    '''vendor''',
+    '''\.venv''',
+    '''venv''',
+    '''__pycache__''',
+    '''\.git''',
+    '''\.github''',
+    '''\.pytest_cache''',
+    '''\.streamlit''',
+    '''examples/''',
+    '''test_samples/''',
+    '''\.DS_Store''',
+    '''.*lock''',
+]
+
+# Detects AWS keys
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key ID"
+regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+tags = ["AWS", "credentials"]
+severity = "HIGH"
+
+# Detects AWS secret keys
+[[rules]]
+id = "aws-secret-key"
+description = "AWS Secret Access Key"
+regex = '''(?i)aws(.{0,20})?(?-i)['\"][0-9a-zA-Z\/+]{40}['\"]'''
+tags = ["AWS", "credentials"]
+severity = "HIGH"
+
+# Detects AWS MWS keys
+[[rules]]
+id = "aws-mws-key"
+description = "AWS MWS Key"
+regex = '''amzn\.mws\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'''
+tags = ["AWS", "MWS", "credentials"]
+severity = "HIGH"
+
+# Detects Google API keys
+[[rules]]
+id = "google-api-key"
+description = "Google API Key"
+regex = '''AIza[0-9A-Za-z\-_]{35}'''
+tags = ["Google", "API", "credentials"]
+severity = "HIGH"
+
+# Detects Google OAuth access tokens
+[[rules]]
+id = "google-oauth-access-token"
+description = "Google OAuth Access Token"
+regex = '''ya29\.[0-9A-Za-z\-_]+'''
+tags = ["Google", "OAuth", "credentials"]
+severity = "HIGH"
+
+# Detects generic API keys
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api_key|apikey|api-key|secret|token|key)(.{0,20})?['\"][0-9a-zA-Z]{16,45}['\"]'''
+tags = ["API", "credentials"]
+severity = "MEDIUM"
+
+# Detects JSON Web Tokens (JWT)
+[[rules]]
+id = "jwt"
+description = "JSON Web Token"
+regex = '''eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*'''
+tags = ["JWT", "token"]
+severity = "MEDIUM"
+
+# Detects OpenAI API Key
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[A-Za-z0-9]{48}'''
+tags = ["OpenAI", "API", "credentials"]
+severity = "HIGH"
+
+# Detects Stripe API Key
+[[rules]]
+id = "stripe-api-key"
+description = "Stripe API Key"
+regex = '''(sk|pk)_(test|live)_[0-9a-zA-Z]{24}'''
+tags = ["Stripe", "API", "credentials"]
+severity = "HIGH"
+
+# Detects Mailchimp API Key
+[[rules]]
+id = "mailchimp-api-key"
+description = "Mailchimp API Key"
+regex = '''[0-9a-f]{32}-us[0-9]{1,2}'''
+tags = ["Mailchimp", "API", "credentials"]
+severity = "HIGH"
+
+# Detect email addresses
+[[rules]]
+id = "email"
+description = "Email address"
+regex = '''(?i)([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)'''
+tags = ["PII", "email"]
+severity = "MEDIUM"
+
+# Detect IP addresses
+[[rules]]
+id = "ipv4"
+description = "IPv4 address"
+regex = '''(?:\d{1,3}\.){3}\d{1,3}'''
+tags = ["PII", "IP"]
+severity = "MEDIUM"
+
+# Special rules for DataGuardian Pro
+[[rules]]
+id = "dataguardian-custom-token"
+description = "DataGuardian Pro Custom Token Format"
+regex = '''dgp_[a-zA-Z0-9]{20,30}'''
+tags = ["DataGuardian", "credentials"]
+severity = "HIGH"
