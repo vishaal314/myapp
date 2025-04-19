@@ -29,6 +29,9 @@ def load_translations(lang_code: str) -> Dict[str, Any]:
     """
     global _translations, _current_language
     
+    # Ensure lang_code is a string
+    lang_code = str(lang_code) if lang_code is not None else 'en'
+    
     # Default to English if the language is not supported
     if lang_code not in LANGUAGES:
         lang_code = 'en'
@@ -93,11 +96,14 @@ def set_language(lang_code: Optional[str] = None) -> None:
         # Get language from session state if available
         lang_code = st.session_state.get('language', 'en')
     
+    # Ensure lang_code is a string
+    lang_code_str = str(lang_code)
+    
     # Load translations for the language
-    load_translations(lang_code)
+    load_translations(lang_code_str)
     
     # Update session state
-    st.session_state.language = lang_code
+    st.session_state.language = lang_code_str
 
 def get_text(key: str, default: Optional[str] = None) -> str:
     """
