@@ -822,11 +822,11 @@ else:
                 
                 # Use session state to remember the selection
                 if 'repo_source' not in st.session_state:
-                    st.session_state.repo_source = "Upload Files"
+                    st.session_state.repo_source = _("scan.upload_files")
                 
                 # Create the radio button and update session state
-                repo_source = st.radio("Repository Source", ["Upload Files", "Repository URL"], 
-                                      index=0 if st.session_state.repo_source == "Upload Files" else 1,
+                repo_source = st.radio("Repository Source", [_("scan.upload_files"), _("scan.repository_url")], 
+                                      index=0 if st.session_state.repo_source == _("scan.upload_files") else 1,
                                       key="repo_source_radio")
                 
                 # Update the session state
