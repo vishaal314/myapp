@@ -114,6 +114,7 @@
   "scan.sustainability": "Duurzaamheid Scan",
   "scan.soc2": "SOC2 Scan",
   "scan.repository_url": "Repository URL",
+  "scan.repository_details": "Repository Details",
   "scan.new_scan_title": "Start een Nieuwe DataGuardian Pro Scan",
   
   "scan.select_region": "Selecteer Regio voor AVG-regels",

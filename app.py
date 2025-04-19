@@ -1423,7 +1423,7 @@ else:
                 uploaded_files = []
                 
         elif scan_type == _("scan.soc2"):
-            if log_source == "Upload Log Files":
+            if log_source == _("scan.upload_files"):
                 upload_help = "Upload log files and access control configurations"
                 uploaded_files = st.file_uploader(
                     "Upload Log Files", 
