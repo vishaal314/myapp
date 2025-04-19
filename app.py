@@ -811,7 +811,8 @@ else:
             "Blob Scan", 
             "Image Scan", 
             "Database Scan",
-            "API Scan", 
+            "API Scan",
+            "Website Scan",
             "Manual Upload",
             "Sustainability Scan",
             "AI Model Scan",
@@ -1151,6 +1152,85 @@ else:
                 st.subheader("Custom PII Patterns")
                 st.text_area("Custom PII terms or patterns (one per line)", 
                            placeholder="ssn: \\d{3}-\\d{2}-\\d{4}\ncredit_card: (?:\\d{4}[- ]?){4}")
+                           
+            elif scan_type == "Website Scan":
+                # Website Scanner
+                st.subheader("Website Scanner Configuration")
+                
+                # Website URL input
+                website_url = st.text_input("Website URL", placeholder="https://example.com")
+                
+                # Scan depth
+                scan_depth = st.slider("Crawl Depth", min_value=1, max_value=5, value=2, 
+                                     help="How many levels of links to follow from the starting URL")
+                
+                # Language support
+                language_options = ["Dutch", "English", "French", "German", "Italian", "Spanish", 
+                                  "Portuguese", "Russian", "Chinese", "Japanese", "Korean"]
+                
+                website_languages = st.multiselect("Website Languages", 
+                                              language_options, 
+                                              default=["English", "Dutch"],
+                                              help="Select the languages used on the website for better extraction")
+                
+                # Scan options
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.subheader("Content Extraction")
+                    include_text = st.checkbox("Extract text content", value=True)
+                    include_images = st.checkbox("Analyze images", value=True)
+                    include_forms = st.checkbox("Scan form fields", value=True)
+                    include_metadata = st.checkbox("Extract metadata", value=True)
+                
+                with col2:
+                    st.subheader("Detection Options")
+                    detect_pii = st.checkbox("Detect PII in content", value=True)
+                    detect_cookies = st.checkbox("Analyze cookies", value=True)
+                    detect_trackers = st.checkbox("Detect trackers", value=True)
+                    analyze_privacy_policy = st.checkbox("Analyze privacy policy", value=True)
+                
+                # Advanced options
+                st.subheader("Advanced Options")
+                
+                # Rate limiting to avoid overloading the target website
+                requests_per_minute = st.slider("Requests per minute", 
+                                             min_value=10, max_value=120, value=30,
+                                             help="Limit request rate to avoid overloading the target website")
+                
+                # Authentication options if the website requires login
+                need_auth = st.checkbox("Website requires authentication", value=False)
+                
+                if need_auth:
+                    auth_method = st.radio("Authentication Method", 
+                                        ["Form Login", "Basic Auth", "OAuth", "API Key"])
+                    
+                    if auth_method == "Form Login":
+                        login_url = st.text_input("Login URL", placeholder="https://example.com/login")
+                        username_field = st.text_input("Username Field", value="username")
+                        password_field = st.text_input("Password Field", value="password")
+                        username = st.text_input("Username")
+                        password = st.text_input("Password", type="password")
+                    elif auth_method == "Basic Auth":
+                        username = st.text_input("Username")
+                        password = st.text_input("Password", type="password")
+                    elif auth_method == "API Key":
+                        api_key = st.text_input("API Key", type="password")
+                        api_key_name = st.text_input("API Key Parameter Name", value="api_key")
+                        api_key_location = st.radio("API Key Location", ["Query Parameter", "Header", "Cookie"])
+                
+                # GDPR/Privacy specific options
+                st.subheader("GDPR Compliance Checks")
+                
+                compliance_checks = st.multiselect("Compliance Checks",
+                                               ["Cookie Consent", "Privacy Policy", "Data Collection Disclosure",
+                                                "Third-party Data Sharing", "Right to be Forgotten",
+                                                "Data Export Functionality", "All"],
+                                               default=["All"])
+                
+                # Custom patterns for website scanning
+                st.text_area("Custom PII patterns to detect", 
+                           placeholder="email: [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\nphone_nl: (\\+31|0)\\s?[1-9][0-9]{8}")
                 
             elif scan_type == "Manual Upload":
                 # 6. Manual Upload Tool
