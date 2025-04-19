@@ -18,7 +18,7 @@ from services.auth import authenticate, is_authenticated, logout, create_user, v
 from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES
 from utils.gdpr_rules import REGIONS, get_region_rules
 from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_finding, get_risk_color_gradient
-from utils.i18n import load_translations, get_text, set_language, LANGUAGES, _
+from utils.i18n import initialize, language_selector, get_text as _, set_language, LANGUAGES
 
 # Initialize session state variables
 if 'logged_in' not in st.session_state:
@@ -53,7 +53,6 @@ st.set_page_config(
 # Authentication sidebar with professional colorful design
 with st.sidebar:
     # Initialize translations
-    from utils.i18n import initialize, language_selector
     initialize()
     
     # Header with gradient background and professional name
