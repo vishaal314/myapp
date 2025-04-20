@@ -355,6 +355,47 @@ class ResultsAggregator:
             print(f"Error deleting scan result: {str(e)}")
             return False
     
+    def get_recent_scans(self, days: int = 30, limit: int = 100, username: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get recent scan results within a specified time period.
+        
+        Args:
+            days: Number of days to look back
+            limit: Maximum number of scans to return
+            username: Optional username to filter results
+            
+        Returns:
+            List of recent scan result dictionaries
+        """
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            
+            # Calculate cutoff date
+            cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
+            
+            if username:
+                cursor.execute('''
+                SELECT result_json FROM scans 
+                WHERE username = %s AND timestamp > %s
+                ORDER BY timestamp DESC LIMIT %s
+                ''', (username, cutoff_date, limit))
+            else:
+                cursor.execute('''
+                SELECT result_json FROM scans 
+                WHERE timestamp > %s
+                ORDER BY timestamp DESC LIMIT %s
+                ''', (cutoff_date, limit))
+            
+            rows = cursor.fetchall()
+            conn.close()
+            
+            return [row[0] for row in rows]
+            
+        except Exception as e:
+            print(f"Error retrieving recent scan results: {str(e)}")
+            return []
+    
     def get_statistics(self, username: Optional[str] = None) -> Dict[str, Any]:
         """
         Get statistics about scan results.
