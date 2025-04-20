@@ -2501,14 +2501,18 @@ else:
                                         # Create a unique key for this radio button
                                         radio_key = f"dpia_{category}_{i}"
                                         
-                                        # Function to update session state when radio button changes
-                                        def on_change():
-                                            # This is automatically called when a radio button value changes
-                                            answer_text = st.session_state[radio_key]
-                                            answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer_text]
-                                            st.session_state.dpia_answers[category][i] = answer_value
+                                        # We need to create a separate callback function for each radio button
+                                        # to avoid variable scoping issues in closures
+                                        callback_key = f"on_change_{category}_{i}"
                                         
-                                        # Set default value with index
+                                        # Store the current category and index in a persistent way
+                                        if callback_key not in st.session_state:
+                                            st.session_state[callback_key] = {
+                                                "category": category,
+                                                "index": i
+                                            }
+                                        
+                                        # Set default value with index (safely)
                                         selected_idx = st.session_state.dpia_answers[category][i]
                                         
                                         # Display the question in a card-like container
@@ -2519,6 +2523,21 @@ else:
                                         </div>
                                         """, unsafe_allow_html=True)
                                         
+                                        # Define a global callback function that will run when this radio button changes
+                                        def update_answer():
+                                            if radio_key in st.session_state:
+                                                # Get the callback metadata
+                                                callback_data = st.session_state[callback_key]
+                                                cat = callback_data["category"]
+                                                idx = callback_data["index"]
+                                                
+                                                # Get the answer text and convert to value
+                                                answer_text = st.session_state[radio_key]
+                                                answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer_text]
+                                                
+                                                # Update the answer in the session state
+                                                st.session_state.dpia_answers[cat][idx] = answer_value
+                                                
                                         # Display the radio button with the current value
                                         # Use the on_change parameter to save answers automatically
                                         answer = st.radio(
@@ -2526,7 +2545,7 @@ else:
                                             ["No", "Partially", "Yes"],
                                             index=selected_idx,
                                             key=radio_key,
-                                            on_change=on_change,
+                                            on_change=update_answer,
                                             horizontal=True # Horizontal layout for better UI
                                         )
                                         
