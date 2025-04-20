@@ -4,7 +4,95 @@
     "subtitle": "Enterprise Privacy Compliance Platform",
     "tagline": "Detect, Manage, and Report Privacy Compliance with AI-powered Precision"
   },
+  "sidebar": {
+    "navigation": "Navigation",
+    "sign_in": "Sign In",
+    "create_account": "Create Account",
+    "welcome": "Welcome",
+    "quick_access": "Quick Access",
+    "dashboard": "Dashboard",
+    "dashboard_help": "View your dashboard",
+    "reports": "Reports",
+    "reports_help": "Generate reports",
+    "profile_permissions": "Profile & Permissions",
+    "current_role": "Current Role",
+    "your_permissions": "Your Permissions",
+    "no_description": "No description available",
+    "other": "Other",
+    "membership_options": "Membership Options",
+    "membership_benefits": "Membership Benefits",
+    "benefit_unlimited_scans": "Unlimited scans",
+    "benefit_priority_support": "Priority support",
+    "benefit_advanced_reporting": "Advanced reporting",
+    "benefit_api_access": "API access",
+    "benefit_team_collaboration": "Team collaboration features",
+    "premium_member": "Premium Member",
+    "free_trial": "Free Trial",
+    "unlimited": "Unlimited",
+    "days_left": "days left",
+    "status": "Status",
+    "active": "Active",
+    "expired": "Expired",
+    "expires": "Expires",
+    "scans_used": "Scans used",
+    "select_plan": "Select Plan",
+    "plan_monthly": "Monthly (€29.99/month)",
+    "plan_quarterly": "Quarterly (€79.99/3 months)",
+    "plan_annual": "Annual (€299.99/year)",
+    "upgrade_button": "Upgrade to Premium",
+    "complete_purchase": "Complete Purchase",
+    "enter_payment_details": "Enter your payment details",
+    "card_number": "Card Number",
+    "card_number_placeholder": "1234 5678 9012 3456",
+    "expiry": "Expiry Date",
+    "expiry_placeholder": "MM/YY",
+    "cvc": "CVC",
+    "cvc_placeholder": "123",
+    "name_on_card": "Name on Card",
+    "name_on_card_placeholder": "J. Smith",
+    "complete_purchase_button": "Complete Purchase",
+    "error": {
+      "card_number": "Enter a valid card number",
+      "expiry": "Enter a valid expiry date (MM/YY)",
+      "cvc": "Enter a valid CVC code",
+      "name_on_card": "Enter the name on the card"
+    },
+    "basic_user": "Basic User"
+  },
+  "login": {
+    "email_username": "Email or Username",
+    "password": "Password",
+    "remember_me": "Remember me",
+    "forgot_password": "Forgot password?",
+    "button": "Login",
+    "success": "Successfully logged in!",
+    "error": {
+      "missing_fields": "Please fill in all required fields",
+      "invalid_credentials": "Invalid credentials"
+    }
+  },
+  "register": {
+    "username": "Username",
+    "email": "Email",
+    "email_placeholder": "your@email.com",
+    "password": "Password",
+    "password_help": "Minimum 8 characters including a number and special character",
+    "confirm_password": "Confirm Password",
+    "role": "Role",
+    "terms": "I agree to the Terms and Conditions",
+    "button": "Register",
+    "error": {
+      "missing_fields": "Please fill in all required fields",
+      "passwords_mismatch": "Passwords do not match",
+      "terms_required": "You must agree to the terms",
+      "email_invalid": "Invalid email address",
+      "username_taken": "Username is already taken",
+      "email_taken": "Email is already in use"
+    }
+  },
   "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Your Privacy Compliance Dashboard",
     "generate_certificate": "Generate Compliance Certificate",
     "generate_certificate_help": "Generate a PDF compliance certificate for this scan",
     "premium_certificate": "Premium: Compliance Certificate",
@@ -14,6 +102,59 @@
     "cannot_generate_certificate_help": "Scan contains compliance issues. Fix all issues to generate a certificate.",
     "generating_certificate": "Generating compliance certificate...",
     "certificate_success": "Compliance certificate generated successfully!",
-    "certificate_error": "Failed to generate compliance certificate. Please contact support."
+    "certificate_error": "Failed to generate compliance certificate. Please contact support.",
+    "welcome": "Welcome Dashboard",
+    "metric": {
+      "total_scans": "Total Scans",
+      "total_pii": "Total PII Found",
+      "high_risk": "High Risk Items"
+    },
+    "analytics_title": "Privacy & Compliance Analytics",
+    "cost_efficiency": "Cost Efficiency",
+    "potential_savings": "Potential Savings in GDPR Fines",
+    "sustainability_score": "Sustainability Score",
+    "scan_activity_over_time": "Scan Activity Over Time"
+  },
+  "scan": {
+    "title": "Scan",
+    "new_scan_title": "New Scan",
+    "select_type": "Select Scan Type",
+    "code": "Code",
+    "blob": "Document",
+    "image": "Image",
+    "website": "Website",
+    "database": "Database",
+    "api": "API",
+    "cloud": "Cloud",
+    "ai_model": "AI Model",
+    "log": "Logs",
+    "select_region": "Select Region",
+    "advanced_configuration": "Advanced Configuration",
+    "upload_files": "Upload Files",
+    "drag_files": "Drag files here or click to browse",
+    "start_scan": "Start Scan",
+    "scanning": "Scanning...",
+    "running_scan": "Running scan",
+    "scan_complete": "Scan complete!",
+    "scan_failed": "Scan failed",
+    "premium_details_title": "Premium Details",
+    "pii_found": "PII found",
+    "high_risk_count": "High risk items",
+    "medium_risk_count": "Medium risk items",
+    "low_risk_count": "Low risk items",
+    "view_details": "View details",
+    "export_results": "Export results"
+  },
+  "history": {
+    "title": "History"
+  },
+  "results": {
+    "title": "Results"
+  },
+  "report": {
+    "generate": "Generate Report"
+  },
+  "admin": {
+    "title": "Admin"
   }
 }

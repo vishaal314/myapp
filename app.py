@@ -241,13 +241,23 @@ with st.sidebar:
                         st.session_state['language'] = current_language  # Ensure it's set in multiple ways
                         
                         # Reinitialize translations - this is important to ensure they're active
-                        from utils.i18n import initialize
-                        initialize()  # Force reinitialization
+                        from utils.i18n import initialize, load_translations
+                        
+                        # Force complete reinitialization of translations
+                        if current_language in _translations:
+                            del _translations[current_language]  # Clear any cached translations
+                            
+                        _current_language = current_language
+                        load_translations(current_language)  # Reload from file
+                        initialize()  # Force full reinitialization
                         set_language(current_language)  # Set language again
                         
                         st.success(_("login.success"))
                         # Flag to ensure translations are reapplied after navigation
                         st.session_state['reload_translations'] = True
+                        
+                        # Force rerun to apply all changes immediately
+                        st.rerun()
                         st.rerun()
                     else:
                         st.error(_("login.error.invalid_credentials"))

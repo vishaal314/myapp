@@ -118,7 +118,32 @@
   "scan": {
     "title": "Scan",
     "new_scan_title": "Nieuwe Scan",
-    "premium_details_title": "Premium Details"
+    "select_type": "Selecteer Scantype",
+    "code": "Code",
+    "blob": "Document",
+    "image": "Afbeelding",
+    "website": "Website",
+    "database": "Database",
+    "api": "API",
+    "cloud": "Cloud",
+    "ai_model": "AI Model",
+    "log": "Logs",
+    "select_region": "Selecteer Regio",
+    "advanced_configuration": "Geavanceerde Configuratie",
+    "upload_files": "Bestanden Uploaden",
+    "drag_files": "Sleep bestanden hierheen of klik om te bladeren",
+    "start_scan": "Scan Starten",
+    "scanning": "Bezig met scannen...",
+    "running_scan": "Scan uitvoeren",
+    "scan_complete": "Scan voltooid!",
+    "scan_failed": "Scan mislukt",
+    "premium_details_title": "Premium Details",
+    "pii_found": "PII gevonden",
+    "high_risk_count": "Hoog risico items",
+    "medium_risk_count": "Gemiddeld risico items",
+    "low_risk_count": "Laag risico items",
+    "view_details": "Details bekijken",
+    "export_results": "Resultaten exporteren"
   },
   "history": {
     "title": "Geschiedenis"
