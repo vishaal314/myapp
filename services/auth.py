@@ -751,3 +751,125 @@ def get_user_role_details(username: str) -> Optional[Dict[str, Any]]:
         "missing_permissions": missing_permissions,
         "total_permissions": len(user_permissions)
     }
+
+def create_custom_role(role_name: str, description: str, permissions: List[str]) -> Tuple[bool, str]:
+    """
+    Create a new custom role with specified permissions.
+    
+    Args:
+        role_name: Name for the new role (must be unique)
+        description: Description of the role
+        permissions: List of permission strings to assign to this role
+        
+    Returns:
+        Tuple of (success, message) where success is True if role was created, 
+        False otherwise, and message provides details
+    """
+    global ROLE_PERMISSIONS
+    
+    # Validate inputs
+    if not role_name or not role_name.strip():
+        return False, "Role name cannot be empty"
+    
+    # Clean role name (alphanumeric + underscores only)
+    role_name = role_name.strip().lower().replace(' ', '_')
+    
+    # Check if role already exists
+    if role_name in ROLE_PERMISSIONS:
+        return False, f"Role '{role_name}' already exists"
+    
+    # Validate permissions
+    valid_permissions = []
+    for perm in permissions:
+        if perm in PERMISSIONS:
+            valid_permissions.append(perm)
+    
+    # Create the new role
+    ROLE_PERMISSIONS[role_name] = {
+        "description": description,
+        "permissions": valid_permissions,
+        "custom": True  # Flag to identify custom roles
+    }
+    
+    # Return success
+    return True, f"Role '{role_name}' created successfully with {len(valid_permissions)} permissions"
+
+def update_role(role_name: str, updates: Dict[str, Any]) -> Tuple[bool, str]:
+    """
+    Update an existing role.
+    
+    Args:
+        role_name: The name of the role to update
+        updates: Dictionary of fields to update (description, permissions)
+        
+    Returns:
+        Tuple of (success, message) where success is True if role was updated, 
+        False otherwise, and message provides details
+    """
+    global ROLE_PERMISSIONS
+    
+    # Check if role exists
+    if role_name not in ROLE_PERMISSIONS:
+        return False, f"Role '{role_name}' does not exist"
+    
+    # Check if it's a system role (only custom roles can be updated)
+    if not ROLE_PERMISSIONS[role_name].get('custom', False):
+        return False, f"Cannot update system role '{role_name}'"
+    
+    # Update description if provided
+    if 'description' in updates:
+        ROLE_PERMISSIONS[role_name]['description'] = updates['description']
+    
+    # Update permissions if provided
+    if 'permissions' in updates:
+        valid_permissions = []
+        for perm in updates['permissions']:
+            if perm in PERMISSIONS:
+                valid_permissions.append(perm)
+        
+        ROLE_PERMISSIONS[role_name]['permissions'] = valid_permissions
+    
+    # Update other fields
+    for key, value in updates.items():
+        if key not in ['description', 'permissions', 'custom']:
+            ROLE_PERMISSIONS[role_name][key] = value
+    
+    # Return success
+    return True, f"Role '{role_name}' updated successfully"
+
+def delete_role(role_name: str) -> Tuple[bool, str]:
+    """
+    Delete a custom role.
+    
+    Args:
+        role_name: The name of the role to delete
+        
+    Returns:
+        Tuple of (success, message) where success is True if role was deleted, 
+        False otherwise, and message provides details
+    """
+    global ROLE_PERMISSIONS
+    
+    # Check if role exists
+    if role_name not in ROLE_PERMISSIONS:
+        return False, f"Role '{role_name}' does not exist"
+    
+    # Check if it's a system role (only custom roles can be deleted)
+    if not ROLE_PERMISSIONS[role_name].get('custom', False):
+        return False, f"Cannot delete system role '{role_name}'"
+    
+    # Check if any users have this role (optional - requires loading all users)
+    try:
+        users = _load_users()
+        role_users = [username for username, data in users.items() if data.get('role') == role_name]
+        if role_users:
+            return False, f"Cannot delete role '{role_name}' because it is assigned to {len(role_users)} users"
+    except:
+        # If we can't load users, continue with deletion
+        pass
+    
+    # Delete the role
+    del ROLE_PERMISSIONS[role_name]
+    
+    # Return success
+    return True, f"Role '{role_name}' deleted successfully"

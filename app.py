@@ -3163,33 +3163,282 @@ else:
                 st.dataframe(roles_df, use_container_width=True)
                 
                 # Role details
-                st.subheader("Role Details")
+                # Create tabs for different role management actions
+                role_mgmt_tabs = st.tabs(["Role Details", "Create Custom Role", "Edit Role", "Delete Role"])
                 
-                selected_role = st.selectbox("Select Role", list(all_roles.keys()))
+                # Tab 1: Role Details
+                with role_mgmt_tabs[0]:
+                    st.subheader("Role Details")
+                    
+                    selected_role = st.selectbox("Select Role", list(all_roles.keys()), key="view_role_details")
+                    
+                    if selected_role:
+                        role_data = all_roles.get(selected_role, {})
+                        is_custom = role_data.get('custom', False)
+                        role_type = "Custom" if is_custom else "System"
+                        
+                        # Show role metadata
+                        st.markdown(f"**Type:** {role_type}")
+                        st.markdown(f"**Description:** {role_data.get('description', 'No description')}")
+                        
+                        # Add visual indicator for custom roles
+                        if is_custom:
+                            st.markdown("""
+                            <div style="background-color: #e6f3ff; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                                <p style="margin: 0;"><strong>⚠️ Custom Role:</strong> This role was created by an administrator and can be modified.</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.markdown("""
+                            <div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                                <p style="margin: 0;"><strong>🔒 System Role:</strong> This is a system-defined role that cannot be modified.</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        
+                        # Show permissions
+                        st.markdown(f"**Permissions ({len(role_data.get('permissions', []))}):**")
+                        
+                        # Group permissions by category
+                        permissions_by_category = {}
+                        for perm in role_data.get('permissions', []):
+                            category = perm.split(':')[0] if ':' in perm else 'Other'
+                            if category not in permissions_by_category:
+                                permissions_by_category[category] = []
+                            permissions_by_category[category].append(perm)
+                        
+                        # Display permissions by category with better visual organization
+                        for category, perms in permissions_by_category.items():
+                            with st.expander(f"{category.title()} Permissions ({len(perms)})"):
+                                for perm in perms:
+                                    desc = all_permissions.get(perm, "No description available")
+                                    st.markdown(f"- **{perm}**: {desc}")
                 
-                if selected_role:
-                    role_data = all_roles.get(selected_role, {})
-                    st.markdown(f"**Description:** {role_data.get('description', 'No description')}")
+                # Tab 2: Create Custom Role
+                with role_mgmt_tabs[1]:
+                    st.subheader("Create New Custom Role")
                     
-                    # Show permissions
-                    st.markdown(f"**Permissions ({len(role_data.get('permissions', []))}):**")
+                    # Add description about custom roles
+                    st.markdown("""
+                    <div style="background-color: #e6f7ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                        <h4 style="margin-top: 0;">About Custom Roles</h4>
+                        <p>Custom roles allow you to create specialized permission sets for different members of your organization. 
+                        Once created, custom roles can be assigned to users just like system roles.</p>
+                        <p><strong>Note:</strong> Custom roles can be modified or deleted later, but system roles cannot.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
                     
-                    # Group permissions by category
-                    permissions_by_category = {}
-                    for perm in role_data.get('permissions', []):
-                        category = perm.split(':')[0] if ':' in perm else 'Other'
-                        if category not in permissions_by_category:
-                            permissions_by_category[category] = []
-                        permissions_by_category[category].append(perm)
-                    
-                    # Display permissions by category without nested expanders
-                    for category, perms in permissions_by_category.items():
-                        st.markdown(f"**{category.title()} ({len(perms)})**")
-                        for perm in perms:
-                            desc = all_permissions.get(perm, "No description available")
-                            st.markdown(f"- **{perm}**: {desc}")
+                    # Form for creating a new role
+                    with st.form("create_role_form"):
+                        new_role_name = st.text_input("Role Name", placeholder="Enter a name for the new role (e.g., compliance_officer)")
+                        new_role_description = st.text_area("Role Description", placeholder="Enter a description for the new role")
+                        
+                        # Create permission selector
+                        st.markdown("### Select Permissions")
+                        
+                        # Group permissions by category for easier selection
+                        permissions_by_category = {}
+                        for perm, desc in all_permissions.items():
+                            category = perm.split(':')[0] if ':' in perm else 'Other'
+                            if category not in permissions_by_category:
+                                permissions_by_category[category] = []
+                            permissions_by_category[category].append((perm, desc))
+                        
+                        # Store selected permissions
+                        selected_permissions = []
+                        
+                        # Display permissions by category with checkboxes
+                        for category, perms in permissions_by_category.items():
+                            with st.expander(f"{category.title()} Permissions ({len(perms)})"):
+                                # Option to select all in category
+                                if st.checkbox(f"Select all {category} permissions", key=f"select_all_{category}"):
+                                    selected_permissions.extend([p[0] for p in perms])
+                                
+                                # Individual permission checkboxes
+                                for perm, desc in perms:
+                                    if st.checkbox(f"{perm}: {desc}", key=f"perm_{perm}"):
+                                        selected_permissions.append(perm)
+                        
+                        # Submit button
+                        submit_button = st.form_submit_button("Create Role")
+                        
+                        if submit_button:
+                            from services.auth import create_custom_role
+                            
+                            if not new_role_name:
+                                st.error("Role name is required")
+                            elif not new_role_description:
+                                st.error("Role description is required")
+                            elif not selected_permissions:
+                                st.error("At least one permission must be selected")
+                            else:
+                                # Create the new role
+                                success, message = create_custom_role(
+                                    new_role_name, 
+                                    new_role_description, 
+                                    selected_permissions
+                                )
+                                
+                                if success:
+                                    st.success(message)
+                                    # Log the action
+                                    try:
+                                        results_aggregator.log_audit_event(
+                                            username=st.session_state.username,
+                                            action="ROLE_CREATED",
+                                            details={
+                                                "role_name": new_role_name,
+                                                "permission_count": len(selected_permissions),
+                                                "timestamp": datetime.now().isoformat()
+                                            }
+                                        )
+                                    except Exception as e:
+                                        st.warning(f"Could not log audit event: {str(e)}")
+                                else:
+                                    st.error(message)
                 
-                # User Role Management
+                # Tab 3: Edit Role
+                with role_mgmt_tabs[2]:
+                    st.subheader("Edit Custom Role")
+                    
+                    # Filter to only show custom roles
+                    custom_roles = {k: v for k, v in all_roles.items() if v.get('custom', False)}
+                    
+                    if not custom_roles:
+                        st.info("No custom roles found. Create a custom role first.")
+                    else:
+                        edit_role_name = st.selectbox("Select Custom Role to Edit", list(custom_roles.keys()), key="edit_role_select")
+                        
+                        if edit_role_name:
+                            role_data = custom_roles.get(edit_role_name, {})
+                            
+                            with st.form("edit_role_form"):
+                                # Edit form fields
+                                edit_role_description = st.text_area(
+                                    "Role Description", 
+                                    value=role_data.get('description', ''),
+                                    key="edit_role_description"
+                                )
+                                
+                                # Existing permissions
+                                current_role_permissions = role_data.get('permissions', [])
+                                
+                                # Group permissions by category for easier selection
+                                st.markdown("### Update Permissions")
+                                
+                                permissions_by_category = {}
+                                for perm, desc in all_permissions.items():
+                                    category = perm.split(':')[0] if ':' in perm else 'Other'
+                                    if category not in permissions_by_category:
+                                        permissions_by_category[category] = []
+                                    permissions_by_category[category].append((perm, desc))
+                                
+                                # Store updated permissions
+                                updated_permissions = []
+                                
+                                # Display permissions by category with checkboxes
+                                for category, perms in permissions_by_category.items():
+                                    with st.expander(f"{category.title()} Permissions ({len(perms)})"):
+                                        # Option to select all in category
+                                        all_selected = all(p[0] in current_role_permissions for p in perms)
+                                        if st.checkbox(f"Select all {category} permissions", 
+                                                    value=all_selected,
+                                                    key=f"edit_select_all_{category}"):
+                                            updated_permissions.extend([p[0] for p in perms])
+                                        else:
+                                            # Individual permission checkboxes
+                                            for perm, desc in perms:
+                                                if st.checkbox(f"{perm}: {desc}", 
+                                                            value=perm in current_role_permissions,
+                                                            key=f"edit_perm_{perm}"):
+                                                    updated_permissions.append(perm)
+                                
+                                # Submit button
+                                edit_submit_button = st.form_submit_button("Update Role")
+                                
+                                if edit_submit_button:
+                                    from services.auth import update_role
+                                    
+                                    if not edit_role_description:
+                                        st.error("Role description is required")
+                                    elif not updated_permissions:
+                                        st.error("At least one permission must be selected")
+                                    else:
+                                        # Update the role
+                                        success, message = update_role(
+                                            edit_role_name, 
+                                            {
+                                                'description': edit_role_description,
+                                                'permissions': updated_permissions
+                                            }
+                                        )
+                                        
+                                        if success:
+                                            st.success(message)
+                                            # Log the action
+                                            try:
+                                                results_aggregator.log_audit_event(
+                                                    username=st.session_state.username,
+                                                    action="ROLE_UPDATED",
+                                                    details={
+                                                        "role_name": edit_role_name,
+                                                        "permission_count": len(updated_permissions),
+                                                        "timestamp": datetime.now().isoformat()
+                                                    }
+                                                )
+                                            except Exception as e:
+                                                st.warning(f"Could not log audit event: {str(e)}")
+                                        else:
+                                            st.error(message)
+                
+                # Tab 4: Delete Role
+                with role_mgmt_tabs[3]:
+                    st.subheader("Delete Custom Role")
+                    
+                    # Filter to only show custom roles
+                    custom_roles = {k: v for k, v in all_roles.items() if v.get('custom', False)}
+                    
+                    if not custom_roles:
+                        st.info("No custom roles found. Create a custom role first.")
+                    else:
+                        delete_role_name = st.selectbox("Select Custom Role to Delete", list(custom_roles.keys()), key="delete_role_select")
+                        
+                        if delete_role_name:
+                            st.warning(f"Warning: Deleting a role is permanent and cannot be undone. Users with this role will need to be reassigned.")
+                            
+                            # Confirm deletion with a form for extra safety
+                            with st.form("delete_role_form"):
+                                confirm_delete = st.checkbox(f"I confirm that I want to delete the role '{delete_role_name}'")
+                                
+                                delete_button = st.form_submit_button("Delete Role", type="primary")
+                                
+                                if delete_button:
+                                    if not confirm_delete:
+                                        st.error("Please confirm the deletion by checking the confirmation box")
+                                    else:
+                                        from services.auth import delete_role
+                                        
+                                        # Delete the role
+                                        success, message = delete_role(delete_role_name)
+                                        
+                                        if success:
+                                            st.success(message)
+                                            # Log the action
+                                            try:
+                                                results_aggregator.log_audit_event(
+                                                    username=st.session_state.username,
+                                                    action="ROLE_DELETED",
+                                                    details={
+                                                        "role_name": delete_role_name,
+                                                        "timestamp": datetime.now().isoformat()
+                                                    }
+                                                )
+                                            except Exception as e:
+                                                st.warning(f"Could not log audit event: {str(e)}")
+                                        else:
+                                            st.error(message)
+                
+                # User role assignment section
+                st.markdown("---")
                 st.subheader("User Role & Permission Management")
                 
                 # Get all users
