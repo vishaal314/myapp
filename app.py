@@ -2385,8 +2385,30 @@ else:
                                 st.session_state.scan_results = scan_results
                                 st.session_state.current_scan_id = assessment_results['scan_id']
                                 
+                                # Generate PDF report automatically
+                                with st.spinner("Generating PDF report..."):
+                                    import base64
+                                    pdf_bytes = generate_pdf_report(
+                                        assessment_results,
+                                        include_details=True,
+                                        include_charts=True,
+                                        include_metadata=True,
+                                        include_recommendations=True
+                                    )
+                                    
+                                    # Store the PDF in session state for later access
+                                    st.session_state.pdf_bytes = pdf_bytes
+                                    
+                                    # Create download link
+                                    b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                    scan_id_short = assessment_results['scan_id'][:6]
+                                    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="DPIA_Assessment_Report_{scan_id_short}.pdf" style="display: inline-block; padding: 0.5em 1em; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin-top: 10px;">Download DPIA Report PDF</a>'
+                                    
                                 # Show success message
                                 st.success("DPIA assessment complete!")
+                                
+                                # Show download link
+                                st.markdown(href, unsafe_allow_html=True)
                                 
                                 # Skip the default scanner logic by returning early
                                 st.session_state.current_scan_id = assessment_results['scan_id']
