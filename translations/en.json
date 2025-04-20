@@ -125,6 +125,7 @@
     "select_type": "Select Scan Type",
     "code": "Code",
     "blob": "Document",
+    "dpia": "Data Protection Impact Assessment",
     "image": "Image",
     "website": "Website",
     "database": "Database",

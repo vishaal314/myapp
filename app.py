@@ -15,9 +15,10 @@ from services.blob_scanner import BlobScanner
 from services.website_scanner import WebsiteScanner
 from services.results_aggregator import ResultsAggregator
 from services.repo_scanner import RepoScanner
-from services.report_generator import generate_report
+from services.report_generator import generate_pdf_report, generate_report
 from services.certificate_generator import CertificateGenerator
 from services.optimized_scanner import OptimizedScanner
+from services.dpia_scanner import DPIAScanner, generate_dpia_report
 from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
 from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES
 from utils.gdpr_rules import REGIONS, get_region_rules
@@ -166,12 +167,34 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Create top-right language switcher in a container with minimal style
+lang_col1, lang_col2, lang_col3 = st.columns([6, 3, 1])
+with lang_col3:
+    # Create a clean language selector in the top-right
+    st.markdown("""
+    <div style="float: right; margin-right: 10px; margin-top: 5px;">
+        <span style="font-size: 1em; margin-right: 5px;">🌐</span>
+    </div>
+    """, unsafe_allow_html=True)
+    # Add a simple language dropdown
+    current_language = st.session_state.get('language', 'en')
+    language_options = {"en": "🇬🇧 English", "nl": "🇳🇱 Nederlands"}
+    selected_language = st.selectbox(
+        "",
+        options=list(language_options.keys()),
+        format_func=lambda x: language_options[x],
+        index=0 if current_language == "en" else 1,
+        key="lang_selector_top",
+        label_visibility="collapsed"
+    )
+    if selected_language != current_language:
+        st.session_state['language'] = selected_language
+        st.session_state['_persistent_language'] = selected_language
+        set_language(selected_language)
+        st.rerun()
+
 # Authentication sidebar with professional colorful design
 with st.sidebar:
-    # Add sidebar language switcher at the top with animated flags
-    st.markdown("### 🌐 Interactive Language")
-    # Use the animated language switcher with flags
-    animated_language_switcher(key_suffix="sidebar", show_title=True, use_buttons=True)
     # Ensure translations are initialized with the current language
     current_language = st.session_state.get('language', 'en')
     set_language(current_language)
@@ -1076,6 +1099,7 @@ else:
             _("scan.api"),
             _("scan.website"),
             _("scan.manual_upload"),
+            _("scan.dpia"),      # Data Protection Impact Assessment
             _("scan.sustainability"),
             _("scan.ai_model"),
             _("scan.soc2")
@@ -1084,7 +1108,7 @@ else:
         # Add premium tag to premium features
         if not has_permission('scan:premium'):
             scan_type_options_with_labels = []
-            premium_scans = [_("scan.image"), _("scan.api"), _("scan.sustainability"), _("scan.ai_model"), _("scan.soc2")]
+            premium_scans = [_("scan.image"), _("scan.api"), _("scan.sustainability"), _("scan.ai_model"), _("scan.soc2"), _("scan.dpia")]
             
             for option in scan_type_options:
                 if option in premium_scans:
@@ -2226,6 +2250,76 @@ else:
                         scanner_instance = ImageScanner(region=region)
                     elif scan_type == _("scan.database"):
                         scanner_instance = DatabaseScanner(region=region)
+                    elif scan_type == _("scan.dpia"):
+                        # For DPIA, we use a different approach - interactive assessment form
+                        st.success("Starting Data Protection Impact Assessment (DPIA)")
+                        
+                        # Initialize DPIA scanner with current language
+                        dpia_scanner = DPIAScanner(language=st.session_state.get('language', 'en'))
+                        
+                        # Get assessment questions
+                        assessment_categories = dpia_scanner.get_questions()
+                        
+                        # Display assessment form
+                        st.subheader("DPIA Assessment Questionnaire")
+                        st.write("Please answer the following questions to assess your data processing activities.")
+                        
+                        # Initialize answers dictionary if not in session state
+                        if 'dpia_answers' not in st.session_state:
+                            st.session_state.dpia_answers = {}
+                            for category in assessment_categories:
+                                st.session_state.dpia_answers[category] = [0] * len(assessment_categories[category]['questions'])
+                        
+                        # Display questions by category
+                        answers = {}
+                        for category, info in assessment_categories.items():
+                            st.write(f"### {info['name']}")
+                            st.write(info['description'])
+                            
+                            # Create a list to store answers for this category
+                            category_answers = []
+                            
+                            # Display each question with radio buttons
+                            for i, question in enumerate(info['questions']):
+                                answer = st.radio(
+                                    question,
+                                    ["No", "Partially", "Yes"],
+                                    index=st.session_state.dpia_answers[category][i],
+                                    key=f"dpia_{category}_{i}"
+                                )
+                                # Convert answer to numerical value
+                                answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer]
+                                category_answers.append(answer_value)
+                                # Update session state
+                                st.session_state.dpia_answers[category][i] = answer_value
+                            
+                            # Store answers for this category
+                            answers[category] = category_answers
+                            st.write("---")
+                        
+                        # Process assessment
+                        if st.button("Complete DPIA Assessment"):
+                            with st.spinner("Processing DPIA assessment..."):
+                                # Perform assessment
+                                assessment_results = dpia_scanner.perform_assessment(answers)
+                                
+                                # Generate comprehensive report
+                                report_data = generate_dpia_report(assessment_results)
+                                
+                                # Store results
+                                scan_results = [report_data]
+                                st.session_state.scan_results = scan_results
+                                st.session_state.current_scan_id = assessment_results['scan_id']
+                                
+                                # Show success message
+                                st.success("DPIA assessment complete!")
+                                
+                                # Skip the default scanner logic by returning early
+                                st.session_state.current_scan_id = assessment_results['scan_id']
+                                st.rerun()
+                        
+                        # Skip the default scanner logic if we're still in the form
+                        st.stop()
                     else:
                         # Generic mock scanner for other types
                         scanner_instance = {

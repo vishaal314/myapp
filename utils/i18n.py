@@ -83,6 +83,10 @@ def load_translations(lang_code: str) -> Dict[str, Any]:
     except (json.JSONDecodeError, FileNotFoundError):
         _translations[lang_code] = {}
     
+    # Ensure the translation dictionary exists
+    if lang_code not in _translations:
+        _translations[lang_code] = {}
+    
     return _translations[lang_code]
 
 def set_language(lang_code: Optional[str] = None) -> None:

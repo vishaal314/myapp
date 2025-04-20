@@ -125,6 +125,7 @@
     "select_type": "Selecteer Scantype",
     "code": "Code",
     "blob": "Document",
+    "dpia": "Gegevensbeschermingseffectbeoordeling",
     "image": "Afbeelding",
     "website": "Website",
     "database": "Database",
