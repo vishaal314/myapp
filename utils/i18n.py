@@ -155,6 +155,7 @@ def language_selector(key_suffix: str = None) -> None:
     """
     Display a language selector in the Streamlit UI.
     Updates the language when changed immediately.
+    Now with enhanced refresh mechanism to ensure all translations are applied.
     
     Args:
         key_suffix: A suffix to ensure unique keys for multiple language selectors
@@ -175,8 +176,16 @@ def language_selector(key_suffix: str = None) -> None:
         if new_lang != current_lang:
             # Update session state language
             st.session_state.language = new_lang
+            
+            # Set reload translations flag to force full reinitialization
+            st.session_state.reload_translations = True
+            
             # Load translations for new language immediately
             set_language(new_lang)
+            
+            # Force complete reinitialization
+            initialize()
+            
             # Force rerun of app to update all UI elements
             st.rerun()  # Force immediate rerun
     
@@ -197,8 +206,19 @@ def language_selector(key_suffix: str = None) -> None:
         with cols[1]:
             if selected_lang != current_lang:
                 if st.button("✓ Apply", key=f"apply_lang_{key_suffix}"):
+                    # Update session state language
                     st.session_state.language = selected_lang
+                    
+                    # Set reload translations flag to force full reinitialization
+                    st.session_state.reload_translations = True
+                    
+                    # Load translations
                     set_language(selected_lang)
+                    
+                    # Force full reinitialization
+                    initialize()
+                    
+                    # Force rerun
                     st.rerun()
 
 # Initialize translations
@@ -206,6 +226,7 @@ def initialize() -> None:
     """
     Initialize the internationalization module.
     Load translations for the current language.
+    Handles both initial app load and language switching.
     """
     global _translations, _current_language
     
@@ -220,6 +241,7 @@ def initialize() -> None:
     st.session_state['language'] = current_lang
     
     # Clear ALL existing translations to force reload
+    # This is critical for proper translation after login/logout
     _translations = {}  # Completely reset all translations
     
     # Set the current language and reload translations
@@ -234,3 +256,6 @@ def initialize() -> None:
     
     # Set language in main interface - must be done after loading translations
     set_language(current_lang)
+    
+    # Log language initialization for debugging
+    print(f"Initialized translations for: {current_lang}")

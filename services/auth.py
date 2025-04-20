@@ -494,7 +494,7 @@ def is_authenticated() -> bool:
 def logout() -> None:
     """
     Log out the current user by clearing session state.
-    Preserves language preference.
+    Preserves language preference and forces proper reinitialization.
     """
     import streamlit as st
     
@@ -508,6 +508,12 @@ def logout() -> None:
     
     # Restore language setting
     st.session_state["language"] = current_language
+    
+    # Force reinitialization of translations on next page load
+    st.session_state["reload_translations"] = True
+    
+    # Reset active tab to login
+    st.session_state["active_tab"] = "login"
 
 def has_permission(permission: str) -> bool:
     """
