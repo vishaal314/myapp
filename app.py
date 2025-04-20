@@ -726,28 +726,60 @@ else:
     # Navigation 
     # Import auth functions for permission checks
     from services.auth import has_permission
+    from utils.i18n import get_text, _current_language
     
-    # Define base navigation options
-    nav_options = [_("scan.title"), _("dashboard.welcome"), _("history.title"), _("results.title"), _("report.generate")]
+    # Force refresh translations for current language
+    # This ensures we get the most up-to-date translations
+    print(f"NAVIGATION - Current language: {_current_language}")
+    
+    # Define base navigation options with direct lookup to ensure fresh translations
+    # Using the direct get_text function for each key to force re-evaluation
+    scan_title = get_text("scan.title")
+    dashboard_title = get_text("dashboard.welcome")
+    history_title = get_text("history.title") 
+    results_title = get_text("results.title")
+    report_title = get_text("report.generate")
+    
+    print(f"NAVIGATION TITLES - Using language {_current_language}:")
+    print(f"  scan.title: '{scan_title}'")
+    print(f"  dashboard.welcome: '{dashboard_title}'")
+    print(f"  history.title: '{history_title}'")
+    print(f"  results.title: '{results_title}'")
+    print(f"  report.generate: '{report_title}'")
+    
+    nav_options = [scan_title, dashboard_title, history_title, results_title, report_title]
     
     # Add Admin section if user has admin permissions
     if has_permission('admin:access'):
-        nav_options.append(_("admin.title"))
+        admin_title = get_text("admin.title")
+        nav_options.append(admin_title)
+        print(f"  admin.title: '{admin_title}'")
     
-    selected_nav = st.sidebar.radio(_("sidebar.navigation"), nav_options)
+    # Ensure the sidebar navigation title is also freshly translated
+    sidebar_nav_title = get_text("sidebar.navigation")
+    selected_nav = st.sidebar.radio(sidebar_nav_title, nav_options)
     
     # Add quick access buttons
     st.sidebar.markdown(f"### {_('sidebar.quick_access')}")
     quick_col1, quick_col2 = st.sidebar.columns(2)
     
+    # Use direct get_text to ensure the most updated translations
+    dash_text = get_text("dashboard.welcome")
+    sidebar_dashboard_text = get_text("sidebar.dashboard") 
+    sidebar_dashboard_help_text = get_text("sidebar.dashboard_help")
+    
+    report_text = get_text("report.generate")
+    sidebar_reports_text = get_text("sidebar.reports")
+    sidebar_reports_help_text = get_text("sidebar.reports_help")
+    
     with quick_col1:
-        if st.button(f"📊 {_('sidebar.dashboard')}", key="quick_dashboard", help=_("sidebar.dashboard_help")):
-            st.session_state.selected_nav = _("dashboard.welcome")
+        if st.button(f"📊 {sidebar_dashboard_text}", key="quick_dashboard", help=sidebar_dashboard_help_text):
+            st.session_state.selected_nav = dash_text
             st.rerun()
     
     with quick_col2:
-        if st.button(f"📑 {_('sidebar.reports')}", key="quick_reports", help=_("sidebar.reports_help")):
-            st.session_state.selected_nav = _("report.generate")
+        if st.button(f"📑 {sidebar_reports_text}", key="quick_reports", help=sidebar_reports_help_text):
+            st.session_state.selected_nav = report_text
             st.rerun()
     
     # Membership section
@@ -889,7 +921,9 @@ else:
         if 'payment_message' in locals() and payment_message:
             st.sidebar.error(payment_message)
     
-    if selected_nav == _("dashboard.welcome"):
+    # Get fresh translation to compare with selected_nav
+    dashboard_welcome_text = get_text("dashboard.welcome")
+    if selected_nav == dashboard_welcome_text:
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
