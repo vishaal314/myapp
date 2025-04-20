@@ -522,9 +522,19 @@ class DPIAScanner:
         """
         import os
         import re
-        import textract
         
         findings = []
+        
+        # Handle case where file_paths might be None or empty
+        if not file_paths:
+            findings.append({
+                "type": "INFO",
+                "value": "No files provided for scanning",
+                "location": "Assessment",
+                "risk_level": "Low",
+                "reason": "No files were provided for analysis"
+            })
+            return findings
         
         # Define PII patterns to search for
         pii_patterns = {
@@ -545,75 +555,120 @@ class DPIAScanner:
             "ANALYTICS": r'\b(?:analytic[s]?|usage\s+data|behavior(?:al)?\s+data)\b'
         }
         
+        # Define text file extensions we can safely scan
+        text_extensions = ['.txt', '.md', '.csv', '.json', '.xml', '.html', '.htm', '.py', '.js', '.ts', 
+                          '.java', '.c', '.cpp', '.h', '.php', '.rb', '.pl', '.sql', '.log']
+        
         for file_path in file_paths:
             try:
+                # Basic file info
                 file_name = os.path.basename(file_path)
                 file_extension = os.path.splitext(file_path)[1].lower()
                 
-                # Extract text content based on file type
+                # Skip non-text files for safety
+                if file_extension not in text_extensions:
+                    findings.append({
+                        "type": "UNSUPPORTED_FILE",
+                        "value": file_extension,
+                        "location": file_name,
+                        "risk_level": "Low",
+                        "reason": f"File type {file_extension} is not supported for scanning"
+                    })
+                    continue
+                
+                # Read file contents safely
                 try:
-                    # Use textract to handle various file types
-                    text_content = textract.process(file_path).decode('utf-8', errors='ignore')
-                except:
-                    # Fallback to basic text extraction
                     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                         text_content = f.read()
+                except Exception as read_error:
+                    findings.append({
+                        "type": "FILE_READ_ERROR",
+                        "value": str(read_error),
+                        "location": file_name,
+                        "risk_level": "Low",
+                        "reason": f"Error reading file: {str(read_error)}"
+                    })
+                    continue
                 
                 # Search for PII patterns
                 for pii_type, pattern in pii_patterns.items():
-                    matches = re.finditer(pattern, text_content)
-                    for match in matches:
-                        # Determine risk level based on PII type
-                        if pii_type in ["CREDIT_CARD", "ID_NUMBER"]:
-                            risk_level = "High"
-                        elif pii_type in ["EMAIL", "PHONE", "ADDRESS"]:
-                            risk_level = "Medium"
-                        else:
-                            risk_level = "Low"
-                        
-                        # Get some context around the match
-                        start = max(0, match.start() - 20)
-                        end = min(len(text_content), match.end() + 20)
-                        context = text_content[start:end].replace(match.group(), f"[{match.group()}]")
-                        
-                        findings.append({
-                            "type": pii_type,
-                            "value": "[REDACTED]",  # Don't expose actual PII
-                            "location": f"{file_name}",
-                            "context": context,
-                            "risk_level": risk_level,
-                            "reason": f"Found {pii_type} in file, requires protection under GDPR"
-                        })
+                    try:
+                        matches = list(re.finditer(pattern, text_content))
+                        for match in matches:
+                            # Determine risk level based on PII type
+                            if pii_type in ["CREDIT_CARD", "ID_NUMBER"]:
+                                risk_level = "High"
+                            elif pii_type in ["EMAIL", "PHONE", "ADDRESS"]:
+                                risk_level = "Medium"
+                            else:
+                                risk_level = "Low"
+                            
+                            # Get some context around the match (safely)
+                            try:
+                                start = max(0, match.start() - 20)
+                                end = min(len(text_content), match.end() + 20)
+                                context = text_content[start:end].replace(match.group(), f"[{match.group()}]")
+                            except:
+                                context = "[Context extraction failed]"
+                            
+                            findings.append({
+                                "type": pii_type,
+                                "value": "[REDACTED]",  # Don't expose actual PII
+                                "location": f"{file_name}",
+                                "context": context,
+                                "risk_level": risk_level,
+                                "reason": f"Found {pii_type} in file, requires protection under GDPR"
+                            })
+                    except Exception as pattern_error:
+                        # Just log and continue if a pattern causes problems
+                        continue
                 
                 # Search for processing patterns
                 for process_type, pattern in processing_patterns.items():
-                    matches = re.finditer(pattern, text_content, re.IGNORECASE)
-                    for match in matches:
-                        risk_level = "Medium"  # Default for processing activities
-                        
-                        # Get some context around the match
-                        start = max(0, match.start() - 30)
-                        end = min(len(text_content), match.end() + 30)
-                        context = text_content[start:end].replace(match.group(), f"[{match.group()}]")
-                        
-                        findings.append({
-                            "type": f"PROCESS_{process_type}",
-                            "value": match.group(),
-                            "location": f"{file_name}",
-                            "context": context,
-                            "risk_level": risk_level,
-                            "reason": f"Found evidence of {process_type.replace('_', ' ')} which may require DPIA under Article 35"
-                        })
-                        
+                    try:
+                        matches = list(re.finditer(pattern, text_content, re.IGNORECASE))
+                        for match in matches:
+                            risk_level = "Medium"  # Default for processing activities
+                            
+                            # Get some context around the match (safely)
+                            try:
+                                start = max(0, match.start() - 30)
+                                end = min(len(text_content), match.end() + 30)
+                                context = text_content[start:end].replace(match.group(), f"[{match.group()}]")
+                            except:
+                                context = "[Context extraction failed]"
+                            
+                            findings.append({
+                                "type": f"PROCESS_{process_type}",
+                                "value": match.group(),
+                                "location": f"{file_name}",
+                                "context": context,
+                                "risk_level": risk_level,
+                                "reason": f"Found evidence of {process_type.replace('_', ' ')} which may require DPIA under Article 35"
+                            })
+                    except Exception as pattern_error:
+                        # Just log and continue if a pattern causes problems
+                        continue
+                
             except Exception as e:
-                # Add an error finding
+                # Add an error finding but continue with other files
                 findings.append({
                     "type": "ERROR",
                     "value": str(e),
-                    "location": file_path,
+                    "location": file_path if file_path else "Unknown",
                     "risk_level": "Low",
                     "reason": f"Error processing file: {str(e)}"
                 })
+        
+        # Always return at least one finding even if empty to avoid downstream errors
+        if not findings:
+            findings.append({
+                "type": "NO_FINDINGS",
+                "value": "No PII or processing patterns found",
+                "location": "Analysis",
+                "risk_level": "Low",
+                "reason": "File analysis completed with no findings"
+            })
                 
         return findings
         
