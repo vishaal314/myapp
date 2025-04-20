@@ -1,4 +1,9 @@
 {
+  "app": {
+    "title": "DataGuardian Pro",
+    "subtitle": "Enterprise Privacy Compliance Platform",
+    "tagline": "Detect, Manage, and Report Privacy Compliance with AI-powered Precision"
+  },
   "dashboard": {
     "generate_certificate": "Generate Compliance Certificate",
     "generate_certificate_help": "Generate a PDF compliance certificate for this scan",
