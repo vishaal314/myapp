@@ -237,9 +237,17 @@ with st.sidebar:
                         current_language = st.session_state.get('language', 'en')
                         
                         # Ensure the language setting persists after login
-                        set_language(current_language)
+                        # Explicitly reinitialize translations to ensure they apply throughout the UI
+                        st.session_state['language'] = current_language  # Ensure it's set in multiple ways
+                        
+                        # Reinitialize translations - this is important to ensure they're active
+                        from utils.i18n import initialize
+                        initialize()  # Force reinitialization
+                        set_language(current_language)  # Set language again
                         
                         st.success(_("login.success"))
+                        # Flag to ensure translations are reapplied after navigation
+                        st.session_state['reload_translations'] = True
                         st.rerun()
                     else:
                         st.error(_("login.error.invalid_credentials"))
@@ -464,10 +472,19 @@ if not st.session_state.logged_in:
 else:
     # Reinitialize language to ensure it's properly loaded after login
     current_language = st.session_state.get('language', 'en')
-    set_language(current_language)
+    st.session_state['language'] = current_language  # Ensure it's set consistently
     
     # Force translation reload to ensure all text is properly translated
-    initialize()
+    initialize()  # This will load translations
+    set_language(current_language)  # This will apply the current language
+    
+    # Add a check for the reload_translations flag
+    if st.session_state.get('reload_translations', False):
+        # Clear the flag
+        st.session_state['reload_translations'] = False
+        # Reinitialize language one more time to ensure it's applied
+        initialize()
+        set_language(current_language)
     
     # Initialize aggregator
     results_aggregator = ResultsAggregator()

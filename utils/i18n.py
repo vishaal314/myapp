@@ -207,5 +207,27 @@ def initialize() -> None:
     Initialize the internationalization module.
     Load translations for the current language.
     """
+    global _translations, _current_language
+    
+    # Get the current language from session state or default to English
     current_lang = st.session_state.get('language', 'en')
+    
+    # Ensure it's a valid language
+    if current_lang not in LANGUAGES:
+        current_lang = 'en'
+    
+    # Force update session state for consistency
+    st.session_state['language'] = current_lang
+    
+    # Clear existing translations to force reload
+    if current_lang in _translations:
+        del _translations[current_lang]
+    
+    # Set the current language and reload translations
+    _current_language = current_lang
+    
+    # Load translations for the language
+    load_translations(current_lang)
+    
+    # Set language in main interface - must be done after loading translations
     set_language(current_lang)
