@@ -51,7 +51,7 @@ if [ ! -f .env ]; then
 fi
 
 # Make sure directories exist
-mkdir -p reports uploads
+mkdir -p reports uploads letsencrypt
 
 # Offer to pull latest changes
 echo -e "${YELLOW}Do you want to pull the latest changes from the repository? [y/N]${NC}"
@@ -83,15 +83,23 @@ sleep 5
 if docker-compose ps | grep -q "Up"; then
     echo -e "${GREEN}Services are running!${NC}"
     
-    # Get host IP
+    # Get host IP and domain
     HOST_IP=$(hostname -I | awk '{print $1}')
     APP_PORT=$(grep APP_PORT .env 2>/dev/null | cut -d '=' -f2 || echo 5000)
+    DOMAIN_NAME=$(grep DOMAIN_NAME .env 2>/dev/null | cut -d '=' -f2)
     
     echo -e "${GREEN}======================================================${NC}"
     echo -e "${GREEN}DataGuardian Pro is now running!${NC}"
     echo -e "${GREEN}Access the application at:${NC}"
-    echo -e "${BLUE}http://localhost:${APP_PORT}${NC} (Local access)"
-    echo -e "${BLUE}http://${HOST_IP}:${APP_PORT}${NC} (Network access)"
+    
+    # If using domain with Traefik
+    if [ -n "$DOMAIN_NAME" ] && docker-compose ps | grep -q "traefik"; then
+        echo -e "${BLUE}https://${DOMAIN_NAME}${NC} (Domain access with SSL)"
+    else
+        echo -e "${BLUE}http://localhost:${APP_PORT}${NC} (Local access)"
+        echo -e "${BLUE}http://${HOST_IP}:${APP_PORT}${NC} (Network access)"
+    fi
+    
     echo -e "${GREEN}======================================================${NC}"
     echo ""
     echo -e "${YELLOW}To stop the application:${NC} docker-compose down"

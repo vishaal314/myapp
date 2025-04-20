@@ -1,6 +1,30 @@
 version: '3.8'
 
 services:
+  # Traefik Reverse Proxy
+  traefik:
+    image: traefik:v2.9
+    container_name: dataguardian-traefik
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
   # PostgreSQL Database
   db:
     image: postgres:15-alpine
@@ -12,14 +36,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    expose:
+      - "5432"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dataguardian}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
 
   # DataGuardian Pro Application
   app:
@@ -30,8 +56,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "${APP_PORT:-5000}:5000"
+    expose:
+      - "5000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-dataguardian}:${POSTGRES_PASSWORD:-dataguardian}@db:5432/${POSTGRES_DB:-dataguardian}
       - PGHOST=db
@@ -46,6 +72,26 @@ services:
       - ./reports:/app/reports
       - ./uploads:/app/uploads
     restart: unless-stopped
+    networks:
+      - internal
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dataguardian.rule=Host(`${DOMAIN_NAME:-dataguardian.local}`)"
+      - "traefik.http.routers.dataguardian.entrypoints=websecure"
+      - "traefik.http.routers.dataguardian.tls.certresolver=letsencrypt"
+      - "traefik.http.services.dataguardian.loadbalancer.server.port=5000"
+      - "traefik.http.middlewares.dataguardian-security.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.dataguardian-security.headers.contentSecurityPolicy=default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+      - "traefik.http.middlewares.dataguardian-security.headers.framedeny=true"
+      - "traefik.http.routers.dataguardian.middlewares=dataguardian-security"
+
+networks:
+  internal:
+    internal: true
+  web:
+    external: false
 
 volumes:
   postgres_data:
+  letsencrypt:
