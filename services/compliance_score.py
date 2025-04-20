@@ -5,22 +5,26 @@ This module handles the calculation, tracking, and visualization of compliance s
 based on scan results from various services.
 """
 
+import json
 import numpy as np
 import pandas as pd
-import json
-import os
 from datetime import datetime, timedelta
+import os
+from typing import Dict, List, Any, Optional
+
 import plotly.express as px
 import plotly.graph_objects as go
-from typing import Dict, List, Tuple, Any, Optional
 
-from services.results_aggregator import ResultsAggregator
+# Make sure services directory exists
+if not os.path.exists('services'):
+    os.makedirs('services')
 
-# File to store historical compliance scores
-COMPLIANCE_HISTORY_FILE = "data/compliance_history.json"
+# Define data directory
+DATA_DIR = 'data'
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
 
-# Ensure data directory exists
-os.makedirs(os.path.dirname(COMPLIANCE_HISTORY_FILE), exist_ok=True)
+COMPLIANCE_SCORE_FILE = os.path.join(DATA_DIR, 'compliance_scores.json')
 
 class ComplianceScoreManager:
     """
@@ -29,29 +33,28 @@ class ComplianceScoreManager:
     
     def __init__(self):
         """Initialize the compliance score manager."""
-        self.results_aggregator = ResultsAggregator()
+        self.score_history = []
         self._load_history()
     
     def _load_history(self) -> None:
         """Load compliance score history from file."""
-        if os.path.exists(COMPLIANCE_HISTORY_FILE):
-            try:
-                with open(COMPLIANCE_HISTORY_FILE, 'r') as f:
-                    self.history = json.load(f)
-            except (json.JSONDecodeError, IOError):
-                # Create default history if file is corrupted or can't be read
-                self.history = {"scores": []}
-        else:
-            # Initialize empty history if file doesn't exist
-            self.history = {"scores": []}
+        try:
+            if os.path.exists(COMPLIANCE_SCORE_FILE):
+                with open(COMPLIANCE_SCORE_FILE, 'r') as f:
+                    self.score_history = json.load(f)
+            else:
+                self.score_history = []
+        except Exception as e:
+            print(f"Error loading compliance score history: {str(e)}")
+            self.score_history = []
     
     def _save_history(self) -> None:
         """Save compliance score history to file."""
         try:
-            with open(COMPLIANCE_HISTORY_FILE, 'w') as f:
-                json.dump(self.history, f)
-        except IOError as e:
-            print(f"Error saving compliance history: {e}")
+            with open(COMPLIANCE_SCORE_FILE, 'w') as f:
+                json.dump(self.score_history, f)
+        except Exception as e:
+            print(f"Error saving compliance score history: {str(e)}")
     
     def calculate_current_score(self) -> Dict[str, Any]:
         """
@@ -60,81 +63,193 @@ class ComplianceScoreManager:
         Returns:
             Dict containing overall score and component scores
         """
-        # Get recent scans from the aggregator
-        recent_scans = self.results_aggregator.get_recent_scans(limit=20)
+        # Import here to avoid circular import
+        from services.results_aggregator import ResultsAggregator
         
-        if not recent_scans:
-            return {
-                "overall_score": 0,
-                "components": {},
-                "timestamp": datetime.now().isoformat()
-            }
+        # Get recent scan results
+        aggregator = ResultsAggregator()
+        recent_scans = aggregator.get_recent_scans(days=30)
         
         # Initialize component scores
-        components = {
-            "code": {"weight": 0.25, "score": 0, "count": 0},
-            "blob": {"weight": 0.15, "score": 0, "count": 0},
-            "dpia": {"weight": 0.25, "score": 0, "count": 0},
-            "image": {"weight": 0.05, "score": 0, "count": 0},
-            "website": {"weight": 0.15, "score": 0, "count": 0},
-            "database": {"weight": 0.15, "score": 0, "count": 0}
+        component_scores = {
+            "code": None,
+            "blob": None,
+            "dpia": None,
+            "image": None,
+            "website": None,
+            "database": None,
+            "api": None,
+            "cloud": None,
+            "ai_model": None
         }
         
-        # Process each scan and calculate component scores
+        if not recent_scans:
+            # If no scans, return default score
+            return {
+                "timestamp": datetime.now().isoformat(),
+                "overall_score": 0,
+                "components": component_scores,
+                "factors": {
+                    "pii_detection": 0,
+                    "risk_assessment": 0,
+                    "documentation": 0,
+                    "data_minimization": 0
+                }
+            }
+        
+        # Group scans by type
+        scans_by_type = {}
         for scan in recent_scans:
-            scan_type = scan.get("type", "").lower()
-            
-            if scan_type in components:
-                # Calculate individual scan score
-                severity_counts = scan.get("severity_counts", {})
-                total_findings = sum(severity_counts.values())
+            scan_type = scan.get('scan_type', 'unknown')
+            if scan_type not in scans_by_type:
+                scans_by_type[scan_type] = []
+            scans_by_type[scan_type].append(scan)
+        
+        # Calculate scores for each component
+        for component, scans in scans_by_type.items():
+            if component in component_scores:
+                # Skip if no scans for this component
+                if not scans:
+                    continue
                 
-                if total_findings > 0:
-                    # Higher weights for more severe findings
-                    weighted_sum = (
-                        severity_counts.get("high", 0) * 3 +
-                        severity_counts.get("medium", 0) * 2 +
-                        severity_counts.get("low", 0) * 1
-                    )
-                    # Invert the score: higher number of severe findings = lower score
-                    max_weighted_sum = total_findings * 3  # if all were high severity
-                    scan_score = max(0, 100 - (weighted_sum / max_weighted_sum * 100))
+                # Calculate component score based on:
+                # 1. PII found vs total scanned items
+                # 2. High risk items percentage
+                # 3. Compliance with relevant GDPR principles
+                
+                # Base metrics
+                total_pii = sum(scan.get('total_pii_found', 0) for scan in scans)
+                high_risk = sum(scan.get('high_risk_count', 0) for scan in scans)
+                medium_risk = sum(scan.get('medium_risk_count', 0) for scan in scans)
+                
+                # Calculate normalized scores (higher is better)
+                if total_pii > 0:
+                    # Risk ratio (lower is better)
+                    risk_ratio = (high_risk * 1.0 + medium_risk * 0.5) / total_pii
+                    risk_score = max(0, 100 - min(100, risk_ratio * 100))
                     
-                    # For DPIA scans, factor in risk assessment
-                    if scan_type == "dpia" and "overall_percentage" in scan:
-                        dpia_score = scan.get("overall_percentage", 0) * 10  # Convert to 0-100
-                        scan_score = (scan_score + dpia_score) / 2
+                    # Compliance factor
+                    compliance_factor = np.mean([
+                        scan.get('compliance_score', 70) for scan in scans 
+                        if 'compliance_score' in scan
+                    ]) if any('compliance_score' in scan for scan in scans) else 70
                     
-                    # Add to component data
-                    components[scan_type]["score"] += scan_score
-                    components[scan_type]["count"] += 1
+                    # Final component score
+                    component_scores[component] = int(min(100, (risk_score * 0.7 + compliance_factor * 0.3)))
+                else:
+                    # If no PII found, it's either not applicable or perfect
+                    component_scores[component] = 100
         
-        # Calculate final component scores (average)
-        component_scores = {}
-        for component, data in components.items():
-            if data["count"] > 0:
-                component_scores[component] = data["score"] / data["count"]
-            else:
-                component_scores[component] = None  # No data
+        # Calculate overall score as weighted average of component scores
+        # Weight factors based on importance for GDPR compliance
+        weights = {
+            "code": 0.15,
+            "blob": 0.10,
+            "dpia": 0.25,  # DPIA is critical for GDPR
+            "image": 0.05,
+            "website": 0.15,
+            "database": 0.20,
+            "api": 0.05,
+            "cloud": 0.03,
+            "ai_model": 0.02
+        }
         
-        # Calculate overall weighted score from components
-        overall_score = 0
-        total_weight = 0
+        # Only include components that have scores
+        valid_components = {k: v for k, v in component_scores.items() if v is not None}
+        if not valid_components:
+            overall_score = 0
+        else:
+            # Normalize weights for available components
+            total_weight = sum(weights[k] for k in valid_components.keys())
+            normalized_weights = {k: weights[k]/total_weight for k in valid_components.keys()}
+            
+            # Calculate weighted average
+            overall_score = int(sum(valid_components[k] * normalized_weights[k] for k in valid_components.keys()))
         
-        for component, data in components.items():
-            if component_scores[component] is not None:
-                overall_score += component_scores[component] * data["weight"]
-                total_weight += data["weight"]
-        
-        # Scale overall score by total weight used
-        if total_weight > 0:
-            overall_score = overall_score / total_weight
+        # Calculate factor scores
+        factors = {
+            "pii_detection": self._calculate_pii_detection_score(recent_scans),
+            "risk_assessment": self._calculate_risk_assessment_score(recent_scans),
+            "documentation": self._calculate_documentation_score(recent_scans),
+            "data_minimization": self._calculate_data_minimization_score(recent_scans)
+        }
         
         return {
-            "overall_score": round(overall_score, 1),
+            "timestamp": datetime.now().isoformat(),
+            "overall_score": overall_score,
             "components": component_scores,
-            "timestamp": datetime.now().isoformat()
+            "factors": factors
         }
+    
+    def _calculate_pii_detection_score(self, scans: List[Dict[str, Any]]) -> int:
+        """Calculate PII detection factor score."""
+        if not scans:
+            return 0
+            
+        # Based on coverage of different PII types
+        pii_types_found = set()
+        for scan in scans:
+            if 'pii_types' in scan:
+                pii_types_found.update(scan['pii_types'].keys())
+        
+        # Common PII types that should be detected
+        common_pii_types = {
+            'email', 'phone', 'address', 'name', 'ip_address', 'credit_card',
+            'ssn', 'passport', 'drivers_license', 'date_of_birth'
+        }
+        
+        # Calculate coverage
+        coverage = len(pii_types_found.intersection(common_pii_types)) / len(common_pii_types)
+        return int(min(100, coverage * 100))
+    
+    def _calculate_risk_assessment_score(self, scans: List[Dict[str, Any]]) -> int:
+        """Calculate risk assessment factor score."""
+        if not scans:
+            return 0
+            
+        # Based on percentage of scans with risk assessment
+        scans_with_risk = sum(1 for scan in scans if 'risk_assessment' in scan)
+        return int(min(100, (scans_with_risk / len(scans)) * 100))
+    
+    def _calculate_documentation_score(self, scans: List[Dict[str, Any]]) -> int:
+        """Calculate documentation factor score."""
+        if not scans:
+            return 0
+            
+        # Based on documentation completeness
+        doc_scores = []
+        for scan in scans:
+            if 'documentation' in scan:
+                doc_scores.append(scan['documentation'].get('completeness', 0))
+            else:
+                doc_scores.append(0)
+                
+        return int(min(100, np.mean(doc_scores) if doc_scores else 0))
+    
+    def _calculate_data_minimization_score(self, scans: List[Dict[str, Any]]) -> int:
+        """Calculate data minimization factor score."""
+        if not scans:
+            return 0
+            
+        # Based on data minimization indicators
+        minimization_scores = []
+        for scan in scans:
+            # Check for minimization metrics
+            if 'data_minimization' in scan:
+                minimization_scores.append(scan['data_minimization'].get('score', 0))
+            else:
+                # Default score based on PII vs necessary data
+                total_pii = scan.get('total_pii_found', 0)
+                necessary_pii = scan.get('necessary_pii_count', total_pii // 2)  # Estimate if not available
+                
+                if total_pii == 0:
+                    minimization_scores.append(100)  # No PII is perfect minimization
+                else:
+                    # Lower ratio is better (less unnecessary PII)
+                    ratio = min(1.0, necessary_pii / total_pii)
+                    minimization_scores.append(int(ratio * 100))
+                
+        return int(min(100, np.mean(minimization_scores) if minimization_scores else 0))
     
     def update_score(self) -> Dict[str, Any]:
         """
@@ -143,14 +258,18 @@ class ComplianceScoreManager:
         Returns:
             Current score data dict
         """
+        # Calculate current score
         current_score = self.calculate_current_score()
         
         # Add to history
-        self.history["scores"].append(current_score)
+        self.score_history.append(current_score)
         
-        # Limit history size (keep last 100 scores)
-        if len(self.history["scores"]) > 100:
-            self.history["scores"] = self.history["scores"][-100:]
+        # Only keep last 365 days of history
+        cutoff_date = (datetime.now() - timedelta(days=365)).isoformat()
+        self.score_history = [
+            score for score in self.score_history 
+            if score.get('timestamp', '') >= cutoff_date
+        ]
         
         # Save updated history
         self._save_history()
@@ -168,14 +287,15 @@ class ComplianceScoreManager:
             List of score records in chronological order
         """
         cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
-        
-        # Filter history by date
-        recent_scores = [
-            score for score in self.history["scores"]
-            if score["timestamp"] >= cutoff_date
+        history = [
+            score for score in self.score_history 
+            if score.get('timestamp', '') >= cutoff_date
         ]
         
-        return recent_scores
+        # Sort by timestamp
+        history.sort(key=lambda x: x.get('timestamp', ''))
+        
+        return history
     
     def get_score_trend(self, days: int = 30) -> Dict[str, Any]:
         """
@@ -187,37 +307,39 @@ class ComplianceScoreManager:
         Returns:
             Dict with trend indicators
         """
-        scores = self.get_score_history(days)
+        history = self.get_score_history(days)
         
-        if not scores or len(scores) < 2:
+        if not history or len(history) < 2:
             return {
                 "direction": "stable",
                 "percentage_change": 0,
                 "score_change": 0
             }
         
-        # Get earliest and most recent scores
-        earliest = scores[0]["overall_score"]
-        latest = scores[-1]["overall_score"]
+        # Get first and last scores
+        first_score = history[0]['overall_score']
+        last_score = history[-1]['overall_score']
         
         # Calculate changes
-        score_change = latest - earliest
+        score_change = last_score - first_score
         
-        if earliest > 0:
-            percentage_change = (score_change / earliest) * 100
+        if first_score == 0:
+            percentage_change = 100 if last_score > 0 else 0
         else:
-            percentage_change = 0 if score_change == 0 else 100
+            percentage_change = int((score_change / first_score) * 100)
         
-        # Determine trend direction
-        if abs(percentage_change) < 2:  # Less than 2% change is considered stable
+        # Determine direction
+        if abs(percentage_change) < 5:
             direction = "stable"
+        elif percentage_change > 0:
+            direction = "improving"
         else:
-            direction = "improving" if percentage_change > 0 else "declining"
+            direction = "declining"
         
         return {
             "direction": direction,
-            "percentage_change": round(percentage_change, 1),
-            "score_change": round(score_change, 1)
+            "percentage_change": abs(percentage_change),
+            "score_change": score_change
         }
     
     def create_score_timeline_chart(self, days: int = 30) -> go.Figure:
@@ -230,92 +352,105 @@ class ComplianceScoreManager:
         Returns:
             Plotly figure object
         """
-        scores = self.get_score_history(days)
+        history = self.get_score_history(days)
         
-        if not scores:
+        if not history:
             # Create empty chart with message
             fig = go.Figure()
             fig.add_annotation(
-                text="No compliance score data available",
-                xref="paper", yref="paper",
                 x=0.5, y=0.5,
+                text="No compliance score data available",
                 showarrow=False,
                 font=dict(size=14)
             )
             fig.update_layout(
-                title="Compliance Score Timeline",
-                height=400
+                title="Compliance Score History",
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
             )
             return fig
         
-        # Convert to DataFrame for easier plotting
+        # Create dataframe from history
         df = pd.DataFrame([
             {
-                "date": datetime.fromisoformat(score["timestamp"]),
-                "score": score["overall_score"]
+                'date': datetime.fromisoformat(score['timestamp']),
+                'score': score['overall_score']
             }
-            for score in scores
+            for score in history
         ])
         
         # Create line chart
-        fig = px.line(
-            df,
-            x="date",
-            y="score",
-            title="Compliance Score Timeline",
-            labels={"date": "Date", "score": "Compliance Score"},
-            line_shape="spline"
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=df['date'],
+            y=df['score'],
+            mode='lines+markers',
+            line=dict(color='#2563EB', width=3),
+            marker=dict(size=8, color='#1E40AF'),
+            name='Compliance Score'
+        ))
+        
+        # Add threshold lines
+        fig.add_shape(
+            type="line",
+            x0=df['date'].min(),
+            y0=80,
+            x1=df['date'].max(),
+            y1=80,
+            line=dict(color="#10B981", width=2, dash="dash"),
+            name="Good"
         )
         
-        # Add reference lines for score ranges
         fig.add_shape(
-            type="rect",
-            x0=df["date"].min(),
-            x1=df["date"].max(),
-            y0=90,
-            y1=100,
-            fillcolor="rgba(75, 192, 192, 0.2)",
-            line=dict(width=0),
-            layer="below"
-        )
-        fig.add_shape(
-            type="rect",
-            x0=df["date"].min(),
-            x1=df["date"].max(),
-            y0=70,
-            y1=90,
-            fillcolor="rgba(255, 206, 86, 0.2)",
-            line=dict(width=0),
-            layer="below"
-        )
-        fig.add_shape(
-            type="rect",
-            x0=df["date"].min(),
-            x1=df["date"].max(),
-            y0=0,
-            y1=70,
-            fillcolor="rgba(255, 99, 132, 0.2)",
-            line=dict(width=0),
-            layer="below"
+            type="line",
+            x0=df['date'].min(),
+            y0=60,
+            x1=df['date'].max(),
+            y1=60,
+            line=dict(color="#F59E0B", width=2, dash="dash"),
+            name="Warning"
         )
         
-        # Customize layout
+        # Add annotations for thresholds
+        fig.add_annotation(
+            x=df['date'].max(), 
+            y=80,
+            text="Good",
+            showarrow=False,
+            font=dict(size=12, color="#10B981"),
+            xshift=40
+        )
+        
+        fig.add_annotation(
+            x=df['date'].max(), 
+            y=60,
+            text="Warning",
+            showarrow=False,
+            font=dict(size=12, color="#F59E0B"),
+            xshift=40
+        )
+        
+        # Update layout
         fig.update_layout(
-            height=400,
-            margin=dict(l=10, r=10, t=40, b=10),
-            yaxis=dict(range=[0, 100]),
+            height=300,
+            margin=dict(l=10, r=10, t=30, b=10),
             xaxis=dict(
-                tickformat="%Y-%m-%d",
-                tickmode="auto",
-                nticks=10
+                title="Date",
+                showgrid=True,
+                gridcolor="rgba(0,0,0,0.1)"
             ),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            )
+            yaxis=dict(
+                title="Score",
+                range=[0, 100],
+                showgrid=True,
+                gridcolor="rgba(0,0,0,0.1)"
+            ),
+            plot_bgcolor="white",
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=14
+            ),
+            hovermode="x"
         )
         
         return fig
@@ -327,41 +462,45 @@ class ComplianceScoreManager:
         Returns:
             Plotly figure object
         """
+        # Get current score
         current_score = self.calculate_current_score()
-        components = current_score["components"]
+        components = current_score.get('components', {})
         
-        # Component names mapped to display names
-        display_names = {
-            "code": "Code",
-            "blob": "Documents",
-            "dpia": "DPIA",
-            "image": "Images",
-            "website": "Websites",
-            "database": "Databases"
-        }
-        
-        # Prepare data for radar chart
-        categories = []
+        # Filter out None values and create lists for chart
+        labels = []
         values = []
         
         for component, score in components.items():
             if score is not None:
-                categories.append(display_names.get(component, component))
+                # Convert component name to display name
+                display_name = {
+                    "code": "Code",
+                    "blob": "Documents",
+                    "dpia": "DPIA",
+                    "image": "Images",
+                    "website": "Website",
+                    "database": "Database",
+                    "api": "API",
+                    "cloud": "Cloud",
+                    "ai_model": "AI Models"
+                }.get(component, component.title())
+                
+                labels.append(display_name)
                 values.append(score)
         
-        if not categories:
+        if not labels:
             # Create empty chart with message
             fig = go.Figure()
             fig.add_annotation(
-                text="No component score data available",
-                xref="paper", yref="paper",
                 x=0.5, y=0.5,
+                text="No component data available",
                 showarrow=False,
                 font=dict(size=14)
             )
             fig.update_layout(
-                title="Component Compliance Scores",
-                height=400
+                title="Component Analysis",
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
             )
             return fig
         
@@ -370,41 +509,51 @@ class ComplianceScoreManager:
         
         fig.add_trace(go.Scatterpolar(
             r=values,
-            theta=categories,
-            fill="toself",
-            name="Current Scores",
-            line_color="rgb(75, 192, 192)",
-            fillcolor="rgba(75, 192, 192, 0.2)"
+            theta=labels,
+            fill='toself',
+            fillcolor='rgba(37, 99, 235, 0.2)',
+            line=dict(color='#2563EB', width=2),
+            name='Component Scores'
         ))
         
-        # Add reference for perfect score
+        # Add benchmark score of 80 for reference
         fig.add_trace(go.Scatterpolar(
-            r=[100] * len(categories),
-            theta=categories,
-            fill="none",
-            name="Perfect Score",
-            line=dict(color="rgba(200, 200, 200, 0.8)", dash="dot")
+            r=[80] * len(labels),
+            theta=labels,
+            fill='none',
+            line=dict(color='#10B981', width=2, dash='dash'),
+            name='Target (80)'
         ))
         
-        # Customize layout
+        # Add warning threshold of 60
+        fig.add_trace(go.Scatterpolar(
+            r=[60] * len(labels),
+            theta=labels,
+            fill='none',
+            line=dict(color='#F59E0B', width=2, dash='dash'),
+            name='Warning (60)'
+        ))
+        
+        # Update layout
         fig.update_layout(
-            title="Component Compliance Scores",
+            height=300,
+            margin=dict(l=10, r=10, t=30, b=10),
             polar=dict(
                 radialaxis=dict(
                     visible=True,
-                    range=[0, 100]
-                )
+                    range=[0, 100],
+                    showticklabels=True,
+                    ticks='',
+                    gridcolor="rgba(0,0,0,0.1)",
+                    gridwidth=1
+                ),
+                angularaxis=dict(
+                    gridcolor="rgba(0,0,0,0.1)",
+                    gridwidth=1
+                ),
+                bgcolor="white"
             ),
-            showlegend=True,
-            height=400,
-            margin=dict(l=10, r=10, t=40, b=10),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            )
+            showlegend=False
         )
         
         return fig
@@ -416,37 +565,40 @@ class ComplianceScoreManager:
         Returns:
             Plotly figure object
         """
+        # Get current score
         current_score = self.calculate_current_score()
-        score = current_score["overall_score"]
+        score = current_score['overall_score']
         
         # Create gauge chart
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=score,
-            title={"text": "Compliance Score"},
-            gauge={
-                "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": "darkblue"},
-                "bar": {"color": "rgba(50, 50, 50, 0.1)"},
-                "bgcolor": "white",
-                "borderwidth": 2,
-                "bordercolor": "gray",
-                "steps": [
-                    {"range": [0, 70], "color": "rgba(255, 99, 132, 0.6)"},
-                    {"range": [70, 90], "color": "rgba(255, 206, 86, 0.6)"},
-                    {"range": [90, 100], "color": "rgba(75, 192, 192, 0.6)"}
+            domain=dict(x=[0, 1], y=[0, 1]),
+            title=dict(text="Compliance Score", font=dict(size=16)),
+            gauge=dict(
+                axis=dict(range=[0, 100], tickwidth=1, tickcolor="darkblue"),
+                bar=dict(color="#2563EB"),
+                bgcolor="white",
+                borderwidth=2,
+                bordercolor="gray",
+                steps=[
+                    dict(range=[0, 60], color="#EF4444"),
+                    dict(range=[60, 80], color="#F59E0B"),
+                    dict(range=[80, 100], color="#10B981")
                 ],
-                "threshold": {
-                    "line": {"color": "red", "width": 4},
-                    "thickness": 0.75,
-                    "value": 90
-                }
-            }
+                threshold=dict(
+                    line=dict(color="black", width=4),
+                    thickness=0.75,
+                    value=score
+                )
+            )
         ))
         
-        # Customize layout
+        # Update layout
         fig.update_layout(
-            height=300,
-            margin=dict(l=10, r=10, t=10, b=10)
+            height=250,
+            margin=dict(l=10, r=10, t=50, b=10),
+            paper_bgcolor="white"
         )
         
         return fig
@@ -462,38 +614,35 @@ class ComplianceScoreManager:
             Dict with badge details
         """
         if score is None:
-            current_score = self.calculate_current_score()
-            score = current_score["overall_score"]
+            score = self.calculate_current_score()['overall_score']
         
         # Determine badge level and color
-        if score >= 90:
+        if score >= 80:
             level = "Excellent"
-            color = "#4CAF50"  # Green
-            description = "Your compliance practices are excellent."
-        elif score >= 80:
-            level = "Good"
-            color = "#8BC34A"  # Light Green
-            description = "Your compliance practices are good with some room for improvement."
+            color = "#10B981"  # Green
+            description = "Your compliance practices exceed GDPR requirements."
         elif score >= 70:
-            level = "Satisfactory"
-            color = "#FFC107"  # Amber
-            description = "Your compliance meets basic requirements but needs improvement."
+            level = "Good"
+            color = "#22C55E"  # Light green
+            description = "Your compliance practices meet most GDPR requirements."
         elif score >= 60:
+            level = "Satisfactory"
+            color = "#F59E0B"  # Amber
+            description = "Your compliance practices need some improvements."
+        elif score >= 50:
             level = "Needs Improvement"
-            color = "#FF9800"  # Orange
-            description = "Your compliance practices need significant improvement."
+            color = "#F97316"  # Orange
+            description = "Your compliance practices require significant improvements."
         else:
             level = "At Risk"
-            color = "#F44336"  # Red
-            description = "Your compliance practices need urgent attention."
+            color = "#EF4444"  # Red
+            description = "Your compliance practices are substantially below requirements."
         
         return {
-            "score": score,
             "level": level,
             "color": color,
             "description": description
         }
-
 
 def generate_mock_history(days: int = 30) -> None:
     """
@@ -502,37 +651,58 @@ def generate_mock_history(days: int = 30) -> None:
     Args:
         days: Number of days of history to generate
     """
-    manager = ComplianceScoreManager()
+    # Start with a base score
+    base_score = 65
     
-    # Clear existing history
-    manager.history = {"scores": []}
-    
-    # Start with a base score and add some variability
-    base_score = 75
-    
-    # Generate daily scores with an improving trend
+    # Create scores with some variation
+    history = []
     for i in range(days):
+        # Generate date
         date = (datetime.now() - timedelta(days=days-i)).isoformat()
         
-        # Calculate this day's score with some noise and a small upward trend
-        day_score = min(100, base_score + (i * 0.5) + np.random.normal(0, 3))
+        # Add some randomness to the score progression
+        variation = np.random.normal(0, 3)
+        trend_factor = i * 0.2  # Slight upward trend
         
-        # Component scores with similar pattern
+        # Combine factors and ensure score stays in bounds
+        score = min(100, max(0, int(base_score + variation + trend_factor)))
+        
+        # Generate component scores
         components = {
-            "code": max(0, min(100, day_score + np.random.normal(0, 5))),
-            "blob": max(0, min(100, day_score + np.random.normal(0, 5))),
-            "dpia": max(0, min(100, day_score + np.random.normal(0, 5))),
-            "image": max(0, min(100, day_score + np.random.normal(0, 5))),
-            "website": max(0, min(100, day_score + np.random.normal(0, 5))),
-            "database": max(0, min(100, day_score + np.random.normal(0, 5)))
+            "code": min(100, max(0, int(score + np.random.normal(0, 5)))),
+            "blob": min(100, max(0, int(score + np.random.normal(0, 5)))),
+            "dpia": min(100, max(0, int(score + np.random.normal(0, 7)))),
+            "image": min(100, max(0, int(score + np.random.normal(0, 8)))),
+            "website": min(100, max(0, int(score + np.random.normal(0, 6)))),
+            "database": min(100, max(0, int(score + np.random.normal(0, 4))))
         }
         
-        # Add to history
-        manager.history["scores"].append({
-            "overall_score": round(day_score, 1),
-            "components": {k: round(v, 1) for k, v in components.items()},
-            "timestamp": date
-        })
+        # Generate factors
+        factors = {
+            "pii_detection": min(100, max(0, int(score + np.random.normal(0, 10)))),
+            "risk_assessment": min(100, max(0, int(score + np.random.normal(0, 8)))),
+            "documentation": min(100, max(0, int(score + np.random.normal(0, 12)))),
+            "data_minimization": min(100, max(0, int(score + np.random.normal(0, 7))))
+        }
+        
+        # Create score record
+        score_record = {
+            "timestamp": date,
+            "overall_score": score,
+            "components": components,
+            "factors": factors
+        }
+        
+        history.append(score_record)
     
-    # Save the mock history
-    manager._save_history()
+    # Save to file
+    with open(COMPLIANCE_SCORE_FILE, 'w') as f:
+        json.dump(history, f)
+    
+    print(f"Generated {days} days of mock compliance score history.")
+
+if __name__ == "__main__":
+    # Example usage
+    manager = ComplianceScoreManager()
+    current_score = manager.update_score()
+    print(f"Current compliance score: {current_score['overall_score']}")

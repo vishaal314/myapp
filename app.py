@@ -987,6 +987,21 @@ else:
             col2.metric(_("dashboard.metric.total_pii"), total_pii)
             col3.metric(_("dashboard.metric.high_risk"), high_risk_items)
             
+            # Real-time Compliance Score Visualization
+            st.markdown(f"""
+            <h3 style="margin: 20px 0 15px 0; color: #1e3a8a; font-weight: 600;">
+                Real-time Compliance Score
+            </h3>
+            """, unsafe_allow_html=True)
+            
+            # Import and render the compliance dashboard component
+            try:
+                from components.compliance_dashboard import render_compliance_dashboard
+                render_compliance_dashboard(current_username=st.session_state.username)
+            except Exception as e:
+                st.error(f"Error loading compliance dashboard: {str(e)}")
+                st.info("If this is your first time using the compliance dashboard, you may need to run some scans first to generate compliance data.")
+            
             # Privacy & Compliance Analytics Dashboard Section
             st.markdown(f"""
             <h3 style="margin: 20px 0 15px 0; color: #1e3a8a; font-weight: 600;">
