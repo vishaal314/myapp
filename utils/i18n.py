@@ -230,15 +230,25 @@ def initialize() -> None:
     """
     global _translations, _current_language
     
-    # Get the current language from session state or default to English
-    current_lang = st.session_state.get('language', 'en')
+    # Get the current language from session state
+    # IMPORTANT: We use direct get with no default to detect missing values 
+    current_lang = st.session_state.get('language')
     
-    # Ensure it's a valid language
-    if current_lang not in LANGUAGES:
+    # If no language is set, see if we have a pre-login language
+    if not current_lang and 'pre_login_language' in st.session_state:
+        current_lang = st.session_state.get('pre_login_language')
+        
+    # If still no language, default to English
+    if not current_lang or current_lang not in LANGUAGES:
         current_lang = 'en'
     
-    # Force update session state for consistency
+    # Completely clear session state of all language keys for consistency
+    # Set both the normal and pre-login language keys
     st.session_state['language'] = current_lang
+    st.session_state['pre_login_language'] = current_lang
+    
+    # Save language in explicit backup location too
+    st.session_state['backup_language'] = current_lang
     
     # Clear ALL existing translations to force reload
     # This is critical for proper translation after login/logout

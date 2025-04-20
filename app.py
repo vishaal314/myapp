@@ -233,26 +233,24 @@ with st.sidebar:
                             if user_data["role"] in ROLE_PERMISSIONS:
                                 st.session_state.permissions = ROLE_PERMISSIONS[user_data["role"]]["permissions"]
                         
-                        # Preserve the current language across login
+                        # CRITICAL: Save the current language BEFORE login processing
                         current_language = st.session_state.get('language', 'en')
+                        print(f"LOGIN - Current language before login: {current_language}")
                         
-                        # Ensure the language setting persists after login
-                        # Explicitly reinitialize translations to ensure they apply throughout the UI
-                        st.session_state['language'] = current_language  # Ensure it's set in multiple ways
+                        # Store in a separate session state variable for absolute safety
+                        st.session_state['pre_login_language'] = current_language
                         
-                        # Set a flag to force reinitialization of translations on next page load
-                        st.session_state['reload_translations'] = True
-                        
-                        # Reinitialize translations - this is important to ensure they're active
-                        from utils.i18n import initialize
-                        
-                        # Force complete reinitialization of translations
-                        initialize()  # Force full reinitialization
-                        set_language(current_language)  # Set language again
-                        
+                        # Display success message in current language
                         st.success(_("login.success"))
-                        # Flag to ensure translations are reapplied after navigation
+                        
+                        # Set all language variables - multiple methods for redundancy
+                        st.session_state['language'] = current_language
+                        st.session_state['current_language'] = current_language
                         st.session_state['reload_translations'] = True
+                        st.session_state['force_language_after_login'] = current_language
+                        
+                        # Let's log for debugging purposes
+                        print(f"LOGIN - Applied language: {current_language}")
                         
                         # Force rerun to apply all changes immediately
                         st.rerun()
@@ -478,21 +476,46 @@ if not st.session_state.logged_in:
     """, unsafe_allow_html=True)
 
 else:
-    # Reinitialize language to ensure it's properly loaded after login
-    current_language = st.session_state.get('language', 'en')
-    st.session_state['language'] = current_language  # Ensure it's set consistently
+    # CRITICAL: Check for multiple potential language storage locations
+    # This is the key to fixing the language persistence issue across login states
     
-    # Force translation reload to ensure all text is properly translated
-    initialize()  # This will load translations
-    set_language(current_language)  # This will apply the current language
+    # First check for a forced language after login 
+    if 'force_language_after_login' in st.session_state:
+        current_language = st.session_state.pop('force_language_after_login')
+        print(f"POST-LOGIN: Found forced language {current_language}")
+    # Check pre-login language as a secondary source
+    elif 'pre_login_language' in st.session_state:
+        current_language = st.session_state.get('pre_login_language')
+        print(f"POST-LOGIN: Using pre-login language {current_language}")
+    # Backup location for language
+    elif 'backup_language' in st.session_state:
+        current_language = st.session_state.get('backup_language')
+        print(f"POST-LOGIN: Using backup language {current_language}")
+    # Fall back to regular language setting
+    else:
+        current_language = st.session_state.get('language', 'en')
+        print(f"POST-LOGIN: Using default language setting {current_language}")
     
-    # Add a check for the reload_translations flag
-    if st.session_state.get('reload_translations', False):
-        # Clear the flag
-        st.session_state['reload_translations'] = False
-        # Reinitialize language one more time to ensure it's applied
-        initialize()
-        set_language(current_language)
+    # Store language in all possible locations for redundancy
+    st.session_state['language'] = current_language
+    st.session_state['pre_login_language'] = current_language
+    st.session_state['backup_language'] = current_language
+    st.session_state['current_language'] = current_language
+    
+    # Force complete reinitialization
+    # Clear ALL existing translations to ensure a clean slate
+    from utils.i18n import _translations
+    _translations = {}
+    
+    # Call initialize multiple times for redundancy
+    initialize()  # First initialization
+    set_language(current_language)  # Direct language setting
+    
+    # Second initialization for reinforcement
+    initialize()
+    
+    # Always set a strong flag to ensure translations are reloaded on next run
+    st.session_state['reload_translations'] = True
     
     # Initialize aggregator
     results_aggregator = ResultsAggregator()
