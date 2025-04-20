@@ -4,7 +4,95 @@
     "subtitle": "Enterprise Privacynaleving Platform",
     "tagline": "Detecteer, Beheer en Rapporteer Privacynaleving met AI-gestuurde Precisie"
   },
+  "sidebar": {
+    "navigation": "Navigatie",
+    "sign_in": "Inloggen",
+    "create_account": "Account Aanmaken",
+    "welcome": "Welkom",
+    "quick_access": "Snelle Toegang",
+    "dashboard": "Dashboard",
+    "dashboard_help": "Bekijk uw dashboard",
+    "reports": "Rapporten",
+    "reports_help": "Genereer rapporten",
+    "profile_permissions": "Profiel & Machtigingen",
+    "current_role": "Huidige Rol",
+    "your_permissions": "Uw Machtigingen",
+    "no_description": "Geen beschrijving beschikbaar",
+    "other": "Overig",
+    "membership_options": "Lidmaatschapsopties",
+    "membership_benefits": "Lidmaatschapsvoordelen",
+    "benefit_unlimited_scans": "Onbeperkte scans",
+    "benefit_priority_support": "Prioriteitsondersteuning",
+    "benefit_advanced_reporting": "Geavanceerde rapportage",
+    "benefit_api_access": "API-toegang",
+    "benefit_team_collaboration": "Teamsamenwerkingsfuncties",
+    "premium_member": "Premium Lid",
+    "free_trial": "Gratis Proefversie",
+    "unlimited": "Onbeperkt",
+    "days_left": "dagen over",
+    "status": "Status",
+    "active": "Actief",
+    "expired": "Verlopen",
+    "expires": "Verloopt",
+    "scans_used": "Scans gebruikt",
+    "select_plan": "Selecteer Abonnement",
+    "plan_monthly": "Maandelijks (€29.99/maand)",
+    "plan_quarterly": "Kwartaal (€79.99/3 maanden)",
+    "plan_annual": "Jaarlijks (€299.99/jaar)",
+    "upgrade_button": "Upgraden naar Premium",
+    "complete_purchase": "Aankoop Afronden",
+    "enter_payment_details": "Voer uw betalingsgegevens in",
+    "card_number": "Kaartnummer",
+    "card_number_placeholder": "1234 5678 9012 3456",
+    "expiry": "Vervaldatum",
+    "expiry_placeholder": "MM/JJ",
+    "cvc": "CVC",
+    "cvc_placeholder": "123",
+    "name_on_card": "Naam op kaart",
+    "name_on_card_placeholder": "J. Smit",
+    "complete_purchase_button": "Aankoop Afronden",
+    "error": {
+      "card_number": "Vul een geldig kaartnummer in",
+      "expiry": "Vul een geldige vervaldatum in (MM/JJ)",
+      "cvc": "Vul een geldige CVC-code in",
+      "name_on_card": "Vul de naam op de kaart in"
+    },
+    "basic_user": "Basisgebruiker"
+  },
+  "login": {
+    "email_username": "E-mail of Gebruikersnaam",
+    "password": "Wachtwoord",
+    "remember_me": "Onthoud mij",
+    "forgot_password": "Wachtwoord vergeten?",
+    "button": "Inloggen",
+    "success": "Succesvol ingelogd!",
+    "error": {
+      "missing_fields": "Vul alle verplichte velden in",
+      "invalid_credentials": "Ongeldige inloggegevens"
+    }
+  },
+  "register": {
+    "username": "Gebruikersnaam",
+    "email": "E-mail",
+    "email_placeholder": "uw@email.com",
+    "password": "Wachtwoord",
+    "password_help": "Minimaal 8 tekens, inclusief een cijfer en speciaal teken",
+    "confirm_password": "Bevestig Wachtwoord",
+    "role": "Rol",
+    "terms": "Ik ga akkoord met de Algemene Voorwaarden",
+    "button": "Registreren",
+    "error": {
+      "missing_fields": "Vul alle verplichte velden in",
+      "passwords_mismatch": "Wachtwoorden komen niet overeen",
+      "terms_required": "U moet akkoord gaan met de voorwaarden",
+      "email_invalid": "Ongeldig e-mailadres",
+      "username_taken": "Gebruikersnaam is al in gebruik",
+      "email_taken": "E-mail is al in gebruik"
+    }
+  },
   "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Uw Privacy Compliance Dashboard",
     "generate_certificate": "Nalevingscertificaat Genereren",
     "generate_certificate_help": "Genereer een PDF-nalevingscertificaat voor deze scan",
     "premium_certificate": "Premium: Nalevingscertificaat",
@@ -14,6 +102,34 @@
     "cannot_generate_certificate_help": "Scan bevat nalevingsproblemen. Los alle problemen op om een certificaat te genereren.",
     "generating_certificate": "Nalevingscertificaat genereren...",
     "certificate_success": "Nalevingscertificaat succesvol gegenereerd!",
-    "certificate_error": "Kon geen nalevingscertificaat genereren. Neem contact op met ondersteuning."
+    "certificate_error": "Kon geen nalevingscertificaat genereren. Neem contact op met ondersteuning.",
+    "welcome": "Welkom Dashboard",
+    "metric": {
+      "total_scans": "Totaal Scans",
+      "total_pii": "Totaal PII Gevonden",
+      "high_risk": "Hoog Risico Items"
+    },
+    "analytics_title": "Privacy & Compliance Analyse",
+    "cost_efficiency": "Kostenefficiëntie",
+    "potential_savings": "Potentiële Besparingen in GDPR-boetes",
+    "sustainability_score": "Duurzaamheidsscore",
+    "scan_activity_over_time": "Scanactiviteit over Tijd"
+  },
+  "scan": {
+    "title": "Scan",
+    "new_scan_title": "Nieuwe Scan",
+    "premium_details_title": "Premium Details"
+  },
+  "history": {
+    "title": "Geschiedenis"
+  },
+  "results": {
+    "title": "Resultaten"
+  },
+  "report": {
+    "generate": "Rapport Genereren"
+  },
+  "admin": {
+    "title": "Admin"
   }
 }
