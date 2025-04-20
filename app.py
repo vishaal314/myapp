@@ -2292,14 +2292,30 @@ else:
                         # For DPIA, we use a different approach - interactive assessment form
                         st.success("Starting Data Protection Impact Assessment (DPIA)")
                         
-                        # Show details about the data source
+                        # Create temp directory for DPIA files if not already created
+                        if 'dpia_temp_dir' not in st.session_state:
+                            st.session_state.dpia_temp_dir = f"temp_{uuid.uuid4().hex}"
+                            os.makedirs(st.session_state.dpia_temp_dir, exist_ok=True)
+                        
+                        # Save uploaded files if any
                         if dpia_source == _("scan.upload_files") and uploaded_files:
+                            # Save files to temp directory
+                            file_paths = []
                             st.write(f"Analyzing {len(uploaded_files)} uploaded file(s) for DPIA assessment.")
                             
                             # List the files that were uploaded
                             st.write("Files being analyzed:")
                             for file in uploaded_files:
                                 st.write(f"- {file.name}")
+                                # Save the file to the temp directory
+                                file_path = os.path.join(st.session_state.dpia_temp_dir, file.name)
+                                with open(file_path, "wb") as f:
+                                    f.write(file.getbuffer())
+                                file_paths.append(file_path)
+                            
+                            # Store file paths in session state for assessment
+                            st.session_state.dpia_file_paths = file_paths
+                        
                         elif dpia_source == "GitHub Repository" and 'github_repo' in locals():
                             st.write(f"Repository URL: {github_repo}")
                             if 'github_branch' in locals() and github_branch:
@@ -2370,8 +2386,9 @@ else:
                                 
                                 # Add data source parameters if relevant
                                 if dpia_source == _("scan.upload_files") and uploaded_files:
-                                    # Files have already been saved to temp_dir
-                                    assessment_params["file_paths"] = file_paths
+                                    # Use file paths from session state to ensure consistency
+                                    if 'dpia_file_paths' in st.session_state:
+                                        assessment_params["file_paths"] = st.session_state.dpia_file_paths
                                     
                                 elif dpia_source == "GitHub Repository" and 'github_repo' in locals():
                                     assessment_params["github_repo"] = github_repo
