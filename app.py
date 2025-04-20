@@ -2402,70 +2402,103 @@ else:
                         
                         # Process assessment when the button is clicked (immediately, without relying on session state)
                         if submit_button:
-                            with st.spinner("Processing DPIA assessment..."):
-                                # Create assessment parameters including data source
-                                assessment_params = {
-                                    "answers": answers,
-                                    "language": st.session_state.get('language', 'en')
-                                }
-                                
-                                # Add data source parameters if relevant
-                                if dpia_source == _("scan.upload_files") and uploaded_files:
-                                    # Use file paths from session state to ensure consistency
-                                    if 'dpia_file_paths' in st.session_state:
-                                        assessment_params["file_paths"] = st.session_state.dpia_file_paths
+                            try:
+                                with st.spinner("Processing DPIA assessment..."):
+                                    # Debug message to track process
+                                    st.info("Preparing DPIA assessment data...")
                                     
-                                elif dpia_source == "GitHub Repository" and 'github_repo' in locals():
-                                    assessment_params["github_repo"] = github_repo
-                                    if 'github_branch' in locals() and github_branch:
-                                        assessment_params["github_branch"] = github_branch
-                                    if 'github_token' in locals() and github_token:
-                                        assessment_params["github_token"] = github_token
+                                    # Create assessment parameters including data source
+                                    assessment_params = {
+                                        "answers": answers,
+                                        "language": st.session_state.get('language', 'en')
+                                    }
+                                    
+                                    st.write(f"Data source: {dpia_source}")
+                                    
+                                    # Add data source parameters if relevant
+                                    if dpia_source == _("scan.upload_files") and uploaded_files:
+                                        # Use file paths from session state to ensure consistency
+                                        if 'dpia_file_paths' in st.session_state:
+                                            assessment_params["file_paths"] = st.session_state.dpia_file_paths
+                                            st.write(f"Scanning {len(st.session_state.dpia_file_paths)} uploaded files")
+                                    
+                                    elif dpia_source == "GitHub Repository" and 'github_repo' in locals():
+                                        assessment_params["github_repo"] = github_repo
+                                        st.write(f"GitHub repository: {github_repo}")
+                                        if 'github_branch' in locals() and github_branch:
+                                            assessment_params["github_branch"] = github_branch
+                                        if 'github_token' in locals() and github_token:
+                                            assessment_params["github_token"] = github_token
+                                            
+                                    elif dpia_source == "Local Files" and 'repo_path' in locals():
+                                        assessment_params["repo_path"] = repo_path
+                                        st.write(f"Local repository: {repo_path}")
+                                    
+                                    # Perform assessment with additional data
+                                    st.info("Running DPIA assessment...")
+                                    assessment_results = dpia_scanner.perform_assessment(**assessment_params)
+                                    
+                                    # Make sure we have valid results
+                                    if not assessment_results or 'scan_id' not in assessment_results:
+                                        st.error("Failed to generate assessment results")
+                                        st.json(assessment_results)
+                                        st.stop()
+                                    
+                                    # Generate comprehensive report
+                                    st.info("Generating comprehensive report...")
+                                    from services.report_generator import generate_dpia_report
+                                    report_data = generate_dpia_report(assessment_results)
+                                    
+                                    # Store results and make sure they're visible in the UI
+                                    scan_results = [report_data]
+                                    st.session_state.scan_results = scan_results 
+                                    st.session_state.current_scan_id = assessment_results['scan_id']
+                                    
+                                    # Make sure results are saved to the database
+                                    from services.results_aggregator import ResultsAggregator
+                                    results_aggregator = ResultsAggregator()
+                                    results_aggregator.save_dpia_result(assessment_results)
+                                    
+                                    # Generate PDF report automatically
+                                    with st.spinner("Generating PDF report..."):
+                                        st.info("Creating downloadable PDF report...")
+                                        import base64
+                                        from services.report_generator import generate_pdf_report
+                                        pdf_bytes = generate_pdf_report(
+                                            assessment_results,
+                                            include_details=True,
+                                            include_charts=True, 
+                                            include_metadata=True,
+                                            include_recommendations=True
+                                        )
                                         
-                                elif dpia_source == "Local Files" and 'repo_path' in locals():
-                                    assessment_params["repo_path"] = repo_path
-                                
-                                # Perform assessment with additional data
-                                assessment_results = dpia_scanner.perform_assessment(**assessment_params)
-                                
-                                # Generate comprehensive report
-                                report_data = generate_dpia_report(assessment_results)
-                                
-                                # Store results
-                                scan_results = [report_data]
-                                st.session_state.scan_results = scan_results
-                                st.session_state.current_scan_id = assessment_results['scan_id']
-                                
-                                # Generate PDF report automatically
-                                with st.spinner("Generating PDF report..."):
-                                    import base64
-                                    pdf_bytes = generate_pdf_report(
-                                        assessment_results,
-                                        include_details=True,
-                                        include_charts=True,
-                                        include_metadata=True,
-                                        include_recommendations=True
-                                    )
+                                        # Store the PDF in session state for later access
+                                        st.session_state.pdf_bytes = pdf_bytes
+                                        
+                                        # Create download link
+                                        b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                        scan_id_short = assessment_results['scan_id'][:6]
+                                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="DPIA_Assessment_Report_{scan_id_short}.pdf" style="display: inline-block; padding: 0.5em 1em; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin-top: 10px;">Download DPIA Report PDF</a>'
                                     
-                                    # Store the PDF in session state for later access
-                                    st.session_state.pdf_bytes = pdf_bytes
+                                    # Show summary of the assessment
+                                    st.subheader("DPIA Assessment Results")
+                                    st.markdown(f"**Overall Risk Level:** {assessment_results['overall_risk_level']}")
+                                    st.markdown(f"**DPIA Required:** {'Yes' if assessment_results['dpia_required'] else 'No'}")
+                                    st.markdown(f"**High Risk Items:** {assessment_results['high_risk_count']}")
+                                    st.markdown(f"**Medium Risk Items:** {assessment_results['medium_risk_count']}")
                                     
-                                    # Create download link
-                                    b64_pdf = base64.b64encode(pdf_bytes).decode()
-                                    scan_id_short = assessment_results['scan_id'][:6]
-                                    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="DPIA_Assessment_Report_{scan_id_short}.pdf" style="display: inline-block; padding: 0.5em 1em; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin-top: 10px;">Download DPIA Report PDF</a>'
+                                    # Show success message and link
+                                    st.success("DPIA assessment complete! Your assessment has been saved.")
+                                    st.markdown(href, unsafe_allow_html=True)
                                     
-                                # Show success message
-                                st.success("DPIA assessment complete!")
-                                
-                                # Show download link
-                                st.markdown(href, unsafe_allow_html=True)
-                                
-                                # No need to reset button state as we're using direct button detection
-                                
-                                # Skip the default scanner logic by returning early
-                                st.session_state.current_scan_id = assessment_results['scan_id']
-                                st.rerun()
+                                    # Provide navigation help
+                                    st.info("You can view this assessment anytime in the History tab.")
+                            
+                            except Exception as e:
+                                st.error(f"Error processing DPIA assessment: {str(e)}")
+                                import traceback
+                                st.code(traceback.format_exc())
+                                st.stop()
                         
                         # Skip the default scanner logic if we're still in the form
                         st.stop()
