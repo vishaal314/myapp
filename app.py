@@ -1742,6 +1742,34 @@ else:
             else:
                 uploaded_files = []
                 
+        elif scan_type == _("scan.dpia"):
+            st.subheader("Data Protection Impact Assessment (DPIA)")
+            dpia_source = st.radio(
+                "Select Data Source",
+                [_("scan.upload_files"), "GitHub Repository", "Local Files"], 
+                key="dpia_source"
+            )
+            
+            if dpia_source == _("scan.upload_files"):
+                upload_help = "Upload documentation, data schemas, or other relevant files for DPIA assessment"
+                uploaded_files = st.file_uploader(
+                    "Upload Files for DPIA Assessment", 
+                    accept_multiple_files=True,
+                    type=["pdf", "doc", "docx", "txt", "csv", "json", "xml", "sql"],
+                    help=upload_help
+                )
+            elif dpia_source == "GitHub Repository":
+                github_repo = st.text_input("GitHub Repository URL", 
+                                          placeholder="https://github.com/username/repository")
+                github_branch = st.text_input("Branch (optional)", value="main")
+                github_token = st.text_input("GitHub Token (for private repositories)", type="password")
+                st.info("The DPIA assessment will scan the repository for PII and data processing patterns.")
+                uploaded_files = []
+            else:  # Local Files
+                repo_path = st.text_input("Path to local files or repository")
+                st.info("The DPIA assessment will scan the provided local path for PII and data processing patterns.")
+                uploaded_files = []
+                
         elif scan_type == _("scan.soc2"):
             if log_source == _("scan.upload_files"):
                 upload_help = "Upload log files and access control configurations"
@@ -1800,6 +1828,16 @@ else:
             elif scan_type == _("scan.ai_model"):
                 # For AI Model scans
                 proceed_with_scan = True
+            elif scan_type == _("scan.dpia"):
+                # For DPIA scans
+                if dpia_source == _("scan.upload_files") and not uploaded_files:
+                    st.error("Please upload at least one file for DPIA assessment.")
+                elif dpia_source == "GitHub Repository" and not github_repo:
+                    st.error("Please enter a GitHub repository URL for DPIA assessment.")
+                elif dpia_source == "Local Files" and not repo_path:
+                    st.error("Please enter a local repository path for DPIA assessment.")
+                else:
+                    proceed_with_scan = True
             elif scan_type == _("scan.manual") and not uploaded_files:
                 st.error("Please upload at least one file for manual scanning.")
             else:
@@ -2254,6 +2292,21 @@ else:
                         # For DPIA, we use a different approach - interactive assessment form
                         st.success("Starting Data Protection Impact Assessment (DPIA)")
                         
+                        # Show details about the data source
+                        if dpia_source == _("scan.upload_files") and uploaded_files:
+                            st.write(f"Analyzing {len(uploaded_files)} uploaded file(s) for DPIA assessment.")
+                            
+                            # List the files that were uploaded
+                            st.write("Files being analyzed:")
+                            for file in uploaded_files:
+                                st.write(f"- {file.name}")
+                        elif dpia_source == "GitHub Repository" and 'github_repo' in locals():
+                            st.write(f"Repository URL: {github_repo}")
+                            if 'github_branch' in locals() and github_branch:
+                                st.write(f"Branch: {github_branch}")
+                        elif dpia_source == "Local Files" and 'repo_path' in locals():
+                            st.write(f"Local repository path: {repo_path}")
+                        
                         # Initialize DPIA scanner with current language
                         dpia_scanner = DPIAScanner(language=st.session_state.get('language', 'en'))
                         
@@ -2300,8 +2353,29 @@ else:
                         # Process assessment
                         if st.button("Complete DPIA Assessment"):
                             with st.spinner("Processing DPIA assessment..."):
-                                # Perform assessment
-                                assessment_results = dpia_scanner.perform_assessment(answers)
+                                # Create assessment parameters including data source
+                                assessment_params = {
+                                    "answers": answers,
+                                    "language": st.session_state.get('language', 'en')
+                                }
+                                
+                                # Add data source parameters if relevant
+                                if dpia_source == _("scan.upload_files") and uploaded_files:
+                                    # Files have already been saved to temp_dir
+                                    assessment_params["file_paths"] = file_paths
+                                    
+                                elif dpia_source == "GitHub Repository" and 'github_repo' in locals():
+                                    assessment_params["github_repo"] = github_repo
+                                    if 'github_branch' in locals() and github_branch:
+                                        assessment_params["github_branch"] = github_branch
+                                    if 'github_token' in locals() and github_token:
+                                        assessment_params["github_token"] = github_token
+                                        
+                                elif dpia_source == "Local Files" and 'repo_path' in locals():
+                                    assessment_params["repo_path"] = repo_path
+                                
+                                # Perform assessment with additional data
+                                assessment_results = dpia_scanner.perform_assessment(**assessment_params)
                                 
                                 # Generate comprehensive report
                                 report_data = generate_dpia_report(assessment_results)
