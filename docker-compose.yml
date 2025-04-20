@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: dataguardian-db
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dataguardian}
+      POSTGRES_USER: ${POSTGRES_USER:-dataguardian}
+      POSTGRES_DB: ${POSTGRES_DB:-dataguardian}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dataguardian}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # DataGuardian Pro Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dataguardian-app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-5000}:5000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-dataguardian}:${POSTGRES_PASSWORD:-dataguardian}@db:5432/${POSTGRES_DB:-dataguardian}
+      - PGHOST=db
+      - PGUSER=${POSTGRES_USER:-dataguardian}
+      - PGPASSWORD=${POSTGRES_PASSWORD:-dataguardian}
+      - PGDATABASE=${POSTGRES_DB:-dataguardian}
+      - PGPORT=5432
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
+    volumes:
+      - ./reports:/app/reports
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
