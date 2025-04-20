@@ -2366,17 +2366,14 @@ else:
                             answers[category] = category_answers
                             st.write("---")
                         
-                        # Process assessment - Using a simplified approach for better reliability
-                        # Make sure the button is unique and use session state to track button clicks
-                        if "dpia_submit_clicked" not in st.session_state:
-                            st.session_state.dpia_submit_clicked = False
+                        # Process assessment - Using a more direct approach that will work better with repository selection
                         
-                        # Create a single, clear button for assessment submission
-                        if st.button("Submit DPIA Assessment", key="dpia_submit_unique"):
-                            st.session_state.dpia_submit_clicked = True
+                        # Create a single, clear button for assessment submission and directly execute the assessment
+                        # This avoids the state management issues with the submit button
+                        submit_button = st.button("Submit DPIA Assessment", key="dpia_submit_unique", type="primary")
                         
-                        # Process the assessment if the button was clicked
-                        if st.session_state.dpia_submit_clicked:
+                        # Process assessment when the button is clicked (immediately, without relying on session state)
+                        if submit_button:
                             with st.spinner("Processing DPIA assessment..."):
                                 # Create assessment parameters including data source
                                 assessment_params = {
@@ -2436,8 +2433,7 @@ else:
                                 # Show download link
                                 st.markdown(href, unsafe_allow_html=True)
                                 
-                                # Reset the submit button state to prevent auto-resubmission
-                                st.session_state.dpia_submit_clicked = False
+                                # No need to reset button state as we're using direct button detection
                                 
                                 # Skip the default scanner logic by returning early
                                 st.session_state.current_scan_id = assessment_results['scan_id']
