@@ -1,1009 +1,831 @@
 """
-Website Scanner for DataGuardian Pro.
-This scanner detects PII, cookies, trackers, and vulnerabilities in websites.
+Website Scanner module for comprehensive privacy compliance scanning of websites.
+
+This module simulates a real visitor journey, analyzing pageviews and actions
+to provide detailed reports on data collection, tracking pixels, cookies,
+and consent choices across a website.
 """
-import re
+
 import os
-import requests
-from bs4 import BeautifulSoup
-import urllib.parse
-import time
-import random
-from typing import Dict, List, Any, Optional, Callable, Tuple
-import tldextract
-import trafilatura
-from datetime import datetime
+import re
 import json
+import time
+import logging
+import requests
+import fnmatch
+import hashlib
+import tldextract
+import threading
+from datetime import datetime
+from typing import Dict, List, Any, Optional, Set, Tuple
+from urllib.parse import urlparse, urljoin
+from bs4 import BeautifulSoup
+from trafilatura import fetch_url, extract
+import whois
+import dns.resolver
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class WebsiteScanner:
     """
-    A scanner that detects PII and privacy issues in websites.
+    A comprehensive scanner that analyzes websites for privacy compliance issues,
+    tracking technologies, cookies, and consent mechanisms.
     """
     
-    def __init__(self, languages: List[str] = None, region: str = "Netherlands", 
-                 rate_limit: int = 10, max_pages: int = 20, 
-                 cookies_enabled: bool = True, js_enabled: bool = True,
-                 user_agent: str = None):
+    def __init__(self, max_pages=100, max_depth=3, crawl_delay=1, 
+                 save_screenshots=False, simulate_user=True, check_ssl=True,
+                 check_dns=True, region="Netherlands"):
         """
         Initialize the website scanner.
         
         Args:
-            languages: List of languages used on the website
-            region: The region for which GDPR rules are applied
-            rate_limit: Maximum requests per minute
-            max_pages: Maximum number of pages to scan
-            cookies_enabled: Whether to collect and analyze cookies
-            js_enabled: Whether to analyze JavaScript
-            user_agent: Custom user agent string
+            max_pages: Maximum number of pages to scan (default: 100)
+            max_depth: Maximum depth of crawling (default: 3)
+            crawl_delay: Delay between requests in seconds (default: 1)
+            save_screenshots: Whether to save screenshots of pages (default: False)
+            simulate_user: Whether to simulate user interactions (default: True)
+            check_ssl: Whether to check SSL/TLS configuration (default: True)
+            check_dns: Whether to check DNS records (default: True)
+            region: Region for applying GDPR rules (default: "Netherlands")
         """
-        self.languages = languages or ["English"]
+        self.max_pages = max_pages
+        self.max_depth = max_depth
+        self.crawl_delay = crawl_delay
+        self.save_screenshots = save_screenshots
+        self.simulate_user = simulate_user
+        self.check_ssl = check_ssl
+        self.check_dns = check_dns
         self.region = region
-        self.rate_limit = max(1, min(rate_limit, 60))  # 1-60 requests per minute
-        self.max_pages = max(1, min(max_pages, 100))  # 1-100 pages
-        self.cookies_enabled = cookies_enabled
-        self.js_enabled = js_enabled
         
-        # Set user agent
-        self.user_agent = user_agent or (
-            "Mozilla/5.0 (compatible; DataGuardianPro/1.0; "
-            "+https://dataguardian.pro/bot)"
-        )
+        # Session with headers that mimic a real browser
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'DNT': '1',  # Do Not Track header
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+        })
         
-        # Rate limiting delay
-        self.request_delay = 60.0 / self.rate_limit
+        # Initialize tracking databases
+        self._load_tracking_databases()
         
-        # Tracking with enhanced capabilities
-        self.visited_urls = set()
+        # Known consent management platforms
+        self.consent_platforms = [
+            {'name': 'OneTrust', 'patterns': ['otSDKStub', 'OneTrust', 'onetrust', 'optanon']},
+            {'name': 'TrustArc', 'patterns': ['truste', 'TrustArc', 'trustarc.com']},
+            {'name': 'Cookiebot', 'patterns': ['cookiebot', 'Cookiebot', 'CookieDeclaration']},
+            {'name': 'CookiePro', 'patterns': ['cookiepro', 'CookiePro']},
+            {'name': 'Osano', 'patterns': ['osano', 'Osano', 'osano.com']},
+            {'name': 'Quantcast Choice', 'patterns': ['quantcast', 'Quantcast', 'quantcast.mgr.consensu.org']},
+            {'name': 'CivicUK', 'patterns': ['civicuk', 'CivicUK', 'civic-cookie-control']},
+            {'name': 'CookieYes', 'patterns': ['cookieyes', 'CookieYes']},
+            {'name': 'GDPR Cookie Consent', 'patterns': ['gdpr-cookie-consent', 'gdpr_cookie_consent', 'GDPRCookieConsent']},
+            {'name': 'Didomi', 'patterns': ['didomi', 'Didomi']},
+            {'name': 'Termly', 'patterns': ['termly', 'Termly']},
+            {'name': 'Usercentrics', 'patterns': ['usercentrics', 'Usercentrics']},
+            {'name': 'iubenda', 'patterns': ['iubenda', 'Iubenda']},
+            {'name': 'Complianz', 'patterns': ['complianz', 'Complianz']},
+            {'name': 'CookieHub', 'patterns': ['cookiehub', 'CookieHub']},
+            {'name': 'Consent Manager', 'patterns': ['consent-manager', 'ConsentManager']},
+            {'name': 'Seers CMP', 'patterns': ['seers', 'Seers', 'seersco.io']},
+            {'name': 'Onetrust Banner', 'patterns': ['onetrust-banner', 'OneTrustBanner']}
+        ]
+        
+        # Known cookie categories
+        self.cookie_categories = {
+            'essential': ['session', 'csrf', 'security', 'auth', 'login', 'cookie_notice', 'gdpr'],
+            'functional': ['preferences', 'settings', 'language', 'timezone', 'region', 'country', 'user_settings'],
+            'analytics': ['ga', 'google', 'analytics', '_ga', '_gid', '_gat', 'utma', 'utmb', 'utmc', 'utmz', 'utmv', 'utmk'],
+            'advertising': ['ad', 'ads', 'advert', 'doubleclick', 'google_ad', 'facebook', 'fb', 'twitter', 'linkedin'],
+            'social': ['facebook', 'twitter', 'linkedin', 'pinterest', 'instagram', 'youtube', 'vimeo', 'tumblr']
+        }
+        
+        # Progress tracking
         self.progress_callback = None
-        self.current_progress = 0
-        self.total_pages = 0
-        
-        # File type patterns to explicitly scan
-        self.crawlable_file_types = [
-            '.html', '.htm', '.xhtml', '.php', '.asp', '.aspx', '.jsp',
-            '.json', '.xml', '.txt', '.md', '.csv', '.pdf'
-        ]
-        
-        # Define which file types should never be excluded during scanning
-        self.important_extensions = [
-            '.env', '.ini', '.conf', '.config', '.json', '.xml', '.txt', 
-            '.log', '.md', '.yml', '.yaml', '.csv', '.tsv'
-        ]
-        
-        # PII detection patterns
-        self.pii_patterns = {
-            'Email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-            'Phone': r'\b(\+\d{1,3}[\s.-])?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b',
-            'Credit Card': r'\b(?:\d{4}[- ]?){3}\d{4}\b',
-            'BSN': r'\b\d{9}\b',
-            'IP Address': r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b',
-            'Address': r'\b\d+\s+[A-Za-z]+\s+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Highway|Hwy|Parkway|Pkwy)\b',
-            'PostalCode': r'\b\d{5}(?:[-\s]\d{4})?\b'
-        }
-        
-        # Vulnerability patterns
-        self.vulnerability_patterns = {
-            'XSS': [
-                r'document\.write\s*\(.*?\)',
-                r'\.innerHTML\s*=',
-                r'eval\s*\(',
-                r'setTimeout\s*\(\s*[\'"`]',
-                r'document\.cookie'
-            ],
-            'CSRF': [
-                r'<form[^>]*>(?:(?!csrf).)*?</form>',
-                r'<!-- CSRF TOKEN MISSING -->',
-                r'<!-- MISSING CSRF PROTECTION -->'
-            ],
-            'Insecure Cookies': [
-                r'document\.cookie\s*=\s*[\'"`][^;]*?[\'"`]',
-                r'setCookie\([^,]+,[^,]+,\s*\{[^}]*?secure:\s*false[^}]*?\}'
-            ],
-            'Sensitive URL': [
-                r'(password|login|admin|token|key|credential)=[^&]+',
-                r'secret=[^&]+'
-            ]
-        }
+        self.is_running = False
     
-    def set_progress_callback(self, callback_function: Callable[[int, int, str], None]) -> None:
+    def _load_tracking_databases(self):
+        """Load known tracking databases from JSON files"""
+        
+        # Define default trackers if database files don't exist
+        self.known_trackers = {
+            'Google Analytics': {
+                'domains': ['google-analytics.com', 'analytics.google.com'],
+                'patterns': ['ga', 'gtag', 'gtm', 'analytics']
+            },
+            'Google Tag Manager': {
+                'domains': ['googletagmanager.com', 'tagmanager.google.com'],
+                'patterns': ['gtm', 'tagmanager']
+            },
+            'Facebook Pixel': {
+                'domains': ['facebook.com', 'facebook.net', 'fbcdn.net'],
+                'patterns': ['fbq', 'fbevents', 'facebook-jssdk']
+            },
+            'LinkedIn Insight': {
+                'domains': ['linkedin.com', 'licdn.com'],
+                'patterns': ['_linkedin_partner_id', 'linkedin_data_partner']
+            },
+            'Twitter Pixel': {
+                'domains': ['twitter.com', 'ads-twitter.com'],
+                'patterns': ['twq', 'twitter_pixel']
+            },
+            'HotJar': {
+                'domains': ['hotjar.com', 'hotjar.io'],
+                'patterns': ['hjLaunchSurvey', 'hjSiteSettings', 'hjUserAttributes']
+            },
+            'Mixpanel': {
+                'domains': ['mixpanel.com'],
+                'patterns': ['mixpanel']
+            },
+            'Hubspot': {
+                'domains': ['hs-scripts.com', 'hubspot.com'],
+                'patterns': ['hs-script', 'hubspot']
+            },
+            'Intercom': {
+                'domains': ['intercom.io', 'intercom.com'],
+                'patterns': ['intercom']
+            },
+            'Segment': {
+                'domains': ['segment.io', 'segment.com'],
+                'patterns': ['segment']
+            },
+            'Amplitude': {
+                'domains': ['amplitude.com'],
+                'patterns': ['amplitude']
+            },
+            'Crazy Egg': {
+                'domains': ['crazyegg.com'],
+                'patterns': ['crazyegg', 'cetrk']
+            },
+            'FullStory': {
+                'domains': ['fullstory.com'],
+                'patterns': ['fullstory', 'FS']
+            },
+            'Lucky Orange': {
+                'domains': ['luckyorange.com', 'luckyorange.net'],
+                'patterns': ['LuckyOrange', 'LOTC']
+            },
+            'Mouseflow': {
+                'domains': ['mouseflow.com'],
+                'patterns': ['mouseflow', 'MF']
+            },
+            'Optimizely': {
+                'domains': ['optimizely.com'],
+                'patterns': ['optimizely']
+            },
+            'VWO': {
+                'domains': ['visualwebsiteoptimizer.com', 'vwo.com'],
+                'patterns': ['vwo', '_vis_opt']
+            },
+            'Matomo': {
+                'domains': ['matomo.org', 'matomo.cloud'],
+                'patterns': ['matomo', 'piwik']
+            },
+            'Adobe Analytics': {
+                'domains': ['omtrdc.net', 'adobe.com'],
+                'patterns': ['s_code', 's.trackingServer', 'sc.omtrdc']
+            }
+        }
+        
+        # Try to load trackers from a JSON file if it exists
+        try:
+            trackers_path = os.path.join('data', 'trackers_database.json')
+            if os.path.exists(trackers_path):
+                with open(trackers_path, 'r') as f:
+                    self.known_trackers = json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load trackers database: {str(e)}")
+    
+    def set_progress_callback(self, callback_function):
         """
-        Set a callback function to report progress during long-running scans.
+        Set a callback function for progress updates during website scanning.
         
         Args:
-            callback_function: Function that takes (current_progress, total_pages, current_url)
+            callback_function: A function that takes current, total, and current URL
         """
         self.progress_callback = callback_function
     
-    def scan_website(self, url: str, include_text: bool = True, include_images: bool = True,
-                    include_forms: bool = True, include_metadata: bool = True,
-                    detect_pii: bool = True, detect_cookies: bool = True,
-                    detect_trackers: bool = True, analyze_privacy_policy: bool = True) -> Dict[str, Any]:
+    def scan_website(self, url: str, follow_links: bool = True) -> Dict[str, Any]:
         """
-        Scan a website for PII and privacy issues.
+        Perform a comprehensive scan of a website.
         
         Args:
-            url: Base URL of the website to scan
-            include_text: Whether to extract and scan text content
-            include_images: Whether to analyze images
-            include_forms: Whether to scan form fields
-            include_metadata: Whether to extract metadata
-            detect_pii: Whether to detect PII in content
-            detect_cookies: Whether to analyze cookies
-            detect_trackers: Whether to detect trackers
-            analyze_privacy_policy: Whether to analyze privacy policy
+            url: The URL of the website to scan
+            follow_links: Whether to follow links during crawling (default: True)
             
         Returns:
-            Dictionary containing scan results
+            Dictionary with comprehensive scan results
         """
-        # Normalize URL
-        if not url.startswith('http'):
-            url = 'https://' + url
+        # Initialize scan data
+        self.start_time = datetime.now()
+        self.is_running = True
         
-        # Extract domain
-        domain_info = tldextract.extract(url)
-        domain = f"{domain_info.domain}.{domain_info.suffix}"
+        # Generate a unique scan ID
+        scan_id = hashlib.md5(f"{url}:{self.start_time.isoformat()}".encode()).hexdigest()[:10]
         
-        # Initialize results
-        results = {
-            'url': url,
-            'domain': domain,
-            'scan_timestamp': datetime.now().isoformat(),
-            'scan_type': 'website_scan',
-            'region': self.region,
-            'findings': [],
-            'pii_types': {},
-            'risk_levels': {'High': 0, 'Medium': 0, 'Low': 0},
-            'total_pii_found': 0,
-            'high_risk_count': 0,
-            'medium_risk_count': 0,
-            'low_risk_count': 0,
-            'pages_scanned': 0,
-            'total_findings': 0
-        }
+        # Parse and normalize the starting URL
+        parsed_url = urlparse(url)
+        if not parsed_url.scheme:
+            url = f"https://{url}"
+            parsed_url = urlparse(url)
         
-        # Reset tracking
-        self.visited_urls = set()
-        self.current_progress = 0
-        self.total_pages = min(self.max_pages, 20)  # Start with 20, adjust as we discover pages
+        base_domain = parsed_url.netloc
+        base_url = f"{parsed_url.scheme}://{base_domain}"
         
-        try:
-            # Get site metadata
-            site_metadata = self._get_site_metadata(url)
-            results['site_metadata'] = site_metadata
-            
-            # First scan the main URL
-            self._scan_url(url, results, include_text, include_images, include_forms, include_metadata,
-                          detect_pii, detect_cookies, detect_trackers)
-            
-            # If privacy policy URL is detected and analysis is requested
-            if analyze_privacy_policy and 'privacy_policy_url' in site_metadata:
-                privacy_url = site_metadata['privacy_policy_url']
-                privacy_findings = self._analyze_privacy_policy(privacy_url)
-                results['privacy_policy_analysis'] = privacy_findings
-            
-            # Update final counts
-            results['pages_scanned'] = len(self.visited_urls)
-            results['total_findings'] = len(results['findings'])
-            
-            # Log completion
-            if self.progress_callback:
-                self.progress_callback(self.total_pages, self.total_pages, "Scan complete")
-            
-        except Exception as e:
-            # Add error information
-            results['error'] = str(e)
-            results['error_type'] = type(e).__name__
+        # Initialize scan data structures
+        visited_urls = set()
+        pages_data = []
+        findings = []
+        cookies = {}
+        trackers = {}
+        all_links = set()
+        same_domain_links = set()
+        external_links = set()
         
-        return results
-    
-    def _scan_url(self, url: str, results: Dict[str, Any], include_text: bool, include_images: bool,
-                 include_forms: bool, include_metadata: bool, detect_pii: bool, 
-                 detect_cookies: bool, detect_trackers: bool) -> None:
-        """
-        Scan a single URL and update results.
+        # Queue for BFS crawling
+        queue = [(url, 0)]  # (url, depth)
         
-        Args:
-            url: URL to scan
-            results: Results dictionary to update
-            include_text, include_images, etc.: Feature flags
-        """
-        # Skip if already visited or max pages reached
-        if url in self.visited_urls or len(self.visited_urls) >= self.max_pages:
-            return
+        # Perform domain registration and DNS checks
+        domain_info = self._check_domain_info(base_domain)
         
-        # Mark as visited
-        self.visited_urls.add(url)
+        # Scan the website by following links
+        page_count = 0
         
-        # Rate limiting
-        time.sleep(self.request_delay)
-        
-        # Update progress
-        self.current_progress = len(self.visited_urls)
+        # Report initial progress
         if self.progress_callback:
-            self.progress_callback(self.current_progress, self.total_pages, url)
+            self.progress_callback(0, self.max_pages, url)
         
-        try:
-            # Get page content
-            headers = {'User-Agent': self.user_agent}
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
+        while queue and page_count < self.max_pages and self.is_running:
+            current_url, depth = queue.pop(0)
             
-            # Extract text using trafilatura for better content extraction
-            text_content = ""
-            html_content = response.text
+            # Skip if URL already visited or depth exceeded
+            if current_url in visited_urls or depth > self.max_depth:
+                continue
             
-            if include_text:
-                try:
-                    text_content = trafilatura.extract(html_content)
-                    
-                    # Fallback to BeautifulSoup if trafilatura fails
-                    if not text_content:
-                        soup = BeautifulSoup(html_content, 'html.parser')
-                        text_content = soup.get_text(separator=' ', strip=True)
-                    
-                    # Scan text for PII if requested
-                    if detect_pii and text_content:
-                        pii_findings = self._scan_text_for_pii(text_content, url)
-                        results['findings'].extend(pii_findings)
-                        
-                        # Update PII types and risk levels
-                        for finding in pii_findings:
-                            pii_type = finding['type']
-                            risk_level = finding['risk_level']
-                            
-                            # Update PII types count
-                            if pii_type not in results['pii_types']:
-                                results['pii_types'][pii_type] = 0
-                            results['pii_types'][pii_type] += 1
-                            
-                            # Update risk level counts
-                            results['risk_levels'][risk_level] += 1
-                            
-                            # Update total PII count
-                            results['total_pii_found'] += 1
-                            
-                            # Update risk counts
-                            if risk_level == 'High':
-                                results['high_risk_count'] += 1
-                            elif risk_level == 'Medium':
-                                results['medium_risk_count'] += 1
-                            elif risk_level == 'Low':
-                                results['low_risk_count'] += 1
-                
-                except Exception as e:
-                    results.setdefault('errors', []).append({
-                        'type': 'text_extraction',
-                        'url': url,
-                        'message': str(e)
-                    })
+            visited_urls.add(current_url)
             
-            # Create soup for further analysis
-            soup = BeautifulSoup(html_content, 'html.parser')
+            # Scan the current page
+            logger.info(f"Scanning page: {current_url}")
             
-            # Scan forms if requested
-            if include_forms:
-                form_findings = self._scan_forms(soup, url)
-                results['findings'].extend(form_findings)
+            try:
+                # Respect crawl delay
+                time.sleep(self.crawl_delay)
                 
-                # Update counts
-                for finding in form_findings:
-                    risk_level = finding['risk_level']
-                    results['risk_levels'][risk_level] += 1
-                    results['total_pii_found'] += 1
-                    
-                    if risk_level == 'High':
-                        results['high_risk_count'] += 1
-                    elif risk_level == 'Medium':
-                        results['medium_risk_count'] += 1
-                    elif risk_level == 'Low':
-                        results['low_risk_count'] += 1
-            
-            # Detect JavaScript vulnerabilities
-            if self.js_enabled:
-                js_findings = self._scan_javascript(soup, url)
-                results['findings'].extend(js_findings)
+                # Fetch the page
+                response = self.session.get(current_url, timeout=10)
                 
-                # Update counts
-                for finding in js_findings:
-                    risk_level = finding['risk_level']
-                    results['risk_levels'][risk_level] += 1
-                    
-                    if risk_level == 'High':
-                        results['high_risk_count'] += 1
-                    elif risk_level == 'Medium':
-                        results['medium_risk_count'] += 1
-                    elif risk_level == 'Low':
-                        results['low_risk_count'] += 1
-            
-            # Detect cookies if requested
-            if detect_cookies and self.cookies_enabled:
-                cookie_findings = self._analyze_cookies(response.cookies, url)
-                results['findings'].extend(cookie_findings)
+                # Skip non-HTML responses
+                if 'text/html' not in response.headers.get('Content-Type', ''):
+                    continue
                 
-                # Update counts
-                for finding in cookie_findings:
-                    risk_level = finding['risk_level']
-                    results['risk_levels'][risk_level] += 1
-                    
-                    if risk_level == 'High':
-                        results['high_risk_count'] += 1
-                    elif risk_level == 'Medium':
-                        results['medium_risk_count'] += 1
-                    elif risk_level == 'Low':
-                        results['low_risk_count'] += 1
-            
-            # Detect trackers if requested
-            if detect_trackers:
-                tracker_findings = self._detect_trackers(soup, url)
-                results['findings'].extend(tracker_findings)
+                # Analyze the page
+                page_data = self._analyze_page(current_url, response.text, depth)
+                pages_data.append(page_data)
                 
-                # Update counts
-                for finding in tracker_findings:
-                    risk_level = finding['risk_level']
-                    results['risk_levels'][risk_level] += 1
-                    
-                    if risk_level == 'High':
-                        results['high_risk_count'] += 1
-                    elif risk_level == 'Medium':
-                        results['medium_risk_count'] += 1
-                    elif risk_level == 'Low':
-                        results['low_risk_count'] += 1
-            
-            # Extract links for further scanning (limited to same domain)
-            if len(self.visited_urls) < self.max_pages:
-                links = soup.find_all('a', href=True)
+                # Extract and analyze cookies
+                page_cookies = self._extract_cookies(response)
+                for cookie_name, cookie_data in page_cookies.items():
+                    cookies[cookie_name] = cookie_data
                 
-                # Extract domain of current URL
-                base_domain = tldextract.extract(url).registered_domain
+                # Find trackers
+                page_trackers = page_data.get('trackers', [])
+                for tracker in page_trackers:
+                    tracker_name = tracker.get('name')
+                    if tracker_name:
+                        trackers[tracker_name] = tracker
                 
-                # Prioritize important file types that could contain sensitive information
-                prioritized_urls = []
-                standard_urls = []
+                # Add findings from the page
+                page_findings = page_data.get('findings', [])
+                findings.extend(page_findings)
                 
-                for link in links:
-                    href = link['href']
-                    
-                    # Skip javascript, mailto links, anchors
-                    if href.startswith('javascript:') or href.startswith('mailto:') or href == '#':
-                        continue
-                    
-                    # Normalize URL
-                    if href.startswith('/'):
-                        # Relative URL
-                        next_url = urllib.parse.urljoin(url, href)
-                    elif href.startswith('http'):
-                        # Absolute URL
-                        next_url = href
-                    else:
-                        # Try to resolve relative URL
-                        try:
-                            next_url = urllib.parse.urljoin(url, href)
-                        except:
-                            continue
-                    
-                    # Skip already visited URLs
-                    if next_url in self.visited_urls:
-                        continue
-                    
-                    # Check if URL is in the same domain
-                    link_domain = tldextract.extract(next_url).registered_domain
-                    if link_domain != base_domain:
-                        continue
-                    
-                    # Check file extension
-                    _, ext = os.path.splitext(next_url.split('?')[0])
-                    ext = ext.lower()
-                    
-                    # Prioritize URLs with important file extensions
-                    if ext in self.important_extensions:
-                        prioritized_urls.append(next_url)
-                    elif ext in self.crawlable_file_types or not ext:
-                        standard_urls.append(next_url)
+                # Update links
+                all_links.update(page_data.get('all_links', []))
+                same_domain_links.update(page_data.get('same_domain_links', []))
+                external_links.update(page_data.get('external_links', []))
                 
-                # Process prioritized URLs first, then standard URLs
-                all_urls = prioritized_urls + standard_urls
+                # Follow links if enabled
+                if follow_links and depth < self.max_depth:
+                    for link in page_data.get('same_domain_links', []):
+                        if link not in visited_urls:
+                            queue.append((link, depth + 1))
                 
-                # Limit to prevent exceeding max_pages
-                remaining_slots = self.max_pages - len(self.visited_urls)
-                urls_to_scan = all_urls[:remaining_slots]
+                # Increment page count
+                page_count += 1
                 
-                # Recursively scan URLs
-                for next_url in urls_to_scan:
-                    self._scan_url(next_url, results, include_text, include_images,
-                                  include_forms, include_metadata, detect_pii,
-                                  detect_cookies, detect_trackers)
+                # Report progress
+                if self.progress_callback:
+                    self.progress_callback(page_count, self.max_pages, current_url)
+                    
+            except Exception as e:
+                logger.error(f"Error scanning {current_url}: {str(e)}")
+                findings.append({
+                    'type': 'error',
+                    'url': current_url,
+                    'description': f"Failed to scan page: {str(e)}",
+                    'severity': 'Medium'
+                })
         
-        except requests.RequestException as e:
-            # Add error information
-            results.setdefault('errors', []).append({
-                'type': 'request',
-                'url': url,
-                'message': str(e)
-            })
-    
-    def _get_site_metadata(self, url: str) -> Dict[str, Any]:
-        """
-        Get metadata about the site.
+        # Check SSL/TLS configuration
+        ssl_info = None
+        if self.check_ssl:
+            ssl_info = self._check_ssl(base_url)
         
-        Args:
-            url: Base URL of the website
-            
-        Returns:
-            Dictionary with site metadata
-        """
-        metadata = {
+        # Summarize findings
+        self.is_running = False
+        end_time = datetime.now()
+        duration = (end_time - self.start_time).total_seconds()
+        
+        # Generate statistics
+        stats = {
+            'pages_scanned': page_count,
+            'total_cookies': len(cookies),
+            'total_trackers': len(trackers),
+            'total_findings': len(findings),
+            'total_links': len(all_links),
+            'internal_links': len(same_domain_links),
+            'external_links': len(external_links),
+            'scan_duration_seconds': duration
+        }
+        
+        # Categorize cookies
+        cookie_categories = self._categorize_cookies(cookies)
+        
+        # Generate the final scan results
+        scan_results = {
+            'scan_id': scan_id,
+            'scan_time': self.start_time.isoformat(),
+            'completion_time': end_time.isoformat(),
+            'duration_seconds': duration,
             'url': url,
-            'scan_time': datetime.now().isoformat()
+            'base_domain': base_domain,
+            'pages_data': pages_data,
+            'findings': findings,
+            'cookies': cookies,
+            'cookie_categories': cookie_categories,
+            'trackers': list(trackers.values()),
+            'links': {
+                'all': list(all_links),
+                'internal': list(same_domain_links),
+                'external': list(external_links)
+            },
+            'domain_info': domain_info,
+            'ssl_info': ssl_info,
+            'stats': stats,
+            'scan_type': 'website'
         }
         
-        try:
-            # Get response
-            headers = {'User-Agent': self.user_agent}
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
-            
-            # Parse with BeautifulSoup
-            soup = BeautifulSoup(response.text, 'html.parser')
-            
-            # Get title
-            title = soup.title.string if soup.title else 'No title'
-            metadata['title'] = title.strip() if title else 'No title'
-            
-            # Get meta description
-            meta_desc = soup.find('meta', attrs={'name': 'description'})
-            if meta_desc and meta_desc.get('content'):
-                metadata['description'] = meta_desc['content'].strip()
-            
-            # Get meta keywords
-            meta_keywords = soup.find('meta', attrs={'name': 'keywords'})
-            if meta_keywords and meta_keywords.get('content'):
-                metadata['keywords'] = meta_keywords['content'].strip().split(',')
-            
-            # Check for privacy policy link
-            privacy_links = soup.find_all('a', string=re.compile(r'privacy|Privacy|PRIVACY'))
-            if privacy_links:
-                href = privacy_links[0].get('href')
-                if href:
-                    if href.startswith('/'):
-                        metadata['privacy_policy_url'] = urllib.parse.urljoin(url, href)
-                    elif href.startswith('http'):
-                        metadata['privacy_policy_url'] = href
-                    else:
-                        metadata['privacy_policy_url'] = urllib.parse.urljoin(url, href)
-            
-            # Check for cookie policy link
-            cookie_links = soup.find_all('a', string=re.compile(r'cookie|Cookie|COOKIE'))
-            if cookie_links:
-                href = cookie_links[0].get('href')
-                if href:
-                    if href.startswith('/'):
-                        metadata['cookie_policy_url'] = urllib.parse.urljoin(url, href)
-                    elif href.startswith('http'):
-                        metadata['cookie_policy_url'] = href
-                    else:
-                        metadata['cookie_policy_url'] = urllib.parse.urljoin(url, href)
-            
-            # Get server header
-            if 'Server' in response.headers:
-                metadata['server'] = response.headers['Server']
-            
-            # Check HTTPS
-            metadata['https'] = url.startswith('https')
-            
-            # Check for security headers
-            security_headers = {
-                'Strict-Transport-Security': False,
-                'Content-Security-Policy': False,
-                'X-Content-Type-Options': False,
-                'X-Frame-Options': False,
-                'X-XSS-Protection': False
-            }
-            
-            for header in security_headers:
-                security_headers[header] = header in response.headers
-            
-            metadata['security_headers'] = security_headers
-            
-        except Exception as e:
-            metadata['error'] = str(e)
-            metadata['error_type'] = type(e).__name__
-        
-        return metadata
+        return scan_results
     
-    def _scan_text_for_pii(self, text: str, url: str) -> List[Dict[str, Any]]:
+    def _analyze_page(self, url: str, html_content: str, depth: int) -> Dict[str, Any]:
         """
-        Scan text content for PII.
+        Analyze a single webpage for privacy issues.
         
         Args:
-            text: Text content to scan
-            url: Original URL for reference
+            url: The URL of the page
+            html_content: The HTML content of the page
+            depth: The crawl depth
             
         Returns:
-            List of PII findings
+            Dictionary with page analysis results
         """
-        findings = []
+        # Parse the URL
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc
         
-        # Strip text to basic content, joining broken lines
-        normalized_text = re.sub(r'\s+', ' ', text).strip()
+        # Parse the HTML content
+        soup = BeautifulSoup(html_content, 'html.parser')
         
-        # Scan for each PII type
-        for pii_type, pattern in self.pii_patterns.items():
-            matches = re.finditer(pattern, normalized_text)
+        # Extract page title and metadata
+        title = soup.title.text.strip() if soup.title else "No title"
+        
+        meta_description = None
+        meta_tags = []
+        for meta in soup.find_all('meta'):
+            meta_dict = {key: meta.get(key) for key in meta.attrs}
+            meta_tags.append(meta_dict)
+            if meta.get('name') == 'description':
+                meta_description = meta.get('content', '')
+        
+        # Extract links
+        all_links = set()
+        same_domain_links = set()
+        external_links = set()
+        
+        for link in soup.find_all('a', href=True):
+            href = link.get('href').strip()
             
-            for match in matches:
-                # Determine risk level
-                risk_level = self._get_risk_level(pii_type)
-                
-                # Create finding
-                finding = {
-                    'type': pii_type,
-                    'value': self._redact_pii(match.group(), pii_type),
-                    'location': f'URL: {url}',
-                    'risk_level': risk_level,
-                    'reason': self._get_reason(pii_type, risk_level)
-                }
-                
-                findings.append(finding)
-        
-        return findings
-    
-    def _scan_forms(self, soup: BeautifulSoup, url: str) -> List[Dict[str, Any]]:
-        """
-        Scan forms for PII collection fields.
-        
-        Args:
-            soup: BeautifulSoup instance for the page
-            url: Original URL for reference
-            
-        Returns:
-            List of form field findings
-        """
-        findings = []
-        
-        # Find all forms
-        forms = soup.find_all('form')
-        
-        for form_idx, form in enumerate(forms, 1):
-            form_action = form.get('action', 'No action')
-            form_method = form.get('method', 'get').lower()
-            
-            # Check for sensitive form with GET method
-            if form_method == 'get':
-                # Check if it contains password field
-                has_password = bool(form.find('input', {'type': 'password'}))
-                if has_password:
-                    findings.append({
-                        'type': 'Vulnerability:InsecureFormMethod',
-                        'value': 'Form uses GET method for sensitive data',
-                        'location': f'URL: {url}, Form #{form_idx}',
-                        'risk_level': 'High',
-                        'reason': 'Sensitive form data should not be sent via GET method, which could expose data in URLs and logs'
-                    })
-            
-            # Check for CSRF protection
-            has_csrf_token = bool(form.find('input', {'name': re.compile(r'csrf|token', re.I)}))
-            if not has_csrf_token and form_method == 'post':
-                findings.append({
-                    'type': 'Vulnerability:CSRF',
-                    'value': 'Form lacks CSRF protection',
-                    'location': f'URL: {url}, Form #{form_idx}',
-                    'risk_level': 'Medium',
-                    'reason': 'Forms without CSRF tokens are vulnerable to cross-site request forgery attacks'
-                })
-            
-            # Check for PII collection fields
-            input_fields = form.find_all('input')
-            for field in input_fields:
-                field_type = field.get('type', 'text').lower()
-                field_name = field.get('name', '').lower()
-                field_id = field.get('id', '').lower()
-                
-                # Check for PII collection without SSL
-                if not url.startswith('https'):
-                    if field_type in ['text', 'email', 'tel'] or any(pii in field_name or pii in field_id for pii in 
-                                                                  ['email', 'phone', 'mobile', 'address', 'postcode', 'zip']):
-                        findings.append({
-                            'type': 'Vulnerability:InsecureFormTransmission',
-                            'value': f'Collecting {field_type} data without HTTPS',
-                            'location': f'URL: {url}, Form #{form_idx}, Field {field_name or field_id}',
-                            'risk_level': 'High',
-                            'reason': 'Transmitting personal data without encryption violates GDPR security requirements'
-                        })
-                
-                # Check for specific PII fields
-                if field_type == 'text' or field_type == '':
-                    for pii_type, keywords in {
-                        'Email': ['email', 'e-mail', 'mail'],
-                        'Phone': ['phone', 'tel', 'mobile', 'cell'],
-                        'Address': ['address', 'street', 'city', 'town'],
-                        'PostalCode': ['zip', 'postal', 'postcode'],
-                        'Name': ['name', 'firstname', 'lastname', 'fullname'],
-                        'BSN': ['bsn', 'ssn', 'social', 'national']
-                    }.items():
-                        if any(kw in field_name or kw in field_id for kw in keywords):
-                            risk_level = self._get_risk_level(pii_type)
-                            findings.append({
-                                'type': f'Form Collection:{pii_type}',
-                                'value': f'Form collecting {pii_type}',
-                                'location': f'URL: {url}, Form #{form_idx}, Field {field_name or field_id}',
-                                'risk_level': risk_level,
-                                'reason': f'Form is collecting {pii_type} data which is subject to GDPR regulations'
-                            })
-        
-        return findings
-    
-    def _scan_javascript(self, soup: BeautifulSoup, url: str) -> List[Dict[str, Any]]:
-        """
-        Scan JavaScript code for vulnerabilities.
-        
-        Args:
-            soup: BeautifulSoup instance for the page
-            url: Original URL for reference
-            
-        Returns:
-            List of JavaScript vulnerability findings
-        """
-        findings = []
-        
-        # Find all script tags
-        scripts = soup.find_all('script')
-        
-        for script_idx, script in enumerate(scripts, 1):
-            # Skip external scripts
-            if script.get('src'):
+            # Skip empty links, anchors, javascript, and mailto
+            if not href or href.startswith('#') or href.startswith('javascript:') or href.startswith('mailto:'):
                 continue
             
-            # Get script content
-            script_content = script.string
-            if not script_content:
+            # Normalize the URL
+            absolute_url = urljoin(url, href)
+            parsed_link = urlparse(absolute_url)
+            
+            # Skip non-HTTP(S) links
+            if parsed_link.scheme not in ('http', 'https'):
                 continue
             
-            # Check for vulnerabilities
-            for vuln_type, patterns in self.vulnerability_patterns.items():
-                for pattern in patterns:
-                    matches = re.finditer(pattern, script_content)
-                    
-                    for match in matches:
-                        risk_level = 'High' if vuln_type in ['XSS', 'Vulnerability:Xss'] else 'Medium'
-                        
-                        # Create finding
-                        finding = {
-                            'type': f'Vulnerability:{vuln_type}',
-                            'value': match.group()[:100] + ('...' if len(match.group()) > 100 else ''),
-                            'location': f'URL: {url}, Script #{script_idx}',
-                            'risk_level': risk_level,
-                            'reason': self._get_vulnerability_reason(vuln_type)
-                        }
-                        
-                        findings.append(finding)
-        
-        return findings
-    
-    def _analyze_cookies(self, cookies, url: str) -> List[Dict[str, Any]]:
-        """
-        Analyze cookies for privacy issues.
-        
-        Args:
-            cookies: Cookie jar from requests
-            url: Original URL for reference
+            clean_url = f"{parsed_link.scheme}://{parsed_link.netloc}{parsed_link.path}"
+            if parsed_link.query:
+                clean_url += f"?{parsed_link.query}"
+                
+            all_links.add(clean_url)
             
-        Returns:
-            List of cookie-related findings
-        """
-        findings = []
-        
-        for cookie in cookies:
-            # Check for secure flag on HTTPS site
-            if url.startswith('https') and not cookie.secure:
-                findings.append({
-                    'type': 'Vulnerability:InsecureCookie',
-                    'value': f'Cookie {cookie.name} missing Secure flag',
-                    'location': f'URL: {url}',
-                    'risk_level': 'Medium',
-                    'reason': 'Cookies on HTTPS sites should have the Secure flag to prevent transmission over HTTP'
-                })
-            
-            # Check for HttpOnly flag
-            if not cookie.has_nonstandard_attr('HttpOnly'):
-                findings.append({
-                    'type': 'Vulnerability:InsecureCookie',
-                    'value': f'Cookie {cookie.name} missing HttpOnly flag',
-                    'location': f'URL: {url}',
-                    'risk_level': 'Medium',
-                    'reason': 'Cookies should have the HttpOnly flag to prevent access from JavaScript'
-                })
-            
-            # Check for SameSite attribute
-            if not cookie.has_nonstandard_attr('SameSite'):
-                findings.append({
-                    'type': 'Vulnerability:InsecureCookie',
-                    'value': f'Cookie {cookie.name} missing SameSite attribute',
-                    'location': f'URL: {url}',
-                    'risk_level': 'Low',
-                    'reason': 'Cookies should have SameSite attribute to prevent CSRF attacks'
-                })
-            
-            # Check for suspicious cookie names
-            suspicious_names = ['auth', 'session', 'token', 'id', 'user', 'key', 'pass']
-            if any(sus in cookie.name.lower() for sus in suspicious_names):
-                findings.append({
-                    'type': 'PotentialPII:Cookie',
-                    'value': f'Potentially sensitive cookie: {cookie.name}',
-                    'location': f'URL: {url}',
-                    'risk_level': 'Medium',
-                    'reason': 'Cookie may contain PII or authentication data'
-                })
-        
-        return findings
-    
-    def _detect_trackers(self, soup: BeautifulSoup, url: str) -> List[Dict[str, Any]]:
-        """
-        Detect tracking scripts and pixels.
-        
-        Args:
-            soup: BeautifulSoup instance for the page
-            url: Original URL for reference
-            
-        Returns:
-            List of tracker findings
-        """
-        findings = []
-        
-        # Common tracker domains
-        trackers = {
-            'Google Analytics': ['google-analytics.com', 'analytics.google.com', 'www.google-analytics.com'],
-            'Google Tag Manager': ['googletagmanager.com', 'www.googletagmanager.com'],
-            'Facebook Pixel': ['connect.facebook.net', 'facebook.com/tr'],
-            'Twitter': ['static.ads-twitter.com', 'analytics.twitter.com'],
-            'LinkedIn': ['snap.licdn.com', 'px.ads.linkedin.com'],
-            'Hotjar': ['static.hotjar.com', 'script.hotjar.com'],
-            'Adobe Analytics': ['assets.adobedtm.com', 'omniture.com'],
-            'HubSpot': ['js.hs-scripts.com', 'track.hubspot.com'],
-            'Matomo/Piwik': ['matomo.php', 'piwik.php', 'piwik.js'],
-            'Mixpanel': ['api.mixpanel.com', 'cdn.mxpnl.com']
-        }
-        
-        # Check script sources
-        scripts = soup.find_all('script', src=True)
-        for script in scripts:
-            src = script['src']
-            for tracker_name, domains in trackers.items():
-                if any(domain in src for domain in domains):
-                    findings.append({
-                        'type': 'Tracker',
-                        'value': f'{tracker_name} detected',
-                        'location': f'URL: {url}, Script: {src}',
-                        'risk_level': 'Medium',
-                        'reason': 'Tracking technologies require proper notice and potentially consent under GDPR'
-                    })
-        
-        # Check img tags for tracking pixels
-        imgs = soup.find_all('img')
-        for img in imgs:
-            src = img.get('src', '')
-            for tracker_name, domains in trackers.items():
-                if any(domain in src for domain in domains):
-                    findings.append({
-                        'type': 'Tracker',
-                        'value': f'{tracker_name} pixel detected',
-                        'location': f'URL: {url}, Image: {src}',
-                        'risk_level': 'Medium',
-                        'reason': 'Tracking pixels require proper notice and potentially consent under GDPR'
-                    })
-        
-        # Check for iframes (potentially containing trackers)
-        iframes = soup.find_all('iframe')
-        for iframe in iframes:
-            src = iframe.get('src', '')
-            for tracker_name, domains in trackers.items():
-                if any(domain in src for domain in domains):
-                    findings.append({
-                        'type': 'Tracker',
-                        'value': f'{tracker_name} iframe detected',
-                        'location': f'URL: {url}, iFrame: {src}',
-                        'risk_level': 'Medium',
-                        'reason': 'Embedded frames with trackers require proper notice and potentially consent under GDPR'
-                    })
-        
-        return findings
-    
-    def _analyze_privacy_policy(self, url: str) -> Dict[str, Any]:
-        """
-        Analyze privacy policy for GDPR compliance.
-        
-        Args:
-            url: Privacy policy URL
-            
-        Returns:
-            Dictionary with privacy policy analysis
-        """
-        try:
-            headers = {'User-Agent': self.user_agent}
-            response = requests.get(url, headers=headers, timeout=15)
-            response.raise_for_status()
-            
-            # Extract text using trafilatura for better content extraction
-            text_content = trafilatura.extract(response.text)
-            
-            # Fallback to BeautifulSoup if trafilatura fails
-            if not text_content:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                text_content = soup.get_text(separator=' ', strip=True)
-            
-            # Define required GDPR elements
-            gdpr_elements = {
-                'data_controller': ['data controller', 'controller of your data', 'responsible for your data'],
-                'contact_info': ['contact us', 'contact information', 'reach us at'],
-                'dpo_contact': ['data protection officer', 'DPO', 'privacy officer'],
-                'purposes': ['purpose', 'why we collect', 'how we use'],
-                'legal_basis': ['legal basis', 'lawful basis', 'grounds for processing'],
-                'recipients': ['recipient', 'third part', 'share your data', 'disclose your data'],
-                'retention': ['retention', 'how long', 'store your data', 'keep your data'],
-                'rights': ['your rights', 'right to access', 'right to erasure', 'right to object'],
-                'complaint': ['complaint', 'supervisory authority', 'data protection authority'],
-                'automated_decision': ['automated decision', 'profiling', 'automatic processing'],
-                'international_transfers': ['transfer', 'outside the EU', 'outside the EEA']
-            }
-            
-            # Check for each GDPR element
-            found_elements = {}
-            
-            for element, keywords in gdpr_elements.items():
-                found = False
-                for keyword in keywords:
-                    if re.search(r'\b' + re.escape(keyword) + r'\b', text_content, re.IGNORECASE):
-                        found = True
-                        break
-                found_elements[element] = found
-            
-            # Calculate compliance score
-            total_elements = len(gdpr_elements)
-            found_count = sum(1 for found in found_elements.values() if found)
-            compliance_score = int((found_count / total_elements) * 100)
-            
-            # Determine compliance level
-            if compliance_score >= 90:
-                compliance_level = "Excellent"
-            elif compliance_score >= 75:
-                compliance_level = "Good"
-            elif compliance_score >= 50:
-                compliance_level = "Moderate"
-            elif compliance_score >= 30:
-                compliance_level = "Poor"
+            # Classify as internal or external
+            if parsed_link.netloc == domain:
+                same_domain_links.add(clean_url)
             else:
-                compliance_level = "Critical"
+                external_links.add(clean_url)
+        
+        # Detect trackers and cookies in the JavaScript
+        scripts = soup.find_all('script')
+        trackers = []
+        findings = []
+        
+        # Check for inline scripts containing tracker patterns
+        for script in scripts:
+            # Check for src attribute
+            src = script.get('src', '')
+            if src:
+                # Check external script sources against known trackers
+                for tracker_name, tracker_info in self.known_trackers.items():
+                    for domain_pattern in tracker_info['domains']:
+                        if domain_pattern in src:
+                            trackers.append({
+                                'name': tracker_name,
+                                'url': src,
+                                'type': 'external',
+                                'found_on': url
+                            })
+                            findings.append({
+                                'type': 'tracker',
+                                'subtype': tracker_name,
+                                'url': url,
+                                'element': src,
+                                'description': f"External tracker script from {tracker_name}",
+                                'severity': 'Medium',
+                                'gdpr_article': 'Art. 6(1)(a), Art. 7'
+                            })
+                            break
             
-            return {
-                'url': url,
-                'elements_found': found_elements,
-                'compliance_score': compliance_score,
-                'compliance_level': compliance_level,
-                'total_words': len(text_content.split()),
-                'missing_elements': [element for element, found in found_elements.items() if not found]
+            # Check inline script content for tracker patterns
+            elif script.string:
+                script_content = script.string
+                for tracker_name, tracker_info in self.known_trackers.items():
+                    for pattern in tracker_info['patterns']:
+                        if pattern in script_content:
+                            trackers.append({
+                                'name': tracker_name,
+                                'type': 'inline',
+                                'found_on': url
+                            })
+                            findings.append({
+                                'type': 'tracker',
+                                'subtype': tracker_name,
+                                'url': url,
+                                'element': f"Inline script containing '{pattern}'",
+                                'description': f"Inline tracker script for {tracker_name}",
+                                'severity': 'Medium',
+                                'gdpr_article': 'Art. 6(1)(a), Art. 7'
+                            })
+                            break
+        
+        # Detect consent management platforms
+        consent_management = []
+        for platform in self.consent_platforms:
+            for pattern in platform['patterns']:
+                if pattern in html_content:
+                    consent_management.append({
+                        'name': platform['name'],
+                        'found_on': url
+                    })
+                    findings.append({
+                        'type': 'consent_management',
+                        'subtype': platform['name'],
+                        'url': url,
+                        'description': f"Using {platform['name']} consent management platform",
+                        'severity': 'Info',
+                        'gdpr_article': 'Art. 7, Art. 13'
+                    })
+                    break
+        
+        # Check for tracking pixels
+        img_tags = soup.find_all('img')
+        tracking_pixels = []
+        
+        for img in img_tags:
+            src = img.get('src', '')
+            height = img.get('height', '')
+            width = img.get('width', '')
+            
+            # Check for 1x1 pixel images or known tracking domains
+            if (height == '1' and width == '1') or ('pixel' in src.lower()):
+                tracking_pixels.append({
+                    'url': src,
+                    'found_on': url
+                })
+                findings.append({
+                    'type': 'tracking_pixel',
+                    'url': url,
+                    'element': src,
+                    'description': f"Tracking pixel detected: {src}",
+                    'severity': 'Medium',
+                    'gdpr_article': 'Art. 6(1)(a), Art. 7'
+                })
+        
+        # Extract main text content
+        try:
+            main_content = extract(html_content) or "No content extracted"
+        except:
+            main_content = "Failed to extract content"
+        
+        # Check for privacy-related content
+        privacy_terms = {
+            'privacy_policy': ['privacy', 'privacy policy', 'privacy statement', 'data policy', 'data protection'],
+            'cookie_policy': ['cookie', 'cookie policy', 'cookie statement', 'cookie notice', 'cookie preferences'],
+            'terms_of_service': ['terms', 'terms of service', 'terms of use', 'terms and conditions', 'legal'],
+            'gdpr': ['gdpr', 'general data protection regulation', 'data protection', 'eu regulation']
+        }
+        
+        privacy_links = {}
+        
+        for link in soup.find_all('a', href=True):
+            href = link.get('href').strip()
+            text = link.get_text().lower()
+            
+            for policy_type, terms in privacy_terms.items():
+                if any(term in text for term in terms):
+                    absolute_url = urljoin(url, href)
+                    privacy_links[policy_type] = absolute_url
+                    break
+        
+        # Check for cookie banner
+        cookie_banner = None
+        cookie_banner_selectors = [
+            '#cookie-banner', '.cookie-banner', '#cookieBanner', '.cookieBanner',
+            '#cookie-notice', '.cookie-notice', '#cookieNotice', '.cookieNotice',
+            '#gdpr-banner', '.gdpr-banner', '#gdprBanner', '.gdprBanner',
+            '#cookie-consent', '.cookie-consent', '#cookieConsent', '.cookieConsent',
+            '[class*="cookie"]', '[id*="cookie"]', '[class*="gdpr"]', '[id*="gdpr"]',
+            '[class*="consent"]', '[id*="consent"]'
+        ]
+        
+        for selector in cookie_banner_selectors:
+            elements = soup.select(selector)
+            if elements:
+                cookie_banner = {
+                    'found': True,
+                    'selector': selector,
+                    'count': len(elements),
+                    'text': elements[0].get_text()[:200] + '...' if len(elements[0].get_text()) > 200 else elements[0].get_text()
+                }
+                break
+        
+        # Return the page analysis results
+        return {
+            'url': url,
+            'depth': depth,
+            'title': title,
+            'meta_description': meta_description,
+            'meta_tags': meta_tags,
+            'all_links': all_links,
+            'same_domain_links': same_domain_links,
+            'external_links': external_links,
+            'trackers': trackers,
+            'consent_management': consent_management,
+            'tracking_pixels': tracking_pixels,
+            'privacy_links': privacy_links,
+            'cookie_banner': cookie_banner,
+            'main_content_sample': main_content[:1000] + '...' if len(main_content) > 1000 else main_content,
+            'findings': findings
+        }
+    
+    def _extract_cookies(self, response) -> Dict[str, Any]:
+        """
+        Extract cookies from a response.
+        
+        Args:
+            response: The HTTP response object
+            
+        Returns:
+            Dictionary of cookies with metadata
+        """
+        cookies = {}
+        
+        for cookie in response.cookies:
+            # Skip if cookie already processed
+            if cookie.name in cookies:
+                continue
+                
+            # Analyze cookie properties
+            secure = cookie.secure
+            httponly = cookie.has_nonstandard_attr('httponly')
+            samesite = cookie.get_nonstandard_attr('samesite', None)
+            
+            expiry = None
+            if cookie.expires:
+                try:
+                    expiry = datetime.fromtimestamp(cookie.expires).isoformat()
+                except:
+                    expiry = str(cookie.expires)
+            
+            # Categorize the cookie
+            category = self._categorize_cookie(cookie.name, cookie.domain)
+            
+            # Evaluate cookie compliance
+            compliance_issues = []
+            if not secure:
+                compliance_issues.append("Cookie not marked as Secure")
+            if not httponly and category == 'essential':
+                compliance_issues.append("Essential cookie not marked as HttpOnly")
+            if not samesite and category != 'essential':
+                compliance_issues.append("Missing SameSite attribute")
+            if category in ['advertising', 'analytics'] and not samesite == 'None':
+                compliance_issues.append("Tracking cookie should use SameSite=None")
+            
+            # Add cookie data
+            cookies[cookie.name] = {
+                'name': cookie.name,
+                'domain': cookie.domain,
+                'path': cookie.path,
+                'value_length': len(cookie.value),
+                'secure': secure,
+                'httponly': httponly,
+                'samesite': samesite,
+                'expiry': expiry,
+                'session': cookie.expires is None,
+                'category': category,
+                'compliance_issues': compliance_issues
             }
         
+        return cookies
+    
+    def _categorize_cookie(self, name: str, domain: str = None) -> str:
+        """
+        Categorize a cookie based on its name and domain.
+        
+        Args:
+            name: Cookie name
+            domain: Cookie domain (optional)
+            
+        Returns:
+            Category name (essential, functional, analytics, advertising, social, or unknown)
+        """
+        name_lower = name.lower()
+        
+        # First check by domain, then by name
+        if domain:
+            domain_lower = domain.lower()
+            if any(tracker in domain_lower for tracker in ['google-analytics', 'analytics.google']):
+                return 'analytics'
+            if any(tracker in domain_lower for tracker in ['doubleclick', 'googleadservices']):
+                return 'advertising'
+            if any(social in domain_lower for social in ['facebook', 'twitter', 'linkedin', 'instagram']):
+                return 'social'
+        
+        # Check by cookie name against known categories
+        for category, patterns in self.cookie_categories.items():
+            for pattern in patterns:
+                if pattern in name_lower:
+                    return category
+        
+        # Return unknown if no match
+        return 'unknown'
+    
+    def _categorize_cookies(self, cookies: Dict[str, Any]) -> Dict[str, List[str]]:
+        """
+        Categorize all cookies.
+        
+        Args:
+            cookies: Dictionary of cookie data
+            
+        Returns:
+            Dictionary with categories and cookie names
+        """
+        categories = {
+            'essential': [],
+            'functional': [],
+            'analytics': [],
+            'advertising': [],
+            'social': [],
+            'unknown': []
+        }
+        
+        for cookie_name, cookie_data in cookies.items():
+            category = cookie_data.get('category', 'unknown')
+            categories.setdefault(category, []).append(cookie_name)
+        
+        return categories
+    
+    def _check_domain_info(self, domain: str) -> Dict[str, Any]:
+        """
+        Check domain registration information.
+        
+        Args:
+            domain: The domain name to check
+            
+        Returns:
+            Dictionary with domain registration information
+        """
+        # Extract the base domain without subdomains
+        extracted = tldextract.extract(domain)
+        base_domain = f"{extracted.domain}.{extracted.suffix}"
+        
+        domain_info = {
+            'domain': base_domain,
+            'registration': None,
+            'registrar': None,
+            'creation_date': None,
+            'expiration_date': None,
+            'dns_records': {}
+        }
+        
+        # Get WHOIS information
+        try:
+            w = whois.whois(base_domain)
+            domain_info['registration'] = {
+                'registrar': w.registrar,
+                'creation_date': w.creation_date.isoformat() if hasattr(w, 'creation_date') and w.creation_date else None,
+                'expiration_date': w.expiration_date.isoformat() if hasattr(w, 'expiration_date') and w.expiration_date else None,
+                'name_servers': w.name_servers if hasattr(w, 'name_servers') else None
+            }
         except Exception as e:
-            return {
-                'url': url,
-                'error': str(e),
-                'error_type': type(e).__name__
-            }
+            logger.warning(f"Failed to get WHOIS information for {base_domain}: {str(e)}")
+            domain_info['registration'] = {'error': str(e)}
+        
+        # Get DNS records if enabled
+        if self.check_dns:
+            try:
+                # Get A records
+                try:
+                    answers = dns.resolver.resolve(base_domain, 'A')
+                    domain_info['dns_records']['A'] = [answer.address for answer in answers]
+                except Exception as e:
+                    logger.warning(f"Failed to get A records for {base_domain}: {str(e)}")
+                
+                # Get MX records
+                try:
+                    answers = dns.resolver.resolve(base_domain, 'MX')
+                    domain_info['dns_records']['MX'] = [str(answer.exchange) for answer in answers]
+                except Exception as e:
+                    logger.warning(f"Failed to get MX records for {base_domain}: {str(e)}")
+                
+                # Get TXT records
+                try:
+                    answers = dns.resolver.resolve(base_domain, 'TXT')
+                    domain_info['dns_records']['TXT'] = [str(answer) for answer in answers]
+                except Exception as e:
+                    logger.warning(f"Failed to get TXT records for {base_domain}: {str(e)}")
+            except Exception as e:
+                logger.warning(f"Failed to get DNS records for {base_domain}: {str(e)}")
+        
+        return domain_info
     
-    def _get_risk_level(self, pii_type: str) -> str:
+    def _check_ssl(self, url: str) -> Dict[str, Any]:
         """
-        Determine risk level based on PII type.
+        Check SSL/TLS configuration.
         
         Args:
-            pii_type: The type of PII
+            url: The URL to check SSL for
             
         Returns:
-            Risk level (High, Medium, Low)
+            Dictionary with SSL/TLS information
         """
-        # High risk PII types
-        high_risk = ['Credit Card', 'BSN', 'Passport']
-        
-        # Medium risk PII types
-        medium_risk = ['Email', 'Phone', 'Address', 'IP Address']
-        
-        # Determine risk level
-        if pii_type in high_risk or pii_type.startswith('Vulnerability:'):
-            return 'High'
-        elif pii_type in medium_risk or pii_type.startswith('PotentialPII:'):
-            return 'Medium'
-        else:
-            return 'Low'
-    
-    def _redact_pii(self, value: str, pii_type: str) -> str:
-        """
-        Redact PII data for safe storage.
-        
-        Args:
-            value: The PII value
-            pii_type: The type of PII
-            
-        Returns:
-            Redacted PII value
-        """
-        if pii_type == 'Email':
-            parts = value.split('@')
-            if len(parts) == 2:
-                username = parts[0]
-                domain = parts[1]
-                if len(username) > 2:
-                    redacted_username = username[0] + '*' * (len(username) - 2) + username[-1]
-                else:
-                    redacted_username = '*' * len(username)
-                return f"{redacted_username}@{domain}"
-        elif pii_type == 'Phone':
-            if len(value) > 4:
-                return '*' * (len(value) - 4) + value[-4:]
-        elif pii_type == 'Credit Card':
-            if len(value) > 4:
-                return '*' * (len(value) - 4) + value[-4:]
-        elif pii_type == 'BSN':
-            if len(value) > 2:
-                return '*' * (len(value) - 2) + value[-2:]
-        
-        # For other types or if redaction logic fails, use generic redaction
-        if len(value) > 4:
-            return value[:2] + '*' * (len(value) - 4) + value[-2:]
-        else:
-            return '*' * len(value)
-    
-    def _get_reason(self, pii_type: str, risk_level: str) -> str:
-        """
-        Get a reason explanation for the PII finding.
-        
-        Args:
-            pii_type: The type of PII found
-            risk_level: The risk level (Low, Medium, High)
-            
-        Returns:
-            A string explaining why this PII is a concern
-        """
-        reasons = {
-            'Email': "Email addresses are personal data under GDPR and require proper handling",
-            'Phone': "Phone numbers are personal data under GDPR and can be used to contact individuals directly",
-            'Credit Card': "Credit card information is financial data requiring special protection under GDPR",
-            'BSN': "BSN (Dutch Social Security Number) is sensitive personal data with strict GDPR requirements",
-            'IP Address': "IP addresses are considered personal data under GDPR as they can identify individuals",
-            'Address': "Physical addresses are personal data under GDPR and can locate individuals",
-            'PostalCode': "Postal codes combined with other data can identify individuals and are subject to GDPR",
-            'Name': "Names are basic personal identifiers protected under GDPR"
+        ssl_info = {
+            'enabled': False,
+            'certificate': None,
+            'expiry': None,
+            'issuer': None,
+            'protocols': [],
+            'issues': []
         }
         
-        # Return specific reason if available, otherwise generic by risk level
-        if pii_type in reasons:
-            return reasons[pii_type]
-        elif pii_type.startswith('Vulnerability:'):
-            return self._get_vulnerability_reason(pii_type.split(':')[1])
-        elif risk_level == 'High':
-            return "High-risk personal data requiring special protection under GDPR"
-        elif risk_level == 'Medium':
-            return "Medium-risk personal data subject to GDPR regulations"
-        else:
-            return "Personal data with potential privacy implications under GDPR"
-    
-    def _get_vulnerability_reason(self, vuln_type: str) -> str:
-        """
-        Get a reason explanation for a vulnerability finding.
-        
-        Args:
-            vuln_type: The type of vulnerability
+        try:
+            response = requests.get(url, verify=True, timeout=10)
             
-        Returns:
-            A string explaining the vulnerability concern
-        """
-        reasons = {
-            'XSS': "Cross-site scripting vulnerabilities can lead to theft of sensitive data and session hijacking",
-            'Xss': "Cross-site scripting vulnerabilities can lead to theft of sensitive data and session hijacking",
-            'CSRF': "Cross-site request forgery vulnerabilities can force users to perform unwanted actions",
-            'Csrf': "Cross-site request forgery vulnerabilities can force users to perform unwanted actions",
-            'InsecureCookie': "Insecure cookies can expose session data and lead to session hijacking",
-            'Insecure Cookies': "Insecure cookies can expose session data and lead to session hijacking",
-            'InsecureFormMethod': "Insecure form methods can expose sensitive data in URLs and server logs",
-            'InsecureFormTransmission': "Transmitting personal data without encryption violates GDPR security requirements",
-            'SensitiveURL': "Sensitive data in URLs can be exposed in browser history, server logs, and referrer headers"
-        }
+            # Check if HTTPS is enabled
+            ssl_info['enabled'] = response.url.startswith('https://')
+            
+            if ssl_info['enabled']:
+                # Unfortunately, requests doesn't provide detailed SSL/TLS info
+                # Here we would need to use a library like pyOpenSSL or subprocess to openssl
+                # For now, just mark that SSL is enabled
+                ssl_info['certificate'] = "Valid (details not available)"
+            else:
+                ssl_info['issues'].append("HTTPS not enabled")
+                
+        except requests.exceptions.SSLError as e:
+            ssl_info['issues'].append(f"SSL Error: {str(e)}")
+        except Exception as e:
+            ssl_info['issues'].append(f"Error checking SSL: {str(e)}")
         
-        return reasons.get(vuln_type, "Security vulnerability that may compromise personal data or system integrity")
+        return ssl_info
+    
+    def cancel_scan(self):
+        """Cancel the current scan if running"""
+        self.is_running = False
