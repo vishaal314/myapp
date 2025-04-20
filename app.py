@@ -74,12 +74,16 @@ with st.sidebar:
     initialize()
     
     # Header with gradient background and professional name
+    # Get translations or use defaults if translations aren't loaded yet
+    title = get_text("app.title", "DataGuardian Pro")
+    subtitle = get_text("app.subtitle", "Enterprise Privacy Compliance Platform")
+    
     st.markdown(f"""
     <div style="background-image: linear-gradient(120deg, #6200EA, #3700B3); 
                padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center;
                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: white; margin: 0; font-weight: bold;">DataGuardian Pro</h2>
-        <p style="color: #E9DAFF; margin: 5px 0 0 0; font-size: 0.9em;">Enterprise Privacy Compliance Platform</p>
+        <h2 style="color: white; margin: 0; font-weight: bold;">{title}</h2>
+        <p style="color: #E9DAFF; margin: 5px 0 0 0; font-size: 0.9em;">{subtitle}</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -227,6 +231,9 @@ with st.sidebar:
                         
                         # Preserve the current language across login
                         current_language = st.session_state.get('language', 'en')
+                        
+                        # Ensure the language setting persists after login
+                        set_language(current_language)
                         
                         st.success(_("login.success"))
                         st.rerun()
@@ -451,6 +458,10 @@ if not st.session_state.logged_in:
     """, unsafe_allow_html=True)
 
 else:
+    # Reinitialize language to ensure it's properly loaded after login
+    current_language = st.session_state.get('language', 'en')
+    set_language(current_language)
+    
     # Initialize aggregator
     results_aggregator = ResultsAggregator()
     
