@@ -1791,6 +1791,13 @@ else:
                                 st.error(f"Repository scan failed: {result.get('message', 'Unknown error')}")
                                 st.stop()
                             
+                            # Check and display branch information
+                            if 'repository_metadata' in result and 'active_branch' in result['repository_metadata']:
+                                actual_branch = result['repository_metadata']['active_branch']
+                                # If the actual branch is different from the requested branch, inform the user
+                                if branch_name and actual_branch != branch_name:
+                                    st.info(f"Note: Branch '{branch_name}' was not found. The repository was scanned using the default branch '{actual_branch}' instead.")
+                            
                             # Store findings from repository scan
                             scan_results = result.get('findings', [])
                             

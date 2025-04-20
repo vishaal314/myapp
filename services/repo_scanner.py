@@ -142,79 +142,128 @@ class RepoScanner:
         # Prepare authentication if needed
         clone_url = self._prepare_auth_for_clone(repo_url, auth_token)
         
-        # Build git clone command
-        cmd = ['git', 'clone']
-        if branch:
-            cmd.extend(['--branch', branch])
-        # Limit clone depth for efficiency
-        cmd.extend(['--depth', '1'])
-        # Add URL and target directory
-        cmd.extend([clone_url, temp_dir])
+        # Try with the specified branch first
+        success = False
+        error_msg = ""
         
-        try:
-            # Execute git clone command
-            logger.info(f"Cloning repository from {repo_url} (branch: {branch or 'default'})")
+        if branch:
+            # First attempt with specified branch
+            cmd = ['git', 'clone', '--branch', branch, '--depth', '1', clone_url, temp_dir]
             
-            # Use subprocess with timeout to prevent hanging
-            result = subprocess.run(
-                cmd, 
-                capture_output=True, 
-                text=True,
-                timeout=600  # 10 min timeout
-            )
+            try:
+                # Execute git clone command
+                logger.info(f"Cloning repository from {repo_url} (branch: {branch})")
+                
+                # Use subprocess with timeout to prevent hanging
+                result = subprocess.run(
+                    cmd, 
+                    capture_output=True, 
+                    text=True,
+                    timeout=600  # 10 min timeout
+                )
+                
+                if result.returncode == 0:
+                    success = True
+                else:
+                    # Save error message for logging later
+                    error_msg = result.stderr
+                    # If branch-specific clone fails, clean up for next attempt
+                    shutil.rmtree(temp_dir)
+                    os.makedirs(temp_dir, exist_ok=True)
+                    logger.warning(f"Failed to clone branch '{branch}', will try default branch instead.")
             
-            if result.returncode != 0:
-                error_msg = result.stderr
-                # Remove auth token from error message if present
-                if auth_token:
-                    error_msg = error_msg.replace(auth_token, '********')
+            except Exception as e:
+                error_msg = str(e)
+                # Clean up for next attempt
+                if os.path.exists(temp_dir):
+                    shutil.rmtree(temp_dir)
+                    os.makedirs(temp_dir, exist_ok=True)
+        
+        # If branch-specific clone failed or no branch was specified, try without branch specifier
+        if not success:
+            cmd = ['git', 'clone', '--depth', '1', clone_url, temp_dir]
+            
+            try:
+                # Execute git clone command
+                logger.info(f"Cloning repository from {repo_url} (default branch)")
+                
+                # Use subprocess with timeout to prevent hanging
+                result = subprocess.run(
+                    cmd, 
+                    capture_output=True, 
+                    text=True,
+                    timeout=600  # 10 min timeout
+                )
+                
+                if result.returncode != 0:
+                    error_msg = result.stderr
+                    # Remove auth token from error message if present
+                    if auth_token:
+                        error_msg = error_msg.replace(auth_token, '********')
+                        
+                    logger.error(f"Git clone failed: {error_msg}")
+                    return {
+                        'status': 'error',
+                        'message': f'Failed to clone repository: {error_msg}',
+                        'repo_path': None,
+                        'time_ms': int((time.time() - start_time) * 1000)
+                    }
+                else:
+                    success = True
                     
-                logger.error(f"Git clone failed: {error_msg}")
+            except subprocess.TimeoutExpired:
+                logger.error("Git clone operation timed out")
                 return {
                     'status': 'error',
-                    'message': f'Failed to clone repository: {error_msg}',
+                    'message': 'Git clone operation timed out after 10 minutes',
                     'repo_path': None,
                     'time_ms': int((time.time() - start_time) * 1000)
                 }
-                
-            # Check if the directory is empty (failed clone but no error)
-            if not os.listdir(temp_dir) or not os.path.exists(os.path.join(temp_dir, '.git')):
-                logger.error("Git clone completed but repository appears empty")
+            except Exception as e:
+                logger.error(f"Error cloning repository: {str(e)}")
                 return {
                     'status': 'error',
-                    'message': 'Repository appears to be empty or not a Git repository',
+                    'message': f'Error cloning repository: {str(e)}',
                     'repo_path': None,
                     'time_ms': int((time.time() - start_time) * 1000)
                 }
-                
-            # Get repository metadata
-            repo_info = self._get_repo_metadata(temp_dir)
-            
-            logger.info(f"Repository cloned successfully to {temp_dir}")
-            return {
-                'status': 'success',
-                'message': 'Repository cloned successfully',
-                'repo_path': temp_dir,
-                'metadata': repo_info,
-                'time_ms': int((time.time() - start_time) * 1000)
-            }
-            
-        except subprocess.TimeoutExpired:
-            logger.error("Git clone operation timed out")
+        
+        # Verify the clone was successful
+        if not os.listdir(temp_dir) or not os.path.exists(os.path.join(temp_dir, '.git')):
+            logger.error("Git clone completed but repository appears empty")
             return {
                 'status': 'error',
-                'message': 'Git clone operation timed out after 10 minutes',
+                'message': 'Repository appears to be empty or not a Git repository',
                 'repo_path': None,
                 'time_ms': int((time.time() - start_time) * 1000)
             }
-        except Exception as e:
-            logger.error(f"Error cloning repository: {str(e)}")
-            return {
-                'status': 'error',
-                'message': f'Error cloning repository: {str(e)}',
-                'repo_path': None,
-                'time_ms': int((time.time() - start_time) * 1000)
-            }
+            
+        # Get repository metadata
+        repo_info = self._get_repo_metadata(temp_dir)
+        
+        # Get the actual branch name that was cloned
+        try:
+            result = subprocess.run(
+                ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                cwd=temp_dir,
+                capture_output=True,
+                text=True
+            )
+            if result.returncode == 0:
+                actual_branch = result.stdout.strip()
+                repo_info['active_branch'] = actual_branch
+        except Exception:
+            # If we can't get the branch name, that's okay
+            pass
+            
+        logger.info(f"Repository cloned successfully to {temp_dir}")
+        return {
+            'status': 'success',
+            'message': 'Repository cloned successfully',
+            'repo_path': temp_dir,
+            'metadata': repo_info,
+            'time_ms': int((time.time() - start_time) * 1000)
+        }
     
     def _get_repo_metadata(self, repo_path: str) -> Dict[str, Any]:
         """
