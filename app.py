@@ -108,6 +108,19 @@ def debug_translations():
         value = get_text(key)
         print(f"  {key}: '{value}'")
     
+    # Dump the raw translations for the current language
+    from utils.i18n import _translations, _current_language
+    print(f"TRANSLATIONS DEBUG - Raw data for language {_current_language}:")
+    if _current_language in _translations:
+        # Print the first level keys only to avoid huge output
+        print(f"  Available top-level keys: {list(_translations[_current_language].keys())}")
+        if 'app' in _translations[_current_language]:
+            print(f"  app keys: {_translations[_current_language]['app']}")
+        if 'scan' in _translations[_current_language]:
+            print(f"  scan keys: {_translations[_current_language]['scan']}")
+    else:
+        print(f"  No translations found for {_current_language}")
+    
     # Also print current language state
     print(f"LANGUAGE DEBUG - Current state:")
     print(f"  language: {st.session_state.get('language')}")
