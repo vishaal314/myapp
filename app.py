@@ -2478,15 +2478,24 @@ else:
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # Create two-column layout for questions and progress
+                            # Simple form approach with minimal interactivity
+                            st.markdown("""
+                            <div style="background-color: #fff8e1; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffa000;">
+                                <h3 style="color: #795548; margin-top: 0; margin-bottom: 10px;">Simple Mode Activated</h3>
+                                <p style="margin: 0;">To prevent form crashing, we're using a simplified assessment mode. 
+                                Select your answers below and click the Submit button only once when complete.</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Create a two-column layout for better use of space
                             question_col, progress_col = st.columns([3, 1])
                             
                             with question_col:
-                                # Display questions by category, all on one page
+                                # Loop through each category
                                 for category, info in assessment_categories.items():
-                                    # Create a visual section for this category with improved styling
+                                    # Create a visually distinct section for each category
                                     st.markdown(f"""
-                                    <div style="background-color: #f8f9fa; padding: 10px 15px; border-radius: 5px; 
+                                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; 
                                                margin-bottom: 15px; border-left: 4px solid #1E88E5;">
                                         <h3 style="color: #1E88E5; margin-bottom: 5px;">{info['name']}</h3>
                                         <p style="color: #555; margin: 0;">{info['description']}</p>
@@ -2496,63 +2505,47 @@ else:
                                     # Create a list to store answers for this category
                                     category_answers = []
                                     
-                                    # Display each question with radio buttons
+                                    # For each question, create a single select box
                                     for i, question in enumerate(info['questions']):
-                                        # Create a unique key for this radio button but we'll avoid callbacks
-                                        radio_key = f"dpia_{category}_{i}"
-                                        
-                                        # Display the question in a card-like container
+                                        # Display the question
                                         st.markdown(f"""
-                                        <div style="background-color: white; padding: 10px 15px; border-radius: 4px;
-                                                   margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                                            <p style="margin: 0;"><strong>Q{i+1}:</strong> {question}</p>
+                                        <div style="background-color: white; padding: 15px; border-radius: 4px;
+                                                   margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                            <p style="margin-bottom: 10px;"><strong>Q{i+1}:</strong> {question}</p>
                                         </div>
                                         """, unsafe_allow_html=True)
                                         
-                                        # Get current answer (safely)
-                                        selected_idx = st.session_state.dpia_answers[category][i]
+                                        # Use a simple selectbox instead of radio buttons or checkboxes
+                                        # This has much better stability in Streamlit
+                                        select_key = f"select_{category}_{i}"
+                                        options = ["No", "Partially", "Yes"]
                                         
-                                        # Create three separate buttons instead of a radio button
-                                        # This avoids the closure issues with callbacks
-                                        col1, col2, col3 = st.columns(3)
+                                        # Map the current value to the appropriate option
+                                        default_idx = st.session_state.dpia_answers[category][i]
                                         
-                                        with col1:
-                                            no_selected = selected_idx == 0
-                                            btn_style = "primary" if no_selected else "secondary"
-                                            if st.button("No", key=f"{radio_key}_no", type=btn_style, use_container_width=True):
-                                                # Directly update the session state
-                                                st.session_state.dpia_answers[category][i] = 0
-                                                st.rerun()
-                                                
-                                        with col2:
-                                            partially_selected = selected_idx == 1
-                                            btn_style = "primary" if partially_selected else "secondary"
-                                            if st.button("Partially", key=f"{radio_key}_partially", type=btn_style, use_container_width=True):
-                                                # Directly update the session state
-                                                st.session_state.dpia_answers[category][i] = 1
-                                                st.rerun()
-                                                
-                                        with col3:
-                                            yes_selected = selected_idx == 2
-                                            btn_style = "primary" if yes_selected else "secondary"
-                                            if st.button("Yes", key=f"{radio_key}_yes", type=btn_style, use_container_width=True):
-                                                # Directly update the session state
-                                                st.session_state.dpia_answers[category][i] = 2
-                                                st.rerun()
+                                        # Create the selectbox
+                                        answer = st.selectbox(
+                                            "Select your answer:",
+                                            options,
+                                            index=default_idx,
+                                            key=select_key,
+                                            label_visibility="collapsed"
+                                        )
                                         
-                                        # Set the answer for form submission based on the selected buttons
-                                        answer_options = ["No", "Partially", "Yes"]
-                                        answer = answer_options[selected_idx]
-                                        
-                                        # Convert answer to numerical value
+                                        # Convert answer to numerical value for storage
                                         answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer]
+                                        
+                                        # Update the session state
+                                        st.session_state.dpia_answers[category][i] = answer_value
+                                        
+                                        # Add to category answers for form submission
                                         category_answers.append(answer_value)
                                     
                                     # Store answers for this category
                                     answers[category] = category_answers
                                     
-                                    # Add a separator between categories
-                                    st.markdown("<hr style='margin: 20px 0; border: none; height: 1px; background-color: #e0e0e0;'>", unsafe_allow_html=True)
+                                    # Add a visual separator between categories
+                                    st.markdown("<hr style='margin: 30px 0; border: none; height: 1px; background-color: #e0e0e0;'>", unsafe_allow_html=True)
                             
                             # Right panel with progress tracking that stays fixed
                             with progress_col:
