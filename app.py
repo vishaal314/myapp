@@ -2409,15 +2409,11 @@ else:
                     elif scan_type == _("scan.database"):
                         scanner_instance = DatabaseScanner(region=region)
                     elif scan_type == _("scan.dpia"):
-                        # For DPIA, we use a different approach - interactive assessment form
-                        st.success("Starting Data Protection Impact Assessment (DPIA)")
-                        
-                        # Create temp directory for DPIA files if not already created
-                        if 'dpia_temp_dir' not in st.session_state:
-                            st.session_state.dpia_temp_dir = f"temp_{uuid.uuid4().hex}"
-                            os.makedirs(st.session_state.dpia_temp_dir, exist_ok=True)
-                        
-                        # Save uploaded files if any
+                        # Import and run the simplified DPIA form to avoid crashes
+                        from simplified_dpia import run_simplified_dpia
+                        run_simplified_dpia()
+                        # Stop normal flow to let the simplified form take over
+                        scan_running = False
                         if dpia_source == _("scan.upload_files") and uploaded_files:
                             # Save files to temp directory
                             file_paths = []
