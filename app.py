@@ -88,6 +88,37 @@ from utils.animated_language_switcher import animated_language_switcher, get_wel
 # Make sure translations are initialized at the start of the app
 initialize()
 
+# Debug translations function for specific keys
+def debug_translations():
+    """Print debug information about critical translation keys."""
+    debug_keys = [
+        "app.tagline", 
+        "scan.new_scan_title", 
+        "scan.select_type", 
+        "scan.upload_files", 
+        "scan.title",
+        "dashboard.welcome",
+        "history.title",
+        "results.title",
+        "report.generate"
+    ]
+    
+    print("TRANSLATION DEBUG - Critical Keys:")
+    for key in debug_keys:
+        value = get_text(key)
+        print(f"  {key}: '{value}'")
+    
+    # Also print current language state
+    print(f"LANGUAGE DEBUG - Current state:")
+    print(f"  language: {st.session_state.get('language')}")
+    print(f"  _persistent_language: {st.session_state.get('_persistent_language')}")
+    print(f"  pre_login_language: {st.session_state.get('pre_login_language')}")
+    print(f"  backup_language: {st.session_state.get('backup_language')}")
+    print(f"  force_language_after_login: {st.session_state.get('force_language_after_login')}")
+
+# Run translation debug after initialization
+debug_translations()
+
 # Initialize session state variables
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -337,6 +368,10 @@ with st.sidebar:
                         # Force translation reload after login completes
                         from utils.i18n import initialize, set_language
                         set_language(preserved_language)
+                        
+                        # Debug translations after login
+                        print("POST-LOGIN: Using pre-login language", preserved_language)
+                        debug_translations()
                         st.session_state['force_language_after_login'] = current_language
 
                         # Display success message in current language

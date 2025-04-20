@@ -148,14 +148,47 @@ def get_text(key: str, default: Optional[str] = None) -> str:
     if _current_language not in _translations:
         load_translations(_current_language)
     
-    # Get translation for key
-    text = _translations.get(_current_language, {}).get(key)
+    # Split the key into parts (e.g., 'app.title' -> ['app', 'title'])
+    parts = key.split('.')
+    
+    # Get the translation dictionary for current language
+    lang_dict = _translations.get(_current_language, {})
+    
+    # Navigate through nested dictionaries based on key parts
+    text = None
+    current_dict = lang_dict
+    for i, part in enumerate(parts):
+        # If we're at the last part, get the value
+        if i == len(parts) - 1:
+            text = current_dict.get(part)
+            break
+            
+        # Navigate to next level if it exists
+        if part in current_dict and isinstance(current_dict[part], dict):
+            current_dict = current_dict[part]
+        else:
+            # Break if we can't navigate further
+            break
     
     # If not found, try English as fallback
     if text is None and _current_language != 'en':
         if 'en' not in _translations:
             load_translations('en')
-        text = _translations.get('en', {}).get(key)
+            
+        # Try to find translation in English
+        current_dict = _translations.get('en', {})
+        for i, part in enumerate(parts):
+            # If we're at the last part, get the value
+            if i == len(parts) - 1:
+                text = current_dict.get(part)
+                break
+                
+            # Navigate to next level if it exists
+            if part in current_dict and isinstance(current_dict[part], dict):
+                current_dict = current_dict[part]
+            else:
+                # Break if we can't navigate further
+                break
     
     # If still not found, use default or key itself
     if text is None:

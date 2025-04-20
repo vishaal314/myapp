@@ -575,6 +575,10 @@ def logout() -> None:
     
     # Final verification
     print(f"LOGOUT - Complete. Language status check: {st.session_state.get('language')}")
+    
+    # Debug the translations after logout
+    from app import debug_translations
+    debug_translations()
 
 def has_permission(permission: str) -> bool:
     """
