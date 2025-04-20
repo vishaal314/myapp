@@ -30,6 +30,9 @@ def _(key, default=None):
 from utils.compliance_score import calculate_compliance_score, display_compliance_score_card
 from utils.animated_language_switcher import animated_language_switcher, get_welcome_message_animation
 
+# Make sure translations are initialized at the start of the app
+initialize()
+
 # Initialize session state variables
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -70,8 +73,9 @@ with st.sidebar:
     st.markdown("### 🌐 Interactive Language")
     # Use the animated language switcher with flags
     animated_language_switcher(key_suffix="sidebar", show_title=True, use_buttons=True)
-    # Initialize translations
-    initialize()
+    # Ensure translations are initialized with the current language
+    current_language = st.session_state.get('language', 'en')
+    set_language(current_language)
     
     # Header with gradient background and professional name
     # Get translations or use defaults if translations aren't loaded yet
@@ -461,6 +465,9 @@ else:
     # Reinitialize language to ensure it's properly loaded after login
     current_language = st.session_state.get('language', 'en')
     set_language(current_language)
+    
+    # Force translation reload to ensure all text is properly translated
+    initialize()
     
     # Initialize aggregator
     results_aggregator = ResultsAggregator()
