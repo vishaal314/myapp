@@ -6,7 +6,24 @@ DataGuardian Pro is a comprehensive enterprise privacy compliance platform desig
 
 ## Development and Deployment Workflow
 
-DataGuardian Pro uses a modern development workflow with Replit, GitHub, and Azure:
+DataGuardian Pro supports multiple development and deployment workflows:
+
+### Option 1: Replit → Azure DevOps → Azure (Recommended)
+
+1. **Development on Replit**: Write and test code in Replit's collaborative environment
+2. **Version Control with Azure DevOps**: Push changes to Azure DevOps repository
+3. **Automated Deployment to Azure**: Azure DevOps Pipeline automatically deploys changes to Azure
+
+To get started with this workflow:
+
+```bash
+# Connect to Azure DevOps from Replit
+./scripts/connect-azure-devops.sh
+```
+
+For detailed instructions, see [Azure DevOps Deployment Guide](docs/azure-devops-deployment.md)
+
+### Option 2: Replit → GitHub → Azure
 
 1. **Development on Replit**: Write and test code in Replit's collaborative environment
 2. **Version Control with GitHub**: Push changes to GitHub for version control
