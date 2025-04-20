@@ -240,6 +240,9 @@ with st.sidebar:
                         # Explicitly reinitialize translations to ensure they apply throughout the UI
                         st.session_state['language'] = current_language  # Ensure it's set in multiple ways
                         
+                        # Set a flag to force reinitialization of translations on next page load
+                        st.session_state['reload_translations'] = True
+                        
                         # Reinitialize translations - this is important to ensure they're active
                         from utils.i18n import initialize
                         
@@ -365,15 +368,15 @@ with st.sidebar:
                 st.markdown("---")
         
         # Quick actions section
-        st.markdown("""
-        <p style="font-size: 0.9rem; color: #6B7280; margin-bottom: 5px;">Quick Actions</p>
+        st.markdown(f"""
+        <p style="font-size: 0.9rem; color: #6B7280; margin-bottom: 5px;">{_("sidebar.quick_actions")}</p>
         """, unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         with col1:
-            st.button("🔎 My Scans", use_container_width=True)
+            st.button(f"🔎 {_('sidebar.my_scans')}", use_container_width=True)
         with col2:
-            st.button("⚙️ Settings", use_container_width=True)
+            st.button(f"⚙️ {_('sidebar.settings')}", use_container_width=True)
         
         # Styled logout button
         st.markdown("""
