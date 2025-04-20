@@ -494,45 +494,87 @@ def is_authenticated() -> bool:
 def logout() -> None:
     """
     Log out the current user by clearing session state.
-    Preserves language preference and forces proper reinitialization.
+    Enhanced to guarantee language preference preservation using multiple redundant mechanisms.
     """
     import streamlit as st
     
-    # IMPORTANT: Preserve ALL language settings before logout
-    # Save language in multiple locations for redundancy
-    current_language = st.session_state.get("language", "en")
-    backup_language = st.session_state.get("backup_language", current_language)
-    pre_login_language = st.session_state.get("pre_login_language", current_language)
+    # LANGUAGE PRESERVATION STRATEGY:
+    # 1. Gather ALL language sources with fallback chain
+    # 2. Store in multiple persistent locations
+    # 3. Preserve through session state clearing
+    # 4. Restore to ALL possible destinations
+    # 5. Force immediate reinitialization
     
-    # Use the most likely correct language (prioritizing backup sources)
-    effective_language = pre_login_language or backup_language or current_language
+    # Step 1: Check ALL possible language locations in priority order
+    lang_sources = {
+        "_persistent_language": st.session_state.get("_persistent_language"),
+        "language": st.session_state.get("language"),
+        "pre_login_language": st.session_state.get("pre_login_language"),
+        "backup_language": st.session_state.get("backup_language"),
+        "force_language_after_login": st.session_state.get("force_language_after_login")
+    }
     
-    print(f"LOGOUT - Preserving language: {effective_language}")
+    # Log all language sources for debugging
+    print(f"LOGOUT - Language sources: {lang_sources}")
     
-    # Store the language in a dedicated variable that won't be cleared
+    # Step 2: Determine the most reliable language value using priority chain
+    effective_language = None
+    for key in ["_persistent_language", "language", "pre_login_language", "backup_language", "force_language_after_login"]:
+        if lang_sources[key]:
+            effective_language = lang_sources[key]
+            print(f"LOGOUT - Using language from {key}: {effective_language}")
+            break
+    
+    # Fallback to English if no language is found
+    if not effective_language:
+        effective_language = "en"
+        print(f"LOGOUT - No language found, defaulting to: {effective_language}")
+    
+    # Step A: Create a special temporary variable to hold language through the reset
+    temp_language_holder = effective_language
+    
+    # Step 3: Store language in ALL redundant persistent locations
+    # These will survive the session state clearing
     st.session_state["_persistent_language"] = effective_language
+    st.session_state["pre_logout_language"] = effective_language  # New backup location
     
-    # Clear authentication-related session state
-    for key in ["logged_in", "username", "role", "permissions"]:
+    # Step 4: Clear ALL authentication-related session state
+    # Only clear auth keys, preserve all other state
+    auth_keys = ["logged_in", "username", "role", "permissions", "user_data"]
+    for key in auth_keys:
         if key in st.session_state:
             del st.session_state[key]
     
-    # Restore language setting in ALL possible locations
-    st.session_state["language"] = effective_language
-    st.session_state["backup_language"] = effective_language
-    st.session_state["pre_login_language"] = effective_language
-    st.session_state["force_language_after_login"] = effective_language
+    # Step 5: Restore language to ALL possible locations for maximum redundancy
+    st.session_state["language"] = temp_language_holder
+    st.session_state["backup_language"] = temp_language_holder
+    st.session_state["pre_login_language"] = temp_language_holder
+    st.session_state["force_language_after_login"] = temp_language_holder
     
-    # Force reinitialization of translations on next page load
+    # Double-check that language is still set correctly after clearing
+    print(f"LOGOUT - Restored language: {st.session_state.get('language')}")
+    
+    # Step 6: Force complete reinitialization of translations
     st.session_state["reload_translations"] = True
     
-    # Explicitly load and apply translations
-    from utils.i18n import initialize, set_language
-    initialize()  # Reload translations
-    set_language(effective_language)  # Set language
+    # Step 7: Explicitly reload translations via direct function calls
+    from utils.i18n import initialize, set_language, _translations
+    
+    # Force clear translation cache
+    if '_translations' in globals():
+        _translations = {}
+    
+    # Set the language directly
+    set_language(temp_language_holder)
+    
+    # Complete full initialization
+    initialize()
     
     # Reset active tab to login
     st.session_state["active_tab"] = "login"
+    
+    # Final verification
+    print(f"LOGOUT - Complete. Language status check: {st.session_state.get('language')}")
 
 def has_permission(permission: str) -> bool:
     """

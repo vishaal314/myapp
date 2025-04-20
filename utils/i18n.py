@@ -88,22 +88,48 @@ def load_translations(lang_code: str) -> Dict[str, Any]:
 def set_language(lang_code: Optional[str] = None) -> None:
     """
     Set the current language for the application.
+    Enhanced with redundant storage for robustness.
     
     Args:
         lang_code: The language code (e.g., 'en', 'nl')
     """
-    if not lang_code:
-        # Get language from session state if available
-        lang_code = st.session_state.get('language', 'en')
+    global _current_language
     
-    # Ensure lang_code is a string
+    if not lang_code:
+        # Priority chain for finding language
+        if '_persistent_language' in st.session_state:
+            lang_code = st.session_state['_persistent_language']
+        elif 'language' in st.session_state:
+            lang_code = st.session_state['language']
+        elif 'pre_login_language' in st.session_state:
+            lang_code = st.session_state['pre_login_language']
+        elif 'backup_language' in st.session_state:
+            lang_code = st.session_state['backup_language']
+        else:
+            lang_code = 'en'  # Default fallback
+    
+    # Ensure lang_code is a string and valid
     lang_code_str = str(lang_code)
+    
+    # Validate language is supported
+    if lang_code_str not in LANGUAGES:
+        print(f"SET_LANGUAGE - Invalid language: {lang_code_str}, falling back to 'en'")
+        lang_code_str = 'en'
+    
+    # Log the set operation for debugging
+    print(f"SET_LANGUAGE - Setting language to: {lang_code_str}")
+    
+    # Update module-level global variable
+    _current_language = lang_code_str
     
     # Load translations for the language
     load_translations(lang_code_str)
     
-    # Update session state
-    st.session_state.language = lang_code_str
+    # Update ALL session state locations for maximum redundancy
+    st.session_state['language'] = lang_code_str
+    st.session_state['_persistent_language'] = lang_code_str
+    st.session_state['pre_login_language'] = lang_code_str
+    st.session_state['backup_language'] = lang_code_str
 
 def get_text(key: str, default: Optional[str] = None) -> str:
     """
