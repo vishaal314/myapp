@@ -907,3 +907,5 @@ class DBScanner:
             "by_type": by_type,
             "by_table": by_table
         }
+# Create an alias for compatibility with existing imports
+DatabaseScanner = DBScanner
