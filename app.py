@@ -233,24 +233,46 @@ with st.sidebar:
                             if user_data["role"] in ROLE_PERMISSIONS:
                                 st.session_state.permissions = ROLE_PERMISSIONS[user_data["role"]]["permissions"]
                         
-                        # CRITICAL: Save the current language BEFORE login processing
-                        current_language = st.session_state.get('language', 'en')
-                        print(f"LOGIN - Current language before login: {current_language}")
+                        # CRITICAL SECTION: Save language settings BEFORE login authentication changes
+                        # This is a fundamental part of the language persistence fix
                         
-                        # Store in a separate session state variable for absolute safety
+                        # First prioritize any special persistent language storage
+                        if '_persistent_language' in st.session_state:
+                            current_language = st.session_state.get('_persistent_language')
+                            print(f"LOGIN - Using _persistent_language: {current_language}")
+                        # Then try the current language
+                        elif 'language' in st.session_state:
+                            current_language = st.session_state.get('language')
+                            print(f"LOGIN - Using current language: {current_language}")
+                        # Then try any backup language settings
+                        elif 'pre_login_language' in st.session_state:
+                            current_language = st.session_state.get('pre_login_language')
+                            print(f"LOGIN - Using pre_login_language: {current_language}")
+                        # Finally default to English if nothing else works
+                        else:
+                            current_language = 'en'
+                            print(f"LOGIN - No language found, defaulting to: {current_language}")
+                        
+                        # Store language in ALL possible locations for redundancy
+                        st.session_state['_persistent_language'] = current_language
                         st.session_state['pre_login_language'] = current_language
-                        
+                        st.session_state['backup_language'] = current_language
+                        st.session_state['language'] = current_language
+                        st.session_state['force_language_after_login'] = current_language
+
                         # Display success message in current language
                         st.success(_("login.success"))
                         
-                        # Set all language variables - multiple methods for redundancy
-                        st.session_state['language'] = current_language
-                        st.session_state['current_language'] = current_language
-                        st.session_state['reload_translations'] = True
-                        st.session_state['force_language_after_login'] = current_language
+                        # Force immediate language initialization for post-login UI
+                        from utils.i18n import initialize, _translations
                         
-                        # Let's log for debugging purposes
-                        print(f"LOGIN - Applied language: {current_language}")
+                        # Clear existing translations and reinitialize for clean state
+                        _translations = {}
+                        initialize()
+                        
+                        # Set strong flags for post-login language preservation
+                        st.session_state['reload_translations'] = True
+                        print(f"LOGIN - Language set to: {current_language}")
                         
                         # Force rerun to apply all changes immediately
                         st.rerun()

@@ -498,19 +498,38 @@ def logout() -> None:
     """
     import streamlit as st
     
-    # Save the current language setting
+    # IMPORTANT: Preserve ALL language settings before logout
+    # Save language in multiple locations for redundancy
     current_language = st.session_state.get("language", "en")
+    backup_language = st.session_state.get("backup_language", current_language)
+    pre_login_language = st.session_state.get("pre_login_language", current_language)
+    
+    # Use the most likely correct language (prioritizing backup sources)
+    effective_language = pre_login_language or backup_language or current_language
+    
+    print(f"LOGOUT - Preserving language: {effective_language}")
+    
+    # Store the language in a dedicated variable that won't be cleared
+    st.session_state["_persistent_language"] = effective_language
     
     # Clear authentication-related session state
     for key in ["logged_in", "username", "role", "permissions"]:
         if key in st.session_state:
             del st.session_state[key]
     
-    # Restore language setting
-    st.session_state["language"] = current_language
+    # Restore language setting in ALL possible locations
+    st.session_state["language"] = effective_language
+    st.session_state["backup_language"] = effective_language
+    st.session_state["pre_login_language"] = effective_language
+    st.session_state["force_language_after_login"] = effective_language
     
     # Force reinitialization of translations on next page load
     st.session_state["reload_translations"] = True
+    
+    # Explicitly load and apply translations
+    from utils.i18n import initialize, set_language
+    initialize()  # Reload translations
+    set_language(effective_language)  # Set language
     
     # Reset active tab to login
     st.session_state["active_tab"] = "login"
