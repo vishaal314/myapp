@@ -405,6 +405,87 @@ def generate_pdf_report(scan_data: Dict[str, Any],
         report_format=report_format
     )
 
+def generate_dpia_report(scan_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Generate a comprehensive DPIA report from assessment results.
+    This function processes and enriches the DPIA assessment data.
+    
+    Args:
+        scan_data: The DPIA assessment data with scores and findings
+        
+    Returns:
+        Enriched DPIA report data
+    """
+    # Create a copy of the scan data to avoid modifying the original
+    report_data = scan_data.copy()
+    
+    # Add report generation timestamp
+    report_data['report_generated_at'] = datetime.now().isoformat()
+    
+    # Add report format info
+    report_data['report_type'] = 'dpia'
+    report_data['report_version'] = '1.0'
+    
+    # Calculate risk summary if not already present
+    if 'risk_summary' not in report_data:
+        high_risk = report_data.get('high_risk_count', 0) + report_data.get('file_high_risk_count', 0)
+        medium_risk = report_data.get('medium_risk_count', 0) + report_data.get('file_medium_risk_count', 0)
+        low_risk = report_data.get('low_risk_count', 0) + report_data.get('file_low_risk_count', 0)
+        
+        report_data['risk_summary'] = {
+            'high': high_risk,
+            'medium': medium_risk,
+            'low': low_risk,
+            'total': high_risk + medium_risk + low_risk
+        }
+    
+    # Add compliance decision info
+    report_data['compliance_status'] = 'Compliant' if not report_data.get('dpia_required', False) else 'Action Required'
+    
+    # Add executive summary
+    language = report_data.get('language', 'en')
+    if language == 'nl':
+        if report_data.get('overall_risk_level') == 'High':
+            summary = "Deze beoordeling geeft aan dat er een hoog risico bestaat voor de rechten en vrijheden van betrokkenen. Een formele DPIA is vereist volgens Artikel 35 van de AVG. Onmiddellijke actie is nodig om risico's te beperken en aan de regelgeving te voldoen."
+        elif report_data.get('overall_risk_level') == 'Medium':
+            summary = "Deze beoordeling toont een gemiddeld risiconiveau voor de rechten en vrijheden van betrokkenen. Hoewel een formele DPIA mogelijk niet vereist is, is het raadzaam om de geïdentificeerde risico's aan te pakken en verdere beoordeling te overwegen."
+        else:
+            summary = "Deze beoordeling geeft aan dat er een laag risico bestaat voor de rechten en vrijheden van betrokkenen. Een formele DPIA lijkt niet vereist volgens Artikel 35 van de AVG, maar blijf gegevensbeschermingsprincipes toepassen op alle verwerkingsactiviteiten."
+    else:
+        if report_data.get('overall_risk_level') == 'High':
+            summary = "This assessment indicates a high risk to the rights and freedoms of data subjects. A formal DPIA is required under Article 35 of GDPR. Immediate action is needed to mitigate risks and comply with regulations."
+        elif report_data.get('overall_risk_level') == 'Medium':
+            summary = "This assessment shows a medium level of risk to the rights and freedoms of data subjects. While a formal DPIA may not be required, it is advisable to address the identified risks and consider further assessment."
+        else:
+            summary = "This assessment indicates a low risk to the rights and freedoms of data subjects. A formal DPIA does not appear to be required under Article 35 of GDPR, but continue to apply data protection principles to all processing activities."
+    
+    report_data['executive_summary'] = summary
+    
+    # Generate action plan based on recommendations
+    if 'recommendations' in report_data and report_data['recommendations']:
+        # Sort recommendations by severity (high to low)
+        severity_order = {'High': 0, 'Medium': 1, 'Low': 2}
+        sorted_recommendations = sorted(
+            report_data['recommendations'], 
+            key=lambda x: severity_order.get(x.get('severity', 'Low'), 3)
+        )
+        
+        # Create action plan
+        action_plan = []
+        for i, rec in enumerate(sorted_recommendations):
+            action = {
+                'id': i + 1,
+                'recommendation': rec.get('description', 'No description'),
+                'category': rec.get('category', 'General'),
+                'priority': rec.get('severity', 'Low'),
+                'status': 'Pending'
+            }
+            action_plan.append(action)
+        
+        report_data['action_plan'] = action_plan
+    
+    return report_data
+
 def generate_report(scan_data: Dict[str, Any], 
                    include_details: bool = True,
                    include_charts: bool = True,
