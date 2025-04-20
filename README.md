@@ -89,9 +89,40 @@ For manual deployment:
 
 ### Cloud Deployment
 
+DataGuardian Pro offers multiple deployment options for cloud environments:
+
+#### One-Click Azure Deployment with Terraform
+
+For the easiest deployment experience, use our Terraform configuration:
+
+```bash
+# Deploy all Azure resources with a single command
+cd terraform
+./deploy.sh
+```
+
+This will deploy:
+- Azure PostgreSQL Flexible Server
+- Azure Container Registry
+- Azure App Service (Web App for Containers)
+- Application Insights monitoring
+- All required networking and security configurations
+
+After infrastructure deployment, build and push your Docker image:
+
+```bash
+# Build and push Docker image to ACR
+cd terraform
+./push-docker-image.sh
+```
+
+For detailed instructions, see [Terraform Deployment Guide](terraform/README.md)
+
+#### Other Cloud Providers
+
 DataGuardian Pro can be deployed to any cloud provider that supports Docker containers:
 
-- **Azure**: Use Azure Container Instances or Azure Kubernetes Service
+- **Azure**: Use our Terraform configuration (recommended), Azure Container Instances, or AKS
 - **AWS**: Use ECS, EKS, or Elastic Beanstalk
 - **GCP**: Use Google Kubernetes Engine or Cloud Run
 
