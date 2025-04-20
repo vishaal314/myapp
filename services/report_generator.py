@@ -376,11 +376,69 @@ def create_bar_chart(data, title, max_value=None):
     
     return drawing
 
+def generate_pdf_report(scan_data: Dict[str, Any], 
+                   include_details: bool = True,
+                   include_charts: bool = True,
+                   include_metadata: bool = True,
+                   include_recommendations: bool = True,
+                   report_format: str = "standard") -> bytes:
+    """
+    Generate a PDF report for a scan result.
+    
+    Args:
+        scan_data: The scan result data
+        include_details: Whether to include detailed findings
+        include_charts: Whether to include charts
+        include_metadata: Whether to include scan metadata
+        include_recommendations: Whether to include recommendations
+        report_format: Report format type ("standard", "executive", "detailed", "dpia")
+        
+    Returns:
+        The PDF report as bytes
+    """
+    return _generate_report_internal(
+        scan_data=scan_data,
+        include_details=include_details,
+        include_charts=include_charts,
+        include_metadata=include_metadata,
+        include_recommendations=include_recommendations,
+        report_format=report_format
+    )
+
 def generate_report(scan_data: Dict[str, Any], 
                    include_details: bool = True,
                    include_charts: bool = True,
                    include_metadata: bool = True,
                    include_recommendations: bool = True) -> bytes:
+    """
+    Legacy function for backward compatibility. 
+    Generate a PDF report for a scan result.
+    
+    Args:
+        scan_data: The scan result data
+        include_details: Whether to include detailed findings
+        include_charts: Whether to include charts
+        include_metadata: Whether to include scan metadata
+        include_recommendations: Whether to include recommendations
+        
+    Returns:
+        The PDF report as bytes
+    """
+    return _generate_report_internal(
+        scan_data=scan_data,
+        include_details=include_details,
+        include_charts=include_charts,
+        include_metadata=include_metadata,
+        include_recommendations=include_recommendations,
+        report_format="standard"
+    )
+
+def _generate_report_internal(scan_data: Dict[str, Any], 
+                   include_details: bool = True,
+                   include_charts: bool = True,
+                   include_metadata: bool = True,
+                   include_recommendations: bool = True,
+                   report_format: str = "standard") -> bytes:
     """
     Generate a PDF report for a scan result.
     
