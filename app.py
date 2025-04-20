@@ -2183,18 +2183,79 @@ else:
                             st.rerun()
                     
                     with col2:
-                        # Quick PDF Report generation
-                        if st.button("Generate PDF Report", key="quick_pdf_report"):
-                            # Import report generator
-                            from services.report_generator import generate_report
-                            
-                            with st.spinner("Generating PDF report..."):
-                                pdf_bytes = generate_report(aggregated_result)
+                        # Report and Certificate Generation
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if st.button("Generate PDF Report", key="quick_pdf_report", use_container_width=True):
+                                # Import report generator
+                                from services.report_generator import generate_report
                                 
-                                # Create download link
-                                b64_pdf = base64.b64encode(pdf_bytes).decode()
-                                href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{display_scan_id}.pdf">Download PDF Report</a>'
-                                st.markdown(href, unsafe_allow_html=True)
+                                with st.spinner("Generating PDF report..."):
+                                    pdf_bytes = generate_report(aggregated_result)
+                                    
+                                    # Create download link
+                                    b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{display_scan_id}.pdf">Download PDF Report</a>'
+                        
+                        # Compliance Certificate for Premium users
+                        with col2:
+                            # Check if user is premium
+                            is_premium = st.session_state.role in ["premium", "admin"]
+                            
+                            # Check if scan is fully compliant
+                            cert_generator = CertificateGenerator(language=st.session_state.language)
+                            is_compliant = cert_generator.is_fully_compliant(aggregated_result)
+                            
+                            # Button text based on compliance and premium status
+                            if is_premium and is_compliant:
+                                cert_btn_text = _("dashboard.generate_certificate")
+                                cert_btn_disabled = False
+                                cert_btn_help = _("dashboard.generate_certificate_help")
+                            elif not is_premium and is_compliant:
+                                cert_btn_text = _("dashboard.premium_certificate") 
+                                cert_btn_disabled = True
+                                cert_btn_help = _("dashboard.premium_certificate_help")
+                            elif is_premium and not is_compliant:
+                                cert_btn_text = _("dashboard.cannot_generate_certificate")
+                                cert_btn_disabled = True
+                                cert_btn_help = _("dashboard.cannot_generate_certificate_help")
+                            else:
+                                cert_btn_text = _("dashboard.premium_certificate")
+                                cert_btn_disabled = True
+                                cert_btn_help = _("dashboard.premium_certificate_help2")
+                            
+                            if st.button(cert_btn_text, key="generate_certificate", 
+                                        disabled=cert_btn_disabled, help=cert_btn_help,
+                                        use_container_width=True):
+                                
+                                with st.spinner(_("dashboard.generating_certificate")):
+                                    # Get user info for certificate
+                                    user_info = {
+                                        "username": st.session_state.username,
+                                        "role": st.session_state.role,
+                                        "email": st.session_state.email,
+                                        "membership": "premium"  # Since we already checked
+                                    }
+                                    
+                                    # Generate certificate
+                                    company_name = None  # Could be added as an input field if needed
+                                    cert_path = cert_generator.generate_certificate(
+                                        aggregated_result, user_info, company_name
+                                    )
+                                    
+                                    if cert_path and os.path.exists(cert_path):
+                                        # Read the certificate PDF
+                                        with open(cert_path, 'rb') as file:
+                                            cert_bytes = file.read()
+                                        
+                                        # Create download link
+                                        b64_cert = base64.b64encode(cert_bytes).decode()
+                                        href = f'<a href="data:application/pdf;base64,{b64_cert}" download="GDPR_Compliance_Certificate_{display_scan_id}.pdf">Download Compliance Certificate</a>'
+                                        st.markdown(href, unsafe_allow_html=True)
+                                        
+                                        st.success(_("dashboard.certificate_success"))
+                                    else:
+                                        st.error(_("dashboard.certificate_error"))
                                 
                     with col3:
                         # Quick HTML Report generation
