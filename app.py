@@ -58,7 +58,7 @@ if 'redirect_to_login' not in st.session_state:
 
 # Set page config
 st.set_page_config(
-    page_title="DataGuardian Pro",
+    page_title="DataGuardian Pro - Enterprise Privacy Compliance Platform",
     page_icon="🔒",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -78,8 +78,8 @@ with st.sidebar:
     <div style="background-image: linear-gradient(120deg, #6200EA, #3700B3); 
                padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center;
                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: white; margin: 0; font-weight: bold;">{_("app.title")}</h2>
-        <p style="color: #E9DAFF; margin: 5px 0 0 0; font-size: 0.9em;">{_("app.subtitle")}</p>
+        <h2 style="color: white; margin: 0; font-weight: bold;">DataGuardian Pro</h2>
+        <p style="color: #E9DAFF; margin: 5px 0 0 0; font-size: 0.9em;">Enterprise Privacy Compliance Platform</p>
     </div>
     """, unsafe_allow_html=True)
     
