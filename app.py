@@ -2351,7 +2351,14 @@ else:
                             st.write("---")
                         
                         # Process assessment
-                        if st.button("Complete DPIA Assessment"):
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            complete_assessment = st.button("Complete DPIA Assessment")
+                        with col2:
+                            # Add a second button for those who prefer the Start Scan button
+                            start_scan_button = st.button("Start Scan", key="dpia_start_scan")
+                            
+                        if complete_assessment or start_scan_button:
                             with st.spinner("Processing DPIA assessment..."):
                                 # Create assessment parameters including data source
                                 assessment_params = {
