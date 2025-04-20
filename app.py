@@ -2467,58 +2467,155 @@ else:
                         answers = {}
                         
                         with assessment_container:
-                            # Add a note about saving
-                            st.info("All answers are automatically saved as you select them. Once you've completed all questions, click the 'Submit DPIA Assessment' button at the bottom.")
+                            # Add a note about saving with better styling
+                            st.markdown("""
+                            <div style="padding: 12px 20px; background-color: #e1f5fe; border-left: 4px solid #03a9f4; 
+                                       border-radius: 4px; margin-bottom: 20px;">
+                              <p style="margin: 0; color: #0277bd;">
+                                <strong>Auto-save enabled:</strong> All answers are automatically saved as you select them. 
+                                Once you've completed all questions, click the 'Submit DPIA Assessment' button.
+                              </p>
+                            </div>
+                            """, unsafe_allow_html=True)
                             
-                            # Display questions by category, all on one page
-                            for category, info in assessment_categories.items():
-                                # Create a visual section for this category
-                                st.subheader(f"**{info['name']}**")
-                                st.write(info['description'])
-                                
-                                # Create a list to store answers for this category
-                                category_answers = []
-                                
-                                # Display each question with radio buttons
-                                for i, question in enumerate(info['questions']):
-                                    # Create a unique key for this radio button
-                                    radio_key = f"dpia_{category}_{i}"
+                            # Create two-column layout for questions and progress
+                            question_col, progress_col = st.columns([3, 1])
+                            
+                            with question_col:
+                                # Display questions by category, all on one page
+                                for category, info in assessment_categories.items():
+                                    # Create a visual section for this category with improved styling
+                                    st.markdown(f"""
+                                    <div style="background-color: #f8f9fa; padding: 10px 15px; border-radius: 5px; 
+                                               margin-bottom: 15px; border-left: 4px solid #1E88E5;">
+                                        <h3 style="color: #1E88E5; margin-bottom: 5px;">{info['name']}</h3>
+                                        <p style="color: #555; margin: 0;">{info['description']}</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
                                     
-                                    # Function to update session state when radio button changes
-                                    def on_change():
-                                        # This is automatically called when a radio button value changes
-                                        answer_text = st.session_state[radio_key]
-                                        answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer_text]
-                                        st.session_state.dpia_answers[category][i] = answer_value
+                                    # Create a list to store answers for this category
+                                    category_answers = []
                                     
-                                    # Set default value with index
-                                    selected_idx = st.session_state.dpia_answers[category][i]
+                                    # Display each question with radio buttons
+                                    for i, question in enumerate(info['questions']):
+                                        # Create a unique key for this radio button
+                                        radio_key = f"dpia_{category}_{i}"
+                                        
+                                        # Function to update session state when radio button changes
+                                        def on_change():
+                                            # This is automatically called when a radio button value changes
+                                            answer_text = st.session_state[radio_key]
+                                            answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer_text]
+                                            st.session_state.dpia_answers[category][i] = answer_value
+                                        
+                                        # Set default value with index
+                                        selected_idx = st.session_state.dpia_answers[category][i]
+                                        
+                                        # Display the question in a card-like container
+                                        st.markdown(f"""
+                                        <div style="background-color: white; padding: 10px 15px; border-radius: 4px;
+                                                   margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                            <p style="margin: 0;"><strong>Q{i+1}:</strong> {question}</p>
+                                        </div>
+                                        """, unsafe_allow_html=True)
+                                        
+                                        # Display the radio button with the current value
+                                        # Use the on_change parameter to save answers automatically
+                                        answer = st.radio(
+                                            "", # Empty label as we displayed the question above
+                                            ["No", "Partially", "Yes"],
+                                            index=selected_idx,
+                                            key=radio_key,
+                                            on_change=on_change,
+                                            horizontal=True # Horizontal layout for better UI
+                                        )
+                                        
+                                        # Convert answer to numerical value
+                                        answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer]
+                                        category_answers.append(answer_value)
                                     
-                                    # Display the radio button with the current value
-                                    # Use the on_change parameter to save answers automatically
-                                    answer = st.radio(
-                                        question,
-                                        ["No", "Partially", "Yes"],
-                                        index=selected_idx,
-                                        key=radio_key,
-                                        on_change=on_change
-                                    )
+                                    # Store answers for this category
+                                    answers[category] = category_answers
                                     
-                                    # Convert answer to numerical value
-                                    answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer]
-                                    category_answers.append(answer_value)
+                                    # Add a separator between categories
+                                    st.markdown("<hr style='margin: 20px 0; border: none; height: 1px; background-color: #e0e0e0;'>", unsafe_allow_html=True)
+                            
+                            # Right panel with progress tracking that stays fixed
+                            with progress_col:
+                                # Calculate the current progress
+                                total_questions = sum(len(info['questions']) for info in assessment_categories.values())
+                                answered_questions = 0
+                                for cat, ans_list in st.session_state.dpia_answers.items():
+                                    answered_questions += sum(1 for a in ans_list if a > 0)
                                 
-                                # Store answers for this category
-                                answers[category] = category_answers
+                                # Create a fixed position panel for progress tracking
+                                st.markdown("""
+                                <div style="position: sticky; top: 0; background-color: #f8f9fa; padding: 15px; 
+                                           border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                    <h3 style="color: #1E88E5; font-size: 18px; margin-top: 0;">Assessment Progress</h3>
+                                </div>
+                                """, unsafe_allow_html=True)
                                 
-                                # Add a separator between categories
-                                st.markdown("---")
+                                # Show a progress bar
+                                progress_pct = min(100, round(answered_questions / total_questions * 100))
+                                st.progress(progress_pct / 100)
+                                
+                                # Progress percentage with large display
+                                st.markdown(f"""
+                                <div style="text-align: center; margin: 10px 0;">
+                                    <span style="font-size: 28px; font-weight: bold; color: #1E88E5;">{progress_pct}%</span>
+                                    <p style="margin: 0; color: #666; font-size: 14px;">
+                                        {answered_questions}/{total_questions} questions answered
+                                    </p>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                # Add a check if all questions are answered with a clear message
+                                if progress_pct < 100:
+                                    st.warning(f"Please answer all questions before submitting. You still have {total_questions - answered_questions} unanswered questions.")
+                                else:
+                                    st.success("All questions answered! You can now submit your assessment.")
+                                
+                                # Show category breakdown
+                                st.markdown("<h4 style='color: #1E88E5; margin-top: 20px;'>Categories</h4>", unsafe_allow_html=True)
+                                
+                                # Mini progress bars for each category
+                                for category, info in assessment_categories.items():
+                                    if category in st.session_state.dpia_answers:
+                                        cat_answers = st.session_state.dpia_answers[category]
+                                        yes_count = sum(1 for a in cat_answers if a == 2)
+                                        partial_count = sum(1 for a in cat_answers if a == 1)
+                                        no_count = sum(1 for a in cat_answers if a == 0)
+                                        
+                                        total_cat = len(info['questions'])
+                                        if total_cat > 0:
+                                            # Calculate completion percentage
+                                            completed = sum(1 for a in cat_answers if a > 0)
+                                            completion_pct = round(completed / total_cat * 100)
+                                            
+                                            # Color based on completion
+                                            if completion_pct == 100:
+                                                color = "#4CAF50"  # Green
+                                            elif completion_pct > 50:
+                                                color = "#FF9800"  # Orange/Amber
+                                            else:
+                                                color = "#F44336"  # Red
+                                            
+                                            # Display mini progress bar
+                                            st.markdown(f"""
+                                            <div style="margin-bottom: 12px;">
+                                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                                    <span style="font-size: 14px;">{info['name']}</span>
+                                                    <span style="font-size: 14px; color: {color};">{completion_pct}%</span>
+                                                </div>
+                                                <div style="height: 6px; background-color: #eee; border-radius: 3px;">
+                                                    <div style="width: {completion_pct}%; height: 6px; background-color: {color}; border-radius: 3px;"></div>
+                                                </div>
+                                            </div>
+                                            """, unsafe_allow_html=True)
                         
-                        # Process assessment - Using a more direct approach that will work better with repository selection
-                        
-                        # Create a single, clear button for assessment submission and directly execute the assessment
-                        # This avoids the state management issues with the submit button
-                        submit_button = st.button("Submit DPIA Assessment", key="dpia_submit_unique", type="primary")
+                        # Submit button with improved styling
+                        submit_button = st.button("Submit DPIA Assessment", key="dpia_submit_unique", type="primary", use_container_width=True)
                         
                         # Process assessment when the button is clicked (immediately, without relying on session state)
                         if submit_button:
@@ -2616,8 +2713,8 @@ else:
                                     
                                     # Display Results in a well-structured, visually attractive way
                                     st.markdown("""
-                                    <div style="margin-top: 30px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #f8f9fa;">
-                                        <h2 style="color: #1E88E5; text-align: center; margin-bottom: 20px;">DPIA Assessment Results</h2>
+                                    <div style="margin-top: 30px; padding: 25px; border-radius: 12px; background: linear-gradient(135deg, #f9f9f9, #f0f4f9); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                                        <h2 style="color: #1E88E5; text-align: center; margin-bottom: 25px; font-weight: 600;">DPIA Assessment Results</h2>
                                     </div>
                                     """, unsafe_allow_html=True)
                                     
@@ -2629,25 +2726,39 @@ else:
                                     if risk_level == "High":
                                         risk_color = "#ef4444"  # Red
                                         risk_bg = "#fee2e2"
+                                        risk_icon = "❗"  # Exclamation mark
+                                        risk_message = "High risk detected. Formal DPIA required before proceeding."
                                     elif risk_level == "Medium":
                                         risk_color = "#f97316"  # Orange
                                         risk_bg = "#ffedd5"
+                                        risk_icon = "⚠️"  # Warning sign
+                                        risk_message = "Medium risk detected. Consider conducting a formal DPIA."
                                     else:
                                         risk_color = "#10b981"  # Green
                                         risk_bg = "#d1fae5"
+                                        risk_icon = "✅"  # Check mark
+                                        risk_message = "Low risk detected. No formal DPIA required."
                                     
                                     # DPIA Required indicator
                                     dpia_text = "Yes" if dpia_required else "No"
                                     dpia_color = "#ef4444" if dpia_required else "#10b981"
                                     dpia_bg = "#fee2e2" if dpia_required else "#d1fae5"
+                                    dpia_icon = "⚠️" if dpia_required else "✅"
                                     
-                                    # Display risk summary in a nice grid
+                                    # Get file counts if available
+                                    file_count = assessment_results.get('file_count', 0)
+                                    finding_count = assessment_results.get('total_findings', 0)
+                                    
+                                    # Display risk summary in a nice grid with improved visuals and more information
                                     st.markdown(f"""
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
-                                        <div style="background-color: {risk_bg}; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                            <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">Overall Risk Level</h3>
-                                            <p style="font-size: 24px; font-weight: 600; color: {risk_color}; margin: 0;">{risk_level}</p>
-                                        </div>
+                                    <div style="background-color: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px;">
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px;">
+                                            <div style="background-color: {risk_bg}; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                                                <span style="font-size: 32px; margin-bottom: 10px; display: block;">{risk_icon}</span>
+                                                <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Overall Risk Level</h3>
+                                                <p style="font-size: 28px; font-weight: 600; color: {risk_color}; margin: 0 0 10px 0;">{risk_level}</p>
+                                                <p style="font-size: 13px; color: #64748b; margin: 0;">{risk_message}</p>
+                                            </div>
                                         
                                         <div style="background-color: {dpia_bg}; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                             <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">DPIA Required</h3>
