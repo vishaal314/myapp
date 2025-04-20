@@ -219,15 +219,18 @@ def initialize() -> None:
     # Force update session state for consistency
     st.session_state['language'] = current_lang
     
-    # Clear existing translations to force reload
-    if current_lang in _translations:
-        del _translations[current_lang]
+    # Clear ALL existing translations to force reload
+    _translations = {}  # Completely reset all translations
     
     # Set the current language and reload translations
     _current_language = current_lang
     
     # Load translations for the language
     load_translations(current_lang)
+    
+    # Also load English as fallback
+    if current_lang != 'en':
+        load_translations('en')
     
     # Set language in main interface - must be done after loading translations
     set_language(current_lang)

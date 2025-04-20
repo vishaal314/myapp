@@ -146,11 +146,11 @@ with st.sidebar:
         tab1, tab2 = st.columns(2)
         
         with tab1:
-            if st.button("Login", key="tab_login", use_container_width=True):
+            if st.button(_("sidebar.sign_in"), key="tab_login", use_container_width=True):
                 st.session_state.active_tab = "login"
         
         with tab2:
-            if st.button("Register", key="tab_register", use_container_width=True):
+            if st.button(_("sidebar.create_account"), key="tab_register", use_container_width=True):
                 st.session_state.active_tab = "register"
         
         # Default to login tab if not set
@@ -241,14 +241,9 @@ with st.sidebar:
                         st.session_state['language'] = current_language  # Ensure it's set in multiple ways
                         
                         # Reinitialize translations - this is important to ensure they're active
-                        from utils.i18n import initialize, load_translations
+                        from utils.i18n import initialize
                         
                         # Force complete reinitialization of translations
-                        if current_language in _translations:
-                            del _translations[current_language]  # Clear any cached translations
-                            
-                        _current_language = current_language
-                        load_translations(current_language)  # Reload from file
                         initialize()  # Force full reinitialization
                         set_language(current_language)  # Set language again
                         
@@ -334,13 +329,13 @@ with st.sidebar:
         st.markdown(f"""
         <div style="margin: 15px 0; background-color: white; padding: 15px; border-radius: 10px; 
                    border-left: 4px solid #3B82F6;">
-            <p><span style="color: #3B82F6;">👤</span> <strong>Role:</strong> {st.session_state.role}</p>
+            <p><span style="color: #3B82F6;">👤</span> <strong>{_("sidebar.current_role")}:</strong> {st.session_state.role}</p>
             <p><span style="color: #3B82F6;">✉️</span> <strong>Email:</strong> {st.session_state.email}</p>
         </div>
         """, unsafe_allow_html=True)
         
         # Include a "My Permissions" collapsible section
-        with st.expander("My Permissions"):
+        with st.expander(_("sidebar.your_permissions")):
             from services.auth import ROLE_PERMISSIONS, get_user_permissions
             
             # Get user's permissions
@@ -395,7 +390,7 @@ with st.sidebar:
         </style>
         """, unsafe_allow_html=True)
         
-        if st.button("🚪 Logout", use_container_width=True, key="logout_btn"):
+        if st.button(f"🚪 {_('sidebar.sign_out')}", use_container_width=True, key="logout_btn"):
             logout()
             st.rerun()
     

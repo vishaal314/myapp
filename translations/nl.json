@@ -7,6 +7,7 @@
   "sidebar": {
     "navigation": "Navigatie",
     "sign_in": "Inloggen",
+    "sign_out": "Uitloggen", 
     "create_account": "Account Aanmaken",
     "welcome": "Welkom",
     "quick_access": "Snelle Toegang",

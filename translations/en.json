@@ -7,6 +7,7 @@
   "sidebar": {
     "navigation": "Navigation",
     "sign_in": "Sign In",
+    "sign_out": "Sign Out",
     "create_account": "Create Account",
     "welcome": "Welcome",
     "quick_access": "Quick Access",
