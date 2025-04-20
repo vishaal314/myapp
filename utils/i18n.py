@@ -170,15 +170,28 @@ def language_selector(key_suffix: str = None) -> None:
     current_lang = st.session_state.get('language', 'en')
     selector_key = f"lang_selector_{key_suffix}"
     
-    # Define callback for language change - forcing stronger immediate update
+    # Define callback for language change - with enhanced persistence
     def on_language_change():
         new_lang = st.session_state[selector_key]
         if new_lang != current_lang:
-            # Update session state language
-            st.session_state.language = new_lang
+            print(f"LANGUAGE CHANGE: {current_lang} -> {new_lang}")
+            
+            # Store language in ALL possible locations for redundant persistence
+            st.session_state['language'] = new_lang
+            st.session_state['_persistent_language'] = new_lang
+            st.session_state['pre_login_language'] = new_lang
+            st.session_state['backup_language'] = new_lang
+            st.session_state['force_language_after_login'] = new_lang
+            
+            # Also log the language change for debugging
+            print(f"LANGUAGE SELECTOR - Changed language to: {new_lang}")
             
             # Set reload translations flag to force full reinitialization
-            st.session_state.reload_translations = True
+            st.session_state['reload_translations'] = True
+            
+            # Reset translations cache completely
+            global _translations
+            _translations = {}
             
             # Load translations for new language immediately
             set_language(new_lang)
@@ -206,13 +219,23 @@ def language_selector(key_suffix: str = None) -> None:
         with cols[1]:
             if selected_lang != current_lang:
                 if st.button("✓ Apply", key=f"apply_lang_{key_suffix}"):
-                    # Update session state language
-                    st.session_state.language = selected_lang
+                    print(f"APPLY BUTTON - Language change: {current_lang} -> {selected_lang}")
+                    
+                    # Store language redundantly in ALL possible locations
+                    st.session_state['language'] = selected_lang
+                    st.session_state['_persistent_language'] = selected_lang
+                    st.session_state['pre_login_language'] = selected_lang
+                    st.session_state['backup_language'] = selected_lang
+                    st.session_state['force_language_after_login'] = selected_lang
                     
                     # Set reload translations flag to force full reinitialization
-                    st.session_state.reload_translations = True
+                    st.session_state['reload_translations'] = True
                     
-                    # Load translations
+                    # Clear existing translations completely
+                    global _translations
+                    _translations = {}
+                    
+                    # Load translations directly
                     set_language(selected_lang)
                     
                     # Force full reinitialization
@@ -221,7 +244,7 @@ def language_selector(key_suffix: str = None) -> None:
                     # Force rerun
                     st.rerun()
 
-# Initialize translations
+# Initialize translations - COMPLETELY FIXED VERSION
 def initialize() -> None:
     """
     Initialize the internationalization module.
@@ -230,42 +253,59 @@ def initialize() -> None:
     """
     global _translations, _current_language
     
-    # Get the current language from session state
-    # IMPORTANT: We use direct get with no default to detect missing values 
-    current_lang = st.session_state.get('language')
+    # LANGUAGE PRIORITY CHAIN:
+    # 1. force_language_after_login (highest - set during auth)
+    # 2. _persistent_language (persistent across all state changes)
+    # 3. language (standard location)
+    # 4. pre_login_language (stored before login)
+    # 5. backup_language (extra backup)
+    # 6. 'en' (default fallback)
     
-    # If no language is set, see if we have a pre-login language
-    if not current_lang and 'pre_login_language' in st.session_state:
+    # Check all possible storage locations in priority order
+    if 'force_language_after_login' in st.session_state:
+        current_lang = st.session_state.pop('force_language_after_login')
+        print(f"INIT - Force Language Available: {current_lang}")
+    elif '_persistent_language' in st.session_state:
+        current_lang = st.session_state.get('_persistent_language')
+        print(f"INIT - Using _persistent_language: {current_lang}")
+    elif 'language' in st.session_state:
+        current_lang = st.session_state.get('language')
+        print(f"INIT - Using language: {current_lang}")
+    elif 'pre_login_language' in st.session_state:
         current_lang = st.session_state.get('pre_login_language')
-        
-    # If still no language, default to English
-    if not current_lang or current_lang not in LANGUAGES:
+        print(f"INIT - Using pre_login_language: {current_lang}")
+    elif 'backup_language' in st.session_state:
+        current_lang = st.session_state.get('backup_language')
+        print(f"INIT - Using backup_language: {current_lang}")
+    else:
+        # Ultimate fallback
+        current_lang = 'en'
+        print(f"INIT - No language found, using default: {current_lang}")
+    
+    # Validate the language is supported
+    if current_lang not in LANGUAGES:
+        print(f"INIT - Invalid language: {current_lang}, falling back to 'en'")
         current_lang = 'en'
     
-    # Completely clear session state of all language keys for consistency
-    # Set both the normal and pre-login language keys
+    # Apply language to ALL storage locations for redundancy
     st.session_state['language'] = current_lang
+    st.session_state['_persistent_language'] = current_lang
     st.session_state['pre_login_language'] = current_lang
-    
-    # Save language in explicit backup location too
     st.session_state['backup_language'] = current_lang
     
-    # Clear ALL existing translations to force reload
-    # This is critical for proper translation after login/logout
-    _translations = {}  # Completely reset all translations
+    # Completely reset all translations to force reload
+    # This is critical for proper translation after auth changes
+    _translations = {}  
     
-    # Set the current language and reload translations
+    # Set the current language module variable
     _current_language = current_lang
     
-    # Load translations for the language
+    # Load primary language translations
     load_translations(current_lang)
     
-    # Also load English as fallback
+    # Always load English as fallback for missing keys
     if current_lang != 'en':
         load_translations('en')
     
-    # Set language in main interface - must be done after loading translations
-    set_language(current_lang)
-    
-    # Log language initialization for debugging
-    print(f"Initialized translations for: {current_lang}")
+    # Log initialization for debugging
+    print(f"INIT - Successfully initialized translations for: {current_lang}")

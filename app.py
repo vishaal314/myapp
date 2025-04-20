@@ -22,12 +22,67 @@ from services.auth import authenticate, is_authenticated, logout, create_user, v
 from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES
 from utils.gdpr_rules import REGIONS, get_region_rules
 from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_finding, get_risk_color_gradient
-from utils.i18n import initialize, language_selector, get_text, set_language, LANGUAGES
+from utils.i18n import initialize, language_selector, get_text, set_language, LANGUAGES, _translations
 
 # Define translation function
 def _(key, default=None):
     return get_text(key, default)
 from utils.compliance_score import calculate_compliance_score, display_compliance_score_card
+
+# === LANGUAGE INITIALIZATION BLOCK ===
+# This critical section ensures language preservation across app state changes
+# Check multiple storage locations for language settings
+
+# First, initialize basic session state if needed
+if 'language' not in st.session_state:
+    # Check if we have a persistent language setting
+    if '_persistent_language' in st.session_state:
+        # Use persistent language across app reloads
+        current_language = st.session_state['_persistent_language']
+        print(f"INIT: Using _persistent_language: {current_language}")
+    elif 'pre_login_language' in st.session_state:
+        # Use pre-login language setting
+        current_language = st.session_state['pre_login_language']
+        print(f"INIT: Using pre_login_language: {current_language}")
+    elif 'backup_language' in st.session_state:
+        # Use backup language setting
+        current_language = st.session_state['backup_language']
+        print(f"INIT: Using backup_language: {current_language}")
+    else:
+        # Default to English if no language specified
+        current_language = 'en'
+        print("INIT: No language found, defaulting to 'en'")
+    
+    # Set the language in the primary location
+    st.session_state['language'] = current_language
+    
+    # Force translations to be reloaded
+    st.session_state['reload_translations'] = True
+
+# Ensure translations are properly initialized 
+# Sometimes the initialize function needs to be called multiple times
+# to properly load all translations
+_translations = {}  # Reset translations for fresh load
+initialize()  # Initialize translations
+
+# If we have a forced language, apply it now
+if 'force_language_after_login' in st.session_state:
+    # Use the forced language from login/logout process
+    forced_language = st.session_state.pop('force_language_after_login')
+    print(f"INIT: Applying forced language: {forced_language}")
+    
+    # Set language in all possible locations for redundancy
+    st.session_state['language'] = forced_language
+    st.session_state['pre_login_language'] = forced_language
+    st.session_state['backup_language'] = forced_language
+    st.session_state['_persistent_language'] = forced_language
+    
+    # Explicitly set the language
+    set_language(forced_language)
+    
+    # Force reloading of translations
+    initialize()
+# === END LANGUAGE INITIALIZATION BLOCK ===
 from utils.animated_language_switcher import animated_language_switcher, get_welcome_message_animation
 
 # Make sure translations are initialized at the start of the app
