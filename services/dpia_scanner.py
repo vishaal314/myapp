@@ -161,17 +161,59 @@ class DPIAScanner:
                 }
             }
 
-    def perform_assessment(self, answers: Dict[str, List[int]]) -> Dict[str, Any]:
+    def perform_assessment(self, answers: Dict[str, List[int]], **kwargs) -> Dict[str, Any]:
         """
-        Perform a DPIA assessment based on provided answers.
+        Perform a DPIA assessment based on provided answers and optional file/repository analysis.
         
         Args:
             answers: Dictionary mapping category names to lists of answer values (0-2)
                     0 = No, 1 = Partially, 2 = Yes
+            **kwargs: Additional keyword arguments:
+                file_paths: List of file paths to scan for PII
+                github_repo: GitHub repository URL to scan
+                github_branch: Branch to scan (default: main)
+                github_token: GitHub token for private repositories
+                repo_path: Local repository path to scan
         
         Returns:
             Assessment results including risk scores and recommendations
         """
+        # Process additional data sources if provided
+        file_findings = []
+        data_source_info = {}
+        
+        # Option 1: Process uploaded files
+        if 'file_paths' in kwargs and kwargs['file_paths']:
+            data_source_info = {
+                "type": "uploaded_files",
+                "count": len(kwargs['file_paths']),
+                "files": [os.path.basename(path) for path in kwargs['file_paths']]
+            }
+            file_findings.extend(self._scan_files(kwargs['file_paths']))
+        
+        # Option 2: Process GitHub repository
+        elif 'github_repo' in kwargs and kwargs['github_repo']:
+            github_branch = kwargs.get('github_branch', 'main')
+            github_token = kwargs.get('github_token', None)
+            data_source_info = {
+                "type": "github_repository",
+                "repository": kwargs['github_repo'],
+                "branch": github_branch
+            }
+            file_findings.extend(self._scan_github_repo(
+                kwargs['github_repo'],
+                branch=github_branch,
+                token=github_token
+            ))
+            
+        # Option 3: Process local repository
+        elif 'repo_path' in kwargs and kwargs['repo_path']:
+            data_source_info = {
+                "type": "local_repository",
+                "path": kwargs['repo_path']
+            }
+            file_findings.extend(self._scan_local_repo(kwargs['repo_path']))
+            
         # Calculate scores for each category and overall
         category_scores = {}
         total_score = 0
@@ -224,6 +266,20 @@ class DPIAScanner:
         # Generate recommendations based on risk levels
         recommendations = self._generate_recommendations(category_scores)
         
+        # Generate recommendations based on file findings
+        if file_findings:
+            file_recommendations = self._generate_file_recommendations(file_findings)
+            recommendations.extend(file_recommendations)
+        
+        # Count findings by risk level
+        file_high_risk = sum(1 for finding in file_findings if finding.get('risk_level') == 'High')
+        file_medium_risk = sum(1 for finding in file_findings if finding.get('risk_level') == 'Medium')
+        file_low_risk = sum(1 for finding in file_findings if finding.get('risk_level') == 'Low')
+        
+        # If there are high-risk findings in the files, adjust overall risk level
+        if file_high_risk > 0 and overall_risk != "High":
+            overall_risk = "High"
+            
         # Create results object
         results = {
             "scan_id": self.scan_id,
@@ -236,8 +292,14 @@ class DPIAScanner:
             "high_risk_count": high_risk_count,
             "medium_risk_count": medium_risk_count,
             "low_risk_count": low_risk_count,
+            "file_findings": file_findings,
+            "file_high_risk_count": file_high_risk,
+            "file_medium_risk_count": file_medium_risk,
+            "file_low_risk_count": file_low_risk,
+            "total_findings_count": len(file_findings),
+            "data_source_info": data_source_info,
             "recommendations": recommendations,
-            "dpia_required": overall_risk == "High" or high_risk_count >= 2,
+            "dpia_required": overall_risk == "High" or high_risk_count >= 2 or file_high_risk > 0,
             "language": self.language
         }
         
@@ -337,6 +399,374 @@ class DPIAScanner:
     def get_questions(self) -> Dict[str, Dict[str, Any]]:
         """Get all assessment questions grouped by category."""
         return self.assessment_categories
+        
+    def _generate_file_recommendations(self, findings: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+        """
+        Generate recommendations based on findings from file scanning.
+        
+        Args:
+            findings: List of findings from file scans
+            
+        Returns:
+            List of recommendation objects
+        """
+        recommendations = []
+        
+        # Count findings by type and risk level
+        finding_types = {}
+        high_risk_findings = []
+        medium_risk_findings = []
+        
+        for finding in findings:
+            finding_type = finding.get('type', 'Unknown')
+            risk_level = finding.get('risk_level', 'Low')
+            
+            # Add to type count
+            finding_types[finding_type] = finding_types.get(finding_type, 0) + 1
+            
+            # Add to risk lists
+            if risk_level == 'High':
+                high_risk_findings.append(finding)
+            elif risk_level == 'Medium':
+                medium_risk_findings.append(finding)
+        
+        # Generate recommendations based on high risk findings
+        if high_risk_findings:
+            # Group high risk findings by type
+            high_risk_types = {}
+            for finding in high_risk_findings:
+                finding_type = finding.get('type', 'Unknown')
+                high_risk_types[finding_type] = high_risk_types.get(finding_type, 0) + 1
+            
+            # Add recommendations for each high-risk finding type
+            for finding_type, count in high_risk_types.items():
+                if self.language == 'nl':
+                    if 'CREDIT_CARD' in finding_type:
+                        recommendations.append({
+                            "category": "Data Beveiliging",
+                            "severity": "High",
+                            "description": f"Gevonden kredietkaartgegevens vereisen speciale bescherming",
+                            "details": f"Er zijn {count} kredietkaartgegevens gevonden. Deze gegevens vereisen versleuteling en beperkte toegang volgens PCI DSS en GDPR."
+                        })
+                    elif 'ID_NUMBER' in finding_type:
+                        recommendations.append({
+                            "category": "Data Minimalisatie",
+                            "severity": "High",
+                            "description": f"Gevonden ID-nummers moeten worden beschermd",
+                            "details": f"Er zijn {count} ID-nummers gevonden. Overweeg of het opslaan van deze gegevens noodzakelijk is of dat ze gepseudonimiseerd kunnen worden."
+                        })
+                else:  # English
+                    if 'CREDIT_CARD' in finding_type:
+                        recommendations.append({
+                            "category": "Data Security",
+                            "severity": "High",
+                            "description": f"Found credit card data requires special protection",
+                            "details": f"Found {count} credit card numbers. This data requires encryption and restricted access as per PCI DSS and GDPR requirements."
+                        })
+                    elif 'ID_NUMBER' in finding_type:
+                        recommendations.append({
+                            "category": "Data Minimization",
+                            "severity": "High",
+                            "description": f"Found ID numbers must be protected",
+                            "details": f"Found {count} ID numbers. Consider whether storing this data is necessary or if it can be pseudonymized."
+                        })
+        
+        # Check for processing activities
+        processing_counts = {k: v for k, v in finding_types.items() if k.startswith('PROCESS_')}
+        if processing_counts:
+            total_processing = sum(processing_counts.values())
+            if self.language == 'nl':
+                recommendations.append({
+                    "category": "Verwerkingsactiviteiten",
+                    "severity": "Medium",
+                    "description": f"Documenteer verwerkingsactiviteiten in een register",
+                    "details": f"Er zijn {total_processing} verwijzingen naar gegevensverwerkingsactiviteiten gevonden. Zorg ervoor dat deze zijn gedocumenteerd in een verwerkingsregister zoals vereist door Artikel 30 van de AVG."
+                })
+            else:
+                recommendations.append({
+                    "category": "Processing Activities",
+                    "severity": "Medium",
+                    "description": f"Document processing activities in a register",
+                    "details": f"Found {total_processing} references to data processing activities. Ensure these are documented in a processing register as required by Article 30 of GDPR."
+                })
+                
+        # Check for PII distribution
+        pii_counts = {k: v for k, v in finding_types.items() if k in ['EMAIL', 'PHONE', 'ADDRESS']}
+        if sum(pii_counts.values()) > 0:
+            if self.language == 'nl':
+                recommendations.append({
+                    "category": "Gegevensbescherming",
+                    "severity": "Medium",
+                    "description": "Implementeer maatregelen voor de bescherming van persoonsgegevens",
+                    "details": f"Er zijn diverse persoonsgegevens gevonden, waaronder {', '.join(f'{v} {k.lower()}s' for k, v in pii_counts.items() if v > 0)}. Zorg voor toereikende beveiligingsmaatregelen en documenteer de rechtsgrond voor verwerking."
+                })
+            else:
+                recommendations.append({
+                    "category": "Data Protection",
+                    "severity": "Medium",
+                    "description": "Implement personal data protection measures",
+                    "details": f"Found various personal data including {', '.join(f'{v} {k.lower()}s' for k, v in pii_counts.items() if v > 0)}. Ensure adequate security measures are in place and document the legal basis for processing."
+                })
+        
+        return recommendations
+        
+    def _scan_files(self, file_paths: List[str]) -> List[Dict[str, Any]]:
+        """
+        Scan uploaded files for PII and data processing patterns.
+        
+        Args:
+            file_paths: List of paths to files that have been uploaded
+            
+        Returns:
+            List of findings from the files
+        """
+        import os
+        import re
+        import textract
+        
+        findings = []
+        
+        # Define PII patterns to search for
+        pii_patterns = {
+            "EMAIL": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+            "PHONE": r'\b(?:\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b',
+            "IP_ADDRESS": r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b',
+            "CREDIT_CARD": r'\b(?:\d{4}[-\s]?){3}\d{4}\b',
+            "ID_NUMBER": r'\b\d{6,9}\b',  # simplified SSN/ID number
+            "ADDRESS": r'\b\d+\s+[A-Za-z]+\s+(?:Avenue|St|Street|Road|Boulevard|Lane|Drive)\b',
+            "URL": r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+'
+        }
+        
+        # Define GDPR-specific processing patterns
+        processing_patterns = {
+            "PROFILING": r'\b(?:profil(?:e|ing)|segment(?:ation|ing)|categoriz(?:e|ing|ation))\b',
+            "AUTOMATED_DECISION": r'\b(?:automat(?:ed|ic)\s+decision|algorithm\s+decision)\b',
+            "TRACKING": r'\b(?:track(?:ing|er)|monitor(?:ing|ed)|surveill(?:ance|ing))\b',
+            "ANALYTICS": r'\b(?:analytic[s]?|usage\s+data|behavior(?:al)?\s+data)\b'
+        }
+        
+        for file_path in file_paths:
+            try:
+                file_name = os.path.basename(file_path)
+                file_extension = os.path.splitext(file_path)[1].lower()
+                
+                # Extract text content based on file type
+                try:
+                    # Use textract to handle various file types
+                    text_content = textract.process(file_path).decode('utf-8', errors='ignore')
+                except:
+                    # Fallback to basic text extraction
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        text_content = f.read()
+                
+                # Search for PII patterns
+                for pii_type, pattern in pii_patterns.items():
+                    matches = re.finditer(pattern, text_content)
+                    for match in matches:
+                        # Determine risk level based on PII type
+                        if pii_type in ["CREDIT_CARD", "ID_NUMBER"]:
+                            risk_level = "High"
+                        elif pii_type in ["EMAIL", "PHONE", "ADDRESS"]:
+                            risk_level = "Medium"
+                        else:
+                            risk_level = "Low"
+                        
+                        # Get some context around the match
+                        start = max(0, match.start() - 20)
+                        end = min(len(text_content), match.end() + 20)
+                        context = text_content[start:end].replace(match.group(), f"[{match.group()}]")
+                        
+                        findings.append({
+                            "type": pii_type,
+                            "value": "[REDACTED]",  # Don't expose actual PII
+                            "location": f"{file_name}",
+                            "context": context,
+                            "risk_level": risk_level,
+                            "reason": f"Found {pii_type} in file, requires protection under GDPR"
+                        })
+                
+                # Search for processing patterns
+                for process_type, pattern in processing_patterns.items():
+                    matches = re.finditer(pattern, text_content, re.IGNORECASE)
+                    for match in matches:
+                        risk_level = "Medium"  # Default for processing activities
+                        
+                        # Get some context around the match
+                        start = max(0, match.start() - 30)
+                        end = min(len(text_content), match.end() + 30)
+                        context = text_content[start:end].replace(match.group(), f"[{match.group()}]")
+                        
+                        findings.append({
+                            "type": f"PROCESS_{process_type}",
+                            "value": match.group(),
+                            "location": f"{file_name}",
+                            "context": context,
+                            "risk_level": risk_level,
+                            "reason": f"Found evidence of {process_type.replace('_', ' ')} which may require DPIA under Article 35"
+                        })
+                        
+            except Exception as e:
+                # Add an error finding
+                findings.append({
+                    "type": "ERROR",
+                    "value": str(e),
+                    "location": file_path,
+                    "risk_level": "Low",
+                    "reason": f"Error processing file: {str(e)}"
+                })
+                
+        return findings
+        
+    def _scan_github_repo(self, repo_url: str, branch: str = 'main', token: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Scan a GitHub repository for PII and data processing patterns.
+        
+        Args:
+            repo_url: GitHub repository URL
+            branch: Branch to scan (default: main)
+            token: GitHub token for private repositories
+            
+        Returns:
+            List of findings from the repository
+        """
+        import tempfile
+        import os
+        import subprocess
+        import shutil
+        
+        findings = []
+        
+        # Create a temporary directory for cloning
+        temp_dir = tempfile.mkdtemp()
+        
+        try:
+            # Extract username and repo name from URL
+            # Example: https://github.com/username/repository
+            parts = repo_url.rstrip('/').split('/')
+            if len(parts) < 5:
+                findings.append({
+                    "type": "ERROR",
+                    "value": "Invalid GitHub URL format",
+                    "location": repo_url,
+                    "risk_level": "Low",
+                    "reason": "URL should be in format: https://github.com/username/repository"
+                })
+                return findings
+                
+            username = parts[-2]
+            repo_name = parts[-1]
+            
+            # Prepare repository URL with token if provided
+            if token:
+                clone_url = f"https://{token}@github.com/{username}/{repo_name}.git"
+            else:
+                clone_url = f"https://github.com/{username}/{repo_name}.git"
+            
+            # Clone the repository
+            clone_process = subprocess.run(
+                ["git", "clone", "--branch", branch, "--depth", "1", clone_url, temp_dir],
+                capture_output=True,
+                text=True
+            )
+            
+            if clone_process.returncode != 0:
+                findings.append({
+                    "type": "ERROR",
+                    "value": "Failed to clone repository",
+                    "location": repo_url,
+                    "risk_level": "Low",
+                    "reason": f"Git error: {clone_process.stderr}"
+                })
+                return findings
+            
+            # Get all files in the repository
+            file_paths = []
+            for root, _, files in os.walk(temp_dir):
+                for file in files:
+                    # Skip .git directory
+                    if '.git' in root:
+                        continue
+                    file_paths.append(os.path.join(root, file))
+            
+            # Scan files using the file scanner
+            repo_findings = self._scan_files(file_paths)
+            findings.extend(repo_findings)
+            
+        except Exception as e:
+            findings.append({
+                "type": "ERROR",
+                "value": str(e),
+                "location": repo_url,
+                "risk_level": "Low",
+                "reason": f"Error scanning repository: {str(e)}"
+            })
+        
+        finally:
+            # Clean up temporary directory
+            try:
+                shutil.rmtree(temp_dir)
+            except:
+                pass
+                
+        return findings
+        
+    def _scan_local_repo(self, repo_path: str) -> List[Dict[str, Any]]:
+        """
+        Scan a local repository for PII and data processing patterns.
+        
+        Args:
+            repo_path: Path to local repository
+            
+        Returns:
+            List of findings from the repository
+        """
+        import os
+        
+        findings = []
+        
+        try:
+            # Check if path exists
+            if not os.path.exists(repo_path):
+                findings.append({
+                    "type": "ERROR",
+                    "value": "Path does not exist",
+                    "location": repo_path,
+                    "risk_level": "Low",
+                    "reason": f"The specified path '{repo_path}' does not exist"
+                })
+                return findings
+            
+            # Get all files in the directory
+            file_paths = []
+            if os.path.isfile(repo_path):
+                # Single file
+                file_paths.append(repo_path)
+            else:
+                # Directory
+                for root, _, files in os.walk(repo_path):
+                    # Skip hidden directories
+                    if '/.' in root or '\\.' in root:
+                        continue
+                    for file in files:
+                        # Skip hidden files
+                        if file.startswith('.'):
+                            continue
+                        file_paths.append(os.path.join(root, file))
+            
+            # Scan files using the file scanner
+            repo_findings = self._scan_files(file_paths)
+            findings.extend(repo_findings)
+            
+        except Exception as e:
+            findings.append({
+                "type": "ERROR",
+                "value": str(e),
+                "location": repo_path,
+                "risk_level": "Low",
+                "reason": f"Error scanning local repository: {str(e)}"
+            })
+            
+        return findings
 
 def generate_dpia_report(assessment_results: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -350,23 +780,37 @@ def generate_dpia_report(assessment_results: Dict[str, Any]) -> Dict[str, Any]:
     """
     language = assessment_results.get('language', 'en')
     
+    # Extract file findings
+    file_findings = assessment_results.get('file_findings', [])
+    
+    # Count findings from files
+    file_high_risk = assessment_results.get('file_high_risk_count', 0)
+    file_medium_risk = assessment_results.get('file_medium_risk_count', 0)
+    file_low_risk = assessment_results.get('file_low_risk_count', 0)
+    total_file_findings = assessment_results.get('total_findings_count', 0)
+    
+    # Get data source information
+    data_source_info = assessment_results.get('data_source_info', {})
+    data_source_type = data_source_info.get('type', 'questionnaire_only')
+    
     # Create report data structure
     report_data = {
         "scan_id": assessment_results["scan_id"],
         "scan_type": "DPIA",
         "timestamp": assessment_results["timestamp"],
-        "total_pii_found": 0,  # Not applicable for DPIA
-        "high_risk_count": assessment_results["high_risk_count"],
-        "medium_risk_count": assessment_results["medium_risk_count"],
-        "low_risk_count": assessment_results["low_risk_count"],
+        "total_pii_found": total_file_findings,
+        "high_risk_count": assessment_results["high_risk_count"] + file_high_risk,
+        "medium_risk_count": assessment_results["medium_risk_count"] + file_medium_risk,
+        "low_risk_count": assessment_results["low_risk_count"] + file_low_risk,
         "region": "EU",  # GDPR is EU-specific
         "risk_level": assessment_results["overall_risk_level"],
         "dpia_required": assessment_results["dpia_required"],
         "dpia_score": assessment_results["overall_percentage"],
-        "findings": [],
+        "findings": file_findings,
         "recommendations": assessment_results["recommendations"],
         "category_scores": assessment_results["category_scores"],
-        "pii_types": {}  # Not applicable for DPIA
+        "data_source_info": data_source_info,
+        "pii_types": _count_pii_types(file_findings)
     }
     
     # Add category findings
@@ -430,3 +874,19 @@ def generate_dpia_report(assessment_results: Dict[str, Any]) -> Dict[str, Any]:
     }
     
     return report_data
+
+def _count_pii_types(findings: List[Dict[str, Any]]) -> Dict[str, int]:
+    """
+    Count occurrences of each PII type found in the file findings.
+    
+    Args:
+        findings: List of findings from file scans
+        
+    Returns:
+        Dictionary mapping PII types to their frequency
+    """
+    pii_types = {}
+    for finding in findings:
+        pii_type = finding.get('type', 'Unknown')
+        pii_types[pii_type] = pii_types.get(pii_type, 0) + 1
+    return pii_types
