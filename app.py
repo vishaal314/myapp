@@ -1016,18 +1016,138 @@ else:
             </div>
             """, unsafe_allow_html=True)
             
-            # Recent scans
-            st.subheader(_("dashboard.recent_scans"))
+            # Recent scans with improved display
+            st.markdown("""
+            <h3 style="margin: 25px 0 15px 0; color: #1e3a8a; font-weight: 600; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
+                Recent Scans & Reports
+            </h3>
+            """, unsafe_allow_html=True)
+            
             recent_scans = all_scans[-5:] if len(all_scans) > 5 else all_scans
             recent_scans_df = pd.DataFrame(recent_scans)
+            
             if 'timestamp' in recent_scans_df.columns:
                 recent_scans_df['timestamp'] = pd.to_datetime(recent_scans_df['timestamp'])
                 recent_scans_df = recent_scans_df.sort_values('timestamp', ascending=False)
             
             if not recent_scans_df.empty:
-                display_cols = ['scan_id', 'scan_type', 'timestamp', 'total_pii_found', 'high_risk_count', 'region']
-                display_cols = [col for col in display_cols if col in recent_scans_df.columns]
-                st.dataframe(recent_scans_df[display_cols])
+                # Create a simplified version with better column names for display
+                display_df = recent_scans_df.copy()
+                
+                # Create a display scan ID
+                if 'scan_id' in display_df.columns:
+                    display_df['display_id'] = display_df.apply(
+                        lambda row: f"{row.get('scan_type', 'UNK')[:3].upper()}-{row['timestamp'].strftime('%m%d')}-{row.get('scan_id', '')[:6]}",
+                        axis=1
+                    )
+                
+                # Select and rename columns for better display
+                cols_to_display = ['display_id', 'scan_type', 'timestamp', 'total_pii_found', 'high_risk_count', 'region']
+                cols_to_display = [col for col in cols_to_display if col in display_df.columns]
+                
+                rename_map = {
+                    'display_id': 'Scan ID',
+                    'scan_type': 'Type',
+                    'timestamp': 'Date & Time',
+                    'total_pii_found': 'PII Found',
+                    'high_risk_count': 'High Risk',
+                    'region': 'Region'
+                }
+                
+                # Rename columns that exist
+                rename_cols = {k: v for k, v in rename_map.items() if k in cols_to_display}
+                display_df = display_df[cols_to_display].rename(columns=rename_cols)
+                
+                # Create a card-based view of recent scans
+                st.markdown('<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
+                
+                for idx, row in display_df.iterrows():
+                    scan_id = recent_scans_df.iloc[idx].get('scan_id', '')
+                    scan_type = row.get('Type', 'Unknown')
+                    pii_found = row.get('PII Found', 0)
+                    high_risk = row.get('High Risk', 0)
+                    timestamp = row.get('Date & Time', '')
+                    display_id = row.get('Scan ID', 'UNK-ID')
+                    
+                    # Determine color based on high risk count
+                    if high_risk > 10:
+                        risk_color = "#ef4444"  # Red
+                        risk_text = "Critical"
+                    elif high_risk > 5:
+                        risk_color = "#f97316"  # Orange
+                        risk_text = "High"
+                    elif high_risk > 0:
+                        risk_color = "#eab308"  # Yellow
+                        risk_text = "Medium"
+                    else:
+                        risk_color = "#10b981"  # Green
+                        risk_text = "Low"
+                    
+                    date_str = timestamp.strftime('%b %d, %Y') if isinstance(timestamp, pd.Timestamp) else timestamp
+                    time_str = timestamp.strftime('%H:%M') if isinstance(timestamp, pd.Timestamp) else ""
+                    
+                    # Generate card HTML
+                    card_html = f"""
+                    <div style="background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); 
+                                border: 1px solid #e5e7eb; padding: 15px; flex: 1; min-width: 260px; max-width: 350px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h4 style="margin: 0; font-size: 16px; color: #1e40af;">{display_id}</h4>
+                            <span style="background: {risk_color}; color: white; padding: 2px 6px; border-radius: 12px; 
+                                   font-size: 12px; font-weight: 500;">{risk_text}</span>
+                        </div>
+                        <div style="color: #4b5563; font-size: 14px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Type:</span>
+                                <span style="font-weight: 500;">{scan_type}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>PII Found:</span>
+                                <span style="font-weight: 500;">{pii_found}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Date:</span>
+                                <span style="font-weight: 500;">{date_str}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button onclick="window.parent.postMessage({{'action': 'open_report', 'scan_id': '{scan_id}'}}, '*')"
+                                    style="background: #2563eb; color: white; border: none; border-radius: 4px; padding: 5px 10px; 
+                                          font-size: 12px; cursor: pointer; flex: 1; text-align: center;">
+                                View Report
+                            </button>
+                            <button onclick="window.parent.postMessage({{'action': 'download_pdf', 'scan_id': '{scan_id}'}}, '*')"
+                                    style="background: #f3f4f6; color: #1f2937; border: 1px solid #d1d5db; border-radius: 4px; 
+                                          padding: 5px 10px; font-size: 12px; cursor: pointer; flex: 1; text-align: center;">
+                                Download PDF
+                            </button>
+                        </div>
+                    </div>
+                    """
+                    st.markdown(card_html, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Add a table view option toggler
+                show_table = st.checkbox("Show as table", value=False)
+                if show_table:
+                    try:
+                        # Apply styling for risk levels
+                        def highlight_risk(val):
+                            if isinstance(val, (int, float)):
+                                if val > 10:
+                                    return 'background-color: #fee2e2; color: #b91c1c; font-weight: bold'
+                                elif val > 5:
+                                    return 'background-color: #ffedd5; color: #c2410c; font-weight: bold'
+                                elif val > 0:
+                                    return 'background-color: #fef9c3; color: #a16207; font-weight: normal'
+                            return ''
+                        
+                        # Apply styling
+                        styled_df = display_df.style.map(highlight_risk, subset=['High Risk', 'PII Found'])
+                        st.dataframe(styled_df, use_container_width=True)
+                    except Exception as e:
+                        st.warning(f"Could not apply styling: {str(e)}")
+                        st.dataframe(display_df, use_container_width=True)
             
                 # PII Types Distribution
                 st.subheader(_("dashboard.pii_distribution"))
@@ -3010,11 +3130,16 @@ else:
                             return 'background-color: #E3F2FD; color: #1976D2; font-weight: normal'
                     return ''
                 
-                # Apply styling
-                styled_df = display_df.style.applymap(highlight_risk, subset=['High Risk Items', 'Total PII Found'])
-                
-                # Display scan history table with styled data
-                st.dataframe(styled_df, use_container_width=True)
+                try:
+                    # Apply styling
+                    styled_df = display_df.style.map(highlight_risk, subset=['High Risk Items', 'Total PII Found'])
+                    
+                    # Display scan history table with styled data
+                    st.dataframe(styled_df, use_container_width=True)
+                except Exception as e:
+                    # Fallback in case of styling errors
+                    st.warning(f"Error styling dataframe: {str(e)}")
+                    st.dataframe(display_df, use_container_width=True)
             
             # Allow user to select a scan to view details
             selected_display_id = st.selectbox(
