@@ -2339,26 +2339,40 @@ else:
                             for category in assessment_categories:
                                 st.session_state.dpia_answers[category] = [0] * len(assessment_categories[category]['questions'])
                         
-                        # Add the current category being viewed
-                        if 'dpia_current_category' not in st.session_state:
-                            st.session_state.dpia_current_category = list(assessment_categories.keys())[0]
+                        # Add the current category tab index
+                        if 'dpia_active_tab' not in st.session_state:
+                            st.session_state.dpia_active_tab = 0
                         
-                        # Function to update category state
-                        def change_category(category):
-                            st.session_state.dpia_current_category = category
+                        # Create a callback for saving answers without using forms
+                        def save_category_answers(category, info):
+                            # Update values in session state based on current selections
+                            for i in range(len(info['questions'])):
+                                radio_key = f"dpia_{category}_{i}"
+                                if radio_key in st.session_state:
+                                    answer_text = st.session_state[radio_key]
+                                    answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer_text]
+                                    st.session_state.dpia_answers[category][i] = answer_value
+                            
+                            # Show success message
+                            st.success(f"Saved answers for {info['name']}!")
+                            
+                        # Get category names for tabs
+                        category_names = [info['name'] for category, info in assessment_categories.items()]
                         
                         # Create tabs for each category
-                        category_tabs = st.tabs([info['name'] for category, info in assessment_categories.items()])
-                        
+                        st.session_state.dpia_active_tab = st.tabs(category_names)
+                            
                         # Display questions by category
                         answers = {}
                         for idx, (category, info) in enumerate(assessment_categories.items()):
                             # Each category has its own tab
-                            with category_tabs[idx]:
+                            with st.session_state.dpia_active_tab[idx]:
                                 st.write(info['description'])
                                 
-                                # Create a form to isolate the category
-                                with st.form(key=f"dpia_form_{category}"):
+                                # Create a container for this category
+                                category_container = st.container()
+                                
+                                with category_container:
                                     # Create a list to store answers for this category
                                     category_answers = []
                                     
@@ -2381,17 +2395,10 @@ else:
                                         # Convert answer to numerical value
                                         answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer]
                                         category_answers.append(answer_value)
-                                        
-                                    # Save button for this category
-                                    if st.form_submit_button(f"Save {info['name']} Answers"):
-                                        # Update values in session state based on form submission
-                                        for i, question in enumerate(info['questions']):
-                                            radio_key = f"dpia_{category}_{i}"
-                                            answer_text = st.session_state[radio_key]
-                                            answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer_text]
-                                            st.session_state.dpia_answers[category][i] = answer_value
-                                        
-                                        st.success(f"Saved answers for {info['name']}!")
+                                    
+                                    # Save button for this category (standalone button, not in a form)
+                                    if st.button(f"Save {info['name']} Answers", key=f"save_btn_{category}"):
+                                        save_category_answers(category, info)
                                 
                                 # Store answers for this category
                                 answers[category] = [st.session_state.dpia_answers[category][i] for i in range(len(info['questions']))]
