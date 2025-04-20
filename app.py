@@ -2350,15 +2350,17 @@ else:
                             answers[category] = category_answers
                             st.write("---")
                         
-                        # Process assessment
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            complete_assessment = st.button("Complete DPIA Assessment")
-                        with col2:
-                            # Add a second button for those who prefer the Start Scan button
-                            start_scan_button = st.button("Start Scan", key="dpia_start_scan")
-                            
-                        if complete_assessment or start_scan_button:
+                        # Process assessment - Using a simplified approach for better reliability
+                        # Make sure the button is unique and use session state to track button clicks
+                        if "dpia_submit_clicked" not in st.session_state:
+                            st.session_state.dpia_submit_clicked = False
+                        
+                        # Create a single, clear button for assessment submission
+                        if st.button("Submit DPIA Assessment", key="dpia_submit_unique"):
+                            st.session_state.dpia_submit_clicked = True
+                        
+                        # Process the assessment if the button was clicked
+                        if st.session_state.dpia_submit_clicked:
                             with st.spinner("Processing DPIA assessment..."):
                                 # Create assessment parameters including data source
                                 assessment_params = {
@@ -2416,6 +2418,9 @@ else:
                                 
                                 # Show download link
                                 st.markdown(href, unsafe_allow_html=True)
+                                
+                                # Reset the submit button state to prevent auto-resubmission
+                                st.session_state.dpia_submit_clicked = False
                                 
                                 # Skip the default scanner logic by returning early
                                 st.session_state.current_scan_id = assessment_results['scan_id']
