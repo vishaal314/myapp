@@ -711,6 +711,7 @@ def generate_report(scan_data: Dict[str, Any],
     elements.append(Spacer(1, 12))
     
     # Add custom risk meter visual with language support
+    # Make sure we use proper language parameter for the components to determine labels
     risk_meter = RiskMeter(risk_level, risk_level_for_meter, language=current_lang)
     elements.append(risk_meter)
     elements.append(Spacer(1, 12))
@@ -967,22 +968,42 @@ def generate_report(scan_data: Dict[str, Any],
     # Include metadata if requested
     if include_metadata:
         elements.append(PageBreak())
-        elements.append(Paragraph('Scan Metadata', heading_style))
         
-        # Collect metadata
-        metadata = {
-            'Scan ID': scan_id,
-            'Scan Type': scan_type,
-            'Region': region,
-            'Timestamp': timestamp,
-            'URL/Domain': url,
-            'Username': scan_data.get('username', 'Unknown'),
-            'Files Scanned': scan_data.get('file_count', 0)
-        }
+        # Translate metadata heading
+        if current_lang == 'nl':
+            metadata_title = _('report.metadata', 'Scan Metadata')
+            metadata_title = 'Scan Metadata' if metadata_title == 'Scan Metadata' else 'Scan Metagegevens'
+        else:
+            metadata_title = _('report.metadata', 'Scan Metadata')
+        elements.append(Paragraph(metadata_title, heading_style))
+        
+        # Collect metadata with translated labels
+        if current_lang == 'nl':
+            metadata_labels = {
+                'Scan ID': scan_id,
+                'Scan Type': scan_type,
+                'Regio': region,
+                'Tijdstempel': timestamp,
+                'URL/Domein': url,
+                'Gebruikersnaam': scan_data.get('username', 'Onbekend'),
+                'Bestanden Gescand': scan_data.get('file_count', 0)
+            }
+        else:
+            metadata_labels = {
+                'Scan ID': scan_id,
+                'Scan Type': scan_type,
+                'Region': region,
+                'Timestamp': timestamp,
+                'URL/Domain': url,
+                'Username': scan_data.get('username', 'Unknown'),
+                'Files Scanned': scan_data.get('file_count', 0)
+            }
         
         # Create metadata table
         metadata_data = []
-        for key, value in metadata.items():
+        for key, value in metadata_labels.items():
+            if value == 'Unknown' and current_lang == 'nl':
+                value = 'Onbekend'
             metadata_data.append([key, str(value)])
         
         metadata_table = Table(metadata_data, colWidths=[150, 300])
@@ -1007,12 +1028,23 @@ def generate_report(scan_data: Dict[str, Any],
             textColor=colors.grey
         )
         
-        disclaimer_text = (
-            "Disclaimer: This report is provided for informational purposes only and should not "
-            "be considered legal advice. The findings in this report are based on automated "
-            "scanning and may not identify all GDPR-relevant personal data. We recommend "
-            "consulting with a qualified legal professional for specific GDPR compliance guidance."
-        )
+        # Translate disclaimer text
+        if current_lang == 'nl':
+            disclaimer_text = (
+                "Disclaimer: Dit rapport wordt uitsluitend ter informatie verstrekt en mag niet "
+                "worden beschouwd als juridisch advies. De bevindingen in dit rapport zijn gebaseerd op "
+                "geautomatiseerde scanning en identificeren mogelijk niet alle AVG-relevante persoonsgegevens. "
+                "Wij raden u aan een gekwalificeerde juridische professional te raadplegen voor specifieke "
+                "AVG-nalevingsbegeleiding."
+            )
+        else:
+            disclaimer_text = (
+                "Disclaimer: This report is provided for informational purposes only and should not "
+                "be considered legal advice. The findings in this report are based on automated "
+                "scanning and may not identify all GDPR-relevant personal data. We recommend "
+                "consulting with a qualified legal professional for specific GDPR compliance guidance."
+            )
+        
         
         elements.append(Paragraph(disclaimer_text, disclaimer_style))
     
