@@ -371,11 +371,51 @@ with st.sidebar:
                         
                         # Debug translations after login
                         print("POST-LOGIN: Using pre-login language", preserved_language)
+                        
+                        # Print all translation keys in Dutch to verify they're loaded
+                        print("==== CHECKING DUTCH TRANSLATIONS AFTER LOGIN ====")
+                        
+                        # Temporarily change to Dutch for debugging
+                        from utils.i18n import _current_language, get_text
+                        temp_saved_lang = _current_language
+                        _current_language = 'nl'
+                        
+                        # Check critical keys
+                        critical_keys = [
+                            "app.tagline", 
+                            "scan.new_scan_title", 
+                            "scan.select_type", 
+                            "scan.upload_files", 
+                            "scan.title",
+                            "dashboard.welcome",
+                            "history.title",
+                            "results.title",
+                            "report.generate"
+                        ]
+                        
+                        print("Dutch translation values:")
+                        for key in critical_keys:
+                            value = get_text(key)
+                            print(f"  NL - {key}: '{value}'")
+                            
+                        # Restore original language
+                        _current_language = temp_saved_lang
+                        
+                        # Run normal debug
                         debug_translations()
                         st.session_state['force_language_after_login'] = current_language
 
                         # Display success message in current language
                         st.success(_("login.success"))
+                        
+                        # Debug language state immediately after login success
+                        print("==== LANGUAGE STATE AFTER LOGIN SUCCESS ====")
+                        print(f"  language: {st.session_state.get('language')}")
+                        print(f"  _persistent_language: {st.session_state.get('_persistent_language')}")
+                        print(f"  pre_login_language: {st.session_state.get('pre_login_language')}")
+                        print(f"  backup_language: {st.session_state.get('backup_language')}")
+                        print(f"  force_language_after_login: {st.session_state.get('force_language_after_login')}")
+                        print(f"  preserved_language: {preserved_language}")
                         
                         # Force immediate language initialization for post-login UI
                         from utils.i18n import initialize, _translations
