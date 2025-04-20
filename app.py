@@ -2498,22 +2498,8 @@ else:
                                     
                                     # Display each question with radio buttons
                                     for i, question in enumerate(info['questions']):
-                                        # Create a unique key for this radio button
+                                        # Create a unique key for this radio button but we'll avoid callbacks
                                         radio_key = f"dpia_{category}_{i}"
-                                        
-                                        # We need to create a separate callback function for each radio button
-                                        # to avoid variable scoping issues in closures
-                                        callback_key = f"on_change_{category}_{i}"
-                                        
-                                        # Store the current category and index in a persistent way
-                                        if callback_key not in st.session_state:
-                                            st.session_state[callback_key] = {
-                                                "category": category,
-                                                "index": i
-                                            }
-                                        
-                                        # Set default value with index (safely)
-                                        selected_idx = st.session_state.dpia_answers[category][i]
                                         
                                         # Display the question in a card-like container
                                         st.markdown(f"""
@@ -2523,31 +2509,40 @@ else:
                                         </div>
                                         """, unsafe_allow_html=True)
                                         
-                                        # Define a global callback function that will run when this radio button changes
-                                        def update_answer():
-                                            if radio_key in st.session_state:
-                                                # Get the callback metadata
-                                                callback_data = st.session_state[callback_key]
-                                                cat = callback_data["category"]
-                                                idx = callback_data["index"]
+                                        # Get current answer (safely)
+                                        selected_idx = st.session_state.dpia_answers[category][i]
+                                        
+                                        # Create three separate buttons instead of a radio button
+                                        # This avoids the closure issues with callbacks
+                                        col1, col2, col3 = st.columns(3)
+                                        
+                                        with col1:
+                                            no_selected = selected_idx == 0
+                                            btn_style = "primary" if no_selected else "secondary"
+                                            if st.button("No", key=f"{radio_key}_no", type=btn_style, use_container_width=True):
+                                                # Directly update the session state
+                                                st.session_state.dpia_answers[category][i] = 0
+                                                st.rerun()
                                                 
-                                                # Get the answer text and convert to value
-                                                answer_text = st.session_state[radio_key]
-                                                answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer_text]
+                                        with col2:
+                                            partially_selected = selected_idx == 1
+                                            btn_style = "primary" if partially_selected else "secondary"
+                                            if st.button("Partially", key=f"{radio_key}_partially", type=btn_style, use_container_width=True):
+                                                # Directly update the session state
+                                                st.session_state.dpia_answers[category][i] = 1
+                                                st.rerun()
                                                 
-                                                # Update the answer in the session state
-                                                st.session_state.dpia_answers[cat][idx] = answer_value
-                                                
-                                        # Display the radio button with the current value
-                                        # Use the on_change parameter to save answers automatically
-                                        answer = st.radio(
-                                            "", # Empty label as we displayed the question above
-                                            ["No", "Partially", "Yes"],
-                                            index=selected_idx,
-                                            key=radio_key,
-                                            on_change=update_answer,
-                                            horizontal=True # Horizontal layout for better UI
-                                        )
+                                        with col3:
+                                            yes_selected = selected_idx == 2
+                                            btn_style = "primary" if yes_selected else "secondary"
+                                            if st.button("Yes", key=f"{radio_key}_yes", type=btn_style, use_container_width=True):
+                                                # Directly update the session state
+                                                st.session_state.dpia_answers[category][i] = 2
+                                                st.rerun()
+                                        
+                                        # Set the answer for form submission based on the selected buttons
+                                        answer_options = ["No", "Partially", "Yes"]
+                                        answer = answer_options[selected_idx]
                                         
                                         # Convert answer to numerical value
                                         answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer]
