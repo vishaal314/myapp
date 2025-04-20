@@ -2523,9 +2523,20 @@ else:
                         # Process assessment when the button is clicked (immediately, without relying on session state)
                         if submit_button:
                             try:
-                                with st.spinner("Processing DPIA assessment..."):
-                                    # Debug message to track process
-                                    st.info("Preparing DPIA assessment data...")
+                                # Clear all content and show a full-page processing message
+                                st.empty()  # Clear all content above
+                                
+                                # Create a container for displaying results that will persist
+                                results_container = st.container()
+                                
+                                with results_container:
+                                    st.title("DPIA Assessment Processing")
+                                    progress_bar = st.progress(0)
+                                    status_text = st.empty()
+                                    
+                                    # Step 1: Prepare assessment data
+                                    status_text.info("Step 1/5: Preparing DPIA assessment data...")
+                                    progress_bar.progress(10)
                                     
                                     # Create assessment parameters including data source
                                     assessment_params = {
@@ -2533,18 +2544,16 @@ else:
                                         "language": st.session_state.get('language', 'en')
                                     }
                                     
-                                    st.write(f"Data source: {dpia_source}")
-                                    
                                     # Add data source parameters if relevant
                                     if dpia_source == _("scan.upload_files") and uploaded_files:
                                         # Use file paths from session state to ensure consistency
                                         if 'dpia_file_paths' in st.session_state:
                                             assessment_params["file_paths"] = st.session_state.dpia_file_paths
-                                            st.write(f"Scanning {len(st.session_state.dpia_file_paths)} uploaded files")
+                                            status_text.info(f"Step 1/5: Preparing to scan {len(st.session_state.dpia_file_paths)} uploaded files")
                                     
                                     elif dpia_source == "GitHub Repository" and 'github_repo' in locals():
                                         assessment_params["github_repo"] = github_repo
-                                        st.write(f"GitHub repository: {github_repo}")
+                                        status_text.info(f"Step 1/5: Preparing to scan GitHub repository: {github_repo}")
                                         if 'github_branch' in locals() and github_branch:
                                             assessment_params["github_branch"] = github_branch
                                         if 'github_token' in locals() and github_token:
@@ -2552,20 +2561,24 @@ else:
                                             
                                     elif dpia_source == "Local Files" and 'repo_path' in locals():
                                         assessment_params["repo_path"] = repo_path
-                                        st.write(f"Local repository: {repo_path}")
+                                        status_text.info(f"Step 1/5: Preparing to scan local repository: {repo_path}")
                                     
-                                    # Perform assessment with additional data
-                                    st.info("Running DPIA assessment...")
+                                    progress_bar.progress(20)
+                                    
+                                    # Step 2: Perform assessment
+                                    status_text.info("Step 2/5: Running DPIA assessment...")
                                     assessment_results = dpia_scanner.perform_assessment(**assessment_params)
+                                    progress_bar.progress(40)
                                     
                                     # Make sure we have valid results
                                     if not assessment_results or 'scan_id' not in assessment_results:
-                                        st.error("Failed to generate assessment results")
-                                        st.json(assessment_results)
+                                        st.error("Failed to generate assessment results. Please try again.")
+                                        if assessment_results:
+                                            st.json(assessment_results)
                                         st.stop()
                                     
-                                    # Generate comprehensive report
-                                    st.info("Generating comprehensive report...")
+                                    # Step 3: Generate comprehensive report
+                                    status_text.info("Step 3/5: Generating comprehensive report...")
                                     from services.report_generator import generate_dpia_report
                                     report_data = generate_dpia_report(assessment_results)
                                     
@@ -2573,51 +2586,164 @@ else:
                                     scan_results = [report_data]
                                     st.session_state.scan_results = scan_results 
                                     st.session_state.current_scan_id = assessment_results['scan_id']
+                                    progress_bar.progress(60)
                                     
-                                    # Make sure results are saved to the database
+                                    # Step 4: Save results to database
+                                    status_text.info("Step 4/5: Saving results to database...")
                                     from services.results_aggregator import ResultsAggregator
                                     results_aggregator = ResultsAggregator()
                                     results_aggregator.save_dpia_result(assessment_results)
+                                    progress_bar.progress(80)
                                     
-                                    # Generate PDF report automatically
-                                    with st.spinner("Generating PDF report..."):
-                                        st.info("Creating downloadable PDF report...")
-                                        import base64
-                                        from services.report_generator import generate_pdf_report
-                                        pdf_bytes = generate_pdf_report(
-                                            assessment_results,
-                                            include_details=True,
-                                            include_charts=True, 
-                                            include_metadata=True,
-                                            include_recommendations=True
-                                        )
+                                    # Step 5: Generate PDF report
+                                    status_text.info("Step 5/5: Creating downloadable PDF report...")
+                                    import base64
+                                    from services.report_generator import generate_pdf_report
+                                    pdf_bytes = generate_pdf_report(
+                                        assessment_results,
+                                        include_details=True,
+                                        include_charts=True, 
+                                        include_metadata=True,
+                                        include_recommendations=True
+                                    )
+                                    
+                                    # Store the PDF in session state for later access
+                                    st.session_state.pdf_bytes = pdf_bytes
+                                    progress_bar.progress(100)
+                                    
+                                    # Let user know processing is complete
+                                    status_text.success("Processing complete! Showing your results below.")
+                                    
+                                    # Display Results in a well-structured, visually attractive way
+                                    st.markdown("""
+                                    <div style="margin-top: 30px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #f8f9fa;">
+                                        <h2 style="color: #1E88E5; text-align: center; margin-bottom: 20px;">DPIA Assessment Results</h2>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Create a visually appealing risk summary
+                                    risk_level = assessment_results['overall_risk_level']
+                                    dpia_required = assessment_results['dpia_required']
+                                    
+                                    # Set colors based on risk level
+                                    if risk_level == "High":
+                                        risk_color = "#ef4444"  # Red
+                                        risk_bg = "#fee2e2"
+                                    elif risk_level == "Medium":
+                                        risk_color = "#f97316"  # Orange
+                                        risk_bg = "#ffedd5"
+                                    else:
+                                        risk_color = "#10b981"  # Green
+                                        risk_bg = "#d1fae5"
+                                    
+                                    # DPIA Required indicator
+                                    dpia_text = "Yes" if dpia_required else "No"
+                                    dpia_color = "#ef4444" if dpia_required else "#10b981"
+                                    dpia_bg = "#fee2e2" if dpia_required else "#d1fae5"
+                                    
+                                    # Display risk summary in a nice grid
+                                    st.markdown(f"""
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                                        <div style="background-color: {risk_bg}; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                            <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">Overall Risk Level</h3>
+                                            <p style="font-size: 24px; font-weight: 600; color: {risk_color}; margin: 0;">{risk_level}</p>
+                                        </div>
                                         
-                                        # Store the PDF in session state for later access
-                                        st.session_state.pdf_bytes = pdf_bytes
+                                        <div style="background-color: {dpia_bg}; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                            <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">DPIA Required</h3>
+                                            <p style="font-size: 24px; font-weight: 600; color: {dpia_color}; margin: 0;">{dpia_text}</p>
+                                        </div>
                                         
-                                        # Create download link
-                                        b64_pdf = base64.b64encode(pdf_bytes).decode()
-                                        scan_id_short = assessment_results['scan_id'][:6]
-                                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="DPIA_Assessment_Report_{scan_id_short}.pdf" style="display: inline-block; padding: 0.5em 1em; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin-top: 10px;">Download DPIA Report PDF</a>'
+                                        <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
+                                            <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">High Risk Items</h3>
+                                            <p style="font-size: 24px; font-weight: 600; color: #ef4444; margin: 0;">{assessment_results['high_risk_count']}</p>
+                                        </div>
+                                        
+                                        <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
+                                            <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">Medium Risk Items</h3>
+                                            <p style="font-size: 24px; font-weight: 600; color: #f97316; margin: 0;">{assessment_results['medium_risk_count']}</p>
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
                                     
-                                    # Show summary of the assessment
-                                    st.subheader("DPIA Assessment Results")
-                                    st.markdown(f"**Overall Risk Level:** {assessment_results['overall_risk_level']}")
-                                    st.markdown(f"**DPIA Required:** {'Yes' if assessment_results['dpia_required'] else 'No'}")
-                                    st.markdown(f"**High Risk Items:** {assessment_results['high_risk_count']}")
-                                    st.markdown(f"**Medium Risk Items:** {assessment_results['medium_risk_count']}")
+                                    # Display main findings
+                                    st.subheader("Key Findings")
                                     
-                                    # Show success message and link
-                                    st.success("DPIA assessment complete! Your assessment has been saved.")
-                                    st.markdown(href, unsafe_allow_html=True)
+                                    # Show key recommendations (top 3)
+                                    if 'recommendations' in assessment_results and assessment_results['recommendations']:
+                                        recommendations = assessment_results['recommendations'][:3]  # Top 3
+                                        
+                                        for i, rec in enumerate(recommendations):
+                                            category = rec.get('category', 'General')
+                                            severity = rec.get('severity', 'Unknown')
+                                            description = rec.get('description', 'No description provided')
+                                            
+                                            # Set color based on severity
+                                            if severity == "High":
+                                                severity_color = "#ef4444"  # Red
+                                            elif severity == "Medium":
+                                                severity_color = "#f97316"  # Orange
+                                            else:
+                                                severity_color = "#10b981"  # Green
+                                            
+                                            st.markdown(f"""
+                                            <div style="padding: 15px; margin-bottom: 10px; border-left: 4px solid {severity_color}; background-color: #f8fafc;">
+                                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                                    <span style="font-weight: 600; color: #334155;">{category}</span>
+                                                    <span style="color: {severity_color}; font-weight: 500;">{severity} Risk</span>
+                                                </div>
+                                                <p style="margin: 0; color: #475569;">{description}</p>
+                                            </div>
+                                            """, unsafe_allow_html=True)
                                     
-                                    # Provide navigation help
-                                    st.info("You can view this assessment anytime in the History tab.")
-                            
+                                    # Create download link with an attractive button
+                                    scan_id_short = assessment_results['scan_id'][:6]
+                                    b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                    
+                                    st.markdown(f"""
+                                    <div style="margin: 30px 0; text-align: center;">
+                                        <a href="data:application/pdf;base64,{b64_pdf}" 
+                                           download="DPIA_Assessment_Report_{scan_id_short}.pdf" 
+                                           style="display: inline-block; padding: 12px 24px; background-color: #2563eb; 
+                                                 color: white; text-decoration: none; border-radius: 6px; 
+                                                 font-weight: 500; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                                            <span style="display: flex; align-items: center; justify-content: center;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                </svg>
+                                                Download Complete DPIA Report PDF
+                                            </span>
+                                        </a>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Add navigation options
+                                    col1, col2 = st.columns(2)
+                                    
+                                    with col1:
+                                        if st.button("View in History", key="view_history_btn", use_container_width=True):
+                                            # Set selected navigation to history and rerun
+                                            st.session_state.selected_nav = _("history.title")
+                                            st.rerun()
+                                    
+                                    with col2:
+                                        if st.button("New Assessment", key="new_assessment_btn", use_container_width=True):
+                                            # Clear form and rerun
+                                            for key in list(st.session_state.keys()):
+                                                if key.startswith('dpia_question_'):
+                                                    del st.session_state[key]
+                                            st.rerun()
+                                    
                             except Exception as e:
                                 st.error(f"Error processing DPIA assessment: {str(e)}")
                                 import traceback
                                 st.code(traceback.format_exc())
+                                
+                                # Give options to retry
+                                if st.button("Retry Assessment", key="retry_dpia"):
+                                    st.rerun()
                                 st.stop()
                         
                         # Skip the default scanner logic if we're still in the form
