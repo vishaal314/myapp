@@ -2409,10 +2409,10 @@ else:
                     elif scan_type == _("scan.database"):
                         scanner_instance = DatabaseScanner(region=region)
                     elif scan_type == _("scan.dpia"):
-                        # Import and run the simplified DPIA form to avoid crashes
-                        from simplified_dpia import run_simplified_dpia
-                        run_simplified_dpia()
-                        # Stop normal flow to let the simplified form take over
+                        # Import and run the ultra-simple DPIA form that avoids all crashes
+                        from ultra_simple_dpia import run_ultra_simple_dpia
+                        run_ultra_simple_dpia()
+                        # Stop normal flow to let the ultra-simple form take over
                         scan_running = False
                         if dpia_source == _("scan.upload_files") and uploaded_files:
                             # Save files to temp directory
