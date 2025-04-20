@@ -2333,38 +2333,68 @@ else:
                         st.subheader("DPIA Assessment Questionnaire")
                         st.write("Please answer the following questions to assess your data processing activities.")
                         
-                        # Initialize answers dictionary if not in session state
+                        # Initialize DPIA state management in session state
                         if 'dpia_answers' not in st.session_state:
                             st.session_state.dpia_answers = {}
                             for category in assessment_categories:
                                 st.session_state.dpia_answers[category] = [0] * len(assessment_categories[category]['questions'])
                         
+                        # Add the current category being viewed
+                        if 'dpia_current_category' not in st.session_state:
+                            st.session_state.dpia_current_category = list(assessment_categories.keys())[0]
+                        
+                        # Function to update category state
+                        def change_category(category):
+                            st.session_state.dpia_current_category = category
+                        
+                        # Create tabs for each category
+                        category_tabs = st.tabs([info['name'] for category, info in assessment_categories.items()])
+                        
                         # Display questions by category
                         answers = {}
-                        for category, info in assessment_categories.items():
-                            st.write(f"### {info['name']}")
-                            st.write(info['description'])
-                            
-                            # Create a list to store answers for this category
-                            category_answers = []
-                            
-                            # Display each question with radio buttons
-                            for i, question in enumerate(info['questions']):
-                                answer = st.radio(
-                                    question,
-                                    ["No", "Partially", "Yes"],
-                                    index=st.session_state.dpia_answers[category][i],
-                                    key=f"dpia_{category}_{i}"
-                                )
-                                # Convert answer to numerical value
-                                answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer]
-                                category_answers.append(answer_value)
-                                # Update session state
-                                st.session_state.dpia_answers[category][i] = answer_value
-                            
-                            # Store answers for this category
-                            answers[category] = category_answers
-                            st.write("---")
+                        for idx, (category, info) in enumerate(assessment_categories.items()):
+                            # Each category has its own tab
+                            with category_tabs[idx]:
+                                st.write(info['description'])
+                                
+                                # Create a form to isolate the category
+                                with st.form(key=f"dpia_form_{category}"):
+                                    # Create a list to store answers for this category
+                                    category_answers = []
+                                    
+                                    # Display each question with radio buttons
+                                    for i, question in enumerate(info['questions']):
+                                        # Create a unique key for this radio button
+                                        radio_key = f"dpia_{category}_{i}"
+                                        
+                                        # Set default value with index
+                                        selected_idx = st.session_state.dpia_answers[category][i]
+                                        
+                                        # Display the radio button with the current value
+                                        answer = st.radio(
+                                            question,
+                                            ["No", "Partially", "Yes"],
+                                            index=selected_idx,
+                                            key=radio_key
+                                        )
+                                        
+                                        # Convert answer to numerical value
+                                        answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer]
+                                        category_answers.append(answer_value)
+                                        
+                                    # Save button for this category
+                                    if st.form_submit_button(f"Save {info['name']} Answers"):
+                                        # Update values in session state based on form submission
+                                        for i, question in enumerate(info['questions']):
+                                            radio_key = f"dpia_{category}_{i}"
+                                            answer_text = st.session_state[radio_key]
+                                            answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer_text]
+                                            st.session_state.dpia_answers[category][i] = answer_value
+                                        
+                                        st.success(f"Saved answers for {info['name']}!")
+                                
+                                # Store answers for this category
+                                answers[category] = [st.session_state.dpia_answers[category][i] for i in range(len(info['questions']))]
                         
                         # Process assessment - Using a more direct approach that will work better with repository selection
                         
