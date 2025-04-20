@@ -100,20 +100,14 @@ def run_ultra_simple_dpia():
     
     # Handle form submission
     if submit:
-        st.session_state.dpia_form_submitted = True
-        st.session_state.dpia_answers = st.session_state.ultra_simple_dpia_answers.copy()
-        st.rerun()
-    
-    # If form was submitted, process and show results
-    if 'dpia_form_submitted' in st.session_state and st.session_state.dpia_form_submitted:
-        st.session_state.dpia_form_submitted = False
-        
-        # Show processing message
-        with st.spinner("Processing DPIA assessment..."):
-            try:
+        try:
+            # Process directly without rerun to avoid form state issues
+            
+            # Show processing message
+            with st.spinner("Processing DPIA assessment..."):
                 # Prepare assessment parameters
                 assessment_params = {
-                    "answers": st.session_state.dpia_answers,
+                    "answers": st.session_state.ultra_simple_dpia_answers.copy(),
                     "language": st.session_state.get('language', 'en')
                 }
                 
@@ -127,15 +121,23 @@ def run_ultra_simple_dpia():
                 st.session_state.dpia_results = assessment_results
                 st.session_state.dpia_report_data = report_data
                 
-                # Clear form
-                st.empty()
-                
-                # Show results
-                show_dpia_results(assessment_results, report_data, scanner)
-                
-            except Exception as e:
-                st.error(f"Error processing DPIA assessment: {str(e)}")
-                st.exception(e)
+                # Set flag so we know to display results
+                st.session_state.dpia_form_submitted = True
+            
+            # Clear the form
+            st.empty()
+        except Exception as e:
+            st.error(f"Error processing DPIA assessment: {str(e)}")
+            st.exception(e)
+    
+    # If form was submitted, show results
+    if 'dpia_form_submitted' in st.session_state and st.session_state.dpia_form_submitted:
+        # Retrieve saved results from session state
+        assessment_results = st.session_state.dpia_results
+        report_data = st.session_state.dpia_report_data
+        
+        # Show results
+        show_dpia_results(assessment_results, report_data, scanner)
 
 def show_dpia_results(assessment_results, report_data, scanner):
     """Display the results of the DPIA assessment."""
