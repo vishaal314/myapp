@@ -1761,8 +1761,8 @@ else:
                            placeholder='{\n  "rules": [\n    {\n      "id": "session-timeout",\n      "requirement": "CC6.1",\n      "check": "session_timeout < 15"\n    }\n  ]\n}')
         
         # File uploader - adaptive based on scan type
-        st.markdown("<hr>", unsafe_allow_html=True)
-        st.subheader(_("scan.upload_files"))
+        st.markdown("<hr id='upload-files-hr'>", unsafe_allow_html=True)
+        st.markdown(f"<div id='upload-files-section'><h2>{_('scan.upload_files')}</h2></div>", unsafe_allow_html=True)
         
         if scan_type == _("scan.code"):
             # Use what was already set in the Advanced Configuration section
@@ -2437,7 +2437,7 @@ else:
                         # Import and run our redesigned DPIA form with comprehensive workflow
                         from new_dpia import run_dpia_assessment
                         
-                        # Hide the Start Scan button and Upload Files section for DPIA
+                        # Hide the Start Scan button and Upload Files section and other unnecessary UI for DPIA
                         st.markdown("""
                         <style>
                         /* Hide the Start Scan button */
@@ -2445,18 +2445,31 @@ else:
                             display: none !important;
                         }
                         
-                        /* Hide the Upload Files section for DPIA */
-                        .main .block-container:has(h2:contains("Upload Files")) {
+                        /* Hide upload-related sections */
+                        .main .block-container h2:contains("Upload Files"),
+                        .main .block-container h2:contains("Upload Files") ~ div,
+                        .main .block-container hr:has(+ h2:contains("Upload Files")),
+                        .main .block-container hr:has(~ h2:contains("Upload Files")) {
                             display: none !important;
                         }
                         
-                        /* Hide the Upload Files header */
-                        .main .block-container h2:contains("Upload Files") {
+                        /* Additional selector for the specific section after Select Region */
+                        .main .block-container div:has(+ h2:contains("Upload Files")),
+                        .main .block-container div:has(~ label:contains("Select Region")) ~ hr,
+                        .main .block-container div:has(~ label:contains("Select Region")) ~ div:has(h2) {
                             display: none !important;
                         }
                         
-                        /* Hide the horizontal line before the Upload Files section */
-                        .main .block-container h2:contains("Upload Files") + hr {
+                        /* Hide "Select Region" section too as it's not needed for DPIA */
+                        .main .block-container label:contains("Select Region"),
+                        .main .block-container div:has(label:contains("Select Region")) {
+                            display: none !important;
+                        }
+                        
+                        /* Hide all specific sections we don't want in DPIA */
+                        #upload-files-section, 
+                        #advanced-configuration-section,
+                        #sample-findings-section {
                             display: none !important;
                         }
                         </style>
