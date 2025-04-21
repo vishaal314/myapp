@@ -2424,22 +2424,26 @@ else:
                     elif scan_type == _("scan.database"):
                         scanner_instance = DatabaseScanner(region=region)
                     elif scan_type == _("scan.dpia"):
-                        # Offer both the standard and online versions
+                        # Offer all DPIA form options with emphasis on the Static version
                         st.markdown("""
                         <div style="background-color: #fff8e1; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffa000;">
                             <h3 style="color: #795548; margin-top: 0; margin-bottom: 10px;">DPIA Assessment Options</h3>
                             <p style="margin: 0;">The standard DPIA form may experience issues during submission. 
-                            If you encounter problems, please use the Online DPIA Report option below.</p>
+                            We recommend using the new <strong>Static DPIA Form</strong> option for maximum reliability.</p>
                         </div>
                         """, unsafe_allow_html=True)
                         
                         dpia_method = st.radio(
                             "Select DPIA Form Version:",
-                            ["Standard DPIA Form", "Online DPIA Report (Recommended)"],
-                            index=1  # Default to the recommended online version
+                            ["Static DPIA Form (Most Reliable)", "Standard DPIA Form", "Online DPIA Report"],
+                            index=0  # Default to the recommended static version
                         )
                         
-                        if dpia_method == "Standard DPIA Form":
+                        if dpia_method == "Static DPIA Form (Most Reliable)":
+                            # Import and run the completely static form
+                            from static_dpia import run_static_dpia
+                            run_static_dpia()
+                        elif dpia_method == "Standard DPIA Form":
                             # Import and run the simple DPIA form
                             from simple_dpia import run_simple_dpia
                             run_simple_dpia()
