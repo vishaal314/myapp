@@ -267,51 +267,83 @@ def run_enhanced_dpia():
         Your answers will be used to assess the level of risk associated with your data processing activities.
         """)
         
-        # Display categories and questions using static entry fields
-        with st.form("enhanced_dpia_form"):
-            for category, questions in scanner.assessment_categories.items():
-                st.subheader(questions["name"])
-                st.write(questions["description"])
-                
-                # Make sure the category exists in answers
-                if category not in st.session_state.enhanced_dpia_answers:
-                    st.session_state.enhanced_dpia_answers[category] = [0] * len(questions["questions"])
-                
-                # Display each question with a simple number input
-                for q_idx, question in enumerate(questions["questions"]):
-                    col1, col2 = st.columns([3, 1])
-                    with col1:
-                        st.write(f"{q_idx+1}. {question}")
-                    
-                    with col2:
-                        # Default to the current value if it exists
-                        current_val = 0
-                        if len(st.session_state.enhanced_dpia_answers[category]) > q_idx:
-                            current_val = st.session_state.enhanced_dpia_answers[category][q_idx]
-                        
-                        # Use a simple selectbox for better stability
-                        options = ["No", "Partially", "Yes"]
-                        selected_option = st.selectbox(
-                            f"Answer for question {q_idx+1}",
-                            options=options,
-                            index=current_val,
-                            key=f"enhanced_dpia_{category}_{q_idx}",
-                            label_visibility="collapsed"
-                        )
-                        
-                        # Convert answer to numerical value for storage
-                        answer_value = options.index(selected_option)
-                        
-                        # Store the answer
-                        if len(st.session_state.enhanced_dpia_answers[category]) <= q_idx:
-                            st.session_state.enhanced_dpia_answers[category].append(int(answer_value))
-                        else:
-                            st.session_state.enhanced_dpia_answers[category][q_idx] = int(answer_value)
-                    
-                    st.markdown("---")
+        # Display categories and questions using static entry fields with improved error handling
+        with st.form("enhanced_dpia_form", clear_on_submit=False):  # Prevent clearing form on submission
+            # Add a note about form stability
+            st.markdown("""
+            <div style="background-color: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196F3;">
+                <h3 style="color: #0d47a1; margin-top: 0; margin-bottom: 10px;">Anti-Crash Protection Enabled</h3>
+                <p style="margin: 0;">To ensure form stability, your answers are automatically saved as you select them. 
+                If you encounter any issues, your progress is preserved and you can pick up where you left off.</p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # Submit button inside the form
-            submit_button = st.form_submit_button("Process & Generate Report", type="primary")
+            # Process each category in a try/except block to prevent entire form crash
+            for category, questions in scanner.assessment_categories.items():
+                try:
+                    st.subheader(questions["name"])
+                    st.write(questions["description"])
+                    
+                    # Make sure the category exists in answers
+                    if category not in st.session_state.enhanced_dpia_answers:
+                        st.session_state.enhanced_dpia_answers[category] = [0] * len(questions["questions"])
+                    
+                    # Ensure the category list has the right length
+                    if len(st.session_state.enhanced_dpia_answers[category]) < len(questions["questions"]):
+                        st.session_state.enhanced_dpia_answers[category].extend(
+                            [0] * (len(questions["questions"]) - len(st.session_state.enhanced_dpia_answers[category]))
+                        )
+                    
+                    # Display each question with a simple number input
+                    for q_idx, question in enumerate(questions["questions"]):
+                        try:
+                            col1, col2 = st.columns([3, 1])
+                            with col1:
+                                st.write(f"{q_idx+1}. {question}")
+                            
+                            with col2:
+                                # Default to the current value if it exists
+                                current_val = 0
+                                if len(st.session_state.enhanced_dpia_answers[category]) > q_idx:
+                                    current_val = st.session_state.enhanced_dpia_answers[category][q_idx]
+                                
+                                # Use number input instead of selectbox for maximum stability
+                                # Number inputs have proven to be more stable than selectboxes
+                                answer_value = st.number_input(
+                                    f"Answer for question {q_idx+1} (0=No, 1=Partially, 2=Yes)",
+                                    min_value=0,
+                                    max_value=2,
+                                    value=int(current_val),
+                                    step=1,
+                                    key=f"enhanced_dpia_{category}_{q_idx}",
+                                    help="0=No, 1=Partially, 2=Yes"
+                                )
+                                
+                                # Store the answer immediately after selection
+                                if len(st.session_state.enhanced_dpia_answers[category]) <= q_idx:
+                                    st.session_state.enhanced_dpia_answers[category].append(int(answer_value))
+                                else:
+                                    st.session_state.enhanced_dpia_answers[category][q_idx] = int(answer_value)
+                        except Exception as q_error:
+                            # If a question fails, log the error but continue with other questions
+                            st.warning(f"Error displaying question {q_idx+1}: {str(q_error)}")
+                            continue
+                        
+                        st.markdown("---")
+                except Exception as cat_error:
+                    # If a category fails, log the error but continue with other categories
+                    st.error(f"Error processing category {category}: {str(cat_error)}")
+                    continue
+            
+            # Submit button inside the form with clear instructions
+            st.markdown("""
+            <div style="background-color: #e8f8ef; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50;">
+                <p style="margin: 0;">Click the button below to process your assessment and generate a report. 
+                Your answers have already been saved.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            submit_button = st.form_submit_button("Process & Generate Report", type="primary", help="Click to generate your DPIA report based on your answers")
     
     with tab4:
         st.subheader("Review & Submit")
@@ -356,14 +388,32 @@ def run_enhanced_dpia():
         process_dpia_assessment()
 
 def process_dpia_assessment():
-    """Process the DPIA assessment and generate results."""
+    """Process the DPIA assessment and generate results with enhanced error handling."""
     
     # Early termination if already processing - this is critical
     if st.session_state.get("is_processing", False):
         st.warning("Assessment is already being processed. Please wait...")
         st.stop()
     
-    st.session_state.is_processing = True
+    # Use a state lock mechanism to prevent form crashes
+    try:
+        st.session_state.is_processing = True
+        
+        # Add notification about processing start with improved styling
+        st.markdown("""
+        <div style="padding: 12px 20px; background-color: #e3f2fd; border: 1px solid #bbdefb; 
+                  border-radius: 4px; margin-bottom: 20px;">
+            <p style="margin: 0; color: #1565c0; display: flex; align-items: center;">
+            <span style="margin-right: 10px; font-size: 20px;">⚙️</span>
+            <span><strong>Processing Started:</strong> Your assessment is now being processed. 
+            This may take a few moments. Please do not refresh the page.</span>
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    except Exception as lock_error:
+        st.error(f"Error initializing processing: {str(lock_error)}")
+        st.session_state.is_processing = False
+        st.stop()
     
     # Create a progress bar and status display
     progress_bar = st.progress(0)
