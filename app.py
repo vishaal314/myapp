@@ -1874,8 +1874,8 @@ else:
                 uploaded_files = []
                 
         elif scan_type == _("scan.dpia"):
-            st.subheader("Data Protection Impact Assessment (DPIA)")
-            # The document upload is handled directly in the enhanced_dpia.py form
+            # No header for DPIA - will be handled by the assessment form
+            # No document upload needed - this is a pure questionnaire
             uploaded_files = []
                 
         elif scan_type == _("scan.soc2"):
@@ -1890,15 +1890,29 @@ else:
             else:
                 uploaded_files = []
         
-        # Prominent "Start Scan" button with free trial info
-        scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
-        with scan_btn_col1:
-            start_scan = st.button("Start Scan", use_container_width=True, type="primary")
-        with scan_btn_col2:
-            if free_trial_active:
-                st.success(f"Free Trial: {free_trial_days_left} days left")
-            else:
-                st.warning("Premium Features")
+        # Hide the scan button for DPIA since we don't need it
+        if scan_type == _("scan.dpia"):
+            # Add CSS to hide the scan button container
+            st.markdown("""
+            <style>
+            /* Hide the start scan button for DPIA */
+            div[data-testid="stHorizontalBlock"] {
+                display: none;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            # Set start_scan to True for DPIA to bypass the button click
+            start_scan = True
+        else:
+            # Prominent "Start Scan" button with free trial info
+            scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
+            with scan_btn_col1:
+                start_scan = st.button("Start Scan", use_container_width=True, type="primary", key="start_scan_button")
+            with scan_btn_col2:
+                if free_trial_active:
+                    st.success(f"Free Trial: {free_trial_days_left} days left")
+                else:
+                    st.warning("Premium Features")
         
         if start_scan:
             # Check if user is logged in first
@@ -1946,8 +1960,37 @@ else:
             
             # If we can proceed with the scan based on validation
             if proceed_with_scan:
+                # Special case for DPIA - skip payment flow
+                if scan_type == _("scan.dpia"):
+                    # Generate a unique scan ID
+                    scan_id = str(uuid.uuid4())
+                    st.session_state.current_scan_id = scan_id
+                    
+                    # Set payment as successful automatically for DPIA
+                    st.session_state.payment_successful = True
+                    st.session_state.payment_details = {
+                        "status": "succeeded",
+                        "amount": 0,
+                        "scan_type": scan_type,
+                        "user_email": user_email,
+                        "is_dpia_bypass": True
+                    }
+                    
+                    # Log the DPIA access
+                    try:
+                        results_aggregator.log_audit_event(
+                            username=st.session_state.username,
+                            action="DPIA_FORM_ACCESS",
+                            details={
+                                "scan_type": scan_type,
+                                "user_email": user_email,
+                                "timestamp": datetime.now().isoformat()
+                            }
+                        )
+                    except Exception as e:
+                        st.warning(f"Audit logging failed: {str(e)}")
                 # Check if free trial is active
-                if free_trial_active:
+                elif free_trial_active:
                     st.success(f"Using free trial (Days left: {free_trial_days_left}, Scans used: {st.session_state.free_trial_scans_used}/5)")
                     
                     # Generate a unique scan ID
@@ -1982,7 +2025,7 @@ else:
                         )
                     except Exception as e:
                         st.warning(f"Audit logging failed: {str(e)}")
-                    
+                
                 else:
                     # Handle payment flow
                     st.markdown("---")
@@ -2390,18 +2433,21 @@ else:
                     elif scan_type == _("scan.database"):
                         scanner_instance = DatabaseScanner(region=region)
                     elif scan_type == _("scan.dpia"):
-                        # Display information about the crash-resistant DPIA form
-                        st.markdown("""
-                        <div style="background-color: #fff8e1; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffa000;">
-                            <h3 style="color: #795548; margin-top: 0; margin-bottom: 10px;">DPIA Assessment</h3>
-                            <p style="margin: 0;">This crash-resistant DPIA form allows you to fill in all required administrative information
-                            and generate a complete privacy DPIA scan report based on your inputs. The form includes enhanced error handling
-                            to prevent crashes during submission.</p>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
+                        # Skip the informational box and go straight to the DPIA form
                         # Import and run our redesigned DPIA form with comprehensive workflow
                         from new_dpia import run_dpia_assessment
+                        
+                        # Hide the Start Scan button for DPIA
+                        if 'start_scan_button' in locals():
+                            st.markdown("""
+                            <style>
+                            div.stButton > button {
+                                display: none !important;
+                            }
+                            </style>
+                            """, unsafe_allow_html=True)
+                        
+                        # Run the DPIA form directly
                         run_dpia_assessment()
                         
                         # Stop normal flow to proceed with only the new DPIA form
