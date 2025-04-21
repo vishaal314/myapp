@@ -1,0 +1,106 @@
+What is a DPIA Flowchart?
+A Data Protection Impact Assessment (DPIA) flowchart is a visual decision-making guide used to determine:
+
+When a DPIA is required, based on the nature of data processing.
+
+How to carry out the assessment, including key steps.
+
+What actions to take based on the DPIA results.
+
+It helps ensure organizations comply with privacy laws (like the GDPR) when processing personal data, especially when there's a high risk to individual rights or freedoms.
+
+🧭 DPIA Flowchart – Key Stages
+Here's what a standard DPIA flowchart might look like (simplified):
+
+Are you processing personal data?
+
+❌ No → DPIA not required.
+
+✅ Yes → Next step.
+
+Is the processing likely to result in a high risk to rights and freedoms of individuals?
+
+✅ Yes → DPIA required.
+
+❓ Not sure → Do a screening or consult DPO.
+
+❌ No → DPIA may not be needed.
+
+Common high-risk triggers:
+
+Large-scale profiling
+
+Monitoring public areas (e.g., CCTV)
+
+Using new technologies
+
+Biometric or genetic data
+
+Systematic surveillance
+
+If DPIA is needed:
+
+Describe the data processing
+
+Assess necessity and proportionality
+
+Identify and assess risks
+
+Identify measures to mitigate risks
+
+Outcome:
+
+Risk is acceptable → Proceed with safeguards
+
+High risk with no mitigation → Consult supervisory authority
+
+📄 Sample DPIA Report (Overview)
+Here's a sample summary structure for a DPIA report:
+
+1. Introduction
+Organization name: ACME Corp
+
+Assessment date: April 21, 2025
+
+Purpose: Assess risks associated with implementing a new customer analytics system.
+
+2. Description of the Processing
+Type of data: Names, emails, behavior tracking, location
+
+Data subjects: Customers using mobile app
+
+Purpose: Personalized marketing and customer segmentation
+
+3. Necessity & Proportionality
+Legal basis: Consent and legitimate interest
+
+Data minimization: Only relevant behavior metrics collected
+
+Retention: 12 months
+
+4. Risk Assessment
+
+Risk Type	Likelihood	Impact	Risk Level
+Unauthorized access	Medium	High	High
+Data misuse by 3rd party	Low	High	Medium
+Inadequate transparency	Medium	Medium	Medium
+5. Mitigation Measures
+Use end-to-end encryption
+
+Two-factor authentication for admin access
+
+Update privacy policy with transparent use cases
+
+Limit data sharing to vetted vendors only
+
+6. Consultation
+Data Protection Officer (DPO) consulted
+
+No consultation with supervisory authority needed
+
+7. Final Decision
+DPIA completed successfully.
+
+Risks mitigated to acceptable level.
+
+Approved by DPO and management.

@@ -12,7 +12,7 @@ import json
 import os
 import traceback
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from services.dpia_scanner import DPIAScanner
 from services.report_generator import generate_dpia_report, generate_pdf_report
 from services.results_aggregator import ResultsAggregator
@@ -125,6 +125,83 @@ def run_enhanced_dpia():
     
     st.title("Enhanced DPIA Assessment")
     st.write("This is a comprehensive DPIA form that collects information provided by the user and generates a privacy DPIA scan report.")
+    
+    # Add explanatory flowchart info from the DPIA flowchart document
+    with st.expander("What is a DPIA and when is it required?", expanded=False):
+        st.markdown("""
+        ### What is a DPIA?
+        A Data Protection Impact Assessment (DPIA) is a visual decision-making guide used to determine:
+
+        - When a DPIA is required, based on the nature of data processing
+        - How to carry out the assessment, including key steps
+        - What actions to take based on the DPIA results
+
+        It helps ensure organizations comply with privacy laws (like the GDPR) when processing personal data, especially when there's a high risk to individual rights or freedoms.
+
+        ### DPIA Flowchart – Key Stages
+        Here's what a standard DPIA assessment process looks like:
+
+        1. **Initial Assessment**
+           - Are you processing personal data?
+           - Is the processing likely to result in a high risk to rights and freedoms of individuals?
+
+        2. **Common high-risk triggers**:
+           - Large-scale profiling
+           - Monitoring public areas (e.g., CCTV)
+           - Using new technologies
+           - Biometric or genetic data
+           - Systematic surveillance
+
+        3. **DPIA Process** (if needed):
+           - Describe the data processing
+           - Assess necessity and proportionality
+           - Identify and assess risks
+           - Identify measures to mitigate risks
+
+        4. **Outcome**:
+           - Risk is acceptable → Proceed with safeguards
+           - High risk with no mitigation → Consult supervisory authority
+        """)
+    
+    # Add sample DPIA report structure
+    with st.expander("Sample DPIA Report Structure", expanded=False):
+        st.markdown("""
+        ### Sample DPIA Report Structure
+
+        1. **Introduction**
+           - Organization name
+           - Assessment date
+           - Purpose of processing
+
+        2. **Description of the Processing**
+           - Type of data collected
+           - Data subjects affected
+           - Purpose of processing
+
+        3. **Necessity & Proportionality**
+           - Legal basis for processing
+           - Data minimization measures
+           - Retention policies
+
+        4. **Risk Assessment**
+           - Identified risks by category
+           - Likelihood and impact analysis
+           - Overall risk level determination
+
+        5. **Mitigation Measures**
+           - Technical safeguards
+           - Organizational controls
+           - Procedural protections
+
+        6. **Consultation**
+           - DPO consultation results
+           - Supervisory authority involvement (if needed)
+
+        7. **Final Decision**
+           - DPIA completion status
+           - Risk assessment conclusion
+           - Approval details
+        """)
     
     # Initialize session state variables if they don't exist
     if 'enhanced_dpia_answers' not in st.session_state:
@@ -610,20 +687,79 @@ def display_assessment_results(results, report_data, scanner):
     
     st.title("DPIA Assessment Results")
     
-    # Display administrative information
+    # Display the structured report format following the DPIA flowchart document
+    st.markdown("""
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #4caf50;">
+        <h3 style="margin-top: 0; color: #3a7144;">DPIA Report</h3>
+        <p style="margin: 0;">This report follows the standard DPIA structure and presents the assessment findings in a clear, organized format.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 1. INTRODUCTION SECTION
     st.markdown("""
     <div style="background-color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;
               box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h2 style="margin-top: 0;">Project Information</h2>
+        <h2 style="margin-top: 0; color: #3f51b5;">1. Introduction</h2>
     """, unsafe_allow_html=True)
     
     admin_info = results.get('admin_info', {})
-    for key, value in admin_info.items():
-        st.markdown(f"**{key.replace('_', ' ').title()}:** {value}")
+    
+    st.markdown(f"""
+    <div style="margin-left: 20px;">
+        <p><strong>Organization/Project:</strong> {admin_info.get('project_name', 'Not specified')}</p>
+        <p><strong>Assessment Date:</strong> {admin_info.get('date', 'Not specified')}</p>
+        <p><strong>Contact Person:</strong> {admin_info.get('contact_person', 'Not specified')}</p>
+        <p><strong>Department/Unit:</strong> {admin_info.get('department', 'Not specified')}</p>
+        <p><strong>Purpose:</strong> {admin_info.get('purpose', 'Not specified')}</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # Overall risk level visualization
+    # 2. DESCRIPTION OF THE PROCESSING 
+    st.markdown("""
+    <div style="background-color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="margin-top: 0; color: #3f51b5;">2. Description of the Processing</h2>
+    """, unsafe_allow_html=True)
+    
+    # Get the data processing description from admin info
+    st.markdown(f"""
+    <div style="margin-left: 20px;">
+        <p><strong>Project Description:</strong> {admin_info.get('description', 'Not specified')}</p>
+        <p><strong>Data Processing Purpose:</strong> {admin_info.get('purpose', 'Not specified')}</p>
+        
+        <h4 style="margin-top: 15px;">Type of data processed:</h4>
+        <ul>
+            {"<li>Sensitive/special category data</li>" if results.get('category_scores', {}).get('data_category', {}).get('score', 0) > 2 else ""}
+            {"<li>Vulnerable persons data</li>" if results.get('category_scores', {}).get('data_category', {}).get('score', 0) > 4 else ""}
+            {"<li>Children's data</li>" if results.get('category_scores', {}).get('data_category', {}).get('score', 0) > 6 else ""}
+            {"<li>Large scale data processing</li>" if results.get('category_scores', {}).get('data_category', {}).get('score', 0) > 8 else ""}
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 3. NECESSITY & PROPORTIONALITY
+    st.markdown("""
+    <div style="background-color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="margin-top: 0; color: #3f51b5;">3. Necessity & Proportionality</h2>
+        
+        <div style="margin-left: 20px;">
+            <h4>Data minimization assessment:</h4>
+            <p>Based on the assessment, the following aspects require attention:</p>
+            <ul>
+                {"<li>Data minimization measures appear inadequate</li>" if results.get('category_scores', {}).get('security_measures', {}).get('score', 0) < 4 else ""}
+                {"<li>Data subject rights may be restricted</li>" if results.get('category_scores', {}).get('rights_impact', {}).get('score', 0) > 6 else ""}
+                {"<li>International data transfers identified</li>" if results.get('category_scores', {}).get('transfer_sharing', {}).get('score', 0) > 5 else ""}
+            </ul>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 4. RISK ASSESSMENT
     risk_level = results["overall_risk_level"]
     risk_color = {
         "High": "#ef4444",
@@ -631,35 +767,164 @@ def display_assessment_results(results, report_data, scanner):
         "Low": "#10b981"
     }.get(risk_level, "#ef4444")
     
-    # Display overall risk with clear visual indicators
+    # Display overall risk with clear visual indicators in a structured format
     st.markdown(f"""
     <div style="background-color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;
               box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h2 style="margin-top: 0;">Overall Risk Level</h2>
-        <div style="display: flex; align-items: center; margin-bottom: 15px;">
-            <div style="width: 20px; height: 20px; border-radius: 50%; 
-                    background-color: {risk_color}; margin-right: 10px;"></div>
-            <span style="font-size: 24px; font-weight: 600;">{risk_level}</span>
-        </div>
-        <div style="display: flex; align-items: center; margin-top: 10px;">
-            <div style="flex: 1;">
-                <h3>DPIA Required</h3>
-                <p style="font-size: 18px; font-weight: 500;">
-                    {"Yes" if results["dpia_required"] else "No"}
-                </p>
-            </div>
-            <div style="flex: 1;">
-                <h3>Risk Score</h3>
-                <p style="font-size: 18px; font-weight: 500;">
-                    {results["overall_percentage"]:.1f}/10
-                </p>
-            </div>
+        <h2 style="margin-top: 0; color: #3f51b5;">4. Risk Assessment</h2>
+        
+        <div style="margin-left: 20px;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                <tr style="background-color: #f5f5f5;">
+                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Risk Type</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Likelihood</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Impact</th>
+                    <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Risk Level</th>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;">Overall Privacy Risk</td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">
+                        {("Low" if results["overall_percentage"] < 4 else "Medium" if results["overall_percentage"] < 7 else "High")}
+                    </td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">
+                        {("Low" if results["overall_percentage"] < 3 else "Medium" if results["overall_percentage"] < 6 else "High")}
+                    </td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #ddd; background-color: {risk_color}; color: white; font-weight: bold;">
+                        {risk_level}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;">DPIA Required</td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #ddd;" colspan="3">
+                        <strong>{"Yes" if results["dpia_required"] else "No"}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;">Risk Score</td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #ddd;" colspan="3">
+                        <strong>{results["overall_percentage"]:.1f}/10</strong>
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Category scores visualization
-    st.subheader("Risk Analysis by Category")
+    # 5. MITIGATION MEASURES
+    st.markdown("""
+    <div style="background-color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="margin-top: 0; color: #3f51b5;">5. Mitigation Measures</h2>
+    """, unsafe_allow_html=True)
+    
+    # Default mitigation measures based on risk areas
+    mitigation_measures = []
+    
+    # Add data category mitigations
+    if results.get("category_scores", {}).get("data_category", {}).get("risk_level") == "High":
+        mitigation_measures.append("Use end-to-end encryption for sensitive data storage and transfer")
+        mitigation_measures.append("Implement strong access controls and authentication for sensitive data access")
+    
+    # Add processing mitigations
+    if results.get("category_scores", {}).get("processing_activity", {}).get("risk_level") in ["Medium", "High"]:
+        mitigation_measures.append("Document clear purpose limitations and processing boundaries")
+        mitigation_measures.append("Implement data minimization practices to only collect necessary data")
+    
+    # Add rights impact mitigations
+    if results.get("category_scores", {}).get("rights_impact", {}).get("risk_level") in ["Medium", "High"]:
+        mitigation_measures.append("Implement transparent notification processes to inform data subjects")
+        mitigation_measures.append("Provide clear mechanisms for data subject rights requests")
+    
+    # Add data sharing mitigations
+    if results.get("category_scores", {}).get("transfer_sharing", {}).get("risk_level") in ["Medium", "High"]:
+        mitigation_measures.append("Establish formal data sharing agreements with all processors/partners")
+        mitigation_measures.append("Implement appropriate safeguards for international transfers")
+    
+    # Add security mitigations
+    if results.get("category_scores", {}).get("security_measures", {}).get("risk_level") in ["Medium", "High"]:
+        mitigation_measures.append("Enhance security monitoring and breach notification procedures")
+        mitigation_measures.append("Conduct regular security audits and penetration testing")
+    
+    # Display mitigation measures
+    if mitigation_measures:
+        st.markdown("""
+        <div style="margin-left: 20px;">
+            <h4>Recommended Mitigation Measures:</h4>
+            <ul>
+        """, unsafe_allow_html=True)
+        
+        for measure in mitigation_measures:
+            st.markdown(f"<li>{measure}</li>", unsafe_allow_html=True)
+        
+        st.markdown("""
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="margin-left: 20px;">
+            <p>No specific mitigation measures required based on the assessment results.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 6. CONSULTATION
+    st.markdown("""
+    <div style="background-color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="margin-top: 0; color: #3f51b5;">6. Consultation</h2>
+        
+        <div style="margin-left: 20px;">
+    """, unsafe_allow_html=True)
+    
+    # Determine consultation requirements based on risk level
+    if risk_level == "High":
+        st.markdown("""
+            <p><strong>DPO Consultation:</strong> Required</p>
+            <p><strong>Supervisory Authority Consultation:</strong> Recommended due to high risk level</p>
+            <p>According to Article 36 of the GDPR, prior consultation with the supervisory authority is required when data processing would result in a high risk in the absence of mitigating measures.</p>
+        """, unsafe_allow_html=True)
+    elif risk_level == "Medium":
+        st.markdown("""
+            <p><strong>DPO Consultation:</strong> Recommended</p>
+            <p><strong>Supervisory Authority Consultation:</strong> Not required if mitigation measures are implemented</p>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+            <p><strong>DPO Consultation:</strong> Optional</p>
+            <p><strong>Supervisory Authority Consultation:</strong> Not required</p>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("""
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 7. FINAL DECISION
+    st.markdown(f"""
+    <div style="background-color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="margin-top: 0; color: #3f51b5;">7. Final Decision</h2>
+        
+        <div style="margin-left: 20px;">
+            <p><strong>DPIA Status:</strong> Completed</p>
+            <p><strong>Overall Decision:</strong> {
+                "Processing can proceed with recommended mitigations" if risk_level != "High" else 
+                "Processing requires significant mitigation measures and possibly supervisory consultation"
+            }</p>
+            <p><strong>Date of Completion:</strong> {datetime.now().strftime("%Y-%m-%d")}</p>
+            <p><strong>Review Date:</strong> {(datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d")} (recommended annual review)</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Category scores visualization in a more structured way
+    st.markdown("""
+    <div style="background-color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="margin-top: 0; color: #3f51b5;">Detailed Risk Analysis by Category</h2>
+    """, unsafe_allow_html=True)
     
     for category, scores in results["category_scores"].items():
         category_name = scanner.assessment_categories[category]["name"]
@@ -672,9 +937,9 @@ def display_assessment_results(results, report_data, scanner):
         }.get(risk_level, "#ef4444")
         
         st.markdown(f"""
-        <div style="background-color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;
-                  box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 5px solid {risk_color};">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="margin-bottom: 15px; margin-left: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; 
+                       border-left: 5px solid {risk_color}; padding-left: 15px;">
                 <div>
                     <h3 style="margin: 0; color: #333;">{category_name}</h3>
                     <p style="margin: 5px 0 0 0; color: #666;">Risk Level: {risk_level}</p>
@@ -687,6 +952,8 @@ def display_assessment_results(results, report_data, scanner):
             </div>
         </div>
         """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
     
     # Key findings and recommendations
     st.subheader("Key Findings & Recommendations")
