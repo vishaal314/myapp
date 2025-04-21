@@ -212,8 +212,18 @@ def run_dpia_assessment():
             admin_info["dpia_lead"] = st.text_input("DPIA Lead", 
                                                    value=admin_info.get("dpia_lead", ""),
                                                    placeholder="e.g., Jane Smith, Data Protection Officer")
-            admin_info["date"] = st.date_input("Date", 
-                                              value=datetime.datetime.strptime(admin_info.get("date", datetime.datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d"))
+            # Handle date input safely
+            try:
+                if isinstance(admin_info.get("date"), str):
+                    default_date = datetime.datetime.strptime(admin_info.get("date"), "%Y-%m-%d").date()
+                elif isinstance(admin_info.get("date"), datetime.date):
+                    default_date = admin_info.get("date")
+                else:
+                    default_date = datetime.datetime.now().date()
+            except Exception:
+                default_date = datetime.datetime.now().date()
+                
+            admin_info["date"] = st.date_input("Date", value=default_date)
             
         # Update session state
         st.session_state.dpia_answers["admin_info"] = admin_info

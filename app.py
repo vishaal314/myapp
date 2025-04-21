@@ -2509,7 +2509,12 @@ else:
                             
                             # Check if scan is fully compliant
                             cert_generator = CertificateGenerator(language=st.session_state.language)
-                            is_compliant = cert_generator.is_fully_compliant(selected_scan)
+                            # Use current_scan_id as fallback if selected_scan is not defined
+                            scan_to_check = locals().get('selected_scan', st.session_state.get('current_scan_id', None))
+                            if scan_to_check:
+                                is_compliant = cert_generator.is_fully_compliant(scan_to_check)
+                            else:
+                                is_compliant = False
                             
                             # Button text based on compliance and premium status
                             if is_premium and is_compliant:
@@ -2544,8 +2549,9 @@ else:
                                     
                                     # Generate certificate
                                     company_name = None  # Could be added as an input field if needed
+                                    # Use the same scan_to_check variable we defined earlier
                                     cert_path = cert_generator.generate_certificate(
-                                        selected_scan, user_info, company_name
+                                        scan_to_check, user_info, company_name
                                     )
                                     
                                     if cert_path and os.path.exists(cert_path):
