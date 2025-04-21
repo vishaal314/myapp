@@ -12,8 +12,9 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Any
 
+# Import scanner and report functions with clear naming to avoid conflicts
 from services.dpia_scanner import DPIAScanner, generate_dpia_report
-from services.report_generator import generate_report
+from services.report_generator import generate_report as generate_pdf_report
 from utils.i18n import get_text, _
 
 def run_ultra_simple_dpia():
@@ -279,7 +280,7 @@ def show_dpia_results(assessment_results, report_data, scanner):
         
         # Show generation message
         with st.spinner("Generating PDF report..."):
-            pdf_data = generate_report(report_data)
+            pdf_data = generate_pdf_report(report_data)
         
         st.success("✅ Report generated successfully! Click below to download.")
         
