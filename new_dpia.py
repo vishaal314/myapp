@@ -199,19 +199,24 @@ def run_dpia_assessment():
         
         admin_info = st.session_state.dpia_answers["admin_info"]
         
+        # Basic Project Information
+        st.subheader("Basic Project Details")
         col1, col2 = st.columns(2)
         with col1:
             admin_info["project_name"] = st.text_input("Project/Processing Name", 
                                                        value=admin_info.get("project_name", ""),
-                                                       placeholder="e.g., CRM Overhaul – Customer Insight Engine")
+                                                       placeholder="e.g., CRM Overhaul – Customer Insight Engine",
+                                                       key="admin_project_name")
             admin_info["organization"] = st.text_input("Organization", 
                                                       value=admin_info.get("organization", ""),
-                                                      placeholder="e.g., ACME Ltd.")
+                                                      placeholder="e.g., ACME Ltd.",
+                                                      key="admin_organization")
         
         with col2:
             admin_info["dpia_lead"] = st.text_input("DPIA Lead", 
                                                    value=admin_info.get("dpia_lead", ""),
-                                                   placeholder="e.g., Jane Smith, Data Protection Officer")
+                                                   placeholder="e.g., Jane Smith, Data Protection Officer",
+                                                   key="admin_dpia_lead")
             # Handle date input safely
             try:
                 if isinstance(admin_info.get("date"), str):
@@ -223,7 +228,73 @@ def run_dpia_assessment():
             except Exception:
                 default_date = datetime.datetime.now().date()
                 
-            admin_info["date"] = st.date_input("Date", value=default_date)
+            admin_info["date"] = st.date_input("Assessment Date", 
+                                              value=default_date,
+                                              key="dpia_admin_date")
+        
+        # Organization Information
+        st.subheader("Organization Details")
+        col1, col2 = st.columns(2)
+        with col1:
+            admin_info["dpo_name"] = st.text_input("Data Protection Officer", 
+                                                  value=admin_info.get("dpo_name", ""),
+                                                  placeholder="Name of your organization's DPO",
+                                                  key="admin_dpo_name")
+            admin_info["business_unit"] = st.text_input("Business Unit/Department", 
+                                                       value=admin_info.get("business_unit", ""),
+                                                       placeholder="e.g., IT, Marketing, Product Development",
+                                                       key="admin_business_unit")
+        with col2:
+            admin_info["org_address"] = st.text_input("Organization Address", 
+                                                    value=admin_info.get("org_address", ""),
+                                                    placeholder="Company headquarters or main office",
+                                                    key="admin_org_address")
+            admin_info["contact_email"] = st.text_input("Contact Email", 
+                                                      value=admin_info.get("contact_email", ""),
+                                                      placeholder="Email for DPIA-related communications",
+                                                      key="admin_contact_email")
+        
+        # Project Additional Information
+        st.subheader("Additional Project Information")
+        
+        admin_info["project_description"] = st.text_area("Project Description", 
+                                                       value=admin_info.get("project_description", ""),
+                                                       placeholder="Brief overview of the project and its purpose",
+                                                       height=100,
+                                                       key="admin_project_description")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            # Use the current date if not already set
+            default_start = admin_info.get("expected_start", datetime.datetime.now().date())
+            if isinstance(default_start, str):
+                try:
+                    default_start = datetime.datetime.strptime(default_start, "%Y-%m-%d").date()
+                except:
+                    default_start = datetime.datetime.now().date()
+                    
+            admin_info["expected_start"] = st.date_input("Expected Start Date", 
+                                                        value=default_start,
+                                                        key="admin_expected_start")
+        with col2:
+            # Default to 6 months in the future if not already set
+            default_end = admin_info.get("expected_completion", (datetime.datetime.now() + datetime.timedelta(days=180)).date())
+            if isinstance(default_end, str):
+                try:
+                    default_end = datetime.datetime.strptime(default_end, "%Y-%m-%d").date()
+                except:
+                    default_end = (datetime.datetime.now() + datetime.timedelta(days=180)).date()
+                    
+            admin_info["expected_completion"] = st.date_input("Expected Completion Date", 
+                                                            value=default_end,
+                                                            key="admin_expected_completion")
+        
+        # Project Stakeholders
+        admin_info["key_stakeholders"] = st.text_area("Key Stakeholders", 
+                                                    value=admin_info.get("key_stakeholders", ""),
+                                                    placeholder="List the key stakeholders involved in this project",
+                                                    height=80,
+                                                    key="admin_key_stakeholders")
             
         # Update session state
         st.session_state.dpia_answers["admin_info"] = admin_info
