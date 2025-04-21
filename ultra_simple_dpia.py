@@ -124,20 +124,33 @@ def run_ultra_simple_dpia():
                 # Set flag so we know to display results
                 st.session_state.dpia_form_submitted = True
             
-            # Clear the form
-            st.empty()
+            # Force a rerun to display results properly
+            st.rerun()
         except Exception as e:
             st.error(f"Error processing DPIA assessment: {str(e)}")
             st.exception(e)
     
     # If form was submitted, show results
-    if 'dpia_form_submitted' in st.session_state and st.session_state.dpia_form_submitted:
-        # Retrieve saved results from session state
-        assessment_results = st.session_state.dpia_results
-        report_data = st.session_state.dpia_report_data
-        
-        # Show results
-        show_dpia_results(assessment_results, report_data, scanner)
+    elif 'dpia_form_submitted' in st.session_state and st.session_state.dpia_form_submitted:
+        try:
+            # Retrieve saved results from session state
+            assessment_results = st.session_state.dpia_results
+            report_data = st.session_state.dpia_report_data
+            
+            # Show results
+            show_dpia_results(assessment_results, report_data, scanner)
+        except Exception as e:
+            # If there's an error displaying results, clear state and allow retry
+            st.error(f"Error displaying DPIA results: {str(e)}")
+            if st.button("Retry Assessment", type="primary"):
+                # Clear form submission flag but keep answers to allow retrying
+                if 'dpia_form_submitted' in st.session_state:
+                    del st.session_state.dpia_form_submitted
+                if 'dpia_results' in st.session_state:
+                    del st.session_state.dpia_results
+                if 'dpia_report_data' in st.session_state:
+                    del st.session_state.dpia_report_data
+                st.rerun()
 
 def show_dpia_results(assessment_results, report_data, scanner):
     """Display the results of the DPIA assessment."""
@@ -244,32 +257,41 @@ def show_dpia_results(assessment_results, report_data, scanner):
     """, unsafe_allow_html=True)
     
     # Generate PDF report
-    report_filename = f"dpia_report_{assessment_results['scan_id']}.pdf"
-    pdf_data = generate_report(report_data)
-    
-    # Download button
-    if st.download_button(
-        label="📄 Download DPIA Report PDF",
-        data=pdf_data,
-        file_name=report_filename,
-        mime="application/pdf",
-        use_container_width=True,
-        type="primary",
-        key="dpia_download_report_button"
-    ):
-        st.success("Report downloaded successfully!")
+    try:
+        report_filename = f"dpia_report_{assessment_results['scan_id']}.pdf"
         
-        # Add to history automatically
-        if 'history' not in st.session_state:
-            st.session_state.history = {}
+        # Show generation message
+        with st.spinner("Generating PDF report..."):
+            pdf_data = generate_report(report_data)
         
-        history_id = assessment_results['scan_id']
-        if history_id not in st.session_state.history:
-            st.session_state.history[history_id] = {
-                'type': 'DPIA',
-                'data': assessment_results,
-                'timestamp': assessment_results['timestamp']
-            }
+        st.success("✅ Report generated successfully! Click below to download.")
+        
+        # Download button
+        if st.download_button(
+            label="📄 Download DPIA Report PDF",
+            data=pdf_data,
+            file_name=report_filename,
+            mime="application/pdf",
+            use_container_width=True,
+            type="primary",
+            key="dpia_download_report_button"
+        ):
+            st.success("Report downloaded successfully!")
+            
+            # Add to history automatically
+            if 'history' not in st.session_state:
+                st.session_state.history = {}
+            
+            history_id = assessment_results['scan_id']
+            if history_id not in st.session_state.history:
+                st.session_state.history[history_id] = {
+                    'type': 'DPIA',
+                    'data': assessment_results,
+                    'timestamp': assessment_results['timestamp']
+                }
+    except Exception as e:
+        st.error(f"Error generating report: {str(e)}")
+        st.warning("Try again or contact support if the issue persists.")
     
     # Important notice
     st.info("⚠️ Important: This report will not be saved automatically. Please download it now for your records.")
