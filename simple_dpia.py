@@ -24,62 +24,56 @@ def run_simple_dpia():
     """Run a very simple DPIA form with minimal complexity."""
     
     st.title("DPIA Assessment")
-    
-    # Debug current session state
+
     if st.checkbox("Debug: Show Session State", value=False, key="debug_show_session"):
         st.write(dict((k, v) for k, v in st.session_state.items() if not k.startswith('_')))
-    
-    # Clear all storage if requested (development only)
+
     if st.checkbox("Debug: Reset Form", value=False, key="debug_reset_form"):
         for key in list(st.session_state.keys()):
             if key.startswith('simple_dpia') or key in ['assessment_results', 'report_data', 'display_results']:
                 del st.session_state[key]
         st.success("Form state reset")
         st.rerun()
-    
-    # Initialize the scanner with minimal error handling
+
     try:
-        scanner = DPIAScanner(language='en')  # Force English for now to simplify
+        scanner = DPIAScanner(language='en')
         assessment_categories = scanner._get_assessment_categories()
     except Exception as e:
         st.error(f"Error initializing DPIA scanner: {str(e)}")
         st.code(traceback.format_exc())
         return
-    
-    # Initialize answers in session state if needed
+
     if 'simple_dpia_answers' not in st.session_state:
         st.session_state.simple_dpia_answers = {}
-        for category in assessment_categories:
-            question_count = len(assessment_categories[category]['questions'])
-            st.session_state.simple_dpia_answers[category] = [0] * question_count
-    
-    # Show instructions
+
+    # Ensure answers are correctly initialized or updated
+    for category, meta in assessment_categories.items():
+        question_count = len(meta.get('questions', []))
+        prev_answers = st.session_state.simple_dpia_answers.get(category, [])
+        st.session_state.simple_dpia_answers[category] = [
+            prev_answers[i] if i < len(prev_answers) and isinstance(prev_answers[i], int) and 0 <= prev_answers[i] <= 2 else 0
+            for i in range(question_count)
+        ]
+
     st.info("This is a simplified DPIA assessment form. Please answer all questions and click Submit.")
-    
-    # Check if we should show results (if we have them)
+
     if 'display_results' in st.session_state and st.session_state.display_results and 'assessment_results' in st.session_state:
         try:
-            # Display the results
             display_assessment_results(
                 st.session_state.assessment_results,
                 st.session_state.report_data,
                 scanner
             )
-            
-            # Add button to start a new assessment
+
             if st.button("Start New Assessment", type="primary"):
-                # Clear all assessment-related state
                 for key in ['simple_dpia_answers', 'assessment_results', 'report_data', 'display_results']:
                     if key in st.session_state:
                         del st.session_state[key]
                 st.rerun()
-            
-            # Exit here to avoid showing the form
             return
         except Exception as e:
             st.error(f"Error displaying results: {str(e)}")
             st.exception(e)
-            # If there's an error showing results, continue to the form
     
     # Show the assessment form
     st.subheader("Assessment Questions")
@@ -99,24 +93,22 @@ def run_simple_dpia():
             for q_idx, question_text in enumerate(assessment_categories[category]['questions']):
                 st.markdown(f"**{question_text}**")
                 
-                # Current value for the answer
-                current_value = st.session_state.simple_dpia_answers[category][q_idx]
-                
-                # Radio buttons for answer options
                 options = ["No", "Partially", "Yes"]
+                stored_value = st.session_state.simple_dpia_answers[category][q_idx]
+
+                # Safe index
+                index = stored_value if isinstance(stored_value, int) and 0 <= stored_value < len(options) else 0
+
                 answer = st.radio(
                     "Answer:",
                     options,
-                    index=current_value,
+                    index=index,
                     key=f"radio_{category}_{q_idx}",
                     horizontal=True,
                     label_visibility="collapsed"
                 )
-                
-                # Update session state with the value
-                new_value = options.index(answer)
-                st.session_state.simple_dpia_answers[category][q_idx] = new_value
-                
+
+                st.session_state.simple_dpia_answers[category][q_idx] = options.index(answer)
                 st.markdown("---")
     
     # Add a submit button
