@@ -1849,17 +1849,9 @@ else:
             )
             
         elif scan_type == _("scan.sustainability"):
-            if cloud_provider == "None/Other":
-                upload_help = "Upload cloud configuration files (Terraform, CloudFormation, etc.)"
-                uploaded_files = st.file_uploader(
-                    "Upload Cloud Configuration Files", 
-                    accept_multiple_files=True,
-                    type=["tf", "json", "yaml", "yml", "xml"],
-                    help=upload_help
-                )
-            else:
-                uploaded_files = []
-                st.info(f"The scan will use the provided {cloud_provider} credentials to analyze your cloud resources.")
+            # No file upload needed for Sustainability scan
+            uploaded_files = []
+            st.info(f"The scan will use the provided {cloud_provider} credentials to analyze your cloud resources.")
                 
         elif scan_type == _("scan.ai_model"):
             if model_source == _("scan.upload_files"):
