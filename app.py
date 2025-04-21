@@ -2452,11 +2452,13 @@ else:
                                 from services.report_generator import generate_report
                                 
                                 with st.spinner("Generating PDF report..."):
-                                    pdf_bytes = generate_report(aggregated_result)
+                                    # Use selected_scan instead of undefined aggregated_result
+                                    pdf_bytes = generate_report(selected_scan)
                                     
                                     # Create download link
                                     b64_pdf = base64.b64encode(pdf_bytes).decode()
                                     href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{display_scan_id}.pdf">Download PDF Report</a>'
+                                    st.markdown(href, unsafe_allow_html=True)
                         
                         # Compliance Certificate for Premium users
                         with col2:
@@ -2465,7 +2467,7 @@ else:
                             
                             # Check if scan is fully compliant
                             cert_generator = CertificateGenerator(language=st.session_state.language)
-                            is_compliant = cert_generator.is_fully_compliant(aggregated_result)
+                            is_compliant = cert_generator.is_fully_compliant(selected_scan)
                             
                             # Button text based on compliance and premium status
                             if is_premium and is_compliant:
@@ -2501,7 +2503,7 @@ else:
                                     # Generate certificate
                                     company_name = None  # Could be added as an input field if needed
                                     cert_path = cert_generator.generate_certificate(
-                                        aggregated_result, user_info, company_name
+                                        selected_scan, user_info, company_name
                                     )
                                     
                                     if cert_path and os.path.exists(cert_path):
@@ -2530,7 +2532,7 @@ else:
                                 os.makedirs(reports_dir, exist_ok=True)
                                 
                                 # Save the HTML report
-                                file_path = save_html_report(aggregated_result, reports_dir)
+                                file_path = save_html_report(selected_scan, reports_dir)
                                 
                                 # Success message
                                 st.success(f"HTML report saved. You can access it from the '{_('results.title')}' page.")
