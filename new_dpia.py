@@ -152,7 +152,15 @@ def run_dpia_assessment():
                 "project_name": "",
                 "organization": "",
                 "dpia_lead": "",
-                "date": datetime.datetime.now().strftime("%Y-%m-%d")
+                "date": datetime.datetime.now().strftime("%Y-%m-%d"),
+                "dpo_name": "",
+                "business_unit": "",
+                "org_address": "",
+                "contact_email": "",
+                "project_description": "",
+                "expected_start": datetime.datetime.now().strftime("%Y-%m-%d"),
+                "expected_completion": (datetime.datetime.now() + datetime.timedelta(days=180)).strftime("%Y-%m-%d"),
+                "key_stakeholders": ""
             },
             "step1": {},  # Identify Need
             "step2": {},  # Describe Processing
@@ -1041,17 +1049,35 @@ def run_dpia_assessment():
                 progress_bar.progress(60, "Generating recommendations...")
                 
                 # Generate report data with enhanced structure
+                admin_info = answers.get("admin_info", {})
                 report_data = {
-                    "admin_info": answers.get("admin_info", {}),
-                    "project_name": answers.get("admin_info", {}).get("project_name", "Unnamed Project"),
-                    "organization": answers.get("admin_info", {}).get("organization", ""),
-                    "dpia_lead": answers.get("admin_info", {}).get("dpia_lead", ""),
-                    "date": answers.get("admin_info", {}).get("date", datetime.datetime.now().strftime("%Y-%m-%d")),
+                    "admin_info": admin_info,
+                    "project_name": admin_info.get("project_name", "Unnamed Project"),
+                    "organization": admin_info.get("organization", ""),
+                    "dpia_lead": admin_info.get("dpia_lead", ""),
+                    "date": admin_info.get("date", datetime.datetime.now().strftime("%Y-%m-%d")),
                     "report_date": datetime.datetime.now().strftime("%Y-%m-%d"),
                     "sections": {
                         "introduction": {
                             "title": "1. Introduction",
-                            "content": f"This DPIA was conducted for {answers.get('admin_info', {}).get('project_name', 'the project')} by {answers.get('admin_info', {}).get('dpia_lead', 'the assessment team')}."
+                            "content": f"""This DPIA was conducted for {admin_info.get('project_name', 'the project')} by {admin_info.get('dpia_lead', 'the assessment team')}.
+                            
+**Project Description:** {admin_info.get('project_description', 'Not provided')}
+
+**Organization:** {admin_info.get('organization', 'Not specified')}
+**Business Unit:** {admin_info.get('business_unit', 'Not specified')}
+**Address:** {admin_info.get('org_address', 'Not specified')}
+
+**Data Protection Officer:** {admin_info.get('dpo_name', 'Not specified')}
+**Contact Email:** {admin_info.get('contact_email', 'Not specified')}
+
+**Timeline:**
+- Assessment Date: {admin_info.get('date', 'Not specified')}
+- Expected Start: {admin_info.get('expected_start', 'Not specified')}
+- Expected Completion: {admin_info.get('expected_completion', 'Not specified')}
+
+**Key Stakeholders:** {admin_info.get('key_stakeholders', 'Not specified')}
+"""
                         },
                         "processing_description": {
                             "title": "2. Processing Description",
@@ -1127,13 +1153,31 @@ def display_assessment_results(results: Dict[str, Any], report_data: Dict[str, A
         <div style="flex: 2; min-width: 300px;">
             <h2 style="margin: 0;">{admin_info.get('project_name', 'Project DPIA')}</h2>
             <p style="margin: 0;">Organization: <strong>{admin_info.get('organization', 'Not specified')}</strong></p>
+            <p style="margin: 0;">Business Unit: <strong>{admin_info.get('business_unit', 'Not specified')}</strong></p>
             <p style="margin: 0;">DPIA Lead: <strong>{admin_info.get('dpia_lead', 'Not specified')}</strong></p>
-            <p style="margin: 0;">Date: <strong>{admin_info.get('date', datetime.datetime.now().strftime('%Y-%m-%d'))}</strong></p>
+            <p style="margin: 0;">DPO: <strong>{admin_info.get('dpo_name', 'Not specified')}</strong></p>
+            <p style="margin: 0;">Assessment Date: <strong>{admin_info.get('date', datetime.datetime.now().strftime('%Y-%m-%d'))}</strong></p>
+            <p style="margin: 0;">Contact: <strong>{admin_info.get('contact_email', 'Not specified')}</strong></p>
         </div>
         <div style="flex: 1; min-width: 200px; padding: 10px; background-color: {risk_color}; color: white; border-radius: 5px; text-align: center;">
             <h3 style="margin: 0;">Overall Risk Level</h3>
             <h2 style="margin: 5px 0; font-size: 1.8em;">{risk_level}</h2>
             <p style="margin: 0;">DPIA Required: <strong>{"Yes" if results.get("dpia_required", False) else "No"}</strong></p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Project timeline info
+    st.markdown(f"""
+    <div style="margin-top: 15px; background-color: #f1f5f9; padding: 10px; border-radius: 5px;">
+        <h4 style="margin: 0;">Project Timeline</h4>
+        <div style="display: flex; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 150px;">
+                <p style="margin: 5px 0;"><strong>Start Date:</strong> {admin_info.get('expected_start', 'Not specified')}</p>
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+                <p style="margin: 5px 0;"><strong>Expected Completion:</strong> {admin_info.get('expected_completion', 'Not specified')}</p>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
