@@ -2410,6 +2410,594 @@ else:
                         
                         # Stop normal flow to proceed with only the crash-resistant form
                         scan_running = False
+                            
+                            # Create a two-column layout for better use of space
+                            question_col, progress_col = st.columns([3, 1])
+                            
+                            with question_col:
+                                # Loop through each category
+                                for category, info in assessment_categories.items():
+                                    # Create a visually distinct section for each category
+                                    st.markdown(f"""
+                                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; 
+                                               margin-bottom: 15px; border-left: 4px solid #1E88E5;">
+                                        <h3 style="color: #1E88E5; margin-bottom: 5px;">{info['name']}</h3>
+                                        <p style="color: #555; margin: 0;">{info['description']}</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Create a list to store answers for this category
+                                    category_answers = []
+                                    
+                                    # For each question, create a single select box
+                                    for i, question in enumerate(info['questions']):
+                                        # Display the question
+                                        st.markdown(f"""
+                                        <div style="background-color: white; padding: 15px; border-radius: 4px;
+                                                   margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                            <p style="margin-bottom: 10px;"><strong>Q{i+1}:</strong> {question}</p>
+                                        </div>
+                                        """, unsafe_allow_html=True)
+                                        
+                                        # Use a simple selectbox instead of radio buttons or checkboxes
+                                        # This has much better stability in Streamlit
+                                        select_key = f"select_{category}_{i}"
+                                        options = ["No", "Partially", "Yes"]
+                                        
+                                        # Map the current value to the appropriate option
+                                        default_idx = st.session_state.dpia_answers[category][i]
+                                        
+                                        # Create the selectbox
+                                        answer = st.selectbox(
+                                            "Select your answer:",
+                                            options,
+                                            index=default_idx,
+                                            key=select_key,
+                                            label_visibility="collapsed"
+                                        )
+                                        
+                                        # Convert answer to numerical value for storage
+                                        answer_value = {"No": 0, "Partially": 1, "Yes": 2}[answer]
+                                        
+                                        # Update the session state
+                                        st.session_state.dpia_answers[category][i] = answer_value
+                                        
+                                        # Add to category answers for form submission
+                                        category_answers.append(answer_value)
+                                    
+                                    # Store answers for this category
+                                    answers[category] = category_answers
+                                    
+                                    # Add a visual separator between categories
+                                    st.markdown("<hr style='margin: 30px 0; border: none; height: 1px; background-color: #e0e0e0;'>", unsafe_allow_html=True)
+                            
+                            # Right panel with progress tracking that stays fixed
+                            with progress_col:
+                                # Calculate the current progress
+                                total_questions = sum(len(info['questions']) for info in assessment_categories.values())
+                                answered_questions = 0
+                                for cat, ans_list in st.session_state.dpia_answers.items():
+                                    answered_questions += sum(1 for a in ans_list if a > 0)
+                                
+                                # Create a fixed position panel for progress tracking
+                                st.markdown("""
+                                <div style="position: sticky; top: 0; background-color: #f8f9fa; padding: 15px; 
+                                           border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                    <h3 style="color: #1E88E5; font-size: 18px; margin-top: 0;">Assessment Progress</h3>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                # Show a progress bar
+                                progress_pct = min(100, round(answered_questions / total_questions * 100))
+                                st.progress(progress_pct / 100)
+                                
+                                # Progress percentage with large display
+                                st.markdown(f"""
+                                <div style="text-align: center; margin: 10px 0;">
+                                    <span style="font-size: 28px; font-weight: bold; color: #1E88E5;">{progress_pct}%</span>
+                                    <p style="margin: 0; color: #666; font-size: 14px;">
+                                        {answered_questions}/{total_questions} questions answered
+                                    </p>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                # Add a check if all questions are answered with a clear message
+                                if progress_pct < 100:
+                                    st.warning(f"Please answer all questions before submitting. You still have {total_questions - answered_questions} unanswered questions.")
+                                else:
+                                    st.success("All questions answered! You can now submit your assessment.")
+                                
+                                # Show category breakdown
+                                st.markdown("<h4 style='color: #1E88E5; margin-top: 20px;'>Categories</h4>", unsafe_allow_html=True)
+                                
+                                # Mini progress bars for each category
+                                for category, info in assessment_categories.items():
+                                    if category in st.session_state.dpia_answers:
+                                        cat_answers = st.session_state.dpia_answers[category]
+                                        yes_count = sum(1 for a in cat_answers if a == 2)
+                                        partial_count = sum(1 for a in cat_answers if a == 1)
+                                        no_count = sum(1 for a in cat_answers if a == 0)
+                                        
+                                        total_cat = len(info['questions'])
+                                        if total_cat > 0:
+                                            # Calculate completion percentage
+                                            completed = sum(1 for a in cat_answers if a > 0)
+                                            completion_pct = round(completed / total_cat * 100)
+                                            
+                                            # Color based on completion
+                                            if completion_pct == 100:
+                                                color = "#4CAF50"  # Green
+                                            elif completion_pct > 50:
+                                                color = "#FF9800"  # Orange/Amber
+                                            else:
+                                                color = "#F44336"  # Red
+                                            
+                                            # Display mini progress bar
+                                            st.markdown(f"""
+                                            <div style="margin-bottom: 12px;">
+                                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                                    <span style="font-size: 14px;">{info['name']}</span>
+                                                    <span style="font-size: 14px; color: {color};">{completion_pct}%</span>
+                                                </div>
+                                                <div style="height: 6px; background-color: #eee; border-radius: 3px;">
+                                                    <div style="width: {completion_pct}%; height: 6px; background-color: {color}; border-radius: 3px;"></div>
+                                                </div>
+                                            </div>
+                                            """, unsafe_allow_html=True)
+                        
+                        # Submit button with improved styling
+                        submit_button = st.button("Submit DPIA Assessment", key="dpia_submit_unique", type="primary", use_container_width=True)
+                        
+                        # Process assessment when the button is clicked (immediately, without relying on session state)
+                        if submit_button:
+                            try:
+                                # Clear all content and show a full-page processing message
+                                st.empty()  # Clear all content above
+                                
+                                # Create a container for displaying results that will persist
+                                results_container = st.container()
+                                
+                                with results_container:
+                                    st.title("DPIA Assessment Processing")
+                                    progress_bar = st.progress(0)
+                                    status_text = st.empty()
+                                    
+                                    # Step 1: Prepare assessment data
+                                    status_text.info("Step 1/5: Preparing DPIA assessment data...")
+                                    progress_bar.progress(10)
+                                    
+                                    # Create assessment parameters including data source
+                                    assessment_params = {
+                                        "answers": answers,
+                                        "language": st.session_state.get('language', 'en')
+                                    }
+                                    
+                                    # Add data source parameters if relevant
+                                    if dpia_source == _("scan.upload_files") and uploaded_files:
+                                        # Use file paths from session state to ensure consistency
+                                        if 'dpia_file_paths' in st.session_state:
+                                            assessment_params["file_paths"] = st.session_state.dpia_file_paths
+                                            status_text.info(f"Step 1/5: Preparing to scan {len(st.session_state.dpia_file_paths)} uploaded files")
+                                    
+                                    elif dpia_source == "GitHub Repository" and 'github_repo' in locals():
+                                        assessment_params["github_repo"] = github_repo
+                                        status_text.info(f"Step 1/5: Preparing to scan GitHub repository: {github_repo}")
+                                        if 'github_branch' in locals() and github_branch:
+                                            assessment_params["github_branch"] = github_branch
+                                        if 'github_token' in locals() and github_token:
+                                            assessment_params["github_token"] = github_token
+                                            
+                                    elif dpia_source == "Local Files" and 'repo_path' in locals():
+                                        assessment_params["repo_path"] = repo_path
+                                        status_text.info(f"Step 1/5: Preparing to scan local repository: {repo_path}")
+                                    
+                                    progress_bar.progress(20)
+                                    
+                                    # Step 2: Perform assessment
+                                    status_text.info("Step 2/5: Running DPIA assessment...")
+                                    assessment_results = dpia_scanner.perform_assessment(**assessment_params)
+                                    progress_bar.progress(40)
+                                    
+                                    # Make sure we have valid results
+                                    if not assessment_results or 'scan_id' not in assessment_results:
+                                        st.error("Failed to generate assessment results. Please try again.")
+                                        if assessment_results:
+                                            st.json(assessment_results)
+                                        st.stop()
+                                    
+                                    # Step 3: Generate comprehensive report
+                                    status_text.info("Step 3/5: Generating comprehensive report...")
+                                    from services.report_generator import generate_dpia_report
+                                    report_data = generate_dpia_report(assessment_results)
+                                    
+                                    # Store results and make sure they're visible in the UI
+                                    scan_results = [report_data]
+                                    st.session_state.scan_results = scan_results 
+                                    st.session_state.current_scan_id = assessment_results['scan_id']
+                                    progress_bar.progress(60)
+                                    
+                                    # Step 4: Save results to database
+                                    status_text.info("Step 4/5: Saving results to database...")
+                                    from services.results_aggregator import ResultsAggregator
+                                    results_aggregator = ResultsAggregator()
+                                    results_aggregator.save_dpia_result(assessment_results)
+                                    progress_bar.progress(80)
+                                    
+                                    # Step 5: Generate PDF report
+                                    status_text.info("Step 5/5: Creating downloadable PDF report...")
+                                    import base64
+                                    from services.report_generator import generate_pdf_report
+                                    pdf_bytes = generate_pdf_report(
+                                        assessment_results,
+                                        include_details=True,
+                                        include_charts=True, 
+                                        include_metadata=True,
+                                        include_recommendations=True
+                                    )
+                                    
+                                    # Store the PDF in session state for later access
+                                    st.session_state.pdf_bytes = pdf_bytes
+                                    progress_bar.progress(100)
+                                    
+                                    # Let user know processing is complete
+                                    status_text.success("Processing complete! Showing your results below.")
+                                    
+                                    # Display Results in a well-structured, visually attractive way
+                                    st.markdown("""
+                                    <div style="margin-top: 30px; padding: 25px; border-radius: 12px; background: linear-gradient(135deg, #f9f9f9, #f0f4f9); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                                        <h2 style="color: #1E88E5; text-align: center; margin-bottom: 25px; font-weight: 600;">DPIA Assessment Results</h2>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Create a visually appealing risk summary
+                                    risk_level = assessment_results['overall_risk_level']
+                                    dpia_required = assessment_results['dpia_required']
+                                    
+                                    # Set colors based on risk level
+                                    if risk_level == "High":
+                                        risk_color = "#ef4444"  # Red
+                                        risk_bg = "#fee2e2"
+                                        risk_icon = "❗"  # Exclamation mark
+                                        risk_message = "High risk detected. Formal DPIA required before proceeding."
+                                    elif risk_level == "Medium":
+                                        risk_color = "#f97316"  # Orange
+                                        risk_bg = "#ffedd5"
+                                        risk_icon = "⚠️"  # Warning sign
+                                        risk_message = "Medium risk detected. Consider conducting a formal DPIA."
+                                    else:
+                                        risk_color = "#10b981"  # Green
+                                        risk_bg = "#d1fae5"
+                                        risk_icon = "✅"  # Check mark
+                                        risk_message = "Low risk detected. No formal DPIA required."
+                                    
+                                    # DPIA Required indicator
+                                    dpia_text = "Yes" if dpia_required else "No"
+                                    dpia_color = "#ef4444" if dpia_required else "#10b981"
+                                    dpia_bg = "#fee2e2" if dpia_required else "#d1fae5"
+                                    dpia_icon = "⚠️" if dpia_required else "✅"
+                                    
+                                    # Get file counts if available
+                                    file_count = assessment_results.get('file_count', 0)
+                                    finding_count = assessment_results.get('total_findings', 0)
+                                    
+                                    # Display risk summary in a nice grid with improved visuals and more information
+                                    st.markdown(f"""
+                                    <div style="background-color: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px;">
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px;">
+                                            <div style="background-color: {risk_bg}; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                                                <span style="font-size: 32px; margin-bottom: 10px; display: block;">{risk_icon}</span>
+                                                <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Overall Risk Level</h3>
+                                                <p style="font-size: 28px; font-weight: 600; color: {risk_color}; margin: 0 0 10px 0;">{risk_level}</p>
+                                                <p style="font-size: 13px; color: #64748b; margin: 0;">{risk_message}</p>
+                                            </div>
+                                        
+                                        <div style="background-color: {dpia_bg}; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                            <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">DPIA Required</h3>
+                                            <p style="font-size: 24px; font-weight: 600; color: {dpia_color}; margin: 0;">{dpia_text}</p>
+                                        </div>
+                                        
+                                        <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
+                                            <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">High Risk Items</h3>
+                                            <p style="font-size: 24px; font-weight: 600; color: #ef4444; margin: 0;">{assessment_results['high_risk_count']}</p>
+                                        </div>
+                                        
+                                        <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
+                                            <h3 style="margin: 0 0 10px 0; color: #64748b; font-size: 14px;">Medium Risk Items</h3>
+                                            <p style="font-size: 24px; font-weight: 600; color: #f97316; margin: 0;">{assessment_results['medium_risk_count']}</p>
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Display main findings
+                                    st.subheader("Key Findings")
+                                    
+                                    # Show key recommendations (top 3)
+                                    if 'recommendations' in assessment_results and assessment_results['recommendations']:
+                                        recommendations = assessment_results['recommendations'][:3]  # Top 3
+                                        
+                                        for i, rec in enumerate(recommendations):
+                                            category = rec.get('category', 'General')
+                                            severity = rec.get('severity', 'Unknown')
+                                            description = rec.get('description', 'No description provided')
+                                            
+                                            # Set color based on severity
+                                            if severity == "High":
+                                                severity_color = "#ef4444"  # Red
+                                            elif severity == "Medium":
+                                                severity_color = "#f97316"  # Orange
+                                            else:
+                                                severity_color = "#10b981"  # Green
+                                            
+                                            st.markdown(f"""
+                                            <div style="padding: 15px; margin-bottom: 10px; border-left: 4px solid {severity_color}; background-color: #f8fafc;">
+                                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                                    <span style="font-weight: 600; color: #334155;">{category}</span>
+                                                    <span style="color: {severity_color}; font-weight: 500;">{severity} Risk</span>
+                                                </div>
+                                                <p style="margin: 0; color: #475569;">{description}</p>
+                                            </div>
+                                            """, unsafe_allow_html=True)
+                                    
+                                    # Create download link with an attractive button
+                                    scan_id_short = assessment_results['scan_id'][:6]
+                                    b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                    
+                                    st.markdown(f"""
+                                    <div style="margin: 30px 0; text-align: center;">
+                                        <a href="data:application/pdf;base64,{b64_pdf}" 
+                                           download="DPIA_Assessment_Report_{scan_id_short}.pdf" 
+                                           style="display: inline-block; padding: 12px 24px; background-color: #2563eb; 
+                                                 color: white; text-decoration: none; border-radius: 6px; 
+                                                 font-weight: 500; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                                            <span style="display: flex; align-items: center; justify-content: center;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                </svg>
+                                                Download Complete DPIA Report PDF
+                                            </span>
+                                        </a>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Add navigation options
+                                    col1, col2 = st.columns(2)
+                                    
+                                    with col1:
+                                        if st.button("View in History", key="view_history_btn", use_container_width=True):
+                                            # Set selected navigation to history and rerun
+                                            st.session_state.selected_nav = _("history.title")
+                                            st.rerun()
+                                    
+                                    with col2:
+                                        if st.button("New Assessment", key="new_assessment_btn", use_container_width=True):
+                                            # Clear form and rerun
+                                            for key in list(st.session_state.keys()):
+                                                if key.startswith('dpia_question_'):
+                                                    del st.session_state[key]
+                                            st.rerun()
+                                    
+                            except Exception as e:
+                                st.error(f"Error processing DPIA assessment: {str(e)}")
+                                import traceback
+                                st.code(traceback.format_exc())
+                                
+                                # Give options to retry
+                                if st.button("Retry Assessment", key="retry_dpia"):
+                                    st.rerun()
+                                st.stop()
+                        
+                        # Skip the default scanner logic if we're still in the form
+                        st.stop()
+                    else:
+                        # Generic mock scanner for other types
+                        scanner_instance = {
+                            'scan_file': lambda file_path: {
+                                'pii_found': [
+                                    {'type': 'Demo PII', 'value': f'Sample in {os.path.basename(file_path)}', 'location': file_path, 'risk_level': 'Medium'}
+                                ],
+                                'file_path': file_path,
+                                'status': 'success',
+                                'scan_time': datetime.now().isoformat()
+                            }
+                        }
+                    
+                    # Scan each file with the appropriate scanner
+                    for i, file_path in enumerate(file_paths):
+                        progress = 0.5 + (i + 1) / (2 * len(file_paths))
+                        progress_bar.progress(progress)
+                        status_text.text(f"Scanning file {i+1}/{len(file_paths)}: {os.path.basename(file_path)}")
+                        
+                        try:
+                            # Call scan_file method on the appropriate scanner
+                            if isinstance(scanner_instance, dict):
+                                # For mock scanners
+                                result = scanner_instance['scan_file'](file_path)
+                            else:
+                                # For real scanner instances with method
+                                result = scanner_instance.scan_file(file_path)
+                                
+                            scan_results.append(result)
+                        except Exception as e:
+                            st.error(f"Error scanning {os.path.basename(file_path)}: {str(e)}")
+                
+                # Aggregate and save results
+                timestamp = datetime.now().isoformat()
+                
+                # Count PIIs by type and risk level
+                pii_types = {}
+                risk_levels = {"Low": 0, "Medium": 0, "High": 0}
+                total_pii_found = 0
+                high_risk_count = 0
+                medium_risk_count = 0 
+                low_risk_count = 0
+                
+                # Handle different formats based on scan type
+                if scan_type == _("scan.website") and len(scan_results) > 0:
+                    # Website scan has a different format - findings are directly in the result
+                    result = scan_results[0]  # Website scanner returns a single comprehensive result
+                    
+                    # Extract findings directly 
+                    if 'findings' in result:
+                        findings = result.get('findings', [])
+                        for finding in findings:
+                            pii_type = finding.get('type', 'Unknown')
+                            risk_level = finding.get('risk_level', 'Medium')
+                            
+                            # Update counts
+                            pii_types[pii_type] = pii_types.get(pii_type, 0) + 1
+                            risk_levels[risk_level] = risk_levels.get(risk_level, 0) + 1
+                            total_pii_found += 1
+                            
+                            if risk_level == "High":
+                                high_risk_count += 1
+                            elif risk_level == "Medium":
+                                medium_risk_count += 1
+                            elif risk_level == "Low":
+                                low_risk_count += 1
+                        
+                        # If result has pre-calculated counts, use those
+                        if all(key in result for key in ['total_pii_found', 'high_risk_count', 'medium_risk_count', 'low_risk_count']):
+                            # These might be more accurate as they include analyzed security issues
+                            total_pii_found = result.get('total_pii_found', total_pii_found)
+                            high_risk_count = result.get('high_risk_count', high_risk_count)
+                            medium_risk_count = result.get('medium_risk_count', medium_risk_count)
+                            low_risk_count = result.get('low_risk_count', low_risk_count)
+                            
+                            # Use pre-calculated risk levels if provided
+                            if 'risk_levels' in result:
+                                risk_levels = result.get('risk_levels', risk_levels)
+                            
+                            # Use pre-calculated PII types if provided
+                            if 'pii_types' in result:
+                                pii_types = result.get('pii_types', pii_types)
+                else:
+                    # Standard format for other scan types
+                    for result in scan_results:
+                        for pii_item in result.get('pii_found', []):
+                            pii_type = pii_item.get('type', 'Unknown')
+                            risk_level = pii_item.get('risk_level', 'Medium')
+                            
+                            pii_types[pii_type] = pii_types.get(pii_type, 0) + 1
+                            risk_levels[risk_level] = risk_levels.get(risk_level, 0) + 1
+                            total_pii_found += 1
+                            
+                            if risk_level == "High":
+                                high_risk_count += 1
+                            elif risk_level == "Medium":
+                                medium_risk_count += 1
+                            elif risk_level == "Low":
+                                low_risk_count += 1
+                
+                # Create aggregated scan result
+                aggregated_result = {
+                    'scan_id': scan_id,
+                    'username': st.session_state.username,
+                    'timestamp': timestamp,
+                    'scan_type': scan_type,
+                    'region': region,
+                    'file_count': len(file_paths),
+                    'total_pii_found': total_pii_found,
+                    'high_risk_count': high_risk_count,
+                    'pii_types': pii_types,
+                    'risk_levels': risk_levels,
+                    'detailed_results': scan_results
+                }
+                
+                # Save to database
+                results_aggregator.save_scan_result(aggregated_result)
+                
+                # Store in session state for immediate display
+                st.session_state.scan_results = aggregated_result
+                
+                # Clean up temp files
+                for file_path in file_paths:
+                    try:
+                        os.remove(file_path)
+                    except:
+                        pass
+                
+                try:
+                    os.rmdir(temp_dir)
+                except:
+                    pass
+                
+                # Show completion
+                progress_bar.progress(1.0)
+                status_text.text("Scan completed!")
+                
+                # Create a meaningful scan ID for display
+                scan_date = datetime.now().strftime('%Y%m%d')
+                display_scan_id = f"{scan_type[:3].upper()}-{scan_date}-{scan_id[:6]}"
+                
+                st.success(f"Scan completed successfully! Scan ID: {display_scan_id}")
+                
+                # Immediate scan results preview
+                st.markdown("---")
+                st.subheader("Immediate Scan Results Preview")
+                
+                # Create a container for the preview
+                preview_container = st.container()
+                
+                with preview_container:
+                    # Summary metrics
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Total PII Found", total_pii_found)
+                    col2.metric("High Risk Items", high_risk_count)
+                    col3.metric("Files Scanned", len(file_paths))
+                    
+                    # Calculate compliance score based on scan results
+                    scan_type_specific_weights = {
+                        _("scan.website"): {
+                            "privacy_policy": 0.25,
+                            "cookies_compliance": 0.20,
+                            "data_security": 0.25,
+                            "tracking_consent": 0.15,
+                            "data_minimization": 0.15
+                        },
+                        _("scan.code"): {
+                            "data_security": 0.30,
+                            "sensitive_data_handling": 0.30,
+                            "data_minimization": 0.20,
+                            "purpose_limitation": 0.10,
+                            "lawful_basis": 0.10
+                        }
+                    }
+                    
+                    # Get the weights for the current scan type, or use defaults
+                    weights = scan_type_specific_weights.get(scan_type, None)
+                    
+                    # Calculate the compliance score
+                    compliance_score_result = calculate_compliance_score(
+                        scan_results=aggregated_result,
+                        weights=weights
+                    )
+                    
+                    # Display the compliance score card
+                    st.markdown("### Compliance Score")
+                    display_compliance_score_card(
+                        compliance_score=compliance_score_result,
+                        show_details=True,
+                        animate=True,
+                        key_suffix=f"scan_{scan_id}"
+                    )
+                    
+                    # Risk Assessment
+                    st.markdown("### Risk Assessment")
+                    risk_level = "High" if high_risk_count > 10 else "Medium" if high_risk_count > 0 else "Low" if total_pii_found > 0 else "None"
+                    risk_color = "red" if risk_level == "High" else "orange" if risk_level == "Medium" else "green"
+                    
+                    st.markdown(f"**Overall Risk Level:** <span style='color:{risk_color};'>{risk_level}</span>", unsafe_allow_html=True)
+                    
+                    # Create horizontal bar chart for PII types
+                    if pii_types:
+                        st.markdown("### PII Types Detected")
+                        
+                        # Convert to DataFrame for visualization
+                        pii_df = pd.DataFrame(list(pii_types.items()), columns=['PII Type', 'Count'])
+                        pii_df = pii_df.sort_values('Count', ascending=False)
+                        
                         # Create a bar chart
                         fig = px.bar(pii_df, x='Count', y='PII Type', orientation='h', 
                                     color='Count', color_continuous_scale='blues')
