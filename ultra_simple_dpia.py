@@ -101,28 +101,35 @@ def run_ultra_simple_dpia():
     
     # Handle form submission
     if submit:
-        st.write("Debug: Form submitted")
-        st.write(f"Debug: Current answers: {st.session_state.ultra_simple_dpia_answers}")
+        # Store answers in session state before processing
+        st.session_state.ultra_simple_dpia_form_submitted = True
+        
+        # Store the answers to survive form resubmission
+        for category in assessment_categories:
+            if category in answers:
+                st.session_state.ultra_simple_dpia_answers[category] = answers[category]
+                
+        # Force a rerun to process in a clean UI state
+        st.rerun()
+    
+    # Process submission in a separate step (after rerun)
+    if 'ultra_simple_dpia_form_submitted' in st.session_state and st.session_state.ultra_simple_dpia_form_submitted:
+        # Clear the submission flag to prevent endless processing
+        del st.session_state.ultra_simple_dpia_form_submitted
         
         try:
-            # Process directly without rerun to avoid form state issues
-            
-            # Show processing message
-            with st.spinner("Processing DPIA assessment..."):
+            with st.spinner(_("scan.dpia_processing")):
                 # Prepare assessment parameters
                 assessment_params = {
                     "answers": st.session_state.ultra_simple_dpia_answers.copy(),
                     "language": st.session_state.get('language', 'en')
                 }
                 
-                st.write("Debug: About to run assessment")
                 # Perform assessment
                 assessment_results = scanner.perform_assessment(**assessment_params)
-                st.write("Debug: Assessment completed")
                 
                 # Generate report data
                 report_data = generate_dpia_report(assessment_results)
-                st.write("Debug: Report data generated")
                 
                 # Save results in session state
                 st.session_state.dpia_results = assessment_results
@@ -130,20 +137,15 @@ def run_ultra_simple_dpia():
                 
                 # Set flag so we know to display results
                 st.session_state.dpia_form_submitted = True
-                st.write("Debug: Results saved in session state")
+                
+            # Show results
+            if 'dpia_results' in st.session_state and 'dpia_report_data' in st.session_state:
+                show_dpia_results(
+                    st.session_state.dpia_results,
+                    st.session_state.dpia_report_data,
+                    scanner
+                )
             
-            st.success("Assessment completed successfully! Displaying results...")
-            # Add a slight delay before rerun to ensure state is saved
-            import time
-            time.sleep(1)
-            
-            # Show results directly instead of forcing a rerun
-            try:
-                st.write("Debug: Showing results directly")
-                show_dpia_results(assessment_results, report_data, scanner)
-            except Exception as display_error:
-                st.error(f"Error displaying results: {str(display_error)}")
-                st.exception(display_error)
         except Exception as e:
             st.error(f"Error processing DPIA assessment: {str(e)}")
             st.exception(e)
