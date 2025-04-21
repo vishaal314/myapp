@@ -2580,7 +2580,12 @@ else:
                                 os.makedirs(reports_dir, exist_ok=True)
                                 
                                 # Save the HTML report
-                                file_path = save_html_report(selected_scan, reports_dir)
+                                scan_to_generate = locals().get('selected_scan', st.session_state.get('current_scan_id', None))
+                                if scan_to_generate:
+                                    file_path = save_html_report(scan_to_generate, reports_dir)
+                                else:
+                                    st.error("No scan selected for generating report")
+                                    file_path = None
                                 
                                 # Success message
                                 st.success(f"HTML report saved. You can access it from the '{_('results.title')}' page.")
@@ -2898,7 +2903,12 @@ else:
                                 os.makedirs(reports_dir, exist_ok=True)
                                 
                                 # Save the HTML report
-                                file_path = save_html_report(selected_scan, reports_dir)
+                                scan_to_generate = locals().get('selected_scan', st.session_state.get('current_scan_id', None))
+                                if scan_to_generate:
+                                    file_path = save_html_report(scan_to_generate, reports_dir)
+                                else:
+                                    st.error("No scan selected for generating report")
+                                    file_path = None
                                 
                                 # Create download link
                                 st.success(_("dashboard.html_report_saved").format(file_path=file_path))
