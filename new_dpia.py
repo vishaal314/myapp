@@ -919,15 +919,34 @@ def run_dpia_assessment():
     
     # Submit button at the bottom
     st.markdown("---")
-    st.write("When you've completed all sections, submit your DPIA for assessment.")
+    st.markdown("<h2 style='text-align: center;'>Submit Your DPIA Assessment</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Click the button below to submit your completed assessment for analysis</p>", unsafe_allow_html=True)
     
-    submit_col1, submit_col2 = st.columns([3, 1])
+    # Create a more prominent submit button
+    st.markdown("""
+    <style>
+    div[data-testid="stButton"] > button {
+        background-color: #0e84b5;
+        color: white;
+        font-weight: bold;
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+        border-radius: 0.5rem;
+        margin: 1rem auto;
+        display: block;
+        width: 50%;
+    }
+    div[data-testid="stButton"] > button:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
-    with submit_col1:
-        st.write("Ready to process your DPIA assessment?")
+    submit_button = st.button("Submit DPIA Assessment", type="primary", key="submit_dpia_button")
     
-    with submit_col2:
-        submit_button = st.button("Submit Assessment", type="primary", use_container_width=True, key="submit_dpia_button")
+    # Info text under the button
+    st.markdown("<p style='text-align: center; font-style: italic; color: #666;'>All sections should be completed before submission</p>", unsafe_allow_html=True)
     
     if submit_button:
         try:

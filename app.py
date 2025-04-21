@@ -2437,15 +2437,30 @@ else:
                         # Import and run our redesigned DPIA form with comprehensive workflow
                         from new_dpia import run_dpia_assessment
                         
-                        # Hide the Start Scan button for DPIA
-                        if 'start_scan_button' in locals():
-                            st.markdown("""
-                            <style>
-                            div.stButton > button {
-                                display: none !important;
-                            }
-                            </style>
-                            """, unsafe_allow_html=True)
+                        # Hide the Start Scan button and Upload Files section for DPIA
+                        st.markdown("""
+                        <style>
+                        /* Hide the Start Scan button */
+                        div.stButton > button:contains("Start Scan") {
+                            display: none !important;
+                        }
+                        
+                        /* Hide the Upload Files section for DPIA */
+                        .main .block-container:has(h2:contains("Upload Files")) {
+                            display: none !important;
+                        }
+                        
+                        /* Hide the Upload Files header */
+                        .main .block-container h2:contains("Upload Files") {
+                            display: none !important;
+                        }
+                        
+                        /* Hide the horizontal line before the Upload Files section */
+                        .main .block-container h2:contains("Upload Files") + hr {
+                            display: none !important;
+                        }
+                        </style>
+                        """, unsafe_allow_html=True)
                         
                         # Run the DPIA form directly
                         run_dpia_assessment()
