@@ -2410,10 +2410,8 @@ else:
                         
                         # Stop normal flow to proceed with only the crash-resistant form
                         scan_running = False
-                        # Create a bar chart
-                        fig = px.bar(pii_df, x='Count', y='PII Type', orientation='h', 
-                                    color='Count', color_continuous_scale='blues')
-                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Removed problematic chart that was referencing undefined variable pii_df
                     
                     # Preview of findings
                     st.markdown("### Sample Findings")
