@@ -254,7 +254,8 @@ def run_dpia_assessment():
                     options=[0, 1, 3],
                     format_func=lambda x: options.get(x, "Unknown"),
                     index=list(options.keys()).index(step1[q_id]["value"]) if step1[q_id]["value"] in options else 0,
-                    label_visibility="collapsed"
+                    label_visibility="collapsed",
+                    key=f"step1_{q_id}_selectbox"
                 )
             
             # If answered Yes, provide notes field
@@ -375,7 +376,8 @@ def run_dpia_assessment():
                     label=f"Risk level for {q_id}",
                     options=list(risk_options.keys()),
                     format_func=lambda x: risk_options.get(x, "Unknown"),
-                    index=list(risk_options.keys()).index(step3[q_id]["value"]) if step3[q_id]["value"] in risk_options else 0
+                    index=list(risk_options.keys()).index(step3[q_id]["value"]) if step3[q_id]["value"] in risk_options else 0,
+                    key=f"step3_{q_id}_risk_level"
                 )
                 
                 # Color-coded risk level display
@@ -438,7 +440,8 @@ def run_dpia_assessment():
                     label="Likelihood",
                     options=list(likelihood_options.keys()),
                     format_func=lambda x: likelihood_options.get(x, "Unknown"),
-                    index=list(likelihood_options.keys()).index(step4[r_id]["likelihood"]) if step4[r_id]["likelihood"] in likelihood_options else 0
+                    index=list(likelihood_options.keys()).index(step4[r_id]["likelihood"]) if step4[r_id]["likelihood"] in likelihood_options else 0,
+                    key=f"step4_{r_id}_likelihood"
                 )
             
             # Impact assessment
@@ -448,7 +451,8 @@ def run_dpia_assessment():
                     label="Impact",
                     options=list(impact_options.keys()),
                     format_func=lambda x: impact_options.get(x, "Unknown"),
-                    index=list(impact_options.keys()).index(step4[r_id]["impact"]) if step4[r_id]["impact"] in impact_options else 0
+                    index=list(impact_options.keys()).index(step4[r_id]["impact"]) if step4[r_id]["impact"] in impact_options else 0,
+                    key=f"step4_{r_id}_impact"
                 )
             
             # Calculate overall risk value (simple multiplication of likelihood and impact)
@@ -623,7 +627,8 @@ def run_dpia_assessment():
         step6["decision"] = st.selectbox(
             "DPIA Decision",
             options=decision_options,
-            index=decision_options.index(step6["decision"]) if step6["decision"] in decision_options else 0
+            index=decision_options.index(step6["decision"]) if step6["decision"] in decision_options else 0,
+            key="step6_decision_selectbox"
         )
         
         # Decision rationale
@@ -681,7 +686,8 @@ def run_dpia_assessment():
         step6["authority_consultation"] = st.radio(
             "Is consultation with the supervisory authority required?",
             options=["No", "Yes"],
-            index=0 if step6["authority_consultation"] == "No" else 1
+            index=0 if step6["authority_consultation"] == "No" else 1,
+            key="step6_authority_consultation_radio"
         )
         
         if step6["authority_consultation"] == "Yes":
@@ -737,7 +743,8 @@ def run_dpia_assessment():
         step7["review_schedule"] = st.selectbox(
             "When will this DPIA be reviewed?",
             options=review_options,
-            index=review_options.index(step7["review_schedule"]) if step7["review_schedule"] in review_options else 1
+            index=review_options.index(step7["review_schedule"]) if step7["review_schedule"] in review_options else 1,
+            key="step7_review_schedule_selectbox"
         )
         
         # Next review date
