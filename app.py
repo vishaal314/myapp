@@ -2424,9 +2424,29 @@ else:
                     elif scan_type == _("scan.database"):
                         scanner_instance = DatabaseScanner(region=region)
                     elif scan_type == _("scan.dpia"):
-                        # Import and run the simple DPIA form that works reliably
-                        from simple_dpia import run_simple_dpia
-                        run_simple_dpia()
+                        # Offer both the standard and online versions
+                        st.markdown("""
+                        <div style="background-color: #fff8e1; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffa000;">
+                            <h3 style="color: #795548; margin-top: 0; margin-bottom: 10px;">DPIA Assessment Options</h3>
+                            <p style="margin: 0;">The standard DPIA form may experience issues during submission. 
+                            If you encounter problems, please use the Online DPIA Report option below.</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        dpia_method = st.radio(
+                            "Select DPIA Form Version:",
+                            ["Standard DPIA Form", "Online DPIA Report (Recommended)"],
+                            index=1  # Default to the recommended online version
+                        )
+                        
+                        if dpia_method == "Standard DPIA Form":
+                            # Import and run the simple DPIA form
+                            from simple_dpia import run_simple_dpia
+                            run_simple_dpia()
+                        else:
+                            # Import and run the standalone DPIA report tool
+                            from dpia_online_report import run_dpia_online_report
+                            run_dpia_online_report()
                         # Stop normal flow to let the ultra-simple form take over
                         scan_running = False
                         if dpia_source == _("scan.upload_files") and uploaded_files:
