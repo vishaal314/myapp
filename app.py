@@ -1879,31 +1879,8 @@ else:
                 
         elif scan_type == _("scan.dpia"):
             st.subheader("Data Protection Impact Assessment (DPIA)")
-            dpia_source = st.radio(
-                "Select Data Source",
-                [_("scan.upload_files"), "GitHub Repository", "Local Files"], 
-                key="dpia_source"
-            )
-            
-            if dpia_source == _("scan.upload_files"):
-                upload_help = "Upload documentation, data schemas, or other relevant files for DPIA assessment"
-                uploaded_files = st.file_uploader(
-                    "Upload Files for DPIA Assessment", 
-                    accept_multiple_files=True,
-                    type=["pdf", "doc", "docx", "txt", "csv", "json", "xml", "sql"],
-                    help=upload_help
-                )
-            elif dpia_source == "GitHub Repository":
-                github_repo = st.text_input("GitHub Repository URL", 
-                                          placeholder="https://github.com/username/repository")
-                github_branch = st.text_input("Branch (optional)", value="main")
-                github_token = st.text_input("GitHub Token (for private repositories)", type="password")
-                st.info("The DPIA assessment will scan the repository for PII and data processing patterns.")
-                uploaded_files = []
-            else:  # Local Files
-                repo_path = st.text_input("Path to local files or repository")
-                st.info("The DPIA assessment will scan the provided local path for PII and data processing patterns.")
-                uploaded_files = []
+            # The document upload is handled directly in the enhanced_dpia.py form
+            uploaded_files = []
                 
         elif scan_type == _("scan.soc2"):
             if log_source == _("scan.upload_files"):
@@ -1964,15 +1941,8 @@ else:
                 # For AI Model scans
                 proceed_with_scan = True
             elif scan_type == _("scan.dpia"):
-                # For DPIA scans
-                if dpia_source == _("scan.upload_files") and not uploaded_files:
-                    st.error("Please upload at least one file for DPIA assessment.")
-                elif dpia_source == "GitHub Repository" and not github_repo:
-                    st.error("Please enter a GitHub repository URL for DPIA assessment.")
-                elif dpia_source == "Local Files" and not repo_path:
-                    st.error("Please enter a local repository path for DPIA assessment.")
-                else:
-                    proceed_with_scan = True
+                # For DPIA scans - no validation needed as the form handles its own documents
+                proceed_with_scan = True
             elif scan_type == _("scan.manual") and not uploaded_files:
                 st.error("Please upload at least one file for manual scanning.")
             else:
@@ -2428,41 +2398,16 @@ else:
                         st.markdown("""
                         <div style="background-color: #fff8e1; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffa000;">
                             <h3 style="color: #795548; margin-top: 0; margin-bottom: 10px;">DPIA Assessment</h3>
-                            <p style="margin: 0;">This comprehensive manual DPIA form doesn't require selecting any repository. 
-                            You can fill in all required administrative information, upload relevant documents 
-                            for data extraction, and generate a complete privacy DPIA scan report based on your inputs.</p>
+                            <p style="margin: 0;">This comprehensive manual DPIA form allows you to fill in all required administrative information, 
+                            upload relevant documents for data extraction, and generate a complete privacy DPIA scan report based on your inputs.</p>
                         </div>
                         """, unsafe_allow_html=True)
                         
                         # Import and run only the enhanced comprehensive manual form
                         from enhanced_dpia import run_enhanced_dpia
                         run_enhanced_dpia()
-                        # Stop normal flow to let the ultra-simple form take over
+                        # Stop normal flow to proceed with only the enhanced form
                         scan_running = False
-                        if dpia_source == _("scan.upload_files") and uploaded_files:
-                            # Save files to temp directory
-                            file_paths = []
-                            st.write(f"Analyzing {len(uploaded_files)} uploaded file(s) for DPIA assessment.")
-                            
-                            # List the files that were uploaded
-                            st.write("Files being analyzed:")
-                            for file in uploaded_files:
-                                st.write(f"- {file.name}")
-                                # Save the file to the temp directory
-                                file_path = os.path.join(st.session_state.dpia_temp_dir, file.name)
-                                with open(file_path, "wb") as f:
-                                    f.write(file.getbuffer())
-                                file_paths.append(file_path)
-                            
-                            # Store file paths in session state for assessment
-                            st.session_state.dpia_file_paths = file_paths
-                        
-                        elif dpia_source == "GitHub Repository" and 'github_repo' in locals():
-                            st.write(f"Repository URL: {github_repo}")
-                            if 'github_branch' in locals() and github_branch:
-                                st.write(f"Branch: {github_branch}")
-                        elif dpia_source == "Local Files" and 'repo_path' in locals():
-                            st.write(f"Local repository path: {repo_path}")
                         
                         # Initialize DPIA scanner with current language
                         dpia_scanner = DPIAScanner(language=st.session_state.get('language', 'en'))
