@@ -680,10 +680,20 @@ def run_dpia_assessment():
         if "decision" not in step6:
             step6["decision"] = decision_options[0]
         
+        # Safely determine the index
+        try:
+            current_decision = step6["decision"]
+            if current_decision in decision_options:
+                index = decision_options.index(current_decision)
+            else:
+                index = 0
+        except (ValueError, KeyError, TypeError):
+            index = 0
+            
         step6["decision"] = st.selectbox(
             "DPIA Decision",
             options=decision_options,
-            index=decision_options.index(step6["decision"]) if step6["decision"] in decision_options else 0,
+            index=index,
             key="step6_decision_selectbox"
         )
         
@@ -803,10 +813,21 @@ def run_dpia_assessment():
             step7["review_schedule"] = "6 months"
         
         review_options = ["3 months", "6 months", "1 year", "2 years", "When significant changes occur"]
+        
+        # Safely determine the index
+        try:
+            current_value = step7["review_schedule"]
+            if current_value in review_options:
+                index = review_options.index(current_value)
+            else:
+                index = 1  # Default to "6 months"
+        except (ValueError, KeyError, TypeError):
+            index = 1
+        
         step7["review_schedule"] = st.selectbox(
             "When will this DPIA be reviewed?",
             options=review_options,
-            index=review_options.index(step7["review_schedule"]) if step7["review_schedule"] in review_options else 1,
+            index=index,
             key="step7_review_schedule_selectbox"
         )
         
