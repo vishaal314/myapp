@@ -54,16 +54,34 @@ class CertificateGenerator:
         except:
             logger.warning("Could not load custom fonts. Using default fonts instead.")
     
-    def is_fully_compliant(self, scan_results: Dict[str, Any]) -> bool:
+    def is_fully_compliant(self, scan_id_or_results) -> bool:
         """
         Check if scan results indicate full compliance (no issues found).
         
         Args:
-            scan_results: Dictionary containing scan results
+            scan_id_or_results: Either a scan ID string or a scan results dictionary
             
         Returns:
             True if no compliance issues were found, False otherwise
         """
+        # If scan_id_or_results is a string (scan ID), get the actual results
+        if isinstance(scan_id_or_results, str):
+            try:
+                from services.results_aggregator import ResultsAggregator
+                results_aggregator = ResultsAggregator()
+                scan_results = results_aggregator.get_scan_by_id(scan_id_or_results)
+                if not scan_results:
+                    return False
+            except Exception as e:
+                logger.error(f"Error loading scan results: {str(e)}")
+                return False
+        else:
+            scan_results = scan_id_or_results
+        
+        # Make sure we have a dictionary
+        if not isinstance(scan_results, dict):
+            return False
+            
         # Check if there are any findings that indicate non-compliance
         if 'findings' in scan_results:
             # If there are findings, check if any have medium or high risk

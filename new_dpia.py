@@ -597,9 +597,26 @@ def run_dpia_assessment():
                     )
                 
                 with col3:
+                    # Properly handle date values by checking the type
+                    deadline_value = step5[risk_id].get("deadline")
+                    if deadline_value:
+                        # If it's already a date object, use it directly
+                        if isinstance(deadline_value, (datetime.date, datetime.datetime)):
+                            date_value = deadline_value
+                        # If it's a string, parse it
+                        elif isinstance(deadline_value, str):
+                            try:
+                                date_value = datetime.datetime.strptime(deadline_value, "%Y-%m-%d").date()
+                            except ValueError:
+                                date_value = datetime.datetime.now().date()
+                        else:
+                            date_value = datetime.datetime.now().date()
+                    else:
+                        date_value = datetime.datetime.now().date()
+                        
                     step5[risk_id]["deadline"] = st.date_input(
                         label="Target Date",
-                        value=datetime.datetime.strptime(step5[risk_id].get("deadline", datetime.datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d") if step5[risk_id].get("deadline") else datetime.datetime.now(),
+                        value=date_value,
                         key=f"step5_{risk_id}_deadline"
                     )
                 
@@ -742,9 +759,26 @@ def run_dpia_assessment():
                 )
             
             with col3:
+                # Properly handle date values by checking the type
+                date_value = approver.get("date")
+                if date_value:
+                    # If it's already a date object, use it directly
+                    if isinstance(date_value, (datetime.date, datetime.datetime)):
+                        approver_date = date_value
+                    # If it's a string, parse it
+                    elif isinstance(date_value, str):
+                        try:
+                            approver_date = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
+                        except ValueError:
+                            approver_date = datetime.datetime.now().date()
+                    else:
+                        approver_date = datetime.datetime.now().date()
+                else:
+                    approver_date = datetime.datetime.now().date()
+                
                 approver["date"] = st.date_input(
                     f"Date {i+1}",
-                    value=datetime.datetime.strptime(approver.get("date", datetime.datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d"),
+                    value=approver_date,
                     key=f"step6_approver_{i}_date"
                 )
             
@@ -845,9 +879,26 @@ def run_dpia_assessment():
         if "next_review_date" not in step7:
             step7["next_review_date"] = (datetime.datetime.now() + datetime.timedelta(days=180)).strftime("%Y-%m-%d")
         
+        # Properly handle date values by checking the type
+        next_review_date = step7.get("next_review_date")
+        if next_review_date:
+            # If it's already a date object, use it directly
+            if isinstance(next_review_date, (datetime.date, datetime.datetime)):
+                review_date = next_review_date
+            # If it's a string, parse it
+            elif isinstance(next_review_date, str):
+                try:
+                    review_date = datetime.datetime.strptime(next_review_date, "%Y-%m-%d").date()
+                except ValueError:
+                    review_date = (datetime.datetime.now() + datetime.timedelta(days=180)).date()
+            else:
+                review_date = (datetime.datetime.now() + datetime.timedelta(days=180)).date()
+        else:
+            review_date = (datetime.datetime.now() + datetime.timedelta(days=180)).date()
+            
         step7["next_review_date"] = st.date_input(
             "Next Review Date",
-            value=datetime.datetime.strptime(step7.get("next_review_date", (datetime.datetime.now() + datetime.timedelta(days=180)).strftime("%Y-%m-%d")), "%Y-%m-%d"),
+            value=review_date,
             key="step7_next_review_date"
         )
         
