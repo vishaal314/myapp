@@ -1,0 +1,112 @@
+def run_ultra_simple_dpia():
+    """Run an ultra-simplified DPIA form focused on reliability."""
+    st.title(_("scan.dpia_assessment"))
+    
+    scanner = DPIAScanner(language=st.session_state.get('language', 'en'))
+    assessment_categories = scanner._get_assessment_categories()
+    
+    if 'ultra_simple_dpia_answers' not in st.session_state:
+        st.session_state.ultra_simple_dpia_answers = {}
+        for category in assessment_categories:
+            question_count = len(assessment_categories[category]['questions'])
+            st.session_state.ultra_simple_dpia_answers[category] = [0] * question_count
+            
+    st.info("📝 Due to form complexity, we're using a minimal version that works reliably.")
+    
+    answers = {}
+    
+    with st.form("ultra_simple_dpia_form"):
+        st.markdown("""
+        ## DPIA Assessment Instructions
+        
+        Please answer all questions in each category below. Select values using the dropdown menus:
+        - **No**: The statement doesn't apply to your processing activities
+        - **Partially**: The statement partially applies to your processing activities
+        - **Yes**: The statement fully applies to your processing activities
+        
+        Click the Submit button at the bottom when you've completed all questions.
+        """)
+        
+        tabs = st.tabs([assessment_categories[cat]['name'] for cat in assessment_categories])
+        
+        for i, category in enumerate(assessment_categories):
+            with tabs[i]:
+                st.markdown(f"### {assessment_categories[category]['name']}")
+                st.markdown(f"*{assessment_categories[category]['description']}*")
+                st.markdown("---")
+                
+                category_answers = []
+                for q_idx, question in enumerate(assessment_categories[category]['questions']):
+                    current_val = st.session_state.ultra_simple_dpia_answers[category][q_idx]
+                    key = f"ultra_simple_{category}_{q_idx}"
+                    options = ["No", "Partially", "Yes"]
+                    selected = st.selectbox(
+                        "Select answer:", 
+                        options,
+                        index=current_val,
+                        key=key
+                    )
+                    value = options.index(selected)
+                    st.session_state.ultra_simple_dpia_answers[category][q_idx] = value
+                    category_answers.append(value)
+                    st.markdown("---")
+                answers[category] = category_answers
+        
+        submit = st.form_submit_button("Submit DPIA Assessment", type="primary", use_container_width=True)
+
+    if submit:
+        # Validate that all questions are answered
+        incomplete = any(len(v) == 0 for v in answers.values())
+        if incomplete:
+            st.error("❌ Please complete all questions in each category before submitting.")
+            return
+        
+        st.session_state.ultra_simple_dpia_form_submitted = True
+        for category in assessment_categories:
+            if category in answers:
+                st.session_state.ultra_simple_dpia_answers[category] = answers[category]
+        st.rerun()
+
+    if 'ultra_simple_dpia_form_submitted' in st.session_state and st.session_state.ultra_simple_dpia_form_submitted:
+        del st.session_state.ultra_simple_dpia_form_submitted
+        try:
+            with st.spinner(_("scan.dpia_processing")):
+                assessment_params = {
+                    "answers": st.session_state.ultra_simple_dpia_answers.copy(),
+                    "language": st.session_state.get('language', 'en')
+                }
+                assessment_results = scanner.perform_assessment(**assessment_params)
+
+                # Ensure essential fields
+                assessment_results.setdefault("scan_id", str(uuid.uuid4()))
+                assessment_results.setdefault("timestamp", datetime.utcnow().isoformat())
+
+                report_data = generate_dpia_report(assessment_results)
+
+                st.session_state.dpia_results = assessment_results
+                st.session_state.dpia_report_data = report_data
+                st.session_state.dpia_form_submitted = True
+
+            show_dpia_results(
+                st.session_state.dpia_results,
+                st.session_state.dpia_report_data,
+                scanner
+            )
+        
+        except Exception as e:
+            st.error(f"Error processing DPIA assessment: {str(e)}")
+            st.exception(e)
+
+    elif 'dpia_form_submitted' in st.session_state and st.session_state.dpia_form_submitted:
+        try:
+            show_dpia_results(
+                st.session_state.dpia_results,
+                st.session_state.dpia_report_data,
+                scanner
+            )
+        except Exception as e:
+            st.error(f"Error displaying DPIA results: {str(e)}")
+            if st.button("Retry Assessment", type="primary"):
+                for key in ['dpia_form_submitted', 'dpia_results', 'dpia_report_data']:
+                    st.session_state.pop(key, None)
+                st.rerun()
