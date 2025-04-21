@@ -10,20 +10,41 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Any
 import traceback
+import json
 
 # Import scanner and report functions with clear naming to avoid conflicts
 from services.dpia_scanner import DPIAScanner, generate_dpia_report
 from services.report_generator import generate_report as generate_pdf_report
 from utils.i18n import get_text, _
 
+# Enable tracing for easier debugging
+st.set_option('client.showErrorDetails', True)
+
 def run_simple_dpia():
     """Run a very simple DPIA form with minimal complexity."""
     
     st.title("DPIA Assessment")
     
-    # Initialize the scanner
-    scanner = DPIAScanner(language='en')  # Force English for now to simplify
-    assessment_categories = scanner._get_assessment_categories()
+    # Debug current session state
+    if st.checkbox("Debug: Show Session State", value=False, key="debug_show_session"):
+        st.write(dict((k, v) for k, v in st.session_state.items() if not k.startswith('_')))
+    
+    # Clear all storage if requested (development only)
+    if st.checkbox("Debug: Reset Form", value=False, key="debug_reset_form"):
+        for key in list(st.session_state.keys()):
+            if key.startswith('simple_dpia') or key in ['assessment_results', 'report_data', 'display_results']:
+                del st.session_state[key]
+        st.success("Form state reset")
+        st.rerun()
+    
+    # Initialize the scanner with minimal error handling
+    try:
+        scanner = DPIAScanner(language='en')  # Force English for now to simplify
+        assessment_categories = scanner._get_assessment_categories()
+    except Exception as e:
+        st.error(f"Error initializing DPIA scanner: {str(e)}")
+        st.code(traceback.format_exc())
+        return
     
     # Initialize answers in session state if needed
     if 'simple_dpia_answers' not in st.session_state:
@@ -33,27 +54,32 @@ def run_simple_dpia():
             st.session_state.simple_dpia_answers[category] = [0] * question_count
     
     # Show instructions
-    st.info("This is a simplified DPIA assessment form. Please answer all questions.")
+    st.info("This is a simplified DPIA assessment form. Please answer all questions and click Submit.")
     
     # Check if we should show results (if we have them)
-    if 'display_results' in st.session_state and st.session_state.display_results:
-        # Display the results
-        display_assessment_results(
-            st.session_state.assessment_results,
-            st.session_state.report_data,
-            scanner
-        )
-        
-        # Add button to start a new assessment
-        if st.button("Start New Assessment", type="primary"):
-            # Clear all assessment-related state
-            for key in ['simple_dpia_answers', 'assessment_results', 'report_data', 'display_results']:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.rerun()
-        
-        # Exit here to avoid showing the form
-        return
+    if 'display_results' in st.session_state and st.session_state.display_results and 'assessment_results' in st.session_state:
+        try:
+            # Display the results
+            display_assessment_results(
+                st.session_state.assessment_results,
+                st.session_state.report_data,
+                scanner
+            )
+            
+            # Add button to start a new assessment
+            if st.button("Start New Assessment", type="primary"):
+                # Clear all assessment-related state
+                for key in ['simple_dpia_answers', 'assessment_results', 'report_data', 'display_results']:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.rerun()
+            
+            # Exit here to avoid showing the form
+            return
+        except Exception as e:
+            st.error(f"Error displaying results: {str(e)}")
+            st.exception(e)
+            # If there's an error showing results, continue to the form
     
     # Show the assessment form
     st.subheader("Assessment Questions")
@@ -98,33 +124,93 @@ def run_simple_dpia():
         # Process the assessment
         with st.spinner("Processing assessment..."):
             try:
-                # Get answers from session state
-                answers = st.session_state.simple_dpia_answers.copy()
+                # Get answers from session state - make a deep copy to avoid reference issues
+                answers = {}
+                for category, values in st.session_state.simple_dpia_answers.items():
+                    answers[category] = list(values)
                 
                 # Show what we're submitting
                 st.write("Processing the following answers:")
-                st.json(answers)
+                st.write(f"**Answer structure:** {json.dumps(answers, indent=2)}")
                 
-                # Perform the assessment
+                # First, generate our own result to verify the calculation works
+                st.write("Calculating scores...")
+                
+                # Calculate scores for each category
+                total_score = 0
+                high_risk_count = 0
+                medium_risk_count = 0
+                low_risk_count = 0
+                total_questions = 0
+                category_scores = {}
+                
+                for category, answer_values in answers.items():
+                    category_score = sum(answer_values)
+                    max_possible = len(answer_values) * 2
+                    percentage = (category_score / max_possible) * 10
+                    
+                    if percentage >= 7:
+                        risk_level = "High"
+                        high_risk_count += 1
+                    elif percentage >= 4:
+                        risk_level = "Medium"
+                        medium_risk_count += 1
+                    else:
+                        risk_level = "Low"
+                        low_risk_count += 1
+                    
+                    category_scores[category] = {
+                        "score": category_score,
+                        "max_possible": max_possible,
+                        "percentage": percentage,
+                        "risk_level": risk_level
+                    }
+                    
+                    total_score += category_score
+                    total_questions += len(answer_values)
+                
+                # Calculate overall risk score
+                max_total = total_questions * 2
+                overall_percentage = (total_score / max_total) * 10 if max_total > 0 else 0
+                
+                if overall_percentage >= 7:
+                    overall_risk = "High"
+                elif overall_percentage >= 4:
+                    overall_risk = "Medium"
+                else:
+                    overall_risk = "Low"
+                
+                st.write(f"Our calculation - Overall Risk: {overall_risk}, Score: {overall_percentage:.1f}/10")
+                
+                # NOW perform the actual assessment with the scanner
+                st.write("Calling official scanner...")
                 assessment_results = scanner.perform_assessment(answers=answers)
                 
                 # Make sure we have essential fields
+                scan_id = str(uuid.uuid4())
+                timestamp = datetime.now().isoformat()
+                
                 if 'scan_id' not in assessment_results:
-                    assessment_results['scan_id'] = str(uuid.uuid4())
+                    assessment_results['scan_id'] = scan_id
                 if 'timestamp' not in assessment_results:
-                    assessment_results['timestamp'] = datetime.now().isoformat()
+                    assessment_results['timestamp'] = timestamp
+                
+                st.write(f"Scanner result - Overall Risk: {assessment_results['overall_risk_level']}, Score: {assessment_results['overall_percentage']:.1f}/10")
                 
                 # Generate report data
+                st.write("Generating report data...")
                 report_data = generate_dpia_report(assessment_results)
                 
                 # Store results in session state
+                st.write("Saving results to session state...")
                 st.session_state.assessment_results = assessment_results
                 st.session_state.report_data = report_data
                 st.session_state.display_results = True
                 
                 # Show success message and rerun to display results
-                st.success("Assessment completed successfully!")
-                st.rerun()
+                st.success("Assessment completed successfully! Click Continue to view results.")
+                if st.button("Continue to Results", type="primary"):
+                    st.rerun()
                 
             except Exception as e:
                 st.error(f"Error performing assessment: {str(e)}")
