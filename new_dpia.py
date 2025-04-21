@@ -642,7 +642,8 @@ def run_dpia_assessment():
             "Decision Rationale",
             value=step6.get("rationale", ""),
             placeholder="Explain the reasoning behind this decision...",
-            height=150
+            height=150,
+            key="step6_rationale"
         )
         
         # Approvers section
@@ -707,7 +708,8 @@ def run_dpia_assessment():
                 "Consultation Details",
                 value=step6.get("authority_details", ""),
                 placeholder="Provide details about the consultation process...",
-                height=150
+                height=150,
+                key="step6_authority_details"
             )
         
         # Update session state
@@ -728,7 +730,8 @@ def run_dpia_assessment():
             "How will DPIA findings be integrated into the project timeline?",
             value=step7.get("timeline_integration", ""),
             placeholder="Describe integration with key project milestones...",
-            height=150
+            height=150,
+            key="step7_timeline_integration"
         )
         
         # Responsible parties
@@ -739,7 +742,8 @@ def run_dpia_assessment():
             "Who is responsible for implementing DPIA recommendations?",
             value=step7.get("responsible_parties", ""),
             placeholder="List roles and responsibilities...",
-            height=150
+            height=150,
+            key="step7_responsible_parties"
         )
         
         # Review schedule
@@ -774,7 +778,8 @@ def run_dpia_assessment():
             "Lessons Learned from DPIA Process",
             value=step7.get("lessons_learned", ""),
             placeholder="Note any lessons from conducting this DPIA that could improve future assessments...",
-            height=150
+            height=150,
+            key="step7_lessons_learned"
         )
         
         # Update session state
