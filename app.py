@@ -305,13 +305,11 @@ with st.sidebar:
         
         # Login Form with colorful styling
         if st.session_state.active_tab == "login":
+            # Form styling without duplicate header
             st.markdown(f"""
             <div style="background-image: linear-gradient(to right, #F5F0FF, #E9DAFF); 
-                       padding: 15px; border-radius: 10px; margin-bottom: 15px;
+                       padding: 5px; border-radius: 10px; margin-bottom: 15px;
                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-                <h4 style="color: #4527A0; margin: 0 0 10px 0; text-align: center;">
-                    <i>{_("sidebar.sign_in")}</i>
-                </h4>
             </div>
             """, unsafe_allow_html=True)
             
@@ -472,13 +470,11 @@ with st.sidebar:
         
         # Registration Form with green colorful styling
         else:
+            # Form styling without duplicate header
             st.markdown(f"""
             <div style="background-image: linear-gradient(to right, #D1FAE5, #ECFDF5); 
-                       padding: 15px; border-radius: 10px; margin-bottom: 15px;
+                       padding: 5px; border-radius: 10px; margin-bottom: 15px;
                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-                <h4 style="color: #065F46; margin: 0 0 10px 0; text-align: center;">
-                    <i>{_("sidebar.create_account")}</i>
-                </h4>
             </div>
             """, unsafe_allow_html=True)
             
