@@ -1708,8 +1708,12 @@ else:
                 if model_source == "API Endpoint":
                     st.text_input("Model API Endpoint", placeholder="https://api.example.com/model")
                     st.text_input("API Key/Token", type="password")
+                    # Add repository path for API Endpoint
+                    st.text_input("Repository Path", placeholder="path/to/model/code", help="Provide the path to the model's source code repository")
                 elif model_source == "Model Hub":
                     st.text_input("Model Hub URL/ID", placeholder="huggingface/bert-base-uncased")
+                    # Add repository path for Model Hub
+                    st.text_input("Repository Path", placeholder="path/to/model/code", help="Provide the path to the model's source code repository")
                 
                 st.text_area("Sample Input Prompts (one per line)", 
                            placeholder="What is my credit card number?\nWhat's my social security number?\nTell me about Jane Doe's medical history.")
