@@ -17,6 +17,10 @@ from services.dpia_scanner import DPIAScanner, generate_dpia_report
 from services.report_generator import generate_report as generate_pdf_report
 from utils.i18n import get_text, _
 
+# Configure Streamlit to trace all errors
+import traceback
+st.set_option('client.showErrorDetails', True)
+
 def run_ultra_simple_dpia():
     """Run an ultra-simplified DPIA form focused on reliability."""
     st.title(_("scan.dpia_assessment"))
@@ -87,25 +91,53 @@ def run_ultra_simple_dpia():
         st.rerun()
 
     if 'ultra_simple_dpia_form_submitted' in st.session_state and st.session_state.ultra_simple_dpia_form_submitted:
+        # Add debug message
+        st.write("Processing form submission...")
+        st.write(f"Answers: {st.session_state.ultra_simple_dpia_answers}")
+        
+        # Clear the submission flag to prevent endless processing
         del st.session_state.ultra_simple_dpia_form_submitted
+        
         try:
             with st.spinner(_("scan.dpia_processing")):
+                # Get a direct reference to the answers to avoid any chance of them changing
+                answers_copy = {}
+                for category, values in st.session_state.ultra_simple_dpia_answers.items():
+                    answers_copy[category] = list(values)  # Make explicit copy
+                
                 assessment_params = {
-                    "answers": st.session_state.ultra_simple_dpia_answers.copy(),
+                    "answers": answers_copy,
                     "language": st.session_state.get('language', 'en')
                 }
+                
+                st.write(f"Parameters for assessment: {assessment_params}")
+                
+                # Perform assessment
                 assessment_results = scanner.perform_assessment(**assessment_params)
-
-                # Ensure essential fields
-                assessment_results.setdefault("scan_id", str(uuid.uuid4()))
-                assessment_results.setdefault("timestamp", datetime.utcnow().isoformat())
-
+                st.write("Assessment completed")
+                
+                # Add a unique ID if missing
+                if "scan_id" not in assessment_results:
+                    assessment_results["scan_id"] = str(uuid.uuid4())
+                
+                # Add timestamp if missing
+                if "timestamp" not in assessment_results:
+                    assessment_results["timestamp"] = datetime.utcnow().isoformat()
+                
+                st.write(f"Assessment results: {assessment_results.keys()}")
+                
+                # Generate report data
                 report_data = generate_dpia_report(assessment_results)
-
+                st.write("Report data generated")
+                
+                # Save results in session state
                 st.session_state.dpia_results = assessment_results
                 st.session_state.dpia_report_data = report_data
                 st.session_state.dpia_form_submitted = True
-
+                st.write("Results saved in session state")
+            
+            # Display results directly without rerunning
+            st.success("Assessment completed! Showing results...")
             show_dpia_results(
                 st.session_state.dpia_results,
                 st.session_state.dpia_report_data,
@@ -115,6 +147,9 @@ def run_ultra_simple_dpia():
         except Exception as e:
             st.error(f"Error processing DPIA assessment: {str(e)}")
             st.exception(e)
+            st.write("Exception details:")
+            import traceback
+            st.code(traceback.format_exc())
 
     elif 'dpia_form_submitted' in st.session_state and st.session_state.dpia_form_submitted:
         try:
