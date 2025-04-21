@@ -534,13 +534,15 @@ def run_dpia_assessment():
                     step5[risk_id]["owner"] = st.text_input(
                         label="Responsible Party",
                         value=step5[risk_id].get("owner", ""),
-                        placeholder="e.g., IT Security"
+                        placeholder="e.g., IT Security",
+                        key=f"step5_{risk_id}_owner"
                     )
                 
                 with col3:
                     step5[risk_id]["deadline"] = st.date_input(
                         label="Target Date",
-                        value=datetime.datetime.strptime(step5[risk_id].get("deadline", datetime.datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d") if step5[risk_id].get("deadline") else datetime.datetime.now()
+                        value=datetime.datetime.strptime(step5[risk_id].get("deadline", datetime.datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d") if step5[risk_id].get("deadline") else datetime.datetime.now(),
+                        key=f"step5_{risk_id}_deadline"
                     )
                 
                 # Assess measure effectiveness
@@ -684,7 +686,7 @@ def run_dpia_assessment():
                     st.rerun()
         
         # Add more approvers
-        if st.button("Add Another Approver"):
+        if st.button("Add Another Approver", key="step6_add_approver_button"):
             step6["approvers"].append({"name": "", "role": "", "date": datetime.datetime.now().strftime("%Y-%m-%d")})
         
         # Consultation with supervisory authority required?
@@ -795,7 +797,7 @@ def run_dpia_assessment():
         st.write("Ready to process your DPIA assessment?")
     
     with submit_col2:
-        submit_button = st.button("Submit Assessment", type="primary", use_container_width=True)
+        submit_button = st.button("Submit Assessment", type="primary", use_container_width=True, key="submit_dpia_button")
     
     if submit_button:
         try:
