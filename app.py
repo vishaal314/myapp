@@ -2404,14 +2404,12 @@ else:
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Import and run our new crash-resistant DPIA form
-                        from crash_resistant_dpia import run_crash_resistant_dpia
-                        run_crash_resistant_dpia()
+                        # Import and run our redesigned DPIA form with comprehensive workflow
+                        from new_dpia import run_dpia_assessment
+                        run_dpia_assessment()
                         
-                        # Stop normal flow to proceed with only the crash-resistant form
+                        # Stop normal flow to proceed with only the new DPIA form
                         scan_running = False
-                        
-                        # Removed problematic chart that was referencing undefined variable pii_df
                     
                     # Preview of findings
                     st.markdown("### Sample Findings")
