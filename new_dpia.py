@@ -249,11 +249,23 @@ def run_dpia_assessment():
                 st.write(question["text"])
             with col2:
                 options = {0: "No", 1: "Unknown", 3: "Yes"}  # Using risk values (0=Low, 1=Medium, 3=High)
+                option_values = [0, 1, 3]
+                
+                # Safely determine the index
+                try:
+                    current_value = step1[q_id]["value"]
+                    if current_value in option_values:
+                        index = option_values.index(current_value)
+                    else:
+                        index = 0
+                except (ValueError, KeyError, TypeError):
+                    index = 0
+                
                 step1[q_id]["value"] = st.selectbox(
                     label=f"Answer for {q_id}",
-                    options=[0, 1, 3],
+                    options=option_values,
                     format_func=lambda x: options.get(x, "Unknown"),
-                    index=list(options.keys()).index(step1[q_id]["value"]) if step1[q_id]["value"] in options else 0,
+                    index=index,
                     label_visibility="collapsed",
                     key=f"step1_{q_id}_selectbox"
                 )
@@ -374,11 +386,23 @@ def run_dpia_assessment():
                 )
             
             with col2:
+                option_values = list(risk_options.keys())
+                
+                # Safely determine the index
+                try:
+                    current_value = step3[q_id]["value"]
+                    if current_value in option_values:
+                        index = option_values.index(current_value)
+                    else:
+                        index = 0
+                except (ValueError, KeyError, TypeError):
+                    index = 0
+                
                 step3[q_id]["value"] = st.selectbox(
                     label=f"Risk level for {q_id}",
-                    options=list(risk_options.keys()),
+                    options=option_values,
                     format_func=lambda x: risk_options.get(x, "Unknown"),
-                    index=list(risk_options.keys()).index(step3[q_id]["value"]) if step3[q_id]["value"] in risk_options else 0,
+                    index=index,
                     key=f"step3_{q_id}_risk_level"
                 )
                 
@@ -439,22 +463,46 @@ def run_dpia_assessment():
             # Likelihood assessment
             with col2:
                 likelihood_options = {0: "Unlikely", 1: "Possible", 2: "Likely", 3: "Very Likely"}
+                option_values = list(likelihood_options.keys())
+                
+                # Safely determine the index
+                try:
+                    current_value = step4[r_id]["likelihood"]
+                    if current_value in option_values:
+                        index = option_values.index(current_value)
+                    else:
+                        index = 0
+                except (ValueError, KeyError, TypeError):
+                    index = 0
+                
                 step4[r_id]["likelihood"] = st.selectbox(
                     label="Likelihood",
-                    options=list(likelihood_options.keys()),
+                    options=option_values,
                     format_func=lambda x: likelihood_options.get(x, "Unknown"),
-                    index=list(likelihood_options.keys()).index(step4[r_id]["likelihood"]) if step4[r_id]["likelihood"] in likelihood_options else 0,
+                    index=index,
                     key=f"step4_{r_id}_likelihood"
                 )
             
             # Impact assessment
             with col3:
                 impact_options = {0: "Minimal", 1: "Moderate", 2: "Significant", 3: "Severe"}
+                option_values = list(impact_options.keys())
+                
+                # Safely determine the index
+                try:
+                    current_value = step4[r_id]["impact"]
+                    if current_value in option_values:
+                        index = option_values.index(current_value)
+                    else:
+                        index = 0
+                except (ValueError, KeyError, TypeError):
+                    index = 0
+                
                 step4[r_id]["impact"] = st.selectbox(
                     label="Impact",
-                    options=list(impact_options.keys()),
+                    options=option_values,
                     format_func=lambda x: impact_options.get(x, "Unknown"),
-                    index=list(impact_options.keys()).index(step4[r_id]["impact"]) if step4[r_id]["impact"] in impact_options else 0,
+                    index=index,
                     key=f"step4_{r_id}_impact"
                 )
             
