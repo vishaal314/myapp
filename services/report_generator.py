@@ -492,8 +492,8 @@ def generate_report(scan_data: Dict[str, Any],
                    include_metadata: bool = True,
                    include_recommendations: bool = True) -> bytes:
     """
-    Legacy function for backward compatibility. 
     Generate a PDF report for a scan result.
+    Auto-detects scan type and uses appropriate report format.
     
     Args:
         scan_data: The scan result data
@@ -505,13 +505,22 @@ def generate_report(scan_data: Dict[str, Any],
     Returns:
         The PDF report as bytes
     """
+    # Get scan type to determine report format
+    scan_type = scan_data.get('scan_type', 'Unknown')
+    
+    # Use appropriate report format based on scan type
+    if 'ai_model' in scan_type.lower():
+        report_format = "ai_model"
+    else:
+        report_format = "standard"
+    
     return _generate_report_internal(
         scan_data=scan_data,
         include_details=include_details,
         include_charts=include_charts,
         include_metadata=include_metadata,
         include_recommendations=include_recommendations,
-        report_format="standard"
+        report_format=report_format
     )
 
 def _generate_report_internal(scan_data: Dict[str, Any], 
