@@ -100,6 +100,9 @@ def run_ultra_simple_dpia():
     
     # Handle form submission
     if submit:
+        st.write("Debug: Form submitted")
+        st.write(f"Debug: Current answers: {st.session_state.ultra_simple_dpia_answers}")
+        
         try:
             # Process directly without rerun to avoid form state issues
             
@@ -111,11 +114,14 @@ def run_ultra_simple_dpia():
                     "language": st.session_state.get('language', 'en')
                 }
                 
+                st.write("Debug: About to run assessment")
                 # Perform assessment
                 assessment_results = scanner.perform_assessment(**assessment_params)
+                st.write("Debug: Assessment completed")
                 
                 # Generate report data
                 report_data = generate_dpia_report(assessment_results)
+                st.write("Debug: Report data generated")
                 
                 # Save results in session state
                 st.session_state.dpia_results = assessment_results
@@ -123,9 +129,20 @@ def run_ultra_simple_dpia():
                 
                 # Set flag so we know to display results
                 st.session_state.dpia_form_submitted = True
+                st.write("Debug: Results saved in session state")
             
-            # Force a rerun to display results properly
-            st.rerun()
+            st.success("Assessment completed successfully! Displaying results...")
+            # Add a slight delay before rerun to ensure state is saved
+            import time
+            time.sleep(1)
+            
+            # Show results directly instead of forcing a rerun
+            try:
+                st.write("Debug: Showing results directly")
+                show_dpia_results(assessment_results, report_data, scanner)
+            except Exception as display_error:
+                st.error(f"Error displaying results: {str(display_error)}")
+                st.exception(display_error)
         except Exception as e:
             st.error(f"Error processing DPIA assessment: {str(e)}")
             st.exception(e)
