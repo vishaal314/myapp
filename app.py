@@ -2424,22 +2424,27 @@ else:
                     elif scan_type == _("scan.database"):
                         scanner_instance = DatabaseScanner(region=region)
                     elif scan_type == _("scan.dpia"):
-                        # Offer all DPIA form options with emphasis on the Static version
+                        # Offer all DPIA form options with emphasis on the Enhanced Manual version
                         st.markdown("""
                         <div style="background-color: #fff8e1; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffa000;">
                             <h3 style="color: #795548; margin-top: 0; margin-bottom: 10px;">DPIA Assessment Options</h3>
-                            <p style="margin: 0;">The standard DPIA form may experience issues during submission. 
-                            We recommend using the new <strong>Static DPIA Form</strong> option for maximum reliability.</p>
+                            <p style="margin: 0;">We now offer a <strong>comprehensive manual DPIA</strong> form that doesn't require selecting any repository. 
+                            This enhanced form allows you to fill in all required administrative information, upload relevant documents 
+                            for data extraction, and generate a complete privacy DPIA scan report based on your inputs.</p>
                         </div>
                         """, unsafe_allow_html=True)
                         
                         dpia_method = st.radio(
                             "Select DPIA Form Version:",
-                            ["Static DPIA Form (Most Reliable)", "Standard DPIA Form", "Online DPIA Report"],
-                            index=0  # Default to the recommended static version
+                            ["Enhanced Manual DPIA (Recommended)", "Static DPIA Form", "Standard DPIA Form", "Online DPIA Report"],
+                            index=0  # Default to the recommended enhanced version
                         )
                         
-                        if dpia_method == "Static DPIA Form (Most Reliable)":
+                        if dpia_method == "Enhanced Manual DPIA (Recommended)":
+                            # Import and run the enhanced comprehensive manual form
+                            from enhanced_dpia import run_enhanced_dpia
+                            run_enhanced_dpia()
+                        elif dpia_method == "Static DPIA Form":
                             # Import and run the completely static form
                             from static_dpia import run_static_dpia
                             run_static_dpia()
