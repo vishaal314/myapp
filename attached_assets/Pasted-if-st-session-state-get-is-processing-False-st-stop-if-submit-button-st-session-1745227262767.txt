@@ -1,0 +1,72 @@
+if st.session_state.get("is_processing", False):
+    st.stop()
+
+if submit_button:
+    st.session_state.is_processing = True
+    try:
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+
+        # Process and sanitize answers
+        answers = {}
+        for category, values in st.session_state.answers.items():
+            try:
+                answers[category] = [
+                    int(v) if isinstance(v, int) and 0 <= v <= 2 else 0
+                    for v in values
+                ]
+            except Exception as e:
+                st.warning(f"Invalid input in category '{category}': {e}")
+                answers[category] = [0] * len(values)
+
+        progress_bar.progress(10)
+        status_text.text("Performing Assessment...")
+
+        report_data = scanner.perform_assessment(answers)
+
+        progress_bar.progress(40)
+        status_text.text("Saving assessment to database...")
+        db.save_assessment(company_name, report_data)
+
+        progress_bar.progress(60)
+        status_text.text("Generating report...")
+
+        dpia_report = generate_dpia_report(company_name, report_data)
+        progress_bar.progress(80)
+        status_text.text("Generating PDF file...")
+
+        try:
+            pdf_data = generate_pdf_report(report_data)
+        except MemoryError:
+            st.error("PDF generation failed due to memory limits.")
+            return
+        except Exception as e:
+            st.error(f"PDF generation error: {e}")
+            st.code(traceback.format_exc())
+            return
+
+        st.success("Assessment and Report generated successfully!")
+        st.download_button(
+            label="📄 Download DPIA PDF Report",
+            data=pdf_data,
+            file_name=f"DPIA_Report_{company_name}.pdf",
+            mime="application/pdf"
+        )
+
+        st.write("---")
+        st.subheader("Your DPIA Report:")
+        st.markdown(dpia_report)
+
+        progress_bar.progress(100)
+        status_text.text("Done!")
+
+    except Exception as e:
+        st.error("Error during submission:")
+        st.code(traceback.format_exc())
+
+        if st.button("Try Again", type="primary"):
+            if not st.session_state.get("is_processing", False):
+                st.rerun()
+
+    finally:
+        st.session_state.is_processing = False

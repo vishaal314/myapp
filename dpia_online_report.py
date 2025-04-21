@@ -169,20 +169,23 @@ def run_dpia_online_report():
     st.subheader("Submit Assessment")
     st.markdown("Click the button below to process your assessment and generate a report.")
     
-    # Prevent double-clicking issues by tracking submission state
-    if 'is_processing' not in st.session_state:
-        st.session_state.is_processing = False
-        
-    # Add a submit button with disabled state during processing
+    # Early termination if already processing - this is critical
+    if st.session_state.get("is_processing", False):
+        st.warning("Assessment is already being processed. Please wait...")
+        st.stop()
+
+    # Add a submit button
     submit_button = st.button("Process & Generate Report", 
                              type="primary", 
-                             use_container_width=True,
-                             disabled=st.session_state.is_processing)
+                             use_container_width=True)
     
     if submit_button:
+        # Immediately mark as processing before doing anything else
         st.session_state.is_processing = True
+        st.rerun()  # Force a rerun to ensure processing state is respected
         
-        # Create a progress bar and status display for better user feedback
+    # Create a progress bar and status display if processing
+    if st.session_state.get("is_processing", False):
         progress_bar = st.progress(0)
         status_text = st.empty()
         status_text.write("Starting assessment processing...")
@@ -333,10 +336,7 @@ def run_dpia_online_report():
             progress_bar.progress(1.0)
             status_text.write("Step 6/6: Finalizing...")
             
-            # Reset processing flag first to avoid state issues
-            st.session_state.is_processing = False
-            
-            # Then store results
+            # Store results (processing flag will be reset in finally block)
             st.session_state.dpia_online_results = assessment_results
             st.session_state.dpia_online_report_data = report_data
             st.session_state.dpia_online_display_results = True
@@ -354,12 +354,13 @@ def run_dpia_online_report():
             st.write("Error details:")
             st.code(traceback.format_exc())
             
-            # Reset processing flag so user can try again
-            st.session_state.is_processing = False
-            
-            # Add recovery option
+            # Add recovery option (processing flag will be reset in finally block)
             if st.button("Try Again", type="primary"):
-                st.rerun()
+                if not st.session_state.get("is_processing", False):
+                    st.rerun()
+        finally:
+            # Always ensure processing flag is reset when done, no matter what happened
+            st.session_state.is_processing = False
 
 def display_assessment_results(results, report_data, scanner):
     """Display the DPIA assessment results with visualizations"""
