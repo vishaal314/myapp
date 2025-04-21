@@ -1886,9 +1886,12 @@ else:
             else:
                 uploaded_files = []
         
-        # Hide the scan button for DPIA since we don't need it
+        # Initialize start_scan variable
+        start_scan = False
+        
+        # Handle special scan types
         if scan_type == _("scan.dpia"):
-            # Add CSS to hide the scan button container
+            # Add CSS to hide the scan button container for DPIA
             st.markdown("""
             <style>
             /* Hide the start scan button for DPIA */
@@ -1899,6 +1902,30 @@ else:
             """, unsafe_allow_html=True)
             # Set start_scan to True for DPIA to bypass the button click
             start_scan = True
+        elif scan_type == _("scan.ai_model"):
+            # Create a more prominent scan button for AI Model scan
+            st.markdown("""
+            <style>
+            /* Make Start Scan button more prominent for AI Model scan */
+            div[data-testid="stHorizontalBlock"] button {
+                background-color: #1976D2 !important;
+                color: white !important;
+                font-weight: bold !important;
+                border: 2px solid #0D47A1 !important;
+                padding: 0.5rem 1rem !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            # Prominent "Start Scan" button with free trial info
+            scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
+            with scan_btn_col1:
+                start_scan = st.button("Start AI Model Scan", use_container_width=True, type="primary", key="ai_model_scan_button")
+            with scan_btn_col2:
+                if free_trial_active:
+                    st.success(f"Free Trial: {free_trial_days_left} days left")
+                else:
+                    st.warning("Premium Features")
         else:
             # Prominent "Start Scan" button with free trial info
             scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
