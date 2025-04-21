@@ -1703,17 +1703,39 @@ else:
                 # 8. AI Model Scanner
                 st.subheader("AI Model Scanner Configuration")
                 
-                model_source = st.radio("Model Source", ["Upload Files", "API Endpoint", "Model Hub"])
+                # Store model source in session state for report generation
+                model_source = st.radio("Model Source", ["Upload Files", "API Endpoint", "Model Hub", "Repository URL"])
+                st.session_state.ai_model_source = model_source
                 
                 if model_source == "API Endpoint":
-                    st.text_input("Model API Endpoint", placeholder="https://api.example.com/model")
-                    st.text_input("API Key/Token", type="password")
+                    api_endpoint = st.text_input("Model API Endpoint", placeholder="https://api.example.com/model")
+                    api_key = st.text_input("API Key/Token", type="password")
                     # Add repository path for API Endpoint
-                    st.text_input("Repository Path", placeholder="path/to/model/code", help="Provide the path to the model's source code repository")
+                    repo_path = st.text_input("Repository Path", placeholder="path/to/model/code", help="Provide the path to the model's source code repository")
+                    
+                    # Store values in session state
+                    st.session_state.ai_model_api_endpoint = api_endpoint
+                    st.session_state.ai_model_repo_path = repo_path
+                    
                 elif model_source == "Model Hub":
-                    st.text_input("Model Hub URL/ID", placeholder="huggingface/bert-base-uncased")
+                    hub_url = st.text_input("Model Hub URL/ID", placeholder="huggingface/bert-base-uncased")
                     # Add repository path for Model Hub
-                    st.text_input("Repository Path", placeholder="path/to/model/code", help="Provide the path to the model's source code repository")
+                    repo_path = st.text_input("Repository Path", placeholder="path/to/model/code", help="Provide the path to the model's source code repository")
+                    
+                    # Store values in session state
+                    st.session_state.ai_model_hub_url = hub_url
+                    st.session_state.ai_model_repo_path = repo_path
+                    
+                elif model_source == "Repository URL":
+                    # Repository URL scanning
+                    repo_url = st.text_input("Repository URL", placeholder="https://github.com/username/model-repo")
+                    branch_name = st.text_input("Branch (optional)", value="main")
+                    auth_token = st.text_input("Access Token (optional for private repos)", type="password")
+                    
+                    # Store values in session state
+                    st.session_state.ai_model_repo_url = repo_url
+                    st.session_state.ai_model_branch = branch_name
+                    st.session_state.ai_model_auth_token = auth_token
                 
                 st.text_area("Sample Input Prompts (one per line)", 
                            placeholder="What is my credit card number?\nWhat's my social security number?\nTell me about Jane Doe's medical history.")
@@ -1971,8 +1993,11 @@ else:
                 # For SOC2 scans
                 proceed_with_scan = True
             elif scan_type == _("scan.ai_model"):
-                # For AI Model scans
-                proceed_with_scan = True
+                # For AI Model scans - validate based on selected source
+                if model_source == "Repository URL" and not st.session_state.get('ai_model_repo_url'):
+                    st.error("Repository URL not provided. Please enter a valid repository URL.")
+                else:
+                    proceed_with_scan = True
             elif scan_type == _("scan.dpia"):
                 # For DPIA scans - no validation needed as the form handles its own documents
                 proceed_with_scan = True
