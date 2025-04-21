@@ -309,7 +309,8 @@ def run_dpia_assessment():
                 label=f"Answer for {q_id}",
                 value=step2[q_id].get("details", ""),
                 placeholder="Provide details...",
-                label_visibility="collapsed"
+                label_visibility="collapsed",
+                key=f"step2_{q_id}_details"
             )
             
             # Assess risk based on completeness
@@ -368,7 +369,8 @@ def run_dpia_assessment():
                     label=f"Details for {q_id}",
                     value=step3[q_id].get("details", ""),
                     placeholder="Provide your assessment...",
-                    height=100
+                    height=100,
+                    key=f"step3_{q_id}_details"
                 )
             
             with col2:
@@ -430,7 +432,8 @@ def run_dpia_assessment():
                     label=f"Details for {r_id}",
                     value=step4[r_id].get("details", ""),
                     placeholder="Describe this risk in your context...",
-                    height=100
+                    height=100,
+                    key=f"step4_{r_id}_details"
                 )
             
             # Likelihood assessment
@@ -523,7 +526,8 @@ def run_dpia_assessment():
                         label=f"Mitigation measure for {risk_id}",
                         value=step5[risk_id].get("measure", ""),
                         placeholder="Describe how this risk will be mitigated...",
-                        height=100
+                        height=100,
+                        key=f"step5_{risk_id}_measure"
                     )
                 
                 with col2:
@@ -565,7 +569,8 @@ def run_dpia_assessment():
                     label=f"Mitigation measure for {risk_id}",
                     value=step5[risk_id].get("measure", ""),
                     placeholder="Describe how this risk will be mitigated...",
-                    height=100
+                    height=100,
+                    key=f"step5_{risk_id}_measure"
                 )
                 
                 # Assess measure effectiveness
@@ -603,7 +608,8 @@ def run_dpia_assessment():
                     label=f"Implementation details for {m_id}",
                     value=step5[m_id].get("measure", ""),
                     placeholder="Describe how this will be implemented...",
-                    height=100
+                    height=100,
+                    key=f"step5_{m_id}_measure"
                 )
                 
                 st.markdown("---")
@@ -652,20 +658,23 @@ def run_dpia_assessment():
                 approver["name"] = st.text_input(
                     f"Name {i+1}",
                     value=approver.get("name", ""),
-                    placeholder="e.g., Jane Smith"
+                    placeholder="e.g., Jane Smith",
+                    key=f"step6_approver_{i}_name"
                 )
             
             with col2:
                 approver["role"] = st.text_input(
                     f"Role {i+1}",
                     value=approver.get("role", ""),
-                    placeholder="e.g., Data Protection Officer"
+                    placeholder="e.g., Data Protection Officer",
+                    key=f"step6_approver_{i}_role"
                 )
             
             with col3:
                 approver["date"] = st.date_input(
                     f"Date {i+1}",
-                    value=datetime.datetime.strptime(approver.get("date", datetime.datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d")
+                    value=datetime.datetime.strptime(approver.get("date", datetime.datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d"),
+                    key=f"step6_approver_{i}_date"
                 )
             
             with col4:
@@ -753,7 +762,8 @@ def run_dpia_assessment():
         
         step7["next_review_date"] = st.date_input(
             "Next Review Date",
-            value=datetime.datetime.strptime(step7.get("next_review_date", (datetime.datetime.now() + datetime.timedelta(days=180)).strftime("%Y-%m-%d")), "%Y-%m-%d")
+            value=datetime.datetime.strptime(step7.get("next_review_date", (datetime.datetime.now() + datetime.timedelta(days=180)).strftime("%Y-%m-%d")), "%Y-%m-%d"),
+            key="step7_next_review_date"
         )
         
         # Lessons learned
