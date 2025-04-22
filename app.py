@@ -1289,6 +1289,26 @@ else:
                                placeholder="https://github.com/username/repo",
                                help="Full repository URL, can include paths like /tree/master/.github",
                                key="repo_url")
+                    
+                    # Debug validation info
+                    if repo_url:
+                        st.info(f"Validating repository URL: {repo_url}")
+                        try:
+                            # Manual check
+                            from services.repo_scanner import RepoScanner
+                            from services.code_scanner import CodeScanner
+                            
+                            code_scanner = CodeScanner()
+                            repo_scanner = RepoScanner(code_scanner)
+                            is_valid = repo_scanner.is_valid_repo_url(repo_url)
+                            
+                            if is_valid:
+                                st.success(f"Repository URL validated successfully!")
+                            else:
+                                st.error(f"Repository URL validation failed. Please ensure it's a valid GitHub, GitLab, or Bitbucket URL.")
+                        except Exception as e:
+                            st.error(f"Error validating URL: {str(e)}")
+                    
                     branch_name = st.text_input("Branch Name", value="main", key="branch_name")
                     auth_token = st.text_input("Authentication Token (if private)", type="password", key="auth_token")
                     

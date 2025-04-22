@@ -35,7 +35,16 @@ class RepoScanner:
             code_scanner: An instance of CodeScanner to use for scanning files
         """
         self.code_scanner = code_scanner
-        self.supported_platforms = ['github.com', 'gitlab.com', 'bitbucket.org', 'dev.azure.com']
+        # Expanded list to include more GitHub domains and variations
+        self.supported_platforms = [
+            'github.com', 
+            'gitlab.com', 
+            'bitbucket.org', 
+            'dev.azure.com',
+            'github.io',
+            'githubusercontent.com',
+            'raw.githubusercontent.com'
+        ]
         self.temp_dirs = []
         
     def __del__(self):
@@ -66,16 +75,27 @@ class RepoScanner:
         Returns:
             True if the URL seems to be a valid Git repository URL, False otherwise
         """
+        # Handle empty URL
+        if not repo_url or repo_url.strip() == "":
+            return False
+            
         # Basic URL validation - allow URLs with repository paths (like /tree/master/.github)
-        url_pattern = r'^https?://(?:www\.)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/.+/.+'
+        # More permissive pattern - just ensure it's an http(s) URL with at least org/repo pattern
+        url_pattern = r'^https?://(?:www\.)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/[^/]+/[^/]+'
         match = re.match(url_pattern, repo_url)
         
         if not match:
+            logger.warning(f"URL pattern validation failed for: {repo_url}")
             return False
         
         # Check if the domain is a supported Git platform
         domain = match.group(1)
-        return any(platform in domain for platform in self.supported_platforms)
+        valid_domain = any(platform in domain for platform in self.supported_platforms)
+        
+        if not valid_domain:
+            logger.warning(f"Domain validation failed for: {domain} in URL: {repo_url}")
+            
+        return valid_domain
     
     def _prepare_auth_for_clone(self, repo_url: str, auth_token: Optional[str] = None) -> str:
         """
