@@ -490,7 +490,8 @@ def generate_report(scan_data: Dict[str, Any],
                    include_details: bool = True,
                    include_charts: bool = True,
                    include_metadata: bool = True,
-                   include_recommendations: bool = True) -> bytes:
+                   include_recommendations: bool = True,
+                   report_format: Optional[str] = None) -> bytes:
     """
     Generate a PDF report for a scan result.
     Auto-detects scan type and uses appropriate report format.
@@ -501,27 +502,74 @@ def generate_report(scan_data: Dict[str, Any],
         include_charts: Whether to include charts
         include_metadata: Whether to include scan metadata
         include_recommendations: Whether to include recommendations
+        report_format: Optional explicit report format to use (e.g., "ai_model")
         
     Returns:
         The PDF report as bytes
     """
-    # Get scan type to determine report format
-    scan_type = scan_data.get('scan_type', 'Unknown')
+    # Ensure we have valid input
+    if not scan_data or not isinstance(scan_data, dict):
+        # Create basic error report if scan_data is invalid
+        buffer = io.BytesIO()
+        
+        # Create a PDF document
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        story = []
+        
+        # Add error title
+        story.append(Paragraph("Error: Invalid Scan Data", styles['Title']))
+        story.append(Spacer(1, 0.5*inch))
+        story.append(Paragraph("The scan data provided was invalid or missing. Cannot generate report.", styles['Normal']))
+        story.append(Spacer(1, 0.25*inch))
+        story.append(Paragraph(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+        
+        # Build the PDF document
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
     
-    # Use appropriate report format based on scan type
-    if 'ai_model' in scan_type.lower():
-        report_format = "ai_model"
-    else:
-        report_format = "standard"
-    
-    return _generate_report_internal(
-        scan_data=scan_data,
-        include_details=include_details,
-        include_charts=include_charts,
-        include_metadata=include_metadata,
-        include_recommendations=include_recommendations,
-        report_format=report_format
-    )
+    try:
+        # Get scan type to determine report format - use provided format if specified
+        if report_format:
+            scan_type = report_format
+        else:
+            scan_type = scan_data.get('scan_type', 'Unknown')
+        
+        # Use appropriate report format based on scan type
+        if 'ai_model' in scan_type.lower():
+            report_format = "ai_model"
+        else:
+            report_format = "standard"
+            
+        return _generate_report_internal(
+            scan_data=scan_data,
+            include_details=include_details,
+            include_charts=include_charts,
+            include_metadata=include_metadata,
+            include_recommendations=include_recommendations,
+            report_format=report_format
+        )
+    except Exception as e:
+        # Create basic error report if something goes wrong
+        buffer = io.BytesIO()
+        
+        # Create a PDF document with error details
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        story = []
+        
+        # Add error title
+        story.append(Paragraph("Error: Report Generation Failed", styles['Title']))
+        story.append(Spacer(1, 0.5*inch))
+        story.append(Paragraph(f"An error occurred while generating the report: {str(e)}", styles['Normal']))
+        story.append(Spacer(1, 0.25*inch))
+        story.append(Paragraph(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+        
+        # Build the PDF document
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
 
 def _generate_report_internal(scan_data: Dict[str, Any], 
                    include_details: bool = True,

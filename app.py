@@ -15,7 +15,7 @@ from services.blob_scanner import BlobScanner
 from services.website_scanner import WebsiteScanner
 from services.results_aggregator import ResultsAggregator
 from services.repo_scanner import RepoScanner
-from services.report_generator import generate_pdf_report, generate_report
+from services.report_generator import generate_report
 from services.certificate_generator import CertificateGenerator
 from services.optimized_scanner import OptimizedScanner
 from services.dpia_scanner import DPIAScanner, generate_dpia_report
@@ -1940,23 +1940,72 @@ else:
                 else:
                     st.info("No findings detected in the AI model scan.")
                 
-                # Generate Report button
+                # Generate Report button with comprehensive error handling
                 if st.button("Generate AI Model Report", key="ai_model_report_button", type="primary"):
-                    with st.spinner("Generating AI model report..."):
-                        # Import report generator
-                        from services.report_generator import generate_report
-                        
-                        # Generate PDF report with AI model format
-                        pdf_bytes = generate_report(
-                            ai_model_scan_results,
-                            report_format="ai_model"
-                        )
-                        
-                        # Create download link
-                        scan_id = ai_model_scan_results.get('scan_id', 'unknown')
-                        b64_pdf = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="AI_Model_Scan_Report_{scan_id}.pdf">Download AI Model Report</a>'
-                        st.markdown(href, unsafe_allow_html=True)
+                    try:
+                        with st.spinner("Generating AI model report..."):
+                            # Import report generator
+                            try:
+                                from services.report_generator import generate_report
+                            except ImportError as import_error:
+                                st.error(f"Failed to import report generator: {str(import_error)}")
+                                st.stop()
+                            
+                            # Validate input data before report generation
+                            if not isinstance(ai_model_scan_results, dict):
+                                st.error("Invalid scan results: scan data must be a dictionary")
+                                st.stop()
+                            
+                            # Make sure required fields are present in scan results
+                            required_fields = ['scan_id', 'timestamp', 'model_source', 'findings']
+                            missing_fields = [field for field in required_fields if field not in ai_model_scan_results]
+                            if missing_fields:
+                                st.warning(f"Scan results missing required fields: {', '.join(missing_fields)}")
+                                # Continue anyway, report generator will handle missing fields
+                            
+                            try:
+                                # Generate PDF report with AI model format
+                                pdf_bytes = generate_report(
+                                    ai_model_scan_results,
+                                    report_format="ai_model"
+                                )
+                                
+                                # Validate the generated PDF
+                                if not pdf_bytes or not isinstance(pdf_bytes, bytes):
+                                    st.error("Failed to generate report: Invalid output from report generator")
+                                    st.stop()
+                                
+                                # Create download link
+                                try:
+                                    scan_id = ai_model_scan_results.get('scan_id', 'unknown')
+                                    b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="AI_Model_Scan_Report_{scan_id}.pdf">Download AI Model Report</a>'
+                                    st.markdown(href, unsafe_allow_html=True)
+                                    st.success("AI Model report generated successfully")
+                                except Exception as encoding_error:
+                                    st.error(f"Error creating download link: {str(encoding_error)}")
+                                    # Try fallback approach to save file
+                                    try:
+                                        # Create reports directory if it doesn't exist
+                                        os.makedirs("reports", exist_ok=True)
+                                        report_path = f"reports/AI_Model_Scan_Report_{scan_id}.pdf"
+                                        with open(report_path, "wb") as f:
+                                            f.write(pdf_bytes)
+                                        st.info(f"Report saved to {report_path}")
+                                    except Exception as save_error:
+                                        st.error(f"Failed to save report to file: {str(save_error)}")
+                            
+                            except Exception as report_error:
+                                st.error(f"Error generating report: {str(report_error)}")
+                                if st.session_state.get('debug_mode', False):
+                                    import traceback
+                                    st.code(traceback.format_exc())
+                    
+                    except Exception as e:
+                        st.error(f"Critical error in report generation process: {str(e)}")
+                        if st.session_state.get('debug_mode', False):
+                            import traceback
+                            st.code(traceback.format_exc())
                 
         elif scan_type == _("scan.dpia"):
             # No header for DPIA - will be handled by the assessment form
