@@ -1285,7 +1285,10 @@ else:
                 st.session_state.repo_source = repo_source
                 
                 if repo_source == _("scan.repository_url"):
-                    repo_url = st.text_input("Repository URL (GitHub, GitLab, Bitbucket)", placeholder="https://github.com/username/repo", key="repo_url")
+                    repo_url = st.text_input("Repository URL (GitHub, GitLab, Bitbucket)", 
+                               placeholder="https://github.com/username/repo",
+                               help="Full repository URL, can include paths like /tree/master/.github",
+                               key="repo_url")
                     branch_name = st.text_input("Branch Name", value="main", key="branch_name")
                     auth_token = st.text_input("Authentication Token (if private)", type="password", key="auth_token")
                     
@@ -1729,7 +1732,9 @@ else:
                     
                 elif model_source == "Repository URL":
                     # Repository URL scanning
-                    repo_url = st.text_input("Repository URL", placeholder="https://github.com/username/model-repo")
+                    repo_url = st.text_input("Repository URL", 
+                              placeholder="https://github.com/username/model-repo", 
+                              help="Full repository URL, can include paths like /tree/master/.github")
                     branch_name = st.text_input("Branch (optional)", value="main")
                     auth_token = st.text_input("Access Token (optional for private repos)", type="password")
                     
