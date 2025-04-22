@@ -2547,6 +2547,76 @@ else:
                         scanner_instance = ImageScanner(region=region)
                     elif scan_type == _("scan.database"):
                         scanner_instance = DatabaseScanner(region=region)
+                    elif scan_type == _("scan.ai_model"):
+                        # Get AI Model Scanner
+                        ai_model_scanner = AIModelScanner(region=region)
+                        
+                        # Set up progress tracking
+                        def update_scan_progress(current, total, status_message):
+                            """Update the AI Model scan progress"""
+                            progress = current / total if total > 0 else 0
+                            progress_bar.progress(progress)
+                            status_text.text(f"AI Model Scan: {status_message} ({current}/{total})")
+                            
+                        # Set progress callback
+                        ai_model_scanner.set_progress_callback(update_scan_progress)
+                        
+                        # Prepare model details based on source
+                        model_source = st.session_state.ai_model_source
+                        model_details = {}
+                        
+                        if model_source == "API Endpoint":
+                            model_details = {
+                                "api_endpoint": st.session_state.get('ai_model_api_endpoint', ""),
+                                "repository_path": st.session_state.get('ai_model_repo_path', "")
+                            }
+                        elif model_source == "Model Hub":
+                            model_details = {
+                                "hub_url": st.session_state.get('ai_model_hub_url', ""),
+                                "repository_path": st.session_state.get('ai_model_repo_path', "")
+                            }
+                        elif model_source == "Repository URL":
+                            model_details = {
+                                "repo_url": st.session_state.get('ai_model_repo_url', ""),
+                                "branch_name": st.session_state.get('ai_model_branch', "main"),
+                                "auth_token": st.session_state.get('ai_model_auth_token', "")
+                            }
+                        
+                        # Get leakage types and context from session state or set defaults
+                        leakage_types = st.session_state.get('leakage_types', ["All"])
+                        context = st.session_state.get('context', ["General"])
+                        
+                        try:
+                            # Run the AI model scan
+                            scan_result = ai_model_scanner.scan_model(
+                                model_source=model_source,
+                                model_details=model_details,
+                                leakage_types=leakage_types,
+                                context=context
+                            )
+                            
+                            # Store scan results in session state for later access
+                            st.session_state.ai_model_scan_results = scan_result
+                            st.session_state.ai_model_scan_complete = True
+                            
+                            # Set progress to complete
+                            progress_bar.progress(1.0)
+                            status_text.text("AI Model Scan: Complete!")
+                            
+                            # Store in scan_results list for aggregator
+                            scan_results = [scan_result]
+                            
+                        except Exception as e:
+                            st.error(f"AI Model scan failed: {str(e)}")
+                            import traceback
+                            st.code(traceback.format_exc())
+                            scan_results = [{
+                                "scan_id": scan_id,
+                                "scan_type": _("scan.ai_model"),
+                                "timestamp": datetime.now().isoformat(),
+                                "status": "failed",
+                                "error": str(e)
+                            }]
                     elif scan_type == _("scan.dpia"):
                         # Skip the informational box and go straight to the DPIA form
                         # Import and run our redesigned DPIA form with comprehensive workflow
