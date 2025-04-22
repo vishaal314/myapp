@@ -646,10 +646,16 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     elements.append(Paragraph(_('app.title', 'DataGuardian Pro'), title_style))
     
     # Subtitle with translation based on language
-    if current_lang == 'nl':
-        subtitle = _('report.subtitle', 'GDPR Compliance Scan Rapport')
+    if report_format == "ai_model":
+        if current_lang == 'nl':
+            subtitle = _('report.subtitle.ai_model', 'AI Model Risico Analyse Rapport')
+        else:
+            subtitle = _('report.subtitle.ai_model', 'AI Model Risk Analysis Report')
     else:
-        subtitle = _('report.subtitle', 'GDPR Compliance Scan Report')
+        if current_lang == 'nl':
+            subtitle = _('report.subtitle', 'GDPR Compliance Scan Rapport')
+        else:
+            subtitle = _('report.subtitle', 'GDPR Compliance Scan Report')
     elements.append(Paragraph(subtitle, subheading_style))
     
     # Current date with nice formatting - localized date format
@@ -725,72 +731,156 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             pass
     
     # Executive summary text with translation
-    if current_lang == 'nl':
-        summary_text = f"""
-        Dit rapport presenteert de bevindingen van een GDPR compliance scan uitgevoerd op <b>{url}</b> 
-        op <b>{timestamp}</b>. De scan heeft in totaal <b>{total_pii}</b> instanties van 
-        persoonlijk identificeerbare informatie (PII) geïdentificeerd met <b>{high_risk}</b> hoog-risico items.
-        """
+    if report_format == "ai_model":
+        # Extract AI model specific data
+        model_source = scan_data.get('model_source', 'Unknown')
+        model_name = scan_data.get('model_name', scan_data.get('repository_path', 'Unknown Model'))
+        
+        if current_lang == 'nl':
+            summary_text = f"""
+            Dit rapport presenteert de bevindingen van een AI Model risico analyse uitgevoerd op <b>{model_name}</b> 
+            van bron <b>{model_source}</b> op <b>{timestamp}</b>. De scan heeft in totaal <b>{total_pii}</b> instanties van 
+            persoonlijk identificeerbare informatie (PII) geïdentificeerd met <b>{high_risk}</b> hoog-risico items.
+            """
+        else:
+            summary_text = f"""
+            This report presents the findings of an AI Model risk analysis conducted on <b>{model_name}</b> 
+            from source <b>{model_source}</b> on <b>{timestamp}</b>. The scan identified a total of <b>{total_pii}</b> instances of 
+            personally identifiable information (PII) with <b>{high_risk}</b> high-risk items.
+            """
     else:
-        summary_text = f"""
-        This report presents the findings of a GDPR compliance scan conducted on <b>{url}</b> 
-        on <b>{timestamp}</b>. The scan identified a total of <b>{total_pii}</b> instances of 
-        personally identifiable information (PII) with <b>{high_risk}</b> high-risk items.
-        """
+        if current_lang == 'nl':
+            summary_text = f"""
+            Dit rapport presenteert de bevindingen van een GDPR compliance scan uitgevoerd op <b>{url}</b> 
+            op <b>{timestamp}</b>. De scan heeft in totaal <b>{total_pii}</b> instanties van 
+            persoonlijk identificeerbare informatie (PII) geïdentificeerd met <b>{high_risk}</b> hoog-risico items.
+            """
+        else:
+            summary_text = f"""
+            This report presents the findings of a GDPR compliance scan conducted on <b>{url}</b> 
+            on <b>{timestamp}</b>. The scan identified a total of <b>{total_pii}</b> instances of 
+            personally identifiable information (PII) with <b>{high_risk}</b> high-risk items.
+            """
     
     elements.append(Paragraph(summary_text, info_style))
     elements.append(Spacer(1, 12))
     
     # Summary table with modern styling
     # Create data for the summary table with nicer labels - translated
-    if current_lang == 'nl':
-        summary_data = [
-            [_('report.scan_type', 'Scan Type'), scan_type],
-            [_('report.region', 'Regio'), region],
-            [_('report.date_time', 'Datum & Tijd'), timestamp],
-            [_('report.scanned_url', 'Gescande URL/Domein'), url],
-            [_('report.total_pii', 'Totaal PII Items Gevonden'), str(total_pii)],
-            [_('report.high_risk', 'Hoog Risico Items'), str(high_risk)],
-            [_('report.medium_risk', 'Gemiddeld Risico Items'), str(medium_risk)],
-            [_('report.low_risk', 'Laag Risico Items'), str(low_risk)]
-        ]
+    if report_format == "ai_model":
+        # Extract AI model specific data
+        model_source = scan_data.get('model_source', 'Unknown')
+        model_name = scan_data.get('model_name', scan_data.get('repository_path', 'Unknown Model'))
+        repository_url = scan_data.get('repository_url', 'N/A')
+        repository_path = scan_data.get('repository_path', 'N/A')
+        
+        if current_lang == 'nl':
+            summary_data = [
+                [_('report.scan_type', 'Scan Type'), scan_type],
+                [_('report.region', 'Regio'), region],
+                [_('report.date_time', 'Datum & Tijd'), timestamp],
+                [_('report.model_source', 'Model Bron'), model_source],
+                [_('report.model_name', 'Model Naam'), model_name],
+                [_('report.repository_url', 'Repository URL'), repository_url if repository_url != 'N/A' else 'Niet beschikbaar'],
+                [_('report.repository_path', 'Repository Pad'), repository_path if repository_path != 'N/A' else 'Niet beschikbaar'],
+                [_('report.total_pii', 'Totaal PII Items Gevonden'), str(total_pii)],
+                [_('report.high_risk', 'Hoog Risico Items'), str(high_risk)],
+                [_('report.medium_risk', 'Gemiddeld Risico Items'), str(medium_risk)],
+                [_('report.low_risk', 'Laag Risico Items'), str(low_risk)]
+            ]
+        else:
+            summary_data = [
+                [_('report.scan_type', 'Scan Type'), scan_type],
+                [_('report.region', 'Region'), region],
+                [_('report.date_time', 'Date & Time'), timestamp],
+                [_('report.model_source', 'Model Source'), model_source],
+                [_('report.model_name', 'Model Name'), model_name],
+                [_('report.repository_url', 'Repository URL'), repository_url if repository_url != 'N/A' else 'Not available'],
+                [_('report.repository_path', 'Repository Path'), repository_path if repository_path != 'N/A' else 'Not available'],
+                [_('report.total_pii', 'Total PII Items Found'), str(total_pii)],
+                [_('report.high_risk', 'High Risk Items'), str(high_risk)],
+                [_('report.medium_risk', 'Medium Risk Items'), str(medium_risk)],
+                [_('report.low_risk', 'Low Risk Items'), str(low_risk)]
+            ]
     else:
-        summary_data = [
-            [_('report.scan_type', 'Scan Type'), scan_type],
-            [_('report.region', 'Region'), region],
-            [_('report.date_time', 'Date & Time'), timestamp],
-            [_('report.scanned_url', 'Scanned URL/Domain'), url],
-            [_('report.total_pii', 'Total PII Items Found'), str(total_pii)],
-            [_('report.high_risk', 'High Risk Items'), str(high_risk)],
-            [_('report.medium_risk', 'Medium Risk Items'), str(medium_risk)],
-            [_('report.low_risk', 'Low Risk Items'), str(low_risk)]
-        ]
+        if current_lang == 'nl':
+            summary_data = [
+                [_('report.scan_type', 'Scan Type'), scan_type],
+                [_('report.region', 'Regio'), region],
+                [_('report.date_time', 'Datum & Tijd'), timestamp],
+                [_('report.scanned_url', 'Gescande URL/Domein'), url],
+                [_('report.total_pii', 'Totaal PII Items Gevonden'), str(total_pii)],
+                [_('report.high_risk', 'Hoog Risico Items'), str(high_risk)],
+                [_('report.medium_risk', 'Gemiddeld Risico Items'), str(medium_risk)],
+                [_('report.low_risk', 'Laag Risico Items'), str(low_risk)]
+            ]
+        else:
+            summary_data = [
+                [_('report.scan_type', 'Scan Type'), scan_type],
+                [_('report.region', 'Region'), region],
+                [_('report.date_time', 'Date & Time'), timestamp],
+                [_('report.scanned_url', 'Scanned URL/Domain'), url],
+                [_('report.total_pii', 'Total PII Items Found'), str(total_pii)],
+                [_('report.high_risk', 'High Risk Items'), str(high_risk)],
+                [_('report.medium_risk', 'Medium Risk Items'), str(medium_risk)],
+                [_('report.low_risk', 'Low Risk Items'), str(low_risk)]
+            ]
     
     # Create a more visually appealing table
     summary_table = Table(summary_data, colWidths=[150, 300])
-    summary_table.setStyle(TableStyle([
-        # Header row styling
-        ('BACKGROUND', (0, 0), (0, -1), HexColor('#f2f9fe')),
-        ('TEXTCOLOR', (0, 0), (0, -1), HexColor('#2c3e50')),
-        # Content styling
-        ('BACKGROUND', (1, 0), (1, -1), colors.white),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        # Padding
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-        # Grid
-        ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#dfe6e9')),
-        # Highlight certain rows
-        ('BACKGROUND', (1, 4), (1, 4), HexColor('#eaf2f8')),  # Total PII row
-        # Risk level colors
-        ('BACKGROUND', (1, 5), (1, 5), HexColor('#fadbd8')),  # High risk row
-        ('BACKGROUND', (1, 6), (1, 6), HexColor('#fef9e7')),  # Medium risk row
-        ('BACKGROUND', (1, 7), (1, 7), HexColor('#e9f7ef')),  # Low risk row
-    ]))
+    
+    # Define table style based on report format
+    if report_format == "ai_model":
+        table_style = [
+            # Header row styling
+            ('BACKGROUND', (0, 0), (0, -1), HexColor('#f2f9fe')),
+            ('TEXTCOLOR', (0, 0), (0, -1), HexColor('#2c3e50')),
+            # Content styling
+            ('BACKGROUND', (1, 0), (1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            # Padding
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            # Grid
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#dfe6e9')),
+            # Highlight certain rows
+            ('BACKGROUND', (1, 3), (1, 6), HexColor('#e3f2fd')),  # Model info rows
+            ('BACKGROUND', (1, 7), (1, 7), HexColor('#eaf2f8')),  # Total PII row
+            # Risk level colors
+            ('BACKGROUND', (1, 8), (1, 8), HexColor('#fadbd8')),  # High risk row
+            ('BACKGROUND', (1, 9), (1, 9), HexColor('#fef9e7')),  # Medium risk row
+            ('BACKGROUND', (1, 10), (1, 10), HexColor('#e9f7ef')),  # Low risk row
+        ]
+    else:
+        table_style = [
+            # Header row styling
+            ('BACKGROUND', (0, 0), (0, -1), HexColor('#f2f9fe')),
+            ('TEXTCOLOR', (0, 0), (0, -1), HexColor('#2c3e50')),
+            # Content styling
+            ('BACKGROUND', (1, 0), (1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            # Padding
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            # Grid
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#dfe6e9')),
+            # Highlight certain rows
+            ('BACKGROUND', (1, 4), (1, 4), HexColor('#eaf2f8')),  # Total PII row
+            # Risk level colors
+            ('BACKGROUND', (1, 5), (1, 5), HexColor('#fadbd8')),  # High risk row
+            ('BACKGROUND', (1, 6), (1, 6), HexColor('#fef9e7')),  # Medium risk row
+            ('BACKGROUND', (1, 7), (1, 7), HexColor('#e9f7ef')),  # Low risk row
+        ]
+    
+    summary_table.setStyle(TableStyle(table_style))
     
     elements.append(summary_table)
     elements.append(Spacer(1, 20))
@@ -998,20 +1088,40 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         elements.append(Paragraph(recommendations_title, heading_style))
         
         # General recommendations with translation
-        if current_lang == 'nl':
-            recommendations = [
-                "Zorg voor een juiste rechtsgrond voor het verwerken van alle geïdentificeerde PII.",
-                "Documenteer alle verwerkingsactiviteiten zoals vereist door AVG artikel 30.",
-                "Evalueer het beleid voor gegevensbewaring om ervoor te zorgen dat PII niet langer dan nodig wordt bewaard.",
-                "Implementeer passende technische en organisatorische maatregelen om PII te beveiligen."
-            ]
+        if report_format == "ai_model":
+            # AI Model specific recommendations
+            if current_lang == 'nl':
+                recommendations = [
+                    "Zorg voor een juiste rechtsgrond voor het verwerken van alle geïdentificeerde PII in AI-modellen.",
+                    "Documenteer het gebruik van persoonlijke gegevens in modeltraining zoals vereist door AVG artikel 30.",
+                    "Implementeer regelmatige audits van AI-modellen om onbedoelde persoonlijke gegevensverwerking te detecteren.",
+                    "Pas gegevensminimalisatie toe in trainingsgegevens om GDPR-naleving voor AI-systemen te waarborgen.",
+                    "Overweeg synthetische gegevens of gepseudonimiseerde datasets voor toekomstige modelontwikkeling."
+                ]
+            else:
+                recommendations = [
+                    "Ensure proper legal basis for processing all identified PII in AI models.",
+                    "Document the use of personal data in model training as required by GDPR Article 30.",
+                    "Implement regular audits of AI models to detect unintended personal data processing.",
+                    "Apply data minimization in training data to ensure GDPR compliance for AI systems.",
+                    "Consider synthetic data or pseudonymized datasets for future model development."
+                ]
         else:
-            recommendations = [
-                "Ensure you have proper legal basis for processing all identified PII.",
-                "Document all processing activities as required by GDPR Article 30.",
-                "Review data retention policies to ensure PII is not kept longer than necessary.",
-                "Implement appropriate technical and organizational measures to secure PII."
-            ]
+            # Standard recommendations
+            if current_lang == 'nl':
+                recommendations = [
+                    "Zorg voor een juiste rechtsgrond voor het verwerken van alle geïdentificeerde PII.",
+                    "Documenteer alle verwerkingsactiviteiten zoals vereist door AVG artikel 30.",
+                    "Evalueer het beleid voor gegevensbewaring om ervoor te zorgen dat PII niet langer dan nodig wordt bewaard.",
+                    "Implementeer passende technische en organisatorische maatregelen om PII te beveiligen."
+                ]
+            else:
+                recommendations = [
+                    "Ensure you have proper legal basis for processing all identified PII.",
+                    "Document all processing activities as required by GDPR Article 30.",
+                    "Review data retention policies to ensure PII is not kept longer than necessary.",
+                    "Implement appropriate technical and organizational measures to secure PII."
+                ]
         
         for recommendation in recommendations:
             elements.append(Paragraph(f"• {recommendation}", normal_style))
@@ -1026,20 +1136,40 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 high_risk_title = _('report.high_risk_recommendations', 'High-Risk Item Recommendations')
             elements.append(Paragraph(high_risk_title, subheading_style))
             
-            if current_lang == 'nl':
-                high_risk_recommendations = [
-                    "Voer een gegevensbeschermingseffectbeoordeling (DPIA) uit voor verwerkingsactiviteiten met een hoog risico.",
-                    "Beoordeel en versterk toegangscontroles voor systemen die PII met een hoog risico bevatten.",
-                    "Overweeg pseudonimisering of versleuteling voor gegevens met een hoog risico.",
-                    "Zorg ervoor dat verwerkers die deze gegevens hanteren passende gegevensverwerkingsovereenkomsten hebben."
-                ]
+            if report_format == "ai_model":
+                # AI Model-specific high risk recommendations
+                if current_lang == 'nl':
+                    high_risk_recommendations = [
+                        "Voer een DPIA uit specifiek voor het AI-model en de gerelateerde gegevensverwerking.",
+                        "Verwijder of herzie trainingsdata die persoonlijke informatie met hoog risico bevat.",
+                        "Implementeer additionele beschermende maatregelen voor AI-modellen die gevoelige gegevens verwerken.",
+                        "Documenteer risicobeperkende strategieën en houd toezicht op modelgedrag.",
+                        "Overweeg differentiële privacy technieken om identificeerbare informatie in het model te beschermen."
+                    ]
+                else:
+                    high_risk_recommendations = [
+                        "Conduct a DPIA specific to the AI model and its related data processing.",
+                        "Remove or revise training data containing high-risk personal information.",
+                        "Implement additional safeguards for AI models processing sensitive data.",
+                        "Document risk mitigation strategies and monitor model behavior.",
+                        "Consider differential privacy techniques to protect identifiable information in the model."
+                    ]
             else:
-                high_risk_recommendations = [
-                    "Conduct a Data Protection Impact Assessment (DPIA) for high-risk processing activities.",
-                    "Review and strengthen access controls for systems containing high-risk PII.",
-                    "Consider pseudonymization or encryption for high-risk data.",
-                    "Ensure processors handling this data have appropriate data processing agreements."
-                ]
+                # Standard high risk recommendations
+                if current_lang == 'nl':
+                    high_risk_recommendations = [
+                        "Voer een gegevensbeschermingseffectbeoordeling (DPIA) uit voor verwerkingsactiviteiten met een hoog risico.",
+                        "Beoordeel en versterk toegangscontroles voor systemen die PII met een hoog risico bevatten.",
+                        "Overweeg pseudonimisering of versleuteling voor gegevens met een hoog risico.",
+                        "Zorg ervoor dat verwerkers die deze gegevens hanteren passende gegevensverwerkingsovereenkomsten hebben."
+                    ]
+                else:
+                    high_risk_recommendations = [
+                        "Conduct a Data Protection Impact Assessment (DPIA) for high-risk processing activities.",
+                        "Review and strengthen access controls for systems containing high-risk PII.",
+                        "Consider pseudonymization or encryption for high-risk data.",
+                        "Ensure processors handling this data have appropriate data processing agreements."
+                    ]
             
             for recommendation in high_risk_recommendations:
                 elements.append(Paragraph(f"• {recommendation}", danger_style))
@@ -1126,26 +1256,60 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         elements.append(Paragraph(metadata_title, heading_style))
         
         # Collect metadata with translated labels
-        if current_lang == 'nl':
-            metadata_labels = {
-                'Scan ID': scan_id,
-                'Scan Type': scan_type,
-                'Regio': region,
-                'Tijdstempel': timestamp,
-                'URL/Domein': url,
-                'Gebruikersnaam': scan_data.get('username', 'Onbekend'),
-                'Bestanden Gescand': scan_data.get('file_count', 0)
-            }
+        if report_format == "ai_model":
+            # Extract AI model specific data
+            model_source = scan_data.get('model_source', 'Unknown')
+            model_name = scan_data.get('model_name', scan_data.get('repository_path', 'Unknown Model'))
+            repository_url = scan_data.get('repository_url', 'N/A')
+            repository_path = scan_data.get('repository_path', 'N/A')
+            
+            if current_lang == 'nl':
+                metadata_labels = {
+                    'Scan ID': scan_id,
+                    'Scan Type': scan_type,
+                    'Regio': region,
+                    'Tijdstempel': timestamp,
+                    'Model Bron': model_source,
+                    'Model Naam': model_name,
+                    'Repository URL': repository_url if repository_url != 'N/A' else 'Niet beschikbaar',
+                    'Repository Pad': repository_path if repository_path != 'N/A' else 'Niet beschikbaar',
+                    'Gebruikersnaam': scan_data.get('username', 'Onbekend'),
+                    'Bestanden Gescand': scan_data.get('file_count', 0)
+                }
+            else:
+                metadata_labels = {
+                    'Scan ID': scan_id,
+                    'Scan Type': scan_type,
+                    'Region': region,
+                    'Timestamp': timestamp,
+                    'Model Source': model_source,
+                    'Model Name': model_name,
+                    'Repository URL': repository_url if repository_url != 'N/A' else 'Not available',
+                    'Repository Path': repository_path if repository_path != 'N/A' else 'Not available',
+                    'Username': scan_data.get('username', 'Unknown'),
+                    'Files Scanned': scan_data.get('file_count', 0)
+                }
         else:
-            metadata_labels = {
-                'Scan ID': scan_id,
-                'Scan Type': scan_type,
-                'Region': region,
-                'Timestamp': timestamp,
-                'URL/Domain': url,
-                'Username': scan_data.get('username', 'Unknown'),
-                'Files Scanned': scan_data.get('file_count', 0)
-            }
+            if current_lang == 'nl':
+                metadata_labels = {
+                    'Scan ID': scan_id,
+                    'Scan Type': scan_type,
+                    'Regio': region,
+                    'Tijdstempel': timestamp,
+                    'URL/Domein': url,
+                    'Gebruikersnaam': scan_data.get('username', 'Onbekend'),
+                    'Bestanden Gescand': scan_data.get('file_count', 0)
+                }
+            else:
+                metadata_labels = {
+                    'Scan ID': scan_id,
+                    'Scan Type': scan_type,
+                    'Region': region,
+                    'Timestamp': timestamp,
+                    'URL/Domain': url,
+                    'Username': scan_data.get('username', 'Unknown'),
+                    'Files Scanned': scan_data.get('file_count', 0)
+                }
         
         # Create metadata table
         metadata_data = []
