@@ -43,6 +43,13 @@ class AIModelScanner:
                   leakage_types: List[str] = None,
                   context: List[str] = None,
                   sample_inputs: List[str] = None) -> Dict[str, Any]:
+        # Initialize default values for None parameters
+        if leakage_types is None:
+            leakage_types = ["All"]
+        if context is None:
+            context = ["General"]
+        if sample_inputs is None:
+            sample_inputs = []
         """
         Scan an AI model for PII exposure and GDPR compliance risks
         
