@@ -1733,10 +1733,10 @@ else:
                     branch_name = st.text_input("Branch (optional)", value="main")
                     auth_token = st.text_input("Access Token (optional for private repos)", type="password")
                     
-                    # Store values in session state
-                    st.session_state.ai_model_repo_url = repo_url
-                    st.session_state.ai_model_branch = branch_name
-                    st.session_state.ai_model_auth_token = auth_token
+                    # Store values in session state using the same variable names as in the scan handler
+                    st.session_state.repo_url = repo_url
+                    st.session_state.branch_name = branch_name
+                    st.session_state.auth_token = auth_token
                 
                 st.text_area("Sample Input Prompts (one per line)", 
                            placeholder="What is my credit card number?\nWhat's my social security number?\nTell me about Jane Doe's medical history.")
@@ -2577,46 +2577,154 @@ else:
                             }
                         elif model_source == "Repository URL":
                             model_details = {
-                                "repo_url": st.session_state.get('ai_model_repo_url', ""),
-                                "branch_name": st.session_state.get('ai_model_branch', "main"),
-                                "auth_token": st.session_state.get('ai_model_auth_token', "")
+                                "repo_url": st.session_state.get('repo_url', ""), 
+                                "branch_name": st.session_state.get('branch_name', "main"),
+                                "auth_token": st.session_state.get('auth_token', "")
                             }
                         
                         # Get leakage types and context from session state or set defaults
                         leakage_types = st.session_state.get('leakage_types', ["All"])
                         context = st.session_state.get('context', ["General"])
                         
+                        # Wrap entire scanning process in try block with multiple layers of error handling
                         try:
-                            # Run the AI model scan
-                            scan_result = ai_model_scanner.scan_model(
-                                model_source=model_source,
-                                model_details=model_details,
-                                leakage_types=leakage_types,
-                                context=context
-                            )
+                            # Validate required inputs first
+                            if not model_source:
+                                raise ValueError("Model source must be selected")
                             
-                            # Store scan results in session state for later access
-                            st.session_state.ai_model_scan_results = scan_result
-                            st.session_state.ai_model_scan_complete = True
+                            # Validate model details based on source type
+                            if model_source == "API Endpoint" and not model_details.get("api_endpoint"):
+                                raise ValueError("API endpoint URL is required")
+                            elif model_source == "Model Hub" and not model_details.get("hub_url"):
+                                raise ValueError("Model Hub URL/ID is required")
+                            elif model_source == "Repository URL" and not model_details.get("repo_url"):
+                                raise ValueError("Repository URL is required")
                             
-                            # Set progress to complete
-                            progress_bar.progress(1.0)
-                            status_text.text("AI Model Scan: Complete!")
-                            
-                            # Store in scan_results list for aggregator
-                            scan_results = [scan_result]
-                            
+                            # Run the AI model scan with complete error handling
+                            try:
+                                scan_result = ai_model_scanner.scan_model(
+                                    model_source=model_source,
+                                    model_details=model_details,
+                                    leakage_types=leakage_types,
+                                    context=context
+                                )
+                                
+                                # Validate returned result
+                                if not isinstance(scan_result, dict):
+                                    st.warning("Scanner returned invalid result format, using fallback result")
+                                    # Create fallback result with valid structure
+                                    scan_result = {
+                                        "scan_id": scan_id,
+                                        "scan_type": _("scan.ai_model"),
+                                        "timestamp": datetime.now().isoformat(),
+                                        "model_source": model_source,
+                                        "findings": [{
+                                            "id": f"AIFALLBACK-{uuid.uuid4().hex[:6]}",
+                                            "type": "Error",
+                                            "category": "Scan Result",
+                                            "description": "Scanner returned invalid format",
+                                            "risk_level": "medium",
+                                            "location": "AI Model Scanner"
+                                        }],
+                                        "status": "completed_with_warnings",
+                                        "risk_score": 50,
+                                        "severity_level": "medium",
+                                        "severity_color": "#f59e0b",
+                                        "total_findings": 1,
+                                        "region": "Global"
+                                    }
+                                
+                                # Store scan results in session state for later access
+                                st.session_state.ai_model_scan_results = scan_result
+                                st.session_state.ai_model_scan_complete = True
+                                
+                                # Set progress to complete
+                                progress_bar.progress(1.0)
+                                status_text.text("AI Model Scan: Complete!")
+                                
+                                # Store in scan_results list for aggregator
+                                scan_results = [scan_result]
+                                
+                            except Exception as scanner_error:
+                                # Show error but continue processing with valid error result
+                                st.warning(f"AI Model scanner encountered an error but recovered: {str(scanner_error)}")
+                                
+                                # Get an error result with valid structure from the scanner
+                                # (The scanner now always returns a valid structure even on error)
+                                scan_result = {
+                                    "scan_id": scan_id,
+                                    "scan_type": _("scan.ai_model"),
+                                    "timestamp": datetime.now().isoformat(),
+                                    "model_source": model_source,
+                                    "findings": [{
+                                        "id": f"AIERROR-{uuid.uuid4().hex[:6]}",
+                                        "type": "Error",
+                                        "category": "Scanner Error",
+                                        "description": f"Error in scanner: {str(scanner_error)}",
+                                        "risk_level": "medium",
+                                        "location": "AI Model Scanner"
+                                    }],
+                                    "status": "completed_with_errors",
+                                    "risk_score": 50,
+                                    "severity_level": "medium", 
+                                    "severity_color": "#f59e0b",
+                                    "total_findings": 1,
+                                    "region": "Global"
+                                }
+                                
+                                # Store error result in session state
+                                st.session_state.ai_model_scan_results = scan_result
+                                st.session_state.ai_model_scan_complete = True
+                                
+                                # Set progress to complete
+                                progress_bar.progress(1.0)
+                                status_text.text("AI Model Scan: Completed with Errors")
+                                
+                                # Store in scan_results list
+                                scan_results = [scan_result]
+                        
                         except Exception as e:
-                            st.error(f"AI Model scan failed: {str(e)}")
-                            import traceback
-                            st.code(traceback.format_exc())
-                            scan_results = [{
+                            # Catastrophic error at the app level - show full error but still provide valid result
+                            st.error(f"AI Model scan encountered a critical error: {str(e)}")
+                            
+                            # Only show stack trace in development mode
+                            if st.session_state.get('debug_mode', False):
+                                import traceback
+                                st.code(traceback.format_exc())
+                            
+                            # Create a valid scan result for the error
+                            error_scan_result = {
                                 "scan_id": scan_id,
                                 "scan_type": _("scan.ai_model"),
                                 "timestamp": datetime.now().isoformat(),
+                                "model_source": model_source if 'model_source' in locals() else "Unknown",
+                                "findings": [{
+                                    "id": f"AIFATAL-{uuid.uuid4().hex[:6]}",
+                                    "type": "Critical Error",
+                                    "category": "Fatal Error",
+                                    "description": f"Fatal error in scan process: {str(e)}",
+                                    "risk_level": "high",
+                                    "location": "Scan Processor"
+                                }],
                                 "status": "failed",
-                                "error": str(e)
-                            }]
+                                "error": str(e),
+                                "risk_score": 75,
+                                "severity_level": "high",
+                                "severity_color": "#ef4444",
+                                "total_findings": 1,
+                                "region": "Global"
+                            }
+                            
+                            # Store error result
+                            st.session_state.ai_model_scan_results = error_scan_result
+                            st.session_state.ai_model_scan_complete = True
+                            scan_results = [error_scan_result]
+                            
+                            # Set progress to complete
+                            if 'progress_bar' in locals():
+                                progress_bar.progress(1.0)
+                            if 'status_text' in locals():
+                                status_text.text("AI Model Scan: Failed with Critical Error")
                     elif scan_type == _("scan.dpia"):
                         # Skip the informational box and go straight to the DPIA form
                         # Import and run our redesigned DPIA form with comprehensive workflow
@@ -2666,16 +2774,39 @@ else:
                         # Stop normal flow to proceed with only the new DPIA form
                         scan_running = False
                     
-                    # Preview of findings
+                    # Preview of findings with error handling
                     st.markdown("### Sample Findings")
                     all_findings = []
+                    
+                    # Process all scan results with enhanced error handling
                     for result in scan_results:
-                        for item in result.get('pii_found', []):
+                        try:
+                            # For AI model scans, the findings are in a different format
+                            if scan_type == _("scan.ai_model") and 'findings' in result:
+                                for item in result.get('findings', []):
+                                    all_findings.append({
+                                        'Type': item.get('type', 'Unknown'),
+                                        'Risk Level': item.get('risk_level', 'Unknown').upper(),
+                                        'Category': item.get('category', 'Unknown'),
+                                        'Description': item.get('description', 'Unknown')
+                                    })
+                            # For other scan types
+                            else:
+                                for item in result.get('pii_found', []):
+                                    all_findings.append({
+                                        'Type': item.get('type', 'Unknown'),
+                                        'Value': item.get('value', 'Unknown'),
+                                        'Risk Level': item.get('risk_level', 'Unknown'),
+                                        'Location': item.get('location', 'Unknown')
+                                    })
+                        except Exception as findings_error:
+                            # If there's an error processing findings, add a placeholder
+                            st.warning(f"Error processing scan findings: {str(findings_error)}")
                             all_findings.append({
-                                'Type': item.get('type', 'Unknown'),
-                                'Value': item.get('value', 'Unknown'),
-                                'Risk Level': item.get('risk_level', 'Unknown'),
-                                'Location': item.get('location', 'Unknown')
+                                'Type': 'Error',
+                                'Risk Level': 'MEDIUM',
+                                'Description': f'Error processing scan results: {str(findings_error)}',
+                                'Location': 'Results Processor'
                             })
                     
                     # Display a sample of findings (up to 10 items)

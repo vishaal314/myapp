@@ -40,16 +40,9 @@ class AIModelScanner:
     def scan_model(self, 
                   model_source: str,
                   model_details: Dict[str, Any],
-                  leakage_types: List[str] = None,
-                  context: List[str] = None,
-                  sample_inputs: List[str] = None) -> Dict[str, Any]:
-        # Initialize default values for None parameters
-        if leakage_types is None:
-            leakage_types = ["All"]
-        if context is None:
-            context = ["General"]
-        if sample_inputs is None:
-            sample_inputs = []
+                  leakage_types: Optional[List[str]] = None,
+                  context: Optional[List[str]] = None,
+                  sample_inputs: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Scan an AI model for PII exposure and GDPR compliance risks
         
@@ -63,6 +56,13 @@ class AIModelScanner:
         Returns:
             Dictionary containing scan results with findings
         """
+        # Initialize default values for None parameters
+        if leakage_types is None:
+            leakage_types = ["All"]
+        if context is None:
+            context = ["General"]
+        if sample_inputs is None:
+            sample_inputs = []
         # Initialize scan result
         scan_id = f"AIMOD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6]}"
         scan_result = {
@@ -96,46 +96,114 @@ class AIModelScanner:
             if self.progress_callback:
                 self.progress_callback(2, total_steps, "Analyzing model architecture")
             
-            # Simulate processing time
-            time.sleep(1)
-            
-            # Add simulated findings based on model type
-            # In a real implementation, these would be actual scan results
-            scan_result["findings"].extend(self._generate_architecture_findings(model_source, model_details))
+            try:
+                # Simulate processing time
+                time.sleep(1)
+                
+                # Add simulated findings based on model type
+                # In a real implementation, these would be actual scan results
+                arch_findings = self._generate_architecture_findings(model_source, model_details)
+                scan_result["findings"].extend(arch_findings)
+            except Exception as arch_error:
+                logging.error(f"Error in architecture analysis: {str(arch_error)}")
+                # Add a fallback finding instead of crashing
+                scan_result["findings"].append({
+                    "id": f"AIARCH-ERROR-{uuid.uuid4().hex[:6]}",
+                    "type": "Error",
+                    "category": "Architecture Analysis",
+                    "description": f"Error during architecture analysis: {str(arch_error)}",
+                    "risk_level": "medium",
+                    "location": "Architecture Scanner"
+                })
             
             # Step 2: Simulate input/output analysis
             if self.progress_callback:
                 self.progress_callback(3, total_steps, "Analyzing input/output patterns")
             
-            # Simulate processing time
-            time.sleep(1)
-            
-            # Add simulated I/O findings
-            scan_result["findings"].extend(self._generate_io_findings(sample_inputs, context))
+            try:
+                # Simulate processing time
+                time.sleep(1)
+                
+                # Add simulated I/O findings
+                io_findings = self._generate_io_findings(sample_inputs, context)
+                scan_result["findings"].extend(io_findings)
+            except Exception as io_error:
+                logging.error(f"Error in I/O analysis: {str(io_error)}")
+                # Add a fallback finding instead of crashing
+                scan_result["findings"].append({
+                    "id": f"AIIO-ERROR-{uuid.uuid4().hex[:6]}",
+                    "type": "Error",
+                    "category": "I/O Analysis",
+                    "description": f"Error during input/output analysis: {str(io_error)}",
+                    "risk_level": "medium",
+                    "location": "I/O Scanner"
+                })
             
             # Step 3: Generate compliance assessment
             if self.progress_callback:
                 self.progress_callback(4, total_steps, "Performing compliance assessment")
             
-            # Simulate processing time
-            time.sleep(1)
+            try:
+                # Simulate processing time
+                time.sleep(1)
+                
+                # Add compliance findings
+                compliance_findings = self._generate_compliance_findings(leakage_types, self.region)
+                scan_result["findings"].extend(compliance_findings)
+            except Exception as compliance_error:
+                logging.error(f"Error in compliance assessment: {str(compliance_error)}")
+                # Add a fallback finding instead of crashing
+                scan_result["findings"].append({
+                    "id": f"AICOMP-ERROR-{uuid.uuid4().hex[:6]}",
+                    "type": "Error",
+                    "category": "Compliance Assessment",
+                    "description": f"Error during compliance assessment: {str(compliance_error)}",
+                    "risk_level": "medium",
+                    "location": "Compliance Scanner"
+                })
             
-            # Add compliance findings
-            scan_result["findings"].extend(self._generate_compliance_findings(leakage_types, self.region))
+            # Calculate risk metrics - with enhanced error handling
+            try:
+                metrics = self._calculate_risk_metrics(scan_result["findings"])
+                scan_result.update(metrics)
+            except Exception as metrics_error:
+                logging.error(f"Error calculating risk metrics: {str(metrics_error)}")
+                # Add default metrics to avoid crashes
+                scan_result.update({
+                    "risk_score": 50,  # Default middle risk score
+                    "severity_level": "medium",
+                    "severity_color": "#f59e0b",  # Amber
+                    "risk_counts": {"low": 0, "medium": 1, "high": 0, "critical": 0},
+                    "total_findings": len(scan_result["findings"])
+                })
             
-            # Calculate risk metrics
-            scan_result.update(self._calculate_risk_metrics(scan_result["findings"]))
-            
+            # Even if there are errors, we still return a valid scan result
             return scan_result
             
         except Exception as e:
             logging.error(f"Error during AI model scan: {str(e)}")
+            # Return a valid scan result structure even in case of a catastrophic error
             return {
                 "scan_id": scan_id,
                 "scan_type": "AI Model",
-                "error": str(e),
                 "timestamp": datetime.now().isoformat(),
-                "status": "failed"
+                "model_source": model_source,
+                "findings": [{
+                    "id": f"AIERROR-{uuid.uuid4().hex[:6]}",
+                    "type": "Critical Error",
+                    "category": "Scan Failure",
+                    "description": f"The AI model scan encountered a critical error: {str(e)}",
+                    "risk_level": "high",
+                    "location": "AI Model Scanner"
+                }],
+                "error": str(e),
+                "status": "completed_with_errors",
+                "risk_score": 50,
+                "severity_level": "medium",
+                "severity_color": "#f59e0b",
+                "risk_counts": {"low": 0, "medium": 0, "high": 1, "critical": 0},
+                "total_findings": 1,
+                "region": self.region
             }
     
     def _generate_architecture_findings(self, model_source: str, model_details: Dict[str, Any]) -> List[Dict[str, Any]]:
