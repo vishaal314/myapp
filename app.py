@@ -19,6 +19,7 @@ from services.report_generator import generate_pdf_report, generate_report
 from services.certificate_generator import CertificateGenerator
 from services.optimized_scanner import OptimizedScanner
 from services.dpia_scanner import DPIAScanner, generate_dpia_report
+from services.ai_model_scanner import AIModelScanner
 from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
 from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES
 from utils.gdpr_rules import REGIONS, get_region_rules
@@ -1880,7 +1881,7 @@ else:
             st.info(f"The scan will use the provided {cloud_provider} credentials to analyze your cloud resources.")
                 
         elif scan_type == _("scan.ai_model"):
-            if model_source == _("scan.upload_files"):
+            if model_source == "Upload Files":
                 upload_help = "Upload model files or sample data"
                 uploaded_files = st.file_uploader(
                     "Upload Model Files or Sample Data", 
@@ -1890,6 +1891,72 @@ else:
                 )
             else:
                 uploaded_files = []
+                
+            # Check if we already have completed scan results for this AI model scan
+            if 'ai_model_scan_complete' in st.session_state and st.session_state.ai_model_scan_complete:
+                # Display the AI model scan results
+                st.success("AI Model scan completed successfully!")
+                
+                # Get scan results
+                ai_model_scan_results = st.session_state.ai_model_scan_results
+                
+                # Display metrics and findings
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    risk_score = ai_model_scan_results.get('risk_score', 0)
+                    severity_color = ai_model_scan_results.get('severity_color', '#10b981')
+                    st.markdown(f"""
+                    <div style="background-color: {severity_color}; padding: 20px; border-radius: 10px; color: white;">
+                        <h3 style="text-align: center; margin: 0;">Risk Score</h3>
+                        <h2 style="text-align: center; margin: 10px 0 0 0;">{risk_score}/100</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    findings_count = ai_model_scan_results.get('total_findings', 0)
+                    st.metric("Total Findings", findings_count)
+                
+                with col3:
+                    severity_level = ai_model_scan_results.get('severity_level', 'low').upper()
+                    st.metric("Severity Level", severity_level)
+                
+                # Display findings table
+                st.subheader("Findings")
+                findings = ai_model_scan_results.get('findings', [])
+                
+                if findings:
+                    findings_data = []
+                    for finding in findings:
+                        findings_data.append({
+                            'Type': finding.get('type', 'Unknown'),
+                            'Risk Level': finding.get('risk_level', 'low').upper(),
+                            'Category': finding.get('category', 'Unknown'),
+                            'Description': finding.get('description', 'Unknown')
+                        })
+                    
+                    findings_df = pd.DataFrame(findings_data)
+                    st.dataframe(findings_df, use_container_width=True)
+                else:
+                    st.info("No findings detected in the AI model scan.")
+                
+                # Generate Report button
+                if st.button("Generate AI Model Report", key="ai_model_report_button", type="primary"):
+                    with st.spinner("Generating AI model report..."):
+                        # Import report generator
+                        from services.report_generator import generate_report
+                        
+                        # Generate PDF report with AI model format
+                        pdf_bytes = generate_report(
+                            ai_model_scan_results,
+                            report_format="ai_model"
+                        )
+                        
+                        # Create download link
+                        scan_id = ai_model_scan_results.get('scan_id', 'unknown')
+                        b64_pdf = base64.b64encode(pdf_bytes).decode()
+                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="AI_Model_Scan_Report_{scan_id}.pdf">Download AI Model Report</a>'
+                        st.markdown(href, unsafe_allow_html=True)
                 
         elif scan_type == _("scan.dpia"):
             # No header for DPIA - will be handled by the assessment form
