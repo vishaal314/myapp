@@ -66,8 +66,8 @@ class RepoScanner:
         Returns:
             True if the URL seems to be a valid Git repository URL, False otherwise
         """
-        # Basic URL validation
-        url_pattern = r'^https?://(?:www\.)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/.+/.+$'
+        # Basic URL validation - allow URLs with repository paths (like /tree/master/.github)
+        url_pattern = r'^https?://(?:www\.)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/.+/.+'
         match = re.match(url_pattern, repo_url)
         
         if not match:
