@@ -771,11 +771,52 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     # Summary data
     scan_type = scan_data.get('scan_type', 'Unknown')
     region = scan_data.get('region', 'Unknown')
-    total_pii = scan_data.get('total_pii_found', 0)
-    high_risk = scan_data.get('high_risk_count', 0)
-    medium_risk = scan_data.get('medium_risk_count', 0)
-    low_risk = scan_data.get('low_risk_count', 0)
     timestamp = scan_data.get('timestamp', 'Unknown')
+    
+    # For AI Model reports, calculate counts directly from findings
+    if report_format == "ai_model" and 'findings' in scan_data:
+        # Count findings by risk level
+        findings = scan_data.get('findings', [])
+        high_risk = 0
+        medium_risk = 0
+        low_risk = 0
+        
+        # Import logging for debugging
+        import logging
+        logging.info(f"Calculating AI model risk counts from {len(findings)} findings")
+        
+        for finding in findings:
+            risk_level = finding.get('risk_level', 'low')
+            # Ensure risk_level is a string and normalized to lowercase for comparison
+            if isinstance(risk_level, str):
+                risk_level_lower = risk_level.lower()
+            else:
+                risk_level_lower = str(risk_level).lower()
+                
+            # Count based on risk level
+            if risk_level_lower == 'high':
+                high_risk += 1
+            elif risk_level_lower == 'medium':
+                medium_risk += 1
+            else:
+                low_risk += 1
+                
+        # Set total findings count
+        total_pii = len(findings)
+        
+        # Update the scan_data with calculated counts
+        scan_data['total_pii_found'] = total_pii
+        scan_data['high_risk_count'] = high_risk
+        scan_data['medium_risk_count'] = medium_risk
+        scan_data['low_risk_count'] = low_risk
+        
+        logging.info(f"Calculated AI model counts - Total: {total_pii}, High: {high_risk}, Medium: {medium_risk}, Low: {low_risk}")
+    else:
+        # Use existing counts from the scan data
+        total_pii = scan_data.get('total_pii_found', 0)
+        high_risk = scan_data.get('high_risk_count', 0)
+        medium_risk = scan_data.get('medium_risk_count', 0)
+        low_risk = scan_data.get('low_risk_count', 0)
     
     # Get URL information
     url = scan_data.get('url', scan_data.get('domain', 'Not available'))
