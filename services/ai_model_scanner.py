@@ -189,11 +189,62 @@ class AIModelScanner:
             }
 
     def _validate_github_repo(self, repo_url: str) -> bool:
+        """
+        Validates a GitHub repository URL by extracting the owner/repo part
+        and checking if it exists via the GitHub API.
+        
+        Args:
+            repo_url: The full GitHub repository URL which may include paths,
+                      branches, etc. (e.g., https://github.com/username/repo/tree/main/path)
+                      
+        Returns:
+            bool: True if the repository exists, False otherwise
+        """
         try:
-            repo_path = repo_url.replace("https://github.com/", "")
-            api_url = f"https://api.github.com/repos/{repo_path}"
+            if not repo_url or not isinstance(repo_url, str):
+                logging.error(f"Invalid repository URL format: {repo_url}")
+                return False
+                
+            # Clean and normalize the URL
+            repo_url = repo_url.strip()
+            
+            # Extract owner/repo from various GitHub URL formats
+            import re
+            
+            # Pattern to match GitHub repository URL and extract owner/repo
+            # This handles URLs like:
+            # - https://github.com/owner/repo
+            # - https://github.com/owner/repo/
+            # - https://github.com/owner/repo.git
+            # - https://github.com/owner/repo/tree/branch
+            # - https://github.com/owner/repo/blob/branch/path
+            pattern = r'github\.com[/:]([^/]+)/([^/]+)'
+            match = re.search(pattern, repo_url)
+            
+            if not match:
+                logging.error(f"Could not extract owner/repo from URL: {repo_url}")
+                return False
+                
+            owner, repo = match.groups()
+            
+            # Remove .git suffix if present
+            repo = repo.replace('.git', '')
+            
+            # Log debugging information
+            logging.info(f"Extracted owner: {owner}, repo: {repo} from URL: {repo_url}")
+            
+            # Use the GitHub API to check if the repo exists
+            api_url = f"https://api.github.com/repos/{owner}/{repo}"
+            logging.info(f"Checking GitHub API URL: {api_url}")
+            
             response = requests.get(api_url)
-            return response.status_code == 200
+            result = response.status_code == 200
+            
+            if not result:
+                logging.error(f"GitHub API response: {response.status_code} - {response.text}")
+            
+            return result
+            
         except Exception as e:
             logging.error(f"GitHub repo validation error: {str(e)}")
             return False

@@ -1751,17 +1751,35 @@ else:
                     st.session_state.ai_model_repo_path = repo_path
                     
                 elif model_source == "Repository URL":
-                    # Repository URL scanning
+                    # Repository URL scanning with AI model-specific session state variables
                     repo_url = st.text_input("Repository URL", 
                               placeholder="https://github.com/username/model-repo", 
                               help="Full repository URL, can include paths like /tree/master/.github")
+                    
+                    # Debug validation info for the AI model repo URL
+                    if repo_url:
+                        st.info(f"Validating AI model repository URL: {repo_url}")
+                        try:
+                            # Manual check using AIModelScanner
+                            from services.ai_model_scanner import AIModelScanner
+                            
+                            ai_model_scanner = AIModelScanner()
+                            is_valid = ai_model_scanner._validate_github_repo(repo_url)
+                            
+                            if is_valid:
+                                st.success(f"AI Model repository URL validated successfully!")
+                            else:
+                                st.error(f"AI Model repository URL validation failed. Please ensure it's a valid GitHub repository URL.")
+                        except Exception as e:
+                            st.error(f"Error validating AI Model URL: {str(e)}")
+                    
                     branch_name = st.text_input("Branch (optional)", value="main")
                     auth_token = st.text_input("Access Token (optional for private repos)", type="password")
                     
-                    # Store values in session state using the same variable names as in the scan handler
-                    st.session_state.repo_url = repo_url
-                    st.session_state.branch_name = branch_name
-                    st.session_state.auth_token = auth_token
+                    # Store values in AI model-specific session state variables to avoid conflicts
+                    st.session_state.ai_model_repo_url = repo_url
+                    st.session_state.ai_model_branch_name = branch_name
+                    st.session_state.ai_model_auth_token = auth_token
                 
                 st.text_area("Sample Input Prompts (one per line)", 
                            placeholder="What is my credit card number?\nWhat's my social security number?\nTell me about Jane Doe's medical history.")
@@ -1771,9 +1789,15 @@ else:
                                               "Sensitive Information Exposure", "All"],
                                              default=["All"])
                 
+                # Store in session state
+                st.session_state.leakage_types = leakage_types
+                
                 context = st.multiselect("Domain Context",
                                        ["Health", "Finance", "HR", "Legal", "General", "All"],
                                        default=["General"])
+                                       
+                # Store in session state
+                st.session_state.context = context
                 
                 st.checkbox("Upload model documentation/data dictionary", value=False)
                 st.checkbox("Perform adversarial testing", value=True)
@@ -2651,10 +2675,15 @@ else:
                             }
                         elif model_source == "Repository URL":
                             model_details = {
-                                "repo_url": st.session_state.get('repo_url', ""), 
-                                "branch_name": st.session_state.get('branch_name', "main"),
-                                "auth_token": st.session_state.get('auth_token', "")
+                                "repo_url": st.session_state.get('ai_model_repo_url', ""), 
+                                "branch_name": st.session_state.get('ai_model_branch_name', "main"),
+                                "auth_token": st.session_state.get('ai_model_auth_token', "")
                             }
+                            
+                            # Debug info for AI model repo URL
+                            logging.info(f"AI Model Repository URL: {model_details.get('repo_url')}")
+                            if not model_details.get('repo_url'):
+                                st.error("AI Model Repository URL is required but not found in session state. Please enter a valid GitHub repository URL.")
                         
                         # Get leakage types and context from session state or set defaults
                         leakage_types = st.session_state.get('leakage_types', ["All"])
