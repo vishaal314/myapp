@@ -2020,6 +2020,15 @@ else:
                                 # Continue anyway, report generator will handle missing fields
                             
                             try:
+                                # Log the findings for debugging
+                                if st.session_state.get('debug_mode', False):
+                                    st.write("Debug - AI Model findings data structure:")
+                                    st.write(ai_model_scan_results.get('findings', []))
+                                
+                                # Log scan_data to debug console
+                                findings_count = len(ai_model_scan_results.get('findings', []))
+                                logging.info(f"AI model report generation with {findings_count} findings")
+                                
                                 # Generate PDF report with AI model format
                                 pdf_bytes = generate_report(
                                     ai_model_scan_results,

@@ -530,17 +530,29 @@ def generate_report(scan_data: Dict[str, Any],
         return buffer.getvalue()
     
     try:
+        # Add debug logging
+        import logging
+        
         # Get scan type to determine report format - use provided format if specified
         if report_format:
             scan_type = report_format
+            logging.info(f"Using provided report format: {report_format}")
         else:
             scan_type = scan_data.get('scan_type', 'Unknown')
+            logging.info(f"Detected scan type: {scan_type}")
+        
+        # Log key data structure elements for debugging
+        logging.info(f"Report generation: scan_data keys: {list(scan_data.keys())}")
+        if 'findings' in scan_data:
+            logging.info(f"Report generation: found {len(scan_data['findings'])} findings")
         
         # Use appropriate report format based on scan type
         if 'ai_model' in scan_type.lower():
             report_format = "ai_model"
+            logging.info("Using AI Model report format")
         else:
             report_format = "standard"
+            logging.info("Using standard report format")
             
         return _generate_report_internal(
             scan_data=scan_data,
@@ -1051,9 +1063,18 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             ai_findings = scan_data['findings']
             ai_finding_items = []
             
+            # Log findings for debugging purposes
+            import logging
+            logging.info(f"Processing AI model findings for report. Found {len(ai_findings)} findings.")
+            
             for finding in ai_findings:
                 # Translate risk level for display if needed
                 original_risk_level = finding.get('risk_level', 'low')
+                
+                # Ensure risk_level is lowercase for consistent comparison
+                if isinstance(original_risk_level, str):
+                    original_risk_level = original_risk_level.lower()
+                
                 if current_lang == 'nl' and original_risk_level in ['high', 'medium', 'low']:
                     if original_risk_level == 'high':
                         displayed_risk_level = 'Hoog'
@@ -1063,7 +1084,10 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                         displayed_risk_level = 'Laag'
                 else:
                     # Convert to title case for better display
-                    displayed_risk_level = original_risk_level.title()
+                    if isinstance(original_risk_level, str):
+                        displayed_risk_level = original_risk_level.title()
+                    else:
+                        displayed_risk_level = str(original_risk_level).title()
                 
                 # Create a data row for this finding
                 finding_data = [
@@ -1074,6 +1098,9 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     displayed_risk_level
                 ]
                 ai_finding_items.append(finding_data)
+                
+                # Log finding details for debugging
+                logging.info(f"Processing finding: {finding.get('type', 'Unknown')} - {displayed_risk_level}")
             
             if ai_finding_items:
                 # Create detailed findings table with translated headers
