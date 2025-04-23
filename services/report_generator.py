@@ -1035,7 +1035,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     elements.append(Spacer(1, 12))
     
     # Include detailed findings if requested
-    if include_details and 'detailed_results' in scan_data and scan_data['detailed_results']:
+    if include_details:
         elements.append(PageBreak())
         
         # Translate detailed findings heading
@@ -1045,77 +1045,169 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             detailed_findings_title = _('report.detailed_findings', 'Detailed Findings')
         elements.append(Paragraph(detailed_findings_title, heading_style))
         
-        # Extract all PII items from all files
-        all_pii_items = []
-        for file_result in scan_data['detailed_results']:
-            file_name = file_result.get('file_name', 'Unknown')
+        # For AI Model reports, display findings from the findings array directly
+        if report_format == "ai_model" and 'findings' in scan_data and scan_data['findings']:
+            # Create a table for AI model findings
+            ai_findings = scan_data['findings']
+            ai_finding_items = []
             
-            for pii_item in file_result.get('pii_found', []):
+            for finding in ai_findings:
                 # Translate risk level for display if needed
-                original_risk_level = pii_item.get('risk_level', 'Unknown')
-                if current_lang == 'nl' and original_risk_level in ['High', 'Medium', 'Low']:
-                    if original_risk_level == 'High':
+                original_risk_level = finding.get('risk_level', 'low')
+                if current_lang == 'nl' and original_risk_level in ['high', 'medium', 'low']:
+                    if original_risk_level == 'high':
                         displayed_risk_level = 'Hoog'
-                    elif original_risk_level == 'Medium':
+                    elif original_risk_level == 'medium':
                         displayed_risk_level = 'Gemiddeld'
                     else:
                         displayed_risk_level = 'Laag'
                 else:
-                    displayed_risk_level = original_risk_level
+                    # Convert to title case for better display
+                    displayed_risk_level = original_risk_level.title()
                 
-                pii_item_data = [
-                    file_name,
-                    pii_item.get('type', 'Unknown'),
-                    pii_item.get('value', 'Unknown'),
-                    pii_item.get('location', 'Unknown'),
+                # Create a data row for this finding
+                finding_data = [
+                    finding.get('type', 'Unknown'),
+                    finding.get('category', 'Unknown'),
+                    finding.get('description', 'Unknown'),
+                    finding.get('location', 'Unknown'),
                     displayed_risk_level
                 ]
-                all_pii_items.append(pii_item_data)
-        
-        if all_pii_items:
-            # Create detailed findings table with translated headers
-            if current_lang == 'nl':
-                table_headers = ['Bestand', 'PII Type', 'Waarde', 'Locatie', 'Risiconiveau']
+                ai_finding_items.append(finding_data)
+            
+            if ai_finding_items:
+                # Create detailed findings table with translated headers
+                if current_lang == 'nl':
+                    table_headers = ['Type', 'Categorie', 'Beschrijving', 'Locatie', 'Risiconiveau']
+                else:
+                    table_headers = ['Type', 'Category', 'Description', 'Location', 'Risk Level']
+                    
+                detailed_data = [table_headers]
+                detailed_data.extend(ai_finding_items)
+                
+                # Create a properly sized table for AI model findings
+                detailed_table = Table(detailed_data, colWidths=[80, 80, 180, 80, 50])
+                
+                # Define row styles based on risk level
+                row_styles = []
+                for i, item in enumerate(ai_finding_items, 1):  # Starting from 1 to account for header
+                    risk_level = item[4]
+                    # Check for both Dutch and English risk levels
+                    if risk_level in ['High', 'Hoog']:
+                        bg_color = colors.pink
+                    elif risk_level in ['Medium', 'Gemiddeld']:
+                        bg_color = colors.lightgoldenrodyellow
+                    else:  # Low or Laag
+                        bg_color = colors.white
+                    
+                    row_styles.append(('BACKGROUND', (0, i), (-1, i), bg_color))
+                
+                # Apply table styles
+                table_style = [
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 8),  # Smaller font for detailed table
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP')
+                ]
+                
+                # Add risk-based row styles
+                table_style.extend(row_styles)
+                
+                detailed_table.setStyle(TableStyle(table_style))
+                
+                elements.append(detailed_table)
             else:
-                table_headers = ['File', 'PII Type', 'Value', 'Location', 'Risk Level']
+                # Translate "No detailed findings" message
+                if current_lang == 'nl':
+                    no_findings_msg = "Geen gedetailleerde bevindingen beschikbaar."
+                else:
+                    no_findings_msg = "No detailed findings available."
+                elements.append(Paragraph(no_findings_msg, normal_style))
+        
+        # For standard reports, extract PII items from the detailed_results structure
+        elif 'detailed_results' in scan_data and scan_data['detailed_results']:
+            # Extract all PII items from all files
+            all_pii_items = []
+            for file_result in scan_data['detailed_results']:
+                file_name = file_result.get('file_name', 'Unknown')
                 
-            detailed_data = [table_headers]
-            detailed_data.extend(all_pii_items)
+                for pii_item in file_result.get('pii_found', []):
+                    # Translate risk level for display if needed
+                    original_risk_level = pii_item.get('risk_level', 'Unknown')
+                    if current_lang == 'nl' and original_risk_level in ['High', 'Medium', 'Low']:
+                        if original_risk_level == 'High':
+                            displayed_risk_level = 'Hoog'
+                        elif original_risk_level == 'Medium':
+                            displayed_risk_level = 'Gemiddeld'
+                        else:
+                            displayed_risk_level = 'Laag'
+                    else:
+                        displayed_risk_level = original_risk_level
+                    
+                    pii_item_data = [
+                        file_name,
+                        pii_item.get('type', 'Unknown'),
+                        pii_item.get('value', 'Unknown'),
+                        pii_item.get('location', 'Unknown'),
+                        displayed_risk_level
+                    ]
+                    all_pii_items.append(pii_item_data)
             
-            detailed_table = Table(detailed_data, colWidths=[80, 80, 150, 80, 80])
-            
-            # Define row styles based on risk level
-            row_styles = []
-            for i, item in enumerate(all_pii_items, 1):  # Starting from 1 to account for header
-                risk_level = item[4]
-                # Check for both Dutch and English risk levels
-                if risk_level in ['High', 'Hoog']:
-                    bg_color = colors.pink
-                elif risk_level in ['Medium', 'Gemiddeld']:
-                    bg_color = colors.lightgoldenrodyellow
-                else:  # Low or Laag
-                    bg_color = colors.white
+            if all_pii_items:
+                # Create detailed findings table with translated headers
+                if current_lang == 'nl':
+                    table_headers = ['Bestand', 'PII Type', 'Waarde', 'Locatie', 'Risiconiveau']
+                else:
+                    table_headers = ['File', 'PII Type', 'Value', 'Location', 'Risk Level']
+                    
+                detailed_data = [table_headers]
+                detailed_data.extend(all_pii_items)
                 
-                row_styles.append(('BACKGROUND', (0, i), (-1, i), bg_color))
-            
-            # Apply table styles
-            table_style = [
-                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, -1), 8),  # Smaller font for detailed table
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP')
-            ]
-            
-            # Add risk-based row styles
-            table_style.extend(row_styles)
-            
-            detailed_table.setStyle(TableStyle(table_style))
-            
-            elements.append(detailed_table)
+                detailed_table = Table(detailed_data, colWidths=[80, 80, 150, 80, 80])
+                
+                # Define row styles based on risk level
+                row_styles = []
+                for i, item in enumerate(all_pii_items, 1):  # Starting from 1 to account for header
+                    risk_level = item[4]
+                    # Check for both Dutch and English risk levels
+                    if risk_level in ['High', 'Hoog']:
+                        bg_color = colors.pink
+                    elif risk_level in ['Medium', 'Gemiddeld']:
+                        bg_color = colors.lightgoldenrodyellow
+                    else:  # Low or Laag
+                        bg_color = colors.white
+                    
+                    row_styles.append(('BACKGROUND', (0, i), (-1, i), bg_color))
+                
+                # Apply table styles
+                table_style = [
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 8),  # Smaller font for detailed table
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP')
+                ]
+                
+                # Add risk-based row styles
+                table_style.extend(row_styles)
+                
+                detailed_table.setStyle(TableStyle(table_style))
+                
+                elements.append(detailed_table)
+            else:
+                # Translate "No detailed findings" message
+                if current_lang == 'nl':
+                    no_findings_msg = "Geen gedetailleerde bevindingen beschikbaar."
+                else:
+                    no_findings_msg = "No detailed findings available."
+                elements.append(Paragraph(no_findings_msg, normal_style))
         else:
             # Translate "No detailed findings" message
             if current_lang == 'nl':
