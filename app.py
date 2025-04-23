@@ -5,10 +5,17 @@ import os
 import uuid
 import random
 import string
+import logging
 from datetime import datetime
 import json
 import base64
 from io import BytesIO
+
+# Configure basic logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 from services.code_scanner import CodeScanner
 from services.blob_scanner import BlobScanner
