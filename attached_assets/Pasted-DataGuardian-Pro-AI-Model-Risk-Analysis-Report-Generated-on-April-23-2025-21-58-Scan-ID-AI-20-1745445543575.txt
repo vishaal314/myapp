@@ -1,0 +1,71 @@
+DataGuardian Pro
+AI Model Risk Analysis Report
+Generated on: April 23, 2025 21:58
+Scan ID: AI -20250423-AIMODExecutive Summary
+This report presents the findings of an AI Model risk analysis conducted on Unknown Model from source Repository
+URL on 2025-04-23 21:58:05. The scan identified a total of 0 instances of personally identifiable information (PII) with 0
+high-risk items.
+Scan Type AI Model
+Region Netherlands
+Date & Time 2025-04-23 21:58:05
+Model Source Repository URL
+Model Name Unknown Model
+Repository URL https://github.com/vishaal314/terrascan
+Repository Path Not available
+Total PII Items Found 0
+High Risk Items 0
+Medium Risk Items 0
+Low Risk Items 0
+Risk Assessment
+GDPR Compliance Protection
+Your organization is well-protected against potential GDPR fines
+Potential fines up to €20 million or 4% of global revenue
+Low
+Medium
+High
+None Risk
+No PII items were found in this scan. Continue monitoring to maintain GDPR compliance.
+Data Sustainability Compliance
+Data sustainability measures how efficiently your organization manages personal data in compliance with GDPR
+principles of data minimization, storage limitation, and purpose limitation. A higher score indicates better long-term data
+governance practices.
+Data Sustainability Index
+90%
+Status: Excellent
+Measures data minimization, retention policies & processing efficiency
+Detailed Findings
+Type Category Description Location Risk Level
+Model Architecture PII Protection Model architecture review completed Repository URL Medium
+Compliance Assessment GDPR Compliance Model requires GDPR compliance assessment for Netherlands Compliance Analysis Medium
+Training Data Assessment PII in Training Potential PII exposure in training data Training Data High
+Recommendations & Next Steps
+• Ensure proper legal basis for processing all identified PII in AI models.
+• Document the use of personal data in model training as required by GDPR Article 30.
+• Implement regular audits of AI models to detect unintended personal data processing.
+• Apply data minimization in training data to ensure GDPR compliance for AI systems.
+• Consider synthetic data or pseudonymized datasets for future model development.
+Netherlands-Specific Recommendations
+• Ensure parental consent for processing personal data of children under 16.
+• Follow Dutch DPA (Autoriteit Persoonsgegevens) guidelines for breach notification within 72 hours.
+• Adhere to specific rules regarding BSN processing under UAVG.
+• Implement appropriate controls for processing medical data as per UAVG requirements.
+Data Sustainability Recommendations
+• Implement data minimization practices to collect only necessary personal data.
+• Establish clear data retention periods and automated deletion processes.
+• Regularly audit and clean databases to remove redundant or obsolete data.
+• Design systems with privacy by design principles to improve sustainability.
+• Consider data storage optimization to reduce environmental impact of data centers.
+Scan Metadata
+Scan ID AIMOD-20250423-69ed9e
+Scan Type AI Model
+Region Netherlands
+Timestamp 2025-04-23 21:58:05
+Model Source Repository URL
+Model Name Unknown Model
+Repository URL https://github.com/vishaal314/terrascan
+Repository Path Not available
+Username Unknown
+Files Scanned 0
+Disclaimer: This report is provided for informational purposes only and should not be considered legal advice. The findings in this report are based on
+automated scanning and may not identify all GDPR-relevant personal data. We recommend consulting with a qualified legal professional for specific
+GDPR compliance guidance.
