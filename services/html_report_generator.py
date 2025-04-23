@@ -94,12 +94,57 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
     scan_id = scan_data.get('scan_id', 'Unknown')
     scan_type = scan_data.get('scan_type', 'Unknown')
     region = scan_data.get('region', 'Unknown')
-    total_pii = scan_data.get('total_pii_found', 0)
-    high_risk = scan_data.get('high_risk_count', 0)
-    medium_risk = scan_data.get('medium_risk_count', 0)
-    low_risk = scan_data.get('low_risk_count', 0)
     timestamp = scan_data.get('timestamp', 'Unknown')
     url = scan_data.get('url', scan_data.get('domain', 'Not available'))
+    
+    # Check if this is an AI model scan
+    is_ai_model_scan = scan_type.lower() == 'ai model' or 'ai_model' in str(scan_type).lower()
+    
+    # Import logging for debugging
+    import logging
+    
+    # For AI Model reports, calculate counts directly from findings
+    if is_ai_model_scan and 'findings' in scan_data:
+        # Count findings by risk level
+        findings = scan_data.get('findings', [])
+        high_risk = 0
+        medium_risk = 0
+        low_risk = 0
+        
+        logging.info(f"HTML Report: Calculating AI model risk counts from {len(findings)} findings")
+        
+        for finding in findings:
+            risk_level = finding.get('risk_level', 'low')
+            # Ensure risk_level is a string and normalized to lowercase for comparison
+            if isinstance(risk_level, str):
+                risk_level_lower = risk_level.lower()
+            else:
+                risk_level_lower = str(risk_level).lower()
+                
+            # Count based on risk level
+            if risk_level_lower == 'high':
+                high_risk += 1
+            elif risk_level_lower == 'medium':
+                medium_risk += 1
+            else:
+                low_risk += 1
+                
+        # Set total findings count
+        total_pii = len(findings)
+        
+        # Update the scan_data with calculated counts to ensure consistency
+        scan_data['total_pii_found'] = total_pii
+        scan_data['high_risk_count'] = high_risk
+        scan_data['medium_risk_count'] = medium_risk
+        scan_data['low_risk_count'] = low_risk
+        
+        logging.info(f"HTML Report: Calculated AI model counts - Total: {total_pii}, High: {high_risk}, Medium: {medium_risk}, Low: {low_risk}")
+    else:
+        # Use existing counts from the scan data
+        total_pii = scan_data.get('total_pii_found', 0)
+        high_risk = scan_data.get('high_risk_count', 0)
+        medium_risk = scan_data.get('medium_risk_count', 0)
+        low_risk = scan_data.get('low_risk_count', 0)
     
     # Format timestamp
     if timestamp != 'Unknown':
@@ -137,11 +182,7 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
     findings = scan_data.get('findings', [])
     findings_table_rows = ""
     
-    # Check if this is an AI model scan
-    is_ai_model_scan = scan_type.lower() == 'ai model' or 'ai_model' in str(scan_type).lower()
-    
-    # Import logging for debugging
-    import logging
+    # Import logging for debugging (already imported above)
     logging.info(f"Generating HTML report for scan type: {scan_type}, AI model scan: {is_ai_model_scan}")
     
     for finding in findings:
