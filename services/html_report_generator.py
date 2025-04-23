@@ -136,32 +136,62 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
     # Create findings table data
     findings = scan_data.get('findings', [])
     findings_table_rows = ""
+    
+    # Check if this is an AI model scan
+    is_ai_model_scan = scan_type.lower() == 'ai model' or 'ai_model' in str(scan_type).lower()
+    
+    # Import logging for debugging
+    import logging
+    logging.info(f"Generating HTML report for scan type: {scan_type}, AI model scan: {is_ai_model_scan}")
+    
     for finding in findings:
         risk_level = finding.get('risk_level', 'Unknown')
         
+        # Ensure risk_level is a string and normalized to lowercase for comparison
+        if isinstance(risk_level, str):
+            risk_level_lower = risk_level.lower()
+        else:
+            risk_level_lower = str(risk_level).lower()
+        
         # Determine risk level color and translate risk level if needed
-        if risk_level == 'High' or risk_level == 'Hoog':
+        if risk_level_lower == 'high' or risk_level_lower == 'hoog':
             risk_color = '#ffcdd2'
             risk_level_display = 'Hoog' if current_lang == 'nl' else 'High'
-        elif risk_level == 'Medium' or risk_level == 'Gemiddeld':
+        elif risk_level_lower == 'medium' or risk_level_lower == 'gemiddeld':
             risk_color = '#fff9c4'
             risk_level_display = 'Gemiddeld' if current_lang == 'nl' else 'Medium'
-        elif risk_level == 'Low' or risk_level == 'Laag':
+        elif risk_level_lower == 'low' or risk_level_lower == 'laag':
             risk_color = '#e8f5e9'
             risk_level_display = 'Laag' if current_lang == 'nl' else 'Low'
         else:
             risk_color = '#e0e0e0'
             risk_level_display = 'Onbekend' if current_lang == 'nl' else 'Unknown'
         
-        findings_table_rows += f"""
-        <tr style="background-color: {risk_color}">
-            <td>{finding.get('type', 'Unknown')}</td>
-            <td>{finding.get('value', 'Unknown')}</td>
-            <td>{finding.get('location', 'Unknown')}</td>
-            <td>{risk_level_display}</td>
-            <td>{finding.get('reason', 'Unknown')}</td>
-        </tr>
-        """
+        # Log the finding for debugging
+        logging.info(f"Processing finding: {finding.get('type', 'Unknown')} - {risk_level_display}")
+        
+        # Handle AI model findings differently as they have a different structure
+        if is_ai_model_scan:
+            findings_table_rows += f"""
+            <tr style="background-color: {risk_color}">
+                <td>{finding.get('type', 'Unknown')}</td>
+                <td>{finding.get('category', 'Unknown')}</td>
+                <td>{finding.get('location', 'Unknown')}</td>
+                <td>{risk_level_display}</td>
+                <td>{finding.get('description', 'Unknown')}</td>
+            </tr>
+            """
+        else:
+            # Standard findings structure
+            findings_table_rows += f"""
+            <tr style="background-color: {risk_color}">
+                <td>{finding.get('type', 'Unknown')}</td>
+                <td>{finding.get('value', 'Unknown')}</td>
+                <td>{finding.get('location', 'Unknown')}</td>
+                <td>{risk_level_display}</td>
+                <td>{finding.get('reason', 'Unknown')}</td>
+            </tr>
+            """
     
     # Recommendations
     recommendations = scan_data.get('recommendations', [])
@@ -487,10 +517,10 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
             <thead>
                 <tr>
                     <th>{pii_type_header}</th>
-                    <th>{value_header}</th>
+                    <th>{is_ai_model_scan and "Category" or value_header}</th>
                     <th>{location_header}</th>
                     <th>{risk_level_header}</th>
-                    <th>{reason_header}</th>
+                    <th>{is_ai_model_scan and "Description" or reason_header}</th>
                 </tr>
             </thead>
             <tbody>
