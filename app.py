@@ -1701,8 +1701,8 @@ else:
                 st.checkbox("Enable OCR for non-text content", value=True)
                 
             elif scan_type == _("scan.sustainability"):
-                # 7. Sustainability Scanner - Call the dedicated sustainability scanner page
-                from pages.sustainability_scanner import run_sustainability_scanner
+                # 7. Sustainability Scanner - Call the dedicated sustainability scanner module
+                from utils.scanners.sustainability_scanner import run_sustainability_scanner
                 run_sustainability_scanner()
                 
 # These options are now handled in the dedicated sustainability scanner page
