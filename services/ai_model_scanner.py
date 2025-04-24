@@ -313,7 +313,13 @@ class AIModelScanner:
                     "risk_level": "low",
                     "location": "License File",
                     "details": {
-                        "license_type": validation_result["license_type"]
+                        "license_type": validation_result["license_type"],
+                        "recommendations": [
+                            "Review license compatibility with your planned AI model usage",
+                            "Ensure attribution requirements are met in your documentation",
+                            "Create a license compliance checklist specific to AI training"
+                        ],
+                        "remediation_path": "To close this finding, document how the model complies with the license terms, particularly regarding attribution and distribution of derivative works."
                     }
                 })
             else:
@@ -326,7 +332,13 @@ class AIModelScanner:
                     "risk_level": "high",
                     "location": "Repository Root",
                     "details": {
-                        "recommendation": "Add a license file to clarify usage permissions"
+                        "recommendations": [
+                            "Add a license file to clarify usage permissions",
+                            "Consider using MIT, Apache 2.0 or other AI-friendly license",
+                            "Explicitly state AI training permissions in your license",
+                            "Consult with legal counsel on best license options for AI models"
+                        ],
+                        "remediation_path": "To close this finding, add a LICENSE file to the repository root that clearly specifies terms for code reuse, AI training, and model output attribution."
                     }
                 })
             
@@ -349,7 +361,14 @@ class AIModelScanner:
                         "risk_level": "low",
                         "location": ".gitignore",
                         "details": {
-                            "mechanism": ".gitignore file present"
+                            "mechanism": ".gitignore file present",
+                            "recommendations": [
+                                "Extend .gitignore to include AI-specific exclusions with comments",
+                                "Consider adding an .aiignore or .mlignore file specifically for AI training exclusions",
+                                "Document the opt-out mechanism in your README.md",
+                                "Create a public registry where developers can register their opt-out preferences"
+                            ],
+                            "remediation_path": "To close this finding, enhance your exclusion mechanisms by creating AI-specific opt-out markers and document these mechanisms in your project documentation."
                         }
                     })
                 else:
@@ -361,7 +380,13 @@ class AIModelScanner:
                         "risk_level": "medium",
                         "location": "Repository Root",
                         "details": {
-                            "recommendation": "Add .gitignore or other exclusion mechanisms"
+                            "recommendations": [
+                                "Add a .gitignore file with standard exclusions",
+                                "Create an AI-specific exclusion mechanism like .aiignore",
+                                "Document how contributors can opt out of AI training",
+                                "Implement file-level exclusion tags in code comments"
+                            ],
+                            "remediation_path": "To close this finding, implement at least one opt-out mechanism (.gitignore, .aiignore, etc.) and document how developers can exclude their code from AI training."
                         }
                     })
                 
@@ -499,7 +524,15 @@ class AIModelScanner:
             "risk_level": "high",
             "location": "Data Collection",
             "details": {
-                "consideration": "Evaluate how model training data was collected and if proper scraping practices were followed"
+                "consideration": "Evaluate how model training data was collected and if proper scraping practices were followed",
+                "recommendations": [
+                    "Document all data collection methodologies in a Data Collection Statement",
+                    "Respect robots.txt directives when scraping public repositories",
+                    "Implement rate limiting to avoid excessive requests to source repositories",
+                    "Consider paying royalties to authors whose code significantly contributes to your model",
+                    "Create a data collection policy that emphasizes ethical scraping practices"
+                ],
+                "remediation_path": "To close this finding, create and publish a comprehensive Data Collection Policy document with details on your scraping methodologies, respect for source restrictions, and compensation plans for significant contributors."
             }
         })
         
@@ -512,7 +545,15 @@ class AIModelScanner:
             "risk_level": "medium",
             "location": "Training Data",
             "details": {
-                "consideration": "Check if model training respected license terms of open source code and obtained proper consent"
+                "consideration": "Check if model training respected license terms of open source code and obtained proper consent",
+                "recommendations": [
+                    "Create a license compatibility assessment for all code used in training",
+                    "Implement a consent mechanism for code authors to opt-in to training usage",
+                    "Maintain a database of licenses that are compatible with AI training",
+                    "Exclude code with licenses that explicitly prohibit use in AI training",
+                    "Develop a consent verification workflow for future data collection"
+                ],
+                "remediation_path": "To close this finding, implement a License Compatibility System that screens training data based on license terms, documents consent processes, and respects copyright restrictions."
             }
         })
         
@@ -525,7 +566,15 @@ class AIModelScanner:
             "risk_level": "high",
             "location": "Data Management",
             "details": {
-                "consideration": "Verify if the model respects opt-out mechanisms like .gitignore or specific exclusion tags"
+                "consideration": "Verify if the model respects opt-out mechanisms like .gitignore or specific exclusion tags",
+                "recommendations": [
+                    "Honor repository-level opt-out markers such as .ml-ignore or .aiignore files",
+                    "Create a public registry for developers to exclude their work from training",
+                    "Implement file-level exclusion recognition via special headers or comments",
+                    "Regularly update your training pipeline to check for opt-out requests",
+                    "Develop a simple process for retroactive removal of training data upon request"
+                ],
+                "remediation_path": "To close this finding, establish a Developer Rights Portal where code authors can register their opt-out preferences, view opt-out status, and request removal of their content from training datasets."
             }
         })
         
@@ -538,7 +587,15 @@ class AIModelScanner:
             "risk_level": "medium",
             "location": "Model Output",
             "details": {
-                "consideration": "Review if the model provides adequate source attribution and explanation for generated content"
+                "consideration": "Review if the model provides adequate source attribution and explanation for generated content",
+                "recommendations": [
+                    "Implement a citation system for generated code that references similar source material",
+                    "Provide confidence levels for each generated code suggestion",
+                    "Add 'inspiration sources' for significant code blocks when possible",
+                    "Create an explainability layer that can justify model recommendations",
+                    "Design a feedback system where users can request explanation for specific suggestions"
+                ],
+                "remediation_path": "To close this finding, develop an Attribution & Explanation Framework that provides appropriate source citations and explains the reasoning behind code suggestions when requested by users."
             }
         })
         
@@ -551,7 +608,15 @@ class AIModelScanner:
             "risk_level": "medium",
             "location": "Training Process",
             "details": {
-                "consideration": "Check if proper documentation and traceability exists for training data sources"
+                "consideration": "Check if proper documentation and traceability exists for training data sources",
+                "recommendations": [
+                    "Maintain comprehensive logs of all data sources used for model training",
+                    "Implement data provenance tracking throughout the training pipeline",
+                    "Create checkpoints in the training process for auditability",
+                    "Document all data cleaning and preprocessing steps",
+                    "Enable third-party audit capabilities for your training methodology"
+                ],
+                "remediation_path": "To close this finding, establish a Training Audit System that documents all aspects of the training process including data sources, preprocessing steps, and model validation, with capabilities for both internal and third-party audit verification."
             }
         })
         

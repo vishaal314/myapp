@@ -213,13 +213,38 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
         
         # Handle AI model findings differently as they have a different structure
         if is_ai_model_scan:
+            # Check if this finding has recommendations or remediation path
+            has_recommendations = 'details' in finding and 'recommendations' in finding.get('details', {})
+            has_remediation = 'details' in finding and 'remediation_path' in finding.get('details', {})
+            
+            # Create recommendation list HTML if available
+            recommendation_html = ""
+            if has_recommendations:
+                recommendation_list = finding.get('details', {}).get('recommendations', [])
+                if recommendation_list:
+                    recommendation_html = "<div class='finding-recommendations'><strong>Recommendations:</strong><ul>"
+                    for rec in recommendation_list:
+                        recommendation_html += f"<li>{rec}</li>"
+                    recommendation_html += "</ul></div>"
+            
+            # Create remediation path HTML if available
+            remediation_html = ""
+            if has_remediation:
+                remediation_path = finding.get('details', {}).get('remediation_path', "")
+                if remediation_path:
+                    remediation_html = f"<div class='finding-remediation'><strong>Remediation:</strong> {remediation_path}</div>"
+            
             findings_table_rows += f"""
             <tr style="background-color: {risk_color}">
                 <td>{finding.get('type', 'Unknown')}</td>
                 <td>{finding.get('category', 'Unknown')}</td>
                 <td>{finding.get('location', 'Unknown')}</td>
                 <td>{risk_level_display}</td>
-                <td>{finding.get('description', 'Unknown')}</td>
+                <td>
+                    <div>{finding.get('description', 'Unknown')}</div>
+                    {recommendation_html}
+                    {remediation_html}
+                </td>
             </tr>
             """
         else:
