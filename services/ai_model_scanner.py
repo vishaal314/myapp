@@ -407,7 +407,14 @@ class AIModelScanner:
                             "files": [
                                 "README.md" if readme_exists else None,
                                 "CONTRIBUTING.md" if contributing_exists else None
-                            ]
+                            ],
+                            "recommendations": [
+                                "Add specific AI usage and attribution guidelines to README.md",
+                                "Include AI training permissions in CONTRIBUTING.md",
+                                "Create a separate AI_GUIDELINES.md file for detailed AI policies",
+                                "Document how AI-generated content should be attributed"
+                            ],
+                            "remediation_path": "To close this finding, enhance your documentation with specific sections on AI usage, training permissions, and attribution requirements."
                         }
                     })
                 else:
@@ -419,7 +426,14 @@ class AIModelScanner:
                         "risk_level": "medium",
                         "location": "Repository Root",
                         "details": {
-                            "recommendation": "Add README.md and CONTRIBUTING.md files with clear guidelines"
+                            "recommendations": [
+                                "Create a README.md with project overview and AI usage guidelines",
+                                "Add a CONTRIBUTING.md with clear contribution process",
+                                "Include a section on AI training permissions in documentation",
+                                "Document attribution requirements for AI-generated content",
+                                "Create templates for issues and pull requests"
+                            ],
+                            "remediation_path": "To close this finding, create comprehensive repository documentation that includes sections on AI usage, training permissions, and attribution requirements."
                         }
                     })
             

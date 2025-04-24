@@ -499,6 +499,27 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
             background-color: #2c3e50;
             color: white;
         }}
+        .finding-recommendations {{
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-left: 3px solid #4682b4;
+            font-size: 0.9em;
+        }}
+        .finding-recommendations ul {{
+            margin: 5px 0 5px 20px;
+            padding: 0;
+        }}
+        .finding-recommendations li {{
+            margin-bottom: 3px;
+        }}
+        .finding-remediation {{
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e6f7ff;
+            border-left: 3px solid #1e90ff;
+            font-size: 0.9em;
+        }}
     </style>
 </head>
 <body>
