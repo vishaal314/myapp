@@ -1701,34 +1701,11 @@ else:
                 st.checkbox("Enable OCR for non-text content", value=True)
                 
             elif scan_type == _("scan.sustainability"):
-                # 7. Sustainability Scanner
-                st.subheader("Sustainability Scanner Configuration")
+                # 7. Sustainability Scanner - Call the dedicated sustainability scanner page
+                from pages.sustainability_scanner import run_sustainability_scanner
+                run_sustainability_scanner()
                 
-                cloud_provider = st.selectbox("Cloud Provider", ["Azure", "AWS", "GCP", "None/Other"])
-                
-                if cloud_provider == "Azure":
-                    st.text_input("Azure Subscription ID")
-                    st.text_input("Azure Tenant ID")
-                    st.text_input("Azure Client ID")
-                    st.text_input("Azure Client Secret", type="password")
-                elif cloud_provider in ["AWS", "GCP"]:
-                    st.text_input(f"{cloud_provider} Access Key/ID")
-                    st.text_input(f"{cloud_provider} Secret Key", type="password")
-                
-                scan_targets = st.multiselect("ESG Focus Areas",
-                                            ["Carbon Usage", "VM Energy Score", "Storage Energy Impact", 
-                                             "Network Efficiency", "Resource Optimization", "All"],
-                                            default=["All"])
-                
-                timeframe = st.selectbox("Analysis Timeframe", 
-                                       ["Last 7 days", "Last 30 days", "Last 90 days", "Last year"])
-                
-                report_format = st.multiselect("Report Format", 
-                                             ["CSV", "PDF", "Interactive Dashboard", "All"],
-                                             default=["Interactive Dashboard"])
-                
-                st.slider("Analysis Depth", min_value=1, max_value=5, value=3)
-                st.checkbox("Include remediation suggestions", value=True)
+# These options are now handled in the dedicated sustainability scanner page
                 
             elif scan_type == _("scan.ai_model"):
                 # 8. AI Model Scanner
@@ -1934,7 +1911,7 @@ else:
         elif scan_type == _("scan.sustainability"):
             # No file upload needed for Sustainability scan
             uploaded_files = []
-            st.info(f"The scan will use the provided {cloud_provider} credentials to analyze your cloud resources.")
+            st.info("The Sustainability Scanner will analyze cloud resources for optimization opportunities.")
                 
         elif scan_type == _("scan.ai_model"):
             if model_source == "Upload Files":
