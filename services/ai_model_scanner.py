@@ -62,35 +62,43 @@ class AIModelScanner:
             scan_result["repository_url"] = repo_url
             scan_result["branch"] = branch
 
-            # ✅ Validate the repo URL
-            if not self._validate_github_repo(repo_url):
-                scan_result["findings"].append({
-                    "id":
-                    f"REPO-INVALID-{uuid.uuid4().hex[:6]}",
-                    "type":
-                    "Repository Error",
-                    "category":
-                    "Source Validation",
-                    "description":
-                    f"Repository URL '{repo_url}' is invalid or inaccessible.",
-                    "risk_level":
-                    "high",
-                    "location":
-                    "Repository Validator"
-                })
-                scan_result.update({
-                    "risk_score": 70,
-                    "severity_level": "high",
-                    "severity_color": "#ef4444",
-                    "risk_counts": {
-                        "low": 0,
-                        "medium": 0,
-                        "high": 1,
-                        "critical": 0
-                    },
-                    "total_findings": 1
-                })
+            # ✅ Validate the repo URL and get ethical AI findings
+            repo_validation = self._validate_github_repo(repo_url)
+            
+            if not repo_validation.get("valid", False):
+                # Repository validation failed, return the validation findings
+                scan_result["findings"].extend(repo_validation.get("findings", []))
+                
+                # Calculate metrics based on validation findings
+                try:
+                    metrics = self._calculate_risk_metrics(scan_result["findings"])
+                    scan_result.update(metrics)
+                except Exception as metrics_error:
+                    logging.error(f"Error calculating risk metrics: {str(metrics_error)}")
+                    scan_result.update({
+                        "risk_score": 70,
+                        "severity_level": "high",
+                        "severity_color": "#ef4444",
+                        "risk_counts": {
+                            "low": 0,
+                            "medium": 0,
+                            "high": 1,
+                            "critical": 0
+                        },
+                        "total_findings": len(scan_result["findings"])
+                    })
+                
                 return scan_result
+            
+            # Repository is valid, add ethical findings to our scan results
+            if repo_validation.get("findings"):
+                scan_result["findings"].extend(repo_validation.get("findings", []))
+                
+            # Add repository metadata
+            scan_result["license_present"] = repo_validation.get("license_present", False)
+            scan_result["license_type"] = repo_validation.get("license_type", "Unknown")
+            scan_result["opt_out_mechanism"] = repo_validation.get("opt_out_mechanism", False)
+            scan_result["attribution_guidelines"] = repo_validation.get("attribution_guidelines", False)
 
         total_steps = 4
         if self.progress_callback:
@@ -188,22 +196,42 @@ class AIModelScanner:
                 self.region
             }
 
-    def _validate_github_repo(self, repo_url: str) -> bool:
+    def _validate_github_repo(self, repo_url: str) -> Dict[str, Any]:
         """
-        Validates a GitHub repository URL by extracting the owner/repo part
-        and checking if it exists via the GitHub API.
+        Validates a GitHub repository URL by extracting the owner/repo part,
+        checking if it exists via the GitHub API, and analyzing ethical AI considerations.
         
         Args:
             repo_url: The full GitHub repository URL which may include paths,
                       branches, etc. (e.g., https://github.com/username/repo/tree/main/path)
                       
         Returns:
-            bool: True if the repository exists, False otherwise
+            Dict containing validation results and ethical AI findings
         """
         try:
+            validation_result = {
+                "valid": False,
+                "owner": "",
+                "repo": "",
+                "license_present": False,
+                "license_type": "Unknown",
+                "opt_out_mechanism": False,
+                "attribution_guidelines": False,
+                "audit_trail": False,
+                "findings": []
+            }
+            
             if not repo_url or not isinstance(repo_url, str):
                 logging.error(f"Invalid repository URL format: {repo_url}")
-                return False
+                validation_result["findings"].append({
+                    "id": f"REPO-FORMAT-{uuid.uuid4().hex[:6]}",
+                    "type": "Repository Error",
+                    "category": "Source Validation",
+                    "description": f"Invalid repository URL format: {repo_url}",
+                    "risk_level": "high",
+                    "location": "Repository Validator"
+                })
+                return validation_result
                 
             # Clean and normalize the URL
             repo_url = repo_url.strip()
@@ -223,12 +251,24 @@ class AIModelScanner:
             
             if not match:
                 logging.error(f"Could not extract owner/repo from URL: {repo_url}")
-                return False
+                validation_result["findings"].append({
+                    "id": f"REPO-EXTRACT-{uuid.uuid4().hex[:6]}",
+                    "type": "Repository Error",
+                    "category": "Source Validation",
+                    "description": f"Could not extract owner/repo from URL: {repo_url}",
+                    "risk_level": "high",
+                    "location": "Repository Validator"
+                })
+                return validation_result
                 
             owner, repo = match.groups()
             
             # Remove .git suffix if present
             repo = repo.replace('.git', '')
+            
+            # Store owner and repo info
+            validation_result["owner"] = owner
+            validation_result["repo"] = repo
             
             # Log debugging information
             logging.info(f"Extracted owner: {owner}, repo: {repo} from URL: {repo_url}")
@@ -238,16 +278,141 @@ class AIModelScanner:
             logging.info(f"Checking GitHub API URL: {api_url}")
             
             response = requests.get(api_url)
-            result = response.status_code == 200
+            repo_exists = response.status_code == 200
             
-            if not result:
+            if not repo_exists:
                 logging.error(f"GitHub API response: {response.status_code} - {response.text}")
+                validation_result["findings"].append({
+                    "id": f"REPO-ACCESS-{uuid.uuid4().hex[:6]}",
+                    "type": "Repository Error",
+                    "category": "Source Validation",
+                    "description": f"Repository URL '{repo_url}' is invalid or inaccessible.",
+                    "risk_level": "high",
+                    "location": "Repository Validator"
+                })
+                return validation_result
             
-            return result
+            # Repository exists, mark as valid
+            validation_result["valid"] = True
+            
+            # Check for license information
+            license_url = f"https://api.github.com/repos/{owner}/{repo}/license"
+            license_response = requests.get(license_url)
+            
+            if license_response.status_code == 200:
+                license_data = license_response.json()
+                validation_result["license_present"] = True
+                validation_result["license_type"] = license_data.get("license", {}).get("name", "Unknown")
+                
+                # Add license finding
+                validation_result["findings"].append({
+                    "id": f"REPO-LICENSE-{uuid.uuid4().hex[:6]}",
+                    "type": "License Detection",
+                    "category": "Open Source Compliance",
+                    "description": f"Repository has a {validation_result['license_type']} license",
+                    "risk_level": "low",
+                    "location": "License File",
+                    "details": {
+                        "license_type": validation_result["license_type"]
+                    }
+                })
+            else:
+                # Add missing license finding
+                validation_result["findings"].append({
+                    "id": f"REPO-LICENSE-MISSING-{uuid.uuid4().hex[:6]}",
+                    "type": "Missing License",
+                    "category": "Open Source Compliance",
+                    "description": "Repository does not have a detectable license file",
+                    "risk_level": "high",
+                    "location": "Repository Root",
+                    "details": {
+                        "recommendation": "Add a license file to clarify usage permissions"
+                    }
+                })
+            
+            # Check for .gitignore (basic opt-out mechanism)
+            contents_url = f"https://api.github.com/repos/{owner}/{repo}/contents"
+            contents_response = requests.get(contents_url)
+            
+            if contents_response.status_code == 200:
+                repo_contents = contents_response.json()
+                
+                # Look for .gitignore file
+                gitignore_exists = any(item.get("name") == ".gitignore" for item in repo_contents if isinstance(item, dict))
+                if gitignore_exists:
+                    validation_result["opt_out_mechanism"] = True
+                    validation_result["findings"].append({
+                        "id": f"REPO-OPTOUT-{uuid.uuid4().hex[:6]}",
+                        "type": "Opt-Out Mechanism",
+                        "category": "Rights Management",
+                        "description": "Repository has a .gitignore file for excluding content",
+                        "risk_level": "low",
+                        "location": ".gitignore",
+                        "details": {
+                            "mechanism": ".gitignore file present"
+                        }
+                    })
+                else:
+                    validation_result["findings"].append({
+                        "id": f"REPO-OPTOUT-MISSING-{uuid.uuid4().hex[:6]}",
+                        "type": "Missing Opt-Out Mechanism",
+                        "category": "Rights Management",
+                        "description": "Repository lacks basic opt-out mechanisms like .gitignore",
+                        "risk_level": "medium",
+                        "location": "Repository Root",
+                        "details": {
+                            "recommendation": "Add .gitignore or other exclusion mechanisms"
+                        }
+                    })
+                
+                # Look for documentation files (README, CONTRIBUTING, etc.)
+                readme_exists = any(item.get("name", "").lower() == "readme.md" for item in repo_contents if isinstance(item, dict))
+                contributing_exists = any(item.get("name", "").lower() == "contributing.md" for item in repo_contents if isinstance(item, dict))
+                
+                if readme_exists or contributing_exists:
+                    validation_result["attribution_guidelines"] = True
+                    validation_result["findings"].append({
+                        "id": f"REPO-DOCS-{uuid.uuid4().hex[:6]}",
+                        "type": "Documentation",
+                        "category": "Transparency",
+                        "description": "Repository has documentation files that may contain attribution guidelines",
+                        "risk_level": "low",
+                        "location": "Repository Documentation",
+                        "details": {
+                            "files": [
+                                "README.md" if readme_exists else None,
+                                "CONTRIBUTING.md" if contributing_exists else None
+                            ]
+                        }
+                    })
+                else:
+                    validation_result["findings"].append({
+                        "id": f"REPO-DOCS-MISSING-{uuid.uuid4().hex[:6]}",
+                        "type": "Missing Documentation",
+                        "category": "Transparency",
+                        "description": "Repository lacks documentation files with contribution guidelines",
+                        "risk_level": "medium",
+                        "location": "Repository Root",
+                        "details": {
+                            "recommendation": "Add README.md and CONTRIBUTING.md files with clear guidelines"
+                        }
+                    })
+            
+            return validation_result
             
         except Exception as e:
             logging.error(f"GitHub repo validation error: {str(e)}")
-            return False
+            return {
+                "valid": False,
+                "findings": [{
+                    "id": f"REPO-ERROR-{uuid.uuid4().hex[:6]}",
+                    "type": "Repository Error",
+                    "category": "Source Validation",
+                    "description": f"GitHub repo validation error: {str(e)}",
+                    "risk_level": "high",
+                    "location": "Repository Validator"
+                }]
+            }
 
     def _generate_architecture_findings(
             self, model_source: str,
@@ -313,6 +478,8 @@ class AIModelScanner:
                 "leakage_types": leakage_types
             }
         }]
+        
+        # Check for PII in training data
         if "All" in leakage_types or "PII in Training Data" in leakage_types:
             findings.append({
                 "id": f"AICOMP-{uuid.uuid4().hex[:6]}",
@@ -322,6 +489,72 @@ class AIModelScanner:
                 "risk_level": "high",
                 "location": "Training Data"
             })
+            
+        # Add checks for scraping practices
+        findings.append({
+            "id": f"AICOMP-SCRAPE-{uuid.uuid4().hex[:6]}",
+            "type": "Scraping Practices",
+            "category": "Data Collection Ethics",
+            "description": "Assessment of code scraping practices for Copilot-style tools",
+            "risk_level": "high",
+            "location": "Data Collection",
+            "details": {
+                "consideration": "Evaluate how model training data was collected and if proper scraping practices were followed"
+            }
+        })
+        
+        # Add checks for consent mechanisms
+        findings.append({
+            "id": f"AICOMP-CONSENT-{uuid.uuid4().hex[:6]}",
+            "type": "Consent Mechanisms",
+            "category": "Open Source Compliance",
+            "description": "Verification of consent mechanisms for using open-source contributions in training",
+            "risk_level": "medium",
+            "location": "Training Data",
+            "details": {
+                "consideration": "Check if model training respected license terms of open source code and obtained proper consent"
+            }
+        })
+        
+        # Add checks for opt-out rights
+        findings.append({
+            "id": f"AICOMP-OPTOUT-{uuid.uuid4().hex[:6]}",
+            "type": "Developer Opt-Out Rights",
+            "category": "Rights Management",
+            "description": "Compliance with developer rights to exclude their data from model training",
+            "risk_level": "high",
+            "location": "Data Management",
+            "details": {
+                "consideration": "Verify if the model respects opt-out mechanisms like .gitignore or specific exclusion tags"
+            }
+        })
+        
+        # Add checks for explainability
+        findings.append({
+            "id": f"AICOMP-EXPLAIN-{uuid.uuid4().hex[:6]}",
+            "type": "Explainability Requirements",
+            "category": "Transparency",
+            "description": "Assessment of explainability when AI tools suggest or generate code",
+            "risk_level": "medium",
+            "location": "Model Output",
+            "details": {
+                "consideration": "Review if the model provides adequate source attribution and explanation for generated content"
+            }
+        })
+        
+        # Add checks for audit trails
+        findings.append({
+            "id": f"AICOMP-AUDIT-{uuid.uuid4().hex[:6]}",
+            "type": "Audit Trail Verification",
+            "category": "Accountability",
+            "description": "Verification of audit trails for models trained with publicly available code",
+            "risk_level": "medium",
+            "location": "Training Process",
+            "details": {
+                "consideration": "Check if proper documentation and traceability exists for training data sources"
+            }
+        })
+        
         return findings
 
     def _calculate_risk_metrics(
