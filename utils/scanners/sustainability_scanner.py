@@ -18,7 +18,15 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 
 # Import cloud scanner
-from services.cloud_resources_scanner import CloudResourcesScanner, GithubRepoSustainabilityScanner
+try:
+    from services.cloud_resources_scanner import CloudResourcesScanner, GithubRepoSustainabilityScanner
+except ImportError:
+    # Import might have changed during refactoring
+    import sys
+    import os
+    # Add current directory to path to ensure imports work
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    from services.cloud_resources_scanner import CloudResourcesScanner, GithubRepoSustainabilityScanner
 
 # Import report generator utilities
 try:
