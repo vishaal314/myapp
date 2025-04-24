@@ -15,6 +15,7 @@ import json
 import time
 import os
 import sys
+import random
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 
@@ -244,19 +245,27 @@ def run_sustainability_scanner():
         st.session_state.sustainability_current_tab = "cloud"
     
     # Create tabs for different scan types
-    tabs = st.tabs(["Cloud Resources", "GitHub Repository", "Code Analysis"])
+    tab_names = ["Cloud Resources", "GitHub Repository", "Code Analysis"]
     
+    # Map session state values to tab indices
+    tab_mapping = {"cloud": 0, "github": 1, "code": 2}
+    tab_index = tab_mapping.get(st.session_state.sustainability_current_tab, 0)
+    
+    # Create tabs with the correct selected index
+    tabs = st.tabs(tab_names)
+    
+    # Display content for each tab
     with tabs[0]:
-        if st.session_state.sustainability_current_tab == "cloud":
-            run_cloud_resources_scan()
+        # Always render the cloud tab content
+        run_cloud_resources_scan()
     
     with tabs[1]:
-        if st.session_state.sustainability_current_tab == "github":
-            run_github_repo_scan()
+        # Always render the GitHub tab content
+        run_github_repo_scan()
     
     with tabs[2]:
-        if st.session_state.sustainability_current_tab == "code":
-            run_code_analysis_scan()
+        # Always render the code analysis tab content
+        run_code_analysis_scan()
     
     # Display reports if scan is complete
     if st.session_state.sustainability_scan_complete and st.session_state.sustainability_scan_results:
