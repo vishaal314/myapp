@@ -1704,12 +1704,16 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         score_color = '#f97316'  # Orange for medium scores
         status_text = "Medium"
     else:
+        score_color = '#10b981'  # Green for high scores
         status_text = "High"
+    
+    # Format sustainability score with proper formatting (70/100)
+    formatted_score = f"{int(sustainability_score)}/100"
     
     # Create a more visually appealing score display with label
     score_table_data = [
         ["Sustainability Score"], 
-        [f"<font color='{score_color}'><b>{sustainability_score}/100</b></font>"],
+        [f"<font color='{score_color}'><b>{formatted_score}</b></font>"],
         [f"<font color='{score_color}'><b>{status_text}</b></font>"]
     ]
     
