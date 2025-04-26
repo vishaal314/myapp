@@ -329,6 +329,9 @@ def display_landing_page_grid() -> None:
                         <li>Japanese, Chinese, Korean</li>
                         <li>And 10+ more languages</li>
                     </ul>
+                    <p style="margin-top: 8px; font-size: 13px; color: #4f46e5; font-style: italic; background-color: #f5f3ff; padding: 5px 10px; border-radius: 4px;">
+                        Currently available in English and Dutch. German and French coming soon!
+                    </p>
                 </div>
             </div>
         </div>
