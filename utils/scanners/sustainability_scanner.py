@@ -428,18 +428,50 @@ def generate_report(scan_data, report_type="sustainability"):
                     'steps': ["Analyze affected resources or code", "Implement recommended changes", "Monitor results"]
                 })
     
+    # Calculate a sustainability score based on findings and available information
+    high_risk_count = sum(1 for f in scan_data.get('findings', []) if f.get('risk_level') == 'high')
+    medium_risk_count = sum(1 for f in scan_data.get('findings', []) if f.get('risk_level') == 'medium')
+    low_risk_count = sum(1 for f in scan_data.get('findings', []) if f.get('risk_level') == 'low')
+    
+    # Base score calculation (100 - deductions for each risk)
+    sustainability_score = 100 - (high_risk_count * 15) - (medium_risk_count * 5) - (low_risk_count * 2)
+    
+    # Additional factors
+    # For cloud scans, consider optimization level
+    if 'resources' in scan_data:
+        total_resources = sum(data.get('count', 0) for data in scan_data.get('resources', {}).values())
+        idle_resources = sum(data.get('idle', 0) for data in scan_data.get('resources', {}).values())
+        
+        if total_resources > 0:
+            idle_percentage = (idle_resources / total_resources) * 100
+            # Deduct up to 15 points for high idle percentage
+            sustainability_score -= min(15, idle_percentage / 4)
+    
+    # For code scans, consider duplication level
+    if 'code_duplication' in scan_data:
+        duplication_percentage = scan_data.get('code_duplication', {}).get('percentage', 0)
+        # Deduct up to 10 points for high duplication
+        sustainability_score -= min(10, duplication_percentage / 5)
+    
+    # Ensure score is between 0-100
+    sustainability_score = max(0, min(100, sustainability_score))
+    
+    # Add the score to the scan data
+    scan_data['sustainability_score'] = int(sustainability_score)
+    
     # Return the enhanced scan data as a report
     return {
         'title': f"{scan_data.get('scan_type', 'Sustainability')} Report",
         'generated_at': datetime.now().isoformat(),
         'scan_data': scan_data,
+        'sustainability_score': int(sustainability_score),  # Add directly to the report top level
         'summary': {
             'total_findings': len(scan_data.get('findings', [])),
             'total_recommendations': len(scan_data.get('recommendations', [])),
             'risk_levels': {
-                'high': sum(1 for f in scan_data.get('findings', []) if f.get('risk_level') == 'high'),
-                'medium': sum(1 for f in scan_data.get('findings', []) if f.get('risk_level') == 'medium'),
-                'low': sum(1 for f in scan_data.get('findings', []) if f.get('risk_level') == 'low')
+                'high': high_risk_count,
+                'medium': medium_risk_count,
+                'low': low_risk_count
             }
         }
     }
@@ -1248,17 +1280,38 @@ def display_sustainability_report(scan_results):
     with col1:
         if st.button("Generate PDF Report", type="primary"):
             st.session_state.generate_pdf = True
-            st.info("Generating PDF report... This may take a moment.")
-            # In a real implementation, we would generate and serve the PDF here
-            st.success("PDF report generated successfully!")
-            
-            # Offer download options
-            st.download_button(
-                "Download PDF Report",
-                data=b"Sample PDF content would go here",  # Mock PDF content
-                file_name=f"sustainability-report-{scan_results.get('scan_id', 'unknown')}.pdf",
-                mime="application/pdf"
-            )
+            with st.spinner("Generating PDF report... This may take a moment."):
+                try:
+                    # Import report generator
+                    from services.report_generator import generate_report
+                    
+                    # Generate the actual PDF report
+                    pdf_bytes = generate_report(
+                        scan_data=scan_results,
+                        include_details=True,
+                        include_charts=True,
+                        include_metadata=True,
+                        include_recommendations=True,
+                        report_format="sustainability"
+                    )
+                    
+                    # Ensure we have valid PDF content
+                    if pdf_bytes and len(pdf_bytes) > 0:
+                        st.success("PDF report generated successfully!")
+                        
+                        # Offer download options with the actual PDF content
+                        st.download_button(
+                            "Download PDF Report",
+                            data=pdf_bytes,
+                            file_name=f"sustainability-report-{scan_results.get('scan_id', 'unknown')}.pdf",
+                            mime="application/pdf"
+                        )
+                    else:
+                        st.error("Failed to generate PDF report. Empty content returned.")
+                except Exception as e:
+                    st.error(f"Error generating PDF report: {str(e)}")
+                    import traceback
+                    st.error(traceback.format_exc())
     
     with col2:
         if st.button("Export JSON Data"):
