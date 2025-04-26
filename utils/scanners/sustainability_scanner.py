@@ -776,12 +776,24 @@ def run_code_analysis_scan():
                 time.sleep(0.5)
                 
                 # Create sample results
+                # Extract domain from the repo URL if available
+                domain = "github.com"
+                if github_url and '://' in github_url:
+                    try:
+                        domain = github_url.split('/')[2]
+                    except IndexError:
+                        domain = "github.com"
+                
                 scan_results = {
                     'scan_id': f"github-code-{int(time.time())}",
                     'scan_type': 'GitHub Code Analysis',
                     'timestamp': datetime.now().isoformat(),
                     'repository': github_url,
+                    'repo_url': github_url,
                     'branch': branch if 'branch' in locals() else 'main',
+                    'region': 'Europe',  # Default region for code analysis
+                    'url': github_url,
+                    'domain': domain,
                     'files_analyzed': random.randint(50, 200),
                     'languages': {
                         'Python': {'files': random.randint(20, 100), 'lines': random.randint(5000, 20000)},
@@ -880,6 +892,9 @@ def run_code_analysis_scan():
                     'scan_type': 'Code Analysis',
                     'timestamp': datetime.now().isoformat(),
                     'files_analyzed': len(uploaded_files),
+                    'region': 'Europe',  # Default region for local code analysis
+                    'url': 'Local Files',
+                    'domain': 'local.files',
                     'findings': [],
                     'recommendations': [],
                     'status': 'in_progress'
