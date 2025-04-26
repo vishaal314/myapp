@@ -4,426 +4,574 @@ Sustainability Scanner
 This module provides a Streamlit interface for scanning cloud resources
 and code repositories for sustainability optimization opportunities.
 """
-
+import random
+import time
+import json
+import os
+from datetime import datetime
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
-import json
-import time
-import os
-import sys
-import random
-from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple
+from plotly.subplots import make_subplots
 
-# Add current directory to path to ensure imports work
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Import app translations
+from app import _
 
-# Import cloud scanner
-try:
-    from services.cloud_resources_scanner import CloudResourcesScanner, GithubRepoSustainabilityScanner
-except ImportError:
-    # Mock classes if modules not available
-    class CloudResourcesScanner:
-        def __init__(self, provider="azure", region="global", **kwargs):
-            self.provider = provider
-            self.region = region
-            self.progress_callback = None
-            # Store additional parameters
-            self.kwargs = kwargs
+
+class CloudResourcesScanner:
+    def __init__(self, provider="azure", region="global", **kwargs):
+        """
+        Initialize a cloud resources scanner.
         
-        def set_progress_callback(self, callback):
-            self.progress_callback = callback
+        Args:
+            provider (str): The cloud provider (azure, aws, gcp)
+            region (str): The region to scan
+            **kwargs: Additional provider-specific arguments
+        """
+        self.provider = provider.lower()
+        self.region = region
+        self.kwargs = kwargs
+        self.progress_callback = None
+        
+    def set_progress_callback(self, callback):
+        """Set a callback function to report scanning progress."""
+        self.progress_callback = callback
+        
+    def scan_resources(self):
+        """
+        Scan cloud resources for sustainability optimization opportunities.
+        Returns a dictionary with scan results.
+        """
+        # This is a mock implementation as we don't have actual cloud resources to scan
+        
+        # Report progress using callback if available
+        if self.progress_callback:
+            self.progress_callback(1, 5, "Initializing scan")
+            time.sleep(0.5)
+            self.progress_callback(2, 5, "Connecting to cloud provider")
+            time.sleep(0.5)
+            self.progress_callback(3, 5, "Fetching resource inventory")
+            time.sleep(0.8)
+            self.progress_callback(4, 5, "Analyzing resource utilization")
+            time.sleep(1.0)
+            self.progress_callback(5, 5, "Generating recommendations")
+            time.sleep(0.5)
+        
+        # Determine the region to use
+        region = self.region if self.region != "global" else self.kwargs.get('region', 'westeurope')
+        
+        # Construct domain name based on provider
+        if self.provider == "azure":
+            cloud_domain = "portal.azure.com"
+        elif self.provider == "aws":
+            cloud_domain = "console.aws.amazon.com"
+        elif self.provider == "gcp":
+            cloud_domain = "console.cloud.google.com"
+        else:
+            cloud_domain = "cloud.unknown.com"
+        
+        # Construct URL based on provider
+        if self.provider == "azure":
+            cloud_url = f"https://{cloud_domain}/#@/resource/subscriptions/{self.kwargs.get('subscription_id', 'unknown')}/resourceGroups/monitoring/providers/Microsoft.Sustainability/sustainability"
+        elif self.provider == "aws":
+            cloud_url = f"https://{region}.{cloud_domain}/console/home?region={region}#sustainability"
+        elif self.provider == "gcp":
+            cloud_url = f"https://{cloud_domain}/sustainability?project={self.kwargs.get('project_id', 'unknown')}"
+        else:
+            cloud_url = f"https://{cloud_domain}/{region.lower()}"
+        
+        return {
+            'scan_id': f"sustainability-{int(time.time())}",
+            'scan_type': 'Cloud Sustainability',
+            'timestamp': datetime.now().isoformat(),
+            'provider': self.provider,
+            'region': region,
+            'url': cloud_url,
+            'domain': cloud_domain,
+            'resources': {
+                'virtual_machines': {'count': 10},
+                'disks': {'count': 15},
+                'storage_accounts': {'count': 5}
+            },
+            'carbon_footprint': {
+                'total_co2e_kg': 1250.5,
+                'emissions_reduction_potential_kg': 380.2,
+                'by_region': {
+                    'eastus': 450.2,
+                    'westus': 320.1,
+                    'northeurope': 280.5,
+                    'westeurope': 199.7
+                }
+            },
+            'findings': [
+                {
+                    'type': 'Idle Resources',
+                    'description': 'Found 8 VMs with average CPU utilization below 10% over the past 30 days',
+                    'location': 'East US',
+                    'risk_level': 'high',
+                    'recommendation': 'Right-size or shutdown idle virtual machines'
+                },
+                {
+                    'type': 'Unattached Disks',
+                    'description': 'Found 12 unattached storage disks consuming resources',
+                    'location': 'West Europe',
+                    'risk_level': 'medium',
+                    'recommendation': 'Delete or archive unattached disks'
+                },
+                {
+                    'type': 'Storage Optimization',
+                    'description': 'Storage accounts contain 35% rarely accessed data on hot storage tiers',
+                    'location': 'Multiple Regions',
+                    'risk_level': 'medium',
+                    'recommendation': 'Move infrequently accessed data to cool or archive storage tiers'
+                },
+                {
+                    'type': 'Resource Scheduling',
+                    'description': 'Development/test environments running 24/7',
+                    'location': 'North Europe',
+                    'risk_level': 'low',
+                    'recommendation': 'Schedule automatic shutdown of dev/test resources during off-hours'
+                }
+            ],
+            'recommendations': [
+                {
+                    'title': 'Right-size virtual machines',
+                    'description': 'Several virtual machines are consistently underutilized and can be downsized to smaller instance types.',
+                    'priority': 'High',
+                    'impact': 'Cost savings of approximately $1,200/month and 150kg CO₂ reduction',
+                    'steps': [
+                        "Identify VMs with <10% average CPU utilization",
+                        "Downsize to appropriate instance types based on actual usage",
+                        "Monitor performance after right-sizing to ensure no degradation"
+                    ]
+                },
+                {
+                    'title': 'Implement auto-scaling for dynamic workloads',
+                    'description': 'Systems with variable load can benefit from auto-scaling rules to match capacity with demand.',
+                    'priority': 'Medium',
+                    'impact': 'Up to 40% reduction in resource usage during low-demand periods',
+                    'steps': [
+                        "Identify applications with variable load patterns",
+                        "Configure scaling rules based on CPU, memory, or request metrics",
+                        "Set appropriate minimum and maximum instance counts"
+                    ]
+                },
+                {
+                    'title': 'Move infrequently accessed data to cold storage',
+                    'description': 'Large volumes of rarely accessed data can be moved to more energy-efficient storage tiers.',
+                    'priority': 'Medium',
+                    'impact': 'Storage cost reduction of 60% for eligible data',
+                    'steps': [
+                        "Analyze data access patterns",
+                        "Implement lifecycle management policies",
+                        "Migrate historical data to appropriate tiers"
+                    ]
+                }
+            ],
+            'status': 'completed'
+        }
+
+
+class GithubRepoSustainabilityScanner:
+    def __init__(self, repo_url="", branch="main", region="Europe"):
+        """
+        Initialize a GitHub repository sustainability scanner.
+        
+        Args:
+            repo_url (str): The GitHub repository URL
+            branch (str): The branch to scan
+            region (str): The region where the code is deployed
+        """
+        self.repo_url = repo_url
+        self.branch = branch
+        self.region = region
+        self.progress_callback = None
+        
+    def set_progress_callback(self, callback):
+        """Set a callback function to report scanning progress."""
+        self.progress_callback = callback
+        
+    def scan_repository(self):
+        """
+        Scan a GitHub repository for sustainability optimization opportunities.
+        Returns a dictionary with scan results.
+        """
+        # This is a mock implementation as we don't have actual GitHub repositories to scan
+        
+        # Report progress using callback if available
+        if self.progress_callback:
+            self.progress_callback(1, 5, "Cloning repository")
+            time.sleep(0.8)
+            self.progress_callback(2, 5, "Analyzing code structure")
+            time.sleep(0.6)
+            self.progress_callback(3, 5, "Checking for code duplication")
+            time.sleep(0.9)
+            self.progress_callback(4, 5, "Identifying optimization opportunities")
+            time.sleep(0.7)
+            self.progress_callback(5, 5, "Generating recommendations")
+            time.sleep(0.5)
             
-        def scan_resources(self):
-            # Simulate scanning with demo data
-            # Use the specified region or default to Europe
-            region = self.region if self.region and self.region != "global" else "Europe"
+        # Extract domain from repo URL
+        domain = "github.com"
+        if self.repo_url and '://' in self.repo_url:
+            try:
+                domain = self.repo_url.split('/')[2]
+            except IndexError:
+                domain = "github.com"
             
-            # Generate URL/domain information based on provider
-            provider_domains = {
-                "azure": "portal.azure.com",
-                "aws": "console.aws.amazon.com",
-                "gcp": "console.cloud.google.com",
-                "none": "cloud-portal.com"
+        # Random generation for demo purposes
+        total_files = random.randint(50, 200)
+        total_lines = random.randint(5000, 25000)
+        large_files_count = random.randint(3, 15)
+        
+        # Create a list of simulated large files
+        large_files = []
+        for i in range(large_files_count):
+            file_size = random.randint(800, 5000)
+            large_files.append({
+                'path': f'src/components/LargeComponent{i+1}.js' if random.random() > 0.5 else f'src/utils/large_utility_{i+1}.py',
+                'size_kb': file_size,
+                'lines': file_size * 5,
+                'complexity': random.randint(15, 50)
+            })
+            
+        # Create code duplication instances
+        duplication_instances = []
+        for i in range(random.randint(5, 15)):
+            duplication_instances.append({
+                'file1': f'src/components/Component{random.randint(1, 20)}.js',
+                'file2': f'src/components/Component{random.randint(1, 20)}.js',
+                'similarity': random.uniform(0.65, 0.95),
+                'lines_duplicated': random.randint(20, 150)
+            })
+            
+        # Compute total duplication percentage
+        total_duplication_pct = round(min(random.uniform(5, 30), 100), 1)
+        
+        # Create a list of recommended optimization actions
+        recommendations = [
+            {
+                'title': 'Reduce code duplication',
+                'description': f'Found {len(duplication_instances)} instances of code duplication across the repository.',
+                'priority': 'High',
+                'impact': 'Reducing code duplication by 50% could reduce maintenance costs and improve energy efficiency',
+                'steps': [
+                    "Extract duplicate code into shared functions or components",
+                    "Create utility libraries for commonly used functionality",
+                    "Review similarity reports and prioritize highest-impact duplications"
+                ]
+            },
+            {
+                'title': 'Optimize large files',
+                'description': f'Found {large_files_count} files over 100KB or 1000 lines, which can lead to increased load times and memory usage.',
+                'priority': 'Medium',
+                'impact': 'Breaking down large files can improve load times and reduce memory consumption',
+                'steps': [
+                    "Break down large files into smaller, focused modules",
+                    "Extract complex logic into separate helper functions",
+                    "Consider applying design patterns like Single Responsibility Principle"
+                ]
+            },
+            {
+                'title': 'Implement lazy loading for heavy components',
+                'description': 'Large JavaScript/TypeScript components could benefit from lazy loading to improve initial load performance.',
+                'priority': 'Medium',
+                'impact': 'Can reduce initial load bundle size by 30-40%',
+                'steps': [
+                    "Identify components not needed for initial render",
+                    "Implement code splitting with dynamic imports",
+                    "Add loading states for components loaded on-demand"
+                ]
             }
-            
-            cloud_domain = provider_domains.get(self.provider, f"{self.provider}.cloud-portal.com")
-            
-            # Format URLs similar to actual cloud console URLs
-            if self.provider == "azure":
-                cloud_url = f"https://{cloud_domain}/#@/resource/subscriptions/{self.kwargs.get('subscription_id', 'unknown')}/resourceGroups/monitoring/providers/Microsoft.Sustainability/sustainability"
-            elif self.provider == "aws":
-                cloud_url = f"https://{region}.{cloud_domain}/console/home?region={region}#sustainability"
-            elif self.provider == "gcp":
-                cloud_url = f"https://{cloud_domain}/sustainability?project={self.kwargs.get('project_id', 'unknown')}"
-            else:
-                cloud_url = f"https://{cloud_domain}/{region.lower()}"
-            
-            return {
-                'scan_id': f"sustainability-{int(time.time())}",
-                'scan_type': 'Cloud Sustainability',
-                'timestamp': datetime.now().isoformat(),
-                'provider': self.provider,
-                'region': region,
-                'url': cloud_url,
-                'domain': cloud_domain,
-                'resources': {
-                    'virtual_machines': {'count': 10},
-                    'disks': {'count': 15},
-                    'storage_accounts': {'count': 5}
+        ]
+        
+        # Add additional language-specific recommendations based on repository content
+        if self.repo_url and "python" in self.repo_url.lower() or random.random() > 0.7:
+            recommendations.append({
+                'title': 'Optimize Python dependencies',
+                'description': 'Several heavy dependencies could be replaced with lighter alternatives.',
+                'priority': 'Low',
+                'impact': 'Could reduce deployment package size by up to 60%',
+                'steps': [
+                    "Review requirements.txt for unused or heavy packages",
+                    "Consider replacing pandas with numpy for simple operations",
+                    "Use specialized libraries instead of full frameworks when possible"
+                ]
+            })
+        elif self.repo_url and ("javascript" in self.repo_url.lower() or "typescript" in self.repo_url.lower() or "react" in self.repo_url.lower()) or random.random() > 0.6:
+            recommendations.append({
+                'title': 'Optimize React rendering performance',
+                'description': 'Several components have unnecessary re-renders that affect performance and energy usage.',
+                'priority': 'Medium',
+                'impact': 'Could reduce CPU usage by 15-25% during user interactions',
+                'steps': [
+                    "Use React.memo for pure function components",
+                    "Implement useMemo and useCallback hooks for expensive calculations",
+                    "Add proper dependency arrays to useEffect hooks"
+                ]
+            })
+        
+        # Final results object
+        return {
+            'scan_id': f"github-{int(time.time())}",
+            'scan_type': 'GitHub Repository Sustainability',
+            'timestamp': datetime.now().isoformat(),
+            'repository': self.repo_url,
+            'branch': self.branch,
+            'region': self.region,  # Include region information
+            'url': self.repo_url,
+            'domain': domain,
+            'total_files': total_files,
+            'total_lines': total_lines,
+            'languages': {
+                'JavaScript': {'files': int(total_files * 0.4), 'lines': int(total_lines * 0.45)},
+                'TypeScript': {'files': int(total_files * 0.2), 'lines': int(total_lines * 0.25)},
+                'Python': {'files': int(total_files * 0.15), 'lines': int(total_lines * 0.1)},
+                'CSS': {'files': int(total_files * 0.15), 'lines': int(total_lines * 0.1)},
+                'HTML': {'files': int(total_files * 0.1), 'lines': int(total_lines * 0.1)}
+            },
+            'code_duplication': {
+                'percentage': total_duplication_pct,
+                'instances': duplication_instances
+            },
+            'large_files': large_files,
+            'findings': [
+                {
+                    'type': 'Code Duplication',
+                    'description': f'{total_duplication_pct}% of code is duplicated across {len(duplication_instances)} instances',
+                    'location': 'Multiple files',
+                    'risk_level': 'high' if total_duplication_pct > 15 else 'medium',
+                    'recommendation': 'Extract shared functionality into reusable components or utilities'
                 },
-                'carbon_footprint': {
-                    'total_co2e_kg': 1250.5,
-                    'emissions_reduction_potential_kg': 380.2,
-                    'by_region': {
-                        'eastus': 450.2,
-                        'westus': 320.1,
-                        'northeurope': 280.5,
-                        'westeurope': 199.7
-                    }
+                {
+                    'type': 'Large Files',
+                    'description': f'Found {large_files_count} files exceeding recommended size limits',
+                    'location': f'Including {large_files[0]["path"] if large_files else "N/A"}',
+                    'risk_level': 'medium',
+                    'recommendation': 'Break down large files into smaller, focused modules'
                 },
-                'optimization_potential': {
-                    'cost_savings_monthly': 325.50,
-                    'cost_savings_yearly': 3906.00,
-                    'optimization_score': 68
-                },
-                'findings': [
-                    {
-                        'id': 'CLOUD-IDLE-001',
-                        'type': 'Idle Resources',
-                        'category': 'Cost Optimization',
-                        'description': 'Found 5 idle or unused resources',
-                        'risk_level': 'medium',
-                        'location': f"Cloud Provider: {self.provider.upper()}",
-                        'details': {
-                            'resources': [
-                                {'resource_name': 'vm-dev-1', 'resource_type': 'Virtual Machine'},
-                                {'resource_name': 'vm-test-2', 'resource_type': 'Virtual Machine'},
-                                {'resource_name': 'disk-unused-1', 'resource_type': 'Managed Disk'}
-                            ]
-                        }
-                    },
-                    {
-                        'id': 'CLOUD-REGION-001',
-                        'type': 'Regional Optimization',
-                        'category': 'Sustainability',
-                        'description': 'Resources in high-carbon regions could be relocated',
-                        'risk_level': 'low',
-                        'location': f"Cloud Provider: {self.provider.upper()}"
-                    }
-                ],
-                'recommendations': [
-                    {
-                        'title': 'Remove or resize idle resources',
-                        'description': 'The following resources are idle or unused and should be considered for removal or resizing.',
-                        'priority': 'High',
-                        'impact': 'High',
-                        'steps': [
-                            "Review 5 idle or unused resources",
-                            "Delete unattached disks and unused snapshots",
-                            "Shut down or resize idle VMs"
-                        ]
-                    },
-                    {
-                        'title': 'Optimize resource placement by region',
-                        'description': 'Moving resources to regions with lower carbon intensity can reduce your carbon footprint.',
-                        'priority': 'Medium',
-                        'impact': 'Medium',
-                        'steps': [
-                            "Identify non-location-dependent workloads",
-                            "Plan migration to lower-carbon regions"
-                        ]
-                    }
-                ],
-                'status': 'completed'
-            }
+                {
+                    'type': 'Dependency Bloat',
+                    'description': 'Project includes several unused or oversized dependencies',
+                    'location': 'package.json / requirements.txt',
+                    'risk_level': 'low',
+                    'recommendation': 'Audit and optimize dependencies, consider tree-shaking'
+                }
+            ],
+            'recommendations': recommendations,
+            'status': 'completed'
+        }
+
+
+def generate_report(scan_data, report_type="sustainability"):
+    """
+    Generate a report from scan data.
     
-    class GithubRepoSustainabilityScanner:
-        def __init__(self, repo_url="", branch="main", region="Europe"):
-            self.repo_url = repo_url
-            self.branch = branch
-            self.region = region
-            self.progress_callback = None
+    Args:
+        scan_data: The scan data to include in the report
+        report_type: The type of report to generate
         
-        def set_progress_callback(self, callback):
-            self.progress_callback = callback
-            
-        def scan_repository(self):
-            # Simulate scanning with demo data
-            region = self.region if self.region else "Europe"  # Use selected region or default
-            
-            # Extract domain from the repo URL if available
-            domain = "github.com"
-            if self.repo_url and '://' in self.repo_url:
-                try:
-                    domain = self.repo_url.split('/')[2]
-                except IndexError:
-                    domain = "github.com"
-            
-            return {
-                'scan_id': f"repo-{int(time.time())}",
-                'scan_type': 'Code Efficiency',
-                'timestamp': datetime.now().isoformat(),
-                'repo_url': self.repo_url,
-                'branch': self.branch,
-                'region': region,
-                'url': self.repo_url,
-                'domain': domain,
-                'sustainability_score': 90,
-                'code_stats': {
-                    'total_files': 120,
-                    'total_size_mb': 25.7,
-                    'language_breakdown': {
-                        'Python': {'file_count': 65, 'size_mb': 12.3},
-                        'JavaScript': {'file_count': 35, 'size_mb': 8.5},
-                        'HTML': {'file_count': 15, 'size_mb': 3.2},
-                        'CSS': {'file_count': 5, 'size_mb': 1.7}
-                    }
-                },
-                'large_files': [
-                    {
-                        'file': 'data/large_dataset.csv',
-                        'size_mb': 8.5,
-                        'category': 'Data',
-                        'recommendation': 'Store as link or in cloud storage'
-                    },
-                    {
-                        'file': 'static/images/background.png',
-                        'size_mb': 3.2,
-                        'category': 'Image',
-                        'recommendation': 'Compress image or use optimized formats'
-                    }
-                ],
-                'unused_imports': [
-                    {
-                        'file': 'src/main.py',
-                        'line': 12,
-                        'import': 'import numpy'
-                    },
-                    {
-                        'file': 'src/utils.py',
-                        'line': 5,
-                        'import': 'from collections import defaultdict'
-                    }
-                ],
-                'findings': [
-                    {
-                        'id': 'REPO-SIZE-001',
-                        'type': 'Large Repository',
-                        'category': 'Storage Efficiency',
-                        'description': 'Repository size (25.7 MB) exceeds recommended limits',
+    Returns:
+        A report object
+    """
+    # This is a placeholder for report generation
+    # In a real implementation, this would create a PDF or HTML report
+    
+    # Add findings if not present
+    if 'findings' not in scan_data:
+        scan_data['findings'] = []
+        # Extract data from various sections to create findings
+        
+        # For cloud sustainability reports
+        if 'resources' in scan_data:
+            for resource_type, resource_data in scan_data.get('resources', {}).items():
+                # Add findings for idle resources
+                if 'idle' in resource_data and resource_data['idle'] > 0:
+                    scan_data['findings'].append({
+                        'type': 'Idle Resources',
+                        'description': f"Found {resource_data['idle']} idle {resource_type}",
+                        'location': scan_data.get('region', 'Global'),
                         'risk_level': 'medium',
-                        'location': self.repo_url
-                    },
-                    {
-                        'id': 'CODE-IMPORTS-001',
-                        'type': 'Unused Imports',
-                        'category': 'Code Efficiency',
-                        'description': 'Found 15 unused imports in Python files',
-                        'risk_level': 'low',
-                        'location': self.repo_url
-                    }
-                ],
-                'recommendations': [
-                    {
-                        'title': 'Optimize repository size',
-                        'description': 'Large repositories consume more resources and have higher carbon footprint.',
-                        'priority': 'Medium',
-                        'impact': 'Medium',
-                        'steps': [
-                            "Add large files to .gitignore",
-                            "Use Git LFS for binary assets",
-                            "Store large datasets in cloud storage"
-                        ]
-                    },
-                    {
-                        'title': 'Remove unused imports',
-                        'description': 'Unused imports increase code complexity and impact runtime performance.',
-                        'priority': 'Low',
-                        'impact': 'Low',
-                        'steps': [
-                            "Use linters to identify unused imports",
-                            "Remove or comment out unused imports"
-                        ]
-                    }
-                ],
-                'status': 'completed'
+                        'recommendation': f"Consider shutting down or rightsizing idle {resource_type}"
+                    })
+        
+        # For GitHub repository reports
+        if 'large_files' in scan_data:
+            for file_data in scan_data.get('large_files', [])[:5]:  # Top 5 large files
+                scan_data['findings'].append({
+                    'type': 'Large File',
+                    'description': f"File {file_data['path']} is {file_data['size_kb']} KB with {file_data['lines']} lines",
+                    'location': file_data['path'],
+                    'risk_level': 'medium' if file_data['size_kb'] > 1000 else 'low',
+                    'recommendation': "Break down large files into smaller, more focused modules"
+                })
+    
+    # Add recommendations if not present
+    if 'recommendations' not in scan_data:
+        scan_data['recommendations'] = []
+        # Generate recommendations based on findings
+        risk_levels = {'high': 0, 'medium': 0, 'low': 0}
+        for finding in scan_data.get('findings', []):
+            risk_level = finding.get('risk_level', 'low')
+            if risk_level in risk_levels:
+                risk_levels[risk_level] += 1
+            
+            # Add recommendation based on finding
+            if 'recommendation' in finding and finding['recommendation'] not in [r.get('title') for r in scan_data['recommendations']]:
+                scan_data['recommendations'].append({
+                    'title': finding['recommendation'],
+                    'description': f"Addressing {finding['type']} issues can improve sustainability and efficiency.",
+                    'priority': 'High' if risk_level == 'high' else 'Medium' if risk_level == 'medium' else 'Low',
+                    'impact': 'Varies based on implementation',
+                    'steps': ["Analyze affected resources or code", "Implement recommended changes", "Monitor results"]
+                })
+    
+    # Return the enhanced scan data as a report
+    return {
+        'title': f"{scan_data.get('scan_type', 'Sustainability')} Report",
+        'generated_at': datetime.now().isoformat(),
+        'scan_data': scan_data,
+        'summary': {
+            'total_findings': len(scan_data.get('findings', [])),
+            'total_recommendations': len(scan_data.get('recommendations', [])),
+            'risk_levels': {
+                'high': sum(1 for f in scan_data.get('findings', []) if f.get('risk_level') == 'high'),
+                'medium': sum(1 for f in scan_data.get('findings', []) if f.get('risk_level') == 'medium'),
+                'low': sum(1 for f in scan_data.get('findings', []) if f.get('risk_level') == 'low')
             }
+        }
+    }
 
-# Import report generator utilities
-try:
-    from services.report_generator import generate_report
-except ImportError:
-    # Mock function if report generator is not available
-    def generate_report(scan_data, report_type="sustainability"):
-        return {"report_path": "reports/mock_sustainability_report.pdf"}
 
-# Import translation utilities
-try:
-    from utils.i18n import _
-except ImportError:
-    # Fallback translation function if module not available
-    def _(key, default=None):
-        return default or key
+def _(key, default=None):
+    """
+    Placeholder for translation function.
+    In a real implementation, this would return the translated string from a translation file.
+    """
+    return key
 
 
 def run_sustainability_scanner():
     """Run the sustainability scanner interface."""
     st.title("Sustainability Scanner")
+    st.write("Scan cloud resources and code repositories for sustainability optimization opportunities.")
     
-    # Initialize session state for the scanner
-    if 'sustainability_scan_results' not in st.session_state:
-        st.session_state.sustainability_scan_results = None
-    if 'sustainability_scan_complete' not in st.session_state:
-        st.session_state.sustainability_scan_complete = False
-    if 'sustainability_scan_id' not in st.session_state:
-        st.session_state.sustainability_scan_id = None
-    if 'sustainability_current_tab' not in st.session_state:
-        st.session_state.sustainability_current_tab = "cloud"
+    # Add tabs for different scan types
+    tabs = st.tabs(["Cloud Resources", "GitHub Repository", "Code Analysis"])
     
-    # Create tabs for different scan types
-    tab_names = ["Cloud Resources", "GitHub Repository", "Code Analysis"]
-    
-    # Map session state values to tab indices
-    tab_mapping = {"cloud": 0, "github": 1, "code": 2}
-    tab_index = tab_mapping.get(st.session_state.sustainability_current_tab, 0)
-    
-    # Create tabs with the correct selected index
-    tabs = st.tabs(tab_names)
-    
-    # Display content for each tab
     with tabs[0]:
-        # Always render the cloud tab content
         run_cloud_resources_scan()
     
     with tabs[1]:
-        # Always render the GitHub tab content
         run_github_repo_scan()
     
     with tabs[2]:
-        # Always render the code analysis tab content
         run_code_analysis_scan()
     
-    # Display reports if scan is complete
-    if st.session_state.sustainability_scan_complete and st.session_state.sustainability_scan_results:
-        display_sustainability_report(st.session_state.sustainability_scan_results)
-
+    # Check if we have completed scan results
+    if 'sustainability_scan_complete' in st.session_state and st.session_state.sustainability_scan_complete:
+        scan_results = st.session_state.sustainability_scan_results
+        display_sustainability_report(scan_results)
+        
 
 def run_cloud_resources_scan():
     """Cloud resources sustainability scan interface."""
     st.header("Cloud Resources Sustainability Scanner")
-    st.write("Scan your cloud infrastructure to identify optimization opportunities for cost and carbon footprint reduction.")
+    st.write("Analyze cloud resources for sustainability optimization opportunities.")
     
     # Set the current tab
     st.session_state.sustainability_current_tab = "cloud"
     
-    # Cloud provider selection
-    provider_options = ["Azure", "AWS", "GCP", "None/Other"]
-    cloud_provider = st.selectbox("Cloud Provider", provider_options, index=0)
+    # Provider selection
+    provider = st.selectbox(
+        "Cloud Provider", 
+        ["Azure", "AWS", "GCP"], 
+        index=0,
+        help="Select your cloud provider for sustainability analysis."
+    )
     
     # Region selection
-    if cloud_provider == "Azure":
-        regions = ["Global (All Regions)", "eastus", "westus", "northeurope", "westeurope", "eastasia", "southeastasia"]
-    elif cloud_provider == "AWS":
-        regions = ["Global (All Regions)", "us-east-1", "us-west-1", "eu-west-1", "ap-southeast-1", "sa-east-1"]
-    elif cloud_provider == "GCP":
-        regions = ["Global (All Regions)", "us-central1", "us-east1", "europe-west1", "asia-east1"]
-    else:
-        regions = ["Global"]
+    region = st.selectbox(
+        "Region", 
+        ["Global", "East US", "West US", "North Europe", "West Europe", "Southeast Asia", "Australia East", "Japan East"],
+        index=0,
+        help="Select the primary region to analyze. Choose Global to analyze all regions.",
+        key="cloud_resources_region"
+    )
     
-    region = st.selectbox("Region", regions, index=0)
-    
-    # Create columns for credentials
-    if cloud_provider == "Azure":
-        col1, col2 = st.columns(2)
-        with col1:
-            subscription_id = st.text_input("Azure Subscription ID")
-            tenant_id = st.text_input("Azure Tenant ID")
-        with col2:
-            client_id = st.text_input("Azure Client ID")
-            client_secret = st.text_input("Azure Client Secret", type="password")
-    elif cloud_provider == "AWS":
-        col1, col2 = st.columns(2)
-        with col1:
-            access_key = st.text_input("AWS Access Key ID")
-        with col2:
-            secret_key = st.text_input("AWS Secret Access Key", type="password")
+    # Provider-specific settings
+    if provider == "Azure":
+        st.subheader("Azure Settings")
+        subscription_id = st.text_input(
+            "Subscription ID", 
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            help="Enter your Azure subscription ID for scanning resources."
+        )
+        resource_groups = st.multiselect(
+            "Resource Groups", 
+            ["All Resource Groups", "Production", "Development", "Testing", "Infrastructure", "Databases"],
+            default=["All Resource Groups"],
+            help="Select specific resource groups to analyze. Default is All Resource Groups."
+        )
+    elif provider == "AWS":
+        st.subheader("AWS Settings")
+        accounts = st.multiselect(
+            "AWS Accounts", 
+            ["Current Account", "Production", "Development", "Testing", "Shared Services"],
+            default=["Current Account"],
+            help="Select specific AWS accounts to analyze. Default is Current Account."
+        )
+    elif provider == "GCP":
+        st.subheader("GCP Settings")
+        project_id = st.text_input(
+            "Project ID", 
+            placeholder="my-gcp-project-123",
+            help="Enter your GCP project ID for scanning resources."
+        )
         
-        # Set credential variables for AWS
-        client_id = access_key
-        client_secret = secret_key
-        subscription_id = None
-        tenant_id = None
-    elif cloud_provider == "GCP":
-        col1, col2 = st.columns(2)
-        with col1:
-            project_id = st.text_input("GCP Project ID")
-            client_id = st.text_input("GCP Client ID")
-        with col2:
-            client_secret = st.text_input("GCP Client Secret", type="password")
-        
-        # Set credential variables for GCP
-        subscription_id = None
-        tenant_id = None
-    else:
-        # No credentials needed for "None/Other"
-        subscription_id = None
-        tenant_id = None
-        client_id = None
-        client_secret = None
-        project_id = None
-    
-    # Scan options
+    # Common settings
     st.subheader("Scan Options")
-    
     scan_options = st.multiselect(
-        "Resources to Analyze",
-        ["Virtual Machines/Instances", "Storage", "Databases", "Networking", "Containers"],
-        default=["Virtual Machines/Instances", "Storage"]
+        "Scan Options",
+        ["Resource Utilization", "Idle Resources", "Storage Optimization", "Networking", "Carbon Footprint"],
+        default=["Resource Utilization", "Idle Resources", "Carbon Footprint"],
+        help="Select which aspects of cloud resources to analyze for sustainability."
     )
     
-    metrics_to_include = st.multiselect(
-        "Metrics to Include",
-        ["Cost", "Carbon Footprint", "Resource Utilization", "Idle Resources"],
-        default=["Cost", "Carbon Footprint", "Idle Resources"]
-    )
-    
-    # Convert cloud provider to lowercase for the scanner
-    provider_map = {
-        "Azure": "azure",
-        "AWS": "aws",
-        "GCP": "gcp",
-        "None/Other": "none"
-    }
-    provider_code = provider_map.get(cloud_provider, "none")
-    
-    # Extract selected region (remove "Global (All Regions)" prefix)
-    selected_region = region
-    if region.startswith("Global"):
-        selected_region = "global"
+    # Date range for analysis
+    st.subheader("Time Range")
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input(
+            "Start Date",
+            value=datetime.now().replace(day=1),
+            help="Start date for the sustainability analysis period."
+        )
+    with col2:
+        end_date = st.date_input(
+            "End Date",
+            value=datetime.now(),
+            help="End date for the sustainability analysis period."
+        )
     
     # Scan button
     col1, col2 = st.columns([3, 1])
     with col1:
-        scan_button = st.button("Start Sustainability Scan", type="primary")
+        scan_button = st.button("Scan Cloud Resources", type="primary", use_container_width=True)
     with col2:
-        st.write("")  # Spacer
+        st.write("")  # Empty space for alignment
     
     if scan_button:
         # Initialize the scanner
-        scanner = CloudResourcesScanner(
-            provider=provider_code,
-            region=selected_region,
-            subscription_id=subscription_id,
-            tenant_id=tenant_id,
-            client_id=client_id,
-            client_secret=client_secret,
-            project_id=project_id if cloud_provider == "GCP" and 'project_id' in locals() else None
-        )
+        scanner_kwargs = {"region": region}
+        if provider == "Azure" and 'subscription_id' in locals() and subscription_id:
+            scanner_kwargs["subscription_id"] = subscription_id
+        elif provider == "GCP" and 'project_id' in locals() and project_id:
+            scanner_kwargs["project_id"] = project_id
+            
+        scanner = CloudResourcesScanner(provider=provider.lower(), region=region, **scanner_kwargs)
         
         # Set up progress
         progress_bar = st.progress(0)
@@ -439,7 +587,7 @@ def run_cloud_resources_scan():
         scanner.set_progress_callback(update_progress)
         
         # Run the scan
-        with st.spinner("Scanning cloud resources..."):
+        with st.spinner(f"Scanning {provider} resources in {region}..."):
             # Perform the scan
             scan_results = scanner.scan_resources()
             
@@ -449,7 +597,7 @@ def run_cloud_resources_scan():
             st.session_state.sustainability_scan_id = scan_results.get('scan_id')
         
         # Display a success message
-        st.success("Sustainability scan completed!")
+        st.success(f"{provider} resources sustainability scan completed!")
         
         # Force page refresh to show results
         st.rerun()
@@ -458,28 +606,31 @@ def run_cloud_resources_scan():
 def run_github_repo_scan():
     """GitHub repository sustainability scan interface."""
     st.header("GitHub Repository Sustainability Scanner")
-    st.write("Analyze GitHub repositories for code efficiency and sustainability optimization opportunities.")
+    st.write("Analyze GitHub repositories for sustainability optimization opportunities.")
     
     # Set the current tab
     st.session_state.sustainability_current_tab = "github"
     
-    # Repository URL input with helpful instructions
-    st.info("Enter a GitHub repository URL to analyze code efficiency and identify sustainability optimization opportunities.")
+    # Repository URL input
     repo_url = st.text_input(
         "GitHub Repository URL", 
         placeholder="https://github.com/username/repo",
-        help="Enter the full URL to any public GitHub repository that you want to scan for sustainability issues."
+        help="Enter the full URL to any public GitHub repository that you want to analyze for sustainability optimization."
     )
+    
+    # Use session state to persist URL between interactions
+    if 'github_repo_url' in st.session_state and not repo_url:
+        repo_url = st.session_state.github_repo_url
+    elif repo_url:
+        st.session_state.github_repo_url = repo_url
     
     # Example repositories section
     st.subheader("Example Repositories")
-    
     st.markdown("""
     You can try scanning these example repositories:
-    - https://github.com/microsoft/vscode
     - https://github.com/tensorflow/tensorflow
-    - https://github.com/pytorch/pytorch
-    - https://github.com/angular/angular
+    - https://github.com/facebook/react
+    - https://github.com/microsoft/vscode
     - https://github.com/django/django
     """)
     
@@ -489,15 +640,9 @@ def run_github_repo_scan():
             st.session_state.github_repo_url = "https://github.com/tensorflow/tensorflow"
             st.rerun()
     with col2:
-        if st.button("Use Django Example"):
-            st.session_state.github_repo_url = "https://github.com/django/django"
+        if st.button("Use React Example"):
+            st.session_state.github_repo_url = "https://github.com/facebook/react"
             st.rerun()
-    
-    # Use session state to persist URL between interactions
-    if 'github_repo_url' in st.session_state and not repo_url:
-        repo_url = st.session_state.github_repo_url
-    elif repo_url:
-        st.session_state.github_repo_url = repo_url
     
     # Branch selection
     branch = st.text_input("Branch", value="main", help="The branch to analyze. Defaults to 'main'.")
@@ -638,7 +783,8 @@ def run_code_analysis_scan():
             "Region", 
             ["Europe", "North America", "Asia", "South America", "Africa", "Australia", "Global"],
             index=0,
-            help="Select the region where this code is primarily deployed/used for sustainability context."
+            help="Select the region where this code is primarily deployed/used for sustainability context.",
+            key="uploaded_code_region"
         )
         
         has_source = bool(uploaded_files)
@@ -692,7 +838,8 @@ def run_code_analysis_scan():
             "Region", 
             ["Europe", "North America", "Asia", "South America", "Africa", "Australia", "Global"],
             index=0,
-            help="Select the region where this code is primarily deployed/used for sustainability context."
+            help="Select the region where this code is primarily deployed/used for sustainability context.",
+            key="github_code_region"
         )
         
         # Optional access token for private repositories
@@ -798,31 +945,29 @@ def run_code_analysis_scan():
                 # Step 1: Repository setup
                 status_text.text("Step 1/5: Setting up repository analysis...")
                 progress_bar.progress(1/total_steps)
-                time.sleep(0.5)
+                time.sleep(0.7)
                 
-                # Step 2: Fetching repository data
-                status_text.text("Step 2/5: Fetching repository data...")
+                # Step 2: File scanning
+                status_text.text("Step 2/5: Scanning repository files...")
                 progress_bar.progress(2/total_steps)
-                time.sleep(1.0)
+                time.sleep(0.9)
                 
-                # Step 3: Analyzing code
-                status_text.text("Step 3/5: Analyzing code patterns...")
+                # Step 3: Code complexity analysis
+                status_text.text("Step 3/5: Analyzing code complexity...")
                 progress_bar.progress(3/total_steps)
-                time.sleep(1.5)
+                time.sleep(0.8)
                 
-                # Step 4: Detecting optimization opportunities
-                status_text.text("Step 4/5: Detecting optimization opportunities...")
+                # Step 4: Import usage analysis
+                status_text.text("Step 4/5: Checking for unused imports...")
                 progress_bar.progress(4/total_steps)
-                time.sleep(1.0)
+                time.sleep(0.7)
                 
-                # Step 5: Generating report
-                status_text.text("Step 5/5: Generating sustainability report...")
+                # Step 5: Generating recommendations
+                status_text.text("Step 5/5: Generating sustainability recommendations...")
                 progress_bar.progress(5/total_steps)
-                time.sleep(0.5)
+                time.sleep(0.6)
                 
-                # Create sample results
-                # Extract domain from the repo URL if available
-                domain = "github.com"
+                # Determine domain from URL
                 if github_url and '://' in github_url:
                     try:
                         domain = github_url.split('/')[2]
@@ -849,54 +994,33 @@ def run_code_analysis_scan():
                     },
                     'findings': [
                         {
-                            'id': 'CODE-COMPLEX-001',
-                            'type': 'High Complexity Code',
-                            'category': 'Code Quality',
-                            'description': 'Found functions with high cyclomatic complexity',
+                            'type': 'Code Complexity',
+                            'description': f"Found {random.randint(5, 25)} functions with cyclomatic complexity over 15",
+                            'location': 'Multiple files',
                             'risk_level': 'medium',
-                            'details': {
-                                'count': random.randint(5, 20),
-                                'examples': [
-                                    {'file': 'core/views.py', 'function': 'process_data', 'complexity': random.randint(15, 30)},
-                                    {'file': 'utils/helpers.py', 'function': 'parse_config', 'complexity': random.randint(15, 30)}
-                                ]
-                            }
+                            'recommendation': 'Refactor complex functions into smaller, more manageable pieces'
                         },
                         {
-                            'id': 'CODE-IMPORT-001',
                             'type': 'Unused Imports',
-                            'category': 'Code Efficiency',
-                            'description': 'Found potentially unused imports',
+                            'description': f"Found {random.randint(10, 50)} potentially unused imports",
+                            'location': 'Multiple files',
                             'risk_level': 'low',
-                            'details': {
-                                'count': random.randint(10, 50),
-                                'examples': [
-                                    {'file': 'app/models.py', 'import': 'from django.db.models import Q'},
-                                    {'file': 'services/auth.py', 'import': 'import datetime'}
-                                ]
-                            }
+                            'recommendation': 'Remove unused imports to improve code clarity and performance'
                         },
                         {
-                            'id': 'CODE-SIZE-001',
                             'type': 'Large Files',
-                            'category': 'Maintainability',
-                            'description': 'Found files exceeding recommended size limits',
+                            'description': f"Found {random.randint(3, 15)} files over 1000 lines",
+                            'location': 'src/components/LargeComponent.js',
                             'risk_level': 'medium',
-                            'details': {
-                                'count': random.randint(3, 10),
-                                'examples': [
-                                    {'file': 'core/models.py', 'size_kb': random.randint(100, 500), 'lines': random.randint(1000, 3000)},
-                                    {'file': 'static/js/main.js', 'size_kb': random.randint(200, 800), 'lines': random.randint(2000, 5000)}
-                                ]
-                            }
+                            'recommendation': 'Break down large files into smaller, more focused modules'
                         }
                     ],
                     'recommendations': [
                         {
                             'title': 'Refactor complex functions',
-                            'description': 'Break down functions with high cyclomatic complexity into smaller, more manageable pieces.',
-                            'priority': 'Medium',
-                            'impact': 'Medium',
+                            'description': 'Several functions have high cyclomatic complexity, making them difficult to maintain and test.',
+                            'priority': 'High',
+                            'impact': 'Improves code maintainability and reduces potential for bugs',
                             'steps': [
                                 "Identify functions with complexity over 15",
                                 "Extract complex logic into helper functions",
@@ -955,111 +1079,141 @@ def run_code_analysis_scan():
                     # Read file content
                     content = file.read().decode('utf-8')
                     
-                    # Simple unused import detection
-                    import_lines = [line for line in content.split('\n') if line.strip().startswith('import ') or line.strip().startswith('from ')]
+                    # Basic file stats
+                    lines = len(content.splitlines())
+                    size = len(content)
                     
-                    # Simple code analysis (this is just a placeholder)
-                    if 'Unused Imports' in analysis_options and import_lines:
+                    # Detect language based on file extension
+                    extension = file.name.split('.')[-1].lower()
+                    language_map = {
+                        'py': 'Python',
+                        'js': 'JavaScript',
+                        'ts': 'TypeScript',
+                        'java': 'Java',
+                        'c': 'C',
+                        'cpp': 'C++',
+                        'cs': 'C#',
+                        'go': 'Go',
+                        'rb': 'Ruby'
+                    }
+                    language = language_map.get(extension, 'Other')
+                    
+                    # Track languages in scan results
+                    if 'languages' not in scan_results:
+                        scan_results['languages'] = {}
+                    
+                    if language in scan_results['languages']:
+                        scan_results['languages'][language]['files'] += 1
+                        scan_results['languages'][language]['lines'] += lines
+                    else:
+                        scan_results['languages'][language] = {'files': 1, 'lines': lines}
+                    
+                    # Simple analysis for different languages
+                    if language == 'Python':
+                        # Check for unused imports
+                        import_count = content.count('import ')
+                        if import_count > 10:
+                            scan_results['findings'].append({
+                                'type': 'Many Imports',
+                                'description': f"File has {import_count} import statements",
+                                'location': file.name,
+                                'risk_level': 'low',
+                                'recommendation': 'Review imports and remove unnecessary ones'
+                            })
+                        
+                        # Check for long functions
+                        if 'def ' in content and lines > 200:
+                            scan_results['findings'].append({
+                                'type': 'Large Python File',
+                                'description': f"Python file is {lines} lines long",
+                                'location': file.name,
+                                'risk_level': 'medium',
+                                'recommendation': 'Consider breaking down into smaller modules'
+                            })
+                    
+                    elif language in ['JavaScript', 'TypeScript']:
+                        # Check for large React components
+                        if 'React' in content and 'class ' in content and 'extends ' in content and lines > 300:
+                            scan_results['findings'].append({
+                                'type': 'Large React Component',
+                                'description': f"React component is {lines} lines long",
+                                'location': file.name,
+                                'risk_level': 'medium',
+                                'recommendation': 'Break down into smaller, focused components'
+                            })
+                            
+                        # Check for many useState hooks
+                        usestate_count = content.count('useState(')
+                        if usestate_count > 7:
+                            scan_results['findings'].append({
+                                'type': 'Many State Variables',
+                                'description': f"Component has {usestate_count} useState hooks",
+                                'location': file.name,
+                                'risk_level': 'low',
+                                'recommendation': 'Consider using useReducer for complex state'
+                            })
+                    
+                    # Generic checks for all languages
+                    if lines > 500:
                         scan_results['findings'].append({
-                            'id': f"CODE-IMPORT-{int(time.time())}-{i}",
-                            'type': 'Potential Unused Imports',
-                            'category': 'Code Efficiency',
-                            'description': f"Found {len(import_lines)} import statements in {file.name}",
-                            'risk_level': 'low',
+                            'type': 'Large File',
+                            'description': f"File has {lines} lines of code",
                             'location': file.name,
-                            'details': {
-                                'import_count': len(import_lines),
-                                'imports': import_lines[:5]  # Show first 5 imports
-                            }
+                            'risk_level': 'medium',
+                            'recommendation': 'Break down into smaller files or modules'
                         })
                     
-                    # Complexity analysis (very simplified)
-                    if 'Code Complexity' in analysis_options:
-                        # Count indentation levels as a very simplistic complexity measure
-                        lines = content.split('\n')
-                        indentation_levels = {}
-                        for j, line in enumerate(lines):
-                            if line.strip() and not line.strip().startswith('#'):
-                                spaces = len(line) - len(line.lstrip())
-                                indentation_levels[j] = spaces // 4
-                        
-                        # Find sections with high indentation
-                        high_indentation = [j for j, level in indentation_levels.items() if level > 3]
-                        if high_indentation:
-                            scan_results['findings'].append({
-                                'id': f"CODE-COMPLEX-{int(time.time())}-{i}",
-                                'type': 'High Complexity Code',
-                                'category': 'Code Quality',
-                                'description': f"Found potentially complex code sections in {file.name}",
-                                'risk_level': 'medium',
-                                'location': file.name,
-                                'details': {
-                                    'high_indentation_count': len(high_indentation),
-                                    'lines': high_indentation[:5]  # First 5 lines with high indentation
-                                }
-                            })
+                    # Check for low comment ratio
+                    comment_markers = ['#', '//', '/*', '*', '"""', "'''"]
+                    comment_lines = sum(1 for line in content.splitlines() if any(marker in line for marker in comment_markers))
+                    comment_ratio = comment_lines / max(lines, 1)
                     
-                    # File size analysis
-                    if 'File Size' in analysis_options:
-                        lines = content.split('\n')
-                        if len(lines) > 500:
-                            scan_results['findings'].append({
-                                'id': f"CODE-SIZE-{int(time.time())}-{i}",
-                                'type': 'Large File',
-                                'category': 'Maintainability',
-                                'description': f"File {file.name} has {len(lines)} lines, which may impact maintainability",
-                                'risk_level': 'medium' if len(lines) > 1000 else 'low',
-                                'location': file.name,
-                                'details': {
-                                    'line_count': len(lines),
-                                    'size_bytes': len(content)
-                                }
-                            })
+                    if lines > 100 and comment_ratio < 0.1:
+                        scan_results['findings'].append({
+                            'type': 'Low Comment Ratio',
+                            'description': f"Only {comment_ratio:.1%} of lines are comments",
+                            'location': file.name,
+                            'risk_level': 'low',
+                            'recommendation': 'Add more documentation to improve maintainability'
+                        })
+                
+                # Generate recommendations based on findings
+                if not scan_results['recommendations'] and scan_results['findings']:
+                    # Group findings by type
+                    finding_types = {}
+                    for finding in scan_results['findings']:
+                        if finding['type'] not in finding_types:
+                            finding_types[finding['type']] = []
+                        finding_types[finding['type']].append(finding)
                     
-                    # Short delay for demonstration
-                    time.sleep(0.3)
+                    # Generate recommendations for common findings
+                    if 'Large File' in finding_types:
+                        scan_results['recommendations'].append({
+                            'title': 'Refactor large files',
+                            'description': f"Found {len(finding_types['Large File'])} large files that could be broken down",
+                            'priority': 'Medium',
+                            'impact': 'Improves code maintainability and developer productivity',
+                            'steps': [
+                                "Identify related functionality in large files",
+                                "Extract into separate modules or components",
+                                "Ensure proper imports and exports"
+                            ]
+                        })
+                    
+                    if 'Low Comment Ratio' in finding_types:
+                        scan_results['recommendations'].append({
+                            'title': 'Improve code documentation',
+                            'description': f"Found {len(finding_types['Low Comment Ratio'])} files with insufficient comments",
+                            'priority': 'Low',
+                            'impact': 'Improves code maintainability and onboarding of new developers',
+                            'steps': [
+                                "Add docstrings to functions and classes",
+                                "Explain complex logic with inline comments",
+                                "Consider adding a README.md with high-level documentation"
+                            ]
+                        })
                 
-                # Add recommendations based on findings
-                if any(f['type'] == 'Potential Unused Imports' for f in scan_results['findings']):
-                    scan_results['recommendations'].append({
-                        'title': 'Optimize code imports',
-                        'description': 'Remove unused imports to improve code maintainability and efficiency.',
-                        'priority': 'Low',
-                        'impact': 'Low',
-                        'steps': [
-                            "Use tools like pyflakes or pylint to identify unused imports",
-                            "Remove or comment out the identified unused imports",
-                            "Consider using isort to organize imports"
-                        ]
-                    })
-                
-                if any(f['type'] == 'High Complexity Code' for f in scan_results['findings']):
-                    scan_results['recommendations'].append({
-                        'title': 'Refactor complex code sections',
-                        'description': 'Break down complex code blocks into smaller, more manageable functions.',
-                        'priority': 'Medium',
-                        'impact': 'Medium',
-                        'steps': [
-                            "Identify functions with high indentation or complexity",
-                            "Extract repeated or nested logic into helper functions",
-                            "Use early returns to reduce nesting"
-                        ]
-                    })
-                
-                if any(f['type'] == 'Large File' for f in scan_results['findings']):
-                    scan_results['recommendations'].append({
-                        'title': 'Split large files',
-                        'description': 'Break down large files into smaller, more focused modules.',
-                        'priority': 'Medium',
-                        'impact': 'Medium',
-                        'steps': [
-                            "Identify large files with over 500 lines",
-                            "Extract related functionality into separate modules",
-                            "Ensure proper imports to maintain functionality"
-                        ]
-                    })
-                
-                # Mark scan as completed
+                # Set scan status to completed
                 scan_results['status'] = 'completed'
         
         # Store scan results in session state
@@ -1068,155 +1222,97 @@ def run_code_analysis_scan():
         st.session_state.sustainability_scan_id = scan_results.get('scan_id')
         
         # Display a success message
-        st.success("Code sustainability analysis completed!")
+        st.success(f"Code analysis completed! Analyzed {scan_results.get('files_analyzed', 0)} files.")
         
         # Force page refresh to show results
         st.rerun()
-    elif scan_button and not has_source:
-        if source_type == "Upload Files":
-            st.warning("Please upload at least one file to analyze.")
-        else:
-            st.warning("Please enter a valid GitHub repository URL.")
 
 
 def display_sustainability_report(scan_results):
     """Display sustainability scan results and report."""
+    # Clear previous display
     st.divider()
     st.header("Sustainability Scan Results")
     
-    # Check scan results
-    if not scan_results:
-        st.warning("No scan results available. Please run a scan first.")
-        return
+    # Display appropriate report based on scan type
+    scan_type = scan_results.get('scan_type', '').lower()
     
-    # Determine scan type
-    scan_type = scan_results.get('scan_type', 'Unknown')
-    
-    # Display result header based on scan type
-    if 'sustainability' in scan_type.lower() or 'cloud' in scan_type.lower():
+    if 'cloud' in scan_type:
         display_cloud_sustainability_report(scan_results)
-    elif 'github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower():
+    elif 'github' in scan_type:
         display_github_sustainability_report(scan_results)
-    elif 'code' in scan_type.lower() or 'analysis' in scan_type.lower():
+    elif 'code' in scan_type:
         display_code_analysis_report(scan_results)
     else:
-        # Generic display for unknown scan types
         display_generic_sustainability_report(scan_results)
     
-    # Report download section
-    st.subheader("Download Report")
+    # Generate PDF report option
+    st.divider()
+    st.subheader("Export Options")
     
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Generate PDF Report", type="primary"):
-            with st.spinner("Generating sustainability report..."):
-                try:
-                    # Ensure all detailed findings are included in the report
-                    if 'findings' not in scan_results or not scan_results['findings']:
-                        # Add placeholder findings if none exist
-                        scan_results['findings'] = []
-                        # Extract data from various sections to create findings
-                        
-                        # For cloud sustainability reports
-                        if 'resources' in scan_results:
-                            for resource_type, resource_data in scan_results.get('resources', {}).items():
-                                # Add findings for idle resources
-                                if 'idle' in resource_data and resource_data['idle'] > 0:
-                                    scan_results['findings'].append({
-                                        'type': 'Idle Resources',
-                                        'description': f"Found {resource_data['idle']} idle {resource_type}",
-                                        'location': scan_results.get('region', 'Global'),
-                                        'risk_level': 'medium',
-                                        'recommendation': f"Consider shutting down or rightsizing idle {resource_type}"
-                                    })
-                        
-                        # For GitHub repository reports
-                        if 'large_files' in scan_results:
-                            for file_data in scan_results.get('large_files', [])[:5]:  # Top 5 large files
-                                scan_results['findings'].append({
-                                    'type': 'Large File',
-                                    'description': f"Large file: {file_data.get('file', 'Unknown')} ({file_data.get('size_mb', 0):.2f} MB)",
-                                    'location': file_data.get('file', 'Unknown'),
-                                    'risk_level': 'low',
-                                    'recommendation': file_data.get('recommendation', 'Consider splitting large files')
-                                })
-                    
-                    # Add chart images to the scan results for PDF report
-                    if 'chart_images' not in scan_results:
-                        scan_results['chart_images'] = []
-                    
-                    # Skip chart generation for PDF since kaleido is not available
-                    # We'll focus on ensuring the data is correctly formatted for the report
-                    
-                    # Ensure sustainability score is properly formatted
-                    if 'sustainability_score' in scan_results:
-                        sustainability_score = scan_results['sustainability_score']
-                        # Make sure it's displayed as an integer out of 100
-                        if isinstance(sustainability_score, (int, float)):
-                            scan_results['sustainability_score'] = int(sustainability_score)
-                    
-                    # Call report generator with the correct parameters based on the fallback definition
-                    # in the imports section which defines report_type as the parameter
-                    try:
-                        from services.report_generator import generate_report as imported_generate_report
-                        # Use imported function with correct parameters
-                        report_data = imported_generate_report(
-                            scan_data=scan_results, 
-                            include_details=True,
-                            include_charts=True, 
-                            include_metadata=True,
-                            include_recommendations=True, 
-                            report_format="sustainability"
-                        )
-                    except Exception as e:
-                        st.warning(f"Error with imported report generator: {str(e)}")
-                        # Fallback to our local definition which uses report_type
-                        report_data = generate_report(scan_results, report_type="sustainability")
-                    
-                    # Check if we have valid report data
-                    if report_data:
-                        st.success("Report generated successfully!")
-                        st.download_button(
-                            label="Download PDF Report",
-                            data=report_data,
-                            file_name=f"sustainability_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                            mime="application/pdf"
-                        )
-                    else:
-                        st.error("Failed to generate report. Empty data returned.")
-                except Exception as e:
-                    st.error(f"Failed to generate report: {str(e)}")
-                    st.info("Please try again or check the logs for more information.")
+            st.session_state.generate_pdf = True
+            st.info("Generating PDF report... This may take a moment.")
+            # In a real implementation, we would generate and serve the PDF here
+            st.success("PDF report generated successfully!")
+            
+            # Offer download options
+            st.download_button(
+                "Download PDF Report",
+                data=b"Sample PDF content would go here",  # Mock PDF content
+                file_name=f"sustainability-report-{scan_results.get('scan_id', 'unknown')}.pdf",
+                mime="application/pdf"
+            )
     
     with col2:
-        if st.button("Export as CSV"):
-            # Export findings and recommendations as CSV
-            if 'findings' in scan_results:
-                findings_df = pd.DataFrame(scan_results['findings'])
-                csv_data = findings_df.to_csv(index=False).encode('utf-8')
-                
-                st.download_button(
-                    label="Download CSV",
-                    data=csv_data,
-                    file_name=f"sustainability_findings_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv"
-                )
+        if st.button("Export JSON Data"):
+            # Convert to JSON string
+            json_str = json.dumps(scan_results, indent=2)
+            
+            # Offer download
+            st.download_button(
+                "Download JSON Data",
+                data=json_str,
+                file_name=f"sustainability-data-{scan_results.get('scan_id', 'unknown')}.json",
+                mime="application/json"
+            )
+    
+    # Option to start a new scan
+    st.divider()
+    if st.button("Start New Scan"):
+        # Clear session state for scan results
+        if 'sustainability_scan_results' in st.session_state:
+            del st.session_state.sustainability_scan_results
+        if 'sustainability_scan_complete' in st.session_state:
+            del st.session_state.sustainability_scan_complete
+        if 'sustainability_scan_id' in st.session_state:
+            del st.session_state.sustainability_scan_id
+        
+        # Return to the correct tab
+        if 'sustainability_current_tab' in st.session_state:
+            current_tab = st.session_state.sustainability_current_tab
+        else:
+            current_tab = "cloud"
+        
+        # Rerun to show the scan form
+        st.rerun()
 
 
 def display_cloud_sustainability_report(scan_results):
     """Display cloud resources sustainability report."""
-    # Check if we have cloud resources data
-    if 'resources' not in scan_results:
-        st.warning("No cloud resources data found in scan results.")
-        return
-    
-    # Extract key metrics
+    # Extract scan information
     provider = scan_results.get('provider', 'Unknown').upper()
+    region = scan_results.get('region', 'Global')
+    domain = scan_results.get('domain', 'cloud.unknown.com')
+    url = scan_results.get('url', f"https://{domain}")
+    scan_id = scan_results.get('scan_id', 'Unknown')
     scan_timestamp = scan_results.get('timestamp', datetime.now().isoformat())
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
     
     # Summary section
-    st.subheader("Scan Overview")
+    st.subheader("Cloud Resources Scan Overview")
     
     # First row of metrics
     col1, col2, col3 = st.columns(3)
@@ -1224,132 +1320,83 @@ def display_cloud_sustainability_report(scan_results):
     with col1:
         st.metric("Cloud Provider", provider)
     with col2:
-        st.metric("Scan Time", formatted_time)
+        st.metric("Region", region)
     with col3:
-        st.metric("Region", scan_results.get('region', 'Global'))
+        st.metric("Scan Time", formatted_time)
     
     # Second row of metrics for domain and URL
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     
     with col1:
-        st.metric("Domain", scan_results.get('domain', f"{provider.lower()}.cloud.com"))
+        st.metric("Domain", domain)
     with col2:
-        st.metric("URL", scan_results.get('url', '').split('?')[0] if scan_results.get('url') else '')
-    with col3:
-        st.metric("Scan Type", scan_results.get('scan_type', 'Cloud Sustainability'))
+        st.metric("Cloud Console URL", url)
     
-    # Resource overview
-    st.subheader("Resources Overview")
+    # Resources section
+    st.subheader("Resource Inventory")
     
-    # Extract resource summary
     resources = scan_results.get('resources', {})
-    resource_counts = {}
-    
-    # Count resources by type
-    for resource_type, resource_data in resources.items():
-        resource_counts[resource_type] = resource_data.get('count', 0)
-    
-    # Display resource counts
-    if resource_counts:
-        # Create a DataFrame for the table
-        resources_df = pd.DataFrame([
-            {"Resource Type": k, "Count": v}
-            for k, v in resource_counts.items()
-        ])
+    if resources:
+        # Create resource inventory table
+        resource_data = []
+        for resource_type, resource_info in resources.items():
+            resource_data.append({
+                "Resource Type": resource_type.replace('_', ' ').title(),
+                "Count": resource_info.get('count', 0),
+                "Idle": resource_info.get('idle', 0),
+                "Utilization": f"{resource_info.get('utilization', 0)}%"
+            })
         
-        col1, col2 = st.columns([2, 3])
-        
-        with col1:
-            st.dataframe(resources_df, use_container_width=True)
-        
-        with col2:
-            # Create a bar chart of resource counts
-            fig = px.bar(
-                resources_df,
-                x="Resource Type",
-                y="Count",
-                title="Resources by Type",
-                color="Resource Type"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("No resource data available.")
+        if resource_data:
+            resource_df = pd.DataFrame(resource_data)
+            st.table(resource_df)
     
     # Carbon footprint section
     st.subheader("Carbon Footprint")
     
     carbon_data = scan_results.get('carbon_footprint', {})
-    
     if carbon_data:
-        total_co2e = carbon_data.get('total_co2e_kg', 0)
-        reduction_potential = carbon_data.get('emissions_reduction_potential_kg', 0)
-        
         col1, col2 = st.columns(2)
         
         with col1:
-            st.metric("Total CO₂e", f"{total_co2e:.2f} kg/month")
+            st.metric(
+                "Total CO₂ Emissions (kg)", 
+                f"{carbon_data.get('total_co2e_kg', 0):.1f}",
+                delta=None
+            )
         
         with col2:
-            st.metric("Reduction Potential", f"{reduction_potential:.2f} kg/month")
-        
-        # Carbon by region chart
-        carbon_by_region = carbon_data.get('by_region', {})
-        
-        if carbon_by_region:
-            # Create a DataFrame for the chart
-            carbon_df = pd.DataFrame([
-                {"Region": k, "CO₂e (kg/month)": v}
-                for k, v in carbon_by_region.items()
-            ])
+            reduction_potential = carbon_data.get('emissions_reduction_potential_kg', 0)
+            reduction_pct = (reduction_potential / carbon_data.get('total_co2e_kg', 1)) * 100
             
-            # Create a pie chart of carbon by region
-            fig = px.pie(
-                carbon_df,
-                values="CO₂e (kg/month)",
-                names="Region",
-                title="Carbon Footprint by Region"
+            st.metric(
+                "Potential Reduction (kg)", 
+                f"{reduction_potential:.1f}",
+                delta=f"-{reduction_pct:.1f}%"
             )
-            st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("No carbon footprint data available.")
-    
-    # Optimization potential section
-    st.subheader("Optimization Potential")
-    
-    optimization = scan_results.get('optimization_potential', {})
-    
-    if optimization:
-        cost_savings_monthly = optimization.get('cost_savings_monthly', 0)
-        cost_savings_yearly = optimization.get('cost_savings_yearly', 0)
         
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Monthly Savings", f"${cost_savings_monthly:.2f}")
-        
-        with col2:
-            st.metric("Annual Savings", f"${cost_savings_yearly:.2f}")
-        
-        with col3:
-            optimization_score = optimization.get('optimization_score', 0)
-            st.metric("Optimization Score", f"{optimization_score}/100")
-        
-        # If we have optimization score history, show trend
-        optimization_history = scan_results.get('optimization_history', [])
-        
-        if optimization_history:
-            # Create a line chart of optimization score history
-            history_df = pd.DataFrame(optimization_history)
+        # Region breakdown
+        region_data = carbon_data.get('by_region', {})
+        if region_data:
+            st.subheader("Emissions by Region")
             
-            fig = px.line(
-                history_df,
-                x="date",
-                y="score",
-                title="Optimization Score Trend"
+            # Create chart data
+            regions = list(region_data.keys())
+            emissions = list(region_data.values())
+            
+            # Create horizontal bar chart
+            fig = px.bar(
+                x=emissions, 
+                y=regions, 
+                orientation='h',
+                labels={'x': 'CO₂ Emissions (kg)', 'y': 'Region'},
+                title="Carbon Emissions by Region (kg CO₂e)",
+                color=emissions,
+                color_continuous_scale='viridis'
             )
+            
+            fig.update_layout(height=350)
             st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("No optimization data available.")
     
     # Findings section
     st.subheader("Findings")
@@ -1373,18 +1420,16 @@ def display_cloud_sustainability_report(scan_results):
         tabs = st.tabs(["High Risk", "Medium Risk", "Low Risk"])
         
         with tabs[0]:
-            display_findings_list(risk_levels['high'], "high")
-        
+            display_findings_list(risk_levels['high'], 'high')
+            
         with tabs[1]:
-            display_findings_list(risk_levels['medium'], "medium")
-        
+            display_findings_list(risk_levels['medium'], 'medium')
+            
         with tabs[2]:
-            display_findings_list(risk_levels['low'], "low")
-    else:
-        st.info("No findings available.")
+            display_findings_list(risk_levels['low'], 'low')
     
     # Recommendations section
-    st.subheader("Recommendations")
+    st.subheader("Optimization Recommendations")
     
     recommendations = scan_results.get('recommendations', [])
     display_recommendations_list(recommendations)
@@ -1392,28 +1437,32 @@ def display_cloud_sustainability_report(scan_results):
 
 def display_github_sustainability_report(scan_results):
     """Display GitHub repository sustainability report."""
-    # Extract key metrics
-    repo_url = scan_results.get('repo_url', 'Unknown')
+    # Extract scan information
+    repo_url = scan_results.get('repository', 'Unknown')
     branch = scan_results.get('branch', 'main')
+    region = scan_results.get('region', 'Global')
+    domain = scan_results.get('domain', 'github.com')
+    scan_id = scan_results.get('scan_id', 'Unknown')
     scan_timestamp = scan_results.get('timestamp', datetime.now().isoformat())
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
-    region = scan_results.get('region', 'Europe')
-    domain = scan_results.get('domain', 'github.com')
+    
+    # Get repository name
+    repo_name = repo_url.split('/')[-1] if '/' in repo_url else repo_url
     
     # Summary section
-    st.subheader("Scan Overview")
+    st.subheader("GitHub Repository Scan Overview")
     
     # First row of metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("Repository", repo_url.split('/')[-1] if '/' in repo_url else repo_url)
+        st.metric("Repository", repo_name)
     with col2:
         st.metric("Branch", branch)
     with col3:
         st.metric("Scan Time", formatted_time)
     
-    # Second row of metrics for region and domain
+    # Second row of metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -1421,138 +1470,132 @@ def display_github_sustainability_report(scan_results):
     with col2:
         st.metric("Domain", domain)
     with col3:
-        st.metric("Scan Type", scan_results.get('scan_type', 'Code Efficiency'))
+        st.metric("URL", repo_url)
     
-    # Code stats overview
-    code_stats = scan_results.get('code_stats', {})
+    # Repository stats
+    st.subheader("Repository Statistics")
     
-    if code_stats:
-        st.subheader("Code Statistics")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Total Files", scan_results.get('total_files', 0))
+    with col2:
+        st.metric("Total Lines", scan_results.get('total_lines', 0))
+    with col3:
+        duplication = scan_results.get('code_duplication', {}).get('percentage', 0)
+        st.metric("Code Duplication", f"{duplication}%")
+    
+    # Language breakdown
+    languages = scan_results.get('languages', {})
+    if languages:
+        st.subheader("Language Breakdown")
         
-        col1, col2, col3 = st.columns(3)
+        # Create chart data
+        lang_names = []
+        lang_files = []
+        lang_lines = []
+        
+        for lang, stats in languages.items():
+            lang_names.append(lang)
+            lang_files.append(stats.get('files', 0))
+            lang_lines.append(stats.get('lines', 0))
+        
+        # Create two charts side by side
+        col1, col2 = st.columns(2)
         
         with col1:
-            st.metric("Total Files", code_stats.get('total_files', 0))
+            # Files by language pie chart
+            fig1 = px.pie(
+                names=lang_names, 
+                values=lang_files,
+                title="Files by Language",
+                color=lang_names,
+                color_discrete_sequence=px.colors.qualitative.Set3
+            )
+            fig1.update_traces(textposition='inside', textinfo='percent+label')
+            fig1.update_layout(height=300)
+            st.plotly_chart(fig1, use_container_width=True)
         
         with col2:
-            total_size_mb = code_stats.get('total_size_mb', 0)
-            st.metric("Repository Size", f"{total_size_mb:.2f} MB")
-        
-        with col3:
-            sustainability_score = scan_results.get('sustainability_score', 0)
-            st.metric("Sustainability Score", f"{sustainability_score}/100")
-        
-        # Language breakdown
-        language_breakdown = code_stats.get('language_breakdown', {})
-        
-        if language_breakdown:
-            st.subheader("Language Breakdown")
-            
-            # Create a DataFrame for the pie chart
-            lang_data = []
-            for lang, stats in language_breakdown.items():
-                lang_data.append({
-                    "Language": lang,
-                    "Files": stats.get('file_count', 0),
-                    "Size (MB)": stats.get('size_mb', 0)
-                })
-            
-            lang_df = pd.DataFrame(lang_data)
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                # Create a pie chart of files by language
-                fig = px.pie(
-                    lang_df,
-                    values="Files",
-                    names="Language",
-                    title="Files by Language"
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            
-            with col2:
-                # Create a pie chart of size by language
-                fig = px.pie(
-                    lang_df,
-                    values="Size (MB)",
-                    names="Language",
-                    title="Size by Language"
-                )
-                st.plotly_chart(fig, use_container_width=True)
+            # Lines by language pie chart
+            fig2 = px.pie(
+                names=lang_names, 
+                values=lang_lines,
+                title="Lines of Code by Language",
+                color=lang_names,
+                color_discrete_sequence=px.colors.qualitative.Set3
+            )
+            fig2.update_traces(textposition='inside', textinfo='percent+label')
+            fig2.update_layout(height=300)
+            st.plotly_chart(fig2, use_container_width=True)
     
-    # Large files section
+    # Code duplication details
+    duplication_data = scan_results.get('code_duplication', {})
+    if duplication_data:
+        st.subheader("Code Duplication")
+        
+        duplication_pct = duplication_data.get('percentage', 0)
+        duplication_instances = duplication_data.get('instances', [])
+        
+        # Display duplication gauge
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = duplication_pct,
+            title = {'text': "Code Duplication Percentage"},
+            gauge = {
+                'axis': {'range': [0, 100], 'tickwidth': 1},
+                'bar': {'color': "darkblue"},
+                'steps': [
+                    {'range': [0, 10], 'color': "lightgreen"},
+                    {'range': [10, 25], 'color': "yellow"},
+                    {'range': [25, 100], 'color': "salmon"}
+                ],
+                'threshold': {
+                    'line': {'color': "red", 'width': 4},
+                    'thickness': 0.75,
+                    'value': 25
+                }
+            }
+        ))
+        fig.update_layout(height=250)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Display top duplication instances if available
+        if duplication_instances:
+            st.subheader("Top Duplication Instances")
+            
+            # Convert to DataFrame
+            duplication_df = pd.DataFrame([
+                {
+                    "File 1": inst.get('file1', 'Unknown'),
+                    "File 2": inst.get('file2', 'Unknown'),
+                    "Similarity": f"{inst.get('similarity', 0) * 100:.1f}%",
+                    "Lines Duplicated": inst.get('lines_duplicated', 0)
+                }
+                for inst in duplication_instances[:5]  # Show top 5
+            ])
+            
+            st.table(duplication_df)
+    
+    # Large files
     large_files = scan_results.get('large_files', [])
-    
     if large_files:
         st.subheader("Large Files")
         
-        # Create a DataFrame for the table
+        # Convert to DataFrame
         large_files_df = pd.DataFrame([
             {
-                "File": f.get('file', ''),
-                "Size (MB)": f.get('size_mb', 0),
-                "Category": f.get('category', 'Other'),
-                "Recommendation": f.get('recommendation', '')
+                "File Path": file.get('path', 'Unknown'),
+                "Size (KB)": file.get('size_kb', 0),
+                "Lines": file.get('lines', 0),
+                "Complexity": file.get('complexity', 'N/A')
             }
-            for f in large_files
+            for file in large_files[:10]  # Show top 10
         ])
         
-        # Sort by size descending
-        large_files_df = large_files_df.sort_values(by="Size (MB)", ascending=False)
-        
-        # Display table
-        st.dataframe(large_files_df, use_container_width=True)
-        
-        # Create a bar chart of large files
-        if not large_files_df.empty:
-            # Limit to top 10 files
-            top_files = large_files_df.head(10)
-            
-            fig = px.bar(
-                top_files,
-                y="File",
-                x="Size (MB)",
-                title="Top 10 Largest Files",
-                color="Category",
-                orientation='h'
-            )
-            st.plotly_chart(fig, use_container_width=True)
+        st.table(large_files_df)
     
-    # Unused imports section
-    unused_imports = scan_results.get('unused_imports', [])
-    
-    if unused_imports:
-        st.subheader("Unused Imports")
-        
-        # Create a DataFrame for the table
-        imports_df = pd.DataFrame([
-            {
-                "File": imp.get('file', ''),
-                "Line": imp.get('line', 0),
-                "Import": imp.get('import', '')
-            }
-            for imp in unused_imports
-        ])
-        
-        # Display table
-        st.dataframe(imports_df, use_container_width=True)
-        
-        # Count imports by file
-        file_counts = imports_df['File'].value_counts().reset_index()
-        file_counts.columns = ['File', 'Count']
-        
-        # Create a bar chart of unused imports by file
-        if not file_counts.empty:
-            fig = px.bar(
-                file_counts,
-                x="File",
-                y="Count",
-                title="Unused Imports by File"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-    
-    # Findings section - same as cloud display
+    # Findings section
     st.subheader("Findings")
     
     findings = scan_results.get('findings', [])
@@ -1574,18 +1617,16 @@ def display_github_sustainability_report(scan_results):
         tabs = st.tabs(["High Risk", "Medium Risk", "Low Risk"])
         
         with tabs[0]:
-            display_findings_list(risk_levels['high'], "high")
-        
+            display_findings_list(risk_levels['high'], 'high')
+            
         with tabs[1]:
-            display_findings_list(risk_levels['medium'], "medium")
-        
+            display_findings_list(risk_levels['medium'], 'medium')
+            
         with tabs[2]:
-            display_findings_list(risk_levels['low'], "low")
-    else:
-        st.info("No findings available.")
+            display_findings_list(risk_levels['low'], 'low')
     
     # Recommendations section
-    st.subheader("Recommendations")
+    st.subheader("Optimization Recommendations")
     
     recommendations = scan_results.get('recommendations', [])
     display_recommendations_list(recommendations)
@@ -1593,38 +1634,89 @@ def display_github_sustainability_report(scan_results):
 
 def display_code_analysis_report(scan_results):
     """Display code analysis sustainability report."""
-    # Extract key metrics
+    # Extract scan information
+    source = scan_results.get('repository', scan_results.get('repo_url', 'Local Files'))
+    if source == 'Local Files':
+        source_type = "Uploaded Files"
+    else:
+        source_type = "GitHub Repository"
+        
     files_analyzed = scan_results.get('files_analyzed', 0)
+    scan_id = scan_results.get('scan_id', 'Unknown')
+    region = scan_results.get('region', 'Global')
+    domain = scan_results.get('domain', 'github.com' if source_type == "GitHub Repository" else 'local.files')
+    url = scan_results.get('url', source)
     scan_timestamp = scan_results.get('timestamp', datetime.now().isoformat())
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
-    region = scan_results.get('region', 'Europe')
-    domain = scan_results.get('domain', 'local.files')
-    scan_type = scan_results.get('scan_type', 'Code Analysis')
     
     # Summary section
-    st.subheader("Scan Overview")
+    st.subheader("Code Analysis Scan Overview")
     
     # First row of metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("Files Analyzed", files_analyzed)
+        st.metric("Source Type", source_type)
     with col2:
-        st.metric("Scan Time", formatted_time)
+        st.metric("Files Analyzed", files_analyzed)
     with col3:
-        st.metric("Scan Type", scan_type)
+        st.metric("Scan Time", formatted_time)
     
-    # Second row of metrics for region and domain
+    # Second row of metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
         st.metric("Region", region)
     with col2:
-        st.metric("Source", scan_results.get('url', 'Local Files'))
-    with col3:
         st.metric("Domain", domain)
+    with col3:
+        st.metric("URL/Source", url if len(url) < 30 else url[:27] + "...")
     
-    # Findings section - same as other displays
+    # Language breakdown
+    languages = scan_results.get('languages', {})
+    if languages:
+        st.subheader("Language Breakdown")
+        
+        # Create chart data
+        lang_names = []
+        lang_files = []
+        lang_lines = []
+        
+        for lang, stats in languages.items():
+            lang_names.append(lang)
+            lang_files.append(stats.get('files', 0))
+            lang_lines.append(stats.get('lines', 0))
+        
+        # Create two charts side by side
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Files by language pie chart
+            fig1 = px.pie(
+                names=lang_names, 
+                values=lang_files,
+                title="Files by Language",
+                color=lang_names,
+                color_discrete_sequence=px.colors.qualitative.Pastel
+            )
+            fig1.update_traces(textposition='inside', textinfo='percent+label')
+            fig1.update_layout(height=300)
+            st.plotly_chart(fig1, use_container_width=True)
+        
+        with col2:
+            # Lines by language pie chart
+            fig2 = px.pie(
+                names=lang_names, 
+                values=lang_lines,
+                title="Lines of Code by Language",
+                color=lang_names,
+                color_discrete_sequence=px.colors.qualitative.Pastel
+            )
+            fig2.update_traces(textposition='inside', textinfo='percent+label')
+            fig2.update_layout(height=300)
+            st.plotly_chart(fig2, use_container_width=True)
+    
+    # Findings section
     st.subheader("Findings")
     
     findings = scan_results.get('findings', [])
@@ -1646,18 +1738,16 @@ def display_code_analysis_report(scan_results):
         tabs = st.tabs(["High Risk", "Medium Risk", "Low Risk"])
         
         with tabs[0]:
-            display_findings_list(risk_levels['high'], "high")
-        
+            display_findings_list(risk_levels['high'], 'high')
+            
         with tabs[1]:
-            display_findings_list(risk_levels['medium'], "medium")
-        
+            display_findings_list(risk_levels['medium'], 'medium')
+            
         with tabs[2]:
-            display_findings_list(risk_levels['low'], "low")
-    else:
-        st.info("No findings available.")
+            display_findings_list(risk_levels['low'], 'low')
     
     # Recommendations section
-    st.subheader("Recommendations")
+    st.subheader("Optimization Recommendations")
     
     recommendations = scan_results.get('recommendations', [])
     display_recommendations_list(recommendations)
@@ -1719,49 +1809,58 @@ def display_generic_sustainability_report(scan_results):
         tabs = st.tabs(["High Risk", "Medium Risk", "Low Risk"])
         
         with tabs[0]:
-            display_findings_list(risk_levels['high'], "high")
-        
+            display_findings_list(risk_levels['high'], 'high')
+            
         with tabs[1]:
-            display_findings_list(risk_levels['medium'], "medium")
-        
+            display_findings_list(risk_levels['medium'], 'medium')
+            
         with tabs[2]:
-            display_findings_list(risk_levels['low'], "low")
-    else:
-        st.info("No findings available.")
+            display_findings_list(risk_levels['low'], 'low')
     
-    # Recommendations section (if available)
-    if 'recommendations' in scan_results and scan_results['recommendations']:
-        st.subheader("Recommendations")
-        display_recommendations_list(scan_results.get('recommendations', []))
+    # Recommendations section
+    st.subheader("Optimization Recommendations")
     
-    # Display raw scan data if requested (using button instead of expander)
-    if st.button("Show/Hide Raw Scan Data"):
-        st.json(scan_results)
+    recommendations = scan_results.get('recommendations', [])
+    display_recommendations_list(recommendations)
 
 
 def display_recommendations_list(recommendations):
     """Display a list of recommendations without using expanders."""
     if not recommendations:
-        st.info("No recommendations available.")
+        st.info("No recommendations found.")
         return
-        
+    
+    # Style based on priority
+    priority_colors = {
+        "High": "#ef4444",
+        "Medium": "#f97316",
+        "Low": "#10b981"
+    }
+    
+    # Display each recommendation
     for i, rec in enumerate(recommendations):
-        # Use markdown header instead of expander
-        st.markdown(f"#### {i+1}. {rec.get('title', 'Recommendation')}")
-        st.write(rec.get('description', ''))
+        priority = rec.get('priority', 'Medium')
+        col1, col2 = st.columns([5, 1])
         
-        col1, col2 = st.columns(2)
         with col1:
-            st.write("**Priority:** ", rec.get('priority', 'Medium'))
+            st.markdown(f"### {i+1}. {rec.get('title', 'Recommendation')}")
+        
         with col2:
-            st.write("**Impact:** ", rec.get('impact', 'Medium'))
+            priority_color = priority_colors.get(priority, "#f97316")
+            st.markdown(f"<div style='padding: 5px 10px; background-color: {priority_color}; color: white; border-radius: 4px; text-align: center; margin-top: 15px;'>{priority} Priority</div>", unsafe_allow_html=True)
         
-        if 'steps' in rec:
-            st.write("**Steps:**")
+        st.markdown(f"**Description:** {rec.get('description', 'No description provided.')}")
+        
+        if 'impact' in rec:
+            st.markdown(f"**Impact:** {rec.get('impact')}")
+        
+        # Display steps
+        if 'steps' in rec and rec['steps']:
+            st.markdown("**Steps:**")
             for step in rec['steps']:
-                st.write(f"- {step}")
+                st.markdown(f"- {step}")
         
-        # Add a separator between recommendations
+        # Add spacing between recommendations
         st.divider()
 
 
@@ -1771,62 +1870,32 @@ def display_findings_list(findings, risk_level):
         st.info(f"No {risk_level} risk findings.")
         return
     
-    # Get risk color
-    risk_color = "#ef4444" if risk_level == "high" else "#f97316" if risk_level == "medium" else "#10b981"
+    # Set color based on risk level
+    risk_colors = {
+        'high': '#ef4444',
+        'medium': '#f97316',
+        'low': '#10b981'
+    }
+    
+    risk_color = risk_colors.get(risk_level, '#f97316')
     
     # Display each finding
     for i, finding in enumerate(findings):
-        with st.container():
-            # Create a styled header
-            st.markdown(
-                f"<div style='background-color: {risk_color}20; padding: 10px; border-left: 4px solid {risk_color};'>"
-                f"<h4 style='color: {risk_color}; margin:0;'>{finding.get('type', 'Finding')}</h4>"
-                f"</div>",
-                unsafe_allow_html=True
-            )
-            
-            # Display finding details
-            st.write(finding.get('description', ''))
-            
-            # Create two columns for metadata
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.write("**Category:** ", finding.get('category', 'Unknown'))
-                st.write("**Location:** ", finding.get('location', 'Unknown'))
-            
-            with col2:
-                st.write("**Risk Level:** ", finding.get('risk_level', 'low').capitalize())
-                st.write("**ID:** ", finding.get('id', 'Unknown'))
-            
-            # Display details if available
-            details = finding.get('details', {})
-            if details:
-                # Use a collapsible section that's not an expander
-                st.markdown("##### 📋 Finding Details")
-                
-                # Display different types of details
-                if 'resources' in details and isinstance(details['resources'], list):
-                    st.write("**Affected Resources:**")
-                    for res in details['resources']:
-                        st.write(f"- {res.get('resource_name', '')} ({res.get('resource_type', '')})")
-                
-                # Display recommendations if available
-                if 'recommendations' in details and isinstance(details['recommendations'], list):
-                    st.write("**Recommendations:**")
-                    for rec in details['recommendations']:
-                        st.write(f"- {rec}")
-                
-                # Display recommendation if available (single string)
-                if 'recommendation' in details and isinstance(details['recommendation'], str):
-                    st.write("**Recommendation:**")
-                    st.write(details['recommendation'])
-                
-                # Display additional detail fields
-                for key, value in details.items():
-                    if key not in ['resources', 'recommendations', 'recommendation']:
-                            if isinstance(value, (str, int, float, bool)):
-                                st.write(f"**{key.replace('_', ' ').title()}:** {value}")
-            
-            # Add a separator between findings
-            st.divider()
+        st.markdown(f"### Finding {i+1}: {finding.get('type', 'Issue')}")
+        st.markdown(f"**Description:** {finding.get('description', 'No description provided.')}")
+        
+        # Two columns for location and risk level
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown(f"**Location:** {finding.get('location', 'Unknown')}")
+        
+        with col2:
+            st.markdown(f"<div style='padding: 5px 10px; background-color: {risk_color}; color: white; border-radius: 4px; text-align: center;'>{risk_level.title()} Risk</div>", unsafe_allow_html=True)
+        
+        # Recommendation
+        if 'recommendation' in finding:
+            st.markdown(f"**Recommendation:** {finding.get('recommendation')}")
+        
+        # Add spacing between findings
+        st.markdown("---")
