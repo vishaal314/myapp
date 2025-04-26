@@ -550,6 +550,9 @@ def generate_report(scan_data: Dict[str, Any],
         if 'ai_model' in scan_type.lower():
             report_format = "ai_model"
             logging.info("Using AI Model report format")
+        elif 'sustainability' in scan_type.lower() or 'github' in scan_type.lower() or 'code efficiency' in scan_type.lower():
+            report_format = "sustainability"
+            logging.info("Using Sustainability report format")
         else:
             report_format = "standard"
             logging.info("Using standard report format")
