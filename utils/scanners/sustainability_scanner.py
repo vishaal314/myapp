@@ -32,6 +32,8 @@ except ImportError:
             self.provider = provider
             self.region = region
             self.progress_callback = None
+            # Store additional parameters
+            self.kwargs = kwargs
         
         def set_progress_callback(self, callback):
             self.progress_callback = callback
@@ -42,12 +44,28 @@ except ImportError:
             region = self.region if self.region and self.region != "global" else "Europe"
             
             # Generate URL/domain information based on provider
-            cloud_domain = f"{self.provider}.cloud-portal.com"
-            cloud_url = f"https://{cloud_domain}/{region.lower()}"
+            provider_domains = {
+                "azure": "portal.azure.com",
+                "aws": "console.aws.amazon.com",
+                "gcp": "console.cloud.google.com",
+                "none": "cloud-portal.com"
+            }
+            
+            cloud_domain = provider_domains.get(self.provider, f"{self.provider}.cloud-portal.com")
+            
+            # Format URLs similar to actual cloud console URLs
+            if self.provider == "azure":
+                cloud_url = f"https://{cloud_domain}/#@/resource/subscriptions/{self.kwargs.get('subscription_id', 'unknown')}/resourceGroups/monitoring/providers/Microsoft.Sustainability/sustainability"
+            elif self.provider == "aws":
+                cloud_url = f"https://{region}.{cloud_domain}/console/home?region={region}#sustainability"
+            elif self.provider == "gcp":
+                cloud_url = f"https://{cloud_domain}/sustainability?project={self.kwargs.get('project_id', 'unknown')}"
+            else:
+                cloud_url = f"https://{cloud_domain}/{region.lower()}"
             
             return {
                 'scan_id': f"sustainability-{int(time.time())}",
-                'scan_type': 'Sustainability',
+                'scan_type': 'Cloud Sustainability',
                 'timestamp': datetime.now().isoformat(),
                 'provider': self.provider,
                 'region': region,
@@ -125,9 +143,10 @@ except ImportError:
             }
     
     class GithubRepoSustainabilityScanner:
-        def __init__(self, repo_url="", branch="main"):
+        def __init__(self, repo_url="", branch="main", region="Europe"):
             self.repo_url = repo_url
             self.branch = branch
+            self.region = region
             self.progress_callback = None
         
         def set_progress_callback(self, callback):
@@ -135,7 +154,7 @@ except ImportError:
             
         def scan_repository(self):
             # Simulate scanning with demo data
-            region = "Europe"  # Default region for sustainability scanning
+            region = self.region if self.region else "Europe"  # Use selected region or default
             
             # Extract domain from the repo URL if available
             domain = "github.com"
@@ -483,6 +502,14 @@ def run_github_repo_scan():
     # Branch selection
     branch = st.text_input("Branch", value="main", help="The branch to analyze. Defaults to 'main'.")
     
+    # Region selection for better context
+    region = st.selectbox(
+        "Region", 
+        ["Europe", "North America", "Asia", "South America", "Africa", "Australia", "Global"],
+        index=0,
+        help="Select the region where this code is primarily deployed/used for sustainability context."
+    )
+    
     # Optional access token for private repositories
     st.subheader("Private Repository Settings")
     access_token = st.text_input(
@@ -540,7 +567,7 @@ def run_github_repo_scan():
             st.stop()
         
         # Initialize the scanner
-        scanner_kwargs = {"repo_url": repo_url, "branch": branch}
+        scanner_kwargs = {"repo_url": repo_url, "branch": branch, "region": region}
         if access_token:
             scanner_kwargs["access_token"] = access_token
         
