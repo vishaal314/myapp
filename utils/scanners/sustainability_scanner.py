@@ -1215,8 +1215,9 @@ def display_cloud_sustainability_report(scan_results):
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
     
     # Summary section
-    st.subheader("Summary")
+    st.subheader("Scan Overview")
     
+    # First row of metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -1225,6 +1226,16 @@ def display_cloud_sustainability_report(scan_results):
         st.metric("Scan Time", formatted_time)
     with col3:
         st.metric("Region", scan_results.get('region', 'Global'))
+    
+    # Second row of metrics for domain and URL
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Domain", scan_results.get('domain', f"{provider.lower()}.cloud.com"))
+    with col2:
+        st.metric("URL", scan_results.get('url', '').split('?')[0] if scan_results.get('url') else '')
+    with col3:
+        st.metric("Scan Type", scan_results.get('scan_type', 'Cloud Sustainability'))
     
     # Resource overview
     st.subheader("Resources Overview")
