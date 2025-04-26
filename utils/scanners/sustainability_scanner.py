@@ -16,8 +16,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# Import app translations
-from app import _
+# Import translations utility
+from utils.translations import _
 
 
 class CloudResourcesScanner:
@@ -445,12 +445,6 @@ def generate_report(scan_data, report_type="sustainability"):
     }
 
 
-def _(key, default=None):
-    """
-    Placeholder for translation function.
-    In a real implementation, this would return the translated string from a translation file.
-    """
-    return key
 
 
 def run_sustainability_scanner():
