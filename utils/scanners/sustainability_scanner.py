@@ -1029,11 +1029,205 @@ def display_sustainability_report(scan_results):
         if st.button("Generate PDF Report", type="primary"):
             with st.spinner("Generating sustainability report..."):
                 try:
+                    # Ensure all detailed findings are included in the report
+                    if 'findings' not in scan_results or not scan_results['findings']:
+                        # Add placeholder findings if none exist
+                        scan_results['findings'] = []
+                        # Extract data from various sections to create findings
+                        
+                        # For cloud sustainability reports
+                        if 'resources' in scan_results:
+                            for resource_type, resource_data in scan_results.get('resources', {}).items():
+                                # Add findings for idle resources
+                                if 'idle' in resource_data and resource_data['idle'] > 0:
+                                    scan_results['findings'].append({
+                                        'type': 'Idle Resources',
+                                        'description': f"Found {resource_data['idle']} idle {resource_type}",
+                                        'location': scan_results.get('region', 'Global'),
+                                        'risk_level': 'medium',
+                                        'recommendation': f"Consider shutting down or rightsizing idle {resource_type}"
+                                    })
+                        
+                        # For GitHub repository reports
+                        if 'large_files' in scan_results:
+                            for file_data in scan_results.get('large_files', [])[:5]:  # Top 5 large files
+                                scan_results['findings'].append({
+                                    'type': 'Large File',
+                                    'description': f"Large file: {file_data.get('file', 'Unknown')} ({file_data.get('size_mb', 0):.2f} MB)",
+                                    'location': file_data.get('file', 'Unknown'),
+                                    'risk_level': 'low',
+                                    'recommendation': file_data.get('recommendation', 'Consider splitting large files')
+                                })
+                    
+                    # Add chart images to the scan results for PDF report
+                    if 'chart_images' not in scan_results:
+                        scan_results['chart_images'] = []
+                    
+                    # Generate chart images if not already present
+                    if not scan_results['chart_images']:
+                        # Add cloud resources charts if it's a cloud report
+                        if 'resources' in scan_results:
+                            # Resources by type chart
+                            resources = scan_results.get('resources', {})
+                            resource_counts = {}
+                            
+                            # Count resources by type
+                            for resource_type, resource_data in resources.items():
+                                resource_counts[resource_type] = resource_data.get('count', 0)
+                            
+                            if resource_counts:
+                                try:
+                                    # Create a DataFrame for the resources chart
+                                    resources_df = pd.DataFrame([
+                                        {"Resource Type": k, "Count": v}
+                                        for k, v in resource_counts.items()
+                                    ])
+                                    
+                                    # Create resources bar chart
+                                    resources_fig = px.bar(
+                                        resources_df,
+                                        x="Resource Type",
+                                        y="Count",
+                                        title="Resources by Type",
+                                        color="Resource Type",
+                                        color_discrete_sequence=px.colors.qualitative.Bold
+                                    )
+                                    resources_fig.update_layout(width=800, height=500)
+                                    resources_img = resources_fig.to_image(format="png")
+                                    scan_results['chart_images'].append({
+                                        'title': 'Resources by Type',
+                                        'data': resources_img,
+                                        'type': 'cloud_resources'
+                                    })
+                                except Exception as e:
+                                    st.warning(f"Failed to generate 'Resources by Type' chart: {str(e)}")
+                            
+                            # Carbon footprint chart
+                            carbon_data = scan_results.get('carbon_footprint', {})
+                            carbon_by_region = carbon_data.get('by_region', {})
+                            
+                            if carbon_by_region:
+                                try:
+                                    # Create a DataFrame for the carbon footprint chart
+                                    carbon_df = pd.DataFrame([
+                                        {"Region": k, "CO₂e (kg/month)": v}
+                                        for k, v in carbon_by_region.items()
+                                    ])
+                                    
+                                    # Create carbon footprint pie chart
+                                    carbon_fig = px.pie(
+                                        carbon_df,
+                                        values="CO₂e (kg/month)",
+                                        names="Region",
+                                        title="Carbon Footprint by Region",
+                                        color_discrete_sequence=px.colors.sequential.Greens
+                                    )
+                                    carbon_fig.update_layout(width=800, height=500)
+                                    carbon_img = carbon_fig.to_image(format="png")
+                                    scan_results['chart_images'].append({
+                                        'title': 'Carbon Footprint by Region',
+                                        'data': carbon_img,
+                                        'type': 'carbon_footprint'
+                                    })
+                                except Exception as e:
+                                    st.warning(f"Failed to generate 'Carbon Footprint by Region' chart: {str(e)}")
+                        
+                        # Language breakdown charts
+                        code_stats = scan_results.get('code_stats', {})
+                        language_breakdown = code_stats.get('language_breakdown', {})
+                        
+                        if language_breakdown:
+                            # Create a DataFrame for the pie charts
+                            lang_data = []
+                            for lang, stats in language_breakdown.items():
+                                lang_data.append({
+                                    "Language": lang,
+                                    "Files": stats.get('file_count', 0),
+                                    "Size (MB)": stats.get('size_mb', 0)
+                                })
+                            
+                            lang_df = pd.DataFrame(lang_data)
+                            
+                            # Create pie chart of files by language
+                            try:
+                                files_by_lang_fig = px.pie(
+                                    lang_df,
+                                    values="Files",
+                                    names="Language",
+                                    title="Files by Language",
+                                    color_discrete_sequence=px.colors.qualitative.Pastel
+                                )
+                                files_by_lang_fig.update_layout(width=800, height=500)
+                                files_img = files_by_lang_fig.to_image(format="png")
+                                scan_results['chart_images'].append({
+                                    'title': 'Files by Language',
+                                    'data': files_img,
+                                    'type': 'language_breakdown'
+                                })
+                            except Exception as e:
+                                st.warning(f"Failed to generate 'Files by Language' chart: {str(e)}")
+                            
+                            # Create pie chart of size by language
+                            try:
+                                size_by_lang_fig = px.pie(
+                                    lang_df,
+                                    values="Size (MB)",
+                                    names="Language",
+                                    title="Size by Language",
+                                    color_discrete_sequence=px.colors.qualitative.Pastel
+                                )
+                                size_by_lang_fig.update_layout(width=800, height=500)
+                                size_img = size_by_lang_fig.to_image(format="png")
+                                scan_results['chart_images'].append({
+                                    'title': 'Size by Language',
+                                    'data': size_img,
+                                    'type': 'language_breakdown'
+                                })
+                            except Exception as e:
+                                st.warning(f"Failed to generate 'Size by Language' chart: {str(e)}")
+                        
+                        # Large files chart
+                        large_files = scan_results.get('large_files', [])
+                        if large_files:
+                            try:
+                                # Create a DataFrame for the bar chart
+                                large_files_df = pd.DataFrame([
+                                    {
+                                        "File": f.get('file', '').split('/')[-1],  # Just the filename
+                                        "Size (MB)": f.get('size_mb', 0),
+                                        "Category": f.get('category', 'Other')
+                                    }
+                                    for f in large_files
+                                ])
+                                
+                                # Sort by size descending and limit to top 10
+                                large_files_df = large_files_df.sort_values(by="Size (MB)", ascending=False).head(10)
+                                
+                                # Create bar chart
+                                large_files_fig = px.bar(
+                                    large_files_df,
+                                    y="File",
+                                    x="Size (MB)",
+                                    color="Category",
+                                    title="Top 10 Largest Files",
+                                    orientation='h',
+                                    color_discrete_sequence=px.colors.qualitative.Set2
+                                )
+                                large_files_fig.update_layout(width=800, height=600)
+                                large_files_img = large_files_fig.to_image(format="png")
+                                scan_results['chart_images'].append({
+                                    'title': 'Top 10 Largest Files',
+                                    'data': large_files_img,
+                                    'type': 'large_files'
+                                })
+                            except Exception as e:
+                                st.warning(f"Failed to generate 'Top 10 Largest Files' chart: {str(e)}")
+                    
                     # Call report generator - the function returns bytes, not a path
-                    report_data = generate_report(scan_results, report_format="sustainability")
+                    report_data = generate_report(scan_results, report_type="sustainability")
                     
                     # Check if we have valid report data
-                    if report_data and isinstance(report_data, bytes):
+                    if report_data:
                         st.success("Report generated successfully!")
                         st.download_button(
                             label="Download PDF Report",
