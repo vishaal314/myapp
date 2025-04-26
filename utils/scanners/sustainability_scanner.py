@@ -430,26 +430,27 @@ def run_github_repo_scan():
         help="Enter the full URL to any public GitHub repository that you want to scan for sustainability issues."
     )
     
-    # Example repositories
-    with st.expander("Example Repositories"):
-        st.markdown("""
-        You can try scanning these example repositories:
-        - https://github.com/microsoft/vscode
-        - https://github.com/tensorflow/tensorflow
-        - https://github.com/pytorch/pytorch
-        - https://github.com/angular/angular
-        - https://github.com/django/django
-        """)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Use TensorFlow Example"):
-                st.session_state.github_repo_url = "https://github.com/tensorflow/tensorflow"
-                st.rerun()
-        with col2:
-            if st.button("Use Django Example"):
-                st.session_state.github_repo_url = "https://github.com/django/django"
-                st.rerun()
+    # Example repositories section
+    st.subheader("Example Repositories")
+    
+    st.markdown("""
+    You can try scanning these example repositories:
+    - https://github.com/microsoft/vscode
+    - https://github.com/tensorflow/tensorflow
+    - https://github.com/pytorch/pytorch
+    - https://github.com/angular/angular
+    - https://github.com/django/django
+    """)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Use TensorFlow Example"):
+            st.session_state.github_repo_url = "https://github.com/tensorflow/tensorflow"
+            st.rerun()
+    with col2:
+        if st.button("Use Django Example"):
+            st.session_state.github_repo_url = "https://github.com/django/django"
+            st.rerun()
     
     # Use session state to persist URL between interactions
     if 'github_repo_url' in st.session_state and not repo_url:
@@ -461,12 +462,12 @@ def run_github_repo_scan():
     branch = st.text_input("Branch", value="main", help="The branch to analyze. Defaults to 'main'.")
     
     # Optional access token for private repositories
-    with st.expander("Private Repository Settings"):
-        access_token = st.text_input(
-            "GitHub Access Token (for private repositories)", 
-            type="password",
-            help="Leave blank for public repositories. For private repositories, provide a GitHub personal access token."
-        )
+    st.subheader("Private Repository Settings")
+    access_token = st.text_input(
+        "GitHub Access Token (for private repositories)", 
+        type="password",
+        help="Leave blank for public repositories. For private repositories, provide a GitHub personal access token."
+    )
     
     # Scan options
     st.subheader("Scan Options")
@@ -600,25 +601,25 @@ def run_code_analysis_scan():
         elif github_url:
             st.session_state.code_github_repo_url = github_url
         
-        # Example repositories
-        with st.expander("Example Repositories"):
-            st.markdown("""
-            You can try analyzing these example repositories:
-            - https://github.com/pallets/flask
-            - https://github.com/django/django
-            - https://github.com/nodejs/node
-            - https://github.com/facebook/react
-            """)
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Use Flask Example"):
-                    st.session_state.code_github_repo_url = "https://github.com/pallets/flask"
-                    st.rerun()
-            with col2:
-                if st.button("Use React Example"):
-                    st.session_state.code_github_repo_url = "https://github.com/facebook/react"
-                    st.rerun()
+        # Example repositories section
+        st.subheader("Example Repositories")
+        st.markdown("""
+        You can try analyzing these example repositories:
+        - https://github.com/pallets/flask
+        - https://github.com/django/django
+        - https://github.com/nodejs/node
+        - https://github.com/facebook/react
+        """)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Use Flask Example", key="flask_example"):
+                st.session_state.code_github_repo_url = "https://github.com/pallets/flask"
+                st.rerun()
+        with col2:
+            if st.button("Use React Example", key="react_example"):
+                st.session_state.code_github_repo_url = "https://github.com/facebook/react"
+                st.rerun()
         
         # Branch selection
         branch = st.text_input(
@@ -628,12 +629,13 @@ def run_code_analysis_scan():
         )
         
         # Optional access token for private repositories
-        with st.expander("Private Repository Settings"):
-            access_token = st.text_input(
-                "GitHub Access Token (for private repositories)", 
-                type="password",
-                help="Leave blank for public repositories. For private repositories, provide a GitHub personal access token."
-            )
+        st.subheader("Private Repository Settings")
+        access_token = st.text_input(
+            "GitHub Access Token (for private repositories)", 
+            type="password",
+            help="Leave blank for public repositories. For private repositories, provide a GitHub personal access token.",
+            key="code_access_token"
+        )
         
         # Validate if we have a source
         has_source = bool(github_url and github_url.startswith("https://github.com/"))
