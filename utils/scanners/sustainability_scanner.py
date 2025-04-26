@@ -1614,27 +1614,29 @@ def display_findings_list(findings, risk_level):
             # Display details if available
             details = finding.get('details', {})
             if details:
-                with st.expander("Details"):
-                    # Display different types of details
-                    if 'resources' in details and isinstance(details['resources'], list):
-                        st.write("**Affected Resources:**")
-                        for res in details['resources']:
-                            st.write(f"- {res.get('resource_name', '')} ({res.get('resource_type', '')})")
-                    
-                    # Display recommendations if available
-                    if 'recommendations' in details and isinstance(details['recommendations'], list):
-                        st.write("**Recommendations:**")
-                        for rec in details['recommendations']:
-                            st.write(f"- {rec}")
-                    
-                    # Display recommendation if available (single string)
-                    if 'recommendation' in details and isinstance(details['recommendation'], str):
-                        st.write("**Recommendation:**")
-                        st.write(details['recommendation'])
-                    
-                    # Display additional detail fields
-                    for key, value in details.items():
-                        if key not in ['resources', 'recommendations', 'recommendation']:
+                # Use a collapsible section that's not an expander
+                st.markdown("##### 📋 Finding Details")
+                
+                # Display different types of details
+                if 'resources' in details and isinstance(details['resources'], list):
+                    st.write("**Affected Resources:**")
+                    for res in details['resources']:
+                        st.write(f"- {res.get('resource_name', '')} ({res.get('resource_type', '')})")
+                
+                # Display recommendations if available
+                if 'recommendations' in details and isinstance(details['recommendations'], list):
+                    st.write("**Recommendations:**")
+                    for rec in details['recommendations']:
+                        st.write(f"- {rec}")
+                
+                # Display recommendation if available (single string)
+                if 'recommendation' in details and isinstance(details['recommendation'], str):
+                    st.write("**Recommendation:**")
+                    st.write(details['recommendation'])
+                
+                # Display additional detail fields
+                for key, value in details.items():
+                    if key not in ['resources', 'recommendations', 'recommendation']:
                             if isinstance(value, (str, int, float, bool)):
                                 st.write(f"**{key.replace('_', ' ').title()}:** {value}")
             
