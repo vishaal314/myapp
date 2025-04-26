@@ -1863,6 +1863,21 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             elements.append(Paragraph("<b>Recommendations</b>", subheading_style))
         
         recommendations = scan_data.get('recommendations', [])
+        if not recommendations and scan_type.lower() == 'sustainability':
+            # Add default sustainability recommendation if none exist
+            recommendations = [{
+                'description': 'Implement code efficiency best practices',
+                'severity': 'Medium',
+                'impact': 'Medium',
+                'category': 'Code Efficiency',
+                'steps': [
+                    'Implement automated linting in CI/CD pipelines',
+                    'Use dependency scanning to identify unused packages',
+                    'Optimize Docker image sizes for containerized applications',
+                    'Implement resource monitoring in production environments'
+                ]
+            }]
+        
         if recommendations:
             recommendation_style = normal_style.clone('RecommendationStyle', 
                                                     leftIndent=10, 
@@ -1872,6 +1887,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             for i, rec in enumerate(recommendations):
                 rec_description = rec.get('description', 'No description')
                 rec_severity = rec.get('severity', 'Low')
+                rec_impact = rec.get('impact', rec_severity)  # Default to severity if impact not available
                 rec_category = rec.get('category', 'General')
                 
                 # Color-coded severity
@@ -1881,10 +1897,17 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                 elif rec_severity.lower() == 'medium':
                     severity_color = '#f97316'  # Orange
                 
+                # Numbered recommendation formatting with bold title
                 elements.append(Paragraph(f"<b>{i+1}. {rec_description}</b>", recommendation_style))
-                elements.append(Paragraph(f"<b>Severity:</b> <font color='{severity_color}'>{rec_severity}</font> | <b>Category:</b> {rec_category}", recommendation_style))
                 
-                # Add steps if available
+                # Add formatted priority and impact on their own lines
+                elements.append(Paragraph(f"<b>Priority:</b> <font color='{severity_color}'>{rec_severity}</font>", recommendation_style))
+                elements.append(Paragraph(f"<b>Impact:</b> {rec_impact}", recommendation_style))
+                
+                # Add Steps header
+                elements.append(Paragraph("<b>Steps:</b>", recommendation_style))
+                
+                # Add steps with bullets
                 steps = rec.get('steps', [])
                 if steps:
                     steps_style = normal_style.clone('StepsStyle', 
@@ -1893,8 +1916,12 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                                                 spaceAfter=2)
                     for step in steps:
                         elements.append(Paragraph(f"• {step}", steps_style))
+                else:
+                    # If no steps, add a general recommendation
+                    elements.append(Paragraph(f"• Consult with development team to implement best practices for {rec_category.lower()}", steps_style))
                 
-                elements.append(Spacer(1, 0.1*inch))
+                # Add space between recommendations
+                elements.append(Spacer(1, 0.25*inch))
         else:
             if current_lang == 'nl':
                 elements.append(Paragraph("Geen specifieke aanbevelingen beschikbaar.", normal_style))
