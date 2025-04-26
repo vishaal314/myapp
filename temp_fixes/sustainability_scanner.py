@@ -1234,17 +1234,16 @@ def display_cloud_sustainability_report(scan_results):
     
     if recommendations:
         for i, rec in enumerate(recommendations):
-            # Use markdown header instead of expander
-            st.markdown(f"#### {i+1}. {rec.get('title', 'Recommendation')}")
-            st.write(rec.get('description', ''))
+            with st.expander(f"{i+1}. {rec.get('title', 'Recommendation')}"):
+                st.write(rec.get('description', ''))
                 
-            st.write("**Priority:** ", rec.get('priority', 'Medium'))
-            st.write("**Impact:** ", rec.get('impact', 'Medium'))
+                st.write("**Priority:** ", rec.get('priority', 'Medium'))
+                st.write("**Impact:** ", rec.get('impact', 'Medium'))
                 
                 if 'steps' in rec:
-                st.write("**Steps:**")
-                for step in rec['steps']:
-                    st.write(f"- {step}")
+                    st.write("**Steps:**")
+                    for step in rec['steps']:
+                        st.write(f"- {step}")
     else:
         st.info("No recommendations available.")
 
@@ -1437,17 +1436,16 @@ def display_github_sustainability_report(scan_results):
     
     if recommendations:
         for i, rec in enumerate(recommendations):
-            # Use markdown header instead of expander
-            st.markdown(f"#### {i+1}. {rec.get('title', 'Recommendation')}")
-            st.write(rec.get('description', ''))
+            with st.expander(f"{i+1}. {rec.get('title', 'Recommendation')}"):
+                st.write(rec.get('description', ''))
                 
-            st.write("**Priority:** ", rec.get('priority', 'Medium'))
-            st.write("**Impact:** ", rec.get('impact', 'Medium'))
+                st.write("**Priority:** ", rec.get('priority', 'Medium'))
+                st.write("**Impact:** ", rec.get('impact', 'Medium'))
                 
                 if 'steps' in rec:
-                st.write("**Steps:**")
-                for step in rec['steps']:
-                    st.write(f"- {step}")
+                    st.write("**Steps:**")
+                    for step in rec['steps']:
+                        st.write(f"- {step}")
     else:
         st.info("No recommendations available.")
 
@@ -1508,17 +1506,16 @@ def display_code_analysis_report(scan_results):
     
     if recommendations:
         for i, rec in enumerate(recommendations):
-            # Use markdown header instead of expander
-            st.markdown(f"#### {i+1}. {rec.get('title', 'Recommendation')}")
-            st.write(rec.get('description', ''))
+            with st.expander(f"{i+1}. {rec.get('title', 'Recommendation')}"):
+                st.write(rec.get('description', ''))
                 
-            st.write("**Priority:** ", rec.get('priority', 'Medium'))
-            st.write("**Impact:** ", rec.get('impact', 'Medium'))
+                st.write("**Priority:** ", rec.get('priority', 'Medium'))
+                st.write("**Impact:** ", rec.get('impact', 'Medium'))
                 
                 if 'steps' in rec:
-                st.write("**Steps:**")
-                for step in rec['steps']:
-                    st.write(f"- {step}")
+                    st.write("**Steps:**")
+                    for step in rec['steps']:
+                        st.write(f"- {step}")
     else:
         st.info("No recommendations available.")
 
@@ -1576,7 +1573,7 @@ def display_generic_sustainability_report(scan_results):
         st.info("No findings available.")
     
     # Display raw scan data if requested
-    if st.button("Show/Hide Raw Scan Data"):
+    with st.expander("Show Raw Scan Data"):
         st.json(scan_results)
 
 
@@ -1607,12 +1604,12 @@ def display_findings_list(findings, risk_level):
             col1, col2 = st.columns(2)
             
             with col1:
-            st.write("**Category:** ", finding.get('category', 'Unknown'))
-            st.write("**Location:** ", finding.get('location', 'Unknown'))
+                st.write("**Category:** ", finding.get('category', 'Unknown'))
+                st.write("**Location:** ", finding.get('location', 'Unknown'))
             
             with col2:
-            st.write("**Risk Level:** ", finding.get('risk_level', 'low').capitalize())
-            st.write("**ID:** ", finding.get('id', 'Unknown'))
+                st.write("**Risk Level:** ", finding.get('risk_level', 'low').capitalize())
+                st.write("**ID:** ", finding.get('id', 'Unknown'))
             
             # Display details if available
             details = finding.get('details', {})
@@ -1622,20 +1619,20 @@ def display_findings_list(findings, risk_level):
                 
                 # Display different types of details
                 if 'resources' in details and isinstance(details['resources'], list):
-                st.write("**Affected Resources:**")
+                    st.write("**Affected Resources:**")
                     for res in details['resources']:
-                    st.write(f"- {res.get('resource_name', '')} ({res.get('resource_type', '')})")
+                        st.write(f"- {res.get('resource_name', '')} ({res.get('resource_type', '')})")
                 
                 # Display recommendations if available
                 if 'recommendations' in details and isinstance(details['recommendations'], list):
-                st.write("**Recommendations:**")
+                    st.write("**Recommendations:**")
                     for rec in details['recommendations']:
-                    st.write(f"- {rec}")
+                        st.write(f"- {rec}")
                 
                 # Display recommendation if available (single string)
                 if 'recommendation' in details and isinstance(details['recommendation'], str):
-                st.write("**Recommendation:**")
-                st.write(details['recommendation'])
+                    st.write("**Recommendation:**")
+                    st.write(details['recommendation'])
                 
                 # Display additional detail fields
                 for key, value in details.items():
