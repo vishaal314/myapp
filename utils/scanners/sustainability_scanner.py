@@ -507,7 +507,8 @@ def run_github_repo_scan():
         "Region", 
         ["Europe", "North America", "Asia", "South America", "Africa", "Australia", "Global"],
         index=0,
-        help="Select the region where this code is primarily deployed/used for sustainability context."
+        help="Select the region where this code is primarily deployed/used for sustainability context.",
+        key="github_repo_region"
     )
     
     # Optional access token for private repositories

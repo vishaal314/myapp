@@ -32,18 +32,45 @@ except ImportError:
             self.provider = provider
             self.region = region
             self.progress_callback = None
+            # Store additional parameters
+            self.kwargs = kwargs
         
         def set_progress_callback(self, callback):
             self.progress_callback = callback
             
         def scan_resources(self):
             # Simulate scanning with demo data
+            # Use the specified region or default to Europe
+            region = self.region if self.region and self.region != "global" else "Europe"
+            
+            # Generate URL/domain information based on provider
+            provider_domains = {
+                "azure": "portal.azure.com",
+                "aws": "console.aws.amazon.com",
+                "gcp": "console.cloud.google.com",
+                "none": "cloud-portal.com"
+            }
+            
+            cloud_domain = provider_domains.get(self.provider, f"{self.provider}.cloud-portal.com")
+            
+            # Format URLs similar to actual cloud console URLs
+            if self.provider == "azure":
+                cloud_url = f"https://{cloud_domain}/#@/resource/subscriptions/{self.kwargs.get('subscription_id', 'unknown')}/resourceGroups/monitoring/providers/Microsoft.Sustainability/sustainability"
+            elif self.provider == "aws":
+                cloud_url = f"https://{region}.{cloud_domain}/console/home?region={region}#sustainability"
+            elif self.provider == "gcp":
+                cloud_url = f"https://{cloud_domain}/sustainability?project={self.kwargs.get('project_id', 'unknown')}"
+            else:
+                cloud_url = f"https://{cloud_domain}/{region.lower()}"
+            
             return {
                 'scan_id': f"sustainability-{int(time.time())}",
-                'scan_type': 'Sustainability',
+                'scan_type': 'Cloud Sustainability',
                 'timestamp': datetime.now().isoformat(),
                 'provider': self.provider,
-                'region': self.region,
+                'region': region,
+                'url': cloud_url,
+                'domain': cloud_domain,
                 'resources': {
                     'virtual_machines': {'count': 10},
                     'disks': {'count': 15},
@@ -116,9 +143,10 @@ except ImportError:
             }
     
     class GithubRepoSustainabilityScanner:
-        def __init__(self, repo_url="", branch="main"):
+        def __init__(self, repo_url="", branch="main", region="Europe"):
             self.repo_url = repo_url
             self.branch = branch
+            self.region = region
             self.progress_callback = None
         
         def set_progress_callback(self, callback):
@@ -126,13 +154,26 @@ except ImportError:
             
         def scan_repository(self):
             # Simulate scanning with demo data
+            region = self.region if self.region else "Europe"  # Use selected region or default
+            
+            # Extract domain from the repo URL if available
+            domain = "github.com"
+            if self.repo_url and '://' in self.repo_url:
+                try:
+                    domain = self.repo_url.split('/')[2]
+                except IndexError:
+                    domain = "github.com"
+            
             return {
                 'scan_id': f"repo-{int(time.time())}",
                 'scan_type': 'Code Efficiency',
                 'timestamp': datetime.now().isoformat(),
                 'repo_url': self.repo_url,
                 'branch': self.branch,
-                'sustainability_score': 72,
+                'region': region,
+                'url': self.repo_url,
+                'domain': domain,
+                'sustainability_score': 90,
                 'code_stats': {
                     'total_files': 120,
                     'total_size_mb': 25.7,
@@ -461,6 +502,15 @@ def run_github_repo_scan():
     # Branch selection
     branch = st.text_input("Branch", value="main", help="The branch to analyze. Defaults to 'main'.")
     
+    # Region selection for better context
+    region = st.selectbox(
+        "Region", 
+        ["Europe", "North America", "Asia", "South America", "Africa", "Australia", "Global"],
+        index=0,
+        help="Select the region where this code is primarily deployed/used for sustainability context.",
+        key="github_repo_region"
+    )
+    
     # Optional access token for private repositories
     st.subheader("Private Repository Settings")
     access_token = st.text_input(
@@ -518,7 +568,7 @@ def run_github_repo_scan():
             st.stop()
         
         # Initialize the scanner
-        scanner_kwargs = {"repo_url": repo_url, "branch": branch}
+        scanner_kwargs = {"repo_url": repo_url, "branch": branch, "region": region}
         if access_token:
             scanner_kwargs["access_token"] = access_token
         
@@ -582,6 +632,15 @@ def run_code_analysis_scan():
             type=['py', 'js', 'ts', 'java', 'c', 'cpp', 'cs', 'go', 'rb'],
             help="Upload one or more code files for analysis. Supports Python, JavaScript, TypeScript, Java, C/C++, C#, Go, and Ruby."
         )
+        
+        # Region selection for better report context
+        region = st.selectbox(
+            "Region", 
+            ["Europe", "North America", "Asia", "South America", "Africa", "Australia", "Global"],
+            index=0,
+            help="Select the region where this code is primarily deployed/used for sustainability context."
+        )
+        
         has_source = bool(uploaded_files)
     else:
         # GitHub repository section
@@ -626,6 +685,14 @@ def run_code_analysis_scan():
             "Branch", 
             value="main",
             help="The branch to analyze. Defaults to 'main'."
+        )
+        
+        # Region selection for better report context
+        region = st.selectbox(
+            "Region", 
+            ["Europe", "North America", "Asia", "South America", "Africa", "Australia", "Global"],
+            index=0,
+            help="Select the region where this code is primarily deployed/used for sustainability context."
         )
         
         # Optional access token for private repositories
@@ -754,12 +821,24 @@ def run_code_analysis_scan():
                 time.sleep(0.5)
                 
                 # Create sample results
+                # Extract domain from the repo URL if available
+                domain = "github.com"
+                if github_url and '://' in github_url:
+                    try:
+                        domain = github_url.split('/')[2]
+                    except IndexError:
+                        domain = "github.com"
+                
                 scan_results = {
                     'scan_id': f"github-code-{int(time.time())}",
                     'scan_type': 'GitHub Code Analysis',
                     'timestamp': datetime.now().isoformat(),
                     'repository': github_url,
+                    'repo_url': github_url,
                     'branch': branch if 'branch' in locals() else 'main',
+                    'region': region if 'region' in locals() else 'Europe',  # Use selected region or default to Europe
+                    'url': github_url,
+                    'domain': domain,
                     'files_analyzed': random.randint(50, 200),
                     'languages': {
                         'Python': {'files': random.randint(20, 100), 'lines': random.randint(5000, 20000)},
@@ -858,6 +937,9 @@ def run_code_analysis_scan():
                     'scan_type': 'Code Analysis',
                     'timestamp': datetime.now().isoformat(),
                     'files_analyzed': len(uploaded_files),
+                    'region': region if 'region' in locals() else 'Europe',  # Use selected region or default
+                    'url': 'Local Files',
+                    'domain': 'local.files',
                     'findings': [],
                     'recommendations': [],
                     'status': 'in_progress'
@@ -1028,20 +1110,83 @@ def display_sustainability_report(scan_results):
     with col1:
         if st.button("Generate PDF Report", type="primary"):
             with st.spinner("Generating sustainability report..."):
-                # Call report generator
-                report_path = generate_report(scan_results, "sustainability")
-                
-                # Display download link
-                if report_path and isinstance(report_path, dict) and 'report_path' in report_path:
-                    st.success("Report generated successfully!")
-                    st.download_button(
-                        label="Download PDF Report",
-                        data=open(report_path['report_path'], "rb"),
-                        file_name=f"sustainability_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                        mime="application/pdf"
-                    )
-                else:
-                    st.error("Failed to generate report. Please try again.")
+                try:
+                    # Ensure all detailed findings are included in the report
+                    if 'findings' not in scan_results or not scan_results['findings']:
+                        # Add placeholder findings if none exist
+                        scan_results['findings'] = []
+                        # Extract data from various sections to create findings
+                        
+                        # For cloud sustainability reports
+                        if 'resources' in scan_results:
+                            for resource_type, resource_data in scan_results.get('resources', {}).items():
+                                # Add findings for idle resources
+                                if 'idle' in resource_data and resource_data['idle'] > 0:
+                                    scan_results['findings'].append({
+                                        'type': 'Idle Resources',
+                                        'description': f"Found {resource_data['idle']} idle {resource_type}",
+                                        'location': scan_results.get('region', 'Global'),
+                                        'risk_level': 'medium',
+                                        'recommendation': f"Consider shutting down or rightsizing idle {resource_type}"
+                                    })
+                        
+                        # For GitHub repository reports
+                        if 'large_files' in scan_results:
+                            for file_data in scan_results.get('large_files', [])[:5]:  # Top 5 large files
+                                scan_results['findings'].append({
+                                    'type': 'Large File',
+                                    'description': f"Large file: {file_data.get('file', 'Unknown')} ({file_data.get('size_mb', 0):.2f} MB)",
+                                    'location': file_data.get('file', 'Unknown'),
+                                    'risk_level': 'low',
+                                    'recommendation': file_data.get('recommendation', 'Consider splitting large files')
+                                })
+                    
+                    # Add chart images to the scan results for PDF report
+                    if 'chart_images' not in scan_results:
+                        scan_results['chart_images'] = []
+                    
+                    # Skip chart generation for PDF since kaleido is not available
+                    # We'll focus on ensuring the data is correctly formatted for the report
+                    
+                    # Ensure sustainability score is properly formatted
+                    if 'sustainability_score' in scan_results:
+                        sustainability_score = scan_results['sustainability_score']
+                        # Make sure it's displayed as an integer out of 100
+                        if isinstance(sustainability_score, (int, float)):
+                            scan_results['sustainability_score'] = int(sustainability_score)
+                    
+                    # Call report generator with the correct parameters based on the fallback definition
+                    # in the imports section which defines report_type as the parameter
+                    try:
+                        from services.report_generator import generate_report as imported_generate_report
+                        # Use imported function with correct parameters
+                        report_data = imported_generate_report(
+                            scan_data=scan_results, 
+                            include_details=True,
+                            include_charts=True, 
+                            include_metadata=True,
+                            include_recommendations=True, 
+                            report_format="sustainability"
+                        )
+                    except Exception as e:
+                        st.warning(f"Error with imported report generator: {str(e)}")
+                        # Fallback to our local definition which uses report_type
+                        report_data = generate_report(scan_results, report_type="sustainability")
+                    
+                    # Check if we have valid report data
+                    if report_data:
+                        st.success("Report generated successfully!")
+                        st.download_button(
+                            label="Download PDF Report",
+                            data=report_data,
+                            file_name=f"sustainability_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                            mime="application/pdf"
+                        )
+                    else:
+                        st.error("Failed to generate report. Empty data returned.")
+                except Exception as e:
+                    st.error(f"Failed to generate report: {str(e)}")
+                    st.info("Please try again or check the logs for more information.")
     
     with col2:
         if st.button("Export as CSV"):
@@ -1071,8 +1216,9 @@ def display_cloud_sustainability_report(scan_results):
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
     
     # Summary section
-    st.subheader("Summary")
+    st.subheader("Scan Overview")
     
+    # First row of metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -1081,6 +1227,16 @@ def display_cloud_sustainability_report(scan_results):
         st.metric("Scan Time", formatted_time)
     with col3:
         st.metric("Region", scan_results.get('region', 'Global'))
+    
+    # Second row of metrics for domain and URL
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Domain", scan_results.get('domain', f"{provider.lower()}.cloud.com"))
+    with col2:
+        st.metric("URL", scan_results.get('url', '').split('?')[0] if scan_results.get('url') else '')
+    with col3:
+        st.metric("Scan Type", scan_results.get('scan_type', 'Cloud Sustainability'))
     
     # Resource overview
     st.subheader("Resources Overview")
@@ -1231,21 +1387,7 @@ def display_cloud_sustainability_report(scan_results):
     st.subheader("Recommendations")
     
     recommendations = scan_results.get('recommendations', [])
-    
-    if recommendations:
-        for i, rec in enumerate(recommendations):
-            with st.expander(f"{i+1}. {rec.get('title', 'Recommendation')}"):
-                st.write(rec.get('description', ''))
-                
-                st.write("**Priority:** ", rec.get('priority', 'Medium'))
-                st.write("**Impact:** ", rec.get('impact', 'Medium'))
-                
-                if 'steps' in rec:
-                    st.write("**Steps:**")
-                    for step in rec['steps']:
-                        st.write(f"- {step}")
-    else:
-        st.info("No recommendations available.")
+    display_recommendations_list(recommendations)
 
 
 def display_github_sustainability_report(scan_results):
@@ -1255,10 +1397,13 @@ def display_github_sustainability_report(scan_results):
     branch = scan_results.get('branch', 'main')
     scan_timestamp = scan_results.get('timestamp', datetime.now().isoformat())
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    region = scan_results.get('region', 'Europe')
+    domain = scan_results.get('domain', 'github.com')
     
     # Summary section
-    st.subheader("Repository Overview")
+    st.subheader("Scan Overview")
     
+    # First row of metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -1267,6 +1412,16 @@ def display_github_sustainability_report(scan_results):
         st.metric("Branch", branch)
     with col3:
         st.metric("Scan Time", formatted_time)
+    
+    # Second row of metrics for region and domain
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Region", region)
+    with col2:
+        st.metric("Domain", domain)
+    with col3:
+        st.metric("Scan Type", scan_results.get('scan_type', 'Code Efficiency'))
     
     # Code stats overview
     code_stats = scan_results.get('code_stats', {})
@@ -1429,25 +1584,11 @@ def display_github_sustainability_report(scan_results):
     else:
         st.info("No findings available.")
     
-    # Recommendations section - same as cloud display
+    # Recommendations section
     st.subheader("Recommendations")
     
     recommendations = scan_results.get('recommendations', [])
-    
-    if recommendations:
-        for i, rec in enumerate(recommendations):
-            with st.expander(f"{i+1}. {rec.get('title', 'Recommendation')}"):
-                st.write(rec.get('description', ''))
-                
-                st.write("**Priority:** ", rec.get('priority', 'Medium'))
-                st.write("**Impact:** ", rec.get('impact', 'Medium'))
-                
-                if 'steps' in rec:
-                    st.write("**Steps:**")
-                    for step in rec['steps']:
-                        st.write(f"- {step}")
-    else:
-        st.info("No recommendations available.")
+    display_recommendations_list(recommendations)
 
 
 def display_code_analysis_report(scan_results):
@@ -1456,16 +1597,32 @@ def display_code_analysis_report(scan_results):
     files_analyzed = scan_results.get('files_analyzed', 0)
     scan_timestamp = scan_results.get('timestamp', datetime.now().isoformat())
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    region = scan_results.get('region', 'Europe')
+    domain = scan_results.get('domain', 'local.files')
+    scan_type = scan_results.get('scan_type', 'Code Analysis')
     
     # Summary section
-    st.subheader("Code Analysis Overview")
+    st.subheader("Scan Overview")
     
-    col1, col2 = st.columns(2)
+    # First row of metrics
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         st.metric("Files Analyzed", files_analyzed)
     with col2:
         st.metric("Scan Time", formatted_time)
+    with col3:
+        st.metric("Scan Type", scan_type)
+    
+    # Second row of metrics for region and domain
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Region", region)
+    with col2:
+        st.metric("Source", scan_results.get('url', 'Local Files'))
+    with col3:
+        st.metric("Domain", domain)
     
     # Findings section - same as other displays
     st.subheader("Findings")
@@ -1499,25 +1656,11 @@ def display_code_analysis_report(scan_results):
     else:
         st.info("No findings available.")
     
-    # Recommendations section - same as other displays
+    # Recommendations section
     st.subheader("Recommendations")
     
     recommendations = scan_results.get('recommendations', [])
-    
-    if recommendations:
-        for i, rec in enumerate(recommendations):
-            with st.expander(f"{i+1}. {rec.get('title', 'Recommendation')}"):
-                st.write(rec.get('description', ''))
-                
-                st.write("**Priority:** ", rec.get('priority', 'Medium'))
-                st.write("**Impact:** ", rec.get('impact', 'Medium'))
-                
-                if 'steps' in rec:
-                    st.write("**Steps:**")
-                    for step in rec['steps']:
-                        st.write(f"- {step}")
-    else:
-        st.info("No recommendations available.")
+    display_recommendations_list(recommendations)
 
 
 def display_generic_sustainability_report(scan_results):
@@ -1527,10 +1670,14 @@ def display_generic_sustainability_report(scan_results):
     scan_id = scan_results.get('scan_id', 'Unknown')
     scan_timestamp = scan_results.get('timestamp', datetime.now().isoformat())
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    region = scan_results.get('region', 'Europe')
+    domain = scan_results.get('domain', 'unknown.domain')
+    url = scan_results.get('url', 'Not specified')
     
     # Summary section
-    st.subheader("Scan Summary")
+    st.subheader("Scan Overview")
     
+    # First row of metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -1539,6 +1686,16 @@ def display_generic_sustainability_report(scan_results):
         st.metric("Scan ID", scan_id)
     with col3:
         st.metric("Scan Time", formatted_time)
+    
+    # Second row of metrics for region and domain
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Region", region)
+    with col2:
+        st.metric("URL", url)
+    with col3:
+        st.metric("Domain", domain)
     
     # Findings section - same as other displays
     st.subheader("Findings")
@@ -1572,9 +1729,40 @@ def display_generic_sustainability_report(scan_results):
     else:
         st.info("No findings available.")
     
-    # Display raw scan data if requested
-    with st.expander("Show Raw Scan Data"):
+    # Recommendations section (if available)
+    if 'recommendations' in scan_results and scan_results['recommendations']:
+        st.subheader("Recommendations")
+        display_recommendations_list(scan_results.get('recommendations', []))
+    
+    # Display raw scan data if requested (using button instead of expander)
+    if st.button("Show/Hide Raw Scan Data"):
         st.json(scan_results)
+
+
+def display_recommendations_list(recommendations):
+    """Display a list of recommendations without using expanders."""
+    if not recommendations:
+        st.info("No recommendations available.")
+        return
+        
+    for i, rec in enumerate(recommendations):
+        # Use markdown header instead of expander
+        st.markdown(f"#### {i+1}. {rec.get('title', 'Recommendation')}")
+        st.write(rec.get('description', ''))
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Priority:** ", rec.get('priority', 'Medium'))
+        with col2:
+            st.write("**Impact:** ", rec.get('impact', 'Medium'))
+        
+        if 'steps' in rec:
+            st.write("**Steps:**")
+            for step in rec['steps']:
+                st.write(f"- {step}")
+        
+        # Add a separator between recommendations
+        st.divider()
 
 
 def display_findings_list(findings, risk_level):
