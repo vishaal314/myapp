@@ -1632,7 +1632,32 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     
     # Extract scan type and key metrics
     scan_type = scan_data.get('scan_type', 'Unknown')
+    
+    # Extract sustainability score, checking multiple possible locations
     sustainability_score = scan_data.get('sustainability_score', 0)
+    if not sustainability_score and isinstance(sustainability_score, (int, float)) and sustainability_score == 0:
+        # Try to get from top level
+        if 'sustainability_score' in scan_data:
+            sustainability_score = scan_data['sustainability_score']
+        # Check if it's nested in scan_data
+        elif isinstance(scan_data.get('scan_data'), dict):
+            sustainability_score = scan_data.get('scan_data', {}).get('sustainability_score', 0)
+        # Default to a reasonable score based on findings
+        else:
+            # Calculate score based on findings if available
+            findings = scan_data.get('findings', [])
+            high_count = len([f for f in findings if f.get('risk_level') == 'high'])
+            medium_count = len([f for f in findings if f.get('risk_level') == 'medium'])
+            low_count = len([f for f in findings if f.get('risk_level') == 'low'])
+            
+            # Base score calculation (100 - deductions for each risk)
+            sustainability_score = 100 - (high_count * 15) - (medium_count * 5) - (low_count * 2)
+            # Ensure between 0-100
+            sustainability_score = max(0, min(100, sustainability_score))
+    
+    # Ensure we have a valid numeric value
+    if not isinstance(sustainability_score, (int, float)):
+        sustainability_score = 70  # Default to a reasonable score if value is invalid
     
     # Add comprehensive scan metadata section
     metadata_style = styles['Normal'].clone('MetadataStyle', spaceBefore=6, spaceAfter=6)
@@ -1766,11 +1791,20 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         
         high_risk_data = [["Description", "Location", "Recommendation"]]
         for finding in risk_levels['high']:
-            high_risk_data.append([
-                finding.get('description', 'No description'),
-                finding.get('location', 'Unknown'),
-                finding.get('recommendation', 'No recommendation')
-            ])
+            # Clean and format the data to prevent text overflow and garbled characters
+            description = str(finding.get('description', 'No description')).strip()
+            location = str(finding.get('location', 'Unknown')).strip()
+            recommendation = str(finding.get('recommendation', 'No recommendation')).strip()
+            
+            # Limit string lengths to ensure they fit in table cells
+            if len(description) > 100:
+                description = description[:97] + "..."
+            if len(location) > 50:
+                location = location[:47] + "..."
+            if len(recommendation) > 100:
+                recommendation = recommendation[:97] + "..."
+                
+            high_risk_data.append([description, location, recommendation])
         
         high_risk_table = Table(high_risk_data, colWidths=[2.5*inch, 1.5*inch, 2.5*inch])
         high_risk_table.setStyle(TableStyle([
@@ -1798,11 +1832,20 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         
         medium_risk_data = [["Description", "Location", "Recommendation"]]
         for finding in risk_levels['medium']:
-            medium_risk_data.append([
-                finding.get('description', 'No description'),
-                finding.get('location', 'Unknown'),
-                finding.get('recommendation', 'No recommendation')
-            ])
+            # Clean and format the data to prevent text overflow and garbled characters
+            description = str(finding.get('description', 'No description')).strip()
+            location = str(finding.get('location', 'Unknown')).strip()
+            recommendation = str(finding.get('recommendation', 'No recommendation')).strip()
+            
+            # Limit string lengths to ensure they fit in table cells
+            if len(description) > 100:
+                description = description[:97] + "..."
+            if len(location) > 50:
+                location = location[:47] + "..."
+            if len(recommendation) > 100:
+                recommendation = recommendation[:97] + "..."
+                
+            medium_risk_data.append([description, location, recommendation])
         
         medium_risk_table = Table(medium_risk_data, colWidths=[2.5*inch, 1.5*inch, 2.5*inch])
         medium_risk_table.setStyle(TableStyle([
@@ -1830,11 +1873,20 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         
         low_risk_data = [["Description", "Location", "Recommendation"]]
         for finding in risk_levels['low']:
-            low_risk_data.append([
-                finding.get('description', 'No description'),
-                finding.get('location', 'Unknown'),
-                finding.get('recommendation', 'No recommendation')
-            ])
+            # Clean and format the data to prevent text overflow and garbled characters
+            description = str(finding.get('description', 'No description')).strip()
+            location = str(finding.get('location', 'Unknown')).strip()
+            recommendation = str(finding.get('recommendation', 'No recommendation')).strip()
+            
+            # Limit string lengths to ensure they fit in table cells
+            if len(description) > 100:
+                description = description[:97] + "..."
+            if len(location) > 50:
+                location = location[:47] + "..."
+            if len(recommendation) > 100:
+                recommendation = recommendation[:97] + "..."
+                
+            low_risk_data.append([description, location, recommendation])
         
         low_risk_table = Table(low_risk_data, colWidths=[2.5*inch, 1.5*inch, 2.5*inch])
         low_risk_table.setStyle(TableStyle([
@@ -1918,6 +1970,10 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                         elements.append(Paragraph(f"• {step}", steps_style))
                 else:
                     # If no steps, add a general recommendation
+                    steps_style = normal_style.clone('StepsStyle', 
+                                                leftIndent=20, 
+                                                spaceBefore=2, 
+                                                spaceAfter=2)
                     elements.append(Paragraph(f"• Consult with development team to implement best practices for {rec_category.lower()}", steps_style))
                 
                 # Add space between recommendations
@@ -1992,7 +2048,24 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                     elements.append(Spacer(1, 0.2*inch))
     
     # If it's a GitHub repository scan, add repository overview and code stats
-    if ('github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower() or 'sustainability' in scan_type.lower()) and include_details:
+    # For sustainability scans, we only include this section if it's a code-focused sustainability scan
+    include_code_stats = False
+    
+    if 'github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower():
+        include_code_stats = True
+    elif 'sustainability' in scan_type.lower():
+        # Only include code stats in sustainability reports if:
+        # 1. It's a code or repository focused sustainability scan
+        # 2. The scan has actual code-related data
+        include_code_stats = (
+            ('code_duplication' in scan_data) or 
+            ('languages' in scan_data) or 
+            ('large_files' in scan_data) or
+            ('code_stats' in scan_data) or
+            ('repository' in scan_data)
+        )
+    
+    if include_code_stats and include_details:
         elements.append(PageBreak())
         # Scan Overview
         if current_lang == 'nl':
