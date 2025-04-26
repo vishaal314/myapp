@@ -2863,9 +2863,9 @@ else:
                             if 'status_text' in locals():
                                 status_text.text("AI Model Scan: Failed with Critical Error")
                     elif scan_type == _("scan.dpia"):
-                        # Skip the informational box and go straight to the DPIA form
-                        # Import and run our redesigned DPIA form with comprehensive workflow
-                        from new_dpia import run_dpia_assessment
+                        # Skip the informational box and go straight to the improved DPIA form
+                        # Import and run our improved DPIA form with a more stable and reliable experience
+                        from improved_dpia import run_improved_dpia
                         
                         # Hide the Start Scan button and Upload Files section and other unnecessary UI for DPIA
                         st.markdown("""
@@ -2905,10 +2905,10 @@ else:
                         </style>
                         """, unsafe_allow_html=True)
                         
-                        # Run the DPIA form directly
-                        run_dpia_assessment()
+                        # Run the improved DPIA form directly
+                        run_improved_dpia()
                         
-                        # Stop normal flow to proceed with only the new DPIA form
+                        # Stop normal flow to proceed with only the improved DPIA form
                         scan_running = False
                     
                     # Preview of findings with error handling

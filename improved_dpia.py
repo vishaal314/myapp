@@ -414,29 +414,50 @@ def process_dpia_assessment(scanner: DPIAScanner):
                     result.append(value)
             return result
         
+        # Map our UI categories to the scanner's categories
+        category_mapping = {
+            "data_categories": "data_category",
+            "processing_activities": "processing_activity",
+            "rights_freedoms": "rights_impact",
+            "data_sharing": "transfer_sharing",
+            "security_measures": "security_measures"
+        }
+        
         # Process each category
-        for category in ["data_categories", "processing_activities", "rights_freedoms", "data_sharing", "security_measures"]:
-            if category in st.session_state.dpia_answers:
-                scanner_answers[category] = convert_category_answers(
-                    category, 
-                    st.session_state.dpia_answers[category]
+        for ui_category, scanner_category in category_mapping.items():
+            if ui_category in st.session_state.dpia_answers:
+                scanner_answers[scanner_category] = convert_category_answers(
+                    ui_category, 
+                    st.session_state.dpia_answers[ui_category]
                 )
         
         # Ensure we have all required categories
-        for category in scanner_answers:
-            if not scanner_answers[category]:
-                scanner_answers[category] = [0] * 5  # Default to 5 questions with "No" answers
+        for scanner_category in category_mapping.values():
+            if scanner_category not in scanner_answers or not scanner_answers[scanner_category]:
+                scanner_answers[scanner_category] = [0] * 5  # Default to 5 questions with "No" answers
         
         # Add admin info
         admin_info = st.session_state.dpia_answers.get("admin_info", {})
         
-        # Perform the assessment
-        assessment_results = scanner.perform_assessment(answers=scanner_answers)
+        # Prepare to call perform_assessment with the expected parameters
+        # The scanner expects answers as lists of integers
+        # We'll also send an empty list for file_findings
+        assessment_results = scanner.perform_assessment(
+            answers=scanner_answers,
+            file_findings=[],  # No file findings since this is just a questionnaire
+            data_source_info={
+                "type": "questionnaire",
+                "name": admin_info.get("project_name", "DPIA Assessment"),
+                "description": admin_info.get("description", "")
+            }
+        )
         
         # Add admin info to results
         assessment_results["admin_info"] = admin_info
-        assessment_results["scan_id"] = str(uuid.uuid4())
-        assessment_results["timestamp"] = datetime.datetime.now().isoformat()
+        if "scan_id" not in assessment_results:
+            assessment_results["scan_id"] = str(uuid.uuid4())
+        if "timestamp" not in assessment_results:
+            assessment_results["timestamp"] = datetime.datetime.now().isoformat()
         
         # Generate report data
         report_data = {
@@ -507,9 +528,24 @@ def display_assessment_results(assessment_results, report_data, scanner):
     st.subheader("Risk Analysis by Category")
     
     for category, scores in assessment_results["category_scores"].items():
-        category_name = scanner.assessment_categories[category]["name"]
-        percentage = scores["percentage"]
-        risk_level = scores["risk_level"]
+        # Get the category name, handling both formats of category keys
+        if category in scanner.assessment_categories:
+            category_name = scanner.assessment_categories[category]["name"]
+        else:
+            # Fallback for categories not found directly
+            # Map back from internal categories to display names
+            category_mapping = {
+                "data_category": "Data Categories",
+                "processing_activity": "Processing Activities",
+                "rights_impact": "Rights and Freedoms",
+                "transfer_sharing": "Data Sharing & Transfer",
+                "security_measures": "Security Measures"
+            }
+            category_name = category_mapping.get(category, category.replace("_", " ").title())
+        
+        # Extract score values safely
+        percentage = scores.get("percentage", 0) * 10  # Convert from 0-10 to 0-100 scale
+        risk_level = scores.get("risk_level", "Low")
         risk_color = {
             "High": "#ef4444",
             "Medium": "#f97316",
