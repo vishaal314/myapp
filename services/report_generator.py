@@ -1571,6 +1571,22 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         
         elements.append(Paragraph(disclaimer_text, disclaimer_style))
     
+    # Special handling for sustainability reports
+    if report_format == "sustainability":
+        # Add sustainability specific report content
+        _add_sustainability_report_content(
+            elements, 
+            scan_data, 
+            styles, 
+            heading_style, 
+            subheading_style, 
+            normal_style, 
+            current_lang, 
+            include_details, 
+            include_charts, 
+            include_recommendations
+        )
+    
     # Build PDF
     doc.build(elements)
     
@@ -1579,3 +1595,376 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     buffer.close()
     
     return pdf_bytes
+    
+def _add_sustainability_report_content(elements, scan_data, styles, heading_style, subheading_style, normal_style, current_lang, include_details=True, include_charts=True, include_recommendations=True):
+    """
+    Add sustainability-specific content to the report PDF.
+    
+    Args:
+        elements: The list of reportlab elements to add to
+        scan_data: The sustainability scan data
+        styles: The reportlab styles dictionary
+        heading_style: The heading style
+        subheading_style: The subheading style
+        normal_style: The normal text style
+        current_lang: The current language (e.g., 'en', 'nl')
+        include_details: Whether to include detailed findings
+        include_charts: Whether to include charts
+        include_recommendations: Whether to include recommendations
+    """
+    # Import needed components
+    from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak
+    from reportlab.lib.units import inch
+    from reportlab.lib import colors
+    from reportlab.lib.colors import HexColor
+    
+    # Add a page break before sustainability content
+    elements.append(PageBreak())
+    
+    # Add sustainability section title
+    if current_lang == 'nl':
+        sustainability_title = "Duurzaamheidsanalyse"
+    else:
+        sustainability_title = "Sustainability Analysis"
+    elements.append(Paragraph(sustainability_title, heading_style))
+    elements.append(Spacer(1, 0.25*inch))
+    
+    # Extract scan type and key metrics
+    scan_type = scan_data.get('scan_type', 'Unknown')
+    sustainability_score = scan_data.get('sustainability_score', 0)
+    
+    # Repository information for GitHub scans
+    if 'github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower():
+        repo_url = scan_data.get('repo_url', 'Not specified')
+        branch = scan_data.get('branch', 'main')
+        
+        repo_info_style = styles['Normal'].clone('RepoInfo', spaceBefore=6, spaceAfter=6)
+        
+        if current_lang == 'nl':
+            elements.append(Paragraph(f"<b>Repository URL:</b> {repo_url}", repo_info_style))
+            elements.append(Paragraph(f"<b>Branch:</b> {branch}", repo_info_style))
+        else:
+            elements.append(Paragraph(f"<b>Repository URL:</b> {repo_url}", repo_info_style))
+            elements.append(Paragraph(f"<b>Branch:</b> {branch}", repo_info_style))
+    
+    # Add sustainability score visualization
+    elements.append(Spacer(1, 0.1*inch))
+    if current_lang == 'nl':
+        elements.append(Paragraph("<b>Duurzaamheidsscore</b>", subheading_style))
+    else:
+        elements.append(Paragraph("<b>Sustainability Score</b>", subheading_style))
+    
+    # Create a score table with color coding
+    score_color = '#10b981'  # Default green
+    if sustainability_score < 40:
+        score_color = '#ef4444'  # Red for low scores
+    elif sustainability_score < 70:
+        score_color = '#f97316'  # Orange for medium scores
+    
+    score_table_data = [[f"<font color='{score_color}'><b>{sustainability_score}/100</b></font>"]]
+    score_table = Table(score_table_data, colWidths=[1.5*inch])
+    score_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, 0), HexColor('#f8f9fa')),
+        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
+        ('TEXTCOLOR', (0, 0), (0, 0), HexColor(score_color)),
+        ('FONTSIZE', (0, 0), (0, 0), 16),
+        ('BOTTOMPADDING', (0, 0), (0, 0), 10),
+        ('TOPPADDING', (0, 0), (0, 0), 10),
+        ('BOX', (0, 0), (0, 0), 1, HexColor('#e9ecef')),
+        ('ROUNDEDCORNERS', [5, 5, 5, 5]),
+    ]))
+    elements.append(score_table)
+    elements.append(Spacer(1, 0.15*inch))
+    
+    # Findings section
+    elements.append(Spacer(1, 0.15*inch))
+    if current_lang == 'nl':
+        elements.append(Paragraph("<b>Bevindingen</b>", subheading_style))
+    else:
+        elements.append(Paragraph("<b>Findings</b>", subheading_style))
+    
+    # Group findings by risk level
+    findings = scan_data.get('findings', [])
+    risk_levels = {
+        'high': [],
+        'medium': [],
+        'low': []
+    }
+    
+    for finding in findings:
+        risk_level = finding.get('risk_level', 'low').lower()
+        if risk_level in risk_levels:
+            risk_levels[risk_level].append(finding)
+    
+    # Add findings tables by risk level
+    if risk_levels['high']:
+        if current_lang == 'nl':
+            elements.append(Paragraph("Hoog Risico Items", normal_style))
+        else:
+            elements.append(Paragraph("High Risk Items", normal_style))
+        
+        high_risk_data = [["Description", "Location", "Recommendation"]]
+        for finding in risk_levels['high']:
+            high_risk_data.append([
+                finding.get('description', 'No description'),
+                finding.get('location', 'Unknown'),
+                finding.get('recommendation', 'No recommendation')
+            ])
+        
+        high_risk_table = Table(high_risk_data, colWidths=[2.5*inch, 1.5*inch, 2.5*inch])
+        high_risk_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#ef4444')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+            ('TOPPADDING', (0, 1), (-1, -1), 4),
+        ]))
+        elements.append(high_risk_table)
+        elements.append(Spacer(1, 0.15*inch))
+    
+    if risk_levels['medium']:
+        if current_lang == 'nl':
+            elements.append(Paragraph("Gemiddeld Risico Items", normal_style))
+        else:
+            elements.append(Paragraph("Medium Risk Items", normal_style))
+        
+        medium_risk_data = [["Description", "Location", "Recommendation"]]
+        for finding in risk_levels['medium']:
+            medium_risk_data.append([
+                finding.get('description', 'No description'),
+                finding.get('location', 'Unknown'),
+                finding.get('recommendation', 'No recommendation')
+            ])
+        
+        medium_risk_table = Table(medium_risk_data, colWidths=[2.5*inch, 1.5*inch, 2.5*inch])
+        medium_risk_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#f97316')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+            ('TOPPADDING', (0, 1), (-1, -1), 4),
+        ]))
+        elements.append(medium_risk_table)
+        elements.append(Spacer(1, 0.15*inch))
+    
+    if risk_levels['low']:
+        if current_lang == 'nl':
+            elements.append(Paragraph("Laag Risico Items", normal_style))
+        else:
+            elements.append(Paragraph("Low Risk Items", normal_style))
+        
+        low_risk_data = [["Description", "Location", "Recommendation"]]
+        for finding in risk_levels['low']:
+            low_risk_data.append([
+                finding.get('description', 'No description'),
+                finding.get('location', 'Unknown'),
+                finding.get('recommendation', 'No recommendation')
+            ])
+        
+        low_risk_table = Table(low_risk_data, colWidths=[2.5*inch, 1.5*inch, 2.5*inch])
+        low_risk_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#10b981')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+            ('TOPPADDING', (0, 1), (-1, -1), 4),
+        ]))
+        elements.append(low_risk_table)
+        elements.append(Spacer(1, 0.15*inch))
+    
+    # Add recommendations section
+    if include_recommendations:
+        elements.append(PageBreak())
+        if current_lang == 'nl':
+            elements.append(Paragraph("<b>Aanbevelingen</b>", subheading_style))
+        else:
+            elements.append(Paragraph("<b>Recommendations</b>", subheading_style))
+        
+        recommendations = scan_data.get('recommendations', [])
+        if recommendations:
+            recommendation_style = normal_style.clone('RecommendationStyle', 
+                                                    leftIndent=10, 
+                                                    spaceBefore=4, 
+                                                    spaceAfter=4)
+            
+            for i, rec in enumerate(recommendations):
+                rec_description = rec.get('description', 'No description')
+                rec_severity = rec.get('severity', 'Low')
+                rec_category = rec.get('category', 'General')
+                
+                # Color-coded severity
+                severity_color = '#10b981'  # Green for Low
+                if rec_severity.lower() == 'high':
+                    severity_color = '#ef4444'  # Red
+                elif rec_severity.lower() == 'medium':
+                    severity_color = '#f97316'  # Orange
+                
+                elements.append(Paragraph(f"<b>{i+1}. {rec_description}</b>", recommendation_style))
+                elements.append(Paragraph(f"<b>Severity:</b> <font color='{severity_color}'>{rec_severity}</font> | <b>Category:</b> {rec_category}", recommendation_style))
+                
+                # Add steps if available
+                steps = rec.get('steps', [])
+                if steps:
+                    steps_style = normal_style.clone('StepsStyle', 
+                                                leftIndent=20, 
+                                                spaceBefore=2, 
+                                                spaceAfter=2)
+                    for step in steps:
+                        elements.append(Paragraph(f"• {step}", steps_style))
+                
+                elements.append(Spacer(1, 0.1*inch))
+        else:
+            if current_lang == 'nl':
+                elements.append(Paragraph("Geen specifieke aanbevelingen beschikbaar.", normal_style))
+            else:
+                elements.append(Paragraph("No specific recommendations available.", normal_style))
+    
+    # If it's a GitHub repository scan, add code stats
+    if ('github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower()) and include_details:
+        elements.append(PageBreak())
+        if current_lang == 'nl':
+            elements.append(Paragraph("<b>Code Statistieken</b>", subheading_style))
+        else:
+            elements.append(Paragraph("<b>Code Statistics</b>", subheading_style))
+        
+        code_stats = scan_data.get('code_stats', {})
+        if code_stats:
+            code_stats_data = []
+            if current_lang == 'nl':
+                code_stats_data = [
+                    ["Totaal Bestanden", str(code_stats.get('total_files', 0))],
+                    ["Repository Grootte", f"{code_stats.get('total_size_mb', 0):.2f} MB"],
+                    ["Gemiddelde Bestandsgrootte", f"{code_stats.get('avg_file_size_kb', 0):.2f} KB"],
+                ]
+            else:
+                code_stats_data = [
+                    ["Total Files", str(code_stats.get('total_files', 0))],
+                    ["Repository Size", f"{code_stats.get('total_size_mb', 0):.2f} MB"],
+                    ["Average File Size", f"{code_stats.get('avg_file_size_kb', 0):.2f} KB"],
+                ]
+            
+            code_stats_table = Table(code_stats_data, colWidths=[2*inch, 2*inch])
+            code_stats_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), HexColor('#f8f9fa')),
+                ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            elements.append(code_stats_table)
+            elements.append(Spacer(1, 0.15*inch))
+            
+            # Add language breakdown if available
+            language_breakdown = code_stats.get('language_breakdown', {})
+            if language_breakdown:
+                if current_lang == 'nl':
+                    elements.append(Paragraph("<b>Taal Verdeling</b>", normal_style))
+                else:
+                    elements.append(Paragraph("<b>Language Breakdown</b>", normal_style))
+                
+                language_data = [["Language", "Files", "Size (MB)"]]
+                for lang, stats in language_breakdown.items():
+                    language_data.append([
+                        lang,
+                        str(stats.get('file_count', 0)),
+                        f"{stats.get('size_mb', 0):.2f}"
+                    ])
+                
+                language_table = Table(language_data, colWidths=[2*inch, 1*inch, 1*inch])
+                language_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), HexColor('#f0f0f0')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 9),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ]))
+                elements.append(language_table)
+        else:
+            if current_lang == 'nl':
+                elements.append(Paragraph("Geen code statistieken beschikbaar.", normal_style))
+            else:
+                elements.append(Paragraph("No code statistics available.", normal_style))
+        
+        # Add unused imports section if available
+        unused_imports = scan_data.get('unused_imports', [])
+        if unused_imports:
+            elements.append(Spacer(1, 0.15*inch))
+            if current_lang == 'nl':
+                elements.append(Paragraph("<b>Ongebruikte Imports</b>", normal_style))
+            else:
+                elements.append(Paragraph("<b>Unused Imports</b>", normal_style))
+            
+            unused_data = [["File", "Import"]]
+            for unused in unused_imports:
+                unused_data.append([
+                    unused.get('file', 'Unknown'),
+                    unused.get('import', 'Unknown')
+                ])
+            
+            unused_table = Table(unused_data, colWidths=[3*inch, 3*inch])
+            unused_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#f0f0f0')),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ]))
+            elements.append(unused_table)
+        
+        # Add large files section if available
+        large_files = scan_data.get('large_files', [])
+        if large_files:
+            elements.append(Spacer(1, 0.15*inch))
+            if current_lang == 'nl':
+                elements.append(Paragraph("<b>Grote Bestanden</b>", normal_style))
+            else:
+                elements.append(Paragraph("<b>Large Files</b>", normal_style))
+            
+            large_data = [["File", "Size (MB)", "Category"]]
+            for large_file in large_files:
+                large_data.append([
+                    large_file.get('file', 'Unknown'),
+                    f"{large_file.get('size_mb', 0):.2f}",
+                    large_file.get('category', 'Unknown')
+                ])
+            
+            large_table = Table(large_data, colWidths=[3*inch, 1.5*inch, 1.5*inch])
+            large_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#f0f0f0')),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ]))
+            elements.append(large_table)
