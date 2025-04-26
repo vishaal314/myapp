@@ -1964,28 +1964,81 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                         
                     elements.append(Spacer(1, 0.2*inch))
     
-    # If it's a GitHub repository scan, add code stats
-    if ('github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower()) and include_details:
+    # If it's a GitHub repository scan, add repository overview and code stats
+    if ('github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower() or 'sustainability' in scan_type.lower()) and include_details:
         elements.append(PageBreak())
+        # Repository Overview
         if current_lang == 'nl':
-            elements.append(Paragraph("<b>Code Statistieken</b>", subheading_style))
+            elements.append(Paragraph("<b>Repository Overzicht</b>", subheading_style))
         else:
-            elements.append(Paragraph("<b>Code Statistics</b>", subheading_style))
+            elements.append(Paragraph("<b>Repository Overview</b>", subheading_style))
+        
+        # Get repository information
+        repo_name = scan_data.get('repo_url', 'Unknown').split('/')[-1] if '/' in scan_data.get('repo_url', 'Unknown') else scan_data.get('repo_url', 'Unknown')
+        branch = scan_data.get('branch', 'main')
+        scan_timestamp = scan_data.get('timestamp', datetime.now().isoformat())
+        formatted_time = ""
+        try:
+            if isinstance(scan_timestamp, str):
+                formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                formatted_time = scan_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            formatted_time = str(scan_timestamp)
+        
+        # Create repository overview table
+        repo_overview_data = []
+        if current_lang == 'nl':
+            repo_overview_data = [
+                ["Repository", repo_name],
+                ["Branch", branch],
+                ["Scan Tijd", formatted_time]
+            ]
+        else:
+            repo_overview_data = [
+                ["Repository", repo_name],
+                ["Branch", branch],
+                ["Scan Time", formatted_time]
+            ]
+        
+        repo_overview_table = Table(repo_overview_data, colWidths=[2*inch, 4*inch])
+        repo_overview_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), HexColor('#f8f9fa')),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(repo_overview_table)
+        elements.append(Spacer(1, 0.15*inch))
+        
+        # Code Statistics
+        if current_lang == 'nl':
+            elements.append(Paragraph("<b>Code Statistieken</b>", normal_style))
+        else:
+            elements.append(Paragraph("<b>Code Statistics</b>", normal_style))
         
         code_stats = scan_data.get('code_stats', {})
+        # Get sustainability score if available
+        sustainability_score = scan_data.get('sustainability_score', 0)
+        # Format as integer out of 100
+        if isinstance(sustainability_score, (int, float)):
+            sustainability_score = int(sustainability_score)
+            
         if code_stats:
             code_stats_data = []
             if current_lang == 'nl':
                 code_stats_data = [
                     ["Totaal Bestanden", str(code_stats.get('total_files', 0))],
                     ["Repository Grootte", f"{code_stats.get('total_size_mb', 0):.2f} MB"],
-                    ["Gemiddelde Bestandsgrootte", f"{code_stats.get('avg_file_size_kb', 0):.2f} KB"],
+                    ["Duurzaamheidsscore", f"{sustainability_score}/100"],
                 ]
             else:
                 code_stats_data = [
                     ["Total Files", str(code_stats.get('total_files', 0))],
                     ["Repository Size", f"{code_stats.get('total_size_mb', 0):.2f} MB"],
-                    ["Average File Size", f"{code_stats.get('avg_file_size_kb', 0):.2f} KB"],
+                    ["Sustainability Score", f"{sustainability_score}/100"],
                 ]
             
             code_stats_table = Table(code_stats_data, colWidths=[2*inch, 2*inch])
