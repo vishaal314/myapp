@@ -1734,13 +1734,34 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     # Add comprehensive scan metadata section
     metadata_style = styles['Normal'].clone('MetadataStyle', spaceBefore=6, spaceAfter=6)
     
-    # Extract all possible metadata fields
-    repo_url = scan_data.get('repo_url', 'Not specified')
+    # Extract all possible metadata fields with better fallbacks
+    repo_url = scan_data.get('repo_url', scan_data.get('repository', 'Not specified'))
     branch = scan_data.get('branch', 'main')
-    domain = scan_data.get('domain', scan_data.get('url', 'Not specified'))
-    username = scan_data.get('username', scan_data.get('user', 'Not specified'))
-    region = scan_data.get('region', scan_data.get('cloud_region', 'Not specified'))
-    scan_date = scan_data.get('scan_date', scan_data.get('timestamp', datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    domain = scan_data.get('domain', scan_data.get('url', scan_data.get('repository', 'Not specified')))
+    
+    # Get username from scan_data or session state if available
+    username = scan_data.get('username', 'Not available')
+    if username == 'Not available' or username == 'Unknown' or username == 'Not specified':
+        if hasattr(st, 'session_state') and 'username' in st.session_state:
+            username = st.session_state.get('username', 'Not specified')
+    
+    # Get region with better fallbacks
+    region = scan_data.get('region', scan_data.get('cloud_region', 'Global'))
+    
+    # Get scan date with formatting
+    scan_date = scan_data.get('scan_date', scan_data.get('timestamp', datetime.now().isoformat()))
+    # Try to format timestamp if it's ISO format
+    try:
+        if isinstance(scan_date, str) and 'T' in scan_date:
+            scan_date = datetime.fromisoformat(scan_date).strftime("%Y-%m-%d %H:%M:%S")
+    except (ValueError, TypeError):
+        pass  # Keep original format if parsing fails
+        
+    # Extract file count information
+    file_count = scan_data.get('file_count', scan_data.get('files_analyzed', 0))
+    # Handle nested data structures
+    if file_count == 0 and 'code_stats' in scan_data:
+        file_count = scan_data.get('code_stats', {}).get('total_files', 0)
     
     # Create metadata table with two columns
     if current_lang == 'nl':
