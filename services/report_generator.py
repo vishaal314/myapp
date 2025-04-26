@@ -1,5 +1,6 @@
 import io
 import os
+import base64
 import streamlit as st
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -1633,19 +1634,59 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     scan_type = scan_data.get('scan_type', 'Unknown')
     sustainability_score = scan_data.get('sustainability_score', 0)
     
-    # Repository information for GitHub scans
+    # Add comprehensive scan metadata section
+    metadata_style = styles['Normal'].clone('MetadataStyle', spaceBefore=6, spaceAfter=6)
+    
+    # Extract all possible metadata fields
+    repo_url = scan_data.get('repo_url', 'Not specified')
+    branch = scan_data.get('branch', 'main')
+    domain = scan_data.get('domain', scan_data.get('url', 'Not specified'))
+    username = scan_data.get('username', scan_data.get('user', 'Not specified'))
+    region = scan_data.get('region', scan_data.get('cloud_region', 'Not specified'))
+    scan_date = scan_data.get('scan_date', scan_data.get('timestamp', datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    
+    # Create metadata table with two columns
+    if current_lang == 'nl':
+        metadata_data = [
+            ["Scan Metadata", ""],
+            ["URL/Domein", domain],
+            ["Gebruikersnaam", username],
+            ["Regio", region],
+            ["Scan Datum", scan_date]
+        ]
+    else:
+        metadata_data = [
+            ["Scan Metadata", ""],
+            ["URL/Domain", domain],
+            ["Username", username],
+            ["Region", region],
+            ["Scan Date", scan_date]
+        ]
+    
+    # Add repo-specific fields for GitHub scans
     if 'github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower():
-        repo_url = scan_data.get('repo_url', 'Not specified')
-        branch = scan_data.get('branch', 'main')
-        
-        repo_info_style = styles['Normal'].clone('RepoInfo', spaceBefore=6, spaceAfter=6)
-        
-        if current_lang == 'nl':
-            elements.append(Paragraph(f"<b>Repository URL:</b> {repo_url}", repo_info_style))
-            elements.append(Paragraph(f"<b>Branch:</b> {branch}", repo_info_style))
-        else:
-            elements.append(Paragraph(f"<b>Repository URL:</b> {repo_url}", repo_info_style))
-            elements.append(Paragraph(f"<b>Branch:</b> {branch}", repo_info_style))
+        metadata_data.append(["Repository URL", repo_url])
+        metadata_data.append(["Branch", branch])
+    
+    # Create and style the metadata table
+    metadata_table = Table(metadata_data, colWidths=[1.5*inch, 4*inch])
+    metadata_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (1, 0), HexColor('#3498db')),
+        ('TEXTCOLOR', (0, 0), (1, 0), colors.white),
+        ('SPAN', (0, 0), (1, 0)),
+        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (1, 0), 12),
+        ('BACKGROUND', (0, 1), (0, -1), HexColor('#f8f9fa')),
+        ('BACKGROUND', (1, 1), (1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(metadata_table)
+    elements.append(Spacer(1, 0.2*inch))
     
     # Add sustainability score visualization
     elements.append(Spacer(1, 0.1*inch))
@@ -1654,25 +1695,40 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     else:
         elements.append(Paragraph("<b>Sustainability Score</b>", subheading_style))
     
-    # Create a score table with color coding
+    # Create a visual score meter
     score_color = '#10b981'  # Default green
     if sustainability_score < 40:
         score_color = '#ef4444'  # Red for low scores
+        status_text = "Low"
     elif sustainability_score < 70:
         score_color = '#f97316'  # Orange for medium scores
+        status_text = "Medium"
+    else:
+        status_text = "High"
     
-    score_table_data = [[f"<font color='{score_color}'><b>{sustainability_score}/100</b></font>"]]
-    score_table = Table(score_table_data, colWidths=[1.5*inch])
+    # Create a more visually appealing score display with label
+    score_table_data = [
+        ["Sustainability Score"], 
+        [f"<font color='{score_color}'><b>{sustainability_score}/100</b></font>"],
+        [f"<font color='{score_color}'><b>{status_text}</b></font>"]
+    ]
+    
+    score_table = Table(score_table_data, colWidths=[2.5*inch])
     score_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, 0), HexColor('#f8f9fa')),
-        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
-        ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
-        ('TEXTCOLOR', (0, 0), (0, 0), HexColor(score_color)),
-        ('FONTSIZE', (0, 0), (0, 0), 16),
-        ('BOTTOMPADDING', (0, 0), (0, 0), 10),
-        ('TOPPADDING', (0, 0), (0, 0), 10),
-        ('BOX', (0, 0), (0, 0), 1, HexColor('#e9ecef')),
-        ('ROUNDEDCORNERS', [5, 5, 5, 5]),
+        ('BACKGROUND', (0, 0), (0, 0), HexColor('#f0f6ff')),  # Light blue header
+        ('BACKGROUND', (0, 1), (0, 2), HexColor('#f8f9fa')),  # Light gray body
+        ('ALIGN', (0, 0), (0, 2), 'CENTER'),
+        ('VALIGN', (0, 0), (0, 2), 'MIDDLE'),
+        ('TEXTCOLOR', (0, 0), (0, 0), HexColor('#3498db')),   # Blue for header
+        ('TEXTCOLOR', (0, 1), (0, 1), HexColor(score_color)),
+        ('TEXTCOLOR', (0, 2), (0, 2), HexColor(score_color)),
+        ('FONTSIZE', (0, 0), (0, 0), 12),
+        ('FONTSIZE', (0, 1), (0, 1), 20),
+        ('FONTSIZE', (0, 2), (0, 2), 14),
+        ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (0, 2), 8),
+        ('TOPPADDING', (0, 0), (0, 2), 8),
+        ('GRID', (0, 0), (0, 2), 0.5, HexColor('#d2d6de')),
     ]))
     elements.append(score_table)
     elements.append(Spacer(1, 0.15*inch))
@@ -1840,6 +1896,69 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                 elements.append(Paragraph("Geen specifieke aanbevelingen beschikbaar.", normal_style))
             else:
                 elements.append(Paragraph("No specific recommendations available.", normal_style))
+    
+    # Add any generated images or charts from the scan
+    if include_charts:
+        chart_images = scan_data.get('chart_images', [])
+        if chart_images:
+            elements.append(PageBreak())
+            if current_lang == 'nl':
+                elements.append(Paragraph("<b>Visualisaties</b>", subheading_style))
+            else:
+                elements.append(Paragraph("<b>Visualizations</b>", subheading_style))
+            
+            elements.append(Spacer(1, 0.15*inch))
+            
+            # Process each chart image
+            for i, chart_info in enumerate(chart_images):
+                if isinstance(chart_info, dict):
+                    img_data = chart_info.get('data')
+                    img_title = chart_info.get('title', f'Chart {i+1}')
+                    img_type = chart_info.get('type', 'general')
+                    
+                    # Add image title
+                    elements.append(Paragraph(f"<b>{img_title}</b>", normal_style))
+                    
+                    if img_data:
+                        # Create Image object
+                        try:
+                            if isinstance(img_data, str) and img_data.startswith('data:image'):
+                                # Handle data URL
+                                img_format, img_data_encoded = img_data.split(';base64,')
+                                img_bytes = base64.b64decode(img_data_encoded)
+                                
+                                # Create a temporary file to store the image
+                                temp_img_path = f"temp_chart_{i}.png"
+                                with open(temp_img_path, 'wb') as f:
+                                    f.write(img_bytes)
+                                
+                                # Add image with appropriate sizing
+                                img = Image(temp_img_path, width=6*inch, height=4*inch)
+                                elements.append(img)
+                                
+                                # Clean up temp file
+                                try:
+                                    os.remove(temp_img_path)
+                                except:
+                                    pass
+                            elif isinstance(img_data, bytes):
+                                # Handle raw bytes
+                                temp_img_path = f"temp_chart_{i}.png"
+                                with open(temp_img_path, 'wb') as f:
+                                    f.write(img_data)
+                                
+                                img = Image(temp_img_path, width=6*inch, height=4*inch)
+                                elements.append(img)
+                                
+                                # Clean up temp file
+                                try:
+                                    os.remove(temp_img_path)
+                                except:
+                                    pass
+                        except Exception as e:
+                            elements.append(Paragraph(f"Error displaying chart: {str(e)}", normal_style))
+                        
+                    elements.append(Spacer(1, 0.2*inch))
     
     # If it's a GitHub repository scan, add code stats
     if ('github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower()) and include_details:
