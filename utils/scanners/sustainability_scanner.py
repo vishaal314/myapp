@@ -1028,20 +1028,24 @@ def display_sustainability_report(scan_results):
     with col1:
         if st.button("Generate PDF Report", type="primary"):
             with st.spinner("Generating sustainability report..."):
-                # Call report generator
-                report_path = generate_report(scan_results, "sustainability")
-                
-                # Display download link
-                if report_path and isinstance(report_path, dict) and 'report_path' in report_path:
-                    st.success("Report generated successfully!")
-                    st.download_button(
-                        label="Download PDF Report",
-                        data=open(report_path['report_path'], "rb"),
-                        file_name=f"sustainability_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                        mime="application/pdf"
-                    )
-                else:
-                    st.error("Failed to generate report. Please try again.")
+                try:
+                    # Call report generator - the function returns bytes, not a path
+                    report_data = generate_report(scan_results, report_format="sustainability")
+                    
+                    # Check if we have valid report data
+                    if report_data and isinstance(report_data, bytes):
+                        st.success("Report generated successfully!")
+                        st.download_button(
+                            label="Download PDF Report",
+                            data=report_data,
+                            file_name=f"sustainability_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                            mime="application/pdf"
+                        )
+                    else:
+                        st.error("Failed to generate report. Empty data returned.")
+                except Exception as e:
+                    st.error(f"Failed to generate report: {str(e)}")
+                    st.info("Please try again or check the logs for more information.")
     
     with col2:
         if st.button("Export as CSV"):
