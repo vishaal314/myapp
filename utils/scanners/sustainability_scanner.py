@@ -604,6 +604,15 @@ def run_code_analysis_scan():
             type=['py', 'js', 'ts', 'java', 'c', 'cpp', 'cs', 'go', 'rb'],
             help="Upload one or more code files for analysis. Supports Python, JavaScript, TypeScript, Java, C/C++, C#, Go, and Ruby."
         )
+        
+        # Region selection for better report context
+        region = st.selectbox(
+            "Region", 
+            ["Europe", "North America", "Asia", "South America", "Africa", "Australia", "Global"],
+            index=0,
+            help="Select the region where this code is primarily deployed/used for sustainability context."
+        )
+        
         has_source = bool(uploaded_files)
     else:
         # GitHub repository section
@@ -648,6 +657,14 @@ def run_code_analysis_scan():
             "Branch", 
             value="main",
             help="The branch to analyze. Defaults to 'main'."
+        )
+        
+        # Region selection for better report context
+        region = st.selectbox(
+            "Region", 
+            ["Europe", "North America", "Asia", "South America", "Africa", "Australia", "Global"],
+            index=0,
+            help="Select the region where this code is primarily deployed/used for sustainability context."
         )
         
         # Optional access token for private repositories
@@ -791,7 +808,7 @@ def run_code_analysis_scan():
                     'repository': github_url,
                     'repo_url': github_url,
                     'branch': branch if 'branch' in locals() else 'main',
-                    'region': 'Europe',  # Default region for code analysis
+                    'region': region if 'region' in locals() else 'Europe',  # Use selected region or default to Europe
                     'url': github_url,
                     'domain': domain,
                     'files_analyzed': random.randint(50, 200),
@@ -892,7 +909,7 @@ def run_code_analysis_scan():
                     'scan_type': 'Code Analysis',
                     'timestamp': datetime.now().isoformat(),
                     'files_analyzed': len(uploaded_files),
-                    'region': 'Europe',  # Default region for local code analysis
+                    'region': region if 'region' in locals() else 'Europe',  # Use selected region or default
                     'url': 'Local Files',
                     'domain': 'local.files',
                     'findings': [],
@@ -1341,10 +1358,13 @@ def display_github_sustainability_report(scan_results):
     branch = scan_results.get('branch', 'main')
     scan_timestamp = scan_results.get('timestamp', datetime.now().isoformat())
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    region = scan_results.get('region', 'Europe')
+    domain = scan_results.get('domain', 'github.com')
     
     # Summary section
-    st.subheader("Repository Overview")
+    st.subheader("Scan Overview")
     
+    # First row of metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -1353,6 +1373,16 @@ def display_github_sustainability_report(scan_results):
         st.metric("Branch", branch)
     with col3:
         st.metric("Scan Time", formatted_time)
+    
+    # Second row of metrics for region and domain
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Region", region)
+    with col2:
+        st.metric("Domain", domain)
+    with col3:
+        st.metric("Scan Type", scan_results.get('scan_type', 'Code Efficiency'))
     
     # Code stats overview
     code_stats = scan_results.get('code_stats', {})
@@ -1528,16 +1558,32 @@ def display_code_analysis_report(scan_results):
     files_analyzed = scan_results.get('files_analyzed', 0)
     scan_timestamp = scan_results.get('timestamp', datetime.now().isoformat())
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    region = scan_results.get('region', 'Europe')
+    domain = scan_results.get('domain', 'local.files')
+    scan_type = scan_results.get('scan_type', 'Code Analysis')
     
     # Summary section
-    st.subheader("Code Analysis Overview")
+    st.subheader("Scan Overview")
     
-    col1, col2 = st.columns(2)
+    # First row of metrics
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         st.metric("Files Analyzed", files_analyzed)
     with col2:
         st.metric("Scan Time", formatted_time)
+    with col3:
+        st.metric("Scan Type", scan_type)
+    
+    # Second row of metrics for region and domain
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Region", region)
+    with col2:
+        st.metric("Source", scan_results.get('url', 'Local Files'))
+    with col3:
+        st.metric("Domain", domain)
     
     # Findings section - same as other displays
     st.subheader("Findings")
@@ -1585,10 +1631,14 @@ def display_generic_sustainability_report(scan_results):
     scan_id = scan_results.get('scan_id', 'Unknown')
     scan_timestamp = scan_results.get('timestamp', datetime.now().isoformat())
     formatted_time = datetime.fromisoformat(scan_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    region = scan_results.get('region', 'Europe')
+    domain = scan_results.get('domain', 'unknown.domain')
+    url = scan_results.get('url', 'Not specified')
     
     # Summary section
-    st.subheader("Scan Summary")
+    st.subheader("Scan Overview")
     
+    # First row of metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -1597,6 +1647,16 @@ def display_generic_sustainability_report(scan_results):
         st.metric("Scan ID", scan_id)
     with col3:
         st.metric("Scan Time", formatted_time)
+    
+    # Second row of metrics for region and domain
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Region", region)
+    with col2:
+        st.metric("URL", url)
+    with col3:
+        st.metric("Domain", domain)
     
     # Findings section - same as other displays
     st.subheader("Findings")
