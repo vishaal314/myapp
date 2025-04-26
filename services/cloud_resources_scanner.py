@@ -1680,6 +1680,7 @@ class GithubRepoSustainabilityScanner:
         import os
         import subprocess
         import shutil
+        import multiprocessing
         
         scan_result = {
             'scan_id': f"repo-{int(time.time())}",
@@ -1706,25 +1707,62 @@ class GithubRepoSustainabilityScanner:
             
             self.temp_dir = tempfile.mkdtemp()
             
-            clone_cmd = f"git clone --depth 1 --branch {self.branch} {self.repo_url} {self.temp_dir}"
-            process = subprocess.run(clone_cmd, shell=True, capture_output=True, text=True)
+            # Use sparse checkout and other optimizations for large repositories
+            # This is much faster than a full clone for large repos like PyTorch
+            os.makedirs(self.temp_dir, exist_ok=True)
             
-            if process.returncode != 0:
-                raise ValueError(f"Failed to clone repository: {process.stderr}")
+            # Initialize git repo
+            subprocess.run(["git", "init"], cwd=self.temp_dir, check=True, capture_output=True)
+            
+            # Add remote
+            subprocess.run(
+                ["git", "remote", "add", "origin", self.repo_url], 
+                cwd=self.temp_dir, check=True, capture_output=True
+            )
+            
+            # Enable sparse checkout
+            subprocess.run(
+                ["git", "config", "core.sparseCheckout", "true"], 
+                cwd=self.temp_dir, check=True, capture_output=True
+            )
+            
+            # Create sparse checkout patterns to focus on specific file types
+            # We'll prioritize Python, JavaScript, and some config files
+            with open(os.path.join(self.temp_dir, ".git/info/sparse-checkout"), "w") as f:
+                f.write("*.py\n")
+                f.write("*.js\n")
+                f.write("*.json\n")
+                f.write("*.md\n")
+                f.write("*.yaml\n")
+                f.write("*.yml\n")
+                
+            # Fetch only the specific branch with limited depth and no tags
+            self._update_progress(current_step, total_steps, "Fetching repository (sparse checkout)")
+            subprocess.run(
+                ["git", "fetch", "--depth=1", "--no-tags", "origin", self.branch], 
+                cwd=self.temp_dir, check=True, capture_output=True
+            )
+            
+            # Checkout the branch
+            subprocess.run(
+                ["git", "checkout", self.branch], 
+                cwd=self.temp_dir, check=True, capture_output=True
+            )
             
             # Step 2: Analyze repository structure
             current_step += 1
             self._update_progress(current_step, total_steps, "Analyzing repository structure")
             
-            # Get repository statistics
+            # Get repository statistics using optimized, sampling-based approach
             file_stats = self._analyze_repository_structure()
             scan_result['code_stats'] = file_stats
             
             # Step 3: Analyze Python files for unused imports
             current_step += 1
-            self._update_progress(current_step, total_steps, "Analyzing Python imports")
+            self._update_progress(current_step, total_steps, "Analyzing Python imports (sample-based)")
             
-            unused_imports = self._find_unused_imports()
+            # Use optimized import analysis with parallelization and sampling
+            unused_imports = self._find_unused_imports_optimized()
             scan_result['unused_imports'] = unused_imports
             
             # Step 4: Identify large files
@@ -1745,6 +1783,10 @@ class GithubRepoSustainabilityScanner:
             # Calculate sustainability score
             scan_result['sustainability_score'] = self._calculate_sustainability_score(file_stats, unused_imports, large_files)
             
+            # Add additional metadata for very large repos
+            if file_stats.get('total_files', 0) > 10000:
+                scan_result['note'] = "Analysis was performed using sampling techniques due to repository size."
+            
             # Mark scan as completed
             scan_result['status'] = 'completed'
             
@@ -1759,7 +1801,10 @@ class GithubRepoSustainabilityScanner:
         finally:
             # Clean up temporary directory
             if self.temp_dir and os.path.exists(self.temp_dir):
-                shutil.rmtree(self.temp_dir)
+                try:
+                    shutil.rmtree(self.temp_dir)
+                except Exception as e:
+                    logger.error(f"Error cleaning up temporary directory: {str(e)}")
     
     def _analyze_repository_structure(self) -> Dict[str, Any]:
         """
