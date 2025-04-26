@@ -38,12 +38,21 @@ except ImportError:
             
         def scan_resources(self):
             # Simulate scanning with demo data
+            # Use the specified region or default to Europe
+            region = self.region if self.region and self.region != "global" else "Europe"
+            
+            # Generate URL/domain information based on provider
+            cloud_domain = f"{self.provider}.cloud-portal.com"
+            cloud_url = f"https://{cloud_domain}/{region.lower()}"
+            
             return {
                 'scan_id': f"sustainability-{int(time.time())}",
                 'scan_type': 'Sustainability',
                 'timestamp': datetime.now().isoformat(),
                 'provider': self.provider,
-                'region': self.region,
+                'region': region,
+                'url': cloud_url,
+                'domain': cloud_domain,
                 'resources': {
                     'virtual_machines': {'count': 10},
                     'disks': {'count': 15},
@@ -126,13 +135,26 @@ except ImportError:
             
         def scan_repository(self):
             # Simulate scanning with demo data
+            region = "Europe"  # Default region for sustainability scanning
+            
+            # Extract domain from the repo URL if available
+            domain = "github.com"
+            if self.repo_url and '://' in self.repo_url:
+                try:
+                    domain = self.repo_url.split('/')[2]
+                except IndexError:
+                    domain = "github.com"
+            
             return {
                 'scan_id': f"repo-{int(time.time())}",
                 'scan_type': 'Code Efficiency',
                 'timestamp': datetime.now().isoformat(),
                 'repo_url': self.repo_url,
                 'branch': self.branch,
-                'sustainability_score': 72,
+                'region': region,
+                'url': self.repo_url,
+                'domain': domain,
+                'sustainability_score': 90,
                 'code_stats': {
                     'total_files': 120,
                     'total_size_mb': 25.7,

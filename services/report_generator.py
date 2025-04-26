@@ -1994,16 +1994,19 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     # If it's a GitHub repository scan, add repository overview and code stats
     if ('github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower() or 'sustainability' in scan_type.lower()) and include_details:
         elements.append(PageBreak())
-        # Repository Overview
+        # Scan Overview
         if current_lang == 'nl':
-            elements.append(Paragraph("<b>Repository Overzicht</b>", subheading_style))
+            elements.append(Paragraph("<b>Scan Overzicht</b>", subheading_style))
         else:
-            elements.append(Paragraph("<b>Repository Overview</b>", subheading_style))
+            elements.append(Paragraph("<b>Scan Overview</b>", subheading_style))
         
         # Get repository information
         repo_name = scan_data.get('repo_url', 'Unknown').split('/')[-1] if '/' in scan_data.get('repo_url', 'Unknown') else scan_data.get('repo_url', 'Unknown')
         branch = scan_data.get('branch', 'main')
         scan_timestamp = scan_data.get('timestamp', datetime.now().isoformat())
+        region = scan_data.get('region', 'Europe')  # Default to Europe if not specified
+        url_domain = scan_data.get('url', scan_data.get('domain', 'Not available'))
+        
         formatted_time = ""
         try:
             if isinstance(scan_timestamp, str):
@@ -2013,32 +2016,46 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         except:
             formatted_time = str(scan_timestamp)
         
-        # Create repository overview table
-        repo_overview_data = []
+        # Create scan overview table
+        scan_overview_data = []
         if current_lang == 'nl':
-            repo_overview_data = [
-                ["Repository", repo_name],
-                ["Branch", branch],
-                ["Scan Tijd", formatted_time]
+            scan_overview_data = [
+                ["Scan Type", scan_data.get('scan_type', 'Code Efficiency')],
+                ["Regio", region],
+                ["Datum & Tijd", formatted_time],
+                ["Gescande URL/Domein", url_domain]
             ]
+            
+            # Only add repository info if relevant
+            if repo_name and repo_name != 'Unknown':
+                scan_overview_data.append(["Repository", repo_name])
+                scan_overview_data.append(["Branch", branch])
         else:
-            repo_overview_data = [
-                ["Repository", repo_name],
-                ["Branch", branch],
-                ["Scan Time", formatted_time]
+            scan_overview_data = [
+                ["Scan Type", scan_data.get('scan_type', 'Code Efficiency')],
+                ["Region", region],
+                ["Date & Time", formatted_time],
+                ["Scanned URL/Domain", url_domain]
             ]
+            
+            # Only add repository info if relevant
+            if repo_name and repo_name != 'Unknown':
+                scan_overview_data.append(["Repository", repo_name])
+                scan_overview_data.append(["Branch", branch])
         
-        repo_overview_table = Table(repo_overview_data, colWidths=[2*inch, 4*inch])
-        repo_overview_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), HexColor('#f8f9fa')),
-            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+        # Create a well-formatted overview table with improved styling
+        scan_overview_table = Table(scan_overview_data, colWidths=[2*inch, 4*inch])
+        scan_overview_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), HexColor('#f1f5f9')),  # Lighter header background
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#cbd5e1')),  # Softer grid lines
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),  # Increased padding
+            ('TOPPADDING', (0, 0), (-1, -1), 6),     # Increased padding
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),  # Bold headers
         ]))
-        elements.append(repo_overview_table)
-        elements.append(Spacer(1, 0.15*inch))
+        elements.append(scan_overview_table)
+        elements.append(Spacer(1, 0.2*inch))
         
         # Code Statistics
         if current_lang == 'nl':
