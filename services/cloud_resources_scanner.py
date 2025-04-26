@@ -1809,6 +1809,171 @@ class GithubRepoSustainabilityScanner:
     def _analyze_repository_structure(self) -> Dict[str, Any]:
         """
         Analyze the repository structure and gather file statistics.
+        Optimized for large repositories with more efficient file analysis.
+        
+        Returns:
+            Dictionary with file statistics
+        """
+        import os
+        import subprocess
+        import re
+        import random
+        
+        file_stats = {
+            'total_files': 0,
+            'total_size_mb': 0,
+            'file_types': {},
+            'file_count_by_type': {},
+            'size_by_type_mb': {},
+            'largest_files': [],
+            'language_breakdown': {}
+        }
+        
+        # Try using git commands for faster repository analysis on large repos
+        try:
+            # Get total file count first
+            file_count_cmd = ["git", "-C", self.temp_dir, "ls-files", "--exclude-standard", "--cached", "|", "wc", "-l"]
+            file_count_process = subprocess.run(" ".join(file_count_cmd), shell=True, capture_output=True, text=True)
+            
+            if file_count_process.returncode == 0 and file_count_process.stdout.strip():
+                try:
+                    total_files = int(file_count_process.stdout.strip())
+                    file_stats['total_files'] = total_files
+                    
+                    # For very large repos, we'll use sampling to avoid processing all files
+                    use_sampling = total_files > 5000
+                    
+                    if use_sampling:
+                        logger.info(f"Large repository detected with {total_files} files. Using sampling for analysis.")
+                        
+                    # Get file types and sizes
+                    file_list_cmd = ["git", "-C", self.temp_dir, "ls-files", "--exclude-standard", "--cached"]
+                    file_list_process = subprocess.run(file_list_cmd, capture_output=True, text=True)
+                    
+                    if file_list_process.returncode == 0:
+                        all_files = []
+                        
+                        # Sample files if there are too many to process efficiently
+                        file_paths = file_list_process.stdout.strip().split('\n')
+                        
+                        # For very large repos, limit to 5000 files max for detailed analysis
+                        if use_sampling:
+                            # Set a max sample size with a minimum 10% of repo files
+                            sample_size = min(5000, max(500, int(total_files * 0.1)))
+                            file_paths = random.sample(file_paths, sample_size)
+                            
+                        for file_path in file_paths:
+                            if not file_path.strip():
+                                continue
+                                
+                            full_path = os.path.join(self.temp_dir, file_path)
+                            if os.path.exists(full_path) and os.path.isfile(full_path):
+                                file_size = os.path.getsize(full_path)
+                                file_extension = os.path.splitext(file_path)[1].lower()
+                                
+                                # Collect file information
+                                file_info = {
+                                    'path': file_path,
+                                    'size': file_size,
+                                    'size_mb': file_size / (1024 * 1024),
+                                    'extension': file_extension
+                                }
+                                
+                                all_files.append(file_info)
+                                
+                                # Update statistics
+                                file_stats['total_size_mb'] += file_info['size_mb']
+                                
+                                # Update file type stats
+                                if file_extension not in file_stats['file_types']:
+                                    file_stats['file_types'][file_extension] = []
+                                    file_stats['file_count_by_type'][file_extension] = 0
+                                    file_stats['size_by_type_mb'][file_extension] = 0
+                                
+                                file_stats['file_types'][file_extension].append(file_info['path'])
+                                file_stats['file_count_by_type'][file_extension] += 1
+                                file_stats['size_by_type_mb'][file_extension] += file_info['size_mb']
+                        
+                        # If we're using sampling, scale up the totals to represent the full repo
+                        if use_sampling:
+                            scaling_factor = total_files / len(file_paths)
+                            file_stats['total_size_mb'] *= scaling_factor
+                            
+                            for ext in file_stats['file_count_by_type']:
+                                file_stats['file_count_by_type'][ext] = int(file_stats['file_count_by_type'][ext] * scaling_factor)
+                                file_stats['size_by_type_mb'][ext] *= scaling_factor
+                            
+                            # Add a note that these are estimated values
+                            file_stats['sampling_note'] = f"Repository statistics estimated by sampling {len(file_paths)} of {total_files} files."
+                        
+                        # Sort files by size and get the largest files
+                        all_files.sort(key=lambda x: x['size'], reverse=True)
+                        file_stats['largest_files'] = all_files[:20]  # Top 20 largest files
+                except (ValueError, IndexError) as e:
+                    logger.warning(f"Error parsing git file count output: {str(e)}")
+                    # Fall back to regular file analysis
+                    return self._analyze_repository_structure_fallback()
+            else:
+                # Fall back to regular file analysis
+                return self._analyze_repository_structure_fallback()
+                
+            # Determine language breakdown
+            language_mapping = {
+                '.py': 'Python',
+                '.js': 'JavaScript',
+                '.jsx': 'JavaScript',
+                '.ts': 'TypeScript',
+                '.tsx': 'TypeScript',
+                '.java': 'Java',
+                '.cpp': 'C++',
+                '.c': 'C',
+                '.h': 'C/C++ Headers',
+                '.hpp': 'C++ Headers',
+                '.cs': 'C#',
+                '.go': 'Go',
+                '.rb': 'Ruby',
+                '.php': 'PHP',
+                '.swift': 'Swift',
+                '.kt': 'Kotlin',
+                '.rs': 'Rust',
+                '.html': 'HTML',
+                '.css': 'CSS',
+                '.scss': 'CSS',
+                '.sass': 'CSS',
+                '.md': 'Markdown',
+                '.json': 'JSON',
+                '.yml': 'YAML',
+                '.yaml': 'YAML',
+                '.sql': 'SQL',
+                '.sh': 'Shell',
+                '.bat': 'Batch',
+                '.ps1': 'PowerShell',
+                '.ipynb': 'Jupyter Notebook'
+            }
+            
+            language_stats = {}
+            for ext, count in file_stats['file_count_by_type'].items():
+                language = language_mapping.get(ext, 'Other')
+                if language not in language_stats:
+                    language_stats[language] = {
+                        'file_count': 0,
+                        'size_mb': 0
+                    }
+                
+                language_stats[language]['file_count'] += count
+                language_stats[language]['size_mb'] += file_stats['size_by_type_mb'].get(ext, 0)
+            
+            file_stats['language_breakdown'] = language_stats
+            
+            return file_stats
+        except Exception as e:
+            logger.warning(f"Error during optimized repository analysis: {str(e)}. Falling back to standard analysis.")
+            return self._analyze_repository_structure_fallback()
+    
+    def _analyze_repository_structure_fallback(self) -> Dict[str, Any]:
+        """
+        Fallback method for analyzing repository structure.
+        Uses traditional file system walking.
         
         Returns:
             Dictionary with file statistics
@@ -1908,9 +2073,117 @@ class GithubRepoSustainabilityScanner:
         
         return file_stats
     
+    def _find_unused_imports_optimized(self) -> List[Dict[str, Any]]:
+        """
+        Find unused imports in Python files using optimized techniques for large repositories.
+        Uses sampling, parallelization, and early termination for better performance.
+        
+        Returns:
+            List of dictionaries with unused import information
+        """
+        import os
+        import subprocess
+        import random
+        import multiprocessing
+        from functools import partial
+        
+        unused_imports = []
+        
+        # Check if pyflakes is available
+        try:
+            subprocess.run(['pyflakes', '--version'], capture_output=True, check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            # If pyflakes is not available, install it
+            try:
+                subprocess.run(['pip', 'install', 'pyflakes'], check=True)
+            except subprocess.CalledProcessError:
+                logger.warning("Failed to install pyflakes. Unused import detection will be limited.")
+                return unused_imports
+        
+        # Find Python files
+        python_files = []
+        for root, _, files in os.walk(self.temp_dir):
+            # Skip .git directory and test directories
+            if '.git' in root or 'test' in root.lower() or 'examples' in root.lower():
+                continue
+                
+            for file in files:
+                if file.endswith('.py'):
+                    # Skip test files, they often have intentionally unused imports
+                    if 'test_' in file.lower() or 'example' in file.lower():
+                        continue
+                    python_files.append(os.path.join(root, file))
+        
+        # For very large repos, use sampling
+        total_files = len(python_files)
+        
+        # For extremely large repos like PyTorch, limit to max 500 files
+        if total_files > 500:
+            logger.info(f"Large repository detected ({total_files} Python files). Using sampling for analysis.")
+            # Randomly sample files to keep analysis fast
+            python_files = random.sample(python_files, 500)
+        
+        # Define a function to analyze a single file with pyflakes
+        def analyze_file(file_path):
+            try:
+                result = subprocess.run(['pyflakes', file_path], capture_output=True, text=True, timeout=5)
+                file_results = []
+                
+                if result.stdout:
+                    # Parse pyflakes output
+                    for line in result.stdout.splitlines():
+                        if 'imported but unused' in line:
+                            parts = line.split(':')
+                            if len(parts) >= 3:
+                                file_rel_path = os.path.relpath(file_path, self.temp_dir)
+                                line_num = int(parts[1])
+                                message = ':'.join(parts[2:]).strip()
+                                
+                                # Extract the import name
+                                import_name = message.split("'")[1] if "'" in message else message
+                                
+                                file_results.append({
+                                    'file': file_rel_path,
+                                    'line': line_num,
+                                    'import': import_name,
+                                    'message': message
+                                })
+                return file_results
+            except Exception as e:
+                logger.warning(f"Error analyzing imports in {file_path}: {str(e)}")
+                return []
+        
+        # Use multiprocessing pool to parallelize analysis
+        # Use a reasonable number of processes based on CPU cores
+        num_processes = min(multiprocessing.cpu_count(), 4)  # Cap at 4 to avoid overloading
+        
+        try:
+            # Process files in parallel batches
+            with multiprocessing.Pool(processes=num_processes) as pool:
+                results = pool.map(analyze_file, python_files)
+            
+            # Flatten results
+            for file_results in results:
+                unused_imports.extend(file_results)
+            
+            # Limit results to avoid overwhelming the report
+            if len(unused_imports) > 100:
+                unused_imports = unused_imports[:100]
+        except Exception as e:
+            logger.error(f"Error in parallel processing of unused imports: {str(e)}")
+            # Fallback to sequential processing for a sample of files
+            if len(python_files) > 50:
+                python_files = random.sample(python_files, 50)
+            
+            for file_path in python_files:
+                unused_imports.extend(analyze_file(file_path))
+            
+        return unused_imports
+    
     def _find_unused_imports(self) -> List[Dict[str, Any]]:
         """
         Find unused imports in Python files.
+        This is a legacy method, the optimized version is preferred for large repositories.
         
         Returns:
             List of dictionaries with unused import information
@@ -1973,7 +2246,7 @@ class GithubRepoSustainabilityScanner:
     
     def _find_large_files(self, threshold_mb: float = 1.0) -> List[Dict[str, Any]]:
         """
-        Find large files in the repository.
+        Find large files in the repository with optimizations for large repositories.
         
         Args:
             threshold_mb: Size threshold in MB
@@ -1982,59 +2255,154 @@ class GithubRepoSustainabilityScanner:
             List of dictionaries with large file information
         """
         import os
+        import subprocess
+        import re
         
         large_files = []
         
-        for root, _, files in os.walk(self.temp_dir):
-            # Skip .git directory
-            if '.git' in root:
-                continue
+        # For large repositories, use git command to efficiently find large files
+        # This is much faster than walking the entire directory tree
+        try:
+            # Try using git ls-files with object size information first
+            git_cmd = [
+                "git", "-C", self.temp_dir, "ls-files", 
+                "--exclude-standard", "--cached", "-z"
+            ]
+            
+            # Use a pipeline approach with git cat-file to get file sizes
+            # This is more efficient than walking the directory
+            ls_files_process = subprocess.Popen(
+                git_cmd, 
+                stdout=subprocess.PIPE
+            )
+            
+            # Use xargs to batch process files with git cat-file
+            xargs_process = subprocess.Popen(
+                ["xargs", "-0", "git", "-C", self.temp_dir, "cat-file", "-s"],
+                stdin=ls_files_process.stdout,
+                stdout=subprocess.PIPE,
+                text=True
+            )
+            
+            # Close the pipe in the first process to avoid deadlocks
+            ls_files_process.stdout.close()
+            
+            # Read file sizes from git cat-file
+            file_sizes = xargs_process.communicate()[0].strip().split('\n')
+            
+            # Get the list of files again to match with sizes
+            files_process = subprocess.run(
+                git_cmd,
+                capture_output=True,
+                text=True
+            )
+            
+            if files_process.returncode == 0:
+                files = files_process.stdout.strip().split('\0')
                 
-            for file in files:
-                file_path = os.path.join(root, file)
-                file_size = os.path.getsize(file_path)
-                file_size_mb = file_size / (1024 * 1024)
-                
-                if file_size_mb >= threshold_mb:
-                    file_ext = os.path.splitext(file)[1].lower()
-                    file_rel_path = os.path.relpath(file_path, self.temp_dir)
+                # Match files with their sizes
+                for i, file_path in enumerate(files):
+                    if i < len(file_sizes) and file_path:
+                        try:
+                            # Convert size from git cat-file output (in bytes)
+                            file_size = int(file_sizes[i])
+                            file_size_mb = file_size / (1024 * 1024)
+                            
+                            if file_size_mb >= threshold_mb:
+                                full_path = os.path.join(self.temp_dir, file_path)
+                                file_ext = os.path.splitext(file_path)[1].lower()
+                                
+                                # Determine file category
+                                file_category = 'Other'
+                                recommendation = ''
+                                
+                                # Categorize by extension
+                                if file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg']:
+                                    file_category = 'Image'
+                                    recommendation = 'Compress image or use optimized formats'
+                                elif file_ext in ['.mp4', '.avi', '.mov', '.wmv']:
+                                    file_category = 'Video'
+                                    recommendation = 'Store as link or in cloud storage'
+                                elif file_ext in ['.pdf', '.doc', '.docx', '.ppt', '.pptx']:
+                                    file_category = 'Document'
+                                    recommendation = 'Store as link or in cloud storage'
+                                elif file_ext in ['.csv', '.xlsx', '.json', '.xml', '.db', '.sqlite']:
+                                    file_category = 'Data'
+                                    recommendation = 'Consider using data versioning tools or cloud storage'
+                                elif file_ext in ['.zip', '.tar', '.gz', '.rar']:
+                                    file_category = 'Archive'
+                                    recommendation = 'Extract necessary files or store elsewhere'
+                                elif file_ext in ['.so', '.dll', '.exe', '.bin']:
+                                    file_category = 'Binary'
+                                    recommendation = 'Store in releases rather than in the repository'
+                                
+                                large_files.append({
+                                    'file': file_path,
+                                    'size_bytes': file_size,
+                                    'size_mb': file_size_mb,
+                                    'extension': file_ext,
+                                    'category': file_category,
+                                    'recommendation': recommendation
+                                })
+                        except (ValueError, IndexError):
+                            continue
+        except Exception as e:
+            logger.warning(f"Error using git for file size analysis: {str(e)}. Falling back to manual search.")
+            # Fallback to regular file walking for non-git repos or if git commands fail
+            for root, _, files in os.walk(self.temp_dir):
+                # Skip .git directory
+                if '.git' in root:
+                    continue
                     
-                    # Determine file category
-                    file_category = 'Other'
-                    recommendation = ''
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    file_size = os.path.getsize(file_path)
+                    file_size_mb = file_size / (1024 * 1024)
                     
-                    # Categorize by extension
-                    if file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg']:
-                        file_category = 'Image'
-                        recommendation = 'Compress image or use optimized formats'
-                    elif file_ext in ['.mp4', '.avi', '.mov', '.wmv']:
-                        file_category = 'Video'
-                        recommendation = 'Store as link or in cloud storage'
-                    elif file_ext in ['.pdf', '.doc', '.docx', '.ppt', '.pptx']:
-                        file_category = 'Document'
-                        recommendation = 'Store as link or in cloud storage'
-                    elif file_ext in ['.csv', '.xlsx', '.json', '.xml', '.db', '.sqlite']:
-                        file_category = 'Data'
-                        recommendation = 'Consider using data versioning tools or cloud storage'
-                    elif file_ext in ['.zip', '.tar', '.gz', '.rar']:
-                        file_category = 'Archive'
-                        recommendation = 'Extract necessary files or store elsewhere'
-                    elif file_ext in ['.so', '.dll', '.exe', '.bin']:
-                        file_category = 'Binary'
-                        recommendation = 'Store in releases rather than in the repository'
-                    
-                    large_files.append({
-                        'file': file_rel_path,
-                        'size_bytes': file_size,
-                        'size_mb': file_size_mb,
-                        'extension': file_ext,
-                        'category': file_category,
-                        'recommendation': recommendation
-                    })
+                    if file_size_mb >= threshold_mb:
+                        file_ext = os.path.splitext(file)[1].lower()
+                        file_rel_path = os.path.relpath(file_path, self.temp_dir)
+                        
+                        # Determine file category
+                        file_category = 'Other'
+                        recommendation = ''
+                        
+                        # Categorize by extension
+                        if file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg']:
+                            file_category = 'Image'
+                            recommendation = 'Compress image or use optimized formats'
+                        elif file_ext in ['.mp4', '.avi', '.mov', '.wmv']:
+                            file_category = 'Video'
+                            recommendation = 'Store as link or in cloud storage'
+                        elif file_ext in ['.pdf', '.doc', '.docx', '.ppt', '.pptx']:
+                            file_category = 'Document'
+                            recommendation = 'Store as link or in cloud storage'
+                        elif file_ext in ['.csv', '.xlsx', '.json', '.xml', '.db', '.sqlite']:
+                            file_category = 'Data'
+                            recommendation = 'Consider using data versioning tools or cloud storage'
+                        elif file_ext in ['.zip', '.tar', '.gz', '.rar']:
+                            file_category = 'Archive'
+                            recommendation = 'Extract necessary files or store elsewhere'
+                        elif file_ext in ['.so', '.dll', '.exe', '.bin']:
+                            file_category = 'Binary'
+                            recommendation = 'Store in releases rather than in the repository'
+                        
+                        large_files.append({
+                            'file': file_rel_path,
+                            'size_bytes': file_size,
+                            'size_mb': file_size_mb,
+                            'extension': file_ext,
+                            'category': file_category,
+                            'recommendation': recommendation
+                        })
         
+        # Limit results to top 50 largest files to avoid overwhelming the report
         # Sort by size (largest first)
         large_files.sort(key=lambda x: x['size_bytes'], reverse=True)
         
+        if len(large_files) > 50:
+            large_files = large_files[:50]
+            
         return large_files
     
     def _generate_findings_recommendations(self, file_stats: Dict[str, Any], unused_imports: List[Dict[str, Any]], 
