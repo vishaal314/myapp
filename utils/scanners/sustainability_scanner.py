@@ -480,23 +480,23 @@ def run_github_repo_scan():
     )
     
     # Advanced options
-    with st.expander("Advanced Options"):
-        depth_limit = st.slider(
-            "Scan Depth", 
-            min_value=1, 
-            max_value=5, 
-            value=3,
-            help="Maximum directory depth to scan. Higher values will analyze more files but take longer."
-        )
-        
-        file_limit = st.number_input(
-            "Maximum Files", 
-            min_value=100, 
-            max_value=10000, 
-            value=1000, 
-            step=100,
-            help="Maximum number of files to scan. Increase for more comprehensive analysis of large repositories."
-        )
+    st.subheader("Advanced Options")
+    depth_limit = st.slider(
+        "Scan Depth", 
+        min_value=1, 
+        max_value=5, 
+        value=3,
+        help="Maximum directory depth to scan. Higher values will analyze more files but take longer."
+    )
+    
+    file_limit = st.number_input(
+        "Maximum Files", 
+        min_value=100, 
+        max_value=10000, 
+        value=1000, 
+        step=100,
+        help="Maximum number of files to scan. Increase for more comprehensive analysis of large repositories."
+    )
     
     # Scan button
     scan_col1, scan_col2 = st.columns([3, 1])
@@ -660,41 +660,45 @@ def run_code_analysis_scan():
     )
     
     # Advanced options
-    with st.expander("Advanced Options"):
-        if source_type == "GitHub Repository":
-            depth_limit = st.slider(
-                "Directory Depth", 
-                min_value=1, 
-                max_value=5, 
-                value=3,
-                help="Maximum directory depth to scan. Higher values analyze more files but take longer."
-            )
-            
-            file_limit = st.number_input(
-                "Maximum Files", 
-                min_value=50, 
-                max_value=5000, 
-                value=500, 
-                step=50,
-                help="Maximum number of files to analyze. Increase for more comprehensive analysis."
-            )
-        
-        complexity_threshold = st.slider(
-            "Complexity Threshold", 
-            min_value=5, 
-            max_value=50, 
-            value=15,
-            help="Minimum cyclomatic complexity to flag a function or method as complex."
+    st.subheader("Advanced Options")
+    if source_type == "GitHub Repository":
+        depth_limit = st.slider(
+            "Directory Depth", 
+            min_value=1, 
+            max_value=5, 
+            value=3,
+            help="Maximum directory depth to scan. Higher values analyze more files but take longer.",
+            key="code_depth_limit"
         )
         
-        unused_threshold = st.slider(
-            "Import Usage Confidence", 
-            min_value=0.5, 
-            max_value=1.0, 
-            value=0.8, 
-            step=0.05,
-            help="Confidence threshold for detecting unused imports."
+        file_limit = st.number_input(
+            "Maximum Files", 
+            min_value=50, 
+            max_value=5000, 
+            value=500, 
+            step=50,
+            help="Maximum number of files to analyze. Increase for more comprehensive analysis.",
+            key="code_file_limit"
         )
+    
+    complexity_threshold = st.slider(
+        "Complexity Threshold", 
+        min_value=5, 
+        max_value=50, 
+        value=15,
+        help="Minimum cyclomatic complexity to flag a function or method as complex.",
+        key="code_complexity_threshold"
+    )
+    
+    unused_threshold = st.slider(
+        "Import Usage Confidence", 
+        min_value=0.5, 
+        max_value=1.0, 
+        value=0.8, 
+        step=0.05,
+        help="Confidence threshold for detecting unused imports.",
+        key="code_unused_threshold"
+    )
     
     # Scan button
     col1, col2 = st.columns([3, 1])
