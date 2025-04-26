@@ -1415,25 +1415,11 @@ def display_github_sustainability_report(scan_results):
     else:
         st.info("No findings available.")
     
-    # Recommendations section - same as cloud display
+    # Recommendations section
     st.subheader("Recommendations")
     
     recommendations = scan_results.get('recommendations', [])
-    
-    if recommendations:
-        for i, rec in enumerate(recommendations):
-            with st.expander(f"{i+1}. {rec.get('title', 'Recommendation')}"):
-                st.write(rec.get('description', ''))
-                
-                st.write("**Priority:** ", rec.get('priority', 'Medium'))
-                st.write("**Impact:** ", rec.get('impact', 'Medium'))
-                
-                if 'steps' in rec:
-                    st.write("**Steps:**")
-                    for step in rec['steps']:
-                        st.write(f"- {step}")
-    else:
-        st.info("No recommendations available.")
+    display_recommendations_list(recommendations)
 
 
 def display_code_analysis_report(scan_results):
@@ -1485,25 +1471,11 @@ def display_code_analysis_report(scan_results):
     else:
         st.info("No findings available.")
     
-    # Recommendations section - same as other displays
+    # Recommendations section
     st.subheader("Recommendations")
     
     recommendations = scan_results.get('recommendations', [])
-    
-    if recommendations:
-        for i, rec in enumerate(recommendations):
-            with st.expander(f"{i+1}. {rec.get('title', 'Recommendation')}"):
-                st.write(rec.get('description', ''))
-                
-                st.write("**Priority:** ", rec.get('priority', 'Medium'))
-                st.write("**Impact:** ", rec.get('impact', 'Medium'))
-                
-                if 'steps' in rec:
-                    st.write("**Steps:**")
-                    for step in rec['steps']:
-                        st.write(f"- {step}")
-    else:
-        st.info("No recommendations available.")
+    display_recommendations_list(recommendations)
 
 
 def display_generic_sustainability_report(scan_results):
@@ -1558,8 +1530,13 @@ def display_generic_sustainability_report(scan_results):
     else:
         st.info("No findings available.")
     
-    # Display raw scan data if requested
-    with st.expander("Show Raw Scan Data"):
+    # Recommendations section (if available)
+    if 'recommendations' in scan_results and scan_results['recommendations']:
+        st.subheader("Recommendations")
+        display_recommendations_list(scan_results.get('recommendations', []))
+    
+    # Display raw scan data if requested (using button instead of expander)
+    if st.button("Show/Hide Raw Scan Data"):
         st.json(scan_results)
 
 
