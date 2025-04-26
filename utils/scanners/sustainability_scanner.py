@@ -1260,6 +1260,34 @@ def display_sustainability_report(scan_results):
     st.divider()
     st.header("Sustainability Scan Results")
     
+    # Extract or calculate the sustainability score
+    sustainability_score = scan_results.get('sustainability_score', 0)
+    if not sustainability_score:
+        # Check if it's nested in scan_data
+        if isinstance(scan_results.get('scan_data'), dict):
+            sustainability_score = scan_results.get('scan_data', {}).get('sustainability_score', 0)
+    
+    # Display the overall sustainability score at the top
+    st.subheader("Sustainability Score")
+    
+    # Style the score with appropriate color
+    score_color = "#ef4444"  # Red for low scores
+    if sustainability_score >= 80:
+        score_color = "#10b981"  # Green for high scores
+    elif sustainability_score >= 50:
+        score_color = "#f97316"  # Orange for medium scores
+    
+    # Display score with styling
+    st.markdown(
+        f"""
+        <div style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; text-align: center;">
+            <h1 style="color: {score_color}; font-size: 2.5rem; margin: 0;">{int(sustainability_score)}<span style="font-size: 1.5rem;">/100</span></h1>
+            <p style="margin: 0;">Data Sustainability Index</p>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    
     # Display appropriate report based on scan type
     scan_type = scan_results.get('scan_type', '').lower()
     
