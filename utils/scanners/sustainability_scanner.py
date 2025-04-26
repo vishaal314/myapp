@@ -856,7 +856,8 @@ def run_code_analysis_scan():
         branch = st.text_input(
             "Branch", 
             value="main",
-            help="The branch to analyze. Defaults to 'main'."
+            help="The branch to analyze. Defaults to 'main'.",
+            key="code_analysis_branch"
         )
         
         # Region selection for better report context
