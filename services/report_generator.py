@@ -1,6 +1,7 @@
 import io
 import os
 import base64
+import math
 import streamlit as st
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -203,87 +204,158 @@ class ComplianceBanner(Flowable):
         renderPDF.draw(d, self.canv, 0, 0)
 
 class SustainabilityMeter(Flowable):
-    """A custom flowable that creates a sustainability compliance meter."""
+    """A custom flowable that creates a sustainability compliance meter with enhanced visuals."""
     
     def __init__(self, sustainability_score, language='en'):
         Flowable.__init__(self)
-        self.sustainability_score = min(max(sustainability_score, 0), 100)  # Ensure between 0-100
+        # Ensure score is an integer between 0-100
+        try:
+            self.sustainability_score = min(max(int(sustainability_score), 0), 100)
+        except (ValueError, TypeError):
+            # Default to 70 if score is invalid
+            self.sustainability_score = 70
+            
         self.language = language
-        self.width = 250
-        self.height = 80
+        self.width = 400
+        self.height = 120
     
     def draw(self):
         # Drawing with width and height
         d = Drawing(self.width, self.height)
         
+        # Add a soft background for the entire meter
+        background_rect = Rect(0, 0, self.width, self.height,
+                            fillColor=HexColor('#f8f9fa'),
+                            strokeColor=HexColor('#e2e8f0'),
+                            strokeWidth=1)
+        d.add(background_rect)
+        
         # Title with language support
         if self.language == 'nl':
-            title_text = "Gegevens Duurzaamheidsindex"
+            title_text = "Duurzaamheidsindex"
         else:
-            title_text = "Data Sustainability Index"
+            title_text = "Sustainability Index"
             
-        title = String(10, self.height - 15, 
+        title = String(self.width/2 - 50, self.height - 20, 
                       title_text, 
-                      fontSize=12, 
+                      fontSize=16, 
                       fillColor=HexColor('#2c3e50'))
         d.add(title)
         
-        # Background bar
-        bar_height = 15
-        bar_y = self.height - 40
-        background = Rect(10, bar_y, self.width - 20, bar_height, 
-                         fillColor=HexColor('#ecf0f1'), 
-                         strokeColor=None)
-        d.add(background)
+        # Create circular gauge
+        center_x = self.width / 2
+        center_y = self.height / 2 - 5
+        outer_radius = 40
+        inner_radius = 35
         
-        # Calculate progress width
-        progress_width = (self.width - 20) * (self.sustainability_score / 100)
+        # Draw background circle (light gray)
+        outer_circle = Circle(center_x, center_y, outer_radius,
+                             fillColor=None,
+                             strokeColor=HexColor('#e2e8f0'),
+                             strokeWidth=2)
+        d.add(outer_circle)
         
         # Determine color based on score with language support for status text
-        if self.sustainability_score >= 75:
-            color = HexColor('#27ae60')  # Green
+        if self.sustainability_score >= 80:
+            color = HexColor('#10b981')  # Green
             status = "Uitstekend" if self.language == 'nl' else "Excellent"
-        elif self.sustainability_score >= 50:
-            color = HexColor('#2ecc71')  # Light green
+        elif self.sustainability_score >= 60:
+            color = HexColor('#34d399')  # Light green
             status = "Goed" if self.language == 'nl' else "Good"
-        elif self.sustainability_score >= 25:
-            color = HexColor('#f39c12')  # Orange
+        elif self.sustainability_score >= 40:
+            color = HexColor('#fbbf24')  # Yellow
+            status = "Voldoende" if self.language == 'nl' else "Satisfactory"
+        elif self.sustainability_score >= 20:
+            color = HexColor('#f97316')  # Orange
             status = "Redelijk" if self.language == 'nl' else "Fair"
         else:
-            color = HexColor('#e74c3c')  # Red
+            color = HexColor('#ef4444')  # Red
             status = "Slecht" if self.language == 'nl' else "Poor"
         
-        # Progress bar
-        progress = Rect(10, bar_y, progress_width, bar_height, 
-                       fillColor=color, 
-                       strokeColor=None)
-        d.add(progress)
+        # Calculate arc based on score (0-100% = 0-360 degrees)
+        end_angle = 360 * self.sustainability_score / 100
         
-        # Score text
-        score_text = String(self.width - 30, bar_y + 3, 
-                           f"{self.sustainability_score}%", 
-                           fontSize=10, 
-                           fillColor=colors.white if self.sustainability_score > 50 else colors.black)
+        # Add colorful progress arc
+        for i in range(0, min(int(end_angle), 360), 5):
+            # Create a gradient effect
+            if i < 120:  # First third - red to yellow
+                segment_color = HexColor('#ef4444') if self.sustainability_score < 40 else HexColor('#f97316')
+            elif i < 240:  # Second third - yellow to light green
+                segment_color = HexColor('#fbbf24') if self.sustainability_score < 70 else HexColor('#34d399')
+            else:  # Final third - light green to green
+                segment_color = HexColor('#10b981')
+                
+            # Draw arc segment
+            arc = Wedge(center_x, center_y, outer_radius, i, min(i+5, end_angle),
+                       fillColor=None, 
+                       strokeColor=segment_color,
+                       strokeWidth=5)
+            d.add(arc)
+        
+        # Add inner circle (white backdrop for text)
+        inner_circle = Circle(center_x, center_y, inner_radius - 15,
+                             fillColor=colors.white,
+                             strokeColor=None)
+        d.add(inner_circle)
+        
+        # Add score text in the center
+        score_text = String(center_x - 15, center_y - 5, 
+                           f"{self.sustainability_score}", 
+                           fontSize=20, 
+                           fillColor=color)
         d.add(score_text)
         
-        # Status text with language support
-        status_prefix = "Status: "
-        status_text = String(10, bar_y - 15, 
-                            f"{status_prefix}{status}", 
+        # Add /100 below score
+        denominator = String(center_x - 10, center_y - 20, 
+                            "/100", 
+                            fontSize=10, 
+                            fillColor=HexColor('#64748b'))
+        d.add(denominator)
+        
+        # Add status text
+        status_text = String(center_x - 20, center_y + 25, 
+                            f"{status}", 
                             fontSize=10, 
                             fillColor=color)
         d.add(status_text)
         
+        # Add scale markings
+        for i in range(0, 101, 25):
+            # Convert percentage to angle
+            angle = math.radians(360 * i / 100)
+            
+            # Calculate outer and inner positions
+            outer_x = center_x + (outer_radius + 5) * math.sin(angle)
+            outer_y = center_y + (outer_radius + 5) * math.cos(angle)
+            inner_x = center_x + (outer_radius - 2) * math.sin(angle)
+            inner_y = center_y + (outer_radius - 2) * math.cos(angle)
+            
+            # Add marking line
+            mark = Line(inner_x, inner_y, outer_x, outer_y,
+                       strokeColor=HexColor('#94a3b8'),
+                       strokeWidth=1)
+            d.add(mark)
+            
+            # Add label
+            label_x = center_x + (outer_radius + 15) * math.sin(angle) - 6
+            label_y = center_y + (outer_radius + 15) * math.cos(angle) - 5
+            
+            label = String(label_x, label_y, 
+                         f"{i}", 
+                         fontSize=8, 
+                         fillColor=HexColor('#64748b'))
+            d.add(label)
+        
         # Description text with language support
         if self.language == 'nl':
-            description_text = "Meet gegevensminimalisatie, bewaartermijnen & verwerkingsefficiëntie"
+            description_text = "Meet hulpbronnenoptimalisatie, code-efficiëntie en energieverbruik"
         else:
-            description_text = "Measures data minimization, retention policies & processing efficiency"
+            description_text = "Measures resource optimization, code efficiency, and energy consumption"
             
-        description = String(10, bar_y - 30, 
+        description = String(10, 10, 
                             description_text, 
-                            fontSize=8, 
-                            fillColor=HexColor('#7f8c8d'))
+                            fontSize=9, 
+                            fillColor=HexColor('#475569'))
         d.add(description)
         
         # Draw the entire drawing
@@ -1914,21 +1986,96 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         else:
             elements.append(Paragraph("<b>Recommendations</b>", subheading_style))
         
+        # Get recommendations from scan data
         recommendations = scan_data.get('recommendations', [])
-        if not recommendations and scan_type.lower() == 'sustainability':
-            # Add default sustainability recommendation if none exist
-            recommendations = [{
-                'description': 'Implement code efficiency best practices',
+        
+        # If there are no recommendations and this is a sustainability report,
+        # add appropriate default recommendations based on scan findings
+        if not recommendations and 'sustainability' in scan_type.lower():
+            # Check findings to generate relevant recommendations
+            findings = scan_data.get('findings', [])
+            
+            # Determine the main areas of concern based on findings
+            has_code_issues = any('code' in f.get('location', '').lower() or 'repository' in f.get('location', '').lower() for f in findings)
+            has_cloud_issues = any('cloud' in f.get('location', '').lower() or 'resources' in f.get('location', '').lower() for f in findings)
+            has_infrastructure_issues = any('server' in f.get('location', '').lower() or 'infrastructure' in f.get('location', '').lower() for f in findings)
+            
+            # Generate appropriate recommendations based on findings
+            recommendations = []
+            
+            # Always add a general recommendation for sustainability
+            recommendations.append({
+                'description': 'Implement sustainability best practices across your organization',
                 'severity': 'Medium',
-                'impact': 'Medium',
-                'category': 'Code Efficiency',
+                'impact': 'High',
+                'category': 'Sustainability',
                 'steps': [
-                    'Implement automated linting in CI/CD pipelines',
-                    'Use dependency scanning to identify unused packages',
-                    'Optimize Docker image sizes for containerized applications',
-                    'Implement resource monitoring in production environments'
+                    'Create a sustainability policy and objectives',
+                    'Establish baseline measurements for resource usage',
+                    'Define KPIs for tracking sustainability improvements',
+                    'Schedule regular sustainability reviews and audits'
                 ]
-            }]
+            })
+            
+            # Add code-specific recommendation if relevant
+            if has_code_issues or not (has_cloud_issues or has_infrastructure_issues):
+                recommendations.append({
+                    'description': 'Optimize code efficiency and repository structure',
+                    'severity': 'Medium',
+                    'impact': 'Medium',
+                    'category': 'Code Efficiency',
+                    'steps': [
+                        'Implement automated linting in CI/CD pipelines',
+                        'Use dependency scanning to identify unused packages',
+                        'Optimize Docker image sizes for containerized applications',
+                        'Implement resource monitoring in production environments'
+                    ]
+                })
+            
+            # Add cloud-specific recommendation if relevant
+            if has_cloud_issues:
+                recommendations.append({
+                    'description': 'Optimize cloud resource utilization',
+                    'severity': 'High',
+                    'impact': 'High',
+                    'category': 'Cloud Resources',
+                    'steps': [
+                        'Implement auto-scaling based on actual usage patterns',
+                        'Configure proper resource hibernation during off-hours',
+                        'Clean up unused resources (disks, snapshots, IPs)',
+                        'Right-size compute instances based on actual utilization'
+                    ]
+                })
+                
+            # Add infrastructure-specific recommendation if relevant
+            if has_infrastructure_issues:
+                recommendations.append({
+                    'description': 'Improve infrastructure efficiency and sustainability',
+                    'severity': 'Medium',
+                    'impact': 'High',
+                    'category': 'Infrastructure',
+                    'steps': [
+                        'Consolidate servers and services where possible',
+                        'Evaluate energy efficiency of data centers',
+                        'Implement energy monitoring and reporting',
+                        'Consider carbon offset programs for unavoidable energy usage'
+                    ]
+                })
+                
+            # Add a simple recommendation for low findings
+            if len(findings) <= 2:
+                recommendations.append({
+                    'description': 'Maintain current sustainability practices',
+                    'severity': 'Low',
+                    'impact': 'Low',
+                    'category': 'Maintenance',
+                    'steps': [
+                        'Continue monitoring resource usage trends',
+                        'Stay updated on latest sustainability best practices',
+                        'Document successful sustainability strategies',
+                        'Share success stories with stakeholders'
+                    ]
+                })
         
         if recommendations:
             recommendation_style = normal_style.clone('RecommendationStyle', 
