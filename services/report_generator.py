@@ -623,6 +623,9 @@ def generate_report(scan_data: Dict[str, Any],
         if 'ai_model' in scan_type.lower():
             report_format = "ai_model"
             logging.info("Using AI Model report format")
+        elif 'soc2' in scan_type.lower():
+            report_format = "soc2"
+            logging.info("Using SOC2 compliance report format")
         elif 'sustainability' in scan_type.lower() or 'github' in scan_type.lower() or 'code efficiency' in scan_type.lower():
             report_format = "sustainability"
             logging.info("Using Sustainability report format")
@@ -925,6 +928,30 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             from source <b>{model_source}</b> on <b>{timestamp}</b>. The scan identified a total of <b>{total_pii}</b> instances of 
             personally identifiable information (PII) with <b>{high_risk}</b> high-risk items.
             """
+    elif report_format == "soc2":
+        # Extract SOC2 specific data
+        repo_url = scan_data.get('repo_url', 'Unknown Repository')
+        branch = scan_data.get('branch', 'main')
+        compliance_score = scan_data.get('compliance_score', 0)
+        technologies = scan_data.get('technologies_detected', [])
+        technologies_text = ", ".join(technologies) if technologies else "None"
+        
+        if current_lang == 'nl':
+            summary_text = f"""
+            Dit rapport presenteert de bevindingen van een SOC2 compliance analyse uitgevoerd op <b>{repo_url}</b> 
+            (branch: <b>{branch}</b>) op <b>{timestamp}</b>. De scan heeft in totaal <b>{total_pii}</b> compliance problemen 
+            geïdentificeerd met <b>{high_risk}</b> hoog-risico items. De algemene compliance score is <b>{compliance_score}/100</b>.
+            
+            <b>Gedetecteerde technologieën:</b> {technologies_text}
+            """
+        else:
+            summary_text = f"""
+            This report presents the findings of a SOC2 compliance analysis conducted on <b>{repo_url}</b> 
+            (branch: <b>{branch}</b>) on <b>{timestamp}</b>. The scan identified a total of <b>{total_pii}</b> compliance issues 
+            with <b>{high_risk}</b> high-risk items. The overall compliance score is <b>{compliance_score}/100</b>.
+            
+            <b>Technologies Detected:</b> {technologies_text}
+            """
     else:
         if current_lang == 'nl':
             summary_text = f"""
@@ -979,6 +1006,71 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 [_('report.medium_risk', 'Medium Risk Items'), str(medium_risk)],
                 [_('report.low_risk', 'Low Risk Items'), str(low_risk)]
             ]
+    elif report_format == "soc2":
+        # Extract SOC2 specific data
+        repo_url = scan_data.get('repo_url', 'Unknown Repository')
+        branch = scan_data.get('branch', 'main')
+        compliance_score = scan_data.get('compliance_score', 0)
+        technologies = scan_data.get('technologies_detected', [])
+        technologies_text = ", ".join(technologies) if technologies else "None"
+        iac_files_found = scan_data.get('iac_files_found', 0)
+        total_files_scanned = scan_data.get('total_files_scanned', 0)
+        
+        # Calculate compliance levels by category
+        security_issues = 0
+        availability_issues = 0
+        processing_integrity_issues = 0
+        confidentiality_issues = 0
+        privacy_issues = 0
+        
+        # Count issues by category
+        for finding in scan_data.get('findings', []):
+            category = finding.get('category', '').lower()
+            if category == 'security':
+                security_issues += 1
+            elif category == 'availability':
+                availability_issues += 1
+            elif category == 'processing_integrity':
+                processing_integrity_issues += 1
+            elif category == 'confidentiality':
+                confidentiality_issues += 1
+            elif category == 'privacy':
+                privacy_issues += 1
+        
+        if current_lang == 'nl':
+            summary_data = [
+                [_('report.scan_type', 'Scan Type'), scan_type],
+                [_('report.repo_url', 'Repository URL'), repo_url],
+                [_('report.branch', 'Branch'), branch],
+                [_('report.date_time', 'Datum & Tijd'), timestamp],
+                [_('report.technologies', 'Technologieën'), technologies_text],
+                [_('report.compliance_score', 'Compliance Score'), f"{compliance_score}/100"],
+                [_('report.iac_files', 'IaC Bestanden Gevonden'), str(iac_files_found)],
+                [_('report.total_files', 'Totaal Bestanden Gescand'), str(total_files_scanned)],
+                [_('report.high_risk', 'Hoog Risico Issues'), str(high_risk)],
+                [_('report.medium_risk', 'Gemiddeld Risico Issues'), str(medium_risk)],
+                [_('report.low_risk', 'Laag Risico Issues'), str(low_risk)],
+                [_('report.security_issues', 'Beveiligings Issues'), str(security_issues)],
+                [_('report.availability_issues', 'Beschikbaarheids Issues'), str(availability_issues)],
+                [_('report.confidentiality_issues', 'Vertrouwelijkheids Issues'), str(confidentiality_issues)]
+            ]
+        else:
+            summary_data = [
+                [_('report.scan_type', 'Scan Type'), scan_type],
+                [_('report.repo_url', 'Repository URL'), repo_url],
+                [_('report.branch', 'Branch'), branch],
+                [_('report.date_time', 'Date & Time'), timestamp],
+                [_('report.technologies', 'Technologies'), technologies_text],
+                [_('report.compliance_score', 'Compliance Score'), f"{compliance_score}/100"],
+                [_('report.iac_files', 'IaC Files Found'), str(iac_files_found)],
+                [_('report.total_files', 'Total Files Scanned'), str(total_files_scanned)],
+                [_('report.high_risk', 'High Risk Issues'), str(high_risk)],
+                [_('report.medium_risk', 'Medium Risk Issues'), str(medium_risk)],
+                [_('report.low_risk', 'Low Risk Issues'), str(low_risk)],
+                [_('report.security_issues', 'Security Issues'), str(security_issues)],
+                [_('report.availability_issues', 'Availability Issues'), str(availability_issues)],
+                [_('report.confidentiality_issues', 'Confidentiality Issues'), str(confidentiality_issues)]
+            ]
     else:
         if current_lang == 'nl':
             summary_data = [
@@ -1031,6 +1123,35 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             ('BACKGROUND', (1, 8), (1, 8), HexColor('#fadbd8')),  # High risk row
             ('BACKGROUND', (1, 9), (1, 9), HexColor('#fef9e7')),  # Medium risk row
             ('BACKGROUND', (1, 10), (1, 10), HexColor('#e9f7ef')),  # Low risk row
+        ]
+    elif report_format == "soc2":
+        table_style = [
+            # Header row styling
+            ('BACKGROUND', (0, 0), (0, -1), HexColor('#f2f9fe')),
+            ('TEXTCOLOR', (0, 0), (0, -1), HexColor('#2c3e50')),
+            # Content styling
+            ('BACKGROUND', (1, 0), (1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            # Padding
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            # Grid
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#dfe6e9')),
+            # Group header rows
+            ('BACKGROUND', (1, 0), (1, 3), HexColor('#f5f9ff')),  # General info rows
+            ('BACKGROUND', (1, 4), (1, 4), HexColor('#ecf0f1')),  # Technologies row
+            ('BACKGROUND', (1, 5), (1, 5), HexColor('#e8f4fd')),  # Compliance score row
+            ('BACKGROUND', (1, 6), (1, 7), HexColor('#f5f9ff')),  # Files info rows
+            # Risk level colors
+            ('BACKGROUND', (1, 8), (1, 8), HexColor('#fadbd8')),  # High risk row
+            ('BACKGROUND', (1, 9), (1, 9), HexColor('#fef9e7')),  # Medium risk row
+            ('BACKGROUND', (1, 10), (1, 10), HexColor('#e9f7ef')),  # Low risk row
+            # SOC2 category rows
+            ('BACKGROUND', (1, 11), (1, 13), HexColor('#ebf5fb')),  # SOC2 categories rows
         ]
     else:
         table_style = [
