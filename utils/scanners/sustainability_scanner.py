@@ -693,7 +693,8 @@ def run_github_repo_scan():
     access_token = st.text_input(
         "GitHub Access Token (for private repositories)", 
         type="password",
-        help="Leave blank for public repositories. For private repositories, provide a GitHub personal access token."
+        help="Leave blank for public repositories. For private repositories, provide a GitHub personal access token.",
+        key="github_repo_token"
     )
     
     # Scan options
@@ -703,7 +704,8 @@ def run_github_repo_scan():
         "Analysis Options",
         ["Repository Size", "Large Files", "Unused Imports", "Code Duplication", "Dependencies"],
         default=["Repository Size", "Large Files", "Unused Imports"],
-        help="Select which aspects of the repository to analyze for sustainability."
+        help="Select which aspects of the repository to analyze for sustainability.",
+        key="github_repo_analysis_options"
     )
     
     # Advanced options
@@ -713,7 +715,8 @@ def run_github_repo_scan():
         min_value=1, 
         max_value=5, 
         value=3,
-        help="Maximum directory depth to scan. Higher values will analyze more files but take longer."
+        help="Maximum directory depth to scan. Higher values will analyze more files but take longer.",
+        key="github_repo_depth_limit"
     )
     
     file_limit = st.number_input(
@@ -722,13 +725,14 @@ def run_github_repo_scan():
         max_value=10000, 
         value=1000, 
         step=100,
-        help="Maximum number of files to scan. Increase for more comprehensive analysis of large repositories."
+        help="Maximum number of files to scan. Increase for more comprehensive analysis of large repositories.",
+        key="github_repo_file_limit"
     )
     
     # Scan button
     scan_col1, scan_col2 = st.columns([3, 1])
     with scan_col1:
-        scan_button = st.button("Scan GitHub Repository", type="primary", use_container_width=True)
+        scan_button = st.button("Scan GitHub Repository", type="primary", use_container_width=True, key="github_repo_scan_button")
     with scan_col2:
         st.write("")  # Empty space for alignment
     
@@ -793,7 +797,8 @@ def run_code_analysis_scan():
     source_type = st.radio(
         "Code Source", 
         ["Upload Files", "GitHub Repository"],
-        help="Choose whether to upload files directly or scan a GitHub repository."
+        help="Choose whether to upload files directly or scan a GitHub repository.",
+        key="code_analysis_source_type"
     )
     
     has_source = False
@@ -896,7 +901,8 @@ def run_code_analysis_scan():
         "File Types to Analyze",
         ["Python (.py)", "JavaScript (.js)", "TypeScript (.ts)", "Java (.java)", "C/C++ (.c/.cpp)", "C# (.cs)", "Go (.go)", "Ruby (.rb)", "All"],
         default=["Python (.py)", "JavaScript (.js)"] if source_type == "GitHub Repository" else ["All"],
-        help="Select which file types to include in the analysis."
+        help="Select which file types to include in the analysis.",
+        key="code_analysis_file_types"
     )
     
     # Analysis options
@@ -904,7 +910,8 @@ def run_code_analysis_scan():
         "Analysis Options",
         ["Unused Imports", "Code Complexity", "Memory Usage", "Execution Time", "Dependencies", "File Size", "Comments Ratio"],
         default=["Unused Imports", "Code Complexity", "File Size"],
-        help="Select which aspects of the code to analyze for sustainability and optimization."
+        help="Select which aspects of the code to analyze for sustainability and optimization.",
+        key="code_analysis_options"
     )
     
     # Advanced options
@@ -952,7 +959,7 @@ def run_code_analysis_scan():
     col1, col2 = st.columns([3, 1])
     with col1:
         button_label = "Analyze GitHub Repository" if source_type == "GitHub Repository" else "Analyze Uploaded Files"
-        scan_button = st.button(button_label, type="primary", use_container_width=True)
+        scan_button = st.button(button_label, type="primary", use_container_width=True, key="code_analysis_scan_button")
     with col2:
         st.write("")  # Empty space for alignment
     
