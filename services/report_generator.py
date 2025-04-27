@@ -1852,11 +1852,11 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     # Format sustainability score with proper formatting (70/100)
     formatted_score = f"{sustainability_score}/100"
     
-    # Create a more visually appealing score display with label
+    # Create a more visually appealing score display with label - avoid using font tags which may not work in PDF
     score_table_data = [
         ["Sustainability Score"], 
-        [f"{formatted_score}"],
-        [f"{status_text}"]
+        [formatted_score],
+        [status_text]
     ]
     
     score_table = Table(score_table_data, colWidths=[2.5*inch])
@@ -2145,7 +2145,15 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                 elements.append(Paragraph(f"<b>{i+1}. {rec_description}</b>", recommendation_style))
                 
                 # Add formatted priority and impact on their own lines
-                elements.append(Paragraph(f"<b>Priority:</b> <font color='{severity_color}'>{rec_severity}</font>", recommendation_style))
+                # Create a separate paragraph with proper styling for priority level
+                priority_style = ParagraphStyle('priority_style', 
+                                               parent=recommendation_style)
+                severity_style = ParagraphStyle('severity_style', 
+                                              parent=recommendation_style,
+                                              textColor=HexColor(severity_color))
+                
+                priority_text = Paragraph(f"<b>Priority:</b> {rec_severity}", priority_style)
+                elements.append(priority_text)
                 elements.append(Paragraph(f"<b>Impact:</b> {rec_impact}", recommendation_style))
                 
                 # Add Steps header
