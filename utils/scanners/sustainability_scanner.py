@@ -773,6 +773,20 @@ def run_github_repo_scan():
             # Perform the scan
             scan_results = scanner.scan_repository()
             
+            # Add the username to the scan results if available in session state
+            if 'username' in st.session_state and st.session_state.username:
+                scan_results['username'] = st.session_state.username
+            
+            # Extract repository info for better metadata
+            repo_parts = repo_url.split('/')
+            if len(repo_parts) >= 5:
+                # Format: https://github.com/username/repo
+                repo_owner = repo_parts[-2]
+                repo_name = repo_parts[-1]
+                scan_results['repo_owner'] = repo_owner
+                scan_results['repo_name'] = repo_name
+                scan_results['file_count'] = scan_results.get('total_files', 0)  # Ensure file_count is set
+            
             # Store scan results in session state
             st.session_state.sustainability_scan_results = scan_results
             st.session_state.sustainability_scan_complete = True
