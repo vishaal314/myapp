@@ -641,7 +641,8 @@ def run_github_repo_scan():
     repo_url = st.text_input(
         "GitHub Repository URL", 
         placeholder="https://github.com/username/repo",
-        help="Enter the full URL to any public GitHub repository that you want to analyze for sustainability optimization."
+        help="Enter the full URL to any public GitHub repository that you want to analyze for sustainability optimization.",
+        key="github_repo_sustainability_url"
     )
     
     # Use session state to persist URL between interactions
@@ -671,7 +672,12 @@ def run_github_repo_scan():
             st.rerun()
     
     # Branch selection
-    branch = st.text_input("Branch", value="main", help="The branch to analyze. Defaults to 'main'.")
+    branch = st.text_input(
+        "Branch", 
+        value="main", 
+        help="The branch to analyze. Defaults to 'main'.",
+        key="github_repo_branch"
+    )
     
     # Region selection for better context
     region = st.selectbox(
@@ -823,7 +829,8 @@ def run_code_analysis_scan():
         github_url = st.text_input(
             "GitHub Repository URL", 
             placeholder="https://github.com/username/repo",
-            help="Enter the full URL to any public GitHub repository that you want to scan for code optimization opportunities."
+            help="Enter the full URL to any public GitHub repository that you want to scan for code optimization opportunities.",
+            key="code_analysis_github_url"
         )
         
         # Use session state to persist URL between interactions
