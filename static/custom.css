@@ -1,0 +1,39 @@
+/* Hide the "app" and "SOC2 Scanner" buttons in the top navigation */
+button[kind="secondary"][data-baseweb="tab"] {
+  display: none !important;
+}
+
+/* Hide the entire navigation section */
+section[data-testid="stSidebar"] > div.block-container {
+  padding-top: 2rem;
+}
+
+/* Hide the hamburger menu */
+button[kind="header"] {
+  display: none !important;
+}
+
+/* Hide the top navigation page items */
+header[data-testid="stHeader"] {
+  display: none !important;
+}
+
+/* Hide the specific pages in the navigation */
+button[data-testid="baseButton-header"]:has(p:contains("app")),
+button[data-testid="baseButton-header"]:has(p:contains("SOC2 Scanner")) {
+  display: none !important;
+}
+
+/* Hide elements with "app" or "SOC2 Scanner" text in navigation */
+.main-nav a:contains("app"),
+.main-nav a:contains("SOC2 Scanner"),
+*[data-testid="stVerticalBlock"] a:contains("app"),
+*[data-testid="stVerticalBlock"] a:contains("SOC2 Scanner") {
+  display: none !important;
+}
+
+/* Additional selector for navigation tabs */
+button[data-baseweb="tab"]:has(div:contains("app")),
+button[data-baseweb="tab"]:has(div:contains("SOC2 Scanner")) {
+  display: none !important;
+}
