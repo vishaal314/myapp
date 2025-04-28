@@ -13,14 +13,19 @@ button[kind="header"] {
   display: none !important;
 }
 
-/* Hide the top navigation page items */
+/* Hide the menu at the top altogether */
 header[data-testid="stHeader"] {
   display: none !important;
 }
 
-/* Hide the specific pages in the navigation */
-button[data-testid="baseButton-header"]:has(p:contains("app")),
-button[data-testid="baseButton-header"]:has(p:contains("SOC2 Scanner")) {
+/* Hide the top navigation completely */
+.stApp header[data-testid="stHeader"] {
+  display: none !important;
+}
+
+/* Hide all elements in header for app and SOC2 Scanner */
+header[data-testid="stHeader"] button span:contains("app"),
+header[data-testid="stHeader"] button span:contains("SOC2 Scanner") {
   display: none !important;
 }
 
@@ -35,5 +40,16 @@ button[data-testid="baseButton-header"]:has(p:contains("SOC2 Scanner")) {
 /* Additional selector for navigation tabs */
 button[data-baseweb="tab"]:has(div:contains("app")),
 button[data-baseweb="tab"]:has(div:contains("SOC2 Scanner")) {
+  display: none !important;
+}
+
+/* Hide streamlit default header menu and make sure it doesn't reappear */
+[data-testid="stDecoratorMargin"] {
+  display: none !important;
+}
+
+/* Hide the multi-page navigation buttons specifically */
+[data-testid="stSidebarNav"] ul li:has(a:contains("app")),
+[data-testid="stSidebarNav"] ul li:has(a:contains("SOC2 Scanner")) {
   display: none !important;
 }

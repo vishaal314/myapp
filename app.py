@@ -175,6 +175,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Load custom CSS to hide unwanted navigation buttons
+with open("static/custom.css") as f:
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 
 # Create top-right language switcher in a container with minimal style

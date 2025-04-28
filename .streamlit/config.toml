@@ -15,3 +15,16 @@ font = "sans serif"
 
 [ui]
 hideTopBar = true
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"
+
+[global]
+developmentMode = false
+
+[runner]
+fastReruns = true
+
+[logger]
+level = "error"
