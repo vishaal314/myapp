@@ -2914,7 +2914,7 @@ else:
                     
                     elif scan_type == _("scan.soc2"):
                         # Import and run the SOC2 scanner
-                        from pages.soc2_scanner import run_soc2_scanner
+                        from components.soc2.soc2_scanner import run_soc2_scanner
                         
                         # Hide the Start Scan button and Upload Files section for cleaner UI
                         st.markdown("""
