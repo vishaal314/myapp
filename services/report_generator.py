@@ -3,7 +3,7 @@ import os
 import base64
 import math
 import streamlit as st
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -24,8 +24,15 @@ from reportlab.graphics.charts.linecharts import HorizontalLineChart
 from reportlab.graphics.charts.textlabels import Label
 from reportlab.graphics import renderPDF
 from reportlab.graphics.widgets.markers import makeMarker
+import logging
+import uuid
+
 # Import translation utilities
 from utils.i18n import get_text, _
+
+# Configure a logger for the report generator
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class RiskMeter(Flowable):
     """A custom flowable that creates a risk meter/gauge."""
