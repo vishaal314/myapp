@@ -28,9 +28,5 @@ developmentMode = false
 [runner]
 fastReruns = true
 
-# Use newer Streamlit configuration format
-[pages]
-hideFilenames = ["soc2_scanner.py"]
-
 [logger]
 level = "error"

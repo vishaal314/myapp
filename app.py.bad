@@ -3005,8 +3005,7 @@ else:
                         scan_running = False
                     
                     elif scan_type == _("scan.soc2"):
-                        # Import SOC2 scanner components directly within app.py
-                        # rather than from a separate page to ensure it's behind authentication
+                        # Import SOC2 scanner components
                         from services.soc2_scanner import scan_github_repo_for_soc2, SOC2_CATEGORIES
                         from services.report_generator import generate_report
                         
@@ -3035,7 +3034,8 @@ else:
                         </style>
                         """, unsafe_allow_html=True)
                         
-                        # SOC2 scanner UI
+                        # Directly implement SOC2 scanner functionality in the main app
+                        # This ensures it's only accessible after login
                         st.title(_("scan.soc2_title", "SOC2 Compliance Scanner"))
                         st.write(_("scan.soc2_description", 
                                 "Scan Infrastructure as Code (IaC) repositories for SOC2 compliance issues. "
@@ -3071,95 +3071,91 @@ else:
                         # Scan button
                         scan_button = st.button(_("scan.start_scan", "Start SOC2 Scan"), type="primary", use_container_width=True)
                         
-                        # Handle the scan process
                         if scan_button:
-                            # Validate input
                             if not repo_url:
                                 st.error(_("scan.error_no_repo", "Please enter a GitHub repository URL"))
                                 scan_running = False
+                            # Check if URL is valid GitHub URL
                             elif not repo_url.startswith(("https://github.com/", "http://github.com/")):
                                 st.error(_("scan.error_invalid_repo", "Please enter a valid GitHub repository URL"))
                                 scan_running = False
                             else:
-                                # Valid input, proceed with scan
+                                
+                                # Show scanning progress
                                 with st.status(_("scan.scanning", "Scanning repository for SOC2 compliance issues..."), expanded=True) as status:
+                                    st.write(_("scan.cloning", "Cloning repository..."))
+                                    
+                                    # Perform scan
                                     try:
-                                        # Show cloning message
-                                        st.write(_("scan.cloning", "Cloning repository..."))
-                                        
-                                        # Perform scan
                                         scan_results = scan_github_repo_for_soc2(repo_url, branch, token)
                                         
-                                        # Check for scan failure
                                         if scan_results.get("scan_status") == "failed":
                                             error_msg = scan_results.get("error", "Unknown error")
                                             st.error(f"{_('scan.scan_failed', 'Scan failed')}: {error_msg}")
                                             status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
                                             scan_running = False
+                                        
+                                    st.write(_("scan.analyzing", "Analyzing IaC files..."))
+                                    time.sleep(1)  # Give the UI time to update
+                                    
+                                    st.write(_("scan.generating_report", "Generating compliance report..."))
+                                    status.update(label=_("scan.scan_complete", "Scan complete!"), state="complete")
+                                    
+                                    # Display results
+                                    if 'findings' in scan_results:
+                                        st.subheader(_("scan.scan_results", "Scan Results"))
+                                        
+                                        # Extract key metrics
+                                        compliance_score = scan_results.get("compliance_score", 0)
+                                        high_risk = scan_results.get("high_risk_count", 0)
+                                        medium_risk = scan_results.get("medium_risk_count", 0)
+                                        low_risk = scan_results.get("low_risk_count", 0)
+                                        total_findings = high_risk + medium_risk + low_risk
+                                        
+                                        # Repository info
+                                        st.write(f"**{_('scan.repository', 'Repository')}:** {scan_results.get('repo_url')}")
+                                        st.write(f"**{_('scan.branch', 'Branch')}:** {scan_results.get('branch', 'main')}")
+                                        
+                                        # Create metrics
+                                        col1, col2, col3, col4 = st.columns(4)
+                                        
+                                        # Determine compliance color for styling
+                                        if compliance_score >= 80:
+                                            compliance_color_css = "green"
+                                        elif compliance_score >= 60:
+                                            compliance_color_css = "orange"
                                         else:
-                                            # Scan succeeded, show progress
-                                            st.write(_("scan.analyzing", "Analyzing IaC files..."))
-                                            time.sleep(1)  # Give the UI time to update
+                                            compliance_color_css = "red"
                                             
-                                            st.write(_("scan.generating_report", "Generating compliance report..."))
-                                            status.update(label=_("scan.scan_complete", "Scan complete!"), state="complete")
-                                            
-                                            # Display results if we have findings
-                                            if 'findings' in scan_results:
-                                                st.subheader(_("scan.scan_results", "Scan Results"))
-                                                
-                                                # Extract key metrics
-                                                compliance_score = scan_results.get("compliance_score", 0)
-                                                high_risk = scan_results.get("high_risk_count", 0)
-                                                medium_risk = scan_results.get("medium_risk_count", 0)
-                                                low_risk = scan_results.get("low_risk_count", 0)
-                                                total_findings = high_risk + medium_risk + low_risk
-                                                
-                                                # Repository info
-                                                st.write(f"**{_('scan.repository', 'Repository')}:** {scan_results.get('repo_url')}")
-                                                st.write(f"**{_('scan.branch', 'Branch')}:** {scan_results.get('branch', 'main')}")
-                                                
-                                                # Create metrics
-                                                col1, col2, col3, col4 = st.columns(4)
-                                                
-                                                # Determine compliance color for styling
-                                                if compliance_score >= 80:
-                                                    compliance_color_css = "green"
-                                                elif compliance_score >= 60:
-                                                    compliance_color_css = "orange"
-                                                else:
-                                                    compliance_color_css = "red"
+                                        with col1:
+                                            st.metric(_("scan.compliance_score", "Compliance Score"), 
+                                                    f"{compliance_score}/100", 
+                                                    delta=None,
+                                                    delta_color="normal")
                                                     
-                                                with col1:
-                                                    st.metric(_("scan.compliance_score", "Compliance Score"), 
-                                                            f"{compliance_score}/100", 
-                                                            delta=None,
-                                                            delta_color="normal")
-                                                            
-                                                    st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{'✓ Good' if compliance_score >= 80 else '⚠️ Needs Review' if compliance_score >= 60 else '✗ Critical'}</div>", unsafe_allow_html=True)
-                                                
-                                                with col2:
-                                                    st.metric(_("scan.high_risk", "High Risk Issues"), 
-                                                            high_risk,
-                                                            delta=None,
-                                                            delta_color="inverse")
-                                                            
-                                                with col3:
-                                                    st.metric(_("scan.medium_risk", "Medium Risk Issues"), 
-                                                            medium_risk,
-                                                            delta=None,
-                                                            delta_color="inverse")
-                                                            
-                                                with col4:
-                                                    st.metric(_("scan.low_risk", "Low Risk Issues"), 
-                                                            low_risk,
-                                                            delta=None,
-                                                            delta_color="inverse")
-                                    except Exception as e:
-                                        # Handle any exception during the scan
-                                        st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
-                                        status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
-                        
+                                            st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{'✓ Good' if compliance_score >= 80 else '⚠️ Needs Review' if compliance_score >= 60 else '✗ Critical'}</div>", unsafe_allow_html=True)
+                                        
+                                        with col2:
+                                            st.metric(_("scan.high_risk", "High Risk Issues"), 
+                                                    high_risk,
+                                                    delta=None,
+                                                    delta_color="inverse")
+                                                    
+                                        with col3:
+                                            st.metric(_("scan.medium_risk", "Medium Risk Issues"), 
+                                                    medium_risk,
+                                                    delta=None,
+                                                    delta_color="inverse")
+                                                    
+                                        with col4:
+                                            st.metric(_("scan.low_risk", "Low Risk Issues"), 
+                                                    low_risk,
+                                                    delta=None,
+                                                    delta_color="inverse")
+                                except Exception as e:
+                                    st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
+                                    status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
+                                
                         # Stop normal flow to proceed with only the SOC2 scanner
                         scan_running = False
                     
