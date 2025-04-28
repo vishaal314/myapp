@@ -127,19 +127,23 @@ def display_soc2_results(scan_results):
     # Create metrics
     col1, col2, col3, col4 = st.columns(4)
     
-    # Determine compliance color
+    # Determine compliance color - we won't use this for delta_color, but for styling text
     if compliance_score >= 80:
-        compliance_color = "green"
+        compliance_color_css = "green"
     elif compliance_score >= 60:
-        compliance_color = "orange"
+        compliance_color_css = "orange"
     else:
-        compliance_color = "red"
+        compliance_color_css = "red"
         
     with col1:
+        # Note: delta_color only accepts 'normal', 'inverse', or 'off'
         st.metric(_("scan.compliance_score", "Compliance Score"), 
                  f"{compliance_score}/100", 
                  delta=None,
-                 delta_color=compliance_color)
+                 delta_color="normal")
+        
+        # Add custom colored text under the metric
+        st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{'✓ Good' if compliance_score >= 80 else '⚠️ Needs Review' if compliance_score >= 60 else '✗ Critical'}</div>", unsafe_allow_html=True)
     
     with col2:
         st.metric(_("scan.high_risk", "High Risk Issues"), 
