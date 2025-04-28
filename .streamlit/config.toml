@@ -2,9 +2,11 @@
 headless = true
 address = "0.0.0.0"
 port = 5000
+folderWatchBlacklist = [".*", "*/reports/*", "*/temp_*/*"]
 
 [browser]
 gatherUsageStats = false
+serverAddress = "localhost"
 
 [theme]
 primaryColor = "#4267B2"
@@ -25,6 +27,10 @@ developmentMode = false
 
 [runner]
 fastReruns = true
+
+# Use newer Streamlit configuration format
+[pages]
+hideFilenames = ["soc2_scanner.py"]
 
 [logger]
 level = "error"
