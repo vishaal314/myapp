@@ -20,7 +20,7 @@ from io import BytesIO
 # Import custom services
 from services.soc2_scanner import scan_github_repo_for_soc2, SOC2_CATEGORIES
 from services.report_generator import generate_report
-from utils.translations import get_translation as _
+from utils.translations import _
 
 def run_soc2_scanner():
     """
