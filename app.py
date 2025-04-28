@@ -2912,6 +2912,41 @@ else:
                         # Stop normal flow to proceed with only the improved DPIA form
                         scan_running = False
                     
+                    elif scan_type == _("scan.soc2"):
+                        # Import and run the SOC2 scanner
+                        from pages.soc2_scanner import run_soc2_scanner
+                        
+                        # Hide the Start Scan button and Upload Files section for cleaner UI
+                        st.markdown("""
+                        <style>
+                        /* Hide the Start Scan button */
+                        div.stButton > button:contains("Start Scan") {
+                            display: none !important;
+                        }
+                        
+                        /* Hide upload-related sections */
+                        .main .block-container h2:contains("Upload Files"),
+                        .main .block-container h2:contains("Upload Files") ~ div,
+                        .main .block-container hr:has(+ h2:contains("Upload Files")),
+                        .main .block-container hr:has(~ h2:contains("Upload Files")) {
+                            display: none !important;
+                        }
+                        
+                        /* Additional selector for the specific section after Select Region */
+                        .main .block-container div:has(+ h2:contains("Upload Files")),
+                        .main .block-container div:has(~ label:contains("Select Region")) ~ hr,
+                        .main .block-container div:has(~ label:contains("Select Region")) ~ div:has(h2) {
+                            display: none !important;
+                        }
+                        </style>
+                        """, unsafe_allow_html=True)
+                        
+                        # Run the SOC2 scanner
+                        run_soc2_scanner()
+                        
+                        # Stop normal flow to proceed with only the SOC2 scanner
+                        scan_running = False
+                    
                     # Preview of findings with error handling
                     st.markdown("### Sample Findings")
                     all_findings = []
