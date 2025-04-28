@@ -776,7 +776,13 @@ else:
     print(f"  report.generate: '{report_title}'")
     print(f"  scan.soc2_title: '{soc2_title}'")
     
-    nav_options = [scan_title, dashboard_title, history_title, results_title, report_title, soc2_title]
+    # Base navigation options available to all logged-in users
+    nav_options = [scan_title, dashboard_title, history_title, results_title, report_title]
+    
+    # SOC2 scanner should only be available after login like other scanners
+    # Add it only if the user is logged in and has necessary permissions
+    if has_permission('scan:create'):
+        nav_options.append(soc2_title)
     
     # Add Admin section if user has admin permissions
     if has_permission('admin:access'):
