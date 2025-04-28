@@ -766,7 +766,6 @@ else:
     history_title = get_text("history.title") 
     results_title = get_text("results.title")
     report_title = get_text("report.generate")
-    soc2_title = get_text("scan.soc2_title", "SOC2 Scanner")
     
     print(f"NAVIGATION TITLES - Using language {_current_language}:")
     print(f"  scan.title: '{scan_title}'")
@@ -774,15 +773,9 @@ else:
     print(f"  history.title: '{history_title}'")
     print(f"  results.title: '{results_title}'")
     print(f"  report.generate: '{report_title}'")
-    print(f"  scan.soc2_title: '{soc2_title}'")
     
     # Base navigation options available to all logged-in users
     nav_options = [scan_title, dashboard_title, history_title, results_title, report_title]
-    
-    # SOC2 scanner should only be available after login like other scanners
-    # Add it only if the user is logged in and has necessary permissions
-    if has_permission('scan:create'):
-        nav_options.append(soc2_title)
     
     # Add Admin section if user has admin permissions
     if has_permission('admin:access'):
@@ -3712,18 +3705,7 @@ else:
         else:
             st.info(_("report.no_scan_history"))
             
-    elif selected_nav == soc2_title or selected_nav == _("scan.soc2_title", "SOC2 Scanner"):
-        # Import the SOC2 scanner page
-        from pages.soc2_scanner import run_soc2_scanner
-        
-        # Check if user has permission to use SOC2 scanner
-        if not require_permission('scan:create'):
-            st.warning("You don't have permission to access the SOC2 scanner. Please contact an administrator for access.")
-            st.info("Your role requires the 'scan:create' permission to use this feature.")
-            st.stop()
-            
-        # Run the SOC2 scanner page
-        run_soc2_scanner()
+    # SOC2 Scanner is now only accessed through the scan menu
         
     elif selected_nav == _("admin.title"):
         # Import required auth functionality
