@@ -195,7 +195,7 @@ class ResultsAggregator:
     
     def save_scan_result(self, result: Dict[str, Any]) -> bool:
         """
-        Save a scan result to the database.
+        Save a scan result to the database and automatically generate a PDF report.
         
         Args:
             result: The scan result dictionary
@@ -204,6 +204,7 @@ class ResultsAggregator:
             True if successful, False otherwise
         """
         try:
+            # First, save to database
             conn = self._get_connection()
             cursor = conn.cursor()
             
@@ -247,6 +248,53 @@ class ResultsAggregator:
             
             conn.commit()
             conn.close()
+            
+            # Second, automatically generate a PDF report for the scan
+            try:
+                # Import here to avoid circular imports
+                from services.report_generator import auto_generate_pdf_report
+                
+                # Make sure reports directory exists
+                reports_path = os.path.join(os.getcwd(), "reports")
+                if not os.path.exists(reports_path):
+                    os.makedirs(reports_path)
+                
+                # Generate the report
+                success, report_path, _ = auto_generate_pdf_report(result, reports_path)
+                
+                if success:
+                    # Add report path to result for future reference
+                    result['report_file_path'] = report_path
+                    
+                    # Update the database with the report path
+                    conn = self._get_connection()
+                    cursor = conn.cursor()
+                    cursor.execute('''
+                    UPDATE scans 
+                    SET result_json = %s
+                    WHERE scan_id = %s
+                    ''', (Json(result), scan_id))
+                    
+                    # Log report generation in audit log
+                    log_id = str(uuid.uuid4())
+                    cursor.execute('''
+                    INSERT INTO audit_log (log_id, username, action, timestamp, details)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ''', (log_id, username or 'system', 'REPORT_AUTO_GENERATED', datetime.now().isoformat(), Json({
+                        'scan_id': scan_id,
+                        'report_path': report_path
+                    })))
+                    
+                    conn.commit()
+                    conn.close()
+                    
+                    print(f"Automatically generated PDF report for scan ID {scan_id}")
+                else:
+                    print(f"Failed to auto-generate PDF report for scan ID {scan_id}")
+            except Exception as report_error:
+                print(f"Error in auto-report generation: {str(report_error)}")
+                # Continue even if report generation fails - database save was successful
+            
             return True
             
         except Exception as e:

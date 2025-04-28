@@ -34,6 +34,93 @@ from utils.i18n import get_text, _
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+def auto_generate_pdf_report(scan_data: Dict[str, Any], save_path: Optional[str] = None) -> Tuple[bool, str, Optional[bytes]]:
+    """
+    Automatically generate a PDF report for a completed scan and save it to disk.
+    
+    Args:
+        scan_data: The scan result data dictionary
+        save_path: Optional folder path to save the report (defaults to 'reports' folder)
+        
+    Returns:
+        Tuple containing:
+        - Success status (bool)
+        - Message or file path (str) 
+        - Report bytes (or None if failed)
+    """
+    try:
+        if not scan_data or not isinstance(scan_data, dict):
+            return False, "Invalid scan data provided", None
+            
+        # Get scan identification information
+        scan_id = scan_data.get('scan_id', f"scan_{uuid.uuid4().hex[:8]}")
+        scan_type = scan_data.get('scan_type', 'Unknown')
+        timestamp = scan_data.get('timestamp', datetime.now().isoformat())
+        
+        # Format timestamp for filename
+        try:
+            if isinstance(timestamp, str):
+                dt = datetime.fromisoformat(timestamp)
+            else:
+                dt = timestamp
+            timestamp_str = dt.strftime("%Y%m%d_%H%M%S")
+        except:
+            timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Create reports directory if it doesn't exist
+        if not save_path:
+            save_path = os.path.join(os.getcwd(), "reports")
+        
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+            
+        # Generate the report with default options
+        try:
+            report_bytes = generate_report(
+                scan_data,
+                include_details=True,
+                include_charts=True,
+                include_metadata=True,
+                include_recommendations=True
+            )
+            
+            if not report_bytes:
+                return False, "Failed to generate report content", None
+                
+            # Create filename based on scan type and ID
+            if 'soc2' in scan_type.lower():
+                prefix = "soc2_compliance"
+            elif 'ai_model' in scan_type.lower():
+                prefix = "ai_model_assessment"
+            elif 'sustainability' in scan_type.lower():
+                prefix = "sustainability_assessment"
+            elif 'dpia' in scan_type.lower():
+                prefix = "dpia_assessment"
+            else:
+                prefix = scan_type.lower().replace(" ", "_")
+                
+            filename = f"{prefix}_{scan_id}_{timestamp_str}.pdf"
+            filepath = os.path.join(save_path, filename)
+            
+            # Write report to file
+            with open(filepath, 'wb') as f:
+                f.write(report_bytes)
+                
+            logger.info(f"Auto-generated report saved to: {filepath}")
+            
+            # Also add the report path to the scan data for reference
+            scan_data['report_file_path'] = filepath
+            
+            return True, filepath, report_bytes
+            
+        except Exception as report_error:
+            logger.error(f"Error generating report content: {str(report_error)}")
+            return False, f"Error generating report: {str(report_error)}", None
+            
+    except Exception as e:
+        logger.error(f"Failed to auto-generate report: {str(e)}")
+        return False, f"Failed to auto-generate report: {str(e)}", None
+
 class RiskMeter(Flowable):
     """A custom flowable that creates a risk meter/gauge."""
     
