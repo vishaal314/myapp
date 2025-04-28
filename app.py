@@ -175,6 +175,26 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Hide the "app" and "SOC2 Scanner" buttons from the top menu
+hide_menu_buttons = """
+<style>
+/* Hide the "app" and "SOC2 Scanner" menu buttons from Streamlit's default menu */
+button[kind="header"]:first-child {display: none !important;}
+.main-nav > div:has(a[href="/soc2_scanner"]) {display: none !important;}
+section[data-testid="stSidebar"] .css-1d391kg div[class*="stSelectbox"] {visibility: hidden;}
+
+/* Also hide them in any other menu location */
+a[href="/"], a[href="/soc2_scanner"] {display: none !important;}
+li:has(a[href="/"]), li:has(a[href="/soc2_scanner"]) {display: none !important;}
+
+/* Hide Streamlit branding */
+footer {visibility: hidden !important;}
+#MainMenu {visibility: hidden !important;}
+header {visibility: hidden !important;}
+</style>
+"""
+st.markdown(hide_menu_buttons, unsafe_allow_html=True)
+
 # Create top-right language switcher in a container with minimal style
 lang_col1, lang_col2, lang_col3 = st.columns([6, 3, 1])
 with lang_col3:
