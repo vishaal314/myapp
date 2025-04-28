@@ -788,36 +788,123 @@ else:
         nav_options.append(admin_title)
         print(f"  admin.title: '{admin_title}'")
     
-    # Ensure the sidebar navigation title is also freshly translated
-    sidebar_nav_title = get_text("sidebar.navigation")
-    selected_nav = st.sidebar.radio(sidebar_nav_title, nav_options)
-    
-    # Add quick access buttons
-    st.sidebar.markdown(f"### {_('sidebar.quick_access')}")
-    quick_col1, quick_col2 = st.sidebar.columns(2)
-    
-    # Use direct get_text to ensure the most updated translations
-    dash_text = get_text("dashboard.welcome")
-    sidebar_dashboard_text = get_text("sidebar.dashboard") 
-    sidebar_dashboard_help_text = get_text("sidebar.dashboard_help")
-    
-    report_text = get_text("report.generate")
-    sidebar_reports_text = get_text("sidebar.reports")
-    sidebar_reports_help_text = get_text("sidebar.reports_help")
-    
-    with quick_col1:
-        if st.button(f"📊 {sidebar_dashboard_text}", key="quick_dashboard", help=sidebar_dashboard_help_text):
+    # Custom function to create a modern sidebar navigation
+    def create_modern_sidebar_nav(nav_options, icon_map=None):
+        """
+        Creates a modern sidebar navigation with icons and hover effects.
+        
+        Args:
+            nav_options: List of navigation options
+            icon_map: Dictionary mapping nav options to icons
+        
+        Returns:
+            The selected navigation option
+        """
+        if icon_map is None:
+            # Default icon mapping
+            icon_map = {
+                get_text("scan.title"): "🔍",
+                get_text("dashboard.welcome"): "📊",
+                get_text("history.title"): "📜",
+                get_text("results.title"): "📋",
+                get_text("report.generate"): "📑",
+                get_text("admin.title"): "⚙️"
+            }
+        
+        # Ensure the sidebar navigation title is also freshly translated
+        sidebar_nav_title = get_text("sidebar.navigation")
+        
+        # Add a stylish header for navigation
+        st.sidebar.markdown(f"<div class='sidebar-header'>{sidebar_nav_title}</div>", unsafe_allow_html=True)
+        
+        # Create container for navigation items
+        st.sidebar.markdown("<div class='sidebar-nav'>", unsafe_allow_html=True)
+        
+        # Store the selection in session state
+        if 'selected_nav' not in st.session_state:
+            st.session_state.selected_nav = nav_options[0]
+        
+        # Create custom navigation buttons with icons
+        for nav_option in nav_options:
+            # Skip 'app' and 'SOC2 Scanner' items
+            if nav_option.lower() == 'app' or 'soc2' in nav_option.lower():
+                continue
+                
+            icon = icon_map.get(nav_option, "🔗")  # Default icon if not found
+            is_active = st.session_state.selected_nav == nav_option
+            active_class = "active" if is_active else ""
+            
+            button_html = f"""
+            <div class='nav-button {active_class}' onclick="this.closest('form').querySelector('button[value=\'{nav_option}\']').click();">
+                <span class='nav-icon'>{icon}</span>
+                <span>{nav_option}</span>
+            </div>
+            """
+            st.sidebar.markdown(button_html, unsafe_allow_html=True)
+            
+            # Hidden button to capture clicks
+            if st.sidebar.button(nav_option, key=f"nav_{nav_option}", visible=False):
+                st.session_state.selected_nav = nav_option
+                st.rerun()
+        
+        st.sidebar.markdown("</div>", unsafe_allow_html=True)
+        
+        # Create a divider
+        st.sidebar.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
+        
+        # Quick access section
+        st.sidebar.markdown(f"<div class='sidebar-header'>{_('sidebar.quick_access')}</div>", unsafe_allow_html=True)
+        
+        # Use direct get_text to ensure the most updated translations
+        dash_text = get_text("dashboard.welcome")
+        sidebar_dashboard_text = get_text("sidebar.dashboard") 
+        sidebar_dashboard_help_text = get_text("sidebar.dashboard_help")
+        
+        report_text = get_text("report.generate")
+        sidebar_reports_text = get_text("sidebar.reports")
+        sidebar_reports_help_text = get_text("sidebar.reports_help")
+        
+        # Modern quick access buttons
+        st.sidebar.markdown("<div class='quick-access-container'>", unsafe_allow_html=True)
+        
+        # Dashboard quick access
+        dashboard_html = f"""
+        <div class='quick-access-button' onclick="this.closest('form').querySelector('button[value=\'dashboard\']').click();">
+            <span class='quick-access-icon'>📊</span>
+            <span>{sidebar_dashboard_text}</span>
+        </div>
+        """
+        st.sidebar.markdown(dashboard_html, unsafe_allow_html=True)
+        
+        # Reports quick access
+        reports_html = f"""
+        <div class='quick-access-button' onclick="this.closest('form').querySelector('button[value=\'reports\']').click();">
+            <span class='quick-access-icon'>📑</span>
+            <span>{sidebar_reports_text}</span>
+        </div>
+        """
+        st.sidebar.markdown(reports_html, unsafe_allow_html=True)
+        
+        # Hidden buttons for quick access
+        if st.sidebar.button("dashboard", key="quick_dashboard_hidden", visible=False):
             st.session_state.selected_nav = dash_text
             st.rerun()
-    
-    with quick_col2:
-        if st.button(f"📑 {sidebar_reports_text}", key="quick_reports", help=sidebar_reports_help_text):
+            
+        if st.sidebar.button("reports", key="quick_reports_hidden", visible=False):
             st.session_state.selected_nav = report_text
             st.rerun()
+            
+        st.sidebar.markdown("</div>", unsafe_allow_html=True)
+        
+        # Return the selected nav option from session state
+        return st.session_state.selected_nav
+    
+    # Call our custom navigation function
+    selected_nav = create_modern_sidebar_nav(nav_options)
     
     # Membership section
-    st.sidebar.markdown("---")
-    st.sidebar.subheader(_("sidebar.membership_options"))
+    st.sidebar.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
+    st.sidebar.markdown(f"<div class='sidebar-header'>{_('sidebar.membership_options')}</div>", unsafe_allow_html=True)
     
     # Display current membership status
     if 'premium_member' not in st.session_state:
