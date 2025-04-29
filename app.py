@@ -27,6 +27,7 @@ from services.certificate_generator import CertificateGenerator
 from services.optimized_scanner import OptimizedScanner
 from services.dpia_scanner import DPIAScanner, generate_dpia_report
 from services.ai_model_scanner import AIModelScanner
+from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository, display_soc2_scan_results
 from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
 from services.soc2_display import display_soc2_findings, run_soc2_display_standalone
 from services.soc2_scanner import scan_github_repo_for_soc2, scan_azure_repo_for_soc2
@@ -3158,8 +3159,8 @@ else:
                                             # Show cloning message
                                             st.write(_("scan.cloning", "Cloning repository..."))
                                             
-                                            # Perform scan
-                                            scan_results = scan_github_repo_for_soc2(repo_url, branch, token)
+                                            # Perform scan using the enhanced scanner function
+                                            scan_results = scan_github_repository(repo_url, branch, token)
                                             
                                             # Store the scan_results for PDF report generation
                                             st.session_state.soc2_scan_results = scan_results
