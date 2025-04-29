@@ -3197,7 +3197,7 @@ else:
                                 for i, (key, name) in enumerate(SOC2_CATEGORIES.items()):
                                     col_idx = i % 3
                                     with categories_cols[col_idx]:
-                                        selected_categories[key] = st.checkbox(name, value=True)
+                                        selected_categories[key] = st.checkbox(name, value=True, key=f"github_soc2_category_{key}")
                             
                             # Scan button
                             scan_button = st.button(_("scan.start_scan", "Start GitHub SOC2 Scan"), type="primary", use_container_width=True, key="github_soc2_scan_button")
@@ -3342,12 +3342,12 @@ else:
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     branch = st.text_input(_("scan.branch", "Branch (optional)"), 
-                                                        placeholder="main")
+                                                        placeholder="main", key="azure_soc2_branch")
                                     organization = st.text_input(_("scan.azure_organization", "Organization (optional)"), 
-                                                          placeholder="Will be extracted from URL if not provided")
+                                                          placeholder="Will be extracted from URL if not provided", key="azure_soc2_organization")
                                 with col2:
                                     token = st.text_input(_("scan.azure_token", "Azure Personal Access Token (for private repos)"), 
-                                                        type="password", placeholder="Personal Access Token")
+                                                        type="password", placeholder="Personal Access Token", key="azure_soc2_token")
                                                         
                                 # SOC2 Categories selection (same as GitHub)
                                 st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
@@ -3358,7 +3358,7 @@ else:
                                 for i, (key, name) in enumerate(SOC2_CATEGORIES.items()):
                                     col_idx = i % 3
                                     with categories_cols[col_idx]:
-                                        selected_categories[key] = st.checkbox(name, value=True)
+                                        selected_categories[key] = st.checkbox(name, value=True, key=f"azure_soc2_category_{key}")
                             
                             # Scan button for Azure
                             scan_button = st.button(_("scan.start_azure_scan", "Start Azure SOC2 Scan"), type="primary", use_container_width=True, key="azure_soc2_scan_button")
