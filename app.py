@@ -104,13 +104,17 @@ initialize()
 def display_soc2_scan_results(scan_results):
     """
     Use the enhanced SOC2 display function to show scan results.
-    This is a wrapper around the display_soc2_findings function.
+    This function uses the enhanced scanner module to display SOC2 findings with
+    proper TSC criteria mapping.
     
     Args:
         scan_results: Dictionary containing SOC2 scan results
     """
-    from services.soc2_display import display_soc2_findings
-    display_soc2_findings(scan_results)
+    # Import is already at the top of file: 
+    # from services.enhanced_soc2_scanner import display_soc2_scan_results
+    # We'll call our enhanced implementation directly
+    from services.enhanced_soc2_scanner import display_soc2_scan_results as enhanced_display
+    enhanced_display(scan_results)
 
 def debug_translations():
     """Print debug information about critical translation keys."""
@@ -3323,8 +3327,8 @@ else:
                                             # Show cloning message
                                             st.write(_("scan.cloning", "Cloning repository..."))
                                             
-                                            # Perform Azure scan
-                                            scan_results = scan_azure_repo_for_soc2(repo_url, project, branch, token, organization)
+                                            # Perform Azure scan using enhanced scanner
+                                            scan_results = scan_azure_repository(repo_url, project, branch, token, organization)
                                             
                                             # Store the scan_results for PDF report generation
                                             st.session_state.soc2_scan_results = scan_results
