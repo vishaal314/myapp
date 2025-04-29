@@ -1947,14 +1947,51 @@ else:
                 st.checkbox("Generate compliance report", value=True)
                 
             elif scan_type == _("scan.soc2"):
-                # 9. SOC2 Scanner
+                # 9. SOC2 Scanner - Import required components
+                from services.soc2_scanner import scan_github_repo_for_soc2, scan_azure_repo_for_soc2, SOC2_CATEGORIES
+                from services.report_generator import generate_report
+                from services.soc2_display import display_soc2_findings
+                
+                # SOC2 scanner UI
                 st.subheader("SOC2 Scanner Configuration")
                 
-                log_source = st.radio("Log Source", ["Upload Log Files", "Cloud Storage", "Log Management System"])
+                # Repository selection
+                repo_source = st.radio(
+                    "Select Repository Source",
+                    ["GitHub Repository", "Azure DevOps Repository"],
+                    horizontal=True
+                )
                 
-                if log_source in ["Cloud Storage", "Log Management System"]:
-                    st.text_input("Log Source URL/Connection String")
-                    st.text_input("Access Key/Token", type="password")
+                if repo_source == "GitHub Repository":
+                    # Repository URL input
+                    repo_url = st.text_input("GitHub Repository URL", 
+                                         placeholder="https://github.com/username/repository")
+                    
+                    # Optional inputs for GitHub
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        branch = st.text_input("Branch (optional)", placeholder="main")
+                    with col2:
+                        token = st.text_input("GitHub Access Token (for private repos)", 
+                                           type="password", placeholder="ghp_xxxxxxxxxxxx")
+                
+                elif repo_source == "Azure DevOps Repository":
+                    # Azure DevOps inputs
+                    repo_url = st.text_input("Azure DevOps Repository URL", 
+                                         placeholder="https://dev.azure.com/organization/project/_git/repository")
+                    
+                    # Project name is required for Azure DevOps
+                    project = st.text_input("Azure DevOps Project", placeholder="MyProject")
+                    
+                    # Optional inputs for Azure
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        branch = st.text_input("Branch (optional)", placeholder="main")
+                        organization = st.text_input("Organization (optional)", 
+                                               placeholder="Will be extracted from URL if not provided")
+                    with col2:
+                        token = st.text_input("Azure Personal Access Token (for private repos)", 
+                                           type="password", placeholder="Personal Access Token")
                 
                 target_checks = st.multiselect("Target Checks",
                                              ["Logging Compliance", "IAM Policy Structure", "Session Timeout Rules", 
@@ -2083,6 +2120,11 @@ else:
                 )
             else:
                 uploaded_files = []
+                
+        elif scan_type == _("scan.soc2"):
+            # SOC2 scanning does not require file uploads
+            st.info("SOC2 scanning does not require file uploads. Configure the repository details in the Advanced Configuration section and click the scan button below.")
+            uploaded_files = []
                 
             # Check if we already have completed scan results for this AI model scan
             if 'ai_model_scan_complete' in st.session_state and st.session_state.ai_model_scan_complete:
