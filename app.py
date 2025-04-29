@@ -3199,7 +3199,7 @@ else:
                                         selected_categories[key] = st.checkbox(name, value=True)
                             
                             # Scan button
-                            scan_button = st.button(_("scan.start_scan", "Start GitHub SOC2 Scan"), type="primary", use_container_width=True)
+                            scan_button = st.button(_("scan.start_scan", "Start GitHub SOC2 Scan"), type="primary", use_container_width=True, key="github_soc2_scan_button")
                             
                             # Handle the scan process
                             if scan_button:
@@ -3291,7 +3291,7 @@ else:
                                                     
                                                     # Add PDF Download button
                                                     st.markdown("### Download Report")
-                                                    if st.button("Generate PDF Report", type="primary"):
+                                                    if st.button("Generate PDF Report", type="primary", key="github_soc2_pdf_button"):
                                                         with st.spinner("Generating PDF report..."):
                                                             # Generate PDF report
                                                             pdf_bytes = generate_report(scan_results)
@@ -3456,7 +3456,7 @@ else:
                                                     
                                                     # Add PDF Download button
                                                     st.markdown("### Download Report")
-                                                    if st.button("Generate PDF Report", type="primary"):
+                                                    if st.button("Generate PDF Report", type="primary", key="azure_soc2_pdf_button"):
                                                         with st.spinner("Generating PDF report..."):
                                                             # Generate PDF report
                                                             pdf_bytes = generate_report(scan_results)
