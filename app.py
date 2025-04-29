@@ -3179,7 +3179,7 @@ else:
                                                 key="github_soc2_repo_url")
                             
                             # Optional inputs with expander
-                            with st.expander(_("scan.advanced_options", "Advanced Options"), key="github_soc2_advanced_options"):
+                            with st.expander(_("scan.advanced_options", "Advanced Options")):
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     branch = st.text_input(_("scan.branch", "Branch (optional)"), 
@@ -3338,7 +3338,7 @@ else:
                                           placeholder="MyProject", key="azure_soc2_project")
                             
                             # Optional inputs with expander
-                            with st.expander(_("scan.advanced_options", "Advanced Options"), key="azure_soc2_advanced_options"):
+                            with st.expander(_("scan.advanced_options", "Advanced Options")):
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     branch = st.text_input(_("scan.branch", "Branch (optional)"), 
