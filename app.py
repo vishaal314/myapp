@@ -3124,11 +3124,11 @@ else:
                         scan_running = False
                     
                     elif scan_type == _("scan.soc2"):
-                        # Import SOC2 scanner components directly within app.py
+                        # Import enhanced SOC2 scanner components directly within app.py
                         # rather than from a separate page to ensure it's behind authentication
-                        from services.soc2_scanner import scan_github_repo_for_soc2, scan_azure_repo_for_soc2, SOC2_CATEGORIES
+                        from services.soc2_scanner import SOC2_CATEGORIES  # Only need categories for UI
+                        from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository, display_soc2_scan_results
                         from services.report_generator import generate_report
-                        from services.soc2_display import display_soc2_findings
                         
                         # Hide the Start Scan button and Upload Files section for cleaner UI
                         st.markdown("""
