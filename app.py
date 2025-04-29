@@ -3167,7 +3167,8 @@ else:
                         repo_source = st.radio(
                             "Select Repository Source",
                             ["GitHub Repository", "Azure DevOps Repository"],
-                            horizontal=True
+                            horizontal=True,
+                            key="soc2_repo_source"
                         )
                         
                         if repo_source == "GitHub Repository":
