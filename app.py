@@ -3057,6 +3057,7 @@ else:
                         # rather than from a separate page to ensure it's behind authentication
                         from services.soc2_scanner import scan_github_repo_for_soc2, scan_azure_repo_for_soc2, SOC2_CATEGORIES
                         from services.report_generator import generate_report
+                        from services.soc2_display import display_soc2_findings
                         
                         # Hide the Start Scan button and Upload Files section for cleaner UI
                         st.markdown("""
