@@ -87,3 +87,75 @@ def display_soc2_findings(scan_results):
                                 for v in violations:
                                     st.markdown(f"- **{v.get('risk_level', '').upper()}**: {v.get('description', '')} in `{v.get('file', '')}:{v.get('line', '')}`")
                                 st.markdown("---")
+
+def run_soc2_display_standalone():
+    """
+    Run a standalone SOC2 display page.
+    This can be imported and called directly from app.py
+    """
+    st.title("SOC2 Compliance Results")
+    
+    if 'soc2_scan_results' not in st.session_state:
+        st.warning("No SOC2 scan results found. Please run a SOC2 scan first.")
+        return
+        
+    scan_results = st.session_state.soc2_scan_results
+    
+    # Show repository info
+    st.write(f"**Repository:** {scan_results.get('repo_url')}")
+    if 'project' in scan_results:
+        st.write(f"**Project:** {scan_results.get('project')}")
+    st.write(f"**Branch:** {scan_results.get('branch', 'main')}")
+    
+    # Extract metrics
+    compliance_score = scan_results.get("compliance_score", 0)
+    high_risk = scan_results.get("high_risk_count", 0)
+    medium_risk = scan_results.get("medium_risk_count", 0)
+    low_risk = scan_results.get("low_risk_count", 0)
+    
+    # Display metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    # Color coding based on compliance score
+    if compliance_score >= 80:
+        compliance_color_css = "green"
+        compliance_status = "✓ Good" 
+    elif compliance_score >= 60:
+        compliance_color_css = "orange"
+        compliance_status = "⚠️ Needs Review"
+    else:
+        compliance_color_css = "red"
+        compliance_status = "✗ Critical"
+        
+    with col1:
+        st.metric("Compliance Score", f"{compliance_score}/100")
+        st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{compliance_status}</div>", unsafe_allow_html=True)
+    
+    with col2:
+        st.metric("High Risk Issues", high_risk, delta_color="inverse")
+    
+    with col3:
+        st.metric("Medium Risk Issues", medium_risk, delta_color="inverse")
+        
+    with col4:
+        st.metric("Low Risk Issues", low_risk, delta_color="inverse")
+    
+    # Use the display function
+    display_soc2_findings(scan_results)
+    
+    # PDF Download button
+    st.markdown("### Download Report")
+    if st.button("Generate PDF Report", type="primary"):
+        from services.report_generator import generate_report
+        import base64
+        from datetime import datetime
+        
+        with st.spinner("Generating PDF report..."):
+            # Generate PDF report
+            pdf_bytes = generate_report(scan_results)
+            
+            # Provide download link
+            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+            pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
+            st.markdown(href, unsafe_allow_html=True)

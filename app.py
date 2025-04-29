@@ -28,6 +28,8 @@ from services.optimized_scanner import OptimizedScanner
 from services.dpia_scanner import DPIAScanner, generate_dpia_report
 from services.ai_model_scanner import AIModelScanner
 from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
+from services.soc2_display import display_soc2_findings, run_soc2_display_standalone
+from services.soc2_scanner import scan_github_repo_for_soc2, scan_azure_repo_for_soc2
 from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES
 from utils.gdpr_rules import REGIONS, get_region_rules
 from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_finding, get_risk_color_gradient
