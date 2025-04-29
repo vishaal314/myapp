@@ -100,6 +100,17 @@ from utils.animated_language_switcher import animated_language_switcher, get_wel
 initialize()
 
 # Debug translations function for specific keys
+def display_soc2_scan_results(scan_results):
+    """
+    Use the enhanced SOC2 display function to show scan results.
+    This is a wrapper around the display_soc2_findings function.
+    
+    Args:
+        scan_results: Dictionary containing SOC2 scan results
+    """
+    from services.soc2_display import display_soc2_findings
+    display_soc2_findings(scan_results)
+
 def debug_translations():
     """Print debug information about critical translation keys."""
     debug_keys = [
