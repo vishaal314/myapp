@@ -2295,18 +2295,6 @@ else:
             # No header for DPIA - will be handled by the assessment form
             # No document upload needed - this is a pure questionnaire
             uploaded_files = []
-                
-        elif scan_type == _("scan.soc2"):
-            if log_source == _("scan.upload_files"):
-                upload_help = "Upload log files and access control configurations"
-                uploaded_files = st.file_uploader(
-                    "Upload Log Files", 
-                    accept_multiple_files=True,
-                    type=["log", "json", "yaml", "yml", "csv", "txt"],
-                    help=upload_help
-                )
-            else:
-                uploaded_files = []
         
         # Initialize start_scan variable
         start_scan = False
@@ -2324,6 +2312,29 @@ else:
             """, unsafe_allow_html=True)
             # Set start_scan to True for DPIA to bypass the button click
             start_scan = True
+        elif scan_type == _("scan.soc2"):
+            # Add CSS to make SOC2 scan button more prominent
+            st.markdown("""
+            <style>
+            /* Make SOC2 Scan button more prominent */
+            div[data-testid="stHorizontalBlock"] button {
+                background-color: #1565C0 !important;
+                color: white !important;
+                font-weight: bold !important;
+                border: 2px solid #0D47A1 !important;
+                padding: 0.5rem 1rem !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
+            with scan_btn_col1:
+                start_scan = st.button("Start SOC2 Compliance Scan", use_container_width=True, type="primary", key="soc2_scan_button")
+            with scan_btn_col2:
+                if 'free_trial_active' in locals() and free_trial_active:
+                    st.success(f"Free Trial: {free_trial_days_left} days left")
+                else:
+                    st.warning("Premium Feature")
         elif scan_type == _("scan.ai_model"):
             # Create a more prominent scan button for AI Model scan
             st.markdown("""
