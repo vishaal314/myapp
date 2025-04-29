@@ -3055,7 +3055,7 @@ else:
                     elif scan_type == _("scan.soc2"):
                         # Import SOC2 scanner components directly within app.py
                         # rather than from a separate page to ensure it's behind authentication
-                        from services.soc2_scanner import scan_github_repo_for_soc2, SOC2_CATEGORIES
+                        from services.soc2_scanner import scan_github_repo_for_soc2, scan_azure_repo_for_soc2, SOC2_CATEGORIES
                         from services.report_generator import generate_report
                         
                         # Hide the Start Scan button and Upload Files section for cleaner UI
@@ -3090,123 +3090,331 @@ else:
                                 "This scanner identifies security, availability, processing integrity, "
                                 "confidentiality, and privacy issues in your infrastructure code."))
                         
-                        # Repository URL input
-                        st.subheader(_("scan.repo_details", "Repository Details"))
-                        repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
-                                            placeholder="https://github.com/username/repository")
+                        # Repository selection
+                        st.subheader(_("scan.repo_source", "Repository Source"))
+                        repo_source = st.radio(
+                            "Select Repository Source",
+                            ["GitHub Repository", "Azure DevOps Repository"],
+                            horizontal=True
+                        )
                         
-                        # Optional inputs with expander
-                        with st.expander(_("scan.advanced_options", "Advanced Options")):
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                branch = st.text_input(_("scan.branch", "Branch (optional)"), 
-                                                    placeholder="main")
-                            with col2:
-                                token = st.text_input(_("scan.access_token", "GitHub Access Token (for private repos)"), 
-                                                    type="password", placeholder="ghp_xxxxxxxxxxxx")
-                                                    
-                            # SOC2 Categories selection
-                            st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
-                            categories_cols = st.columns(3)
+                        if repo_source == "GitHub Repository":
+                            # Repository URL input
+                            st.subheader(_("scan.repo_details", "Repository Details"))
+                            repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
+                                                placeholder="https://github.com/username/repository")
                             
-                            # Create checkboxes for each category
-                            selected_categories = {}
-                            for i, (key, name) in enumerate(SOC2_CATEGORIES.items()):
-                                col_idx = i % 3
-                                with categories_cols[col_idx]:
-                                    selected_categories[key] = st.checkbox(name, value=True)
-                        
-                        # Scan button
-                        scan_button = st.button(_("scan.start_scan", "Start SOC2 Scan"), type="primary", use_container_width=True)
-                        
-                        # Handle the scan process
-                        if scan_button:
-                            # Validate input
-                            if not repo_url:
-                                st.error(_("scan.error_no_repo", "Please enter a GitHub repository URL"))
-                                scan_running = False
-                            elif not repo_url.startswith(("https://github.com/", "http://github.com/")):
-                                st.error(_("scan.error_invalid_repo", "Please enter a valid GitHub repository URL"))
-                                scan_running = False
-                            else:
-                                # Valid input, proceed with scan
-                                with st.status(_("scan.scanning", "Scanning repository for SOC2 compliance issues..."), expanded=True) as status:
-                                    try:
-                                        # Show cloning message
-                                        st.write(_("scan.cloning", "Cloning repository..."))
-                                        
-                                        # Perform scan
-                                        scan_results = scan_github_repo_for_soc2(repo_url, branch, token)
-                                        
-                                        # Check for scan failure
-                                        if scan_results.get("scan_status") == "failed":
-                                            error_msg = scan_results.get("error", "Unknown error")
-                                            st.error(f"{_('scan.scan_failed', 'Scan failed')}: {error_msg}")
-                                            status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
-                                            scan_running = False
-                                        else:
-                                            # Scan succeeded, show progress
-                                            st.write(_("scan.analyzing", "Analyzing IaC files..."))
-                                            time.sleep(1)  # Give the UI time to update
+                            # Optional inputs with expander
+                            with st.expander(_("scan.advanced_options", "Advanced Options")):
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    branch = st.text_input(_("scan.branch", "Branch (optional)"), 
+                                                        placeholder="main")
+                                with col2:
+                                    token = st.text_input(_("scan.access_token", "GitHub Access Token (for private repos)"), 
+                                                        type="password", placeholder="ghp_xxxxxxxxxxxx")
+                                                        
+                                # SOC2 Categories selection
+                                st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
+                                categories_cols = st.columns(3)
+                                
+                                # Create checkboxes for each category
+                                selected_categories = {}
+                                for i, (key, name) in enumerate(SOC2_CATEGORIES.items()):
+                                    col_idx = i % 3
+                                    with categories_cols[col_idx]:
+                                        selected_categories[key] = st.checkbox(name, value=True)
+                            
+                            # Scan button
+                            scan_button = st.button(_("scan.start_scan", "Start GitHub SOC2 Scan"), type="primary", use_container_width=True)
+                            
+                            # Handle the scan process
+                            if scan_button:
+                                # Validate input
+                                if not repo_url:
+                                    st.error(_("scan.error_no_repo", "Please enter a GitHub repository URL"))
+                                    scan_running = False
+                                elif not repo_url.startswith(("https://github.com/", "http://github.com/")):
+                                    st.error(_("scan.error_invalid_repo", "Please enter a valid GitHub repository URL"))
+                                    scan_running = False
+                                else:
+                                    # Valid input, proceed with scan
+                                    with st.status(_("scan.scanning", "Scanning repository for SOC2 compliance issues..."), expanded=True) as status:
+                                        try:
+                                            # Show cloning message
+                                            st.write(_("scan.cloning", "Cloning repository..."))
                                             
-                                            st.write(_("scan.generating_report", "Generating compliance report..."))
-                                            status.update(label=_("scan.scan_complete", "Scan complete!"), state="complete")
+                                            # Perform scan
+                                            scan_results = scan_github_repo_for_soc2(repo_url, branch, token)
                                             
-                                            # Display results if we have findings
-                                            if 'findings' in scan_results:
-                                                st.subheader(_("scan.scan_results", "Scan Results"))
+                                            # Store the scan_results for PDF report generation
+                                            st.session_state.soc2_scan_results = scan_results
+                                            
+                                            # Check for scan failure
+                                            if scan_results.get("scan_status") == "failed":
+                                                error_msg = scan_results.get("error", "Unknown error")
+                                                st.error(f"{_('scan.scan_failed', 'Scan failed')}: {error_msg}")
+                                                status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
+                                                scan_running = False
+                                            else:
+                                                # Scan succeeded, show progress
+                                                st.write(_("scan.analyzing", "Analyzing IaC files..."))
+                                                time.sleep(1)  # Give the UI time to update
                                                 
-                                                # Extract key metrics
-                                                compliance_score = scan_results.get("compliance_score", 0)
-                                                high_risk = scan_results.get("high_risk_count", 0)
-                                                medium_risk = scan_results.get("medium_risk_count", 0)
-                                                low_risk = scan_results.get("low_risk_count", 0)
-                                                total_findings = high_risk + medium_risk + low_risk
+                                                st.write(_("scan.generating_report", "Generating compliance report..."))
+                                                status.update(label=_("scan.scan_complete", "Scan complete!"), state="complete")
                                                 
-                                                # Repository info
-                                                st.write(f"**{_('scan.repository', 'Repository')}:** {scan_results.get('repo_url')}")
-                                                st.write(f"**{_('scan.branch', 'Branch')}:** {scan_results.get('branch', 'main')}")
-                                                
-                                                # Create metrics
-                                                col1, col2, col3, col4 = st.columns(4)
-                                                
-                                                # Determine compliance color for styling
-                                                if compliance_score >= 80:
-                                                    compliance_color_css = "green"
-                                                elif compliance_score >= 60:
-                                                    compliance_color_css = "orange"
-                                                else:
-                                                    compliance_color_css = "red"
+                                                # Display results if we have findings
+                                                if 'findings' in scan_results:
+                                                    st.subheader(_("scan.scan_results", "Scan Results"))
                                                     
-                                                with col1:
-                                                    st.metric(_("scan.compliance_score", "Compliance Score"), 
-                                                            f"{compliance_score}/100", 
-                                                            delta=None,
-                                                            delta_color="normal")
+                                                    # Extract key metrics
+                                                    compliance_score = scan_results.get("compliance_score", 0)
+                                                    high_risk = scan_results.get("high_risk_count", 0)
+                                                    medium_risk = scan_results.get("medium_risk_count", 0)
+                                                    low_risk = scan_results.get("low_risk_count", 0)
+                                                    total_findings = high_risk + medium_risk + low_risk
+                                                    
+                                                    # Repository info
+                                                    st.write(f"**{_('scan.repository', 'Repository')}:** {scan_results.get('repo_url')}")
+                                                    st.write(f"**{_('scan.branch', 'Branch')}:** {scan_results.get('branch', 'main')}")
+                                                    
+                                                    # Create metrics
+                                                    col1, col2, col3, col4 = st.columns(4)
+                                                    
+                                                    # Determine compliance color for styling
+                                                    if compliance_score >= 80:
+                                                        compliance_color_css = "green"
+                                                    elif compliance_score >= 60:
+                                                        compliance_color_css = "orange"
+                                                    else:
+                                                        compliance_color_css = "red"
+                                                        
+                                                    with col1:
+                                                        st.metric(_("scan.compliance_score", "Compliance Score"), 
+                                                                f"{compliance_score}/100", 
+                                                                delta=None,
+                                                                delta_color="normal")
+                                                                
+                                                        st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{'✓ Good' if compliance_score >= 80 else '⚠️ Needs Review' if compliance_score >= 60 else '✗ Critical'}</div>", unsafe_allow_html=True)
+                                                    
+                                                    with col2:
+                                                        st.metric(_("scan.high_risk", "High Risk Issues"), 
+                                                                high_risk,
+                                                                delta=None,
+                                                                delta_color="inverse")
+                                                                
+                                                    with col3:
+                                                        st.metric(_("scan.medium_risk", "Medium Risk Issues"), 
+                                                                medium_risk,
+                                                                delta=None,
+                                                                delta_color="inverse")
+                                                                
+                                                    with col4:
+                                                        st.metric(_("scan.low_risk", "Low Risk Issues"), 
+                                                                low_risk,
+                                                                delta=None,
+                                                                delta_color="inverse")
+                                                    
+                                                    # Add PDF Download button
+                                                    st.markdown("### Download Report")
+                                                    if st.button("Generate PDF Report", type="primary"):
+                                                        with st.spinner("Generating PDF report..."):
+                                                            # Generate PDF report
+                                                            pdf_bytes = generate_report(scan_results)
                                                             
-                                                    st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{'✓ Good' if compliance_score >= 80 else '⚠️ Needs Review' if compliance_score >= 60 else '✗ Critical'}</div>", unsafe_allow_html=True)
+                                                            # Provide download link
+                                                            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+                                                            pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                                                            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
+                                                            st.markdown(href, unsafe_allow_html=True)
+                                                    
+                                                    # Display findings table
+                                                    st.subheader("Compliance Findings")
+                                                    if 'findings' in scan_results and scan_results['findings']:
+                                                        findings_df = pd.DataFrame([
+                                                            {
+                                                                "Risk": f.get("risk_level", "Unknown").upper(),
+                                                                "Category": f.get("category", "Unknown").capitalize(),
+                                                                "Description": f.get("description", "No description"),
+                                                                "File": f.get("file", "Unknown"),
+                                                                "Line": f.get("line", "N/A"),
+                                                            }
+                                                            for f in scan_results['findings'][:10]  # Show top 10 findings
+                                                        ])
+                                                        st.dataframe(findings_df, use_container_width=True)
+                                                        
+                                                        if len(scan_results['findings']) > 10:
+                                                            st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")
+                                        except Exception as e:
+                                            # Handle any exception during the scan
+                                            st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
+                                            status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
+                        
+                        elif repo_source == "Azure DevOps Repository":
+                            # Azure DevOps repository inputs
+                            st.subheader(_("scan.azure_repo_details", "Azure DevOps Repository Details"))
+                            
+                            # Input fields for Azure DevOps
+                            repo_url = st.text_input(_("scan.azure_repo_url", "Azure DevOps Repository URL"), 
+                                            placeholder="https://dev.azure.com/organization/project/_git/repository")
+                            
+                            # Project name is required for Azure DevOps
+                            project = st.text_input(_("scan.azure_project", "Azure DevOps Project"), 
+                                          placeholder="MyProject")
+                            
+                            # Optional inputs with expander
+                            with st.expander(_("scan.advanced_options", "Advanced Options")):
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    branch = st.text_input(_("scan.branch", "Branch (optional)"), 
+                                                        placeholder="main")
+                                    organization = st.text_input(_("scan.azure_organization", "Organization (optional)"), 
+                                                          placeholder="Will be extracted from URL if not provided")
+                                with col2:
+                                    token = st.text_input(_("scan.azure_token", "Azure Personal Access Token (for private repos)"), 
+                                                        type="password", placeholder="Personal Access Token")
+                                                        
+                                # SOC2 Categories selection (same as GitHub)
+                                st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
+                                categories_cols = st.columns(3)
+                                
+                                # Create checkboxes for each category
+                                selected_categories = {}
+                                for i, (key, name) in enumerate(SOC2_CATEGORIES.items()):
+                                    col_idx = i % 3
+                                    with categories_cols[col_idx]:
+                                        selected_categories[key] = st.checkbox(name, value=True)
+                            
+                            # Scan button for Azure
+                            scan_button = st.button(_("scan.start_azure_scan", "Start Azure SOC2 Scan"), type="primary", use_container_width=True)
+                            
+                            # Handle the Azure scan process
+                            if scan_button:
+                                # Validate input
+                                if not repo_url:
+                                    st.error(_("scan.error_no_repo", "Please enter an Azure DevOps repository URL"))
+                                    scan_running = False
+                                elif not repo_url.startswith(("https://dev.azure.com/", "http://dev.azure.com/")):
+                                    st.error(_("scan.error_invalid_azure_repo", "Please enter a valid Azure DevOps repository URL"))
+                                    scan_running = False
+                                elif not project:
+                                    st.error(_("scan.error_no_project", "Please enter the Azure DevOps project name"))
+                                    scan_running = False
+                                else:
+                                    # Valid input, proceed with Azure scan
+                                    with st.status(_("scan.scanning_azure", "Scanning Azure repository for SOC2 compliance issues..."), expanded=True) as status:
+                                        try:
+                                            # Show cloning message
+                                            st.write(_("scan.cloning", "Cloning repository..."))
+                                            
+                                            # Perform Azure scan
+                                            scan_results = scan_azure_repo_for_soc2(repo_url, project, branch, token, organization)
+                                            
+                                            # Store the scan_results for PDF report generation
+                                            st.session_state.soc2_scan_results = scan_results
+                                            
+                                            # Check for scan failure (same logic as GitHub)
+                                            if scan_results.get("scan_status") == "failed":
+                                                error_msg = scan_results.get("error", "Unknown error")
+                                                st.error(f"{_('scan.scan_failed', 'Scan failed')}: {error_msg}")
+                                                status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
+                                                scan_running = False
+                                            else:
+                                                # Scan succeeded, show progress
+                                                st.write(_("scan.analyzing", "Analyzing IaC files..."))
+                                                time.sleep(1)  # Give the UI time to update
                                                 
-                                                with col2:
-                                                    st.metric(_("scan.high_risk", "High Risk Issues"), 
-                                                            high_risk,
-                                                            delta=None,
-                                                            delta_color="inverse")
+                                                st.write(_("scan.generating_report", "Generating compliance report..."))
+                                                status.update(label=_("scan.scan_complete", "Scan complete!"), state="complete")
+                                                
+                                                # Display results if we have findings (same format as GitHub)
+                                                if 'findings' in scan_results:
+                                                    st.subheader(_("scan.scan_results", "Scan Results"))
+                                                    
+                                                    # Extract key metrics
+                                                    compliance_score = scan_results.get("compliance_score", 0)
+                                                    high_risk = scan_results.get("high_risk_count", 0)
+                                                    medium_risk = scan_results.get("medium_risk_count", 0)
+                                                    low_risk = scan_results.get("low_risk_count", 0)
+                                                    total_findings = high_risk + medium_risk + low_risk
+                                                    
+                                                    # Repository info
+                                                    st.write(f"**{_('scan.repository', 'Repository')}:** {scan_results.get('repo_url')}")
+                                                    st.write(f"**{_('scan.project', 'Project')}:** {scan_results.get('project')}")
+                                                    st.write(f"**{_('scan.branch', 'Branch')}:** {scan_results.get('branch', 'main')}")
+                                                    
+                                                    # Create metrics
+                                                    col1, col2, col3, col4 = st.columns(4)
+                                                    
+                                                    # Determine compliance color for styling
+                                                    if compliance_score >= 80:
+                                                        compliance_color_css = "green"
+                                                    elif compliance_score >= 60:
+                                                        compliance_color_css = "orange"
+                                                    else:
+                                                        compliance_color_css = "red"
+                                                        
+                                                    with col1:
+                                                        st.metric(_("scan.compliance_score", "Compliance Score"), 
+                                                                f"{compliance_score}/100", 
+                                                                delta=None,
+                                                                delta_color="normal")
+                                                                
+                                                        st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{'✓ Good' if compliance_score >= 80 else '⚠️ Needs Review' if compliance_score >= 60 else '✗ Critical'}</div>", unsafe_allow_html=True)
+                                                    
+                                                    with col2:
+                                                        st.metric(_("scan.high_risk", "High Risk Issues"), 
+                                                                high_risk,
+                                                                delta=None,
+                                                                delta_color="inverse")
+                                                                
+                                                    with col3:
+                                                        st.metric(_("scan.medium_risk", "Medium Risk Issues"), 
+                                                                medium_risk,
+                                                                delta=None,
+                                                                delta_color="inverse")
+                                                                
+                                                    with col4:
+                                                        st.metric(_("scan.low_risk", "Low Risk Issues"), 
+                                                                low_risk,
+                                                                delta=None,
+                                                                delta_color="inverse")
+                                                    
+                                                    # Add PDF Download button
+                                                    st.markdown("### Download Report")
+                                                    if st.button("Generate PDF Report", type="primary"):
+                                                        with st.spinner("Generating PDF report..."):
+                                                            # Generate PDF report
+                                                            pdf_bytes = generate_report(scan_results)
                                                             
-                                                with col3:
-                                                    st.metric(_("scan.medium_risk", "Medium Risk Issues"), 
-                                                            medium_risk,
-                                                            delta=None,
-                                                            delta_color="inverse")
-                                                            
-                                                with col4:
-                                                    st.metric(_("scan.low_risk", "Low Risk Issues"), 
-                                                            low_risk,
-                                                            delta=None,
-                                                            delta_color="inverse")
-                                    except Exception as e:
-                                        # Handle any exception during the scan
-                                        st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
-                                        status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
+                                                            # Provide download link
+                                                            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+                                                            pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                                                            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
+                                                            st.markdown(href, unsafe_allow_html=True)
+                                                    
+                                                    # Display findings table
+                                                    st.subheader("Compliance Findings")
+                                                    if 'findings' in scan_results and scan_results['findings']:
+                                                        findings_df = pd.DataFrame([
+                                                            {
+                                                                "Risk": f.get("risk_level", "Unknown").upper(),
+                                                                "Category": f.get("category", "Unknown").capitalize(),
+                                                                "Description": f.get("description", "No description"),
+                                                                "File": f.get("file", "Unknown"),
+                                                                "Line": f.get("line", "N/A"),
+                                                            }
+                                                            for f in scan_results['findings'][:10]  # Show top 10 findings
+                                                        ])
+                                                        st.dataframe(findings_df, use_container_width=True)
+                                                        
+                                                        if len(scan_results['findings']) > 10:
+                                                            st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")
+                                        except Exception as e:
+                                            # Handle any exception during the scan
+                                            st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
+                                            status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
                         
                         # Stop normal flow to proceed with only the SOC2 scanner
                         scan_running = False

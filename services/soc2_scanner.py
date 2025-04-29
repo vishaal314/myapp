@@ -29,8 +29,119 @@ SOC2_CATEGORIES = {
     "privacy": "Privacy"
 }
 
+# SOC2 Trust Services Criteria (TSC) mapping
+# This maps the SOC2 criteria to their descriptions for reporting
+SOC2_TSC_MAPPING = {
+    # Common Criteria (Security)
+    "CC1.1": "The entity demonstrates a commitment to integrity and ethical values.",
+    "CC1.2": "The board of directors demonstrates independence from management and exercises oversight responsibility.",
+    "CC1.3": "Management establishes structures, reporting lines, and authorities and responsibilities.",
+    "CC1.4": "The entity demonstrates a commitment to attract, develop, and retain competent individuals.",
+    "CC2.1": "The entity specifies objectives with sufficient clarity to enable risks to be identified.",
+    "CC2.2": "The entity identifies and assesses risks to the achievement of its objectives.",
+    "CC2.3": "The entity considers the potential for fraud in assessing risks.",
+    "CC3.1": "The entity selects and develops control activities that mitigate risks.",
+    "CC3.2": "The entity selects and develops general controls over technology.",
+    "CC3.3": "The entity deploys control activities through policies and procedures.",
+    "CC3.4": "The entity obtains or generates relevant, quality information to support the functioning of controls.",
+    "CC4.1": "The entity communicates information internally to support the functioning of controls.",
+    "CC4.2": "The entity communicates with external parties regarding matters affecting the functioning of controls.",
+    "CC5.1": "The entity selects, develops, and performs ongoing evaluations to ascertain whether controls are functioning.",
+    "CC5.2": "The entity evaluates and communicates control deficiencies in a timely manner.",
+    "CC5.3": "The entity identifies, develops, and implements activities to mitigate risks.",
+    "CC6.1": "The entity implements logical access security software, infrastructure, and architectures.",
+    "CC6.2": "Prior to issuing system credentials and granting system access, the entity registers and authorizes new users.",
+    "CC6.3": "The entity authorizes, modifies, or removes access to data, software, functions, and other IT resources.",
+    "CC6.4": "The entity restricts physical access to facilities and protected information assets.",
+    "CC6.5": "The entity discontinues logical and physical protections over physical assets only after the ability to read or recover data has been diminished.",
+    "CC6.6": "The entity implements logical access security measures to protect against threats from sources outside its system boundaries.",
+    "CC6.7": "The entity restricts the transmission, movement, and removal of information to authorized users and processes.",
+    "CC6.8": "The entity implements controls to prevent or detect and act upon the introduction of unauthorized or malicious software.",
+    "CC7.1": "The entity selects and develops security incident identification and response activities.",
+    "CC7.2": "The entity monitors the information system and environments for potential security breaches and vulnerabilities.",
+    "CC7.3": "The entity evaluates security events for significance and communicates breaches and other incidents.",
+    "CC7.4": "The entity responds to identified security incidents by executing a defined incident response program.",
+    "CC7.5": "The entity implements recovery plan procedures to restore systems operations in the event of incidents.",
+    "CC8.1": "The entity authorizes, designs, develops or acquires, implements, operates, approves, maintains, and monitors environmental protections, software, data, infrastructure, and procedures to meet its objectives.",
+    "CC9.1": "The entity identifies, selects, and develops risk mitigation activities for risks arising from business disruptions.",
+    "CC9.2": "The entity assesses and manages risks associated with vendors and business partners.",
+    
+    # Availability
+    "A1.1": "The entity maintains, monitors, and evaluates current processing capacity and use of system components.",
+    "A1.2": "The entity authorizes, designs, develops, or acquires, implements, operates, approves, maintains, and monitors environmental protections.",
+    "A1.3": "The entity authorizes, designs, develops or acquires, implements, operates, approves, maintains, and monitors recovery plans and recovery infrastructure.",
+    
+    # Processing Integrity
+    "PI1.1": "The entity obtains or generates, uses, and communicates relevant, quality information regarding the objectives of processing.",
+    "PI1.2": "The entity implements policies and procedures over system inputs to result in products, services, and reporting that meet the entity's objectives.",
+    "PI1.3": "The entity implements policies and procedures over system processing to result in products and services that meet objectives.",
+    "PI1.4": "The entity implements policies and procedures to make available or deliver outputs that meet entity objectives.",
+    "PI1.5": "The entity implements policies and procedures to store inputs, items in processing, and outputs.",
+    
+    # Confidentiality
+    "C1.1": "The entity identifies and maintains confidential information to meet the entity's objectives.",
+    "C1.2": "The entity disposes of confidential information to meet the entity's objectives.",
+    
+    # Privacy
+    "P1.1": "The entity provides notice of its privacy practices to data subjects.",
+    "P2.1": "The entity communicates choices available regarding the collection, use, retention, disclosure, and disposal of personal information.",
+    "P3.1": "Personal information is collected consistent with the entity's objectives.",
+    "P3.2": "The entity collects personal information with the consent of the data subjects.",
+    "P4.1": "The entity limits the use of personal information to the purposes identified in the entity's objectives.",
+    "P5.1": "The entity grants data subjects the ability to access their personal information.",
+    "P6.1": "The entity discloses personal information to third parties with the consent of data subjects.",
+    "P7.1": "The entity secures personal information during collection, use, retention, disclosure, and disposal.",
+    "P8.1": "The entity maintains accurate and complete personal information."
+}
+
 # SOC2 Compliance risk levels
 RISK_LEVELS = ["high", "medium", "low"]
+
+# Map from category to SOC2 TSC criteria
+CATEGORY_TO_TSC_MAP = {
+    "security": [
+        "CC1.1", "CC1.2", "CC1.3", "CC1.4", "CC2.1", "CC2.2", "CC2.3", 
+        "CC3.1", "CC3.2", "CC3.3", "CC3.4", "CC4.1", "CC4.2", "CC5.1", 
+        "CC5.2", "CC5.3", "CC6.1", "CC6.2", "CC6.3", "CC6.4", "CC6.5", 
+        "CC6.6", "CC6.7", "CC6.8", "CC7.1", "CC7.2", "CC7.3", "CC7.4", 
+        "CC7.5", "CC8.1", "CC9.1", "CC9.2"
+    ],
+    "availability": ["A1.1", "A1.2", "A1.3"],
+    "processing_integrity": ["PI1.1", "PI1.2", "PI1.3", "PI1.4", "PI1.5"],
+    "confidentiality": ["C1.1", "C1.2"],
+    "privacy": ["P1.1", "P2.1", "P3.1", "P3.2", "P4.1", "P5.1", "P6.1", "P7.1", "P8.1"]
+}
+
+# More specific mapping for common findings to specific TSC criteria
+FINDING_TO_TSC_MAP = {
+    # Security mappings
+    "Hard-coded AWS access keys": ["CC6.1", "CC6.7"],
+    "Possible hard-coded secrets": ["CC6.1", "CC6.7"],
+    "Possible hard-coded password": ["CC6.1", "CC6.7"],
+    "Security group with unrestricted ingress": ["CC6.6", "CC6.7"],
+    "IAM policy with unrestricted access": ["CC6.1", "CC6.3"],
+    "Container running in privileged mode": ["CC6.8", "CC7.2"],
+    "Pod using hostPath volume": ["CC6.1", "CC6.8"],
+    
+    # Availability mappings
+    "Resource with backups disabled": ["A1.2", "A1.3"],
+    "EC2 instance without termination protection": ["A1.2"],
+    "S3 bucket without versioning": ["A1.3"],
+    "Resource with monitoring disabled": ["A1.1"],
+    "Resource without deletion protection": ["A1.2"],
+    
+    # Processing Integrity mappings
+    "Resource without logging configured": ["PI1.3", "PI1.4"],
+    "Using 'latest' tag for base image": ["PI1.2", "PI1.3"],
+    
+    # Confidentiality mappings
+    "S3 bucket with public read access": ["C1.1"],
+    "Resource with encryption disabled": ["C1.1"],
+    
+    # Privacy mappings
+    "Container with potential PII exposure": ["P7.1"],
+    "Unrestricted data access": ["P4.1", "P7.1"]
+}
 
 # IaC file patterns to identify
 IaC_FILE_PATTERNS = {
@@ -335,6 +446,25 @@ def scan_iac_file(file_path: str, tech: Optional[str] = None) -> List[Dict[str, 
                     
                 code_snippet = content[context_start:context_end].strip()
                 
+                # Get SOC2 TSC criteria mapping for this finding
+                tsc_criteria = []
+                
+                # Check if we have a specific mapping for this description
+                if description in FINDING_TO_TSC_MAP:
+                    tsc_criteria = FINDING_TO_TSC_MAP[description]
+                else:
+                    # Fall back to category-based mapping
+                    tsc_criteria = CATEGORY_TO_TSC_MAP.get(category, [])
+                
+                # Create tsc_details with criterion and description pairs
+                tsc_details = []
+                for criterion in tsc_criteria:
+                    criterion_description = SOC2_TSC_MAPPING.get(criterion, "")
+                    tsc_details.append({
+                        "criterion": criterion,
+                        "description": criterion_description
+                    })
+                
                 finding = {
                     "file": file_path,
                     "line": line_num,
@@ -344,7 +474,9 @@ def scan_iac_file(file_path: str, tech: Optional[str] = None) -> List[Dict[str, 
                     "category": category,
                     "location": f"{os.path.basename(file_path)}:{line_num}",
                     "code_snippet": code_snippet,
-                    "technology": tech
+                    "technology": tech,
+                    "soc2_tsc_criteria": tsc_criteria,
+                    "soc2_tsc_details": tsc_details
                 }
                 
                 findings.append(finding)
@@ -512,6 +644,172 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
     
     return results
 
+def scan_azure_repo_for_soc2(repo_url: str, project: str, branch: Optional[str] = None, 
+                          token: Optional[str] = None, organization: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Scan an Azure DevOps repository for SOC2 compliance issues in IaC code.
+    
+    Args:
+        repo_url: Azure DevOps repository URL
+        project: Azure DevOps project name
+        branch: Optional branch name
+        token: Optional Azure personal access token
+        organization: Optional Azure DevOps organization name (can be extracted from URL)
+        
+    Returns:
+        Dictionary with scan results
+    """
+    # Initialize results with same structure as GitHub scan
+    results = {
+        "scan_type": "soc2",
+        "timestamp": datetime.now().isoformat(),
+        "repo_url": repo_url,
+        "project": project,
+        "branch": branch or "main",
+        "findings": [],
+        "summary": {
+            "security": {"high": 0, "medium": 0, "low": 0},
+            "availability": {"high": 0, "medium": 0, "low": 0},
+            "processing_integrity": {"high": 0, "medium": 0, "low": 0},
+            "confidentiality": {"high": 0, "medium": 0, "low": 0},
+            "privacy": {"high": 0, "medium": 0, "low": 0}
+        },
+        "scan_status": "failed",
+        "technologies_detected": set(),
+        "total_files_scanned": 0,
+        "iac_files_found": 0,
+        "high_risk_count": 0,
+        "medium_risk_count": 0,
+        "low_risk_count": 0,
+    }
+    
+    # Create temp directory
+    temp_dir = tempfile.mkdtemp()
+    clone_successful = False
+    
+    try:
+        # Extract organization from URL if not provided
+        if not organization and "dev.azure.com" in repo_url:
+            # Format: https://dev.azure.com/{organization}/{project}/_git/{repository}
+            url_parts = repo_url.split('/')
+            org_index = url_parts.index("dev.azure.com") + 1
+            if org_index < len(url_parts):
+                organization = url_parts[org_index]
+        
+        # Build the clone URL with authentication if token is provided
+        if token:
+            # Format: https://{token}@dev.azure.com/{organization}/{project}/_git/{repository}
+            clone_url = repo_url.replace("https://", f"https://{token}@")
+        else:
+            clone_url = repo_url
+        
+        # Clone repository
+        logger.info(f"Cloning Azure repository: {repo_url} (branch: {branch})")
+        
+        # Prepare git command
+        git_cmd = ["git", "clone", clone_url, temp_dir]
+        if branch:
+            git_cmd.extend(["--branch", branch])
+        git_cmd.extend(["--single-branch", "--depth", "1"])
+        
+        # Execute clone
+        subprocess.run(git_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        clone_successful = True
+        
+        # Once cloned, process it the same way as GitHub repositories
+        # Count total files
+        total_files = 0
+        for root, dirs, files in os.walk(temp_dir):
+            if '.git' in dirs:
+                dirs.remove('.git')  # Skip .git directory
+            total_files += len(files)
+        
+        results["total_files_scanned"] = total_files
+        
+        # Find IaC files
+        iac_files = []
+        for root, dirs, files in os.walk(temp_dir):
+            for file in files:
+                file_path = os.path.join(root, file)
+                rel_path = os.path.relpath(file_path, temp_dir)
+                
+                # Skip .git directory
+                if '.git' in rel_path.split(os.sep):
+                    continue
+                
+                # Check if it's an IaC file
+                for tech, patterns in IaC_FILE_PATTERNS.items():
+                    for pattern in patterns:
+                        if re.search(pattern, file):
+                            iac_files.append((file_path, tech, rel_path))
+                            if tech not in results["technologies_detected"]:
+                                results["technologies_detected"].add(tech)
+                            break
+        
+        results["iac_files_found"] = len(iac_files)
+        
+        # If we found IaC files, scan them
+        if iac_files:
+            # Process each file
+            for file_path, tech, rel_path in iac_files:
+                # Scan file
+                file_findings = scan_iac_file(file_path, tech)
+                
+                # Add file path to each finding
+                for finding in file_findings:
+                    finding["file"] = rel_path
+                    
+                    # Update risk counts and categories
+                    risk_level = finding["risk_level"]
+                    category = finding["category"]
+                    
+                    if risk_level in ["high", "medium", "low"]:
+                        results["summary"][category][risk_level] += 1
+                        
+                        if risk_level == "high":
+                            results["high_risk_count"] += 1
+                        elif risk_level == "medium":
+                            results["medium_risk_count"] += 1
+                        elif risk_level == "low":
+                            results["low_risk_count"] += 1
+                
+                results["findings"].extend(file_findings)
+            
+            # Calculate compliance score based on findings
+            if results["high_risk_count"] > 0 or results["medium_risk_count"] > 0 or results["low_risk_count"] > 0:
+                total_issues = results["high_risk_count"] * 3 + results["medium_risk_count"] * 2 + results["low_risk_count"]
+                max_score = 100
+                penalty_per_point = min(3, max(1, total_issues / 10))  # Dynamic penalty based on total issues
+                compliance_score = max(0, max_score - int(total_issues * penalty_per_point))
+                results["compliance_score"] = compliance_score
+            else:
+                results["compliance_score"] = 100  # Perfect score if no issues
+                
+            # Generate recommendations
+            results["recommendations"] = generate_recommendations(results)
+            
+            # Mark scan as successful
+            results["scan_status"] = "success"
+        else:
+            # No IaC files found
+            results["scan_status"] = "success"
+            results["compliance_score"] = 100  # Perfect score if no issues
+            results["warning"] = "No Infrastructure-as-Code files found in the repository."
+    
+    except Exception as e:
+        logger.error(f"Error scanning Azure repository: {str(e)}")
+        traceback.print_exc()
+        results["error"] = f"Error scanning Azure repository: {str(e)}"
+    finally:
+        # Clean up temp directory
+        if os.path.exists(temp_dir):
+            try:
+                shutil.rmtree(temp_dir)
+            except:
+                logger.warning(f"Failed to clean up temp directory: {temp_dir}")
+    
+    return results
+
 def generate_recommendations(scan_results: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     Generate recommendations based on scan results.
@@ -535,8 +833,21 @@ def generate_recommendations(scan_results: Dict[str, Any]) -> List[Dict[str, Any
                 "impact": "High" if finding["risk_level"] == "high" else "Medium" if finding["risk_level"] == "medium" else "Low",
                 "category": finding["category"],
                 "steps": [],
-                "affected_files": []
+                "affected_files": [],
+                "soc2_tsc_criteria": finding.get("soc2_tsc_criteria", []),
+                "soc2_tsc_details": finding.get("soc2_tsc_details", [])
             }
+        else:
+            # Merge TSC criteria if not already present
+            existing_criteria = unique_recs[rec_key].get("soc2_tsc_criteria", [])
+            for criterion in finding.get("soc2_tsc_criteria", []):
+                if criterion not in existing_criteria:
+                    unique_recs[rec_key]["soc2_tsc_criteria"].append(criterion)
+                    
+                    # Also add the criterion details
+                    for detail in finding.get("soc2_tsc_details", []):
+                        if detail["criterion"] == criterion:
+                            unique_recs[rec_key]["soc2_tsc_details"].append(detail)
         
         # Add file to affected files if not already there
         file_info = f"{finding['file']}:{finding['line']}"
@@ -585,6 +896,11 @@ def generate_recommendations(scan_results: Dict[str, Any]) -> List[Dict[str, Any
                 f"Focus on files: {', '.join(rec_data['affected_files'][:3])}" + ("..." if len(rec_data["affected_files"]) > 3 else "")
             ]
         
+        # Add SOC2 TSC reference to steps if available
+        if rec_data["soc2_tsc_criteria"]:
+            criteria_str = ", ".join(rec_data["soc2_tsc_criteria"])
+            rec_data["steps"].append(f"SOC2 TSC Criteria: {criteria_str}")
+        
         # Remove affected_files before adding to recommendations
         affected_files = rec_data.pop("affected_files")
         recommendations.append(rec_data)
@@ -593,4 +909,83 @@ def generate_recommendations(scan_results: Dict[str, Any]) -> List[Dict[str, Any
     severity_order = {"high": 0, "medium": 1, "low": 2}
     recommendations.sort(key=lambda x: severity_order.get(x["severity"], 3))
     
+    # Add a SOC2 TSC compliance checklist to the scan results
+    scan_results["soc2_tsc_checklist"] = generate_soc2_tsc_checklist(scan_results)
+    
     return recommendations
+
+def generate_soc2_tsc_checklist(scan_results: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Generate a SOC2 TSC checklist based on the scan results.
+    
+    Args:
+        scan_results: Scan results dictionary
+        
+    Returns:
+        Dictionary with SOC2 TSC checklist
+    """
+    # Initialize checklist with all criteria as "not_assessed"
+    checklist = {}
+    for criterion, description in SOC2_TSC_MAPPING.items():
+        checklist[criterion] = {
+            "criterion": criterion,
+            "description": description,
+            "status": "not_assessed",
+            "violations": [],
+            "category": get_criterion_category(criterion)
+        }
+    
+    # Update status based on findings
+    for finding in scan_results.get("findings", []):
+        for criterion in finding.get("soc2_tsc_criteria", []):
+            if criterion in checklist:
+                # If any high risk finding, mark as "failed"
+                if finding["risk_level"] == "high":
+                    checklist[criterion]["status"] = "failed"
+                # If medium risk and not already failed, mark as "warning"
+                elif finding["risk_level"] == "medium" and checklist[criterion]["status"] != "failed":
+                    checklist[criterion]["status"] = "warning"
+                # If low risk and not already failed or warning, mark as "info"
+                elif finding["risk_level"] == "low" and checklist[criterion]["status"] not in ["failed", "warning"]:
+                    checklist[criterion]["status"] = "info"
+                
+                # Add violation
+                violation = {
+                    "description": finding["description"],
+                    "file": finding["file"],
+                    "line": finding["line"],
+                    "risk_level": finding["risk_level"],
+                    "recommendation": finding["recommendation"]
+                }
+                checklist[criterion]["violations"].append(violation)
+    
+    # For any criterion with no findings, mark as "passed" if it was previously "not_assessed"
+    for criterion in checklist:
+        if checklist[criterion]["status"] == "not_assessed":
+            checklist[criterion]["status"] = "passed"
+    
+    return checklist
+
+def get_criterion_category(criterion: str) -> str:
+    """
+    Get the category of a SOC2 TSC criterion based on its prefix.
+    
+    Args:
+        criterion: SOC2 TSC criterion code (e.g., "CC1.1", "A1.2", etc.)
+        
+    Returns:
+        Category of the criterion
+    """
+    prefix = criterion.split(".")[0]
+    if prefix.startswith("CC"):
+        return "security"
+    elif prefix.startswith("A"):
+        return "availability"
+    elif prefix.startswith("PI"):
+        return "processing_integrity"
+    elif prefix.startswith("C"):
+        return "confidentiality"
+    elif prefix.startswith("P"):
+        return "privacy"
+    else:
+        return "unknown"
