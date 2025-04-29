@@ -843,7 +843,25 @@ else:
             st.sidebar.markdown(button_html, unsafe_allow_html=True)
             
             # Hidden button to capture clicks
-            if st.sidebar.button(nav_option, key=f"nav_{nav_option}", visible=False):
+            # Use CSS to hide the button visually but keep it functional
+            st.sidebar.markdown(
+                f"""
+                <style>
+                div[data-testid="stButton"][aria-label="{nav_option}"] {{
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    top: 0;
+                    left: 0;
+                    opacity: 0;
+                    z-index: 1;
+                }}
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+            
+            if st.sidebar.button(nav_option, key=f"nav_{nav_option}"):
                 st.session_state.selected_nav = nav_option
                 st.rerun()
         
@@ -885,12 +903,42 @@ else:
         """
         st.sidebar.markdown(reports_html, unsafe_allow_html=True)
         
-        # Hidden buttons for quick access
-        if st.sidebar.button("dashboard", key="quick_dashboard_hidden", visible=False):
+        # Hidden buttons for quick access - CSS to hide them
+        st.sidebar.markdown(
+            """
+            <style>
+            div[data-testid="stButton"][aria-label="dashboard"] {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border-width: 0;
+            }
+            div[data-testid="stButton"][aria-label="reports"] {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border-width: 0;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+        
+        if st.sidebar.button("dashboard", key="quick_dashboard_hidden"):
             st.session_state.selected_nav = dash_text
             st.rerun()
             
-        if st.sidebar.button("reports", key="quick_reports_hidden", visible=False):
+        if st.sidebar.button("reports", key="quick_reports_hidden"):
             st.session_state.selected_nav = report_text
             st.rerun()
             
