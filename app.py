@@ -3175,17 +3175,18 @@ else:
                             # Repository URL input
                             st.subheader(_("scan.repo_details", "Repository Details"))
                             repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
-                                                placeholder="https://github.com/username/repository")
+                                                placeholder="https://github.com/username/repository",
+                                                key="github_soc2_repo_url")
                             
                             # Optional inputs with expander
                             with st.expander(_("scan.advanced_options", "Advanced Options")):
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     branch = st.text_input(_("scan.branch", "Branch (optional)"), 
-                                                        placeholder="main")
+                                                        placeholder="main", key="github_soc2_branch")
                                 with col2:
                                     token = st.text_input(_("scan.access_token", "GitHub Access Token (for private repos)"), 
-                                                        type="password", placeholder="ghp_xxxxxxxxxxxx")
+                                                        type="password", placeholder="ghp_xxxxxxxxxxxx", key="github_soc2_token")
                                                         
                                 # SOC2 Categories selection
                                 st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
@@ -3330,11 +3331,11 @@ else:
                             
                             # Input fields for Azure DevOps
                             repo_url = st.text_input(_("scan.azure_repo_url", "Azure DevOps Repository URL"), 
-                                            placeholder="https://dev.azure.com/organization/project/_git/repository")
+                                            placeholder="https://dev.azure.com/organization/project/_git/repository", key="azure_soc2_repo_url")
                             
                             # Project name is required for Azure DevOps
                             project = st.text_input(_("scan.azure_project", "Azure DevOps Project"), 
-                                          placeholder="MyProject")
+                                          placeholder="MyProject", key="azure_soc2_project")
                             
                             # Optional inputs with expander
                             with st.expander(_("scan.advanced_options", "Advanced Options")):
