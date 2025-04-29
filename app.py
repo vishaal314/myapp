@@ -3360,7 +3360,7 @@ else:
                                         selected_categories[key] = st.checkbox(name, value=True)
                             
                             # Scan button for Azure
-                            scan_button = st.button(_("scan.start_azure_scan", "Start Azure SOC2 Scan"), type="primary", use_container_width=True)
+                            scan_button = st.button(_("scan.start_azure_scan", "Start Azure SOC2 Scan"), type="primary", use_container_width=True, key="azure_soc2_scan_button")
                             
                             # Handle the Azure scan process
                             if scan_button:
