@@ -2326,6 +2326,12 @@ else:
             </style>
             """, unsafe_allow_html=True)
             
+            # Store GitHub tab input values in session state for main button to use
+            if 'repo_url' in st.session_state:
+                github_repo_url = st.session_state.repo_url
+                github_branch = st.session_state.get('branch', '')
+                github_token = st.session_state.get('token', '')
+            
             # Prominent "Start Scan" button with free trial info
             scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
             with scan_btn_col1:
@@ -2571,8 +2577,93 @@ else:
                 progress_bar = st.progress(0)
                 status_text = st.empty()
                 
+                # Handle SOC2 scan
+                if scan_type == _("scan.soc2"):
+                    # Import needed functions for SOC2 scanning
+                    from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository, display_soc2_scan_results
+                    
+                    st.info("Starting SOC2 compliance scan...")
+                    
+                    # Show status message and scan steps
+                    with st.status(_("scan.scanning", "Scanning repository for SOC2 compliance issues..."), expanded=True) as status:
+                        try:
+                            # Check if we have repo URL in session state from the GitHub tab
+                            repo_url = st.session_state.get('repo_url', '')
+                            branch = st.session_state.get('branch', 'main') 
+                            token = st.session_state.get('token', '')
+                            
+                            if not repo_url:
+                                st.error(_("scan.error_no_repo", "Please enter a GitHub repository URL in the GitHub tab"))
+                                st.stop()
+                            
+                            # Show cloning message
+                            st.write(_("scan.cloning", "Cloning repository..."))
+                            
+                            # Check if it's a GitHub or Azure repo
+                            if repo_url.startswith(("https://github.com/", "http://github.com/")):
+                                # Perform GitHub scan
+                                scan_results = scan_github_repository(repo_url, branch, token)
+                            elif repo_url.startswith(("https://dev.azure.com/", "http://dev.azure.com/")):
+                                # For Azure repos also need project name
+                                project = st.session_state.get('project', '')
+                                organization = st.session_state.get('organization', '')
+                                
+                                if not project:
+                                    st.error(_("scan.error_no_project", "Please enter the Azure DevOps project name"))
+                                    st.stop()
+                                
+                                # Perform Azure scan
+                                scan_results = scan_azure_repository(repo_url, project, branch, token, organization)
+                            else:
+                                st.error(_("scan.error_invalid_repo", "Please enter a valid GitHub or Azure DevOps repository URL"))
+                                st.stop()
+                            
+                            # Store the scan_results for PDF report generation
+                            st.session_state.soc2_scan_results = scan_results
+                            
+                            # Check for scan failure
+                            if scan_results.get("scan_status") == "failed":
+                                error_msg = scan_results.get("error", "Unknown error")
+                                st.error(f"{_('scan.scan_failed', 'Scan failed')}: {error_msg}")
+                                status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
+                                st.stop()
+                            else:
+                                # Update status
+                                status.update(label=_("scan.scan_complete", "SOC2 scan complete!"), state="complete")
+                                
+                                # Display scan results
+                                st.markdown("---")
+                                st.subheader(_("results.title", "SOC2 Scan Results"))
+                                display_soc2_scan_results(scan_results)
+                                
+                                # Store scan in database
+                                try:
+                                    results_aggregator.store_scan_results(
+                                        scan_id=scan_id,
+                                        username=st.session_state.username,
+                                        scan_type="soc2",
+                                        results=scan_results
+                                    )
+                                    
+                                    # Log audit event
+                                    results_aggregator.log_audit_event(
+                                        username=st.session_state.username,
+                                        action="SOC2_SCAN_COMPLETED",
+                                        details={
+                                            "scan_id": scan_id,
+                                            "repo_url": repo_url
+                                        }
+                                    )
+                                except Exception as e:
+                                    st.warning(f"Failed to store scan results: {str(e)}")
+                        except Exception as e:
+                            st.error(f"Error during SOC2 scan: {str(e)}")
+                            logger.error(f"SOC2 scan error: {str(e)}")
+                            traceback.print_exc()
+                            status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
+                
                 # Handle Repository URL special case
-                if scan_type == _("scan.code") and st.session_state.repo_source == _("scan.repository_url"):
+                elif scan_type == _("scan.code") and st.session_state.repo_source == _("scan.repository_url"):
                     # We'll handle the repository URL scanning differently using our RepoScanner
                     st.info("Starting repository URL scan...")
                     
