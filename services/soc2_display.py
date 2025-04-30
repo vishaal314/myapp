@@ -14,7 +14,7 @@ def display_soc2_findings(scan_results):
     Args:
         scan_results: Dictionary containing SOC2 scan results
     """
-    # Display findings table
+    # Display findings table with enhanced TSC mapping
     st.subheader("Compliance Findings")
     if 'findings' in scan_results and scan_results['findings']:
         findings_df = pd.DataFrame([
@@ -32,6 +32,24 @@ def display_soc2_findings(scan_results):
         
         if len(scan_results['findings']) > 10:
             st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")
+            
+        # Add detailed TSC mapping explanation
+        with st.expander("SOC2 TSC Criteria Details"):
+            st.markdown("""
+            ### SOC2 Trust Services Criteria Explained
+            
+            Each finding is mapped to specific SOC2 Trust Services Criteria to help you understand 
+            how it impacts your compliance posture:
+            
+            - **CC**: Common Criteria (Security)
+            - **A**: Availability
+            - **PI**: Processing Integrity
+            - **C**: Confidentiality
+            - **P**: Privacy
+            
+            For example, a finding mapped to **CC6.1** means it impacts the "Logical and Physical Access Controls" 
+            criteria under the Security category.
+            """)
             
     # Display SOC2 TSC Checklist
     if 'soc2_tsc_checklist' in scan_results:
