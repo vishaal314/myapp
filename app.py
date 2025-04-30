@@ -1965,33 +1965,57 @@ else:
                 if repo_source == "GitHub Repository":
                     # Repository URL input
                     repo_url = st.text_input("GitHub Repository URL", 
-                                         placeholder="https://github.com/username/repository")
+                                         placeholder="https://github.com/username/repository",
+                                         key="initial_github_repo_url")
                     
                     # Optional inputs for GitHub
                     col1, col2 = st.columns(2)
                     with col1:
-                        branch = st.text_input("Branch (optional)", placeholder="main")
+                        branch = st.text_input("Branch (optional)", placeholder="main", key="initial_github_branch")
                     with col2:
                         token = st.text_input("GitHub Access Token (for private repos)", 
-                                           type="password", placeholder="ghp_xxxxxxxxxxxx")
+                                           type="password", placeholder="ghp_xxxxxxxxxxxx", key="initial_github_token")
+                    
+                    # Store values in session state for the main scan button to use
+                    if repo_url:
+                        st.session_state.repo_url = repo_url
+                    if branch:
+                        st.session_state.branch = branch
+                    if token:
+                        st.session_state.token = token
                 
                 elif repo_source == "Azure DevOps Repository":
                     # Azure DevOps inputs
                     repo_url = st.text_input("Azure DevOps Repository URL", 
-                                         placeholder="https://dev.azure.com/organization/project/_git/repository")
+                                         placeholder="https://dev.azure.com/organization/project/_git/repository",
+                                         key="initial_azure_repo_url")
                     
                     # Project name is required for Azure DevOps
-                    project = st.text_input("Azure DevOps Project", placeholder="MyProject")
+                    project = st.text_input("Azure DevOps Project", placeholder="MyProject", key="initial_azure_project")
                     
                     # Optional inputs for Azure
                     col1, col2 = st.columns(2)
                     with col1:
-                        branch = st.text_input("Branch (optional)", placeholder="main")
+                        branch = st.text_input("Branch (optional)", placeholder="main", key="initial_azure_branch")
                         organization = st.text_input("Organization (optional)", 
-                                               placeholder="Will be extracted from URL if not provided")
+                                               placeholder="Will be extracted from URL if not provided",
+                                               key="initial_azure_organization")
                     with col2:
                         token = st.text_input("Azure Personal Access Token (for private repos)", 
-                                           type="password", placeholder="Personal Access Token")
+                                           type="password", placeholder="Personal Access Token",
+                                           key="initial_azure_token")
+                    
+                    # Store values in session state for the main scan button to use
+                    if repo_url:
+                        st.session_state.repo_url = repo_url
+                    if project:
+                        st.session_state.project = project 
+                    if branch:
+                        st.session_state.branch = branch
+                    if organization:
+                        st.session_state.organization = organization
+                    if token:
+                        st.session_state.token = token
                 
                 target_checks = st.multiselect("Target Checks",
                                              ["Logging Compliance", "IAM Policy Structure", "Session Timeout Rules", 
@@ -2587,13 +2611,32 @@ else:
                     # Show status message and scan steps
                     with st.status(_("scan.scanning", "Scanning repository for SOC2 compliance issues..."), expanded=True) as status:
                         try:
-                            # Check if we have repo URL in session state from the GitHub tab
+                            # Determine which tab (GitHub or Azure) is active from session state 
+                            # We'll use the keys that were used in the respective tab inputs
+                            
+                            # Try to get GitHub repo details first
                             repo_url = st.session_state.get('repo_url', '')
                             branch = st.session_state.get('branch', 'main') 
                             token = st.session_state.get('token', '')
+                            project = st.session_state.get('project', '')
+                            organization = st.session_state.get('organization', '')
                             
+                            # Log information about session state values for debugging
+                            st.write(f"**Debug session state values:**")
+                            st.write(f"- Repository URL: {repo_url}")
+                            st.write(f"- Branch: {branch}")
+                            st.write(f"- Project (Azure): {project}")
+                            st.write(f"- Organization (Azure): {organization}")
+                            
+                            # Determine if we're doing GitHub or Azure repo scan
+                            repo_source = "GitHub Repository"  # Default to GitHub
+                            
+                            # Check Azure-specific fields to detect if Azure tab is active
+                            if project:
+                                repo_source = "Azure DevOps Repository"
+                                
                             if not repo_url:
-                                st.error(_("scan.error_no_repo", "Please enter a GitHub repository URL in the GitHub tab"))
+                                st.error(_("scan.error_no_repo", f"Please enter a repository URL in the {repo_source} tab"))
                                 st.stop()
                             
                             # Show cloning message
@@ -2601,12 +2644,22 @@ else:
                             
                             # Check if it's a GitHub or Azure repo
                             if repo_url.startswith(("https://github.com/", "http://github.com/")):
+                                # Show which type of repository we're scanning
+                                st.info("Scanning GitHub repository...")
                                 # Perform GitHub scan
                                 scan_results = scan_github_repository(repo_url, branch, token)
                             elif repo_url.startswith(("https://dev.azure.com/", "http://dev.azure.com/")):
-                                # For Azure repos also need project name
+                                # Show which type of repository we're scanning
+                                st.info("Scanning Azure DevOps repository...")
+                                
+                                # Get project and organization from session state
                                 project = st.session_state.get('project', '')
                                 organization = st.session_state.get('organization', '')
+                                
+                                # Log additional Azure-specific values for debugging
+                                st.write(f"**Azure DevOps Details:**")
+                                st.write(f"- Project: {project}")
+                                st.write(f"- Organization: {organization}")
                                 
                                 if not project:
                                     st.error(_("scan.error_no_project", "Please enter the Azure DevOps project name"))
