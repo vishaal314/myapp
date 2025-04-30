@@ -3291,14 +3291,14 @@ else:
                                 "in the Advanced Configuration section and click the scan button below."
                             )
                             
-                            # Add expected output information
+                            # Add expected output information inside the layout
                             st.markdown("""
                             <div style="padding: 10px; border-radius: 5px; background-color: #f0f8ff; margin: 10px 0;">
-                                <span style="font-weight: bold;">Output:</span> SOC2 checklist + mapped violations
+                                <span style="font-weight: bold;">Output:</span> SOC2 checklist + mapped violations aligned with Trust Services Criteria
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # Scan button with better styling
+                            # Scan button with better styling - inside the layout
                             scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
                             with scan_col2:
                                 scan_button = st.button(
