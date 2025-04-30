@@ -114,7 +114,7 @@ CATEGORY_TO_TSC_MAP = {
 
 # More specific mapping for common findings to specific TSC criteria
 FINDING_TO_TSC_MAP = {
-    # Security mappings
+    # Security mappings for IaC
     "Hard-coded AWS access keys": ["CC6.1", "CC6.7"],
     "Possible hard-coded secrets": ["CC6.1", "CC6.7"],
     "Possible hard-coded password": ["CC6.1", "CC6.7"],
@@ -123,24 +123,41 @@ FINDING_TO_TSC_MAP = {
     "Container running in privileged mode": ["CC6.8", "CC7.2"],
     "Pod using hostPath volume": ["CC6.1", "CC6.8"],
     
-    # Availability mappings
+    # Availability mappings for IaC
     "Resource with backups disabled": ["A1.2", "A1.3"],
     "EC2 instance without termination protection": ["A1.2"],
     "S3 bucket without versioning": ["A1.3"],
     "Resource with monitoring disabled": ["A1.1"],
     "Resource without deletion protection": ["A1.2"],
     
-    # Processing Integrity mappings
+    # Processing Integrity mappings for IaC
     "Resource without logging configured": ["PI1.3", "PI1.4"],
     "Using 'latest' tag for base image": ["PI1.2", "PI1.3"],
     
-    # Confidentiality mappings
+    # Confidentiality mappings for IaC
     "S3 bucket with public read access": ["C1.1"],
     "Resource with encryption disabled": ["C1.1"],
     
-    # Privacy mappings
+    # Privacy mappings for IaC
     "Container with potential PII exposure": ["P7.1"],
-    "Unrestricted data access": ["P4.1", "P7.1"]
+    "Unrestricted data access": ["P4.1", "P7.1"],
+    
+    # JavaScript/Node.js Security mappings
+    "Hard-coded credentials or secrets": ["CC6.1", "CC6.6", "CC6.7"],
+    "Use of eval() function": ["CC5.1", "CC6.8", "CC7.2"],
+    "Use of document.write()": ["CC6.6", "CC6.8"],
+    "Direct manipulation of innerHTML": ["CC6.6", "CC6.8"],
+    "Use of exec function": ["CC6.1", "CC6.8", "CC7.2"],
+    "Use of child_process.exec": ["CC6.1", "CC6.8", "CC7.2"],
+    "Serving static files without proper restrictions": ["CC6.6", "CC6.7"],
+    "CORS allowing all origins": ["CC6.6", "CC6.7", "C1.1"],
+    "Crypto usage without proper configuration": ["CC6.1", "CC8.1", "C1.1"],
+    "JWT token generation without expiration": ["CC6.1", "CC6.6"],
+    "MongoDB update without input validation": ["CC6.6", "PI1.2", "PI1.3"],
+    
+    # JavaScript/Node.js Availability mappings
+    "Database connection without proper error handling": ["A1.1", "CC7.2", "CC7.5"],
+    "Hardcoded port in server configuration": ["CC3.2", "A1.1"]
 }
 
 # IaC file patterns to identify
