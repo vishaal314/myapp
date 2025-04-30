@@ -3311,6 +3311,14 @@ else:
                                                         type="password", 
                                                         placeholder="ghp_xxxxxxxxxxxx", 
                                                         key="github_soc2_token")
+                                    
+                                # Store these values in session state for the main scan button to use
+                                if repo_url:
+                                    st.session_state.repo_url = repo_url
+                                if branch:
+                                    st.session_state.branch = branch
+                                if token:
+                                    st.session_state.token = token
                                 
                                 st.markdown("</div>", unsafe_allow_html=True)
                             
@@ -3549,9 +3557,23 @@ else:
                                                         key="azure_soc2_branch")
                                 with col2:
                                     token = st.text_input(_("scan.azure_token", "Azure Personal Access Token (for private repos)"), 
-                                                        type="password", 
+                                                        type="password",
                                                         placeholder="Personal Access Token", 
                                                         key="azure_soc2_token")
+                                
+                                # Store these values in session state for the main scan button to use
+                                if repo_url:
+                                    st.session_state.repo_url = repo_url
+                                if project:
+                                    st.session_state.project = project
+                                if branch:
+                                    st.session_state.branch = branch
+                                if token:
+                                    st.session_state.token = token
+                                
+                                # Store organization if present in the advanced configuration
+                                if 'organization' in locals():
+                                    st.session_state.organization = organization
                                 
                                 st.markdown("</div>", unsafe_allow_html=True)
                             
@@ -3571,6 +3593,10 @@ else:
                                     _("scan.azure_organization", "Organization (optional)"), 
                                     placeholder="Will be extracted from URL if not provided",
                                     key="azure_soc2_organization")
+                                    
+                                # Store organization in session state for the main scan button
+                                if organization:
+                                    st.session_state.organization = organization
                                 
                                 # Path to config file
                                 access_control_path = st.text_input(
