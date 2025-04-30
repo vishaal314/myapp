@@ -3155,52 +3155,158 @@ else:
                         </style>
                         """, unsafe_allow_html=True)
                         
-                        # SOC2 scanner UI
+                        # SOC2 scanner UI with enhanced design
                         st.title(_("scan.soc2_title", "SOC2 Compliance Scanner"))
-                        st.write(_("scan.soc2_description", 
-                                "Scan Infrastructure as Code (IaC) repositories for SOC2 compliance issues. "
-                                "This scanner identifies security, availability, processing integrity, "
-                                "confidentiality, and privacy issues in your infrastructure code."))
                         
-                        # Repository selection
-                        st.subheader(_("scan.repo_source", "Repository Source"))
-                        repo_source = st.radio(
-                            "Select Repository Source",
-                            ["GitHub Repository", "Azure DevOps Repository"],
-                            horizontal=True,
-                            key="soc2_repo_source"
-                        )
+                        # Display enhanced description with clear value proposition
+                        st.write(_(
+                            "scan.soc2_description", 
+                            "Scan Infrastructure as Code (IaC) repositories for SOC2 compliance issues. "
+                            "This scanner identifies security, availability, processing integrity, "
+                            "confidentiality, and privacy issues in your infrastructure code."
+                        ))
+                        
+                        # Add more detailed info about what SOC2 scanning does
+                        st.info(_(
+                            "scan.soc2_info",
+                            "SOC2 scanning analyzes your infrastructure code against Trust Services Criteria (TSC) "
+                            "to identify potential compliance issues. The scanner maps findings to specific TSC controls "
+                            "and provides recommendations for remediation."
+                        ))
+                        
+                        # Add free trial information
+                        st.markdown("""
+                        <div style="padding: 10px; border-radius: 5px; background-color: #f0f2f6; margin-bottom: 20px;">
+                            <span style="font-weight: bold;">Free Trial:</span> 3 days left
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Create tabs for configuration and results
+                        config_tab, results_tab = st.tabs(["SOC2 Scanner Configuration", "Results"])
+                        
+                        with config_tab:
+                            # Repository selection
+                            st.subheader(_("scan.repo_source", "Repository Source"))
+                            repo_source = st.radio(
+                                "Select Repository Source",
+                                ["GitHub Repository", "Azure DevOps Repository"],
+                                horizontal=True,
+                                key="soc2_repo_source"
+                            )
                         
                         if repo_source == "GitHub Repository":
-                            # Repository URL input
-                            st.subheader(_("scan.repo_details", "Repository Details"))
-                            repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
-                                                placeholder="https://github.com/username/repository",
-                                                key="github_soc2_repo_url")
-                            
-                            # Optional inputs with expander
-                            with st.expander(_("scan.advanced_options", "Advanced Options")):
+                            # Create a container with a custom border
+                            with st.container():
+                                st.markdown("""
+                                <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                                """, unsafe_allow_html=True)
+                                
+                                # Repository URL input
+                                st.subheader(_("scan.repo_details", "Repository Details"))
+                                repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
+                                                    placeholder="https://github.com/username/repository",
+                                                    value="https://github.com/vishaal314/terrascan",
+                                                    key="github_soc2_repo_url")
+                                
+                                # Create columns for the branch and token inputs
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     branch = st.text_input(_("scan.branch", "Branch (optional)"), 
-                                                        placeholder="main", key="github_soc2_branch")
+                                                        value="main",
+                                                        placeholder="main", 
+                                                        key="github_soc2_branch")
                                 with col2:
                                     token = st.text_input(_("scan.access_token", "GitHub Access Token (for private repos)"), 
-                                                        type="password", placeholder="ghp_xxxxxxxxxxxx", key="github_soc2_token")
-                                                        
-                                # SOC2 Categories selection
-                                st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
-                                categories_cols = st.columns(3)
+                                                        type="password", 
+                                                        placeholder="ghp_xxxxxxxxxxxx", 
+                                                        key="github_soc2_token")
                                 
-                                # Create checkboxes for each category
-                                selected_categories = {}
-                                for i, (key, name) in enumerate(SOC2_CATEGORIES.items()):
-                                    col_idx = i % 3
-                                    with categories_cols[col_idx]:
-                                        selected_categories[key] = st.checkbox(name, value=True, key=f"github_soc2_category_{key}")
+                                st.markdown("</div>", unsafe_allow_html=True)
                             
-                            # Scan button
-                            scan_button = st.button(_("scan.start_scan", "Start GitHub SOC2 Scan"), type="primary", use_container_width=True, key="github_soc2_scan_button")
+                            # Advanced configuration in an expander
+                            with st.expander(_("scan.advanced_options", "Advanced Configuration")):
+                                # Target check options
+                                st.subheader("Target Checks")
+                                target_checks = st.radio(
+                                    "Select scan scope",
+                                    ["All", "Security Only", "Custom"],
+                                    horizontal=True,
+                                    key="github_soc2_target_checks"
+                                )
+                                
+                                # Path to config file
+                                access_control_path = st.text_input(
+                                    "Access Control Config File Path",
+                                    placeholder="/path/to/iam/config.yaml",
+                                    value="/path/to/iam/config.yaml",
+                                    key="github_soc2_config_path"
+                                )
+                                
+                                # Scan timeframe
+                                scan_timeframe = st.selectbox(
+                                    "Scan Timeframe",
+                                    ["Last 7 days", "Last 30 days", "Last 90 days", "All time"],
+                                    index=0,
+                                    key="github_soc2_timeframe"
+                                )
+                                
+                                # Custom ruleset
+                                st.subheader("Custom SOC2 Ruleset")
+                                custom_rules = st.text_area(
+                                    "Custom SOC2 rules (JSON format)",
+                                    value="""{\n  "rules": [\n    {\n      "id": "session-timeout",\n      "requirement": "CC6.1",\n      "check": "session_timeout < 15"\n    }\n  ]\n}""",
+                                    height=200,
+                                    key="github_soc2_custom_rules"
+                                )
+                            
+                            # SOC2 Categories selection in a stylized container
+                            st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
+                            
+                            # Create a grid of checkboxes with better styling
+                            col1, col2, col3, col4, col5 = st.columns(5)
+                            
+                            with col1:
+                                security = st.checkbox("Security", value=True, key="github_soc2_category_security", 
+                                                    help="Focuses on system protection against unauthorized access")
+                            
+                            with col2:
+                                availability = st.checkbox("Availability", value=True, key="github_soc2_category_availability",
+                                                        help="Examines system availability for operation and use")
+                            
+                            with col3:
+                                processing = st.checkbox("Processing Integrity", value=True, key="github_soc2_category_processing",
+                                                    help="Checks if system processing is complete, accurate, and timely")
+                            
+                            with col4:
+                                confidentiality = st.checkbox("Confidentiality", value=True, key="github_soc2_category_confidentiality",
+                                                          help="Ensures information designated as confidential is protected")
+                            
+                            with col5:
+                                privacy = st.checkbox("Privacy", value=True, key="github_soc2_category_privacy",
+                                                    help="Verifies personal information is collected and used appropriately")
+                            
+                            # Note about file uploads
+                            st.info(
+                                "SOC2 scanning does not require file uploads. Configure the repository details "
+                                "in the Advanced Configuration section and click the scan button below."
+                            )
+                            
+                            # Add expected output information
+                            st.markdown("""
+                            <div style="padding: 10px; border-radius: 5px; background-color: #f0f8ff; margin: 10px 0;">
+                                <span style="font-weight: bold;">Output:</span> SOC2 checklist + mapped violations
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Scan button with better styling
+                            scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
+                            with scan_col2:
+                                scan_button = st.button(
+                                    _("scan.start_scan", "Start SOC2 Compliance Scan"),
+                                    type="primary",
+                                    use_container_width=True,
+                                    key="github_soc2_scan_button"
+                                )
                             
                             # Handle the scan process
                             if scan_button:
@@ -3326,42 +3432,126 @@ else:
                                             status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
                         
                         elif repo_source == "Azure DevOps Repository":
-                            # Azure DevOps repository inputs
-                            st.subheader(_("scan.azure_repo_details", "Azure DevOps Repository Details"))
-                            
-                            # Input fields for Azure DevOps
-                            repo_url = st.text_input(_("scan.azure_repo_url", "Azure DevOps Repository URL"), 
-                                            placeholder="https://dev.azure.com/organization/project/_git/repository", key="azure_soc2_repo_url")
-                            
-                            # Project name is required for Azure DevOps
-                            project = st.text_input(_("scan.azure_project", "Azure DevOps Project"), 
-                                          placeholder="MyProject", key="azure_soc2_project")
-                            
-                            # Optional inputs with expander
-                            with st.expander(_("scan.advanced_options", "Advanced Options")):
+                            # Create a container with a custom border for Azure
+                            with st.container():
+                                st.markdown("""
+                                <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                                """, unsafe_allow_html=True)
+                                
+                                # Repository URL input
+                                st.subheader(_("scan.azure_repo_details", "Azure DevOps Repository Details"))
+                                repo_url = st.text_input(_("scan.azure_repo_url", "Azure DevOps Repository URL"), 
+                                                placeholder="https://dev.azure.com/organization/project/_git/repository",
+                                                key="azure_soc2_repo_url")
+                                
+                                # Project name is required for Azure DevOps
+                                project = st.text_input(_("scan.azure_project", "Azure DevOps Project"), 
+                                            placeholder="MyProject",
+                                            key="azure_soc2_project")
+                                
+                                # Create columns for the branch and token inputs
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     branch = st.text_input(_("scan.branch", "Branch (optional)"), 
-                                                        placeholder="main", key="azure_soc2_branch")
-                                    organization = st.text_input(_("scan.azure_organization", "Organization (optional)"), 
-                                                          placeholder="Will be extracted from URL if not provided", key="azure_soc2_organization")
+                                                        placeholder="main", 
+                                                        key="azure_soc2_branch")
                                 with col2:
                                     token = st.text_input(_("scan.azure_token", "Azure Personal Access Token (for private repos)"), 
-                                                        type="password", placeholder="Personal Access Token", key="azure_soc2_token")
-                                                        
-                                # SOC2 Categories selection (same as GitHub)
-                                st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
-                                categories_cols = st.columns(3)
+                                                        type="password", 
+                                                        placeholder="Personal Access Token", 
+                                                        key="azure_soc2_token")
                                 
-                                # Create checkboxes for each category
-                                selected_categories = {}
-                                for i, (key, name) in enumerate(SOC2_CATEGORIES.items()):
-                                    col_idx = i % 3
-                                    with categories_cols[col_idx]:
-                                        selected_categories[key] = st.checkbox(name, value=True, key=f"azure_soc2_category_{key}")
+                                st.markdown("</div>", unsafe_allow_html=True)
                             
-                            # Scan button for Azure
-                            scan_button = st.button(_("scan.start_azure_scan", "Start Azure SOC2 Scan"), type="primary", use_container_width=True, key="azure_soc2_scan_button")
+                            # Advanced configuration in an expander
+                            with st.expander(_("scan.advanced_options", "Advanced Configuration")):
+                                # Target check options
+                                st.subheader("Target Checks")
+                                target_checks = st.radio(
+                                    "Select scan scope",
+                                    ["All", "Security Only", "Custom"],
+                                    horizontal=True,
+                                    key="azure_soc2_target_checks"
+                                )
+                                
+                                # Organization field (optional)
+                                organization = st.text_input(
+                                    _("scan.azure_organization", "Organization (optional)"), 
+                                    placeholder="Will be extracted from URL if not provided",
+                                    key="azure_soc2_organization")
+                                
+                                # Path to config file
+                                access_control_path = st.text_input(
+                                    "Access Control Config File Path",
+                                    placeholder="/path/to/iam/config.yaml",
+                                    key="azure_soc2_config_path"
+                                )
+                                
+                                # Scan timeframe
+                                scan_timeframe = st.selectbox(
+                                    "Scan Timeframe",
+                                    ["Last 7 days", "Last 30 days", "Last 90 days", "All time"],
+                                    index=0,
+                                    key="azure_soc2_timeframe"
+                                )
+                                
+                                # Custom ruleset
+                                st.subheader("Custom SOC2 Ruleset")
+                                custom_rules = st.text_area(
+                                    "Custom SOC2 rules (JSON format)",
+                                    value="""{\n  "rules": [\n    {\n      "id": "session-timeout",\n      "requirement": "CC6.1",\n      "check": "session_timeout < 15"\n    }\n  ]\n}""",
+                                    height=200,
+                                    key="azure_soc2_custom_rules"
+                                )
+                            
+                            # SOC2 Categories selection in a stylized container
+                            st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
+                            
+                            # Create a grid of checkboxes with better styling
+                            col1, col2, col3, col4, col5 = st.columns(5)
+                            
+                            with col1:
+                                security = st.checkbox("Security", value=True, key="azure_soc2_category_security", 
+                                                    help="Focuses on system protection against unauthorized access")
+                            
+                            with col2:
+                                availability = st.checkbox("Availability", value=True, key="azure_soc2_category_availability",
+                                                        help="Examines system availability for operation and use")
+                            
+                            with col3:
+                                processing = st.checkbox("Processing Integrity", value=True, key="azure_soc2_category_processing",
+                                                    help="Checks if system processing is complete, accurate, and timely")
+                            
+                            with col4:
+                                confidentiality = st.checkbox("Confidentiality", value=True, key="azure_soc2_category_confidentiality",
+                                                          help="Ensures information designated as confidential is protected")
+                            
+                            with col5:
+                                privacy = st.checkbox("Privacy", value=True, key="azure_soc2_category_privacy",
+                                                    help="Verifies personal information is collected and used appropriately")
+                            
+                            # Note about file uploads
+                            st.info(
+                                "SOC2 scanning does not require file uploads. Configure the repository details "
+                                "in the Advanced Configuration section and click the scan button below."
+                            )
+                            
+                            # Add expected output information
+                            st.markdown("""
+                            <div style="padding: 10px; border-radius: 5px; background-color: #f0f8ff; margin: 10px 0;">
+                                <span style="font-weight: bold;">Output:</span> SOC2 checklist + mapped violations
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Scan button with better styling
+                            scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
+                            with scan_col2:
+                                scan_button = st.button(
+                                    _("scan.start_azure_scan", "Start Azure SOC2 Compliance Scan"),
+                                    type="primary",
+                                    use_container_width=True,
+                                    key="azure_soc2_scan_button"
+                                )
                             
                             # Handle the Azure scan process
                             if scan_button:
