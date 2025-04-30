@@ -17,6 +17,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
+# Create a logger instance for this module
+logger = logging.getLogger(__name__)
+
 from services.code_scanner import CodeScanner
 from services.blob_scanner import BlobScanner
 from services.website_scanner import WebsiteScanner

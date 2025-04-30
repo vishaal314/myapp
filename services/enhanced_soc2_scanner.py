@@ -25,23 +25,22 @@ def scan_github_repository(repo_url: str, branch: Optional[str] = None, token: O
     Returns:
         Dictionary with scan results
     """
-    with st.status("Scanning repository for SOC2 compliance issues...", expanded=True) as status:
-        try:
-            # Show cloning message
-            st.write("Cloning repository...")
-            
-            # Perform scan
-            scan_results = scan_github_repo_for_soc2(repo_url, branch, token)
-            
-            # Update status
-            status.update(label="Scan complete!", state="complete")
-            
-            return scan_results
-            
-        except Exception as e:
-            # Handle scan errors
-            status.update(label=f"Scan failed: {str(e)}", state="error")
-            raise e
+    try:
+        # Show cloning message - status updates should be handled by the caller
+        
+        # Perform scan
+        scan_results = scan_github_repo_for_soc2(repo_url, branch, token)
+        
+        return scan_results
+        
+    except Exception as e:
+        # Return error in scan results rather than raising
+        return {
+            "scan_status": "failed",
+            "error": str(e),
+            "repo_url": repo_url,
+            "branch": branch or "main"
+        }
 
 def scan_azure_repository(repo_url: str, project: str, branch: Optional[str] = None, 
                           token: Optional[str] = None, organization: Optional[str] = None) -> Dict[str, Any]:
@@ -58,23 +57,24 @@ def scan_azure_repository(repo_url: str, project: str, branch: Optional[str] = N
     Returns:
         Dictionary with scan results
     """
-    with st.status("Scanning Azure DevOps repository for SOC2 compliance issues...", expanded=True) as status:
-        try:
-            # Show cloning message
-            st.write("Cloning repository...")
-            
-            # Perform scan
-            scan_results = scan_azure_repo_for_soc2(repo_url, project, branch, token, organization)
-            
-            # Update status
-            status.update(label="Scan complete!", state="complete")
-            
-            return scan_results
-            
-        except Exception as e:
-            # Handle scan errors
-            status.update(label=f"Scan failed: {str(e)}", state="error")
-            raise e
+    try:
+        # Show cloning message - status updates should be handled by the caller
+        
+        # Perform scan
+        scan_results = scan_azure_repo_for_soc2(repo_url, project, branch, token, organization)
+        
+        return scan_results
+        
+    except Exception as e:
+        # Return error in scan results rather than raising
+        return {
+            "scan_status": "failed",
+            "error": str(e),
+            "repo_url": repo_url,
+            "project": project,
+            "branch": branch or "main",
+            "organization": organization
+        }
 
 def display_soc2_scan_results(scan_results: Dict[str, Any]):
     """
