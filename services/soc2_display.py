@@ -47,7 +47,18 @@ def display_soc2_findings(scan_results):
             - **C**: Confidentiality
             - **P**: Privacy
             
-            For example, a finding mapped to **CC6.1** means it impacts the "Logical and Physical Access Controls" 
+            For example, a finding mapped to **CC6.1** means it impacts the "Logical and Physical Access Controls"
+            criteria under the Security category.
+            
+            ### Remediation Prioritization
+            
+            When addressing findings, prioritize based on these criteria:
+            
+            1. **CC (Security)** - Critical foundation for all other controls
+            2. **C (Confidentiality)** - Protects sensitive data from unauthorized disclosure
+            3. **A (Availability)** - Ensures systems are operational when needed
+            4. **PI (Processing Integrity)** - Ensures data processing is complete and accurate
+            5. **P (Privacy)** - Addresses personal data protection requirements 
             criteria under the Security category.
             """)
             

@@ -129,6 +129,31 @@ def display_soc2_scan_results(scan_results: Dict[str, Any]):
     # Use the enhanced display function
     display_soc2_findings(scan_results)
     
+    # Add SOC2 TSC criteria explanation as an expander
+    with st.expander("SOC2 Trust Services Criteria Details"):
+        st.markdown("""
+        ### SOC2 Trust Services Criteria Explained
+        
+        Each finding is mapped to specific SOC2 Trust Services Criteria to help you understand 
+        how it impacts your compliance posture:
+        
+        - **CC**: Common Criteria (Security)
+        - **A**: Availability
+        - **PI**: Processing Integrity
+        - **C**: Confidentiality
+        - **P**: Privacy
+        
+        For example, a finding mapped to **CC6.1** means it impacts the "Logical and Physical Access Controls" 
+        criteria under the Security category.
+        
+        ### Why TSC Mapping Matters
+        
+        Understanding which Trust Services Criteria are affected by each finding helps prioritize remediation efforts 
+        based on which SOC2 categories are most critical for your compliance requirements. The detailed mapping 
+        also facilitates communication with auditors by directly linking findings to the standardized 
+        SOC2 framework components.
+        """)
+    
     # PDF Download button
     st.markdown("### Download Report")
     if st.button("Generate PDF Report", type="primary"):
