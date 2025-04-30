@@ -1624,15 +1624,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             elements.append(Paragraph(tsc_title, subheading_style))
             elements.append(Paragraph(tsc_explanation, normal_style))
             
-        else:
-            # Translate "No detailed findings" message
-            if current_lang == 'nl':
-                no_findings_msg = "Geen gedetailleerde bevindingen beschikbaar."
-            else:
-                no_findings_msg = "No detailed findings available."
-            elements.append(Paragraph(no_findings_msg, normal_style))
-        
-        # For standard reports, extract PII items from the detailed_results structure
+        # For standard reports with detailed_results
         elif 'detailed_results' in scan_data and scan_data['detailed_results']:
             # Extract all PII items from all files
             all_pii_items = []
@@ -1712,6 +1704,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 else:
                     no_findings_msg = "No detailed findings available."
                 elements.append(Paragraph(no_findings_msg, normal_style))
+        # For all other cases with no findings
         else:
             # Translate "No detailed findings" message
             if current_lang == 'nl':

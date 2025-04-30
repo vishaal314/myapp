@@ -152,7 +152,8 @@ IaC_FILE_PATTERNS = {
     "docker": [r"Dockerfile$", r"docker-compose\.ya?ml$"],
     "pulumi": [r"\.ts$", r"\.js$", r"\.py$", r"Pulumi\.yaml$"],
     "chef": [r"\.rb$", r"Berksfile$", r"metadata\.rb$"],
-    "puppet": [r"\.pp$", r"Puppetfile$"]
+    "puppet": [r"\.pp$", r"Puppetfile$"],
+    "javascript": [r"\.js$", r"\.jsx$", r"package\.json$", r"\.ts$", r"\.tsx$", r"package-lock\.json$"]
 }
 
 # Risk patterns for each IaC tool
@@ -337,12 +338,101 @@ DOCKER_RISK_PATTERNS = {
     ),
 }
 
+# JavaScript/Node.js risk patterns
+JAVASCRIPT_RISK_PATTERNS = {
+    r"(password|secret|key|token|auth).*=.*['\"][^'\"]+['\"]": (
+        "Hard-coded credentials or secrets",
+        "high",
+        "Store sensitive information in environment variables or a secure vault",
+        "security"
+    ),
+    r"eval\s*\(": (
+        "Use of eval() function",
+        "high",
+        "Avoid using eval() as it can lead to code injection vulnerabilities",
+        "security"
+    ),
+    r"document\.write\s*\(": (
+        "Use of document.write()",
+        "medium",
+        "Avoid document.write() to prevent XSS vulnerabilities",
+        "security"
+    ),
+    r"\.innerHTML\s*=": (
+        "Direct manipulation of innerHTML",
+        "medium",
+        "Use safer alternatives like textContent or DOM methods to prevent XSS",
+        "security"
+    ),
+    r"exec\s*\(": (
+        "Use of exec function",
+        "high",
+        "Avoid using exec() as it can lead to command injection vulnerabilities",
+        "security"
+    ),
+    r"child_process\.exec\s*\(": (
+        "Use of child_process.exec",
+        "high",
+        "Use child_process.execFile or spawn with proper input validation",
+        "security"
+    ),
+    r"express\.static\s*\(.*\)": (
+        "Serving static files without proper restrictions",
+        "medium",
+        "Use middleware to set appropriate security headers",
+        "security"
+    ),
+    r"(?:mongoose|sequelize|knex)\.connect.*\(": (
+        "Database connection without proper error handling",
+        "medium",
+        "Implement proper error handling for database connections",
+        "availability"
+    ),
+    r"app\.listen\s*\(\s*\d+": (
+        "Hardcoded port in server configuration",
+        "low",
+        "Use environment variables for port configuration",
+        "processing_integrity"
+    ),
+    r"\.createServer\s*\(\s*\)\s*\.listen\s*\(\s*\d+": (
+        "Hardcoded port in server configuration",
+        "low",
+        "Use environment variables for port configuration",
+        "processing_integrity"
+    ),
+    r"cors\s*\(\s*\{\s*origin\s*:\s*[\'\"]?\*[\'\"]?": (
+        "CORS allowing all origins",
+        "high",
+        "Restrict CORS to specific trusted origins",
+        "confidentiality"
+    ),
+    r"require\s*\(\s*['\"]crypto['\"]": (
+        "Crypto usage without proper configuration",
+        "medium",
+        "Ensure proper cryptographic configurations and use modern algorithms",
+        "confidentiality"
+    ),
+    r"JWT\.sign\s*\(": (
+        "JWT token generation without expiration",
+        "medium",
+        "Set appropriate expiration for JWT tokens",
+        "security"
+    ),
+    r"\.update\s*\(\s*\{\s*\$set": (
+        "MongoDB update without input validation",
+        "high",
+        "Validate user input before database operations",
+        "security"
+    )
+}
+
 # Combine all patterns for use in scanning
 IaC_RISK_PATTERNS = {
     "terraform": TERRAFORM_RISK_PATTERNS,
     "cloudformation": CLOUDFORMATION_RISK_PATTERNS,
     "kubernetes": KUBERNETES_RISK_PATTERNS,
     "docker": DOCKER_RISK_PATTERNS,
+    "javascript": JAVASCRIPT_RISK_PATTERNS,
     # Add more as needed
 }
 
@@ -403,6 +493,16 @@ def identify_iac_technology(file_path: str) -> Optional[str]:
         return "kubernetes"
     elif "FROM" in file_content and ("RUN" in file_content or "CMD" in file_content):
         return "docker"
+    # Check for JavaScript files
+    elif (file_path.endswith('.js') or file_path.endswith('.jsx') or 
+          file_path.endswith('.ts') or file_path.endswith('.tsx') or
+          file_path.endswith('package.json')):
+        return "javascript"
+    elif any(js_indicator in file_content for js_indicator in [
+        "function", "const", "let", "var", "import", "export", "require(", 
+        "module.exports", "addEventListener", "document.", "window."
+    ]):
+        return "javascript"
             
     return None
 
