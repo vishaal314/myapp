@@ -2313,20 +2313,10 @@ else:
             # Set start_scan to True for DPIA to bypass the button click
             start_scan = True
         elif scan_type == _("scan.soc2"):
-            # Add CSS to hide the main scan button for SOC2 - we'll use tab-specific buttons instead
+            # Make SOC2 scan buttons more prominent without hiding any buttons
             st.markdown("""
             <style>
-            /* Hide the main SOC2 scan button - we'll use tab-specific buttons */
-            [data-testid="stHorizontalBlock"]:has(button[kind="primaryFormSubmit"]:contains("Start Scan")) {
-                display: none !important;
-            }
-            
-            /* Hide any button with the text "Start Scan" outside the config tab */
-            button:has-text("Start Scan") {
-                display: none !important;
-            }
-            
-            /* Make in-tab scan buttons more prominent */
+            /* Make SOC2 primary buttons more prominent */
             button[kind="primary"] {
                 background-color: #1565C0 !important;
                 color: white !important;
@@ -2336,8 +2326,15 @@ else:
             </style>
             """, unsafe_allow_html=True)
             
-            # Set start_scan to False because we're using tab-specific buttons
-            start_scan = False
+            # Prominent "Start Scan" button with free trial info
+            scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
+            with scan_btn_col1:
+                start_scan = st.button("Start SOC2 Compliance Scan", use_container_width=True, type="primary", key="main_soc2_scan_button")
+            with scan_btn_col2:
+                if 'free_trial_active' in locals() and free_trial_active:
+                    st.success(f"Free Trial: {free_trial_days_left} days left")
+                else:
+                    st.warning("Premium Feature")
         elif scan_type == _("scan.ai_model"):
             # Create a more prominent scan button for AI Model scan
             st.markdown("""
