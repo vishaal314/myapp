@@ -1503,6 +1503,135 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     no_findings_msg = "No detailed findings available."
                 elements.append(Paragraph(no_findings_msg, normal_style))
         
+        # For SOC2 reports, display findings with TSC criteria mapping
+        elif report_format == "soc2" and 'findings' in scan_data and scan_data['findings']:
+            # Create a table for SOC2 findings with TSC mapping
+            soc2_findings = scan_data['findings']
+            
+            # Log findings for debugging purposes
+            import logging
+            logging.info(f"Processing SOC2 findings for report. Found {len(soc2_findings)} findings.")
+            
+            # Create headers based on language
+            if current_lang == 'nl':
+                table_headers = ["Bestand", "Regel", "Beschrijving", "Risico", "Categorie", "SOC2 TSC"]
+            else:
+                table_headers = ["File", "Line", "Description", "Risk", "Category", "SOC2 TSC"]
+            
+            detailed_data = [table_headers]
+            soc2_finding_items = []
+            
+            for finding in soc2_findings:
+                # Translate risk level for display if needed
+                original_risk_level = finding.get('risk_level', 'low')
+                
+                if current_lang == 'nl':
+                    if original_risk_level.lower() == 'high':
+                        displayed_risk_level = 'Hoog'
+                    elif original_risk_level.lower() == 'medium':
+                        displayed_risk_level = 'Gemiddeld'
+                    else:
+                        displayed_risk_level = 'Laag'
+                else:
+                    displayed_risk_level = original_risk_level.upper()
+                
+                # Extract TSC criteria if available
+                tsc_criteria = finding.get('soc2_tsc_criteria', [])
+                tsc_criteria_text = ", ".join(tsc_criteria) if tsc_criteria else "N/A"
+                
+                category = finding.get('category', 'Unknown')
+                # Capitalize first letter of category
+                category = category[0].upper() + category[1:] if category else 'Unknown'
+                
+                # Create item row
+                item_row = [
+                    finding.get('file', 'Unknown'),
+                    str(finding.get('line', 'N/A')),
+                    finding.get('description', 'No description'),
+                    displayed_risk_level,
+                    category,
+                    tsc_criteria_text
+                ]
+                
+                soc2_finding_items.append(item_row)
+            
+            # Add rows to table data
+            detailed_data.extend(soc2_finding_items)
+            
+            # Create a properly sized table for SOC2 findings
+            detailed_table = Table(detailed_data, colWidths=[80, 30, 180, 50, 70, 70])
+            
+            # Define row styles based on risk level
+            row_styles = []
+            for i, item in enumerate(soc2_finding_items, 1):  # Starting from 1 to account for header
+                risk_level = item[3]
+                # Check for both Dutch and English risk levels
+                if risk_level in ['High', 'HIGH', 'Hoog']:
+                    bg_color = colors.pink
+                elif risk_level in ['Medium', 'MEDIUM', 'Gemiddeld']:
+                    bg_color = colors.lightgoldenrodyellow
+                else:  # Low or Laag
+                    bg_color = colors.white
+                
+                row_styles.append(('BACKGROUND', (0, i), (-1, i), bg_color))
+            
+            # Apply table styles
+            table_style = [
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 8),  # Smaller font for detailed table
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP')
+            ]
+            
+            # Add risk-based row styles
+            table_style.extend(row_styles)
+            
+            detailed_table.setStyle(TableStyle(table_style))
+            
+            elements.append(detailed_table)
+            
+            # Add TSC criteria explanation
+            if current_lang == 'nl':
+                tsc_title = "SOC2 Trust Services Criteria (TSC) Uitleg"
+                tsc_explanation = """
+                SOC2 Trust Services Criteria verwijzen naar de specifieke controlepunten die worden gebruikt om de naleving te beoordelen:
+                • CC: Common Criteria (beveiliging)
+                • A: Beschikbaarheid
+                • PI: Verwerkingsintegriteit
+                • C: Vertrouwelijkheid
+                • P: Privacy
+                
+                Elke bevinding in deze rapportage verwijst naar specifieke TSC criteria om te helpen begrijpen hoe het de compliance-status beïnvloedt.
+                """
+            else:
+                tsc_title = "SOC2 Trust Services Criteria (TSC) Explanation"
+                tsc_explanation = """
+                SOC2 Trust Services Criteria refer to the specific control points used to assess compliance:
+                • CC: Common Criteria (security)
+                • A: Availability
+                • PI: Processing Integrity
+                • C: Confidentiality
+                • P: Privacy
+                
+                Each finding in this report references specific TSC criteria to help understand how it impacts compliance posture.
+                """
+            
+            elements.append(Spacer(1, 15))
+            elements.append(Paragraph(tsc_title, subheading_style))
+            elements.append(Paragraph(tsc_explanation, normal_style))
+            
+        else:
+            # Translate "No detailed findings" message
+            if current_lang == 'nl':
+                no_findings_msg = "Geen gedetailleerde bevindingen beschikbaar."
+            else:
+                no_findings_msg = "No detailed findings available."
+            elements.append(Paragraph(no_findings_msg, normal_style))
+        
         # For standard reports, extract PII items from the detailed_results structure
         elif 'detailed_results' in scan_data and scan_data['detailed_results']:
             # Extract all PII items from all files
@@ -1621,6 +1750,24 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     "Apply data minimization in training data to ensure GDPR compliance for AI systems.",
                     "Consider synthetic data or pseudonymized datasets for future model development."
                 ]
+        elif report_format == "soc2":
+            # SOC2 specific recommendations
+            if current_lang == 'nl':
+                recommendations = [
+                    "Implementeer een formeel proces voor het toekennen en beheren van toegangsrechten volgens het principe van minimale rechten.",
+                    "Ontwikkel een uitgebreid risicobeheerproces dat geautomatiseerde scanstrategieën omvat voor Infrastructure-as-Code.",
+                    "Voer periodieke beoordelingen uit van beveiligingsconfiguraties en pas best practices toe voor alle SOC2 Trust Services Criteria.",
+                    "Documenteer en verifieer alle controlemaatregelen die relevant zijn voor de TSC-criteria die in de bevindingen zijn vermeld.",
+                    "Implementeer geautomatiseerde compliance controles in CI/CD-pijplijnen om afwijkingen vroeg in de ontwikkelingscyclus te detecteren."
+                ]
+            else:
+                recommendations = [
+                    "Implement a formal process for assigning and managing access rights in accordance with the principle of least privilege.",
+                    "Develop a comprehensive risk management process that includes automated scanning strategies for Infrastructure-as-Code.",
+                    "Conduct periodic reviews of security configurations and apply best practices across all SOC2 Trust Services Criteria.",
+                    "Document and verify all control measures relevant to the TSC criteria noted in the findings.",
+                    "Implement automated compliance checks in CI/CD pipelines to detect deviations early in the development cycle."
+                ]
         else:
             # Standard recommendations
             if current_lang == 'nl':
@@ -1668,6 +1815,24 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                         "Implement additional safeguards for AI models processing sensitive data.",
                         "Document risk mitigation strategies and monitor model behavior.",
                         "Consider differential privacy techniques to protect identifiable information in the model."
+                    ]
+            elif report_format == "soc2":
+                # SOC2-specific high risk recommendations
+                if current_lang == 'nl':
+                    high_risk_recommendations = [
+                        "Prioriteer onmiddellijke correctie van hoog-risico bevindingen die betrekking hebben op CC-beveiligingskritische componenten.",
+                        "Implementeer strikte toegangscontroles voor gevoelige infrastructuuronderdelen volgens het principe van minimale rechten.",
+                        "Voer een gedetailleerde risicobeoordeling uit voor alle Common Criteria-gerelateerde bevindingen.",
+                        "Documenteer en test incidentresponsprocessen voor alle hoog-risico kwetsbaarheden.",
+                        "Installeer een geautomatiseerd controleproces dat IaC-wijzigingen valideert voordat ze worden toegepast op productieomgevingen."
+                    ]
+                else:
+                    high_risk_recommendations = [
+                        "Prioritize immediate remediation of high-risk findings related to CC security-critical components.",
+                        "Implement strict access controls for sensitive infrastructure components applying the principle of least privilege.",
+                        "Conduct detailed risk assessment for all Common Criteria-related findings.",
+                        "Document and test incident response processes for all high-risk vulnerabilities.",
+                        "Install an automated validation process that checks IaC changes before they are applied to production environments."
                     ]
             else:
                 # Standard high risk recommendations
@@ -1804,6 +1969,57 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Username': scan_data.get('username', 'Unknown'),
                     'Files Scanned': scan_data.get('file_count', 0)
                 }
+        elif report_format == "soc2":
+            # Extract SOC2 specific data
+            repository_url = scan_data.get('repository_url', 'N/A')
+            repository_path = scan_data.get('repository_path', 'N/A')
+            repository_provider = scan_data.get('repository_provider', 'GitHub')
+            branch = scan_data.get('branch', 'main')
+            
+            # Extract SOC2 specific metrics
+            tsc_categories = scan_data.get('tsc_categories', {})
+            cc_findings = tsc_categories.get('CC', 0)
+            a_findings = tsc_categories.get('A', 0)
+            pi_findings = tsc_categories.get('PI', 0)
+            c_findings = tsc_categories.get('C', 0)
+            p_findings = tsc_categories.get('P', 0)
+            
+            if current_lang == 'nl':
+                metadata_labels = {
+                    'Scan ID': scan_id,
+                    'Scan Type': scan_type,
+                    'Regio': region,
+                    'Tijdstempel': timestamp,
+                    'Repository Aanbieder': repository_provider,
+                    'Repository URL': repository_url if repository_url != 'N/A' else 'Niet beschikbaar',
+                    'Repository Pad': repository_path if repository_path != 'N/A' else 'Niet beschikbaar',
+                    'Branch': branch,
+                    'Gebruikersnaam': scan_data.get('username', 'Onbekend'),
+                    'Bestanden Gescand': scan_data.get('file_count', 0),
+                    'CC Bevindingen': cc_findings,
+                    'A Bevindingen': a_findings,
+                    'PI Bevindingen': pi_findings,
+                    'C Bevindingen': c_findings,
+                    'P Bevindingen': p_findings
+                }
+            else:
+                metadata_labels = {
+                    'Scan ID': scan_id,
+                    'Scan Type': scan_type,
+                    'Region': region,
+                    'Timestamp': timestamp,
+                    'Repository Provider': repository_provider,
+                    'Repository URL': repository_url if repository_url != 'N/A' else 'Not available',
+                    'Repository Path': repository_path if repository_path != 'N/A' else 'Not available',
+                    'Branch': branch,
+                    'Username': scan_data.get('username', 'Unknown'),
+                    'Files Scanned': scan_data.get('file_count', 0),
+                    'CC Findings': cc_findings,
+                    'A Findings': a_findings,
+                    'PI Findings': pi_findings,
+                    'C Findings': c_findings,
+                    'P Findings': p_findings
+                }
         else:
             if current_lang == 'nl':
                 metadata_labels = {
@@ -1855,22 +2071,40 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             textColor=colors.grey
         )
         
-        # Translate disclaimer text
-        if current_lang == 'nl':
-            disclaimer_text = (
-                "Disclaimer: Dit rapport wordt uitsluitend ter informatie verstrekt en mag niet "
-                "worden beschouwd als juridisch advies. De bevindingen in dit rapport zijn gebaseerd op "
-                "geautomatiseerde scanning en identificeren mogelijk niet alle AVG-relevante persoonsgegevens. "
-                "Wij raden u aan een gekwalificeerde juridische professional te raadplegen voor specifieke "
-                "AVG-nalevingsbegeleiding."
-            )
+        # Translate disclaimer text based on report format
+        if report_format == "soc2":
+            if current_lang == 'nl':
+                disclaimer_text = (
+                    "Disclaimer: Dit rapport wordt uitsluitend ter informatie verstrekt en mag niet "
+                    "worden beschouwd als juridisch of compliance-gerelateerd advies. De bevindingen in dit rapport zijn gebaseerd op "
+                    "geautomatiseerde scanning en identificeren mogelijk niet alle SOC2-relevante beveiligingsproblemen. "
+                    "De Trust Services Criteria (TSC) mapping is bedoeld als richtlijn. Wij raden u aan een gekwalificeerde "
+                    "SOC2-auditor of compliance-specialist te raadplegen voor specifieke SOC2-nalevingsbegeleiding."
+                )
+            else:
+                disclaimer_text = (
+                    "Disclaimer: This report is provided for informational purposes only and should not "
+                    "be considered legal or compliance advice. The findings in this report are based on automated "
+                    "scanning and may not identify all SOC2-relevant security issues. The Trust Services Criteria (TSC) "
+                    "mapping is intended as guidance. We recommend consulting with a qualified SOC2 auditor or "
+                    "compliance specialist for specific SOC2 compliance guidance."
+                )
         else:
-            disclaimer_text = (
-                "Disclaimer: This report is provided for informational purposes only and should not "
-                "be considered legal advice. The findings in this report are based on automated "
-                "scanning and may not identify all GDPR-relevant personal data. We recommend "
-                "consulting with a qualified legal professional for specific GDPR compliance guidance."
-            )
+            if current_lang == 'nl':
+                disclaimer_text = (
+                    "Disclaimer: Dit rapport wordt uitsluitend ter informatie verstrekt en mag niet "
+                    "worden beschouwd als juridisch advies. De bevindingen in dit rapport zijn gebaseerd op "
+                    "geautomatiseerde scanning en identificeren mogelijk niet alle AVG-relevante persoonsgegevens. "
+                    "Wij raden u aan een gekwalificeerde juridische professional te raadplegen voor specifieke "
+                    "AVG-nalevingsbegeleiding."
+                )
+            else:
+                disclaimer_text = (
+                    "Disclaimer: This report is provided for informational purposes only and should not "
+                    "be considered legal advice. The findings in this report are based on automated "
+                    "scanning and may not identify all GDPR-relevant personal data. We recommend "
+                    "consulting with a qualified legal professional for specific GDPR compliance guidance."
+                )
         
         
         elements.append(Paragraph(disclaimer_text, disclaimer_style))
