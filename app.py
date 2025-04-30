@@ -2313,28 +2313,31 @@ else:
             # Set start_scan to True for DPIA to bypass the button click
             start_scan = True
         elif scan_type == _("scan.soc2"):
-            # Add CSS to make SOC2 scan button more prominent
+            # Add CSS to hide the main scan button for SOC2 - we'll use tab-specific buttons instead
             st.markdown("""
             <style>
-            /* Make SOC2 Scan button more prominent */
-            div[data-testid="stHorizontalBlock"] button {
+            /* Hide the main SOC2 scan button - we'll use tab-specific buttons */
+            [data-testid="stHorizontalBlock"]:has(button[kind="primaryFormSubmit"]:contains("Start Scan")) {
+                display: none !important;
+            }
+            
+            /* Hide any button with the text "Start Scan" outside the config tab */
+            button:has-text("Start Scan") {
+                display: none !important;
+            }
+            
+            /* Make in-tab scan buttons more prominent */
+            button[kind="primary"] {
                 background-color: #1565C0 !important;
                 color: white !important;
                 font-weight: bold !important;
                 border: 2px solid #0D47A1 !important;
-                padding: 0.5rem 1rem !important;
             }
             </style>
             """, unsafe_allow_html=True)
             
-            scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
-            with scan_btn_col1:
-                start_scan = st.button("Start SOC2 Compliance Scan", use_container_width=True, type="primary", key="soc2_scan_button")
-            with scan_btn_col2:
-                if 'free_trial_active' in locals() and free_trial_active:
-                    st.success(f"Free Trial: {free_trial_days_left} days left")
-                else:
-                    st.warning("Premium Feature")
+            # Set start_scan to False because we're using tab-specific buttons
+            start_scan = False
         elif scan_type == _("scan.ai_model"):
             # Create a more prominent scan button for AI Model scan
             st.markdown("""
@@ -3298,11 +3301,12 @@ else:
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # Scan button with better styling - inside the layout
+                            # Create a prominent scan button with improved styling
+                            st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
                             scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
                             with scan_col2:
                                 scan_button = st.button(
-                                    _("scan.start_scan", "Start SOC2 Compliance Scan"),
+                                    "Start SOC2 Compliance Scan",
                                     type="primary",
                                     use_container_width=True,
                                     key="github_soc2_scan_button"
@@ -3543,11 +3547,12 @@ else:
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # Scan button with better styling
+                            # Create a prominent scan button with improved styling
+                            st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
                             scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
                             with scan_col2:
                                 scan_button = st.button(
-                                    _("scan.start_azure_scan", "Start Azure SOC2 Compliance Scan"),
+                                    "Start Azure SOC2 Compliance Scan",
                                     type="primary",
                                     use_container_width=True,
                                     key="azure_soc2_scan_button"
