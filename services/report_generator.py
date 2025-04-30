@@ -1037,6 +1037,14 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             geïdentificeerd met <b>{high_risk}</b> hoog-risico items. De algemene compliance score is <b>{compliance_score}/100</b>.
             
             <b>Gedetecteerde technologieën:</b> {technologies_text}
+            
+            Elke bevinding in dit rapport is gekoppeld aan specifieke SOC2 Trust Services Criteria (TSC) om u te helpen begrijpen
+            hoe het uw compliance-status beïnvloedt. De TSC-categorieën omvatten:
+            • CC: Common Criteria (Beveiliging)
+            • A: Beschikbaarheid
+            • PI: Verwerkingsintegriteit
+            • C: Vertrouwelijkheid
+            • P: Privacy
             """
         else:
             summary_text = f"""
@@ -1045,6 +1053,14 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             with <b>{high_risk}</b> high-risk items. The overall compliance score is <b>{compliance_score}/100</b>.
             
             <b>Technologies Detected:</b> {technologies_text}
+            
+            Each finding in this report is mapped to specific SOC2 Trust Services Criteria (TSC) to help you understand 
+            how it impacts your compliance posture. The TSC categories include:
+            • CC: Common Criteria (Security)
+            • A: Availability
+            • PI: Processing Integrity
+            • C: Confidentiality
+            • P: Privacy
             """
     else:
         if current_lang == 'nl':
