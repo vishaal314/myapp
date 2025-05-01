@@ -2288,8 +2288,64 @@ else:
                     st.dataframe(findings_df, use_container_width=True)
                 else:
                     st.info("No findings detected in the AI model scan.")
+                    
+                # Auto-generate PDF report with direct download button
+                st.markdown("---")
+                st.subheader("AI Model Scan Report")
                 
-                # Generate Report buttons with comprehensive error handling
+                # Auto-generate PDF report and show download button
+                with st.spinner("Generating PDF report..."):
+                    # Import auto_generate_pdf_report function
+                    try:
+                        from services.report_generator import auto_generate_pdf_report
+                    except ImportError:
+                        st.error("Failed to import report generator functions")
+                    else:
+                        # Format scan data for the report
+                        scan_data = {
+                            'scan_id': ai_model_scan_results.get('scan_id', 'unknown'),
+                            'username': st.session_state.get('username', 'anonymous'),
+                            'scan_type': "ai_model",
+                            'timestamp': ai_model_scan_results.get('timestamp', datetime.now().isoformat()),
+                            'region': ai_model_scan_results.get('region', 'Global'),
+                            'model_source': ai_model_scan_results.get('model_source', 'Unknown'),
+                            'total_findings': ai_model_scan_results.get('total_findings', 0),
+                            'findings': ai_model_scan_results.get('findings', []),
+                            'risk_score': ai_model_scan_results.get('risk_score', 0),
+                            'severity_level': ai_model_scan_results.get('severity_level', 'low'),
+                            'severity_color': ai_model_scan_results.get('severity_color', '#10b981')
+                        }
+                        
+                        # Generate the PDF report
+                        success, report_path, pdf_bytes = auto_generate_pdf_report(scan_data)
+                        
+                        if success and pdf_bytes:
+                            # Extract filename from path
+                            pdf_filename = os.path.basename(report_path)
+                            
+                            # Calculate file size
+                            size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
+                            
+                            # Create columns for report info and download button
+                            col1, col2 = st.columns([3, 2])
+                            
+                            with col1:
+                                st.info(f"Report file: {pdf_filename} ({size_in_mb} MB)")
+                            
+                            with col2:
+                                # Show direct download button using Streamlit's native download button
+                                st.download_button(
+                                    label="📥 Download Report PDF",
+                                    data=pdf_bytes,
+                                    file_name=pdf_filename,
+                                    mime="application/pdf",
+                                    key=f"auto_pdf_download_{scan_data['scan_id']}",
+                                    use_container_width=True
+                                )
+                
+                # Manual report generation buttons with comprehensive error handling
+                st.markdown("---")
+                st.subheader("Additional Report Options")
                 report_col1, report_col2 = st.columns(2)
                 
                 with report_col1:
