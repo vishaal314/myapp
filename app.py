@@ -2695,12 +2695,21 @@ else:
                                 
                                 # Store scan in database
                                 try:
-                                    results_aggregator.store_scan_results(
-                                        scan_id=scan_id,
-                                        username=st.session_state.username,
-                                        scan_type="soc2",
-                                        results=scan_results
-                                    )
+                                    # Format the results for storage
+                                    scan_data = {
+                                        'scan_id': scan_id,
+                                        'username': st.session_state.username,
+                                        'scan_type': "soc2",
+                                        'timestamp': datetime.now().isoformat(),
+                                        'region': scan_results.get('region', 'Global'),
+                                        'file_count': scan_results.get('total_files_scanned', 0),
+                                        'total_pii_found': len(scan_results.get('findings', [])),
+                                        'high_risk_count': sum(1 for f in scan_results.get('findings', []) if f.get('risk_level', '').lower() == 'high'),
+                                        **scan_results  # Include all original scan results
+                                    }
+                                    
+                                    # Save scan using the correct method name
+                                    results_aggregator.save_scan_result(scan_data)
                                     
                                     # Log audit event
                                     results_aggregator.log_audit_event(
