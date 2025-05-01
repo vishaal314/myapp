@@ -2775,26 +2775,59 @@ else:
                                 # Update status
                                 status.update(label=_("scan.scan_complete", "SOC2 scan complete!"), state="complete")
                                 
-                                # Display scan results
+                                # Format the results for storage
+                                scan_data = {
+                                    'scan_id': scan_id,
+                                    'username': st.session_state.username,
+                                    'scan_type': "soc2",
+                                    'timestamp': datetime.now().isoformat(),
+                                    'region': scan_results.get('region', 'Global'),
+                                    'file_count': scan_results.get('total_files_scanned', 0),
+                                    'total_pii_found': len(scan_results.get('findings', [])),
+                                    'high_risk_count': sum(1 for f in scan_results.get('findings', []) if f.get('risk_level', '').lower() == 'high'),
+                                    **scan_results  # Include all original scan results
+                                }
+                                
+                                # Auto-generate PDF report
+                                from services.report_generator import auto_generate_pdf_report
+                                
                                 st.markdown("---")
                                 st.subheader(_("results.title", "SOC2 Scan Results"))
+                                
+                                # Auto-generate PDF report and show download button
+                                with st.spinner("Generating PDF report..."):
+                                    success, report_path, pdf_bytes = auto_generate_pdf_report(scan_data)
+                                    
+                                    if success and pdf_bytes:
+                                        st.success("Scan completed successfully. PDF report is available for download.")
+                                        # Extract filename from path
+                                        pdf_filename = os.path.basename(report_path)
+                                        
+                                        # Calculate file size
+                                        size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
+                                        
+                                        # Create columns for report info and download button
+                                        col1, col2 = st.columns([3, 2])
+                                        
+                                        with col1:
+                                            st.info(f"Report file: {pdf_filename} ({size_in_mb} MB)")
+                                        
+                                        with col2:
+                                            # Show direct download button using Streamlit's native download button
+                                            st.download_button(
+                                                label="📥 Download Report PDF",
+                                                data=pdf_bytes,
+                                                file_name=pdf_filename,
+                                                mime="application/pdf",
+                                                key=f"auto_pdf_download_{scan_id}",
+                                                use_container_width=True
+                                            )
+                                
+                                # Display scan results
                                 display_soc2_scan_results(scan_results)
                                 
                                 # Store scan in database
                                 try:
-                                    # Format the results for storage
-                                    scan_data = {
-                                        'scan_id': scan_id,
-                                        'username': st.session_state.username,
-                                        'scan_type': "soc2",
-                                        'timestamp': datetime.now().isoformat(),
-                                        'region': scan_results.get('region', 'Global'),
-                                        'file_count': scan_results.get('total_files_scanned', 0),
-                                        'total_pii_found': len(scan_results.get('findings', [])),
-                                        'high_risk_count': sum(1 for f in scan_results.get('findings', []) if f.get('risk_level', '').lower() == 'high'),
-                                        **scan_results  # Include all original scan results
-                                    }
-                                    
                                     # Save scan using the correct method name
                                     results_aggregator.save_scan_result(scan_data)
                                     
