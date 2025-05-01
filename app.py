@@ -2297,11 +2297,16 @@ else:
                 with st.spinner("Generating PDF report..."):
                     # Import auto_generate_pdf_report function
                     try:
-                        from services.report_generator import auto_generate_pdf_report
-                    except ImportError:
-                        st.error("Failed to import report generator functions")
+                        import logging
+                        from services.report_generator import auto_generate_pdf_report, generate_report
+                        
+                        # Debug info
+                        logging.info(f"AI Model scan results: {list(ai_model_scan_results.keys())}")
+                        logging.info(f"Generating auto PDF report for AI model scan, scan_id: {ai_model_scan_results.get('scan_id', 'unknown')}")
+                    except ImportError as e:
+                        st.error(f"Failed to import report generator functions: {str(e)}")
                     else:
-                        # Format scan data for the report
+                        # Format scan data for the report - make sure all required fields are present
                         scan_data = {
                             'scan_id': ai_model_scan_results.get('scan_id', 'unknown'),
                             'username': st.session_state.get('username', 'anonymous'),
@@ -2309,39 +2314,75 @@ else:
                             'timestamp': ai_model_scan_results.get('timestamp', datetime.now().isoformat()),
                             'region': ai_model_scan_results.get('region', 'Global'),
                             'model_source': ai_model_scan_results.get('model_source', 'Unknown'),
-                            'total_findings': ai_model_scan_results.get('total_findings', 0),
+                            'total_pii_found': ai_model_scan_results.get('total_findings', 0),  # Required key for report
                             'findings': ai_model_scan_results.get('findings', []),
                             'risk_score': ai_model_scan_results.get('risk_score', 0),
                             'severity_level': ai_model_scan_results.get('severity_level', 'low'),
                             'severity_color': ai_model_scan_results.get('severity_color', '#10b981')
                         }
                         
-                        # Generate the PDF report
-                        success, report_path, pdf_bytes = auto_generate_pdf_report(scan_data)
-                        
-                        if success and pdf_bytes:
-                            # Extract filename from path
-                            pdf_filename = os.path.basename(report_path)
+                        # Try direct report generation first as a fallback
+                        st.info("Generating AI Model PDF report...")
+                        try:
+                            # First try with auto_generate_pdf_report
+                            logging.info("Attempting auto_generate_pdf_report for AI model scan")
+                            success, report_path, pdf_bytes = auto_generate_pdf_report(scan_data)
+                            logging.info(f"Auto-generate result: success={success}, report_path={report_path}, pdf_bytes_length={len(pdf_bytes) if pdf_bytes else 'None'}")
                             
-                            # Calculate file size
-                            size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
-                            
-                            # Create columns for report info and download button
-                            col1, col2 = st.columns([3, 2])
-                            
-                            with col1:
-                                st.info(f"Report file: {pdf_filename} ({size_in_mb} MB)")
-                            
-                            with col2:
-                                # Show direct download button using Streamlit's native download button
-                                st.download_button(
-                                    label="📥 Download Report PDF",
-                                    data=pdf_bytes,
-                                    file_name=pdf_filename,
-                                    mime="application/pdf",
-                                    key=f"auto_pdf_download_{scan_data['scan_id']}",
-                                    use_container_width=True
+                            # If auto-generate fails, try direct generation
+                            if not success or not pdf_bytes:
+                                logging.warning("Auto-generate failed, trying direct PDF generation")
+                                pdf_bytes = generate_report(
+                                    scan_data,
+                                    report_format="ai_model",
+                                    include_details=True,
+                                    include_charts=True,
+                                    include_metadata=True,
+                                    include_recommendations=True
                                 )
+                                success = True if pdf_bytes else False
+                                report_path = f"reports/AI_Model_Scan_Report_{scan_data['scan_id']}.pdf"
+                                
+                                # Save the report to disk as a fallback
+                                if pdf_bytes:
+                                    os.makedirs("reports", exist_ok=True)
+                                    with open(report_path, "wb") as f:
+                                        f.write(pdf_bytes)
+                                    logging.info(f"Saved PDF report to {report_path}")
+                            
+                            if success and pdf_bytes:
+                                # Extract filename from path
+                                pdf_filename = os.path.basename(report_path)
+                                
+                                # Calculate file size
+                                size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
+                                
+                                # Create columns for report info and download button
+                                col1, col2 = st.columns([3, 2])
+                                
+                                with col1:
+                                    st.info(f"Report file: {pdf_filename} ({size_in_mb} MB)")
+                                
+                                with col2:
+                                    # Show direct download button using Streamlit's native download button
+                                    st.download_button(
+                                        label="📥 Download Report PDF",
+                                        data=pdf_bytes,
+                                        file_name=pdf_filename,
+                                        mime="application/pdf",
+                                        key=f"auto_pdf_download_{scan_data['scan_id']}",
+                                        use_container_width=True
+                                    )
+                                    st.success("PDF report generated successfully")
+                            else:
+                                st.error("Failed to generate PDF report. Please try the manual report options below.")
+                        except Exception as e:
+                            import traceback
+                            logging.error(f"Error generating AI model report: {str(e)}")
+                            logging.error(traceback.format_exc())
+                            st.error(f"Error generating report: {str(e)}")
+                            if st.session_state.get('debug_mode', False):
+                                st.code(traceback.format_exc())
                 
                 # Manual report generation buttons with comprehensive error handling
                 st.markdown("---")
