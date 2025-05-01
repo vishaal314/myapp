@@ -1198,12 +1198,32 @@ else:
             </div>
             """, unsafe_allow_html=True)
             
-            # Recent scans with improved display
-            st.markdown("""
-            <h3 style="margin: 25px 0 15px 0; color: #1e3a8a; font-weight: 600; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
-                Recent Scans & Reports
-            </h3>
-            """, unsafe_allow_html=True)
+            # Recent scans with improved display and report download section
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.markdown("""
+                <h3 style="margin: 25px 0 15px 0; color: #1e3a8a; font-weight: 600; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
+                    Recent Scans & Reports
+                </h3>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                # Create "Download Reports" button with unique key
+                if st.button("📥 Download All Reports", key="download_all_reports_btn", 
+                             help="Download all available PDF reports"):
+                    # Create a function to list all available reports
+                    reports_dir = "reports"
+                    if os.path.exists(reports_dir):
+                        report_files = [f for f in os.listdir(reports_dir) 
+                                       if f.endswith(".pdf") and os.path.isfile(os.path.join(reports_dir, f))]
+                        
+                        if report_files:
+                            st.session_state.available_reports = report_files
+                            st.session_state.show_reports_list = True
+                        else:
+                            st.warning("No reports available for download.")
+                    else:
+                        st.warning("Reports directory not found.")
             
             recent_scans = all_scans[-5:] if len(all_scans) > 5 else all_scans
             recent_scans_df = pd.DataFrame(recent_scans)
