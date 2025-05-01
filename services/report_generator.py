@@ -775,6 +775,9 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     Returns:
         The PDF report as bytes
     """
+    # Optimize scan data for report generation
+    optimized_scan_data = _optimize_scan_data_for_report(scan_data, report_format)
+    
     buffer = io.BytesIO()
     
     # Get current language from session state
