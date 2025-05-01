@@ -74,17 +74,69 @@ def auto_generate_pdf_report(scan_data: Dict[str, Any], save_path: Optional[str]
         if not os.path.exists(save_path):
             os.makedirs(save_path)
             
+        # Import logger
+        import logging
+        logger = logging.getLogger(__name__)
+        import traceback
+        
+        # For AI Model scans, ensure required fields are present
+        explicit_report_format = None
+        if 'ai_model' in scan_type.lower():
+            logger.info(f"Preparing AI Model report data, scan ID: {scan_id}")
+            
+            # Ensure total_pii_found is present (required for report generation)
+            if 'total_pii_found' not in scan_data and 'findings' in scan_data:
+                scan_data['total_pii_found'] = len(scan_data['findings'])
+                logger.info(f"Added total_pii_found count: {scan_data['total_pii_found']}")
+                
+            # Count findings by risk level if not already present
+            if ('high_risk_count' not in scan_data or 'medium_risk_count' not in scan_data or 
+                'low_risk_count' not in scan_data) and 'findings' in scan_data:
+                high_risk = 0
+                medium_risk = 0
+                low_risk = 0
+                
+                for finding in scan_data['findings']:
+                    risk_level = finding.get('risk_level', 'low')
+                    if isinstance(risk_level, str):
+                        risk_level = risk_level.lower()
+                    if risk_level == 'high':
+                        high_risk += 1
+                    elif risk_level == 'medium':
+                        medium_risk += 1
+                    else:
+                        low_risk += 1
+                
+                scan_data['high_risk_count'] = high_risk
+                scan_data['medium_risk_count'] = medium_risk
+                scan_data['low_risk_count'] = low_risk
+                logger.info(f"Added risk counts - High: {high_risk}, Medium: {medium_risk}, Low: {low_risk}")
+                
+            # Make sure model_source is present
+            if 'model_source' not in scan_data:
+                scan_data['model_source'] = 'AI Model'
+                logger.info("Added default model_source")
+                
+            # Format explicitly for AI Model report
+            explicit_report_format = "ai_model"
+            logger.info("Using AI Model report format explicitly")
+        
         # Generate the report with default options
         try:
+            logger.info(f"Generating report for scan type: {scan_type}")
+            logger.info(f"Available scan data keys: {list(scan_data.keys())}")
+            
             report_bytes = generate_report(
                 scan_data,
                 include_details=True,
                 include_charts=True,
                 include_metadata=True,
-                include_recommendations=True
+                include_recommendations=True,
+                report_format=explicit_report_format
             )
             
             if not report_bytes:
+                logger.error("Failed to generate report content - report_bytes is None or empty")
                 return False, "Failed to generate report content", None
                 
             # Create filename based on scan type and ID
@@ -115,10 +167,13 @@ def auto_generate_pdf_report(scan_data: Dict[str, Any], save_path: Optional[str]
             
         except Exception as report_error:
             logger.error(f"Error generating report content: {str(report_error)}")
+            logger.error(traceback.format_exc())
             return False, f"Error generating report: {str(report_error)}", None
             
     except Exception as e:
         logger.error(f"Failed to auto-generate report: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         return False, f"Failed to auto-generate report: {str(e)}", None
 
 class RiskMeter(Flowable):
