@@ -182,7 +182,7 @@ def run_soc2_display_standalone():
         
         with col1:
             # PDF Download button
-            if st.button("Generate PDF Report", type="primary"):
+            if st.button("Generate PDF Report", type="primary", key="soc2_pdf_report_btn"):
                 from services.report_generator import generate_report
                 import base64
                 from datetime import datetime
@@ -194,12 +194,22 @@ def run_soc2_display_standalone():
                     # Provide download link
                     b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
                     pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
-                    st.markdown(href, unsafe_allow_html=True)
+                    
+                    # Display a more prominent download link with styling
+                    st.success("PDF report generated successfully!")
+                    st.markdown(f"""
+                    <div style="padding: 10px; background-color: #f0f2f6; border-radius: 5px; margin: 10px 0px; text-align: center;">
+                        <a href="data:application/pdf;base64,{b64_pdf}" 
+                           download="{pdf_filename}" 
+                           style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                           <span style="margin-right: 5px;">📥</span> Download SOC2 Compliance Report PDF
+                        </a>
+                    </div>
+                    """, unsafe_allow_html=True)
         
         with col2:
             # HTML Download button
-            if st.button("Generate HTML Report", type="primary"):
+            if st.button("Generate HTML Report", type="primary", key="soc2_html_report_btn"):
                 from services.html_report_generator import get_html_report_as_base64
                 import base64
                 from datetime import datetime
@@ -238,14 +248,24 @@ def run_soc2_display_standalone():
                     # Get base64 encoded HTML
                     html_base64 = get_html_report_as_base64(html_compatible_results)
                     
-                    # Provide download link
+                    # Provide styled download link
                     html_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-                    href = f'<a href="data:text/html;base64,{html_base64}" download="{html_filename}">Download SOC2 Compliance Report HTML</a>'
-                    st.markdown(href, unsafe_allow_html=True)
+                    
+                    # Display a success message and prominent download link
+                    st.success("HTML report generated successfully!")
+                    st.markdown(f"""
+                    <div style="padding: 10px; background-color: #f0f2f6; border-radius: 5px; margin: 10px 0px; text-align: center;">
+                        <a href="data:text/html;base64,{html_base64}" 
+                           download="{html_filename}" 
+                           style="background-color: #2196F3; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                           <span style="margin-right: 5px;">📥</span> Download SOC2 Compliance Report HTML
+                        </a>
+                    </div>
+                    """, unsafe_allow_html=True)
     
     with report_tabs[1]:
         # Full Report viewing option
-        if st.button("Show Detailed Report"):
+        if st.button("Show Detailed Report", key="show_detailed_soc2_report_btn"):
             with st.spinner("Generating detailed report view..."):
                 st.markdown("## Detailed SOC2 Compliance Report")
                 

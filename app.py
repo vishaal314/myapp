@@ -2360,10 +2360,14 @@ else:
                 github_branch = st.session_state.get('branch', '')
                 github_token = st.session_state.get('token', '')
             
-            # Free trial info
-            if 'free_trial_active' in locals() and free_trial_active:
-                st.success(f"Free Trial: {free_trial_days_left} days left")
-            else:
+            # Prominent "Start Scan" button with free trial info
+            scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
+            with scan_btn_col1:
+                start_scan = st.button("Start SOC2 Compliance Scan", use_container_width=True, type="primary", key="main_soc2_scan_button")
+            with scan_btn_col2:
+                if 'free_trial_active' in locals() and free_trial_active:
+                    st.success(f"Free Trial: {free_trial_days_left} days left")
+                else:
                     st.warning("Premium Feature")
         elif scan_type == _("scan.ai_model"):
             # Create a more prominent scan button for AI Model scan
