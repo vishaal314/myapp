@@ -1224,6 +1224,73 @@ else:
                             st.warning("No reports available for download.")
                     else:
                         st.warning("Reports directory not found.")
+                
+                # Display available reports if the button has been clicked
+                if st.session_state.get("show_reports_list", False):
+                    st.markdown("""
+                    <h4 style="margin: 20px 0 10px 0; color: #1e3a8a; font-weight: 600;">
+                        Available Reports
+                    </h4>
+                    """, unsafe_allow_html=True)
+                    
+                    # Display the list of available reports with download links
+                    reports = st.session_state.get("available_reports", [])
+                    
+                    if reports:
+                        # Create a container for the reports
+                        report_container = st.container()
+                        with report_container:
+                            for i, report_file in enumerate(reports):
+                                # Get report file path and size
+                                report_path = os.path.join("reports", report_file)
+                                size_bytes = os.path.getsize(report_path) if os.path.exists(report_path) else 0
+                                size_display = f"{size_bytes / 1024:.1f} KB" if size_bytes < 1024*1024 else f"{size_bytes / (1024*1024):.1f} MB"
+                                
+                                # Format the filename for display (remove timestamp and make it more readable)
+                                display_name = report_file
+                                if "_" in report_file:
+                                    parts = report_file.split("_")
+                                    if len(parts) >= 2:
+                                        scan_type = parts[0].replace("_", " ").title()
+                                        # Try to parse and format date if in the filename
+                                        date_part = None
+                                        for part in parts:
+                                            if part.startswith("2025") and len(part) == 8:  # Format like 20250501
+                                                try:
+                                                    date_obj = datetime.strptime(part, "%Y%m%d")
+                                                    date_part = date_obj.strftime("%b %d, %Y")
+                                                except:
+                                                    pass
+                                        
+                                        if date_part:
+                                            display_name = f"{scan_type} Report - {date_part}"
+                                
+                                # Read the file content for download
+                                with open(report_path, "rb") as f:
+                                    report_bytes = f.read()
+                                
+                                # Create a download button for each report
+                                col1, col2 = st.columns([3, 1])
+                                with col1:
+                                    st.markdown(f"**{display_name}** ({size_display})")
+                                with col2:
+                                    st.download_button(
+                                        label="Download",
+                                        data=report_bytes,
+                                        file_name=report_file,
+                                        mime="application/pdf",
+                                        key=f"download_report_{i}",
+                                        help=f"Download {display_name}"
+                                    )
+                                
+                                # Add a separator between reports
+                                if i < len(reports) - 1:
+                                    st.markdown("---")
+                        
+                        # Button to hide the reports list
+                        if st.button("Hide Reports List", key="hide_reports_btn"):
+                            st.session_state.show_reports_list = False
+                            st.rerun()
             
             recent_scans = all_scans[-5:] if len(all_scans) > 5 else all_scans
             recent_scans_df = pd.DataFrame(recent_scans)
