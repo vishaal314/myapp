@@ -4022,10 +4022,21 @@ else:
                                     # Use selected_scan instead of undefined aggregated_result
                                     pdf_bytes = generate_report(selected_scan)
                                     
-                                    # Create download link
-                                    b64_pdf = base64.b64encode(pdf_bytes).decode()
-                                    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{display_scan_id}.pdf">Download PDF Report</a>'
-                                    st.markdown(href, unsafe_allow_html=True)
+                                    # Use Streamlit's native download button
+                                    st.success("PDF Report generated successfully!")
+                                    # Display file size information
+                                    size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
+                                    st.info(f"Report size: {size_in_mb} MB")
+                                    
+                                    # Show download button
+                                    st.download_button(
+                                        label="📥 Download PDF Report",
+                                        data=pdf_bytes,
+                                        file_name=f"GDPR_Scan_Report_{display_scan_id}.pdf",
+                                        mime="application/pdf",
+                                        use_container_width=True,
+                                        key=f"download_pdf_{display_scan_id}"
+                                    )
                         
                         # Compliance Certificate for Premium users
                         with col2:
@@ -4084,12 +4095,22 @@ else:
                                         with open(cert_path, 'rb') as file:
                                             cert_bytes = file.read()
                                         
-                                        # Create download link
-                                        b64_cert = base64.b64encode(cert_bytes).decode()
-                                        href = f'<a href="data:application/pdf;base64,{b64_cert}" download="GDPR_Compliance_Certificate_{display_scan_id}.pdf">Download Compliance Certificate</a>'
-                                        st.markdown(href, unsafe_allow_html=True)
-                                        
+                                        # Use Streamlit's native download button
                                         st.success(_("dashboard.certificate_success"))
+                                        
+                                        # Display file size information
+                                        size_in_mb = round(len(cert_bytes) / (1024 * 1024), 2)
+                                        st.info(f"Certificate size: {size_in_mb} MB")
+                                        
+                                        # Show download button
+                                        st.download_button(
+                                            label="📥 Download Compliance Certificate",
+                                            data=cert_bytes,
+                                            file_name=f"GDPR_Compliance_Certificate_{display_scan_id}.pdf",
+                                            mime="application/pdf",
+                                            use_container_width=True,
+                                            key=f"download_cert_{display_scan_id}"
+                                        )
                                     else:
                                         st.error(_("dashboard.certificate_error"))
                                 

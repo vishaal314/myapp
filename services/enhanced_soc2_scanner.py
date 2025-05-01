@@ -131,16 +131,30 @@ def display_soc2_scan_results(scan_results: Dict[str, Any]):
     
     # PDF Download button
     st.markdown("### Download Report")
-    if st.button("Generate PDF Report", type="primary"):
+    if st.button("Generate PDF Report", type="primary", key="enhanced_generate_pdf_btn"):
         with st.spinner("Generating PDF report..."):
             # Generate PDF report
             pdf_bytes = generate_report(scan_results)
             
-            # Provide download link
-            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+            # Generate filename
             pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
-            st.markdown(href, unsafe_allow_html=True)
+            
+            # Use Streamlit's native download button
+            st.success("Report generated successfully! Click below to download.")
+            
+            # Display file size information
+            size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
+            st.info(f"Report size: {size_in_mb} MB")
+            
+            # Show download button
+            st.download_button(
+                label="📥 Download SOC2 Report PDF",
+                data=pdf_bytes,
+                file_name=pdf_filename,
+                mime="application/pdf",
+                use_container_width=True,
+                key="enhanced_pdf_download"
+            )
 
 def add_nav_soc2_results():
     """
