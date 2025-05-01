@@ -107,14 +107,16 @@ def display_soc2_findings(scan_results):
                 
                 # Show violations if any criteria failed
                 if failed > 0 or warning > 0:
-                    with st.expander("View Violations"):
-                        for criterion, details in category_criteria.items():
-                            violations = details.get("violations", [])
-                            if violations:
-                                st.markdown(f"**{criterion}**: {details.get('description', '')}")
-                                for v in violations:
-                                    st.markdown(f"- **{v.get('risk_level', '').upper()}**: {v.get('description', '')} in `{v.get('file', '')}:{v.get('line', '')}`")
-                                st.markdown("---")
+                    st.markdown("#### Violations")
+                    violations_list = []
+                    
+                    for criterion, details in category_criteria.items():
+                        violations = details.get("violations", [])
+                        if violations:
+                            st.markdown(f"**{criterion}**: {details.get('description', '')}")
+                            for v in violations:
+                                st.markdown(f"- **{v.get('risk_level', '').upper()}**: {v.get('description', '')} in `{v.get('file', '')}:{v.get('line', '')}`")
+                            st.markdown("---")
 
 def run_soc2_display_standalone():
     """
