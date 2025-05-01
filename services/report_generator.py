@@ -1570,8 +1570,140 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         
         # For SOC2 reports, display findings with TSC criteria mapping
         elif report_format == "soc2" and 'findings' in scan_data and scan_data['findings']:
-            # Create a table for SOC2 findings with TSC mapping
+            # First add a SOC2 compliance summary section
+            elements.append(Paragraph("SOC2 Compliance Summary", heading_style))
+            elements.append(Spacer(1, 8))
+            
+            # Add compliance overview
+            compliance_score = scan_data.get('compliance_score', 0)
+            if compliance_score >= 80:
+                compliance_status = "Good"
+                compliance_color = colors.green
+            elif compliance_score >= 60:
+                compliance_status = "Needs Review"
+                compliance_color = colors.orange
+            else:
+                compliance_status = "Critical"
+                compliance_color = colors.red
+                
+            # Add overview text
+            if current_lang == 'nl':
+                overview_text = f"""
+                Deze SOC2 compliance scan heeft een score van {compliance_score}/100 opgeleverd, wat wordt beschouwd als 
+                <font color="{compliance_color}">{compliance_status}</font>. De bevindingen zijn hieronder ingedeeld op basis van 
+                Trust Services Criteria (TSC) categorieën om te helpen bij prioritering en remediëring.
+                """
+            else:
+                overview_text = f"""
+                This SOC2 compliance scan resulted in a score of {compliance_score}/100, which is considered 
+                <font color="{compliance_color}">{compliance_status}</font>. The findings are categorized below based on 
+                Trust Services Criteria (TSC) categories to help with prioritization and remediation.
+                """
+            elements.append(Paragraph(overview_text, normal_style))
+            elements.append(Spacer(1, 12))
+            
+            # Add scanning info
+            repo_url = scan_data.get('repo_url', 'Unknown Repository')
+            branch = scan_data.get('branch', 'main')
+            timestamp = scan_data.get('timestamp', datetime.now().isoformat())
+            if isinstance(timestamp, str):
+                try:
+                    timestamp = datetime.fromisoformat(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+                except:
+                    pass
+                
+            scan_info_data = [
+                ["Repository", repo_url],
+                ["Branch", branch],
+                ["Scan Date", timestamp],
+                ["Total Findings", str(len(scan_data.get('findings', [])))],
+                ["High Risk Findings", str(scan_data.get('high_risk_count', 0))],
+                ["Medium Risk Findings", str(scan_data.get('medium_risk_count', 0))],
+                ["Low Risk Findings", str(scan_data.get('low_risk_count', 0))]
+            ]
+            
+            scan_info_table = Table(scan_info_data, colWidths=[150, 320])
+            scan_info_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
+            ]))
+            elements.append(scan_info_table)
+            elements.append(Spacer(1, 12))
+            
+            # Create a chart of findings by TSC category
+            
+            # First, categorize findings by TSC
+            tsc_categories = {
+                'CC': {'name': 'Security (CC)', 'count': 0, 'color': colors.red},
+                'A': {'name': 'Availability (A)', 'count': 0, 'color': colors.blue},
+                'PI': {'name': 'Processing Integrity (PI)', 'count': 0, 'color': colors.green},
+                'C': {'name': 'Confidentiality (C)', 'count': 0, 'color': colors.purple},
+                'P': {'name': 'Privacy (P)', 'count': 0, 'color': colors.orange}
+            }
+            
+            # Count findings by TSC category
             soc2_findings = scan_data['findings']
+            for finding in soc2_findings:
+                tsc_criteria = finding.get('soc2_tsc_criteria', [])
+                if isinstance(tsc_criteria, str):
+                    tsc_criteria = [tsc_criteria]
+                    
+                for tsc in tsc_criteria:
+                    for category in tsc_categories.keys():
+                        if category in tsc:
+                            tsc_categories[category]['count'] += 1
+                            break
+            
+            # Add findings by TSC category chart title
+            if current_lang == 'nl':
+                tsc_chart_title = "Bevindingen per SOC2 TSC Categorie"
+            else:
+                tsc_chart_title = "Findings by SOC2 TSC Category"
+            elements.append(Paragraph(tsc_chart_title, subheading_style))
+            
+            # Now create a horizontal bar chart for findings by TSC category
+            data = []
+            names = []
+            for category, info in tsc_categories.items():
+                if info['count'] > 0:
+                    data.append(info['count'])
+                    names.append(info['name'])
+            
+            if data:
+                # Add the chart
+                drawing = Drawing(400, 200)
+                bc = HorizontalBarChart()
+                bc.x = 50
+                bc.y = 50
+                bc.height = 120
+                bc.width = 300
+                bc.data = [data]
+                bc.strokeColor = colors.black
+                
+                bc.valueAxis.valueMin = 0
+                bc.valueAxis.valueMax = max(data) + 5
+                bc.valueAxis.valueStep = 5
+                bc.categoryAxis.labels.boxAnchor = 'w'
+                bc.categoryAxis.categoryNames = names
+                bc.bars[0].fillColor = colors.lightblue
+                
+                drawing.add(bc)
+                elements.append(drawing)
+            else:
+                elements.append(Paragraph("No TSC category data available", normal_style))
+            
+            elements.append(Spacer(1, 12))
+            
+            # Now add the detailed findings table
+            elements.append(PageBreak())
+            elements.append(Paragraph("SOC2 Detailed Findings", heading_style))
+            elements.append(Spacer(1, 8))
             
             # Log findings for debugging purposes
             import logging
@@ -1608,11 +1740,20 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 # Capitalize first letter of category
                 category = category[0].upper() + category[1:] if category else 'Unknown'
                 
+                # Truncate long file paths and descriptions for better display
+                file_path = finding.get('file', 'Unknown')
+                if len(file_path) > 40:
+                    file_path = "..." + file_path[-37:]
+                    
+                description = finding.get('description', 'No description')
+                if len(description) > 100:
+                    description = description[:97] + "..."
+                
                 # Create item row
                 item_row = [
-                    finding.get('file', 'Unknown'),
+                    file_path,
                     str(finding.get('line', 'N/A')),
-                    finding.get('description', 'No description'),
+                    description,
                     displayed_risk_level,
                     category,
                     tsc_criteria_text
@@ -1659,7 +1800,62 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             
             elements.append(detailed_table)
             
+            # Add recommendations section if available
+            if 'recommendations' in scan_data and scan_data['recommendations']:
+                elements.append(PageBreak())
+                
+                if current_lang == 'nl':
+                    rec_title = "SOC2 Aanbevelingen"
+                else:
+                    rec_title = "SOC2 Recommendations"
+                elements.append(Paragraph(rec_title, heading_style))
+                elements.append(Spacer(1, 8))
+                
+                # Add an intro text for recommendations
+                if current_lang == 'nl':
+                    rec_intro = """
+                    De volgende aanbevelingen zijn gebaseerd op de bevindingen van de scan. Het implementeren van deze aanbevelingen 
+                    zal helpen bij het verbeteren van uw SOC2-compliance posture en het verminderen van risico's.
+                    """
+                else:
+                    rec_intro = """
+                    The following recommendations are based on the scan findings. Implementing these recommendations will 
+                    help improve your SOC2 compliance posture and reduce risks.
+                    """
+                elements.append(Paragraph(rec_intro, normal_style))
+                elements.append(Spacer(1, 12))
+                
+                # List each recommendation
+                for i, rec in enumerate(scan_data['recommendations'], 1):
+                    # Get recommendation details
+                    title = rec.get('title', f"Recommendation {i}")
+                    description = rec.get('description', "No description provided")
+                    priority = rec.get('priority', "Medium")
+                    steps = rec.get('steps', [])
+                    
+                    # Recommendation title with priority
+                    elements.append(Paragraph(f"{i}. {title} (Priority: {priority})", subheading_style))
+                    elements.append(Spacer(1, 4))
+                    
+                    # Description
+                    elements.append(Paragraph(description, normal_style))
+                    elements.append(Spacer(1, 4))
+                    
+                    # Implementation steps if available
+                    if steps:
+                        if current_lang == 'nl':
+                            steps_title = "Implementatiestappen:"
+                        else:
+                            steps_title = "Implementation Steps:"
+                        elements.append(Paragraph(steps_title, bullet_style))
+                        
+                        for step in steps:
+                            elements.append(Paragraph(f"• {step}", bullet_style))
+                    
+                    elements.append(Spacer(1, 8))
+            
             # Add TSC criteria explanation
+            elements.append(Spacer(1, 15))
             if current_lang == 'nl':
                 tsc_title = "SOC2 Trust Services Criteria (TSC) Uitleg"
                 tsc_explanation = """
@@ -1684,8 +1880,6 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 
                 Each finding in this report references specific TSC criteria to help understand how it impacts compliance posture.
                 """
-            
-            elements.append(Spacer(1, 15))
             elements.append(Paragraph(tsc_title, subheading_style))
             elements.append(Paragraph(tsc_explanation, normal_style))
             
