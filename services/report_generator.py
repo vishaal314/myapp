@@ -775,8 +775,15 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     Returns:
         The PDF report as bytes
     """
-    # Optimize scan data for report generation
-    optimized_scan_data = _optimize_scan_data_for_report(scan_data, report_format)
+    # Import the optimize function from our utility module
+    try:
+        from services._optimize_scan_data_for_report import optimize_scan_data_for_report
+        # Optimize scan data for report generation
+        optimized_scan_data = optimize_scan_data_for_report(scan_data, report_format)
+        logger.info("Successfully optimized scan data for report")
+    except Exception as e:
+        logger.error(f"Error optimizing scan data: {str(e)}")
+        optimized_scan_data = scan_data  # Fallback to original data if optimization fails
     
     buffer = io.BytesIO()
     
@@ -914,9 +921,9 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     elements.append(Spacer(1, 24))
     
     # Scan ID with badge-like styling
-    scan_id = scan_data.get('scan_id', 'Unknown')
+    scan_id = optimized_scan_data.get('scan_id', 'Unknown')
     scan_date = datetime.now().strftime('%Y%m%d')
-    scan_type = scan_data.get('scan_type', 'Unknown')
+    scan_type = optimized_scan_data.get('scan_type', 'Unknown')
     
     # Create a fancy scan ID display
     display_scan_id = f"{scan_type[:3].upper()}-{scan_date}-{scan_id[:6]}"
@@ -945,9 +952,9 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     elements.append(Paragraph(exec_summary_title, heading_style))
     
     # Summary data
-    scan_type = scan_data.get('scan_type', 'Unknown')
-    region = scan_data.get('region', 'Unknown')
-    timestamp = scan_data.get('timestamp', 'Unknown')
+    scan_type = optimized_scan_data.get('scan_type', 'Unknown')
+    region = optimized_scan_data.get('region', 'Unknown')
+    timestamp = optimized_scan_data.get('timestamp', 'Unknown')
     
     # For AI Model reports, calculate counts directly from findings
     if report_format == "ai_model" and 'findings' in scan_data:
