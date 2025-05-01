@@ -229,16 +229,19 @@ def run_soc2_display_standalone():
                             size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
                             st.info(f"Report size: {size_in_mb} MB | Saved to: reports/{pdf_filename}")
                             
-                            # Present multiple download options
+                            # Use native Streamlit download button (more reliable than HTML link)
+                            st.download_button(
+                                label="📥 Download Report PDF",
+                                data=pdf_bytes,
+                                file_name=pdf_filename,
+                                mime="application/pdf",
+                                use_container_width=True,
+                                key="soc2_pdf_download"
+                            )
+                            
                             st.markdown(f"""
-                            <div style="padding: 15px; background-color: #f0f2f6; border-radius: 8px; margin: 15px 0px; text-align: center;">
-                                <h3 style="margin-bottom: 15px; color: #2C3E50;">Download Options</h3>
-                                <a href="data:application/pdf;base64,{b64_pdf}" 
-                                   download="{pdf_filename}" 
-                                   style="background-color: #4CAF50; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; margin: 10px;">
-                                   <span style="margin-right: 5px;">📥</span> Download Report PDF
-                                </a>
-                                <p style="margin-top: 15px; font-size: 0.9em; color: #555;">
+                            <div style="padding: 15px; background-color: #f0f2f6; border-radius: 8px; margin: 15px 0px;">
+                                <p style="font-size: 0.9em; color: #555;">
                                     The report is also saved to the server at <code>{file_path}</code> for future reference.
                                 </p>
                             </div>
@@ -335,22 +338,25 @@ def run_soc2_display_standalone():
                             size_in_mb = round(len(html_bytes) / (1024 * 1024), 2)
                             st.info(f"Report size: {size_in_mb} MB | Saved to: reports/{html_filename}")
                             
-                            # Display prominent download option
+                            # Use native Streamlit download button
+                            st.download_button(
+                                label="📥 Download HTML Report",
+                                data=html_bytes,
+                                file_name=html_filename,
+                                mime="text/html",
+                                use_container_width=True,
+                                key="soc2_html_download"
+                            )
+                            
                             st.markdown(f"""
-                            <div style="padding: 15px; background-color: #f0f2f6; border-radius: 8px; margin: 15px 0px; text-align: center;">
-                                <h3 style="margin-bottom: 15px; color: #2C3E50;">Download HTML Report</h3>
-                                <a href="data:text/html;base64,{html_base64}" 
-                                   download="{html_filename}" 
-                                   style="background-color: #2196F3; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; margin: 10px;">
-                                   <span style="margin-right: 5px;">📥</span> Download SOC2 Compliance Report HTML
-                                </a>
-                                <p style="margin-top: 15px; font-size: 0.9em; color: #555;">
+                            <div style="padding: 15px; background-color: #f0f2f6; border-radius: 8px; margin: 15px 0px;">
+                                <p style="font-size: 0.9em; color: #555;">
                                     The report is also saved to the server at <code>{file_path}</code> for future reference.
                                 </p>
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # Add option to view report in new tab
+                            # Add option to view report in new tab (need to keep this HTML-based since Streamlit doesn't have a native "open in new tab" button)
                             st.markdown(f"""
                             <div style="padding: 10px; background-color: #eef2f7; border-radius: 8px; margin: 10px 0px; text-align: center;">
                                 <a href="data:text/html;base64,{html_base64}" 
