@@ -1753,20 +1753,22 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         risk_text = "No PII items were found in this scan. Continue monitoring to maintain GDPR compliance."
     sustainability_score = 90  # Excellent sustainability score
     
-    # Add GDPR fine protection banner with language support
-    gdpr_banner = ComplianceBanner(compliance_level, language=current_lang)
-    elements.append(gdpr_banner)
-    elements.append(Spacer(1, 12))
+    # Add GDPR fine protection banner with language support (skip for SOC2 reports)
+    if report_format != "soc2":
+        gdpr_banner = ComplianceBanner(compliance_level, language=current_lang)
+        elements.append(gdpr_banner)
+        elements.append(Spacer(1, 12))
     
-    # Add custom risk meter visual with language support
+    # Add custom risk meter visual with language support (skip for SOC2 reports)
     # Make sure we use proper language parameter for the components to determine labels
-    risk_meter = RiskMeter(risk_level, risk_level_for_meter, language=current_lang)
-    elements.append(risk_meter)
-    elements.append(Spacer(1, 12))
-    
-    # Risk level paragraph with styled text
-    elements.append(Paragraph(risk_text, normal_style))
-    elements.append(Spacer(1, 12))
+    if report_format != "soc2":
+        risk_meter = RiskMeter(risk_level, risk_level_for_meter, language=current_lang)
+        elements.append(risk_meter)
+        elements.append(Spacer(1, 12))
+        
+        # Risk level paragraph with styled text
+        elements.append(Paragraph(risk_text, normal_style))
+        elements.append(Spacer(1, 12))
     
     # Add sustainability compliance section - translated (except for SOC2 reports)
     if report_format != "soc2":
