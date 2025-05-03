@@ -565,7 +565,9 @@ class CodeScanner:
             'total_findings': self.scan_checkpoint_data['stats']['total_findings'],
             'findings': self.scan_checkpoint_data['findings'],
             'status': 'completed' if len(all_files) == len(self.scan_checkpoint_data['completed_files']) else 'partial',
-            'completion_percentage': int(100 * len(self.scan_checkpoint_data['completed_files']) / max(1, len(all_files)))
+            'completion_percentage': int(100 * len(self.scan_checkpoint_data['completed_files']) / max(1, len(all_files))),
+            'lines_scanned': self.total_lines_scanned,
+            'principles_checked': list(self.principles_checked)
         }
         
         # Clean up checkpoint file if scan completed successfully
