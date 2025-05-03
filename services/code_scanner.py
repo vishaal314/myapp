@@ -1161,6 +1161,10 @@ class CodeScanner:
             # Scan for GDPR principle-specific patterns
             principle_findings = self._scan_for_gdpr_principles(content, lines, file_path)
             all_findings.extend(principle_findings)
+            
+            # Scan for Netherlands-specific UAVG patterns (for Dutch region)
+            nl_uavg_findings = self._scan_for_nl_uavg_patterns(content, lines, file_path)
+            all_findings.extend(nl_uavg_findings)
         
         return all_findings
         
@@ -1690,7 +1694,7 @@ class CodeScanner:
         
         # Determine finding type based on content
         if 'type' in finding:
-            if finding['type'] in ['dsar', 'consent', 'security', 'principle']:
+            if finding['type'] in ['dsar', 'consent', 'security', 'principle', 'nl_uavg']:
                 finding_type = finding['type']
             elif finding['type'].startswith('Vulnerability:'):
                 finding_type = 'security'
@@ -1715,6 +1719,19 @@ class CodeScanner:
             for pattern_key, pattern_info in GDPR_PRINCIPLE_PATTERNS.items():
                 if pattern_key == finding['pattern_key']:
                     finding['gdpr_principle'] = pattern_info.get('gdpr_principle', 'unknown')
+                    break
+        
+        # Add NL-specific UAVG data if applicable
+        if finding_type == 'nl_uavg' and 'pattern_key' in finding:
+            # Try to get the data from NL_UAVG_PATTERNS
+            for pattern_key, pattern_info in NL_UAVG_PATTERNS.items():
+                if pattern_key == finding['pattern_key']:
+                    # Add specific UAVG article references if not already present
+                    if 'uavg_articles' not in finding and 'uavg_articles' in pattern_info:
+                        finding['uavg_articles'] = pattern_info.get('uavg_articles', [])
+                    
+                    # Mark as country-specific
+                    finding['country_specific'] = 'Netherlands'
                     break
         
         return finding

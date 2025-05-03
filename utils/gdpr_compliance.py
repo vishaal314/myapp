@@ -564,6 +564,8 @@ def generate_remediation_suggestion(finding: Dict[str, Any]) -> str:
         patterns_dict = SECURITY_PATTERNS
     elif finding_type == 'principle':
         patterns_dict = GDPR_PRINCIPLE_PATTERNS
+    elif finding_type == 'nl_uavg':
+        patterns_dict = NL_UAVG_PATTERNS
     
     # Get the pattern-specific remediation if available
     if patterns_dict and pattern_key in patterns_dict and 'remediation' in patterns_dict[pattern_key]:
@@ -584,13 +586,29 @@ def generate_remediation_suggestion(finding: Dict[str, Any]) -> str:
         if gdpr_principle in principle_recommendations:
             return principle_recommendations[gdpr_principle]
     
+    # Check for country-specific recommendations
+    country_specific = finding.get('country_specific', '')
+    if country_specific == 'Netherlands':
+        # Specific Dutch UAVG remediation suggestions based on pattern key
+        if pattern_key.startswith('nl_'):
+            nl_specific_recommendations = {
+                'nl_retention_period': "Ensure compliance with Dutch retention requirements: fiscal data (7 years), medical data (15-20 years), client identity (5 years), and employment data (2-5 years).",
+                'nl_bsn_processing': "Process BSN (Dutch citizen service number) only when explicitly authorized by law, such as employment, taxation, or social security purposes.",
+                'nl_breach_notification': "Implement Dutch-specific breach notification procedures, including the 72-hour deadline for reporting to Autoriteit Persoonsgegevens.",
+                'nl_data_sharing': "Review and ensure compliance with Dutch regulations for international data transfers, especially when sharing data outside the EU.",
+                'nl_dpa_requirements': "Follow Autoriteit Persoonsgegevens (Dutch DPA) guidelines and ensure appropriate reporting mechanisms are in place."
+            }
+            if pattern_key in nl_specific_recommendations:
+                return nl_specific_recommendations[pattern_key]
+            
     # Default remediation suggestions by finding type
     default_remediation = {
         'pii': "Ensure proper legal basis and implement data protection measures for handling personal data.",
         'dsar': "Implement proper procedures for handling data subject rights requests.",
         'consent': "Ensure explicit, informed consent is collected and properly recorded.",
         'security': "Implement appropriate technical and organizational security measures.",
-        'principle': "Implement measures to ensure compliance with this GDPR principle."
+        'principle': "Implement measures to ensure compliance with this GDPR principle.",
+        'nl_uavg': "Ensure compliance with Netherlands-specific UAVG requirements which implement GDPR in Dutch law."
     }
     
     return default_remediation.get(finding_type, "Review this finding for GDPR compliance.")
@@ -631,6 +649,7 @@ def calculate_gdpr_risk_score(findings: List[Dict[str, Any]]) -> Tuple[int, Dict
         'consent': 0,
         'security': 0,
         'principle': 0,
+        'nl_uavg': 0,
         'other': 0
     }
     
@@ -698,6 +717,15 @@ def get_remediation_priority(finding: Dict[str, Any]) -> str:
     """
     risk_level = finding.get('risk_level', 'low')
     article_refs = finding.get('gdpr_articles', [])
+    uavg_article_refs = finding.get('uavg_articles', [])
+    finding_type = finding.get('type', '')
+    
+    # Dutch-specific checks with high priority
+    if finding_type == 'nl_uavg' and finding.get('country_specific', '') == 'Netherlands':
+        # BSN processing and data breach notification are critical in Dutch context
+        pattern_key = finding.get('pattern_key', '')
+        if pattern_key in ['nl_bsn_processing', 'nl_breach_notification']:
+            return "high"
     
     # High risk findings always have high priority
     if risk_level == 'high' or risk_level == 'critical':
@@ -708,6 +736,13 @@ def get_remediation_priority(finding: Dict[str, Any]) -> str:
     for article in article_refs:
         if article in high_priority_articles:
             return "high"
+    
+    # Dutch UAVG-specific prioritization
+    if uavg_article_refs:
+        high_priority_uavg_articles = ['article_46']  # Dutch BSN processing article
+        for article in uavg_article_refs:
+            if article in high_priority_uavg_articles:
+                return "high"
     
     # Medium risk findings that aren't tied to high priority articles
     if risk_level == 'medium':
