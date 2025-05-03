@@ -1081,7 +1081,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             Paragraph(f"""<font color="#333333">{current_date}</font>""", normal_style),
             Paragraph(f"""<font color="#666666"><b>{scan_id_label}</b></font>""", normal_style),
             Paragraph(
-                f"""<font color="#333333" backgroundColor="#e8f4f8">{display_scan_id}</font>""", 
+                f"""<font color="#333333" bgcolor="#e8f4f8">{display_scan_id}</font>""", 
                 ParagraphStyle('ScanIdStyle', parent=normal_style)
             )
         ]
