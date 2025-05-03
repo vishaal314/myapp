@@ -959,6 +959,11 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             subtitle = _('report.subtitle.ai_model', 'AI Model Risico Analyse Rapport')
         else:
             subtitle = _('report.subtitle.ai_model', 'AI Model Risk Analysis Report')
+    elif report_format == "soc2":
+        if current_lang == 'nl':
+            subtitle = _('report.subtitle.soc2', 'SOC2 Compliance Rapport')
+        else:
+            subtitle = _('report.subtitle.soc2', 'SOC2 Compliance Report')
     else:
         if current_lang == 'nl':
             subtitle = _('report.subtitle', 'GDPR Compliance Scan Rapport')
