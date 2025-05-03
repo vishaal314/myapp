@@ -973,32 +973,74 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     # Content elements
     elements = []
     
-    # Create a more professional header with company logo and title in a table
+    # Create a stylish, modern logo and header
     logo_data = [
         [
-            # Create a colored box for logo effect with company name
+            # Modern logo with shield icon and gradient
             Table(
                 [
-                    [Paragraph(
-                        f"""<font color="#FFFFFF" size="16"><b>{_('app.title', 'DataGuardian Pro')}</b></font>""", 
-                        ParagraphStyle('LogoStyle', alignment=1)
-                    )],
-                    [Paragraph(
-                        f"""<font color="#FFFFFF" size="10">{_('app.subtitle', 'Enterprise Privacy Compliance Platform')}</font>""", 
-                        ParagraphStyle('SubtitleStyle', alignment=1)
-                    )]
+                    [
+                        # Shield icon with DataGuardian Pro text
+                        Table(
+                            [
+                                [
+                                    # Shield icon
+                                    Table(
+                                        [[Paragraph(
+                                            """<font color="#FFFFFF" size="22">🔒</font>""",
+                                            ParagraphStyle('IconStyle', alignment=1)
+                                        )]],
+                                        colWidths=[50],
+                                        rowHeights=[50],
+                                        style=TableStyle([
+                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#4338ca')),  # Indigo blue for icon
+                                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                            ('ROUNDEDCORNERS', [25, 25, 25, 25]),  # Circular icon
+                                        ])
+                                    ),
+                                    # Brand text with modern styling
+                                    Table(
+                                        [
+                                            [Paragraph(
+                                                f"""<font color="#FFFFFF" size="18"><b>{_('app.title', 'DataGuardian Pro')}</b></font>""", 
+                                                ParagraphStyle('LogoStyle', alignment=0)
+                                            )],
+                                            [Paragraph(
+                                                f"""<font color="#FFFFFF" size="10">{_('app.subtitle', 'Enterprise Privacy Compliance Platform')}</font>""", 
+                                                ParagraphStyle('SubtitleStyle', alignment=0)
+                                            )]
+                                        ],
+                                        colWidths=[150],
+                                        rowHeights=[30, 20],
+                                        style=TableStyle([
+                                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                                            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Dark blue background
+                                        ])
+                                    )
+                                ]
+                            ],
+                            colWidths=[50, 160],
+                            style=TableStyle([
+                                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Dark blue background
+                                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                                ('LEFTPADDING', (0, 0), (-1, -1), 12),
+                                ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+                                ('ROUNDEDCORNERS', [10, 10, 10, 10]),
+                            ])
+                        ),
+                    ]
                 ],
-                colWidths=[200],
-                rowHeights=[30, 20],
+                colWidths=[220],
                 style=TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Dark blue background
                     ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('TOPPADDING', (0, 0), (-1, -1), 6),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 12),
-                    ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-                    ('ROUNDEDCORNERS', [10, 10, 10, 10]),
                 ])
             ),
             
