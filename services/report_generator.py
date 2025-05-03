@@ -27,6 +27,29 @@ from reportlab.graphics.widgets.markers import makeMarker
 import logging
 import uuid
 
+
+def lightenColor(color, factor=0.5):
+    """
+    Lightens a given ReportLab color by the specified factor.
+    
+    Args:
+        color: A ReportLab color (e.g., colors.red, HexColor('#ff0000'))
+        factor: Float between 0 and 1, where 0 is black and 1 is white
+        
+    Returns:
+        A lighter version of the color
+    """
+    if not isinstance(color, colors.Color):
+        return color
+        
+    r, g, b = color.red, color.green, color.blue
+    # Mix with white based on factor
+    r = r + (1 - r) * factor
+    g = g + (1 - g) * factor
+    b = b + (1 - b) * factor
+    
+    return colors.Color(r, g, b)
+
 # Import translation utilities
 from utils.i18n import get_text, _
 
@@ -199,13 +222,13 @@ class RiskMeter(Flowable):
         # Risk level indicator (change angle based on risk level)
         angle = 0
         if self.risk_level_for_meter == "Low":
-            angle = 135  # Changed from 45 to 135 (reversed)
+            angle = 135  # Correctly points to Low (right side of gauge)
             indicator_color = colors.green
         elif self.risk_level_for_meter == "Medium":
-            angle = 90   # Middle position stays the same
+            angle = 90   # Middle position
             indicator_color = colors.orange
         elif self.risk_level_for_meter == "High":
-            angle = 45   # Changed from 135 to 45 (reversed)
+            angle = 45   # Correctly points to High (left side of gauge)
             indicator_color = colors.red
         else: # None
             angle = 0
@@ -1779,33 +1802,51 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             # Add rows to table data
             detailed_data.extend(soc2_finding_items)
             
-            # Create a properly sized table for SOC2 findings
+            # Create a properly sized table for SOC2 findings with improved layout
             detailed_table = Table(detailed_data, colWidths=[80, 30, 180, 50, 70, 70])
             
-            # Define row styles based on risk level
+            # Define row styles based on risk level with clearer colors and enhanced readability
             row_styles = []
             for i, item in enumerate(soc2_finding_items, 1):  # Starting from 1 to account for header
                 risk_level = item[3]
-                # Check for both Dutch and English risk levels
+                # Check for both Dutch and English risk levels with more distinct colors
                 if risk_level in ['High', 'HIGH', 'Hoog']:
-                    bg_color = colors.pink
+                    bg_color = HexColor('#ffe4e1')  # Lighter red for better readability
                 elif risk_level in ['Medium', 'MEDIUM', 'Gemiddeld']:
-                    bg_color = colors.lightgoldenrodyellow
+                    bg_color = HexColor('#fff4e0')  # Lighter orange for better readability
                 else:  # Low or Laag
-                    bg_color = colors.white
+                    bg_color = HexColor('#f0f9ff')  # Light blue for better visibility than white
+                
+                # Add alternating row styling for better readability
+                if i % 2 == 0:
+                    bg_color = lightenColor(bg_color, 0.7)  # Make even rows slightly lighter
                 
                 row_styles.append(('BACKGROUND', (0, i), (-1, i), bg_color))
-            
-            # Apply table styles
+                # Add specific cell styling for the risk level column (column 3, index position)
+                if risk_level in ['High', 'HIGH', 'Hoog']:
+                    row_styles.append(('TEXTCOLOR', (3, i), (3, i), colors.red))
+                    row_styles.append(('FONTNAME', (3, i), (3, i), 'Helvetica-Bold'))
+                elif risk_level in ['Medium', 'MEDIUM', 'Gemiddeld']:
+                    row_styles.append(('TEXTCOLOR', (3, i), (3, i), colors.orange))
+                
+            # Apply improved table styles
             table_style = [
-                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                # Header styling
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#2c5282')),  # Darker blue header
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for better contrast
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, -1), 8),  # Smaller font for detailed table
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP')
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold headers
+                ('FONTSIZE', (0, 0), (-1, 0), 9),  # Slightly larger header font
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),  # More padding for header
+                ('TOPPADDING', (0, 0), (-1, 0), 8),  # More padding for header
+                
+                # Content styling 
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8.5),  # Slightly larger for better readability
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 7),  # More padding for content
+                ('TOPPADDING', (0, 1), (-1, -1), 7),  # More padding for content
+                ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#cbd5e1')),  # Lighter grid lines
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')  # Vertical center alignment
             ]
             
             # Add risk-based row styles
