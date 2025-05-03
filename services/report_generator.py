@@ -343,16 +343,17 @@ class RiskMeter(Flowable):
                 full_risk_text = "Low Risk" 
             badge_color = HexColor('#10b981')  # Green
         
-        # Draw badge background (rounded rectangle)
+        # Draw badge background (using a regular rectangle since RoundRect isn't available)
         badge_width = 80
         badge_height = 26
         badge_x = gauge_center_x - badge_width/2
         badge_y = gauge_center_y - 35
         
-        # Create badge with rounded corners
-        badge = RoundRect(
+        # Create badge with regular rectangle (no rounded corners)
+        badge = Rect(
             badge_x, badge_y, badge_width, badge_height, 
-            radius=5, fillColor=badge_color
+            fillColor=badge_color,
+            strokeColor=None
         )
         d.add(badge)
         
