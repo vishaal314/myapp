@@ -134,7 +134,7 @@ class RepoScanner:
     def clone_repository(self, repo_url: str, branch: Optional[str] = None, 
                          auth_token: Optional[str] = None) -> Dict[str, Any]:
         """
-        Clone a Git repository to a temporary directory.
+        Clone a Git repository to a temporary directory with optimized performance.
         
         Args:
             repo_url: URL of the Git repository
@@ -166,9 +166,22 @@ class RepoScanner:
         success = False
         error_msg = ""
         
+        # PERFORMANCE OPTIMIZATION 1: Reduce clone depth and use sparse checkout
+        # PERFORMANCE OPTIMIZATION 2: Reduce timeout from 10 minutes to 2 minutes
+        # PERFORMANCE OPTIMIZATION 3: Add --filter=blob:none to avoid retrieving large blobs
+        timeout_seconds = 120  # 2 min timeout instead of 10
+        
         if branch:
             # First attempt with specified branch
-            cmd = ['git', 'clone', '--branch', branch, '--depth', '1', clone_url, temp_dir]
+            # Performance-optimized clone command with sparse checkout
+            cmd = [
+                'git', 'clone',
+                '--branch', branch,
+                '--depth', '1',  # Get only most recent commit
+                '--filter=blob:none',  # Don't download file contents initially
+                '--no-checkout',  # Don't check out files initially (for faster clone)
+                clone_url, temp_dir
+            ]
             
             try:
                 # Execute git clone command
@@ -179,7 +192,7 @@ class RepoScanner:
                     cmd, 
                     capture_output=True, 
                     text=True,
-                    timeout=600  # 10 min timeout
+                    timeout=timeout_seconds
                 )
                 
                 if result.returncode == 0:
@@ -201,7 +214,14 @@ class RepoScanner:
         
         # If branch-specific clone failed or no branch was specified, try without branch specifier
         if not success:
-            cmd = ['git', 'clone', '--depth', '1', clone_url, temp_dir]
+            # Performance-optimized clone command with sparse checkout
+            cmd = [
+                'git', 'clone',
+                '--depth', '1',  # Get only most recent commit
+                '--filter=blob:none',  # Don't download file contents initially
+                '--no-checkout',  # Don't check out files initially (for faster clone)
+                clone_url, temp_dir
+            ]
             
             try:
                 # Execute git clone command
@@ -212,7 +232,7 @@ class RepoScanner:
                     cmd, 
                     capture_output=True, 
                     text=True,
-                    timeout=600  # 10 min timeout
+                    timeout=timeout_seconds
                 )
                 
                 if result.returncode != 0:
@@ -235,7 +255,7 @@ class RepoScanner:
                 logger.error("Git clone operation timed out")
                 return {
                     'status': 'error',
-                    'message': 'Git clone operation timed out after 10 minutes',
+                    'message': f'Git clone operation timed out after {timeout_seconds} seconds',
                     'repo_path': None,
                     'time_ms': int((time.time() - start_time) * 1000)
                 }
@@ -244,6 +264,69 @@ class RepoScanner:
                 return {
                     'status': 'error',
                     'message': f'Error cloning repository: {str(e)}',
+                    'repo_path': None,
+                    'time_ms': int((time.time() - start_time) * 1000)
+                }
+        
+        # PERFORMANCE OPTIMIZATION 4: Use sparse checkout to only get important files
+        # Now setup sparse checkout for only important file types
+        try:
+            # Initialize sparse checkout
+            subprocess.run(
+                ['git', 'sparse-checkout', 'init', '--cone'],
+                cwd=temp_dir,
+                capture_output=True,
+                timeout=30
+            )
+            
+            # Set sparse checkout patterns to only check out important files
+            # Create patterns file for important file types to check out
+            patterns = [
+                '*.py', '*.js', '*.ts', '*.java', '*.cs', '*.go', '*.rs', '*.rb',
+                '*.php', '*.jsx', '*.tsx', '*.yml', '*.yaml', '*.json', '*.xml',
+                '*.tf', '*.tfvars', '*.html', '*.htm', '*.css', '*.sql', '*.sh',
+                '*.ps1', '*.env', '*.properties', '*.conf', '*.ini'
+            ]
+            
+            # Write patterns to file
+            patterns_file = os.path.join(temp_dir, 'sparse-checkout-patterns.txt')
+            with open(patterns_file, 'w') as f:
+                for pattern in patterns:
+                    f.write(f"{pattern}\n")
+            
+            # Set sparse checkout patterns
+            subprocess.run(
+                ['git', 'sparse-checkout', 'set', '--stdin'],
+                input='\n'.join(patterns),
+                text=True,
+                cwd=temp_dir,
+                capture_output=True,
+                timeout=30
+            )
+            
+            # Checkout the files
+            subprocess.run(
+                ['git', 'checkout'],
+                cwd=temp_dir,
+                capture_output=True,
+                timeout=30
+            )
+            
+        except Exception as e:
+            logger.warning(f"Failed to set up sparse checkout: {str(e)}. Falling back to regular checkout.")
+            # If sparse checkout fails, fall back to regular checkout of the HEAD commit
+            try:
+                subprocess.run(
+                    ['git', 'checkout', 'HEAD'],
+                    cwd=temp_dir,
+                    capture_output=True,
+                    timeout=30
+                )
+            except Exception as checkout_error:
+                logger.error(f"Error checking out repository: {str(checkout_error)}")
+                return {
+                    'status': 'error',
+                    'message': f'Error checking out repository: {str(checkout_error)}',
                     'repo_path': None,
                     'time_ms': int((time.time() - start_time) * 1000)
                 }
@@ -267,7 +350,8 @@ class RepoScanner:
                 ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
                 cwd=temp_dir,
                 capture_output=True,
-                text=True
+                text=True,
+                timeout=10  # Short timeout for this simple command
             )
             if result.returncode == 0:
                 actual_branch = result.stdout.strip()
@@ -405,12 +489,13 @@ class RepoScanner:
             if progress_callback:
                 self.code_scanner.set_progress_callback(progress_callback)
             
-            # Scan the directory
+            # Scan the directory with performance optimization
             scan_results = self.code_scanner.scan_directory(
                 directory_path=repo_path,
                 ignore_patterns=ignore_patterns,
-                max_file_size_mb=50,  # Limit file size to 50MB
-                continue_from_checkpoint=True
+                max_file_size_mb=20,  # Reduce max file size from 50MB to 20MB
+                continue_from_checkpoint=True,
+                max_files=500  # Limit to 500 files maximum for better performance
             )
             
             # Add repository metadata

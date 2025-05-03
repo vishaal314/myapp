@@ -333,9 +333,9 @@ class CodeScanner:
         
     def scan_directory(self, directory_path: str, progress_callback=None, 
                       ignore_patterns=None, max_file_size_mb=50, 
-                      continue_from_checkpoint=False) -> Dict[str, Any]:
+                      continue_from_checkpoint=False, max_files=1000) -> Dict[str, Any]:
         """
-        Scan a directory of files with timeout protection and checkpoints.
+        Scan a directory of files with timeout protection, checkpoints, and improved performance.
         
         Args:
             directory_path: Path to the directory to scan
@@ -343,6 +343,7 @@ class CodeScanner:
             ignore_patterns: List of glob patterns to ignore
             max_file_size_mb: Max file size to scan in MB
             continue_from_checkpoint: Whether to continue from last checkpoint if available
+            max_files: Maximum number of files to scan (for performance)
             
         Returns:
             Dictionary containing scan results
@@ -354,6 +355,9 @@ class CodeScanner:
         self.start_time = datetime.now()
         self.is_running = True
         scan_id = hashlib.md5(f"{directory_path}:{self.start_time.isoformat()}".encode()).hexdigest()[:10]
+        
+        # PERFORMANCE OPTIMIZATION 1: Set a shorter maximum timeout (15 min instead of 1 hour)
+        self.max_timeout = min(self.max_timeout, 900)  # 15 minutes
         
         # Prepare checkpoint file path
         checkpoint_path = f"scan_checkpoint_{scan_id}.json"
@@ -398,8 +402,21 @@ class CodeScanner:
                     # File pattern
                     ignore_regexes.append(re.compile(f".*{regex_pattern}$"))
         
-        # Walk directory and get all files
+        # PERFORMANCE OPTIMIZATION 2: Prioritize most important file types for scanning
+        priority_extensions = [
+            '.py', '.js', '.ts', '.java', '.cs', '.go', 
+            '.tf', '.json', '.yml', '.yaml'
+        ]
+        
+        # Walk directory and get all files with prioritization
         all_files = []
+        priority_files = []
+        regular_files = []
+        
+        # PERFORMANCE OPTIMIZATION 3: Set a limit on the number of files to scan
+        file_count = 0
+        max_file_count = max_files  # Limit to 1000 files by default
+        
         for root, _, files in os.walk(directory_path):
             for file in files:
                 file_path = os.path.join(root, file)
@@ -430,16 +447,43 @@ class CodeScanner:
                     self.scan_checkpoint_data['stats']['files_skipped'] += 1
                     continue
                 
-                all_files.append(file_path)
+                # PERFORMANCE OPTIMIZATION: Prioritize important file types
+                _, ext = os.path.splitext(file)
+                if ext.lower() in priority_extensions:
+                    priority_files.append(file_path)
+                else:
+                    regular_files.append(file_path)
+                
+                file_count += 1
+                # Check if we've reached the file limit
+                if file_count >= max_file_count:
+                    break
+            
+            # If we've reached the file limit, break out of the directory walk
+            if file_count >= max_file_count:
+                break
+                
+        # Combine priority files and regular files (priority first)
+        all_files = priority_files + regular_files
+        # Trim to max file count if needed
+        all_files = all_files[:max_file_count]
+        
+        # PERFORMANCE OPTIMIZATION 4: Use a smaller batch size for better progress updates
+        batch_size = 20  # Smaller batches for more frequent updates
+        
+        # PERFORMANCE OPTIMIZATION 5: Log how many files will be processed
+        total_files = len(all_files)
+        print(f"Processing {total_files} files ({len(priority_files)} priority files)")
+        
+        if self.progress_callback:
+            self.progress_callback(0, total_files, "Starting scan...")
         
         # Set up multiprocessing pool for parallel scanning
-        num_workers = max(1, multiprocessing.cpu_count() - 1)  # Leave one CPU free
+        num_workers = max(1, min(4, multiprocessing.cpu_count() - 1))  # Use no more than 4 workers
         
         # Use threading for I/O bound tasks
         with multiprocessing.Pool(processes=num_workers) as pool:
             # Process files in batches to allow checkpointing
-            batch_size = 50  # Adjust this based on avg. file size and memory constraints
-            
             for i in range(0, len(all_files), batch_size):
                 batch = all_files[i:i+batch_size]
                 
@@ -459,9 +503,11 @@ class CodeScanner:
                         file_name = os.path.basename(file_path)
                         self.progress_callback(progress, total, file_name)
                     
+                    # PERFORMANCE OPTIMIZATION 6: Reduced timeout per file from 60 seconds to 30 seconds
                     # Scan file with timeout protection
                     try:
-                        result = self._scan_file_with_timeout(file_path)
+                        # Use a shorter timeout for each file
+                        result = self._scan_file_with_timeout(file_path, timeout=30)
                         results.append(result)
                         
                         # Mark as completed
@@ -476,8 +522,10 @@ class CodeScanner:
                     except Exception as e:
                         print(f"Error scanning {file_path}: {str(e)}")
                 
-                # Save checkpoint after each batch
-                if (datetime.now() - self.start_time).total_seconds() % self.checkpoint_interval < batch_size:
+                # PERFORMANCE OPTIMIZATION 7: Save checkpoint less frequently
+                # Save checkpoint every 5 minutes instead of after each batch
+                checkpoint_interval_seconds = 300  # 5 minutes
+                if (datetime.now() - self.start_time).total_seconds() % checkpoint_interval_seconds < batch_size * 2:
                     try:
                         with open(checkpoint_path, 'w') as f:
                             json.dump(self.scan_checkpoint_data, f)
