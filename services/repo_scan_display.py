@@ -45,9 +45,13 @@ def display_repo_scan_results(scan_results: Dict[str, Any], show_download_button
     scan_time = scan_results.get('scan_time')
     
     try:
-        scan_timestamp = datetime.fromisoformat(scan_time).strftime('%Y-%m-%d %H:%M:%S')
+        # Handle None or invalid timestamp values
+        if scan_time and isinstance(scan_time, str):
+            scan_timestamp = datetime.fromisoformat(scan_time).strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            scan_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     except:
-        scan_timestamp = str(scan_time)
+        scan_timestamp = str(scan_time) if scan_time else datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
     # Extract findings and count by risk level
     findings = scan_results.get('findings', [])

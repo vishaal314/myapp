@@ -177,6 +177,10 @@ if 'current_scan_id' not in st.session_state:
     st.session_state.current_scan_id = None
 if 'scan_results' not in st.session_state:
     st.session_state.scan_results = None
+if 'repo_scan_results' not in st.session_state:
+    st.session_state.repo_scan_results = None
+if 'repo_scan_complete' not in st.session_state:
+    st.session_state.repo_scan_complete = False
 if 'payment_successful' not in st.session_state:
     st.session_state.payment_successful = False
 if 'payment_details' not in st.session_state:
@@ -1209,6 +1213,14 @@ else:
                     Recent Scans & Reports
                 </h3>
                 """, unsafe_allow_html=True)
+                
+                # Check if we have a recent repository scan in session state
+                if 'repo_scan_results' in st.session_state and st.session_state.get('repo_scan_complete', False):
+                    st.success("🔍 Your most recent repository scan is available for review.")
+                    
+                    # Display repository scan results with option to download report
+                    from services.repo_scan_display import display_repo_scan_results
+                    display_repo_scan_results(st.session_state.repo_scan_results, show_download_button=True)
             
             with col2:
                 # Create "Download Reports" button with unique key
