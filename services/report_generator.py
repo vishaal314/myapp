@@ -973,47 +973,100 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     # Content elements
     elements = []
     
-    # Title with company name - use translation
-    elements.append(Paragraph(_('app.title', 'DataGuardian Pro'), title_style))
+    # Create a more professional header with company logo and title in a table
+    logo_data = [
+        [
+            # Create a colored box for logo effect with company name
+            Table(
+                [
+                    [Paragraph(
+                        f"""<font color="#FFFFFF" size="16"><b>{_('app.title', 'DataGuardian Pro')}</b></font>""", 
+                        ParagraphStyle('LogoStyle', alignment=1)
+                    )],
+                    [Paragraph(
+                        f"""<font color="#FFFFFF" size="10">{_('app.subtitle', 'Enterprise Privacy Compliance Platform')}</font>""", 
+                        ParagraphStyle('SubtitleStyle', alignment=1)
+                    )]
+                ],
+                colWidths=[200],
+                rowHeights=[30, 20],
+                style=TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Dark blue background
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('TOPPADDING', (0, 0), (-1, -1), 6),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 12),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+                    ('ROUNDEDCORNERS', [10, 10, 10, 10]),
+                ])
+            ),
+            
+            # Report title section
+            Table(
+                [[
+                    # Get the right report title based on format
+                    Paragraph(
+                        f"""<font size="14" color="#1e3a8a"><b>{
+                            _('report.subtitle.ai_model', 'AI Model Risk Analysis Report') if report_format == "ai_model" else
+                            _('report.subtitle.soc2', 'SOC2 Compliance Report') if report_format == "soc2" else
+                            _('report.subtitle', 'GDPR Compliance Scan Report')
+                        }</b></font>""",
+                        ParagraphStyle('ReportTitle', alignment=1)
+                    )
+                ]],
+                colWidths=[300],
+                style=TableStyle([
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                ])
+            )
+        ]
+    ]
     
-    # Subtitle with translation based on language
-    if report_format == "ai_model":
-        if current_lang == 'nl':
-            subtitle = _('report.subtitle.ai_model', 'AI Model Risico Analyse Rapport')
-        else:
-            subtitle = _('report.subtitle.ai_model', 'AI Model Risk Analysis Report')
-    elif report_format == "soc2":
-        if current_lang == 'nl':
-            subtitle = _('report.subtitle.soc2', 'SOC2 Compliance Rapport')
-        else:
-            subtitle = _('report.subtitle.soc2', 'SOC2 Compliance Report')
-    else:
-        if current_lang == 'nl':
-            subtitle = _('report.subtitle', 'GDPR Compliance Scan Rapport')
-        else:
-            subtitle = _('report.subtitle', 'GDPR Compliance Scan Report')
-    elements.append(Paragraph(subtitle, subheading_style))
+    header_table = Table(
+        logo_data,
+        colWidths=[220, 320],
+        style=TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ])
+    )
     
+    elements.append(header_table)
+    elements.append(Spacer(1, 15))
+    
+    # Add a separator line
+    elements.append(
+        Table(
+            [['']], 
+            colWidths=[540], 
+            rowHeights=[2], 
+            style=TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#3b82f6')),  # Blue line
+                ('LINEABOVE', (0, 0), (-1, -1), 2, HexColor('#3b82f6')),
+            ])
+        )
+    )
+    elements.append(Spacer(1, 15))
+    
+    # Report info section (date and scan ID) in a clean table format
     # Current date with nice formatting - localized date format
     if current_lang == 'nl':
         # Dutch date format
         current_date = datetime.now().strftime('%d %B %Y %H:%M')
         date_prefix = _('report.generated_on', 'Gegenereerd op:')
+        scan_id_label = _('report.scan_id', 'Scan ID:')
     else:
         # English date format
         current_date = datetime.now().strftime('%B %d, %Y %H:%M')
         date_prefix = _('report.generated_on', 'Generated on:')
-        
-    date_style = ParagraphStyle(
-        'DateStyle', 
-        parent=normal_style,
-        alignment=1, # Center
-        textColor=HexColor('#7f8c8d')
-    )
-    elements.append(Paragraph(f"{date_prefix} {current_date}", date_style))
-    elements.append(Spacer(1, 24))
+        scan_id_label = _('report.scan_id', 'Scan ID:')
     
-    # Scan ID with badge-like styling
+    # Scan ID with formatting
     scan_id = optimized_scan_data.get('scan_id', 'Unknown')
     scan_date = datetime.now().strftime('%Y%m%d')
     scan_type = optimized_scan_data.get('scan_type', 'Unknown')
@@ -1021,28 +1074,59 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     # Create a fancy scan ID display
     display_scan_id = f"{scan_type[:3].upper()}-{scan_date}-{scan_id[:6]}"
     
-    scan_id_style = ParagraphStyle(
-        'ScanIdStyle',
-        parent=normal_style,
-        alignment=1, # Center
-        backgroundColor=HexColor('#e8f4f8'),
-        borderColor=HexColor('#b8daff'),
-        borderWidth=1,
-        borderPadding=5,
-        borderRadius=5
+    # Info table
+    info_data = [
+        [
+            Paragraph(f"""<font color="#666666"><b>{date_prefix}</b></font>""", normal_style),
+            Paragraph(f"""<font color="#333333">{current_date}</font>""", normal_style),
+            Paragraph(f"""<font color="#666666"><b>{scan_id_label}</b></font>""", normal_style),
+            Paragraph(
+                f"""<font color="#333333" backgroundColor="#e8f4f8">{display_scan_id}</font>""", 
+                ParagraphStyle('ScanIdStyle', parent=normal_style)
+            )
+        ]
+    ]
+    
+    info_table = Table(
+        info_data,
+        colWidths=[100, 165, 80, 195],
+        style=TableStyle([
+            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
+            ('ALIGN', (3, 0), (3, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BACKGROUND', (3, 0), (3, -1), HexColor('#e8f4f8')),  # Light blue for scan ID
+            ('BOX', (3, 0), (3, -1), 0.5, HexColor('#b8daff')), # Border for scan ID
+        ])
     )
     
-    # Translate scan ID label based on language
-    scan_id_label = _('report.scan_id', 'Scan ID')
-    elements.append(Paragraph(f"{scan_id_label}: {display_scan_id}", scan_id_style))
-    elements.append(Spacer(1, 24))
+    elements.append(info_table)
+    elements.append(Spacer(1, 15))
     
     # Executive Summary - styled as a highlight box with translation
     if current_lang == 'nl':
         exec_summary_title = _('report.executive_summary', 'Samenvatting')
     else:
         exec_summary_title = _('report.executive_summary', 'Executive Summary')
-    elements.append(Paragraph(exec_summary_title, heading_style))
+    
+    # Create a more visually distinct executive summary header
+    summary_header = Table(
+        [[Paragraph(f'<b>{exec_summary_title}</b>', heading_style)]],
+        colWidths=[540],
+        style=TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#ebf5ff')),  # Light blue background
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOX', (0, 0), (-1, -1), 0.5, HexColor('#3b82f6')),
+        ])
+    )
+    elements.append(summary_header)
     
     # Summary data
     scan_type = optimized_scan_data.get('scan_type', 'Unknown')
@@ -1179,8 +1263,30 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             personally identifiable information (PII) with <b>{high_risk}</b> high-risk items.
             """
     
-    elements.append(Paragraph(summary_text, info_style))
-    elements.append(Spacer(1, 12))
+    # Create a more visually appealing summary text section
+    summary_text_table = Table(
+        [[Paragraph(summary_text, ParagraphStyle('SummaryText', 
+                                              parent=normal_style,
+                                              leftIndent=10,
+                                              rightIndent=10,
+                                              leading=14,
+                                              spaceBefore=4,
+                                              spaceAfter=4))]],
+        colWidths=[540],
+        style=TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#f0f9ff')),  # Light blue background
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOX', (0, 0), (-1, -1), 0.5, HexColor('#bfdbfe')),  # Light blue border
+            ('ROUNDEDCORNERS', [8, 8, 8, 8]),
+        ])
+    )
+    
+    elements.append(summary_text_table)
+    elements.append(Spacer(1, 15))
     
     # Summary table with modern styling
     # Create data for the summary table with nicer labels - translated
