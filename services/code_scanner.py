@@ -12,6 +12,11 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Set
 from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
+from utils.gdpr_compliance import (
+    PII_PATTERNS, DSAR_PATTERNS, CONSENT_PATTERNS, SECURITY_PATTERNS, 
+    GDPR_ARTICLES, map_finding_to_gdpr_articles, generate_remediation_suggestion,
+    calculate_gdpr_risk_score, calculate_compliance_score, get_remediation_priority
+)
 
 class CodeScanner:
     """
@@ -737,6 +742,14 @@ class CodeScanner:
             # Combine results
             all_pii = pii_in_code + pii_in_comments
             
+            # Enhance all findings with GDPR-specific data
+            enhanced_findings = []
+            for finding in all_pii:
+                enhanced_finding = self._enhance_finding_with_gdpr_data(finding)
+                enhanced_findings.append(enhanced_finding)
+            
+            all_pii = enhanced_findings
+            
             # Scan for secrets using regex patterns
             for secret_type, pattern in self.secret_patterns.items():
                 for match in re.finditer(pattern, content, re.MULTILINE | re.DOTALL):
@@ -782,12 +795,17 @@ class CodeScanner:
                         if file_metadata.get('git'):
                             finding['git_metadata'] = json.dumps(file_metadata['git'])
                         
-                        all_pii.append(finding)
+                        # Enhance finding with GDPR data
+                        enhanced_finding = self._enhance_finding_with_gdpr_data(finding)
+                        all_pii.append(enhanced_finding)
             
             # Use entropy analysis for additional secret detection
             if self.use_entropy:
                 entropy_findings = self._detect_high_entropy_strings(content, file_path)
-                all_pii.extend(entropy_findings)
+                # Enhance entropy findings with GDPR data
+                for finding in entropy_findings:
+                    enhanced_finding = self._enhance_finding_with_gdpr_data(finding)
+                    all_pii.append(enhanced_finding)
             
             # Create results with detailed metadata
             result = {
@@ -820,6 +838,24 @@ class CodeScanner:
             
             result['risk_summary'] = risk_levels
             result['pii_types_summary'] = pii_types
+            
+            # Calculate GDPR compliance metrics
+            gdpr_risk_score, risk_breakdown = calculate_gdpr_risk_score(all_pii)
+            gdpr_compliance_score = calculate_compliance_score(gdpr_risk_score)
+            
+            # Add GDPR compliance data to the result
+            result['gdpr_compliance'] = {
+                'compliance_score': gdpr_compliance_score,
+                'risk_score': gdpr_risk_score,
+                'risk_breakdown': risk_breakdown,
+                'compliance_status': 'Compliant' if gdpr_compliance_score >= 80 else 'Needs Improvement',
+                'legal_basis_count': sum(1 for item in all_pii if 'article_mappings' in item),
+                'remediation_priorities': {
+                    'high': sum(1 for item in all_pii if item.get('remediation_priority') == 'high'),
+                    'medium': sum(1 for item in all_pii if item.get('remediation_priority') == 'medium'),
+                    'low': sum(1 for item in all_pii if item.get('remediation_priority') == 'low')
+                }
+            }
             
             # Add CI/CD compatibility fields
             result['ci_cd'] = {
@@ -1082,7 +1118,7 @@ class CodeScanner:
     
     def _scan_content(self, content: str, content_type: str, file_path: str) -> List[Dict[str, Any]]:
         """
-        Scan content (code or comments) for PII and security vulnerabilities.
+        Scan content (code or comments) for PII, GDPR compliance issues, and security vulnerabilities.
         
         Args:
             content: The text content to scan
@@ -1090,12 +1126,47 @@ class CodeScanner:
             file_path: Original file path for reference
             
         Returns:
-            List of PII and vulnerability findings
+            List of PII, GDPR compliance, and vulnerability findings
         """
-        pii_found = []
+        all_findings = []
         
         # Split into lines for better location reporting
         lines = content.split('\n')
+        
+        # Run standard PII detection
+        pii_findings = self._detect_pii(content, content_type, lines, file_path)
+        all_findings.extend(pii_findings)
+        
+        # Add GDPR-specific scanning for code content
+        if content_type == "code":
+            # Scan for DSAR (Data Subject Access Request) patterns
+            dsar_findings = self._scan_for_dsar_patterns(content, lines, file_path)
+            all_findings.extend(dsar_findings)
+            
+            # Scan for consent verification markers
+            consent_findings = self._scan_for_consent_patterns(content, lines, file_path)
+            all_findings.extend(consent_findings)
+            
+            # Scan for security measures related to GDPR Art. 32
+            security_findings = self._scan_for_security_patterns(content, lines, file_path)
+            all_findings.extend(security_findings)
+        
+        return all_findings
+        
+    def _detect_pii(self, content: str, content_type: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
+        """
+        Detect PII in content using both standard PII detection and enhanced GDPR-specific patterns.
+        
+        Args:
+            content: The text content to scan
+            content_type: Either "code" or "comment"
+            lines: Content split into lines
+            file_path: Original file path for reference
+            
+        Returns:
+            List of PII findings
+        """
+        pii_found = []
         
         # Define vulnerability patterns for specific repository types
         vulnerability_patterns = {
@@ -1253,6 +1324,183 @@ class CodeScanner:
                             pii_found.append(finding)
         
         return pii_found
+    
+    def _scan_for_dsar_patterns(self, content: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
+        """
+        Scan for Data Subject Access Request (DSAR) patterns in the code.
+        
+        Args:
+            content: The text content to scan
+            lines: Content split into lines
+            file_path: Original file path for reference
+            
+        Returns:
+            List of DSAR-related findings
+        """
+        dsar_findings = []
+        
+        # Scan each line for DSAR patterns
+        for i, line in enumerate(lines):
+            line_num = i + 1
+            
+            # Check against each DSAR pattern
+            for pattern_key, pattern_info in DSAR_PATTERNS.items():
+                match = re.search(pattern_info['pattern'], line)
+                if match:
+                    # Map to GDPR articles
+                    gdpr_articles = pattern_info.get('gdpr_articles', [])
+                    
+                    # Create finding
+                    finding = {
+                        'type': 'dsar',
+                        'pattern_key': pattern_key,
+                        'value': line.strip(),
+                        'location': f'Line {line_num} (code)',
+                        'risk_level': pattern_info.get('risk_level', 'medium'),
+                        'description': pattern_info.get('description', 'DSAR Implementation'),
+                        'gdpr_articles': gdpr_articles,
+                        'reason': pattern_info.get('remediation', 'Implement proper DSAR handling'),
+                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
+                    }
+                    
+                    # Generate legal basis mapping
+                    article_mappings = map_finding_to_gdpr_articles('dsar', finding)
+                    if article_mappings:
+                        finding['article_mappings'] = article_mappings
+                    
+                    dsar_findings.append(finding)
+        
+        return dsar_findings
+    
+    def _scan_for_consent_patterns(self, content: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
+        """
+        Scan for consent verification patterns in the code.
+        
+        Args:
+            content: The text content to scan
+            lines: Content split into lines
+            file_path: Original file path for reference
+            
+        Returns:
+            List of consent-related findings
+        """
+        consent_findings = []
+        
+        # Scan each line for consent patterns
+        for i, line in enumerate(lines):
+            line_num = i + 1
+            
+            # Check against each consent pattern
+            for pattern_key, pattern_info in CONSENT_PATTERNS.items():
+                match = re.search(pattern_info['pattern'], line)
+                if match:
+                    # Map to GDPR articles
+                    gdpr_articles = pattern_info.get('gdpr_articles', [])
+                    
+                    # Create finding
+                    finding = {
+                        'type': 'consent',
+                        'pattern_key': pattern_key,
+                        'value': line.strip(),
+                        'location': f'Line {line_num} (code)',
+                        'risk_level': pattern_info.get('risk_level', 'medium'),
+                        'description': pattern_info.get('description', 'Consent Implementation'),
+                        'gdpr_articles': gdpr_articles,
+                        'reason': pattern_info.get('remediation', 'Implement proper consent mechanisms'),
+                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
+                    }
+                    
+                    # Generate legal basis mapping
+                    article_mappings = map_finding_to_gdpr_articles('consent', finding)
+                    if article_mappings:
+                        finding['article_mappings'] = article_mappings
+                    
+                    consent_findings.append(finding)
+        
+        return consent_findings
+    
+    def _scan_for_security_patterns(self, content: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
+        """
+        Scan for security implementation patterns related to GDPR Article 32.
+        
+        Args:
+            content: The text content to scan
+            lines: Content split into lines
+            file_path: Original file path for reference
+            
+        Returns:
+            List of security-related findings
+        """
+        security_findings = []
+        
+        # Scan each line for security patterns
+        for i, line in enumerate(lines):
+            line_num = i + 1
+            
+            # Check against each security pattern
+            for pattern_key, pattern_info in SECURITY_PATTERNS.items():
+                match = re.search(pattern_info['pattern'], line)
+                if match:
+                    # Map to GDPR articles
+                    gdpr_articles = pattern_info.get('gdpr_articles', [])
+                    
+                    # Create finding
+                    finding = {
+                        'type': 'security',
+                        'pattern_key': pattern_key,
+                        'value': line.strip(),
+                        'location': f'Line {line_num} (code)',
+                        'risk_level': pattern_info.get('risk_level', 'medium'),
+                        'description': pattern_info.get('description', 'Security Implementation'),
+                        'gdpr_articles': gdpr_articles,
+                        'reason': pattern_info.get('remediation', 'Implement proper security measures'),
+                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
+                    }
+                    
+                    # Generate legal basis mapping
+                    article_mappings = map_finding_to_gdpr_articles('security', finding)
+                    if article_mappings:
+                        finding['article_mappings'] = article_mappings
+                    
+                    security_findings.append(finding)
+        
+        return security_findings
+    
+    def _enhance_finding_with_gdpr_data(self, finding: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Enhance a finding with GDPR-specific data.
+        
+        Args:
+            finding: The original finding
+            
+        Returns:
+            Enhanced finding with GDPR compliance information
+        """
+        # Set default finding type
+        finding_type = 'pii'
+        
+        # Determine finding type based on content
+        if 'type' in finding:
+            if finding['type'] in ['dsar', 'consent', 'security']:
+                finding_type = finding['type']
+            elif finding['type'].startswith('Vulnerability:'):
+                finding_type = 'security'
+        
+        # Generate remediation suggestion
+        if 'remediation' not in finding:
+            finding['remediation'] = generate_remediation_suggestion(finding)
+        
+        # Add GDPR article mappings if not already present
+        if 'article_mappings' not in finding and 'pattern_key' in finding:
+            article_mappings = map_finding_to_gdpr_articles(finding_type, finding)
+            if article_mappings:
+                finding['article_mappings'] = article_mappings
+        
+        # Set remediation priority if not present
+        if 'remediation_priority' not in finding:
+            finding['remediation_priority'] = get_remediation_priority(finding)
+        
+        return finding
     
     def _get_reason(self, pii_type: str, risk_level: str) -> str:
         """
