@@ -1671,13 +1671,14 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     elements.append(summary_table)
     elements.append(Spacer(1, 20))
     
-    # Risk assessment section with visual indicator and GDPR fine protection banner
+    # Risk assessment section with visual indicator and GDPR fine protection banner (skip for SOC2 reports)
     # Translate risk assessment title
-    if current_lang == 'nl':
-        risk_assessment_title = _('report.risk_assessment', 'Risicobeoordeling')
-    else:
-        risk_assessment_title = _('report.risk_assessment', 'Risk Assessment')
-    elements.append(Paragraph(risk_assessment_title, heading_style))
+    if report_format != "soc2":
+        if current_lang == 'nl':
+            risk_assessment_title = _('report.risk_assessment', 'Risicobeoordeling')
+        else:
+            risk_assessment_title = _('report.risk_assessment', 'Risk Assessment')
+        elements.append(Paragraph(risk_assessment_title, heading_style))
     
     # Determine overall risk level with enhanced terms and visuals
     if high_risk > 10:
