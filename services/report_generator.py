@@ -200,7 +200,7 @@ def auto_generate_pdf_report(scan_data: Dict[str, Any], save_path: Optional[str]
         return False, f"Failed to auto-generate report: {str(e)}", None
 
 class RiskMeter(Flowable):
-    """A custom flowable that creates a risk meter/gauge."""
+    """A custom flowable that creates a modern risk gauge with enhanced visualization."""
     
     def __init__(self, risk_level, risk_level_for_meter=None, language='en'):
         Flowable.__init__(self)
@@ -209,43 +209,111 @@ class RiskMeter(Flowable):
         self.risk_level_for_meter = risk_level_for_meter if risk_level_for_meter else risk_level
         self.language = language
         self.width = 250
-        self.height = 100
+        self.height = 150  # Increased height for better visualization
     
     def draw(self):
         # Drawing with width and height
         d = Drawing(self.width, self.height)
         
-        # Background arc
-        arc = Wedge(self.width/2, 20, 50, 0, 180, fillColor=colors.lightgrey)
-        d.add(arc)
+        # Determine gauge properties based on risk level
+        if self.risk_level_for_meter in ["Critical", "High"]:
+            main_color = HexColor('#ef4444')  # Red
+            angle_start = 180
+            angle_end = 240
+            indicator_text = "Critical" if self.risk_level_for_meter == "Critical" else "High"
+        elif self.risk_level_for_meter in ["Elevated", "Medium"]:
+            main_color = HexColor('#f97316')  # Orange
+            angle_start = 120
+            angle_end = 180
+            indicator_text = "Elevated" if self.risk_level_for_meter == "Elevated" else "Medium"
+        elif self.risk_level_for_meter in ["Moderate", "Low"]:
+            main_color = HexColor('#eab308')  # Yellow
+            angle_start = 60
+            angle_end = 120
+            indicator_text = "Moderate" if self.risk_level_for_meter == "Moderate" else "Low"
+        else:  # Low or None
+            main_color = HexColor('#10b981')  # Green
+            angle_start = 0
+            angle_end = 60
+            indicator_text = "Low"
         
-        # Risk level indicator (change angle based on risk level)
-        angle = 0
-        if self.risk_level_for_meter == "Low":
-            angle = 135  # Correctly points to Low (right side of gauge)
-            indicator_color = colors.green
-        elif self.risk_level_for_meter == "Medium":
-            angle = 90   # Middle position
-            indicator_color = colors.orange
-        elif self.risk_level_for_meter == "High":
-            angle = 45   # Correctly points to High (left side of gauge)
-            indicator_color = colors.red
-        else: # None
-            angle = 0
-            indicator_color = colors.blue
-            
-        # Draw the indicator (a small filled circle)
-        rad_angle = angle * 3.14159 / 180  # Convert to radians
-        x = self.width/2 + 50 * np.cos(rad_angle)
-        y = 20 + 50 * np.sin(rad_angle)
+        # Create a more modern gauge with gradient sections
+        gauge_center_x = self.width / 2
+        gauge_center_y = 50
+        gauge_radius = 45
         
-        # Add indicator needle line
-        line = Line(self.width/2, 20, x, y, strokeColor=indicator_color, strokeWidth=2)
-        d.add(line)
+        # Add background gauge (full semi-circle in light gray)
+        bg_arc = Wedge(
+            gauge_center_x, gauge_center_y, gauge_radius, 
+            0, 240, fillColor=colors.lightgrey
+        )
+        d.add(bg_arc)
         
-        # Add indicator circle
-        circle = Circle(x, y, 5, fillColor=indicator_color, strokeColor=None)
-        d.add(circle)
+        # Add colored segments for risk zones
+        # Green zone (0-60°)
+        green_segment = Wedge(
+            gauge_center_x, gauge_center_y, gauge_radius,
+            0, 60, fillColor=HexColor('#10b981')
+        )
+        d.add(green_segment)
+        
+        # Yellow zone (60-120°)
+        yellow_segment = Wedge(
+            gauge_center_x, gauge_center_y, gauge_radius,
+            60, 120, fillColor=HexColor('#eab308')
+        )
+        d.add(yellow_segment)
+        
+        # Orange zone (120-180°)
+        orange_segment = Wedge(
+            gauge_center_x, gauge_center_y, gauge_radius,
+            120, 180, fillColor=HexColor('#f97316')
+        )
+        d.add(orange_segment)
+        
+        # Red zone (180-240°)
+        red_segment = Wedge(
+            gauge_center_x, gauge_center_y, gauge_radius,
+            180, 240, fillColor=HexColor('#ef4444')
+        )
+        d.add(red_segment)
+        
+        # Add inner white circle for cleaner look
+        inner_circle = Circle(
+            gauge_center_x, gauge_center_y, gauge_radius - 15,
+            fillColor=colors.white, strokeColor=None
+        )
+        d.add(inner_circle)
+        
+        # Calculate indicator angle (middle of the segment)
+        indicator_angle = (angle_start + angle_end) / 2
+        rad_angle = math.radians(indicator_angle)
+        
+        # Calculate needle positions
+        x = gauge_center_x + (gauge_radius - 5) * math.cos(rad_angle)
+        y = gauge_center_y + (gauge_radius - 5) * math.sin(rad_angle)
+        
+        # Add indicator needle with thicker line
+        needle = Line(
+            gauge_center_x, gauge_center_y, x, y, 
+            strokeColor=main_color, strokeWidth=3
+        )
+        d.add(needle)
+        
+        # Add center circle for needle pivot
+        pivot = Circle(
+            gauge_center_x, gauge_center_y, 8,
+            fillColor=main_color, strokeColor=colors.darkgrey
+        )
+        d.add(pivot)
+        
+        # Add risk level text below gauge
+        risk_label = String(
+            gauge_center_x, gauge_center_y - 25, 
+            self.risk_level,
+            fontSize=14, fillColor=main_color, textAnchor='middle'
+        )
+        d.add(risk_label)
         
         # Add risk labels in appropriate language - position reversed to match angle changes
         if self.language == 'nl':
@@ -260,7 +328,7 @@ class RiskMeter(Flowable):
             risk_text = f"{self.risk_level} Risk"
         
         # Add risk level text
-        d.add(String(self.width/2-20, 10, risk_text, fontSize=12, fillColor=indicator_color))
+        d.add(String(self.width/2-20, 10, risk_text, fontSize=12, fillColor=main_color))
         
         # Draw the entire drawing
         renderPDF.draw(d, self.canv, 0, 0)
@@ -1552,55 +1620,79 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         risk_assessment_title = _('report.risk_assessment', 'Risk Assessment')
     elements.append(Paragraph(risk_assessment_title, heading_style))
     
-    # Determine overall risk level with appropriate translations
+    # Determine overall risk level with enhanced terms and visuals
     if high_risk > 10:
         if current_lang == 'nl':
-            risk_level = "Hoog"
-            risk_level_for_meter = "High"  # Keep English for the meter component
+            risk_level = "Kritisch"
+            risk_level_for_meter = "Critical"  # Keep English for the meter component
             compliance_level = "Laag"
             risk_text = "Deze scan heeft een groot aantal hoog-risico PII-items geïdentificeerd. Onmiddellijke actie wordt aanbevolen om GDPR-naleving te waarborgen en gevoelige gegevens te beschermen."
         else:
-            risk_level = "High"
-            risk_level_for_meter = "High"
+            risk_level = "Critical"
+            risk_level_for_meter = "Critical"
             compliance_level = "Low"
             risk_text = "This scan has identified a high number of high-risk PII items. Immediate action is recommended to ensure GDPR compliance and protect sensitive data."
         sustainability_score = 20  # Low sustainability score due to high risk
+        risk_color_hex = '#ef4444'  # Red
+        angle_start = 270
+        angle_end = 360
     elif high_risk > 0:
         if current_lang == 'nl':
-            risk_level = "Gemiddeld"
-            risk_level_for_meter = "Medium"  # Keep English for the meter component
+            risk_level = "Verhoogd"
+            risk_level_for_meter = "Elevated"  # Keep English for the meter component
             compliance_level = "Gemiddeld"
             risk_text = "Deze scan heeft enkele hoog-risico PII-items geïdentificeerd die direct moeten worden aangepakt om doorlopende GDPR-naleving te waarborgen."
         else:
-            risk_level = "Medium"
-            risk_level_for_meter = "Medium"
+            risk_level = "Elevated"
+            risk_level_for_meter = "Elevated"
             compliance_level = "Medium"
             risk_text = "This scan has identified some high-risk PII items that should be addressed promptly to ensure ongoing GDPR compliance."
         sustainability_score = 50  # Medium sustainability score
+        risk_color_hex = '#f97316'  # Orange
+        angle_start = 180
+        angle_end = 270
     elif total_pii > 0:
+        if current_lang == 'nl':
+            risk_level = "Gemiddeld"
+            risk_level_for_meter = "Moderate"  # Keep English for the meter component
+            compliance_level = "Hoog"
+            risk_text = "Deze scan heeft PII-items geïdentificeerd, maar geen daarvan is geclassificeerd als hoog risico. Bekijk de items voor GDPR-naleving, maar er is geen dringende actie vereist."
+        else:
+            risk_level = "Moderate"
+            risk_level_for_meter = "Moderate"
+            compliance_level = "High"
+            risk_text = "This scan has identified PII items, but none are classified as high risk. Review the items for GDPR compliance, but no urgent action is required."
+        sustainability_score = 75  # Good sustainability score
+        risk_color_hex = '#eab308'  # Yellow
+        angle_start = 90
+        angle_end = 180
+    else:
         if current_lang == 'nl':
             risk_level = "Laag"
             risk_level_for_meter = "Low"  # Keep English for the meter component
             compliance_level = "Hoog"
-            risk_text = "Deze scan heeft PII-items geïdentificeerd, maar geen daarvan is geclassificeerd als hoog risico. Bekijk de items voor GDPR-naleving, maar er is geen dringende actie vereist."
+            risk_text = "Deze scan heeft geen PII-items geïdentificeerd. Geen directe actie vereist, maar we raden aan om doorlopende monitoring te behouden naarmate uw project evolueert."
         else:
             risk_level = "Low"
             risk_level_for_meter = "Low"
             compliance_level = "High"
-            risk_text = "This scan has identified PII items, but none are classified as high risk. Review the items for GDPR compliance, but no urgent action is required."
-        sustainability_score = 75  # Good sustainability score
+            risk_text = "This scan has identified no PII items. No immediate action required, but we recommend maintaining ongoing monitoring as your project evolves."
+        sustainability_score = 100  # Perfect sustainability score
+        risk_color_hex = '#10b981'  # Green
+        angle_start = 0
+        angle_end = 90
+    # No PII items found - lowest risk level
+    if current_lang == 'nl':
+        risk_level = "Geen"
+        risk_level_for_meter = "None"  # Keep English for the meter component
+        compliance_level = "Hoog"
+        risk_text = "Er zijn geen PII-items gevonden in deze scan. Blijf monitoren om GDPR-naleving te behouden."
     else:
-        if current_lang == 'nl':
-            risk_level = "Geen"
-            risk_level_for_meter = "None"  # Keep English for the meter component
-            compliance_level = "Hoog"
-            risk_text = "Er zijn geen PII-items gevonden in deze scan. Blijf monitoren om GDPR-naleving te behouden."
-        else:
-            risk_level = "None"
-            risk_level_for_meter = "None"
-            compliance_level = "High"
-            risk_text = "No PII items were found in this scan. Continue monitoring to maintain GDPR compliance."
-        sustainability_score = 90  # Excellent sustainability score
+        risk_level = "None"
+        risk_level_for_meter = "None"
+        compliance_level = "High"
+        risk_text = "No PII items were found in this scan. Continue monitoring to maintain GDPR compliance."
+    sustainability_score = 90  # Excellent sustainability score
     
     # Add GDPR fine protection banner with language support
     gdpr_banner = ComplianceBanner(compliance_level, language=current_lang)
@@ -1951,7 +2043,8 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             detailed_data.extend(soc2_finding_items)
             
             # Create a properly sized table for SOC2 findings with improved layout
-            detailed_table = Table(detailed_data, colWidths=[80, 30, 180, 50, 70, 70])
+            # Create a properly sized table for SOC2 findings with improved layout and better column widths
+            detailed_table = Table(detailed_data, colWidths=[110, 35, 160, 55, 80, 80])
             
             # Define row styles based on risk level with clearer colors and enhanced readability
             row_styles = []
@@ -1971,11 +2064,24 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 
                 row_styles.append(('BACKGROUND', (0, i), (-1, i), bg_color))
                 # Add specific cell styling for the risk level column (column 3, index position)
-                if risk_level in ['High', 'HIGH', 'Hoog']:
-                    row_styles.append(('TEXTCOLOR', (3, i), (3, i), colors.red))
-                    row_styles.append(('FONTNAME', (3, i), (3, i), 'Helvetica-Bold'))
-                elif risk_level in ['Medium', 'MEDIUM', 'Gemiddeld']:
-                    row_styles.append(('TEXTCOLOR', (3, i), (3, i), colors.orange))
+                # Use a badge-style format for risk levels
+                if risk_level in ['High', 'HIGH', 'Hoog', 'Critical']:
+                    # Create a high-visibility badge for critical/high risk
+                    row_styles.append(('BACKGROUND', (3, i), (3, i), HexColor('#ef4444')))  # Red background
+                    row_styles.append(('TEXTCOLOR', (3, i), (3, i), colors.white))  # White text for contrast
+                    row_styles.append(('FONTNAME', (3, i), (3, i), 'Helvetica-Bold'))  # Bold for emphasis
+                    row_styles.append(('ALIGN', (3, i), (3, i), 'CENTER'))  # Center align for badge look
+                elif risk_level in ['Medium', 'MEDIUM', 'Gemiddeld', 'Elevated']:
+                    # Create a medium-visibility badge for medium risk
+                    row_styles.append(('BACKGROUND', (3, i), (3, i), HexColor('#f97316')))  # Orange background
+                    row_styles.append(('TEXTCOLOR', (3, i), (3, i), colors.white))  # White text for contrast
+                    row_styles.append(('FONTNAME', (3, i), (3, i), 'Helvetica-Bold'))  # Bold for emphasis
+                    row_styles.append(('ALIGN', (3, i), (3, i), 'CENTER'))  # Center align for badge look
+                else:
+                    # Create a low-visibility badge for low risk
+                    row_styles.append(('BACKGROUND', (3, i), (3, i), HexColor('#0ea5e9')))  # Blue background
+                    row_styles.append(('TEXTCOLOR', (3, i), (3, i), colors.white))  # White text for contrast
+                    row_styles.append(('ALIGN', (3, i), (3, i), 'CENTER'))  # Center align for badge look
                 
             # Apply improved table styles
             table_style = [
