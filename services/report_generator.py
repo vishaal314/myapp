@@ -3137,6 +3137,12 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     
     # Group findings by risk level
     findings = scan_data.get('findings', [])
+    logging.info(f"Processing {len(findings)} findings for report tables")
+    
+    # Log a sample finding for debugging
+    if findings and len(findings) > 0:
+        logging.info(f"Sample finding structure: {json.dumps(findings[0], indent=2, default=str)}")
+    
     risk_levels = {
         'high': [],
         'medium': [],
@@ -3157,10 +3163,52 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         
         high_risk_data = [["Description", "Location", "Recommendation"]]
         for finding in risk_levels['high']:
+            # Enhance description with contextual information
+            finding_type = finding.get('type', '')
+            finding_value = finding.get('value', '')
+            finding_description = finding.get('description', '')
+            
+            if not finding_description and finding_type:
+                if finding_value:
+                    description = f"{finding_type}: {finding_value}"
+                else:
+                    description = finding_type
+            else:
+                description = finding_description
+                
+            # Extract file and line information for better location context
+            file_name = finding.get('file_name', '')
+            line_no = finding.get('line_no', finding.get('line', ''))
+            location_text = finding.get('location', '')
+            
+            if file_name and not location_text:
+                if line_no:
+                    location = f"{file_name}:{line_no}"
+                else:
+                    location = file_name
+            else:
+                location = location_text or "Unknown"
+            
+            # Generate better recommendations based on finding type
+            if 'recommendation' in finding and finding['recommendation']:
+                recommendation = finding['recommendation']
+            else:
+                # Get article mappings for recommendation
+                article_refs = finding.get('article_mappings', [])
+                gdpr_articles = ", ".join(article_refs) if article_refs else ""
+                
+                # Use type-specific recommendation if available
+                if finding_type in ['email', 'phone', 'credit_card', 'api_key', 'password']:
+                    recommendation = f"Ensure proper protection for this {finding_type}. Consider encryption or tokenization."
+                    if gdpr_articles:
+                        recommendation += f" Relevant GDPR: {gdpr_articles}"
+                else:
+                    recommendation = finding.get('suggestion', 'Review and secure this sensitive data point')
+            
             # Clean and format the data to prevent text overflow and garbled characters
-            description = str(finding.get('description', 'No description')).strip()
-            location = str(finding.get('location', 'Unknown')).strip()
-            recommendation = str(finding.get('recommendation', 'No recommendation')).strip()
+            description = str(description).strip()
+            location = str(location).strip()
+            recommendation = str(recommendation).strip()
             
             # Limit string lengths to ensure they fit in table cells
             if len(description) > 100:
@@ -3198,10 +3246,52 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         
         medium_risk_data = [["Description", "Location", "Recommendation"]]
         for finding in risk_levels['medium']:
+            # Enhance description with contextual information
+            finding_type = finding.get('type', '')
+            finding_value = finding.get('value', '')
+            finding_description = finding.get('description', '')
+            
+            if not finding_description and finding_type:
+                if finding_value:
+                    description = f"{finding_type}: {finding_value}"
+                else:
+                    description = finding_type
+            else:
+                description = finding_description
+            
+            # Extract file and line information for better location context
+            file_name = finding.get('file_name', '')
+            line_no = finding.get('line_no', finding.get('line', ''))
+            location_text = finding.get('location', '')
+            
+            if file_name and not location_text:
+                if line_no:
+                    location = f"{file_name}:{line_no}"
+                else:
+                    location = file_name
+            else:
+                location = location_text or "Unknown"
+            
+            # Generate better recommendations based on finding type
+            if 'recommendation' in finding and finding['recommendation']:
+                recommendation = finding['recommendation']
+            else:
+                # Get article mappings for recommendation
+                article_refs = finding.get('article_mappings', [])
+                gdpr_articles = ", ".join(article_refs) if article_refs else ""
+                
+                # Use type-specific recommendation if available
+                if finding_type in ['email', 'phone', 'credit_card', 'api_key', 'password']:
+                    recommendation = f"Implement proper protection for this {finding_type}. Consider encryption or masking."
+                    if gdpr_articles:
+                        recommendation += f" Relevant GDPR: {gdpr_articles}"
+                else:
+                    recommendation = finding.get('suggestion', 'Review this data for compliance with GDPR requirements')
+            
             # Clean and format the data to prevent text overflow and garbled characters
-            description = str(finding.get('description', 'No description')).strip()
-            location = str(finding.get('location', 'Unknown')).strip()
-            recommendation = str(finding.get('recommendation', 'No recommendation')).strip()
+            description = str(description).strip()
+            location = str(location).strip()
+            recommendation = str(recommendation).strip()
             
             # Limit string lengths to ensure they fit in table cells
             if len(description) > 100:
@@ -3239,10 +3329,52 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         
         low_risk_data = [["Description", "Location", "Recommendation"]]
         for finding in risk_levels['low']:
+            # Enhance description with contextual information
+            finding_type = finding.get('type', '')
+            finding_value = finding.get('value', '')
+            finding_description = finding.get('description', '')
+            
+            if not finding_description and finding_type:
+                if finding_value:
+                    description = f"{finding_type}: {finding_value}"
+                else:
+                    description = finding_type
+            else:
+                description = finding_description
+            
+            # Extract file and line information for better location context
+            file_name = finding.get('file_name', '')
+            line_no = finding.get('line_no', finding.get('line', ''))
+            location_text = finding.get('location', '')
+            
+            if file_name and not location_text:
+                if line_no:
+                    location = f"{file_name}:{line_no}"
+                else:
+                    location = file_name
+            else:
+                location = location_text or "Unknown"
+            
+            # Generate better recommendations based on finding type
+            if 'recommendation' in finding and finding['recommendation']:
+                recommendation = finding['recommendation']
+            else:
+                # Get article mappings for recommendation
+                article_refs = finding.get('article_mappings', [])
+                gdpr_articles = ", ".join(article_refs) if article_refs else ""
+                
+                # Use type-specific recommendation if available
+                if finding_type in ['email', 'phone', 'credit_card', 'api_key', 'password']:
+                    recommendation = f"Consider reviewing protection for this {finding_type}."
+                    if gdpr_articles:
+                        recommendation += f" Relevant GDPR: {gdpr_articles}"
+                else:
+                    recommendation = finding.get('suggestion', 'Monitor as part of regular compliance review')
+            
             # Clean and format the data to prevent text overflow and garbled characters
-            description = str(finding.get('description', 'No description')).strip()
-            location = str(finding.get('location', 'Unknown')).strip()
-            recommendation = str(finding.get('recommendation', 'No recommendation')).strip()
+            description = str(description).strip()
+            location = str(location).strip()
+            recommendation = str(recommendation).strip()
             
             # Limit string lengths to ensure they fit in table cells
             if len(description) > 100:
