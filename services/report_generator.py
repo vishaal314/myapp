@@ -937,6 +937,16 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         borderPadding=5
     )
     
+    # Bullet style for recommendation lists
+    bullet_style = ParagraphStyle(
+        'BulletStyle',
+        parent=normal_style,
+        leftIndent=20,
+        firstLineIndent=0,
+        spaceBefore=2,
+        spaceAfter=2
+    )
+    
     # Content elements
     elements = []
     
