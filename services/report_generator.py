@@ -2185,8 +2185,8 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             detailed_data.extend(soc2_finding_items)
             
             # Create a properly sized table for SOC2 findings with improved layout
-            # Create a properly sized table for SOC2 findings with improved layout and better column widths
-            detailed_table = Table(detailed_data, colWidths=[110, 35, 160, 55, 80, 80])
+            # Adjust column widths for better readability - wider description column, narrower line column
+            detailed_table = Table(detailed_data, colWidths=[90, 30, 200, 50, 70, 80])
             
             # Define row styles based on risk level with clearer colors and enhanced readability
             row_styles = []
@@ -2243,11 +2243,11 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 ('ALIGN', (4, 0), (4, 0), 'LEFT'),   # Category column - left align
                 ('ALIGN', (5, 0), (5, 0), 'LEFT'),   # TSC criteria column - left align
                 
-                # Content styling with improved formatting
+                # Content styling with improved formatting for much better readability
                 ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 8.5),  # Slightly larger for better readability
-                ('BOTTOMPADDING', (0, 1), (-1, -1), 7),  # More padding for content
-                ('TOPPADDING', (0, 1), (-1, -1), 7),  # More padding for content
+                ('FONTSIZE', (0, 1), (-1, -1), 10),  # Larger font size for much better readability
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 8),  # More padding for content
+                ('TOPPADDING', (0, 1), (-1, -1), 8),  # More padding for content
                 
                 # Column-specific alignment for content cells
                 ('ALIGN', (0, 1), (0, -1), 'LEFT'),   # File column - left align
