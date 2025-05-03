@@ -3552,6 +3552,10 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             if repo_name and repo_name != 'Unknown':
                 scan_overview_data.append(["Repository", repo_name])
                 scan_overview_data.append(["Branch", branch])
+                
+            # Add lines scanned information if available
+            if 'lines_scanned' in scan_data and scan_data['lines_scanned'] > 0:
+                scan_overview_data.append(["Regels Code Gescand", f"{scan_data['lines_scanned']:,}"])
         else:
             scan_overview_data = [
                 ["Scan Type", scan_data.get('scan_type', 'Code Efficiency')],
@@ -3564,6 +3568,10 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             if repo_name and repo_name != 'Unknown':
                 scan_overview_data.append(["Repository", repo_name])
                 scan_overview_data.append(["Branch", branch])
+                
+            # Add lines scanned information if available
+            if 'lines_scanned' in scan_data and scan_data['lines_scanned'] > 0:
+                scan_overview_data.append(["Lines of Code Scanned", f"{scan_data['lines_scanned']:,}"])
         
         # Create a well-formatted overview table with improved styling
         scan_overview_table = Table(scan_overview_data, colWidths=[2*inch, 4*inch])
@@ -3670,6 +3678,14 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                 ["Repository Size", f"{repo_size_mb:.2f} MB"],
                 ["Sustainability Score", f"{sustainability_score}/100"],
             ]
+            
+        # Add GDPR principles checked information if available
+        if 'principles_checked' in scan_data and scan_data['principles_checked'] and isinstance(scan_data['principles_checked'], list):
+            principles = scan_data['principles_checked']
+            if current_lang == 'nl':
+                code_stats_data.append(["GDPR Principes Gecontroleerd", f"{len(principles)}"])
+            else:
+                code_stats_data.append(["GDPR Principles Checked", f"{len(principles)}"])
         
         code_stats_table = Table(code_stats_data, colWidths=[2*inch, 2*inch])
         code_stats_table.setStyle(TableStyle([
@@ -3683,9 +3699,89 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         elements.append(code_stats_table)
         elements.append(Spacer(1, 0.15*inch))
         
+        # Add GDPR principles breakdown if available
+        if 'principles_checked' in scan_data and scan_data['principles_checked'] and isinstance(scan_data['principles_checked'], list):
+            elements.append(Spacer(1, 0.2*inch))
+            if current_lang == 'nl':
+                elements.append(Paragraph("<b>GDPR Principes Geëvalueerd</b>", normal_style))
+            else:
+                elements.append(Paragraph("<b>GDPR Principles Evaluated</b>", normal_style))
+            
+            # Define all possible principles and their display names
+            all_principles = {
+                "lawfulness_fairness_transparency": "Lawfulness, Fairness, and Transparency",
+                "purpose_limitation": "Purpose Limitation",
+                "data_minimization": "Data Minimization",
+                "accuracy": "Accuracy",
+                "storage_limitation": "Storage Limitation",
+                "integrity_confidentiality": "Integrity and Confidentiality",
+                "accountability": "Accountability",
+                # Dutch translations
+                "rechtmatigheid_eerlijkheid_transparantie": "Rechtmatigheid, Eerlijkheid en Transparantie",
+                "doelbinding": "Doelbinding",
+                "dataminimalisatie": "Dataminimalisatie",
+                "juistheid": "Juistheid",
+                "opslagbeperking": "Opslagbeperking",
+                "integriteit_vertrouwelijkheid": "Integriteit en Vertrouwelijkheid",
+                "verantwoordingsplicht": "Verantwoordingsplicht"
+            }
+            
+            # Get the principles that were checked
+            principles = scan_data['principles_checked']
+            
+            # Create principles table
+            principles_data = []
+            if current_lang == 'nl':
+                principles_data.append(["GDPR Principe", "Gecontroleerd"])
+                # Map English principle keys to Dutch display names
+                for principle in principles:
+                    # Map English keys to Dutch display names when available
+                    display_name = all_principles.get(principle, principle)
+                    # For Dutch reports, try to use Dutch display name when available
+                    if principle in all_principles and "rechtmatigheid" in all_principles:
+                        # Map English keys to Dutch equivalents
+                        if principle == "lawfulness_fairness_transparency":
+                            display_name = all_principles["rechtmatigheid_eerlijkheid_transparantie"]
+                        elif principle == "purpose_limitation":
+                            display_name = all_principles["doelbinding"]
+                        elif principle == "data_minimization":
+                            display_name = all_principles["dataminimalisatie"]
+                        elif principle == "accuracy":
+                            display_name = all_principles["juistheid"]
+                        elif principle == "storage_limitation":
+                            display_name = all_principles["opslagbeperking"]
+                        elif principle == "integrity_confidentiality":
+                            display_name = all_principles["integriteit_vertrouwelijkheid"]
+                        elif principle == "accountability":
+                            display_name = all_principles["verantwoordingsplicht"]
+                    
+                    principles_data.append([display_name, "✓"])
+            else:
+                principles_data.append(["GDPR Principle", "Checked"])
+                for principle in principles:
+                    # Use friendly display name or fall back to the raw key
+                    display_name = all_principles.get(principle, principle)
+                    principles_data.append([display_name, "✓"])
+            
+            principles_table = Table(principles_data, colWidths=[4*inch, 1*inch])
+            principles_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#f0f0f0')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+                ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ALIGN', (1, 1), (1, -1), 'CENTER'),
+            ]))
+            elements.append(principles_table)
+        
         # Add language breakdown if available
         language_breakdown = code_stats.get('language_breakdown', {})
         if language_breakdown:
+            elements.append(Spacer(1, 0.2*inch))
             if current_lang == 'nl':
                 elements.append(Paragraph("<b>Taal Verdeling</b>", normal_style))
             else:
