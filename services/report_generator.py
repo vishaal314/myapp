@@ -1865,30 +1865,61 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 # Create a properly sized table for AI model findings
                 detailed_table = Table(detailed_data, colWidths=[80, 80, 180, 80, 50])
                 
-                # Define row styles based on risk level
+                # Define row styles based on risk level with improved badge-style indicators
                 row_styles = []
                 for i, item in enumerate(ai_finding_items, 1):  # Starting from 1 to account for header
                     risk_level = item[4]
-                    # Check for both Dutch and English risk levels
+                    # Check for both Dutch and English risk levels with more distinct colors
                     if risk_level in ['High', 'Hoog']:
-                        bg_color = colors.pink
+                        bg_color = HexColor('#ffe4e1')  # Lighter red for better readability
                     elif risk_level in ['Medium', 'Gemiddeld']:
-                        bg_color = colors.lightgoldenrodyellow
+                        bg_color = HexColor('#fff4e0')  # Lighter orange for better readability
                     else:  # Low or Laag
-                        bg_color = colors.white
+                        bg_color = HexColor('#f0f9ff')  # Light blue for better visibility than white
+                    
+                    # Add alternating row styling for better readability
+                    if i % 2 == 0:
+                        bg_color = lightenColor(bg_color, 0.7)  # Make even rows slightly lighter
                     
                     row_styles.append(('BACKGROUND', (0, i), (-1, i), bg_color))
+                    
+                    # Add badge-style risk indicators for the risk level column (column 4)
+                    if risk_level in ['High', 'Hoog']:
+                        row_styles.append(('BACKGROUND', (4, i), (4, i), HexColor('#ef4444')))  # Red background
+                        row_styles.append(('TEXTCOLOR', (4, i), (4, i), colors.white))  # White text
+                        row_styles.append(('FONTNAME', (4, i), (4, i), 'Helvetica-Bold'))  # Bold for emphasis
+                        row_styles.append(('ALIGN', (4, i), (4, i), 'CENTER'))  # Center align for badge look
+                    elif risk_level in ['Medium', 'Gemiddeld']:
+                        row_styles.append(('BACKGROUND', (4, i), (4, i), HexColor('#f97316')))  # Orange background
+                        row_styles.append(('TEXTCOLOR', (4, i), (4, i), colors.white))  # White text
+                        row_styles.append(('FONTNAME', (4, i), (4, i), 'Helvetica-Bold'))  # Bold for emphasis
+                        row_styles.append(('ALIGN', (4, i), (4, i), 'CENTER'))  # Center align for badge look
+                    else:
+                        row_styles.append(('BACKGROUND', (4, i), (4, i), HexColor('#0ea5e9')))  # Blue background
+                        row_styles.append(('TEXTCOLOR', (4, i), (4, i), colors.white))  # White text
+                        row_styles.append(('ALIGN', (4, i), (4, i), 'CENTER'))  # Center align for badge look
                 
-                # Apply table styles
+                # Apply improved table styles with better readability and modern look
                 table_style = [
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 8),  # Smaller font for detailed table
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP')
+                    # Header styling - more professional darker blue for better contrast
+                    ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1e40af')),  # Darker blue header
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for better contrast
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold headers
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),  # Larger header font for better readability
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),  # More padding for header
+                    ('TOPPADDING', (0, 0), (-1, 0), 8),  # More padding for header
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),  # Center align headers
+                    
+                    # Content styling with improved formatting
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),  # Larger font size for better readability
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 6),  # More padding for content
+                    ('TOPPADDING', (0, 1), (-1, -1), 6),  # More padding for content
+                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#cbd5e1')),  # Lighter grid lines
+                    ('BOX', (0, 0), (-1, -1), 1, HexColor('#475569')),  # Darker outer border
+                    ('LINEBELOW', (0, 0), (-1, 0), 1.5, HexColor('#1e3a8a')),  # Thicker line below header
+                    ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),  # Middle align header cells
+                    ('VALIGN', (0, 1), (-1, -1), 'TOP')  # Top align content cells
                 ]
                 
                 # Add risk-based row styles
@@ -2424,16 +2455,27 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                         row_styles.append(('TEXTCOLOR', (4, i), (4, i), colors.white))  # White text
                         row_styles.append(('ALIGN', (4, i), (4, i), 'CENTER'))  # Center align for badge look
                 
-                # Apply table styles
+                # Apply improved table styles with better readability and modern look
                 table_style = [
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 8),  # Smaller font for detailed table
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP')
+                    # Header styling - more professional darker blue for better contrast
+                    ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1e40af')),  # Darker blue header
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for better contrast
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold headers
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),  # Larger header font for better readability
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),  # More padding for header
+                    ('TOPPADDING', (0, 0), (-1, 0), 8),  # More padding for header
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),  # Center align headers
+                    
+                    # Content styling with improved formatting
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),  # Larger font size for better readability
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 6),  # More padding for content
+                    ('TOPPADDING', (0, 1), (-1, -1), 6),  # More padding for content
+                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#cbd5e1')),  # Lighter grid lines
+                    ('BOX', (0, 0), (-1, -1), 1, HexColor('#475569')),  # Darker outer border
+                    ('LINEBELOW', (0, 0), (-1, 0), 1.5, HexColor('#1e3a8a')),  # Thicker line below header
+                    ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),  # Middle align header cells
+                    ('VALIGN', (0, 1), (-1, -1), 'TOP')  # Top align content cells
                 ]
                 
                 # Add risk-based row styles
