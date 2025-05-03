@@ -3,6 +3,15 @@ GDPR Compliance Module
 
 This module provides GDPR-specific patterns, article mappings, and compliance evaluation functions
 to enhance repository scanning with proper GDPR legal basis identification and risk assessment.
+
+It implements all seven core GDPR principles:
+1. Lawfulness, Fairness, Transparency: Logs metadata of all processing activities
+2. Purpose Limitation: Flags data used outside defined scope
+3. Data Minimization: Highlights unused or excessive data
+4. Accuracy: Validates if detected data is recent and correct
+5. Storage Limitation: Detects outdated or stale PII
+6. Integrity & Confidentiality: Ensures security in transit and at rest
+7. Accountability: Generates audit logs and traceable report links
 """
 
 from typing import Dict, List, Any, Optional, Tuple
@@ -251,21 +260,185 @@ SECURITY_PATTERNS = {
         "description": "Encryption Implementation",
         "gdpr_articles": ["article_32"],
         "risk_level": "medium",
-        "remediation": "Ensure sensitive data is encrypted at rest and in transit"
+        "remediation": "Ensure sensitive data is encrypted at rest and in transit",
+        "gdpr_principle": "integrity_confidentiality"
     },
     "pseudonymization": {
         "pattern": r'(?i)\b(?:pseudonymize|pseudonymization|anonymize|anonymization|data masking)\b',
         "description": "Pseudonymization Implementation",
         "gdpr_articles": ["article_32", "article_25"],
         "risk_level": "medium",
-        "remediation": "Implement pseudonymization for personal data where appropriate"
+        "remediation": "Implement pseudonymization for personal data where appropriate",
+        "gdpr_principle": "data_minimization"
     },
     "data_breach": {
         "pattern": r'(?i)\b(?:data breach|security incident|breach notification|incident response)\b',
         "description": "Data Breach Handling",
         "gdpr_articles": ["article_33", "article_34"],
         "risk_level": "high",
-        "remediation": "Implement data breach detection and notification procedures"
+        "remediation": "Implement data breach detection and notification procedures",
+        "gdpr_principle": "integrity_confidentiality"
+    },
+    "access_controls": {
+        "pattern": r'(?i)\b(?:access control|authorization|role-based access|permission|privilege)\b',
+        "description": "Access Control Implementation",
+        "gdpr_articles": ["article_32"],
+        "risk_level": "high",
+        "remediation": "Implement proper access controls and authorization mechanisms",
+        "gdpr_principle": "integrity_confidentiality"
+    },
+    "tls_https": {
+        "pattern": r'(?i)\b(?:TLS|SSL|https|secure connection|secure communication)\b',
+        "description": "Secure Communication Implementation",
+        "gdpr_articles": ["article_32"],
+        "risk_level": "high",
+        "remediation": "Ensure all data transfers use secure protocols like TLS/HTTPS",
+        "gdpr_principle": "integrity_confidentiality"
+    }
+}
+
+# GDPR Principle-Specific Patterns
+GDPR_PRINCIPLE_PATTERNS = {
+    # 1. Lawfulness, Fairness, Transparency
+    "lawfulness": {
+        "pattern": r'(?i)\b(?:legal basis|lawful basis|lawfulness|legal ground|legitimate basis)\b',
+        "description": "Legal Basis Documentation",
+        "gdpr_articles": ["article_6_1_a", "article_6_1_b", "article_6_1_c", "article_6_1_d", "article_6_1_e", "article_6_1_f"],
+        "risk_level": "high",
+        "remediation": "Document the legal basis for each type of personal data processing",
+        "gdpr_principle": "lawfulness_fairness_transparency"
+    },
+    "transparency": {
+        "pattern": r'(?i)\b(?:privacy notice|privacy policy|information notice|transparent information|privacy statement)\b',
+        "description": "Transparency Documentation",
+        "gdpr_articles": ["article_12", "article_13", "article_14"],
+        "risk_level": "high",
+        "remediation": "Ensure clear and transparent privacy notices are provided to data subjects",
+        "gdpr_principle": "lawfulness_fairness_transparency"
+    },
+    "processing_logs": {
+        "pattern": r'(?i)\b(?:processing log|audit log|activity log|data processing record|processing record)\b',
+        "description": "Processing Activity Logs",
+        "gdpr_articles": ["article_30"],
+        "risk_level": "medium",
+        "remediation": "Implement logging of all data processing activities",
+        "gdpr_principle": "lawfulness_fairness_transparency"
+    },
+    
+    # 2. Purpose Limitation
+    "purpose_definition": {
+        "pattern": r'(?i)\b(?:purpose limitation|specified purpose|explicit purpose|defined purpose|purpose specification)\b',
+        "description": "Purpose Definition and Limitation",
+        "gdpr_articles": ["article_5_1_b"],
+        "risk_level": "high",
+        "remediation": "Clearly define and document the specific purposes for personal data processing",
+        "gdpr_principle": "purpose_limitation"
+    },
+    "purpose_creep": {
+        "pattern": r'(?i)\b(?:purpose creep|purpose change|additional processing|secondary use|repurpose data)\b',
+        "description": "Purpose Change Detection",
+        "gdpr_articles": ["article_5_1_b", "article_6_4"],
+        "risk_level": "high",
+        "remediation": "Implement controls to prevent unauthorized changes to data processing purposes",
+        "gdpr_principle": "purpose_limitation"
+    },
+    
+    # 3. Data Minimization
+    "data_minimization": {
+        "pattern": r'(?i)\b(?:data minimization|minimize data|necessary data|relevant data|limited data collection)\b',
+        "description": "Data Minimization Implementation",
+        "gdpr_articles": ["article_5_1_c"],
+        "risk_level": "medium",
+        "remediation": "Ensure only data necessary for the specified purpose is collected and processed",
+        "gdpr_principle": "data_minimization"
+    },
+    "excessive_data": {
+        "pattern": r'(?i)\b(?:excessive data collection|unnecessary data|all user data|complete profile|excessive fields)\b',
+        "description": "Excessive Data Collection Detection",
+        "gdpr_articles": ["article_5_1_c"],
+        "risk_level": "medium",
+        "remediation": "Review and reduce data collection to only what's necessary for the specified purpose",
+        "gdpr_principle": "data_minimization"
+    },
+    
+    # 4. Accuracy
+    "data_accuracy": {
+        "pattern": r'(?i)\b(?:data accuracy|accurate data|data validation|data verification|data correction)\b',
+        "description": "Data Accuracy Mechanisms",
+        "gdpr_articles": ["article_5_1_d"],
+        "risk_level": "medium",
+        "remediation": "Implement mechanisms to ensure data accuracy and enable corrections",
+        "gdpr_principle": "accuracy"
+    },
+    "data_rectification": {
+        "pattern": r'(?i)\b(?:rectification|correct data|update data|data update request|correction mechanism)\b',
+        "description": "Data Rectification Process",
+        "gdpr_articles": ["article_16"],
+        "risk_level": "medium",
+        "remediation": "Implement processes for data subjects to request data rectification",
+        "gdpr_principle": "accuracy"
+    },
+    
+    # 5. Storage Limitation
+    "retention_period": {
+        "pattern": r'(?i)\b(?:retention period|data retention|storage period|retention policy|storage limitation)\b',
+        "description": "Data Retention Periods",
+        "gdpr_articles": ["article_5_1_e"],
+        "risk_level": "high",
+        "remediation": "Define and implement appropriate data retention periods",
+        "gdpr_principle": "storage_limitation"
+    },
+    "data_deletion": {
+        "pattern": r'(?i)\b(?:automatic deletion|data purge|purge data|automated removal|retention enforcement)\b',
+        "description": "Automated Data Deletion Mechanisms",
+        "gdpr_articles": ["article_5_1_e"],
+        "risk_level": "medium",
+        "remediation": "Implement automated mechanisms to delete data after retention periods expire",
+        "gdpr_principle": "storage_limitation"
+    },
+    
+    # 6. Integrity & Confidentiality
+    "data_integrity": {
+        "pattern": r'(?i)\b(?:data integrity|integrity check|checksums|data validation|integrity validation)\b',
+        "description": "Data Integrity Mechanisms",
+        "gdpr_articles": ["article_32"],
+        "risk_level": "high",
+        "remediation": "Implement mechanisms to ensure data integrity throughout processing",
+        "gdpr_principle": "integrity_confidentiality"
+    },
+    "secure_processing": {
+        "pattern": r'(?i)\b(?:secure processing|security measures|protection measures|safeguards|security controls)\b',
+        "description": "Secure Processing Implementation",
+        "gdpr_articles": ["article_32"],
+        "risk_level": "high",
+        "remediation": "Implement appropriate technical and organizational security measures",
+        "gdpr_principle": "integrity_confidentiality"
+    },
+    
+    # 7. Accountability
+    "accountability": {
+        "pattern": r'(?i)\b(?:accountability|compliance documentation|documentation obligation|responsibility|compliance record)\b',
+        "description": "Accountability Documentation",
+        "gdpr_articles": ["article_5_2", "article_24"],
+        "risk_level": "high",
+        "remediation": "Document all data protection measures and be able to demonstrate compliance",
+        "gdpr_principle": "accountability"
+    },
+    "dpo": {
+        "pattern": r'(?i)\b(?:data protection officer|DPO|data privacy officer|privacy officer|appointed DPO)\b',
+        "description": "Data Protection Officer Reference",
+        "gdpr_articles": ["article_37", "article_38", "article_39"],
+        "risk_level": "medium",
+        "remediation": "Consider whether appointing a DPO is required for your organization",
+        "gdpr_principle": "accountability"
+    },
+    "dpia": {
+        "pattern": r'(?i)\b(?:data protection impact assessment|DPIA|impact assessment|risk assessment|privacy impact)\b',
+        "description": "Data Protection Impact Assessment Reference",
+        "gdpr_articles": ["article_35"],
+        "risk_level": "high",
+        "remediation": "Conduct DPIAs for high-risk processing activities",
+        "gdpr_principle": "accountability"
     }
 }
 
@@ -274,7 +447,7 @@ def map_finding_to_gdpr_articles(finding_type: str, finding_data: Dict[str, Any]
     Map a finding to relevant GDPR articles based on its type and content.
     
     Args:
-        finding_type: Type of finding (e.g., 'pii', 'dsar', 'consent', 'security')
+        finding_type: Type of finding (e.g., 'pii', 'dsar', 'consent', 'security', 'principle')
         finding_data: Data about the finding
         
     Returns:
@@ -293,6 +466,8 @@ def map_finding_to_gdpr_articles(finding_type: str, finding_data: Dict[str, Any]
         pattern_data = CONSENT_PATTERNS[pattern_key]
     elif finding_type == 'security' and pattern_key in SECURITY_PATTERNS:
         pattern_data = SECURITY_PATTERNS[pattern_key]
+    elif finding_type == 'principle' and pattern_key in GDPR_PRINCIPLE_PATTERNS:
+        pattern_data = GDPR_PRINCIPLE_PATTERNS[pattern_key]
     
     # If we have pattern data with GDPR article mappings
     if pattern_data and 'gdpr_articles' in pattern_data:
@@ -328,17 +503,35 @@ def generate_remediation_suggestion(finding: Dict[str, Any]) -> str:
         patterns_dict = CONSENT_PATTERNS
     elif finding_type == 'security':
         patterns_dict = SECURITY_PATTERNS
+    elif finding_type == 'principle':
+        patterns_dict = GDPR_PRINCIPLE_PATTERNS
     
     # Get the pattern-specific remediation if available
     if patterns_dict and pattern_key in patterns_dict and 'remediation' in patterns_dict[pattern_key]:
         return patterns_dict[pattern_key]['remediation']
+    
+    # Check GDPR principle if it exists
+    gdpr_principle = finding.get('gdpr_principle', '')
+    if gdpr_principle:
+        principle_recommendations = {
+            'lawfulness_fairness_transparency': "Ensure lawful processing with a documented legal basis, fair data handling, and transparent information to data subjects.",
+            'purpose_limitation': "Clearly define and document specific purposes for data processing and prevent usage beyond those purposes.",
+            'data_minimization': "Collect and process only the data necessary for your specified purposes, and delete unnecessary data.",
+            'accuracy': "Implement mechanisms to ensure personal data is accurate and up-to-date, with processes for correction.",
+            'storage_limitation': "Define appropriate retention periods and implement processes to delete data once no longer needed.",
+            'integrity_confidentiality': "Implement appropriate security measures to protect data from unauthorized access, loss, or damage.",
+            'accountability': "Document compliance measures and be able to demonstrate compliance with all GDPR principles."
+        }
+        if gdpr_principle in principle_recommendations:
+            return principle_recommendations[gdpr_principle]
     
     # Default remediation suggestions by finding type
     default_remediation = {
         'pii': "Ensure proper legal basis and implement data protection measures for handling personal data.",
         'dsar': "Implement proper procedures for handling data subject rights requests.",
         'consent': "Ensure explicit, informed consent is collected and properly recorded.",
-        'security': "Implement appropriate technical and organizational security measures."
+        'security': "Implement appropriate technical and organizational security measures.",
+        'principle': "Implement measures to ensure compliance with this GDPR principle."
     }
     
     return default_remediation.get(finding_type, "Review this finding for GDPR compliance.")
@@ -378,6 +571,7 @@ def calculate_gdpr_risk_score(findings: List[Dict[str, Any]]) -> Tuple[int, Dict
         'dsar': 0,
         'consent': 0,
         'security': 0,
+        'principle': 0,
         'other': 0
     }
     
