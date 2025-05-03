@@ -165,7 +165,7 @@
     "title": "Scan",
     "new_scan_title": "New Scan",
     "select_type": "Select Scan Type",
-    "code": "Repo Scanner",
+    "code": "GDPR Repo Scanner",
     "blob": "Document",
     "dpia": "Data Protection Impact Assessment",
     "image": "Image",
