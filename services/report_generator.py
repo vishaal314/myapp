@@ -1052,41 +1052,51 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                         Table(
                             [
                                 [
-                                    # Shield icon
+                                    # Modern shield icon with gradient effect
                                     Table(
                                         [[Paragraph(
-                                            """<font color="#FFFFFF" size="22">🔒</font>""",
+                                            """<font color="#FFFFFF" size="22">🛡️</font>""",
                                             ParagraphStyle('IconStyle', alignment=1)
                                         )]],
-                                        colWidths=[50],
-                                        rowHeights=[50],
+                                        colWidths=[55],
+                                        rowHeights=[55],
                                         style=TableStyle([
-                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#4338ca')),  # Indigo blue for icon
+                                            # Create a shield shape with gradient-like effect using multiple background layers
+                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#4f46e5')),  # Base gradient color - indigo
+                                            ('LINEABOVE', (0, 0), (-1, 0), 2, HexColor('#818cf8')),  # Light indigo top accent
+                                            ('LINEBELOW', (0, -1), (-1, -1), 2, HexColor('#312e81')),  # Dark indigo bottom accent
+                                            ('LINEBEFORE', (0, 0), (0, -1), 2, HexColor('#6366f1')),  # Medium indigo left accent
+                                            ('LINEAFTER', (-1, 0), (-1, -1), 2, HexColor('#4338ca')),  # Indigo right accent
                                             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                                            ('ROUNDEDCORNERS', [25, 25, 25, 25]),  # Circular icon
+                                            ('ROUNDEDCORNERS', [8, 8, 8, 8]),  # Shield shape with slightly rounded corners
                                         ])
                                     ),
-                                    # Brand text with modern styling
+                                    # Enhanced brand text with improved typography and gradient accent
                                     Table(
                                         [
                                             [Paragraph(
-                                                f"""<font color="#FFFFFF" size="18"><b>{_('app.title', 'DataGuardian Pro')}</b></font>""", 
-                                                ParagraphStyle('LogoStyle', alignment=0)
+                                                # Enhanced title with modern font styling and spacing
+                                                f"""<font face="Helvetica-Bold" color="#FFFFFF" size="18"><b>Data<font color="#a5b4fc">Guardian</font> Pro</b></font>""", 
+                                                ParagraphStyle('LogoStyle', alignment=0, leading=22, spaceAfter=2)
                                             )],
                                             [Paragraph(
-                                                f"""<font color="#FFFFFF" size="10">{_('app.subtitle', 'Enterprise Privacy Compliance Platform')}</font>""", 
-                                                ParagraphStyle('SubtitleStyle', alignment=0)
+                                                # Improved subtitle with letter spacing
+                                                f"""<font face="Helvetica" color="#cbd5e1" size="10">Enterprise Privacy Compliance Platform</font>""", 
+                                                ParagraphStyle('SubtitleStyle', alignment=0, leading=12, spaceBefore=0)
                                             )]
                                         ],
-                                        colWidths=[150],
-                                        rowHeights=[30, 20],
+                                        colWidths=[180],  # Wider for better text layout
+                                        rowHeights=[32, 20],  # Slightly taller for main title
                                         style=TableStyle([
                                             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                                            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                                            ('LEFTPADDING', (0, 0), (-1, -1), 12),  # More left padding for better alignment
                                             ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                                            # Gradient-like background with accent border
                                             ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Dark blue background
+                                            ('LINEAFTER', (-1, 0), (-1, -1), 3, HexColor('#3b82f6')),  # Blue right accent
+                                            ('LINEBELOW', (0, -1), (-1, -1), 1, HexColor('#60a5fa')),  # Light blue bottom accent
                                         ])
                                     )
                                 ]
@@ -2083,24 +2093,46 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     row_styles.append(('TEXTCOLOR', (3, i), (3, i), colors.white))  # White text for contrast
                     row_styles.append(('ALIGN', (3, i), (3, i), 'CENTER'))  # Center align for badge look
                 
-            # Apply improved table styles
+            # Apply improved table styles with better heading contrast and column-specific alignment
             table_style = [
-                # Header styling
-                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#2c5282')),  # Darker blue header
+                # Header styling - more professional darker blue for better contrast
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1e40af')),  # Darker blue header
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for better contrast
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold headers
                 ('FONTSIZE', (0, 0), (-1, 0), 9),  # Slightly larger header font
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 8),  # More padding for header
                 ('TOPPADDING', (0, 0), (-1, 0), 8),  # More padding for header
                 
-                # Content styling 
+                # Column-specific alignment for headers
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),   # File column - left align
+                ('ALIGN', (1, 0), (1, 0), 'CENTER'), # Line number column - center align
+                ('ALIGN', (2, 0), (2, 0), 'LEFT'),   # Description column - left align
+                ('ALIGN', (3, 0), (3, 0), 'CENTER'), # Risk column - center align
+                ('ALIGN', (4, 0), (4, 0), 'LEFT'),   # Category column - left align
+                ('ALIGN', (5, 0), (5, 0), 'LEFT'),   # TSC criteria column - left align
+                
+                # Content styling with improved formatting
                 ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
                 ('FONTSIZE', (0, 1), (-1, -1), 8.5),  # Slightly larger for better readability
                 ('BOTTOMPADDING', (0, 1), (-1, -1), 7),  # More padding for content
                 ('TOPPADDING', (0, 1), (-1, -1), 7),  # More padding for content
+                
+                # Column-specific alignment for content cells
+                ('ALIGN', (0, 1), (0, -1), 'LEFT'),   # File column - left align
+                ('ALIGN', (1, 1), (1, -1), 'CENTER'), # Line number column - center align
+                ('ALIGN', (2, 1), (2, -1), 'LEFT'),   # Description column - left align
+                ('ALIGN', (3, 1), (3, -1), 'CENTER'), # Risk column - center align
+                ('ALIGN', (4, 1), (4, -1), 'LEFT'),   # Category column - left align
+                ('ALIGN', (5, 1), (5, -1), 'LEFT'),   # TSC criteria column - left align
+                
+                # Improved grid and borders for a more professional look
                 ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#cbd5e1')),  # Lighter grid lines
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')  # Vertical center alignment
+                ('BOX', (0, 0), (-1, -1), 1, HexColor('#475569')),  # Darker outer border
+                ('LINEBELOW', (0, 0), (-1, 0), 1.5, HexColor('#1e3a8a')),  # Thicker line below header
+                
+                # Vertical alignment
+                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),  # Middle align header cells
+                ('VALIGN', (0, 1), (-1, -1), 'TOP')     # Top align content cells to handle longer text
             ]
             
             # Add risk-based row styles
