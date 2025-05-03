@@ -1641,9 +1641,10 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         ]
     else:
         table_style = [
-            # Header row styling
-            ('BACKGROUND', (0, 0), (0, -1), HexColor('#f2f9fe')),
-            ('TEXTCOLOR', (0, 0), (0, -1), HexColor('#2c3e50')),
+            # Header row styling - improved with darker blue for better contrast
+            ('BACKGROUND', (0, 0), (0, -1), HexColor('#1e40af')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.white),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             # Content styling
             ('BACKGROUND', (1, 0), (1, -1), colors.white),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
