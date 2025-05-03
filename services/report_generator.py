@@ -3523,7 +3523,8 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             elements.append(Paragraph("<b>Scan Overview</b>", subheading_style))
         
         # Get repository information
-        repo_name = scan_data.get('repo_url', 'Unknown').split('/')[-1] if '/' in scan_data.get('repo_url', 'Unknown') else scan_data.get('repo_url', 'Unknown')
+        repo_url = scan_data.get('repo_url', 'Unknown')
+        repo_name = repo_url.split('/')[-1] if '/' in repo_url else repo_url
         branch = scan_data.get('branch', 'main')
         scan_timestamp = scan_data.get('timestamp', datetime.now().isoformat())
         region = scan_data.get('region', 'Europe')  # Default to Europe if not specified
