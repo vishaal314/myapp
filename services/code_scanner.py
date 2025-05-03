@@ -1150,6 +1150,10 @@ class CodeScanner:
             # Scan for security measures related to GDPR Art. 32
             security_findings = self._scan_for_security_patterns(content, lines, file_path)
             all_findings.extend(security_findings)
+            
+            # Scan for GDPR principle-specific patterns
+            principle_findings = self._scan_for_gdpr_principles(content, lines, file_path)
+            all_findings.extend(principle_findings)
         
         return all_findings
         
