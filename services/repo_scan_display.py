@@ -187,15 +187,76 @@ def display_repo_scan_results(scan_results: Dict[str, Any], show_download_button
     st.subheader(_("scan.findings", "Scan Findings"))
     
     if findings:
-        # Create a dataframe for better display
+        # Create a dataframe for better display with professional formatting
         df_data = []
         for finding in findings:
+            # Create a more descriptive type label
+            finding_type = finding.get('type', '')
+            if not finding_type:
+                # Try to infer type from other fields
+                if finding.get('description', '').startswith(('API', 'Secret', 'Token', 'Password')):
+                    finding_type = 'Credential'
+                elif 'email' in str(finding.get('value', '')).lower():
+                    finding_type = 'Email Address'
+                elif 'credit' in str(finding.get('value', '')).lower() or 'card' in str(finding.get('value', '')).lower():
+                    finding_type = 'Payment Information'
+                else:
+                    finding_type = 'Sensitive Data'
+            
+            # Format finding value to be more readable
+            finding_value = finding.get('value', '')
+            if finding_value:
+                # Truncate long values
+                if len(str(finding_value)) > 30:
+                    finding_value = str(finding_value)[:27] + '...'
+            else:
+                # Create a contextual description if no value
+                if finding_type in ['API Key', 'Secret Key', 'Password', 'Credential']:
+                    finding_value = 'Exposed Credential'
+                elif finding_type in ['Email', 'Email Address']:
+                    finding_value = 'Email Address'
+                elif finding_type in ['PII', 'Personal Data']:
+                    finding_value = 'Personal Identifiable Information'
+                else:
+                    finding_value = finding.get('description', 'Sensitive Data')
+            
+            # Generate a better location string
+            file_name = finding.get('file_name', '')
+            line_no = finding.get('line_no', finding.get('line', ''))
+            location_text = finding.get('location', '')
+            
+            if file_name:
+                if line_no:
+                    location = f"{file_name}:{line_no}"
+                else:
+                    location = file_name
+            elif location_text:
+                location = location_text
+            else:
+                # Fallback for database fields or other locations
+                location = finding.get('context', 'Application Data')
+            
+            # Get more descriptive reason or generate one
+            reason = finding.get('reason', '')
+            if not reason or reason == 'N/A':
+                if finding.get('description'):
+                    reason = finding.get('description')
+                else:
+                    # Generate based on type and risk level
+                    risk_level = finding.get('risk_level', 'low').lower()
+                    if risk_level == 'high':
+                        reason = f"Critical {finding_type} exposed in source code"
+                    elif risk_level == 'medium':
+                        reason = f"Potentially sensitive {finding_type} detected"
+                    else:
+                        reason = f"Possible {finding_type} found in code"
+            
             df_data.append({
-                'Type': finding.get('type', 'Unknown'),
-                'Value': finding.get('value', 'N/A'),
-                'Location': finding.get('location', 'N/A'),
-                'Risk Level': finding.get('risk_level', 'Low'),
-                'Reason': finding.get('reason', 'N/A')
+                'Type': finding_type or 'Sensitive Data',
+                'Value': finding_value,
+                'Location': location,
+                'Risk Level': finding.get('risk_level', 'Low').capitalize(),
+                'Reason': reason
             })
         
         # Create and style the dataframe
