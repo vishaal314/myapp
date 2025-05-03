@@ -199,13 +199,13 @@ class RiskMeter(Flowable):
         # Risk level indicator (change angle based on risk level)
         angle = 0
         if self.risk_level_for_meter == "Low":
-            angle = 45
+            angle = 135  # Changed from 45 to 135 (reversed)
             indicator_color = colors.green
         elif self.risk_level_for_meter == "Medium":
-            angle = 90
+            angle = 90   # Middle position stays the same
             indicator_color = colors.orange
         elif self.risk_level_for_meter == "High":
-            angle = 135
+            angle = 45   # Changed from 135 to 45 (reversed)
             indicator_color = colors.red
         else: # None
             angle = 0
@@ -224,16 +224,16 @@ class RiskMeter(Flowable):
         circle = Circle(x, y, 5, fillColor=indicator_color, strokeColor=None)
         d.add(circle)
         
-        # Add risk labels in appropriate language
+        # Add risk labels in appropriate language - position reversed to match angle changes
         if self.language == 'nl':
-            d.add(String(self.width/6, 75, "Laag", fontSize=9, fillColor=colors.green))
+            d.add(String(4*self.width/5, 75, "Laag", fontSize=9, fillColor=colors.green))
             d.add(String(self.width/2, 85, "Gemiddeld", fontSize=9, fillColor=colors.orange))
-            d.add(String(4*self.width/5, 75, "Hoog", fontSize=9, fillColor=colors.red))
+            d.add(String(self.width/6, 75, "Hoog", fontSize=9, fillColor=colors.red))
             risk_text = f"{self.risk_level} Risico"
         else:
-            d.add(String(self.width/6, 75, "Low", fontSize=9, fillColor=colors.green))
+            d.add(String(4*self.width/5, 75, "Low", fontSize=9, fillColor=colors.green))
             d.add(String(self.width/2, 85, "Medium", fontSize=9, fillColor=colors.orange))
-            d.add(String(4*self.width/5, 75, "High", fontSize=9, fillColor=colors.red))
+            d.add(String(self.width/6, 75, "High", fontSize=9, fillColor=colors.red))
             risk_text = f"{self.risk_level} Risk"
         
         # Add risk level text
