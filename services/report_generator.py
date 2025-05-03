@@ -1953,20 +1953,21 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 compliance_color = colors.green
                 compliance_score = scan_data.get('compliance_score', 95)
                 
-            # Add overview text
+            # Add overview text with improved formatting for better readability
             if current_lang == 'nl':
-                overview_text = f"""
-                Deze SOC2 compliance scan heeft een score van {compliance_score}/100 opgeleverd, wat wordt beschouwd als 
-                <font color="{compliance_color}">{compliance_status}</font>. De bevindingen zijn hieronder ingedeeld op basis van 
-                Trust Services Criteria (TSC) categorieën om te helpen bij prioritering en remediëring.
-                """
+                overview_text = f"Deze SOC2 compliance scan heeft een score van {compliance_score}/100 opgeleverd, wat wordt beschouwd als <font color=\"{compliance_color}\">{compliance_status}</font>. De bevindingen zijn hieronder ingedeeld op basis van Trust Services Criteria (TSC) categorieën om te helpen bij prioritering en remediëring."
             else:
-                overview_text = f"""
-                This SOC2 compliance scan resulted in a score of {compliance_score}/100, which is considered 
-                <font color="{compliance_color}">{compliance_status}</font>. The findings are categorized below based on 
-                Trust Services Criteria (TSC) categories to help with prioritization and remediation.
-                """
-            elements.append(Paragraph(overview_text, normal_style))
+                overview_text = f"This SOC2 compliance scan resulted in a score of {compliance_score}/100, which is considered <font color=\"{compliance_color}\">{compliance_status}</font>. The findings are categorized below based on Trust Services Criteria (TSC) categories to help with prioritization and remediation."
+            # Use a more compact paragraph style with optimized line width
+            compact_style = ParagraphStyle(
+                'Compact',
+                parent=normal_style,
+                leading=14,     # Slightly tighter line spacing
+                alignment=4,    # Fully justified for cleaner appearance
+                spaceAfter=6,
+                firstLineIndent=0
+            )
+            elements.append(Paragraph(overview_text, compact_style))
             elements.append(Spacer(1, 12))
             
             # Add scanning info
@@ -2235,7 +2236,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1e40af')),  # Darker blue header
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for better contrast
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold headers
-                ('FONTSIZE', (0, 0), (-1, 0), 9),  # Slightly larger header font
+                ('FONTSIZE', (0, 0), (-1, 0), 10),  # Larger header font for better readability
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 8),  # More padding for header
                 ('TOPPADDING', (0, 0), (-1, 0), 8),  # More padding for header
                 
