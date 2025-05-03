@@ -2,6 +2,8 @@ import io
 import os
 import base64
 import math
+import logging
+import uuid
 import streamlit as st
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
@@ -24,10 +26,6 @@ from reportlab.graphics.charts.linecharts import HorizontalLineChart
 from reportlab.graphics.charts.textlabels import Label
 from reportlab.graphics import renderPDF
 from reportlab.graphics.widgets.markers import makeMarker
-import logging
-import uuid
-
-
 def lightenColor(color, factor=0.5):
     """
     Lightens a given ReportLab color by the specified factor.
@@ -97,9 +95,7 @@ def auto_generate_pdf_report(scan_data: Dict[str, Any], save_path: Optional[str]
         if not os.path.exists(save_path):
             os.makedirs(save_path)
             
-        # Import logger
-        import logging
-        logger = logging.getLogger(__name__)
+        # For local logger reference
         import traceback
         
         # For AI Model scans, ensure required fields are present
@@ -194,9 +190,9 @@ def auto_generate_pdf_report(scan_data: Dict[str, Any], save_path: Optional[str]
             return False, f"Error generating report: {str(report_error)}", None
             
     except Exception as e:
-        logger.error(f"Failed to auto-generate report: {str(e)}")
+        print(f"Failed to auto-generate report: {str(e)}")
         import traceback
-        logger.error(traceback.format_exc())
+        print(traceback.format_exc())
         return False, f"Failed to auto-generate report: {str(e)}", None
 
 class RiskMeter(Flowable):
