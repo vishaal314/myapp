@@ -2985,9 +2985,23 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     metadata_style = styles['Normal'].clone('MetadataStyle', spaceBefore=6, spaceAfter=6)
     
     # Extract all possible metadata fields with better fallbacks
-    repo_url = scan_data.get('repo_url', scan_data.get('repository', 'Not specified'))
+    repo_url = scan_data.get('repo_url', scan_data.get('repository', scan_data.get('github_url', '')))
     branch = scan_data.get('branch', 'main')
-    domain = scan_data.get('domain', scan_data.get('url', scan_data.get('repository', 'Not specified')))
+    
+    # More comprehensive domain fallback logic
+    domain = scan_data.get('domain', scan_data.get('url', ''))
+    
+    # If it's a repository scan, prioritize repo URL as the domain
+    if ('github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code' in scan_type.lower()) and repo_url:
+        domain = repo_url
+    
+    # Final fallback to repository name if available
+    if not domain and 'repository' in scan_data:
+        domain = scan_data.get('repository')
+    
+    # Use scan type if no proper URL/domain is found
+    if not domain:
+        domain = f"Scan Type: {scan_type}"
     
     # Get username from scan_data or session state if available with more fallbacks
     username = scan_data.get('username', 'Not available')
@@ -3034,24 +3048,39 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     if current_lang == 'nl':
         metadata_data = [
             ["Scan Metadata", ""],
-            ["URL/Domein", domain],
-            ["Gebruikersnaam", username],
-            ["Regio", region],
-            ["Scan Datum", scan_date]
+            ["Scan Type", scan_type],
+            ["URL/Domein", domain if domain else "N/A"],
         ]
     else:
         metadata_data = [
             ["Scan Metadata", ""],
-            ["URL/Domain", domain],
-            ["Username", username],
-            ["Region", region],
-            ["Scan Date", scan_date]
+            ["Scan Type", scan_type],
+            ["URL/Domain", domain if domain else "N/A"],
         ]
     
-    # Add repo-specific fields for GitHub scans
-    if 'github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code efficiency' in scan_type.lower():
-        metadata_data.append(["Repository URL", repo_url])
-        metadata_data.append(["Branch", branch])
+    # Add repo-specific fields for GitHub scans but avoid duplicate data
+    if ('github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code' in scan_type.lower()) and repo_url:
+        # Only add Repository URL if it's different from the domain
+        if repo_url != domain:
+            if current_lang == 'nl':
+                metadata_data.append(["Repository URL", repo_url])
+            else:
+                metadata_data.append(["Repository URL", repo_url])
+        # Add branch information
+        if current_lang == 'nl':
+            metadata_data.append(["Branch", branch])
+        else:
+            metadata_data.append(["Branch", branch])
+    
+    # Add username, region and date
+    if current_lang == 'nl':
+        metadata_data.append(["Gebruikersnaam", username])
+        metadata_data.append(["Regio", region])
+        metadata_data.append(["Scan Datum", scan_date])
+    else:
+        metadata_data.append(["Username", username])
+        metadata_data.append(["Region", region])
+        metadata_data.append(["Scan Date", scan_date])
     
     # Create and style the metadata table
     metadata_table = Table(metadata_data, colWidths=[1.5*inch, 4*inch])
