@@ -442,6 +442,65 @@ GDPR_PRINCIPLE_PATTERNS = {
     }
 }
 
+# Netherlands-specific UAVG Patterns (Dutch implementation of GDPR)
+NL_UAVG_PATTERNS = {
+    # Dutch-specific retention requirements
+    "nl_retention_period": {
+        "pattern": r'(?i)\b(?:bewaar(?:termijn|plicht)|bewaartermijnen|wettelijke bewaartermijn|fiscale bewaarplicht|administratieplicht)\b',
+        "description": "Dutch Retention Period Requirements (UAVG)",
+        "gdpr_articles": ["article_5_1_e"],
+        "uavg_articles": ["article_46"],
+        "risk_level": "high",
+        "remediation": "Ensure compliance with Dutch specific retention periods (Fiscale Bewaarplicht 7 years, Medical data 15-20 years)",
+        "gdpr_principle": "storage_limitation",
+        "country_specific": "Netherlands"
+    },
+    # Dutch-specific BSN (Citizen Service Number) handling
+    "nl_bsn_processing": {
+        "pattern": r'(?i)\b(?:BSN|burgerservicenummer|sofinummer|persoonsnummer)\b',
+        "description": "Dutch BSN Processing Rules (UAVG)",
+        "gdpr_articles": ["article_9"],
+        "uavg_articles": ["article_46"],
+        "risk_level": "high",
+        "remediation": "Process BSN only when legally authorized under Dutch law (UAVG article 46)",
+        "gdpr_principle": "lawfulness_fairness_transparency",
+        "country_specific": "Netherlands"
+    },
+    # Dutch-specific data breach notification requirements
+    "nl_breach_notification": {
+        "pattern": r'(?i)\b(?:datalek|data lek|meldplicht datalekken|AP melden|Autoriteit Persoonsgegevens|melden datalek)\b',
+        "description": "Dutch Data Breach Notification Requirements (UAVG)",
+        "gdpr_articles": ["article_33", "article_34"],
+        "uavg_articles": ["article_33"],
+        "risk_level": "high",
+        "remediation": "Implement Dutch-specific data breach notification procedures (72-hour deadline to Dutch DPA)",
+        "gdpr_principle": "integrity_confidentiality",
+        "country_specific": "Netherlands"
+    },
+    # Dutch-specific data sharing regulations
+    "nl_data_sharing": {
+        "pattern": r'(?i)\b(?:gegevensuitwisseling|doorgifte gegevens|gegevens delen|delen van persoonsgegevens|internationale doorgifte)\b',
+        "description": "Dutch Data Sharing Regulations (UAVG)",
+        "gdpr_articles": ["article_44", "article_45", "article_46"],
+        "uavg_articles": ["article_47"],
+        "risk_level": "medium",
+        "remediation": "Ensure compliance with Dutch-specific regulations for data sharing, particularly with non-EU countries",
+        "gdpr_principle": "integrity_confidentiality",
+        "country_specific": "Netherlands"
+    },
+    # Dutch DPA (Autoriteit Persoonsgegevens) specific requirements
+    "nl_dpa_requirements": {
+        "pattern": r'(?i)\b(?:Autoriteit Persoonsgegevens|AP|Dutch DPA|toezichthoudende autoriteit|CBP)\b',
+        "description": "Dutch DPA Specific Requirements (UAVG)",
+        "gdpr_articles": ["article_51", "article_57", "article_58"],
+        "uavg_articles": ["article_6", "article_7", "article_15"],
+        "risk_level": "medium",
+        "remediation": "Follow Dutch DPA (Autoriteit Persoonsgegevens) specific guidelines and reporting requirements",
+        "gdpr_principle": "accountability",
+        "country_specific": "Netherlands"
+    }
+}
+
 def map_finding_to_gdpr_articles(finding_type: str, finding_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     Map a finding to relevant GDPR articles based on its type and content.

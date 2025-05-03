@@ -14,7 +14,7 @@ from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
 from utils.gdpr_compliance import (
     PII_PATTERNS, DSAR_PATTERNS, CONSENT_PATTERNS, SECURITY_PATTERNS, GDPR_PRINCIPLE_PATTERNS,
-    GDPR_ARTICLES, map_finding_to_gdpr_articles, generate_remediation_suggestion,
+    NL_UAVG_PATTERNS, GDPR_ARTICLES, map_finding_to_gdpr_articles, generate_remediation_suggestion,
     calculate_gdpr_risk_score, calculate_compliance_score, get_remediation_priority
 )
 
@@ -1571,6 +1571,109 @@ class CodeScanner:
                     principle_findings.append(finding)
         
         return principle_findings
+        
+    def _scan_for_nl_uavg_patterns(self, content: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
+        """
+        Scan for Netherlands-specific UAVG patterns:
+        1. Dutch retention period requirements
+        2. BSN (citizen service number) processing rules
+        3. Data breach notification requirements 
+        4. Data sharing regulations
+        5. Dutch DPA (Autoriteit Persoonsgegevens) requirements
+        
+        Args:
+            content: The text content to scan
+            lines: Content split into lines
+            file_path: Original file path for reference
+            
+        Returns:
+            List of Dutch UAVG-related findings
+        """
+        # Only perform these scans for Dutch region
+        if self.region.lower() != "netherlands":
+            return []
+            
+        nl_findings = []
+        
+        # Scan each line for Netherlands-specific patterns
+        for i, line in enumerate(lines):
+            line_num = i + 1
+            
+            # Check against each NL-specific pattern
+            for pattern_key, pattern_info in NL_UAVG_PATTERNS.items():
+                match = re.search(pattern_info['pattern'], line)
+                if match:
+                    # Get GDPR principle category (if applicable)
+                    gdpr_principle = pattern_info.get('gdpr_principle', 'unknown')
+                    
+                    # Map to GDPR and UAVG articles
+                    gdpr_articles = pattern_info.get('gdpr_articles', [])
+                    uavg_articles = pattern_info.get('uavg_articles', [])
+                    
+                    # Create finding
+                    finding = {
+                        'type': 'nl_uavg',
+                        'pattern_key': pattern_key,
+                        'value': line.strip(),
+                        'location': f'Line {line_num} (code)',
+                        'risk_level': pattern_info.get('risk_level', 'medium'),
+                        'description': pattern_info.get('description', f'Dutch UAVG Requirement: {pattern_key.replace("nl_", "").replace("_", " ").title()}'),
+                        'gdpr_articles': gdpr_articles,
+                        'uavg_articles': uavg_articles,
+                        'gdpr_principle': gdpr_principle,
+                        'country_specific': 'Netherlands',
+                        'reason': pattern_info.get('remediation', 'Ensure Dutch UAVG compliance'),
+                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
+                    }
+                    
+                    # Generate article mappings (if applicable)
+                    article_mappings = map_finding_to_gdpr_articles('principle', finding)
+                    if article_mappings:
+                        finding['article_mappings'] = article_mappings
+                    
+                    nl_findings.append(finding)
+        
+        # Also scan for multi-line NL-specific patterns
+        # Process in chunks of 5 lines for efficiency
+        for i in range(0, len(lines), 5):
+            chunk = "\n".join(lines[i:i+5])
+            chunk_start_line = i + 1
+            chunk_end_line = min(i + 5, len(lines))
+            
+            for pattern_key, pattern_info in NL_UAVG_PATTERNS.items():
+                match = re.search(pattern_info['pattern'], chunk, re.DOTALL | re.IGNORECASE)
+                if match:
+                    # Get GDPR principle category (if applicable)
+                    gdpr_principle = pattern_info.get('gdpr_principle', 'unknown')
+                    
+                    # Map to GDPR and UAVG articles
+                    gdpr_articles = pattern_info.get('gdpr_articles', [])
+                    uavg_articles = pattern_info.get('uavg_articles', [])
+                    
+                    # Create finding
+                    finding = {
+                        'type': 'nl_uavg',
+                        'pattern_key': pattern_key,
+                        'value': match.group(0).strip(),
+                        'location': f'Lines {chunk_start_line}-{chunk_end_line} (code)',
+                        'risk_level': pattern_info.get('risk_level', 'medium'),
+                        'description': pattern_info.get('description', f'Dutch UAVG Requirement: {pattern_key.replace("nl_", "").replace("_", " ").title()}'),
+                        'gdpr_articles': gdpr_articles,
+                        'uavg_articles': uavg_articles,
+                        'gdpr_principle': gdpr_principle,
+                        'country_specific': 'Netherlands',
+                        'reason': pattern_info.get('remediation', 'Ensure Dutch UAVG compliance'),
+                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
+                    }
+                    
+                    # Generate article mappings (if applicable)
+                    article_mappings = map_finding_to_gdpr_articles('principle', finding)
+                    if article_mappings:
+                        finding['article_mappings'] = article_mappings
+                    
+                    nl_findings.append(finding)
+        
+        return nl_findings
     
     def _enhance_finding_with_gdpr_data(self, finding: Dict[str, Any]) -> Dict[str, Any]:
         """
