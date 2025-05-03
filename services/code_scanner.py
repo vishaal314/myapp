@@ -48,6 +48,10 @@ class CodeScanner:
         self.scan_checkpoint_data = {}
         self.is_running = False
         self.progress_callback = None
+        
+        # Scan metrics for reporting
+        self.total_lines_scanned = 0
+        self.principles_checked = set()  # Track unique GDPR principles checked
         # Support for multiple languages
         self.extensions = extensions or [
             # Core programming languages
@@ -717,6 +721,10 @@ class CodeScanner:
             
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
+                
+            # Count lines of code for reporting
+            lines_count = content.count('\n') + 1
+            self.total_lines_scanned += lines_count
                 
             # First, extract code and comments separately
             code_content = content
@@ -1501,6 +1509,12 @@ class CodeScanner:
             List of GDPR principle-related findings
         """
         principle_findings = []
+        
+        # Keep track of principles we've checked for reporting
+        for pattern_key, pattern_info in GDPR_PRINCIPLE_PATTERNS.items():
+            gdpr_principle = pattern_info.get('gdpr_principle', 'unknown')
+            if gdpr_principle and gdpr_principle not in self.principles_checked:
+                self.principles_checked.add(gdpr_principle)
         
         # Scan each line for GDPR principle patterns
         for i, line in enumerate(lines):
