@@ -1862,10 +1862,21 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                             steps_title = "Implementatiestappen:"
                         else:
                             steps_title = "Implementation Steps:"
-                        elements.append(Paragraph(steps_title, bullet_style))
+                        
+                        # Create a local steps style rather than using bullet_style
+                        steps_style = ParagraphStyle(
+                            'StepsStyle',
+                            parent=normal_style,
+                            leftIndent=20,
+                            firstLineIndent=0,
+                            spaceBefore=2,
+                            spaceAfter=2
+                        )
+                        
+                        elements.append(Paragraph(steps_title, steps_style))
                         
                         for step in steps:
-                            elements.append(Paragraph(f"• {step}", bullet_style))
+                            elements.append(Paragraph(f"• {step}", steps_style))
                     
                     elements.append(Spacer(1, 8))
             
