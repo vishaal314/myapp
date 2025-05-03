@@ -1912,16 +1912,42 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             elements.append(Spacer(1, 8))
             
             # Add compliance overview
-            compliance_score = scan_data.get('compliance_score', 0)
-            if compliance_score >= 80:
-                compliance_status = "Good"
-                compliance_color = colors.green
-            elif compliance_score >= 60:
-                compliance_status = "Needs Review"
-                compliance_color = colors.orange
-            else:
+            high_risk_count = scan_data.get('high_risk_count', 0)
+            total_findings = len(scan_data.get('findings', []))
+            
+            # More aggressive risk assessment to properly show Critical status
+            # when there are many findings, especially high-risk ones
+            if high_risk_count > 0:
+                # If any high risk findings exist, set status to Critical
                 compliance_status = "Critical"
                 compliance_color = colors.red
+                # Adjust compliance score based on high risk count
+                adjusted_score = max(20, min(50, 50 - high_risk_count))
+                compliance_score = scan_data.get('compliance_score', adjusted_score)
+            elif total_findings > 20:
+                # Many findings should indicate at least "Needs Review"
+                compliance_status = "Needs Review"
+                compliance_color = colors.orange
+                # Adjust compliance score based on total findings
+                adjusted_score = max(50, min(70, 70 - (total_findings / 10)))
+                compliance_score = scan_data.get('compliance_score', adjusted_score)
+            elif total_findings > 0:
+                # Some findings - still use original score but ensure status matches
+                compliance_score = scan_data.get('compliance_score', 75)
+                if compliance_score >= 80:
+                    compliance_status = "Good"
+                    compliance_color = colors.green
+                elif compliance_score >= 60:
+                    compliance_status = "Needs Review"
+                    compliance_color = colors.orange
+                else:
+                    compliance_status = "Critical"
+                    compliance_color = colors.red
+            else:
+                # No findings
+                compliance_status = "Good"
+                compliance_color = colors.green
+                compliance_score = scan_data.get('compliance_score', 95)
                 
             # Add overview text
             if current_lang == 'nl':
@@ -2004,33 +2030,90 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 tsc_chart_title = "Findings by SOC2 TSC Category"
             elements.append(Paragraph(tsc_chart_title, subheading_style))
             
-            # Now create a horizontal bar chart for findings by TSC category
+            # Now create a professional horizontal bar chart for findings by TSC category
             data = []
             names = []
-            for category, info in tsc_categories.items():
-                if info['count'] > 0:
-                    data.append(info['count'])
-                    names.append(info['name'])
+            colors_list = []
+            
+            # Only include categories with findings and sort by count descending
+            tsc_with_findings = [(k, v) for k, v in tsc_categories.items() if v['count'] > 0]
+            tsc_with_findings.sort(key=lambda x: x[1]['count'], reverse=True)
+            
+            for category, info in tsc_with_findings:
+                data.append(info['count'])
+                names.append(info['name'])
+                colors_list.append(info['color'])
             
             if data:
                 # Add the chart
-                drawing = Drawing(400, 200)
+                drawing = Drawing(460, 200)
+                
+                # Create a nicer horizontal bar chart with category colors
                 bc = HorizontalBarChart()
-                bc.x = 50
-                bc.y = 50
-                bc.height = 120
+                bc.x = 100  # More space for labels
+                bc.y = 40
+                bc.height = 130
                 bc.width = 300
                 bc.data = [data]
                 bc.strokeColor = colors.black
                 
+                # Better scale
                 bc.valueAxis.valueMin = 0
-                bc.valueAxis.valueMax = max(data) + 5
-                bc.valueAxis.valueStep = 5
-                bc.categoryAxis.labels.boxAnchor = 'w'
-                bc.categoryAxis.categoryNames = names
-                bc.bars[0].fillColor = colors.lightblue
+                max_value = max(data)
+                bc.valueAxis.valueMax = max_value + (5 - max_value % 5)  # Round to nearest 5
+                bc.valueAxis.valueStep = min(5, max(1, max_value // 5))
+                bc.valueAxis.labels.fontName = 'Helvetica'
+                bc.valueAxis.labels.fontSize = 8
                 
+                # Better category labels
+                bc.categoryAxis.labels.boxAnchor = 'e'
+                bc.categoryAxis.labels.dx = -10
+                bc.categoryAxis.labels.fontName = 'Helvetica'
+                bc.categoryAxis.labels.fontSize = 9
+                bc.categoryAxis.categoryNames = names
+                
+                # Custom colors for bars
+                for i, color in enumerate(colors_list):
+                    bc.bars[0].fillColor = color
+                
+                # Add a light grid
+                bc.valueAxis.gridStrokeColor = HexColor('#e5e7eb')
+                bc.valueAxis.gridStrokeWidth = 0.5
+                bc.valueAxis.visibleGrid = True
+                
+                # Title at the top
+                title = String(230, 180, "Findings by SOC2 TSC Category", 
+                              fontSize=12, 
+                              fontName='Helvetica-Bold',
+                              fillColor=colors.black,
+                              textAnchor='middle')
+                drawing.add(title)
+                
+                # Add data labels on the bars
+                for i, value in enumerate(data):
+                    label = String(
+                        bc.x + bc.width/2 + 40,  # Position after the bar
+                        bc.y + bc.height - ((i + 0.5) * bc.height / len(data)),
+                        str(value),
+                        fontSize=9,
+                        fillColor=colors.black,
+                        textAnchor='start'
+                    )
+                    drawing.add(label)
+                
+                # Add a subtle border around the chart area
+                chart_border = Rect(
+                    bc.x - 5, bc.y - 5, 
+                    bc.width + 70, bc.height + 10,
+                    fillColor=None,
+                    strokeColor=HexColor('#e5e7eb'),
+                    strokeWidth=0.5
+                )
+                drawing.add(chart_border)
+                
+                # Add the bar chart last so it appears on top
                 drawing.add(bc)
+                
                 elements.append(drawing)
             else:
                 elements.append(Paragraph("No TSC category data available", normal_style))
