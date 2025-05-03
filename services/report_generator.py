@@ -307,25 +307,73 @@ class RiskMeter(Flowable):
         )
         d.add(pivot)
         
-        # Add risk level text below gauge
-        risk_label = String(
-            gauge_center_x, gauge_center_y - 25, 
-            self.risk_level,
-            fontSize=14, fillColor=main_color, textAnchor='middle'
-        )
-        d.add(risk_label)
-        
-        # Add risk labels in appropriate language - position reversed to match angle changes
-        if self.language == 'nl':
-            d.add(String(4*self.width/5, 75, "Laag", fontSize=9, fillColor=colors.green))
-            d.add(String(self.width/2, 85, "Gemiddeld", fontSize=9, fillColor=colors.orange))
-            d.add(String(self.width/6, 75, "Hoog", fontSize=9, fillColor=colors.red))
-            risk_text = f"{self.risk_level} Risico"
+        # Add risk level text below gauge with modern visual styling
+        # Create a visual badge-style risk indicator
+        # First, determine the modern category name based on risk level
+        if self.risk_level.lower() in ['high', 'hoog']:
+            if self.language == 'nl':
+                category_text = "Kritisch"
+                full_risk_text = "Kritisch Risico"
+            else:
+                category_text = "Critical"
+                full_risk_text = "Critical Risk"
+            badge_color = HexColor('#ef4444')  # Red
+        elif self.risk_level.lower() in ['medium', 'gemiddeld']:
+            if self.language == 'nl':
+                category_text = "Verhoogd"
+                full_risk_text = "Verhoogd Risico"
+            else:
+                category_text = "Elevated"
+                full_risk_text = "Elevated Risk"
+            badge_color = HexColor('#f97316')  # Orange
+        elif self.risk_level.lower() in ['low', 'laag']:
+            if self.language == 'nl':
+                category_text = "Matig"
+                full_risk_text = "Matig Risico"
+            else:
+                category_text = "Moderate"
+                full_risk_text = "Moderate Risk"
+            badge_color = HexColor('#fbbd23')  # Amber
         else:
-            d.add(String(4*self.width/5, 75, "Low", fontSize=9, fillColor=colors.green))
-            d.add(String(self.width/2, 85, "Medium", fontSize=9, fillColor=colors.orange))
-            d.add(String(self.width/6, 75, "High", fontSize=9, fillColor=colors.red))
-            risk_text = f"{self.risk_level} Risk"
+            if self.language == 'nl':
+                category_text = "Laag"
+                full_risk_text = "Laag Risico"
+            else:
+                category_text = "Low"
+                full_risk_text = "Low Risk" 
+            badge_color = HexColor('#10b981')  # Green
+        
+        # Draw badge background (rounded rectangle)
+        badge_width = 80
+        badge_height = 26
+        badge_x = gauge_center_x - badge_width/2
+        badge_y = gauge_center_y - 35
+        
+        # Create badge with rounded corners
+        badge = RoundRect(
+            badge_x, badge_y, badge_width, badge_height, 
+            radius=5, fillColor=badge_color
+        )
+        d.add(badge)
+        
+        # Add risk level text on the badge
+        d.add(String(
+            gauge_center_x, badge_y + 7, 
+            category_text,
+            fontSize=12, fillColor=colors.white, textAnchor='middle'
+        ))
+        
+        # Add risk level labels on the gauge with more modern terminology
+        if self.language == 'nl':
+            d.add(String(4*self.width/5, 75, "Laag", fontSize=9, fillColor=HexColor('#10b981')))
+            d.add(String(self.width/2, 85, "Matig", fontSize=9, fillColor=HexColor('#fbbd23')))
+            d.add(String(self.width/6, 75, "Kritisch", fontSize=9, fillColor=HexColor('#ef4444')))
+            risk_text = full_risk_text
+        else:
+            d.add(String(4*self.width/5, 75, "Low", fontSize=9, fillColor=HexColor('#10b981')))
+            d.add(String(self.width/2, 85, "Moderate", fontSize=9, fillColor=HexColor('#fbbd23')))
+            d.add(String(self.width/6, 75, "Critical", fontSize=9, fillColor=HexColor('#ef4444')))
+            risk_text = full_risk_text
         
         # Add risk level text
         d.add(String(self.width/2-20, 10, risk_text, fontSize=12, fillColor=main_color))
