@@ -3136,8 +3136,21 @@ else:
                             
                             # Show completion status
                             progress_bar.progress(1.0)
-                            file_count = len(scan_results)
+                            file_count = result.get('files_scanned', 0)
                             status_text.text(f"Completed repository scan. Scanned {file_count} files.")
+                            
+                            # Save the complete scan result to session state for immediate display
+                            st.session_state.repo_scan_results = result
+                            st.session_state.repo_scan_complete = True
+                            
+                            # Display the repository scan results immediately
+                            from services.repo_scan_display import display_repo_scan_results
+                            
+                            # Show success message and display results
+                            st.success(f"Repository scan completed successfully! Displaying results and PDF report.")
+                            
+                            # Use the enhanced display function
+                            display_repo_scan_results(result, show_download_button=True)
                             
                         # Standard directory or file scanning
                         elif len(file_paths) == 1 and os.path.isdir(file_paths[0]):
