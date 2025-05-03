@@ -3551,7 +3551,9 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             
             # Only add repository info if relevant
             if repo_name and repo_name != 'Unknown':
-                scan_overview_data.append(["Repository", repo_name])
+                # Add full repository URL and then the name
+                scan_overview_data.append(["Repository URL", repo_url])
+                scan_overview_data.append(["Repository Naam", repo_name])
                 scan_overview_data.append(["Branch", branch])
                 
             # Add lines scanned information if available
@@ -3567,7 +3569,9 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             
             # Only add repository info if relevant
             if repo_name and repo_name != 'Unknown':
-                scan_overview_data.append(["Repository", repo_name])
+                # Add full repository URL and then the name
+                scan_overview_data.append(["Repository URL", repo_url])
+                scan_overview_data.append(["Repository Name", repo_name])
                 scan_overview_data.append(["Branch", branch])
                 
             # Add lines scanned information if available
