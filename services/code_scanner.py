@@ -578,6 +578,65 @@ class CodeScanner:
             if elapsed_time >= self.max_timeout:
                 raise TimeoutError(f"Overall scan timeout reached after {elapsed_time:.1f} seconds")
         
+        # PERFORMANCE OPTIMIZATION 1: Skip binary files and large files
+        try:
+            # Check file extension first for quick filtering
+            _, ext = os.path.splitext(file_path)
+            
+            # Skip common binary file extensions
+            binary_extensions = [
+                '.exe', '.dll', '.so', '.dylib', '.bin', '.o', '.obj',
+                '.class', '.pyc', '.pyo', '.jpg', '.jpeg', '.png', '.gif',
+                '.bmp', '.ico', '.svg', '.mp3', '.mp4', '.avi', '.mov',
+                '.pdf', '.zip', '.tar', '.gz', '.rar', '.7z', '.jar',
+                '.war', '.db', '.sqlite', '.sqlite3', '.mdb', '.accdb'
+            ]
+            
+            if ext.lower() in binary_extensions:
+                return {
+                    "status": "skipped",
+                    "reason": f"Binary file extension: {ext}",
+                    "file_name": os.path.basename(file_path),
+                    "pii_found": [],
+                    "pii_count": 0
+                }
+                
+            # Check file size - hard limit at 1MB for better performance
+            file_size = os.path.getsize(file_path)
+            max_size_bytes = 1 * 1024 * 1024  # 1MB limit for any individual file
+            if file_size > max_size_bytes:
+                return {
+                    "status": "skipped",
+                    "reason": f"File too large ({file_size / (1024*1024):.1f} MB)",
+                    "file_name": os.path.basename(file_path),
+                    "pii_found": [],
+                    "pii_count": 0
+                }
+                
+            # For non-text extensions, check content to determine if it's binary
+            if ext.lower() not in self.extensions:
+                with open(file_path, 'rb') as f:
+                    chunk = f.read(1024)
+                    # Simple heuristic: if the chunk contains more than 10% non-ASCII characters or NUL bytes, it's likely binary
+                    binary_chars = sum(1 for b in chunk if b > 127 or b == 0)
+                    if binary_chars > len(chunk) * 0.1:
+                        return {
+                            "status": "skipped",
+                            "reason": "Binary file content detected",
+                            "file_name": os.path.basename(file_path),
+                            "pii_found": [],
+                            "pii_count": 0
+                        }
+        except Exception as e:
+            # If we can't read the file or analyze it, skip it
+            return {
+                "status": "error",
+                "error": f"Failed to check file type: {str(e)}",
+                "file_name": os.path.basename(file_path),
+                "pii_found": [],
+                "pii_count": 0
+            }
+        
         # Create a event for timeout notification
         event = threading.Event()
         result = {"status": "timeout", "file_name": os.path.basename(file_path)}
@@ -606,7 +665,9 @@ class CodeScanner:
             return {
                 "status": "timeout",
                 "file_name": os.path.basename(file_path),
-                "error": f"Scan timed out after {timeout} seconds"
+                "error": f"Scan timed out after {timeout} seconds",
+                "pii_found": [],
+                "pii_count": 0
             }
         
         return result

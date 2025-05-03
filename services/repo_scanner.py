@@ -449,10 +449,20 @@ class RepoScanner:
         """
         start_time = time.time()
         
+        # Performance improvement logging
+        logger.info(f"Starting optimized repository scan for {repo_url}")
+        
+        if progress_callback:
+            progress_callback(0, 100, f"Cloning repository: {repo_url}")
+        
         # First, clone the repository
         clone_result = self.clone_repository(repo_url, branch, auth_token)
         
         if clone_result['status'] != 'success':
+            logger.warning(f"Failed to clone repository: {clone_result['message']}")
+            if progress_callback:
+                progress_callback(100, 100, f"Error: {clone_result['message']}")
+                
             return {
                 'scan_type': 'repository',
                 'status': 'error',
@@ -466,49 +476,120 @@ class RepoScanner:
         
         repo_path = clone_result['repo_path']
         
+        # Log cloning performance
+        clone_time = time.time() - start_time
+        logger.info(f"Repository cloned in {clone_time:.2f} seconds")
+        
+        if progress_callback:
+            progress_callback(10, 100, f"Repository cloned successfully. Starting scan...")
+        
         # Now scan the repository using the code scanner
         try:
-            # Configure ignore patterns specific to repositories
+            # Configure improved ignore patterns specific to repositories
             ignore_patterns = [
-                "**/.git/**",        # Git internals
-                "**/node_modules/**", # Node.js dependencies
-                "**/__pycache__/**",  # Python cache
-                "**/venv/**",         # Python virtual environment
-                "**/env/**",          # Python virtual environment
-                "**/build/**",        # Build artifacts
-                "**/dist/**",         # Distribution artifacts
-                "**/*.min.js",        # Minified JavaScript
-                "**/*.pyc",           # Python compiled files
-                "**/*.pyo",           # Python optimized files
-                "**/*.class",         # Java compiled files
-                "**/.DS_Store",       # macOS metadata
-                "**/Thumbs.db"        # Windows metadata
+                # Git and version control
+                "**/.git/**",           # Git internals
+                "**/.svn/**",           # SVN internals
+                "**/.hg/**",            # Mercurial internals
+                "**/.bzr/**",           # Bazaar internals
+                
+                # Dependencies and packages
+                "**/node_modules/**",   # Node.js dependencies
+                "**/bower_components/**", # Bower components
+                "**/jspm_packages/**",  # JSPM packages
+                "**/vendor/**",         # Vendor packages (PHP, Ruby)
+                "**/packages/**",       # Generic packages directory
+                "**/Pods/**",           # CocoaPods
+                "**/dist/**",           # Distribution artifacts
+                "**/build/**",          # Build artifacts
+                
+                # Python specific
+                "**/__pycache__/**",    # Python cache
+                "**/venv/**",           # Python virtual environment
+                "**/env/**",            # Python virtual environment
+                "**/*.pyc",             # Python compiled files
+                "**/*.pyo",             # Python optimized files
+                
+                # Java specific
+                "**/target/**",         # Maven build directory
+                "**/bin/**",            # Binary directory
+                "**/build/**",          # Gradle build directory
+                "**/*.class",           # Java compiled files
+                
+                # JavaScript and web specific
+                "**/*.min.js",          # Minified JavaScript
+                "**/*.min.css",         # Minified CSS
+                "**/bundle.js",         # Bundled JavaScript
+                "**/coverage/**",       # Code coverage reports
+                
+                # IDE and system files
+                "**/.idea/**",          # IntelliJ IDEA
+                "**/.vscode/**",        # VS Code
+                "**/.DS_Store",         # macOS metadata
+                "**/Thumbs.db",         # Windows metadata
+                
+                # Common binary file extensions
+                "**/*.jpg", "**/*.jpeg", "**/*.png", "**/*.gif", "**/*.bmp", "**/*.ico",
+                "**/*.pdf", "**/*.zip", "**/*.tar", "**/*.gz", "**/*.rar", "**/*.7z",
+                "**/*.exe", "**/*.dll", "**/*.so", "**/*.dylib", "**/*.jar", "**/*.war",
+                "**/*.ear", "**/*.db", "**/*.sqlite", "**/*.sqlite3"
             ]
             
             # Pass the progress callback to the code scanner
             if progress_callback:
-                self.code_scanner.set_progress_callback(progress_callback)
+                # Create a wrapper function to offset the progress (10-90% range)
+                def adjusted_progress_callback(current, total, current_file):
+                    adjusted_progress = 10 + int((current / total) * 80)
+                    progress_callback(adjusted_progress, 100, f"Scanning file {current}/{total}: {current_file}")
+                    
+                self.code_scanner.set_progress_callback(adjusted_progress_callback)
             
-            # Scan the directory with performance optimization
+            # Measure scan time separately
+            scan_start_time = time.time()
+            
+            # Scan the directory with optimized performance settings
             scan_results = self.code_scanner.scan_directory(
                 directory_path=repo_path,
                 ignore_patterns=ignore_patterns,
-                max_file_size_mb=20,  # Reduce max file size from 50MB to 20MB
+                max_file_size_mb=20,     # Limit max file size to 20MB
                 continue_from_checkpoint=True,
-                max_files=500  # Limit to 500 files maximum for better performance
+                max_files=500            # Limit to 500 files maximum for better performance
             )
             
+            # Log scan performance
+            scan_time = time.time() - scan_start_time
+            total_time = time.time() - start_time
+            
+            logger.info(f"Repository scanning completed in {scan_time:.2f} seconds")
+            logger.info(f"Total process time: {total_time:.2f} seconds")
+            logger.info(f"Files scanned: {scan_results.get('files_scanned', 0)}")
+            logger.info(f"Files skipped: {scan_results.get('files_skipped', 0)}")
+            logger.info(f"Findings: {scan_results.get('total_findings', 0)}")
+            
+            if progress_callback:
+                progress_callback(90, 100, "Finalizing results...")
+            
             # Add repository metadata
+            scan_results['scan_type'] = 'repository'
             scan_results['repo_url'] = repo_url
             scan_results['branch'] = branch or 'default'
             scan_results['repository_metadata'] = clone_result.get('metadata', {})
             scan_results['scan_time'] = datetime.now().isoformat()
             scan_results['process_time_seconds'] = time.time() - start_time
+            scan_results['clone_time_seconds'] = clone_time
+            scan_results['scan_time_seconds'] = scan_time
+            
+            if progress_callback:
+                progress_callback(100, 100, "Scan completed successfully")
             
             return scan_results
             
         except Exception as e:
             logger.error(f"Error scanning repository: {str(e)}")
+            
+            if progress_callback:
+                progress_callback(100, 100, f"Error: {str(e)}")
+                
             return {
                 'scan_type': 'repository',
                 'status': 'error',
