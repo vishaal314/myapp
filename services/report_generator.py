@@ -1768,33 +1768,34 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     elements.append(Paragraph(risk_text, normal_style))
     elements.append(Spacer(1, 12))
     
-    # Add sustainability compliance section - translated
-    if current_lang == 'nl':
-        sustainability_title = _('report.sustainability_compliance', 'Gegevens Duurzaamheid Naleving')
-    else:
-        sustainability_title = _('report.sustainability_compliance', 'Data Sustainability Compliance')
-    elements.append(Paragraph(sustainability_title, subheading_style))
-    elements.append(Spacer(1, 6))
-    
-    # Add description of what sustainability means in this context - translated
-    if current_lang == 'nl':
-        sustainability_desc = """
-        Gegevensduurzaamheid meet hoe efficiënt uw organisatie persoonlijke gegevens beheert in overeenstemming met de AVG-principes 
-        van gegevensminimalisatie, bewaartermijnen en doelbinding. Een hogere score duidt op betere 
-        langetermijnpraktijken voor gegevensbeheer.
-        """
-    else:
-        sustainability_desc = """
-        Data sustainability measures how efficiently your organization manages personal data in compliance with GDPR principles of 
-        data minimization, storage limitation, and purpose limitation. A higher score indicates better long-term data governance practices.
-        """
-    elements.append(Paragraph(sustainability_desc, normal_style))
-    elements.append(Spacer(1, 6))
-    
-    # Add the sustainability meter with language support
-    sustainability_meter = SustainabilityMeter(sustainability_score, language=current_lang)
-    elements.append(sustainability_meter)
-    elements.append(Spacer(1, 12))
+    # Add sustainability compliance section - translated (except for SOC2 reports)
+    if report_format != "soc2":
+        if current_lang == 'nl':
+            sustainability_title = _('report.sustainability_compliance', 'Gegevens Duurzaamheid Naleving')
+        else:
+            sustainability_title = _('report.sustainability_compliance', 'Data Sustainability Compliance')
+        elements.append(Paragraph(sustainability_title, subheading_style))
+        elements.append(Spacer(1, 6))
+        
+        # Add description of what sustainability means in this context - translated
+        if current_lang == 'nl':
+            sustainability_desc = """
+            Gegevensduurzaamheid meet hoe efficiënt uw organisatie persoonlijke gegevens beheert in overeenstemming met de AVG-principes 
+            van gegevensminimalisatie, bewaartermijnen en doelbinding. Een hogere score duidt op betere 
+            langetermijnpraktijken voor gegevensbeheer.
+            """
+        else:
+            sustainability_desc = """
+            Data sustainability measures how efficiently your organization manages personal data in compliance with GDPR principles of 
+            data minimization, storage limitation, and purpose limitation. A higher score indicates better long-term data governance practices.
+            """
+        elements.append(Paragraph(sustainability_desc, normal_style))
+        elements.append(Spacer(1, 6))
+        
+        # Add the sustainability meter with language support
+        sustainability_meter = SustainabilityMeter(sustainability_score, language=current_lang)
+        elements.append(sustainability_meter)
+        elements.append(Spacer(1, 12))
     
     # Include detailed findings if requested
     if include_details:
@@ -2619,46 +2620,47 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             for recommendation in nl_recommendations:
                 elements.append(Paragraph(f"• {recommendation}", normal_style))
                 
-        # Sustainability recommendations with translation
-        if current_lang == 'nl':
-            sustainability_title = _('report.sustainability_recommendations', 'Aanbevelingen voor Gegevensduurzaamheid')
-        else:
-            sustainability_title = _('report.sustainability_recommendations', 'Data Sustainability Recommendations')
-        elements.append(Paragraph(sustainability_title, subheading_style))
-        
-        if current_lang == 'nl':
-            sustainability_recommendations = [
-                "Implementeer praktijken voor gegevensminimalisatie om alleen noodzakelijke persoonsgegevens te verzamelen.",
-                "Stel duidelijke bewaartermijnen voor gegevens en geautomatiseerde verwijderingsprocessen vast.",
-                "Controleer en schoon databases regelmatig om overbodige of verouderde gegevens te verwijderen.",
-                "Ontwerp systemen met privacy-by-design principes om duurzaamheid te verbeteren.",
-                "Overweeg optimalisatie van gegevensopslag om de milieu-impact van datacenters te verminderen."
-            ]
-        else:
-            sustainability_recommendations = [
-                "Implement data minimization practices to collect only necessary personal data.",
-                "Establish clear data retention periods and automated deletion processes.",
-                "Regularly audit and clean databases to remove redundant or obsolete data.",
-                "Design systems with privacy by design principles to improve sustainability.",
-                "Consider data storage optimization to reduce environmental impact of data centers."
-            ]
-        
-        # Use a custom style for sustainability recommendations with green accents
-        sustainability_style = ParagraphStyle(
-            'Sustainability',
-            parent=normal_style,
-            textColor=HexColor('#2ecc71'),
-            leftIndent=10,
-            borderColor=HexColor('#2ecc71'),
-            borderWidth=0,
-            borderPadding=0,
-            borderRadius=0,
-            spaceBefore=2,
-            spaceAfter=2
-        )
-        
-        for recommendation in sustainability_recommendations:
-            elements.append(Paragraph(f"• {recommendation}", sustainability_style))
+        # Sustainability recommendations with translation - skip for SOC2 reports
+        if report_format != "soc2":
+            if current_lang == 'nl':
+                sustainability_title = _('report.sustainability_recommendations', 'Aanbevelingen voor Gegevensduurzaamheid')
+            else:
+                sustainability_title = _('report.sustainability_recommendations', 'Data Sustainability Recommendations')
+            elements.append(Paragraph(sustainability_title, subheading_style))
+            
+            if current_lang == 'nl':
+                sustainability_recommendations = [
+                    "Implementeer praktijken voor gegevensminimalisatie om alleen noodzakelijke persoonsgegevens te verzamelen.",
+                    "Stel duidelijke bewaartermijnen voor gegevens en geautomatiseerde verwijderingsprocessen vast.",
+                    "Controleer en schoon databases regelmatig om overbodige of verouderde gegevens te verwijderen.",
+                    "Ontwerp systemen met privacy-by-design principes om duurzaamheid te verbeteren.",
+                    "Overweeg optimalisatie van gegevensopslag om de milieu-impact van datacenters te verminderen."
+                ]
+            else:
+                sustainability_recommendations = [
+                    "Implement data minimization practices to collect only necessary personal data.",
+                    "Establish clear data retention periods and automated deletion processes.",
+                    "Regularly audit and clean databases to remove redundant or obsolete data.",
+                    "Design systems with privacy by design principles to improve sustainability.",
+                    "Consider data storage optimization to reduce environmental impact of data centers."
+                ]
+            
+            # Use a custom style for sustainability recommendations with green accents
+            sustainability_style = ParagraphStyle(
+                'Sustainability',
+                parent=normal_style,
+                textColor=HexColor('#2ecc71'),
+                leftIndent=10,
+                borderColor=HexColor('#2ecc71'),
+                borderWidth=0,
+                borderPadding=0,
+                borderRadius=0,
+                spaceBefore=2,
+                spaceAfter=2
+            )
+            
+            for recommendation in sustainability_recommendations:
+                elements.append(Paragraph(f"• {recommendation}", sustainability_style))
     
     # Include metadata if requested
     if include_metadata:
