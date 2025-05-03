@@ -762,15 +762,23 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
         # Base score is 100, deduct points based on findings
         base_score = 100
         if total_findings > 0:
-            # Calculate weighted impact of findings
-            weighted_impact = (high_risk * 10 + medium_risk * 5 + low_risk * 2) / (results["iac_files_found"] or 1)
-            # Cap the impact to ensure score doesn't go below 0
-            weighted_impact = min(95, weighted_impact)
-            compliance_score = base_score - weighted_impact
+            # Calculate score using a more severe penalty formula
+            # Each high risk issue now significantly impacts the score
+            total_issues = high_risk * 3 + medium_risk * 2 + low_risk
+            penalty_per_point = min(3, max(1, total_issues / 10))  # Dynamic penalty based on total issues
+            
+            # Additional penalty for having many high-risk issues (matching Azure method)
+            if high_risk > 10:
+                high_risk_penalty = min(60, high_risk)  # Cap at 60 points
+            else:
+                high_risk_penalty = high_risk * 2
+                
+            # Calculate final score with hard penalties for high risk issues
+            compliance_score = max(0, base_score - int(total_issues * penalty_per_point) - high_risk_penalty)
         else:
             compliance_score = base_score
             
-        results["compliance_score"] = max(5, int(compliance_score))
+        results["compliance_score"] = max(1, int(compliance_score))
         
         # Update scan status
         results["scan_status"] = "completed"
