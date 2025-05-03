@@ -114,6 +114,9 @@ def display_soc2_scan_results(scan_results):
     Args:
         scan_results: Dictionary containing SOC2 scan results
     """
+    # First, save the results to session state for the results tab to access later
+    st.session_state.soc2_scan_results = scan_results
+    
     # Import is already at the top of file: 
     # from services.enhanced_soc2_scanner import display_soc2_scan_results
     # We'll call our enhanced implementation directly
@@ -3557,6 +3560,95 @@ else:
                         
                         # Create tabs for configuration and results
                         config_tab, results_tab = st.tabs(["SOC2 Scanner Configuration", "Results"])
+                        
+                        # Add content to results tab
+                        with results_tab:
+                            if 'soc2_scan_results' in st.session_state:
+                                # Display scan results 
+                                scan_results = st.session_state.soc2_scan_results
+                                
+                                # Show repository info
+                                st.write(f"**Repository:** {scan_results.get('repo_url')}")
+                                if 'project' in scan_results:
+                                    st.write(f"**Project:** {scan_results.get('project')}")
+                                st.write(f"**Branch:** {scan_results.get('branch', 'main')}")
+                                
+                                # Extract metrics
+                                compliance_score = scan_results.get("compliance_score", 0)
+                                high_risk = scan_results.get("high_risk_count", 0)
+                                medium_risk = scan_results.get("medium_risk_count", 0)
+                                low_risk = scan_results.get("low_risk_count", 0)
+                                
+                                # Display metrics
+                                col1, col2, col3, col4 = st.columns(4)
+                                
+                                # Color coding based on compliance score
+                                if compliance_score >= 80:
+                                    compliance_color_css = "green"
+                                    compliance_status = "✓ Good" 
+                                elif compliance_score >= 60:
+                                    compliance_color_css = "orange"
+                                    compliance_status = "⚠️ Needs Review"
+                                else:
+                                    compliance_color_css = "red"
+                                    compliance_status = "✗ Critical"
+                                    
+                                with col1:
+                                    st.metric("Compliance Score", f"{compliance_score}/100")
+                                    st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{compliance_status}</div>", unsafe_allow_html=True)
+                                
+                                with col2:
+                                    st.metric("High Risk Issues", high_risk, delta_color="inverse")
+                                
+                                with col3:
+                                    st.metric("Medium Risk Issues", medium_risk, delta_color="inverse")
+                                    
+                                with col4:
+                                    st.metric("Low Risk Issues", low_risk, delta_color="inverse")
+                                
+                                # Display findings
+                                from services.soc2_display import display_soc2_findings
+                                display_soc2_findings(scan_results)
+                                
+                                # Add download report button
+                                st.markdown("### Download Report")
+                                
+                                if st.button("Generate PDF Report", type="primary", key="soc2_results_pdf_report_btn"):
+                                    from services.report_generator import generate_report
+                                    import base64
+                                    from datetime import datetime
+                                    
+                                    try:
+                                        with st.spinner("Generating PDF report..."):
+                                            # Generate the report
+                                            report_bytes = generate_report(
+                                                scan_results, 
+                                                include_details=True,
+                                                include_charts=True,
+                                                report_format="soc2"
+                                            )
+                                            
+                                            # Create the download button
+                                            b64_pdf = base64.b64encode(report_bytes).decode('utf-8')
+                                            
+                                            # Create a formatted filename with timestamp
+                                            report_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                                            
+                                            # Display the download button
+                                            st.markdown(
+                                                f"""
+                                                <a href="data:application/pdf;base64,{b64_pdf}" download="{report_filename}" style="text-decoration:none;">
+                                                    <div style="background-color:#4CAF50; color:white; padding:10px; border-radius:5px; text-align:center; margin:10px 0;">
+                                                        📥 Download SOC2 Compliance Report PDF
+                                                    </div>
+                                                </a>
+                                                """,
+                                                unsafe_allow_html=True
+                                            )
+                                    except Exception as e:
+                                        st.error(f"Error generating report: {str(e)}")
+                            else:
+                                st.info("No SOC2 scan results available yet. Run a scan in the Configuration tab.")
                         
                         with config_tab:
                             # Repository selection
