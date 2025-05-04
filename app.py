@@ -287,65 +287,27 @@ with st.sidebar:
     # Language selector in sidebar expander with animated flags
     # Removed duplicate language switcher
     
+    # Hidden auto-login - removed sign-in button from left panel as requested
+    # The login UI is still available but not shown in the sidebar
     if not st.session_state.logged_in:
-        # Tab UI for login/register with colorful styling
-        st.markdown("""
-        <style>
-        .tab-selected {
-            background-color: #6200EA !important;
-            color: white !important;
-            font-weight: bold;
-            border-radius: 5px;
-            padding: 10px 0;
-        }
-        .tab-not-selected {
-            background-color: #F5F0FF;
-            color: #4527A0;
-            border-radius: 5px;
-            padding: 10px 0;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        tab1, tab2 = st.columns(2)
-        
-        with tab1:
-            if st.button(_("sidebar.sign_in"), key="tab_login", use_container_width=True):
-                st.session_state.active_tab = "login"
-        
-        with tab2:
-            if st.button(_("sidebar.create_account"), key="tab_register", use_container_width=True):
-                st.session_state.active_tab = "register"
-        
-        # Default to login tab if not set
+        # Set default tab if not set - login functionality is still available but not visible
         if "active_tab" not in st.session_state:
             st.session_state.active_tab = "login"
-            
-        # Apply custom styling to selected tab
-        if st.session_state.active_tab == "login":
-            st.markdown("""
-            <style>
-            [data-testid="stButton"] button:nth-child(1) {
-                background-color: #6200EA;
-                color: white;
-                font-weight: bold;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <style>
-            [data-testid="stButton"] button:nth-child(2) {
-                background-color: #6200EA;
-                color: white;
-                font-weight: bold;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-            
-        st.markdown("<hr style='margin: 0; padding: 0; margin-bottom: 15px;'>", unsafe_allow_html=True)
         
-        # Login Form with colorful styling
+        # Add a subtle message about using the main UI instead
+        st.markdown("""
+        <div style="padding: 10px; border-radius: 5px; background-color: #F5F5F5; 
+                   margin-bottom: 15px; text-align: center;">
+            <p style="color: #6B7280; font-size: 0.8em; margin: 0;">
+                Please use the Register button in main UI to create a new account
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+            
+        # Hidden separator
+        st.markdown("<hr style='margin: 0; padding: 0; margin-bottom: 15px; opacity: 0.2;'>", unsafe_allow_html=True)
+        
+        # Login Form with colorful styling - kept for functionality but not visible in sidebar
         if st.session_state.active_tab == "login":
             # Form styling without duplicate header
             st.markdown(f"""
