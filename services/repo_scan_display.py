@@ -353,25 +353,30 @@ def display_repo_scan_results(scan_results: Dict[str, Any], show_download_button
                     st.code(issue.get('remediation'), language=lang)
                     
                     # Add a copy button (implemented with HTML/CSS/JS for better UX)
-                    st.markdown(
-                        f"""
-                        <button 
-                            onclick="navigator.clipboard.writeText(`{issue.get('remediation', '').replace('`', '\\`').replace("'", "\\'").replace('"', '\\"')}`)
-                            .then(() => alert('Code copied to clipboard!'))
-                            .catch(err => alert('Error copying code: ' + err));"
-                            style="background-color: #4CAF50; color: white; padding: 10px 15px; 
-                            border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
-                            📋 Copy Remediation Code
-                        </button>
-                        """, 
-                        unsafe_allow_html=True
-                    )
+                    # Process the remediation code to make it safe for inclusion in JavaScript
+                    remediation_js_safe = issue.get('remediation', '')
+                    remediation_js_safe = remediation_js_safe.replace('`', '\\`')
+                    remediation_js_safe = remediation_js_safe.replace("'", "\\'")
+                    remediation_js_safe = remediation_js_safe.replace('"', '\\"')
+                    
+                    button_html = """
+                    <button 
+                        onclick="navigator.clipboard.writeText(`{}`)
+                        .then(() => alert('Code copied to clipboard!'))
+                        .catch(err => alert('Error copying code: ' + err));"
+                        style="background-color: #4CAF50; color: white; padding: 10px 15px; 
+                        border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
+                        📋 Copy Remediation Code
+                    </button>
+                    """.format(remediation_js_safe)
+                    
+                    st.markdown(button_html, unsafe_allow_html=True)
                 else:
                     st.info("No specific remediation suggestion available for this issue.")
                 
                 # Additional guidance
                 st.markdown("### 📝 Compliance Guidance")
-                st.markdown(f"""
+                st.markdown("""
                 - Ensure explicit user consent is collected before processing this data
                 - Clearly document the specific purpose for data collection and processing
                 - Implement proper data retention policies
