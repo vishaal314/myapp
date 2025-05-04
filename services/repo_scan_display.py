@@ -58,11 +58,25 @@ def display_repo_scan_results(scan_results: Dict[str, Any], show_download_button
     # Extract findings and count by risk level
     findings = scan_results.get('findings', [])
     
-    # Count findings by risk level
-    high_risk_count = sum(1 for f in findings if f.get('risk_level', '').lower() == 'high')
-    medium_risk_count = sum(1 for f in findings if f.get('risk_level', '').lower() == 'medium')
-    low_risk_count = sum(1 for f in findings if f.get('risk_level', '').lower() == 'low')
+    # Count findings by risk level, ensuring consistent case handling
+    # Use more robust risk level checking to handle various formats in findings
+    high_risk_count = 0
+    medium_risk_count = 0
+    low_risk_count = 0
+    
+    for f in findings:
+        risk_level = str(f.get('risk_level', '')).lower()
+        if risk_level == 'high':
+            high_risk_count += 1
+        elif risk_level == 'medium':
+            medium_risk_count += 1
+        elif risk_level == 'low' or risk_level == '':  # Count empty risk levels as low risk
+            low_risk_count += 1
+    
     total_findings = len(findings)
+    
+    # Debug logging to see what's being counted
+    print(f"RISK COUNT DEBUG - High: {high_risk_count}, Medium: {medium_risk_count}, Low: {low_risk_count}, Total: {total_findings}")
     
     # Calculate a better compliance score that reflects findings more accurately
     # Base formula: 100 - (high_risk * 10 + medium_risk * 5 + low_risk * 1)
