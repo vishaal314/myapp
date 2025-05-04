@@ -1513,6 +1513,12 @@ else:
     elif selected_nav == _("scan.title"):
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
+        from utils.i18n import set_language
+        
+        # Force language refresh for scan page
+        current_language = st.session_state.get('language', 'en')
+        set_language(current_language)  # Force language to be correctly set
+        print(f"SCAN PAGE - Setting language to: {current_language}")
         
         st.title(_("scan.new_scan_title"))
         
@@ -1522,25 +1528,35 @@ else:
             st.info(_("permission.requires_scan_create"))
             st.stop()
         
-        # Scan configuration form - expanded with all scanner types
+        # Ensure translations are refreshed using the current language
+        from utils.i18n import get_text
+        
+        # Scan configuration form - expanded with all scanner types - using get_text to ensure fresh translations
         scan_type_options = [
-            _("scan.code"), 
-            _("scan.document"),  # Blob Scan
-            _("scan.image"), 
-            _("scan.database"),
-            _("scan.api"),
-            _("scan.website"),
-            _("scan.manual_upload"),
-            _("scan.dpia"),      # Data Protection Impact Assessment
-            _("scan.sustainability"),
-            _("scan.ai_model"),
-            _("scan.soc2")
+            get_text("scan.code"), 
+            get_text("scan.document"),  # Blob Scan
+            get_text("scan.image"), 
+            get_text("scan.database"),
+            get_text("scan.api"),
+            get_text("scan.website"),
+            get_text("scan.manual_upload"),
+            get_text("scan.dpia"),      # Data Protection Impact Assessment
+            get_text("scan.sustainability"),
+            get_text("scan.ai_model"),
+            get_text("scan.soc2")
         ]
         
         # Add premium tag to premium features
         if not has_permission('scan:premium'):
             scan_type_options_with_labels = []
-            premium_scans = [_("scan.image"), _("scan.api"), _("scan.sustainability"), _("scan.ai_model"), _("scan.soc2"), _("scan.dpia")]
+            premium_scans = [
+                get_text("scan.image"), 
+                get_text("scan.api"), 
+                get_text("scan.sustainability"), 
+                get_text("scan.ai_model"), 
+                get_text("scan.soc2"), 
+                get_text("scan.dpia")
+            ]
             
             for option in scan_type_options:
                 if option in premium_scans:
@@ -1568,7 +1584,8 @@ else:
         # Additional configurations - customized for each scan type
         with st.expander(_("scan.advanced_configuration")):
             # Scan-specific configurations based on type
-            if scan_type == _("scan.code"):
+            # Use fresh translation via get_text to ensure language consistency
+            if scan_type == get_text("scan.code"):
                 # 1. Code Scanner
                 st.subheader("Code Scanner Configuration")
                 
@@ -1774,7 +1791,7 @@ else:
                 include_strings = st.checkbox("Scan string literals", value=True)
                 include_variables = st.checkbox("Analyze variable names", value=True)
                 
-            elif scan_type == _("scan.document"):
+            elif scan_type == get_text("scan.document"):
                 # 2. Blob Scanner
                 st.subheader("Blob Scanner Configuration")
                 blob_source = st.radio(_("scan.repository_details"), [_("scan.upload_files"), "Azure Blob", "AWS S3", "Local Path"])
@@ -1804,7 +1821,7 @@ else:
                 
                 st.slider("OCR Confidence Threshold", min_value=0.0, max_value=1.0, value=0.6, step=0.05)
                 
-            elif scan_type == _("scan.image"):
+            elif scan_type == get_text("scan.image"):
                 # 3. Image Scanner
                 st.subheader("Image Scanner Configuration")
                 image_source = st.radio(_("scan.repository_details"), [_("scan.upload_files"), "Azure Blob", "AWS S3", "Local Path"])
