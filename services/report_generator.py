@@ -3185,7 +3185,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Model Name': model_name,
                     'Repository URL': repository_url if repository_url != 'N/A' else 'Not available',
                     'Repository Path': repository_path if repository_path != 'N/A' else 'Not available',
-                    'Username': scan_data.get('username', 'Unknown'),
+                    'Username': 'DataGuardian Pro User',  # Always use fixed username for AI models
                     'Files Scanned': scan_data.get('file_count', 0)
                 }
         elif report_format == "soc2":
@@ -3213,7 +3213,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Repository URL': repository_url if repository_url != 'N/A' else 'Niet beschikbaar',
                     'Repository Pad': repository_path if repository_path != 'N/A' else 'Niet beschikbaar',
                     'Branch': branch,
-                    'Gebruikersnaam': scan_data.get('username', 'Onbekend'),
+                    'Gebruikersnaam': 'DataGuardian Pro Gebruiker',  # Always use fixed username for SOC2 Dutch
                     'Bestanden Gescand': scan_data.get('file_count', 0),
                     'CC Bevindingen': cc_findings,
                     'A Bevindingen': a_findings,
