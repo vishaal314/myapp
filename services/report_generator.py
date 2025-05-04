@@ -1994,15 +1994,40 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 if not finding_description:
                     finding_description = "Potential privacy data detected"
                     
+                # Import os at the top level so it's available throughout
+                import os
+                
                 # Get location data with proper fallbacks
                 finding_location = None
                 for key in ['location', 'file', 'path', 'file_path']:
                     if key in finding and finding[key]:
                         finding_location = str(finding[key])
-                        # Truncate very long paths to prevent overflow
-                        if len(finding_location) > 60:
-                            finding_location = "..." + finding_location[-57:]
                         break
+                        
+                # If we have a location, make it more readable
+                if finding_location:
+                    # Parse the file path to get a more readable format
+                    if '/' in finding_location:
+                        try:
+                            # Try to extract just the filename and parent directory
+                            filename = os.path.basename(finding_location)
+                            if filename:
+                                # Get parent directory name
+                                parent_dir = os.path.basename(os.path.dirname(finding_location))
+                                if parent_dir:
+                                    finding_location = f"{parent_dir}/{filename}"
+                                else:
+                                    # If no parent dir, just use filename
+                                    finding_location = filename
+                        except Exception as e:
+                            # If path parsing fails, fall back to simpler method
+                            parts = finding_location.split('/')
+                            if len(parts) > 2:
+                                # Get just the last two parts of the path
+                                finding_location = f".../{parts[-2]}/{parts[-1]}"
+                            elif len(finding_location) > 60:
+                                # Simple truncation for very long paths
+                                finding_location = "..." + finding_location[-57:]
                         
                 if not finding_location and 'line' in finding:
                     finding_location = f"Line {finding['line']}"
