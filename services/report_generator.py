@@ -1967,12 +1967,28 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     else:
                         displayed_risk_level = str(original_risk_level).title()
                 
-                # Create a data row for this finding
+                # Create a data row for this finding with improved fallback values
+                # Extract the data from the finding with better fallbacks
+                finding_type = finding.get('type', finding.get('finding_type', finding.get('issue_type', 'PII')))
+                finding_category = finding.get('category', finding.get('gdpr_principle', finding.get('principle', 'Data Protection')))
+                finding_description = finding.get('description', finding.get('message', finding.get('finding_description', 'Potential privacy data detected')))
+                finding_location = finding.get('location', finding.get('file', finding.get('path', 'Repository')))
+                
+                # Ensure no empty values in displayed data
+                if not finding_type or finding_type == "Unknown":
+                    finding_type = "PII Finding"
+                if not finding_category or finding_category == "Unknown":
+                    finding_category = "GDPR"
+                if not finding_description or finding_description == "Unknown":
+                    finding_description = "Privacy sensitive data"
+                if not finding_location or finding_location == "Unknown":
+                    finding_location = "Codebase"
+                
                 finding_data = [
-                    finding.get('type', 'Unknown'),
-                    finding.get('category', 'Unknown'),
-                    finding.get('description', 'Unknown'),
-                    finding.get('location', 'Unknown'),
+                    finding_type,
+                    finding_category,
+                    finding_description,
+                    finding_location,
                     displayed_risk_level
                 ]
                 finding_items.append(finding_data)
@@ -1990,8 +2006,13 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 detailed_data = [table_headers]
                 detailed_data.extend(finding_items)
                 
-                # Create a properly sized table for AI model findings
-                detailed_table = Table(detailed_data, colWidths=[80, 80, 180, 80, 50])
+                # Create a properly sized table for AI model and GDPR findings with improved column widths
+                if report_format == "gdpr_repository":
+                    # For GDPR reports, give more room to description and location columns
+                    detailed_table = Table(detailed_data, colWidths=[70, 80, 200, 120, 60])
+                else:
+                    # For AI model reports
+                    detailed_table = Table(detailed_data, colWidths=[80, 80, 180, 80, 50])
                 
                 # Define row styles based on risk level with improved badge-style indicators
                 row_styles = []
@@ -3018,8 +3039,8 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         
         elements.append(Paragraph(disclaimer_text, disclaimer_style))
     
-    # Special handling for sustainability reports
-    if report_format == "sustainability":
+    # Special handling for sustainability reports, but not for GDPR or SOC2 reports
+    if report_format == "sustainability" and not (scan_type.lower() in ["gdpr", "repository", "code", "repo", "soc2"]):
         # Add sustainability specific report content
         _add_sustainability_report_content(
             elements, 
