@@ -811,11 +811,15 @@ else:
     # Navigation 
     # Import auth functions for permission checks
     from services.auth import has_permission
-    from utils.i18n import get_text, _current_language
+    from utils.i18n import get_text, _current_language, set_language
     
     # Force refresh translations for current language
     # This ensures we get the most up-to-date translations
     print(f"NAVIGATION - Current language: {_current_language}")
+    
+    # Get the current language from session state and ensure it's properly set
+    current_language = st.session_state.get('language', 'en')
+    set_language(current_language)  # Force language to be correctly set
     
     # Define base navigation options with direct lookup to ensure fresh translations
     # Using the direct get_text function for each key to force re-evaluation
