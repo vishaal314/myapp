@@ -3517,7 +3517,186 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         if risk_level in risk_levels:
             risk_levels[risk_level].append(finding)
     
+    # Add section for scan types performed
+    if current_lang == 'nl':
+        elements.append(Paragraph("<b>Uitgevoerde Scan Types</b>", subheading_style))
+    else:
+        elements.append(Paragraph("<b>Scan Types Performed</b>", subheading_style))
+    
+    # Create a table with scan types and descriptions
+    if current_lang == 'nl':
+        scan_types_data = [["Scan Type", "Beschrijving", "Dekking"]]
+    else:
+        scan_types_data = [["Scan Type", "Description", "Coverage"]]
+    
+    # Define the scan types and descriptions
+    scan_types = {
+        "PII Detection": "Scan for personally identifiable information like emails, phone numbers, addresses, etc.",
+        "Security Analysis": "Detect security vulnerabilities such as XSS, SQL injection, insecure auth, etc.",
+        "GDPR Principles": "Validate implementation of GDPR principles like data minimization, consent, etc.",
+        "NL UAVG": "Netherlands-specific GDPR implementation requirements",
+        "Legal Basis": "Check for explicit legal basis for data processing",
+        "High Entropy": "Detection of potential secrets and credentials through entropy analysis"
+    }
+    
+    # Build the scan types data from scan_data
+    scan_types_used = set()
+    
+    # Analyze findings to determine which scan types were used
+    for finding in findings:
+        finding_type = finding.get('type', '').lower()
+        
+        if any(pii in finding_type for pii in ['email', 'phone', 'address', 'name', 'passport', 'id']):
+            scan_types_used.add("PII Detection")
+        
+        if any(sec in finding_type for sec in ['vulnerability', 'insecure', 'auth', 'xss', 'injection', 'csrf']):
+            scan_types_used.add("Security Analysis")
+            
+        if any(sec in finding_type for sec in ['principle', 'gdpr_principle', 'consent', 'minimization']):
+            scan_types_used.add("GDPR Principles")
+            
+        if any(sec in finding_type for sec in ['nl_uavg', 'netherlands', 'dutch']):
+            scan_types_used.add("NL UAVG")
+            
+        if any(sec in finding_type for sec in ['legal_basis', 'lawful_basis']):
+            scan_types_used.add("Legal Basis")
+            
+        if 'entropy' in finding_type or 'high entropy' in finding_type:
+            scan_types_used.add("High Entropy")
+    
+    # Include all scan types by default if none are detected from findings
+    if not scan_types_used:
+        scan_types_used = set(scan_types.keys())
+    
+    # Add scan types to the table
+    for scan_type in scan_types_used:
+        coverage = "Full" if scan_type in ["PII Detection", "Security Analysis"] else "As Required"
+        scan_types_data.append([scan_type, scan_types.get(scan_type, ""), coverage])
+    
+    # Create the scan types table
+    scan_types_table = Table(scan_types_data, colWidths=[1.5*inch, 4*inch, 1*inch])
+    scan_types_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1e3a8a')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('TOPPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('TOPPADDING', (0, 1), (-1, -1), 6),
+    ]))
+    elements.append(scan_types_table)
+    elements.append(Spacer(1, 0.2*inch))
+    
+    # Add file-level scan details section
+    if current_lang == 'nl':
+        elements.append(Paragraph("<b>Gescande Bestandstypen</b>", subheading_style))
+    else:
+        elements.append(Paragraph("<b>Scanned File Types</b>", subheading_style))
+    
+    # Create a table with file types and the scans performed
+    if current_lang == 'nl':
+        file_scan_data = [["Bestandstype", "Aantal", "Toegepaste Scans"]]
+    else:
+        file_scan_data = [["File Type", "Count", "Scans Applied"]]
+    
+    # Extract file types from scan_data
+    file_types = scan_data.get('file_types', {})
+    
+    # If file_types is empty or invalid, try to build it from findings
+    if not file_types or not isinstance(file_types, dict):
+        file_types = {}
+        for finding in findings:
+            file_name = finding.get('file_name', '')
+            if file_name and '.' in file_name:
+                ext = file_name.split('.')[-1].lower()
+                if ext:
+                    file_types[ext] = file_types.get(ext, 0) + 1
+    
+    # Sort file types by count, descending
+    sorted_file_types = sorted(file_types.items(), key=lambda x: x[1], reverse=True)
+    
+    # Create dictionary to track which scans were applied to each file type
+    file_type_scans = {}
+    
+    # Determine which scans were applied to each file type based on findings
+    for finding in findings:
+        file_name = finding.get('file_name', '')
+        if file_name and '.' in file_name:
+            ext = file_name.split('.')[-1].lower()
+            if ext not in file_type_scans:
+                file_type_scans[ext] = set()
+            
+            finding_type = finding.get('type', '').lower()
+            
+            # Map finding types to scan types
+            if any(pii in finding_type for pii in ['email', 'phone', 'address', 'name', 'passport', 'id']):
+                file_type_scans[ext].add("PII Detection")
+            
+            if any(sec in finding_type for sec in ['vulnerability', 'insecure', 'auth', 'xss', 'injection', 'csrf']):
+                file_type_scans[ext].add("Security Analysis")
+                
+            if any(sec in finding_type for sec in ['principle', 'gdpr_principle', 'consent', 'minimization']):
+                file_type_scans[ext].add("GDPR Principles")
+                
+            if any(sec in finding_type for sec in ['nl_uavg', 'netherlands', 'dutch']):
+                file_type_scans[ext].add("NL UAVG")
+                
+            if any(sec in finding_type for sec in ['legal_basis', 'lawful_basis']):
+                file_type_scans[ext].add("Legal Basis")
+                
+            if 'entropy' in finding_type or 'high entropy' in finding_type:
+                file_type_scans[ext].add("High Entropy")
+    
+    # Populate the file type scan table
+    for ext, count in sorted_file_types[:10]:  # Limit to top 10 file types
+        if ext in file_type_scans:
+            applied_scans = ", ".join(sorted(file_type_scans[ext]))
+        else:
+            applied_scans = "All Standard Scans"
+        
+        # Format extension with leading dot if needed
+        if not ext.startswith('.'):
+            ext = '.' + ext
+            
+        file_scan_data.append([ext, str(count), applied_scans])
+    
+    # If we don't have any file types, add a default row
+    if len(file_scan_data) == 1:
+        file_scan_data.append(["Various", str(len(findings)), "All Standard Scans"])
+    
+    # Create the file scan types table
+    file_scan_table = Table(file_scan_data, colWidths=[1.5*inch, 1*inch, 4*inch])
+    file_scan_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1e3a8a')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('TOPPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('ALIGN', (1, 1), (1, -1), 'CENTER'),  # Center align the count column
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('TOPPADDING', (0, 1), (-1, -1), 6),
+    ]))
+    elements.append(file_scan_table)
+    elements.append(Spacer(1, 0.2*inch))
+    
     # Add findings tables by risk level
+    if current_lang == 'nl':
+        elements.append(Paragraph("<b>Bevindingen per Risiconiveau</b>", subheading_style))
+    else:
+        elements.append(Paragraph("<b>Findings by Risk Level</b>", subheading_style))
+    
     if risk_levels['high']:
         if current_lang == 'nl':
             elements.append(Paragraph("Hoog Risico Items", normal_style))
