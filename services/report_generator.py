@@ -3993,16 +3993,10 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     elements.append(Spacer(1, 0.2*inch))
     
     # Add findings tables by risk level
-    if current_lang == 'nl':
-        elements.append(Paragraph("<b>Bevindingen per Risiconiveau</b>", subheading_style))
-    else:
-        elements.append(Paragraph("<b>Findings by Risk Level</b>", subheading_style))
+    elements.append(Paragraph(f"<b>{_('report.findings_by_risk_level', 'Findings by Risk Level')}</b>", subheading_style))
     
     if risk_levels['high']:
-        if current_lang == 'nl':
-            elements.append(Paragraph("Hoog Risico Items", normal_style))
-        else:
-            elements.append(Paragraph("High Risk Items", normal_style))
+        elements.append(Paragraph(_("report.high_risk_items", "High Risk Items"), normal_style))
         
         high_risk_data = [["Description", "Location", "Recommendation"]]
         for finding in risk_levels['high']:
@@ -4107,10 +4101,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         elements.append(Spacer(1, 0.15*inch))
     
     if risk_levels['medium']:
-        if current_lang == 'nl':
-            elements.append(Paragraph("Gemiddeld Risico Items", normal_style))
-        else:
-            elements.append(Paragraph("Medium Risk Items", normal_style))
+        elements.append(Paragraph(_("report.medium_risk_items", "Medium Risk Items"), normal_style))
         
         medium_risk_data = [["Description", "Location", "Recommendation"]]
         for finding in risk_levels['medium']:
@@ -4215,10 +4206,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         elements.append(Spacer(1, 0.15*inch))
     
     if risk_levels['low']:
-        if current_lang == 'nl':
-            elements.append(Paragraph("Laag Risico Items", normal_style))
-        else:
-            elements.append(Paragraph("Low Risk Items", normal_style))
+        elements.append(Paragraph(_("report.low_risk_items", "Low Risk Items"), normal_style))
         
         low_risk_data = [["Description", "Location", "Recommendation"]]
         for finding in risk_levels['low']:
@@ -4325,10 +4313,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     # Add recommendations section
     if include_recommendations:
         elements.append(PageBreak())
-        if current_lang == 'nl':
-            elements.append(Paragraph("<b>Aanbevelingen</b>", subheading_style))
-        else:
-            elements.append(Paragraph("<b>Recommendations</b>", subheading_style))
+        elements.append(Paragraph(f"<b>{_('report.recommendations', 'Recommendations')}</b>", subheading_style))
         
         # Get recommendations from scan data
         recommendations = scan_data.get('recommendations', [])
@@ -4479,20 +4464,14 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                 # Add space between recommendations
                 elements.append(Spacer(1, 0.25*inch))
         else:
-            if current_lang == 'nl':
-                elements.append(Paragraph("Geen specifieke aanbevelingen beschikbaar.", normal_style))
-            else:
-                elements.append(Paragraph("No specific recommendations available.", normal_style))
+            elements.append(Paragraph(_("report.no_recommendations", "No specific recommendations available."), normal_style))
     
     # Add any generated images or charts from the scan
     if include_charts:
         chart_images = scan_data.get('chart_images', [])
         if chart_images:
             elements.append(PageBreak())
-            if current_lang == 'nl':
-                elements.append(Paragraph("<b>Visualisaties</b>", subheading_style))
-            else:
-                elements.append(Paragraph("<b>Visualizations</b>", subheading_style))
+            elements.append(Paragraph(f"<b>{_('report.visualizations', 'Visualizations')}</b>", subheading_style))
             
             elements.append(Spacer(1, 0.15*inch))
             
@@ -4568,10 +4547,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     if include_code_stats and include_details:
         elements.append(PageBreak())
         # Scan Overview
-        if current_lang == 'nl':
-            elements.append(Paragraph("<b>Scan Overzicht</b>", subheading_style))
-        else:
-            elements.append(Paragraph("<b>Scan Overview</b>", subheading_style))
+        elements.append(Paragraph(f"<b>{_('report.scan_overview', 'Scan Overview')}</b>", subheading_style))
         
         # Get repository information
         repo_url = scan_data.get('repo_url', 'Unknown')
@@ -4645,10 +4621,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         elements.append(Spacer(1, 0.2*inch))
         
         # Code Statistics
-        if current_lang == 'nl':
-            elements.append(Paragraph("<b>Code Statistieken</b>", normal_style))
-        else:
-            elements.append(Paragraph("<b>Code Statistics</b>", normal_style))
+        elements.append(Paragraph(f"<b>{_('report.code_statistics', 'Code Statistics')}</b>", normal_style))
         
         code_stats = scan_data.get('code_stats', {})
         
@@ -4759,10 +4732,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         # Add GDPR principles breakdown if available
         if 'principles_checked' in scan_data and scan_data['principles_checked'] and isinstance(scan_data['principles_checked'], list):
             elements.append(Spacer(1, 0.2*inch))
-            if current_lang == 'nl':
-                elements.append(Paragraph("<b>GDPR Principes Geëvalueerd</b>", normal_style))
-            else:
-                elements.append(Paragraph("<b>GDPR Principles Evaluated</b>", normal_style))
+            elements.append(Paragraph(f"<b>{_('report.gdpr_principles_evaluated', 'GDPR Principles Evaluated')}</b>", normal_style))
             
             # Define all possible principles and their display names
             all_principles = {
