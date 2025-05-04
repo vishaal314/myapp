@@ -2843,7 +2843,7 @@ else:
                 else:
                     scan_id = st.session_state.current_scan_id
                 
-                st.success(f"Payment successful! Starting scan...")
+                st.success(_("payment_successful"))
                 
                 # Show progress
                 progress_bar = st.progress(0)
@@ -2854,7 +2854,7 @@ else:
                     # Import needed functions for SOC2 scanning
                     from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository, display_soc2_scan_results
                     
-                    st.info("Starting SOC2 compliance scan...")
+                    st.info(_("scan.starting_soc2_scan", "Starting SOC2 compliance scan..."))
                     
                     # Show status message and scan steps
                     with st.status(_("scan.scanning", "Scanning repository for SOC2 compliance issues..."), expanded=True) as status:
@@ -3008,7 +3008,7 @@ else:
                 # Handle Repository URL special case
                 elif scan_type == _("scan.code") and st.session_state.repo_source == _("scan.repository_url"):
                     # We'll handle the repository URL scanning differently using our RepoScanner
-                    st.info("Starting repository URL scan...")
+                    st.info(_("starting_repository_url_scan", "Starting repository URL scan..."))
                     
                     # Get repository URL parameters from session state
                     repo_url = st.session_state.get('repo_url', '')
@@ -3126,7 +3126,7 @@ else:
                     st.warning(f"Audit logging failed: {str(e)}")
                 
                 # Show informational message about the mock implementation
-                st.info(f"Running demonstration scan for {scan_type}. Results are simulated for demonstration purposes.")
+                st.info(_("running_demonstration_scan").format(scan_type=scan_type))
                 
                 # Reset payment information after scan is started
                 st.session_state.payment_successful = False
