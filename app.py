@@ -287,21 +287,64 @@ with st.sidebar:
     # Language selector in sidebar expander with animated flags
     # Removed duplicate language switcher
     
-    # Hidden auto-login - removed sign-in button from left panel as requested
-    # The login UI is still available but not shown in the sidebar
+    # Authentication in the sidebar - added Register button
     if not st.session_state.logged_in:
-        # Set default tab if not set - login functionality is still available but not visible
+        # Set default tab if not set
         if "active_tab" not in st.session_state:
             st.session_state.active_tab = "login"
         
-        # Add a subtle message about using the main UI instead
-        st.markdown("""
-        <div style="padding: 10px; border-radius: 5px; background-color: #F5F5F5; 
-                   margin-bottom: 15px; text-align: center;">
-            <p style="color: #6B7280; font-size: 0.8em; margin: 0;">
-                Please use the Register button in main UI to create a new account
-            </p>
+        # Add login/register tabs
+        col1, col2 = st.columns(2)
+        with col1:
+            login_active = st.session_state.active_tab == "login"
+            login_style = "background-color: #3B82F6; color: white; font-weight: bold; border-radius: 5px 5px 0 0;" if login_active else "color: #6B7280; cursor: pointer;"
+            st.markdown(f"""
+            <div style="{login_style} padding: 10px; text-align: center;" onclick="document.getElementById('login_tab_button').click();">
+                Login
+            </div>
+            """, unsafe_allow_html=True)
+            # Hidden button to handle login tab selection
+            if st.button("Login Tab", key="login_tab_button", help="Switch to login tab", type="secondary", use_container_width=True):
+                st.session_state.active_tab = "login"
+                st.rerun()
+                
+        with col2:
+            register_active = st.session_state.active_tab == "register"
+            register_style = "background-color: #10B981; color: white; font-weight: bold; border-radius: 5px 5px 0 0;" if register_active else "color: #6B7280; cursor: pointer;"
+            st.markdown(f"""
+            <div style="{register_style} padding: 10px; text-align: center;" onclick="document.getElementById('register_tab_button').click();">
+                Register
+            </div>
+            """, unsafe_allow_html=True)
+            # Hidden button to handle register tab selection
+            if st.button("Register Tab", key="register_tab_button", help="Switch to register tab", type="secondary", use_container_width=True):
+                st.session_state.active_tab = "register"
+                st.rerun()
+                
+        # Add tab content background
+        active_tab_color = "#3B82F6" if st.session_state.active_tab == "login" else "#10B981"
+        st.markdown(f"""
+        <div style="padding: 10px; border-radius: 0 0 5px 5px; background-color: #F5F5F5; 
+                   margin-bottom: 15px; border-top: 3px solid {active_tab_color};">
         </div>
+        """, unsafe_allow_html=True)
+        
+        # Hide the actual tab buttons but keep them functional
+        st.markdown("""
+        <style>
+        /* Hide the actual tab buttons but keep them accessible to JavaScript */
+        [data-testid="stButton"] button[kind="secondary"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        </style>
         """, unsafe_allow_html=True)
             
         # Hidden separator
