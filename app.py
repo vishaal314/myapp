@@ -289,9 +289,9 @@ with st.sidebar:
     
     # Authentication in the sidebar - Enhanced professional design
     if not st.session_state.logged_in:
-        # Set default tab if not set
+        # Set default tab to login if not set
         if "active_tab" not in st.session_state:
-            st.session_state.active_tab = "register"
+            st.session_state.active_tab = "login"
             
         # Add custom CSS for professional look
         st.markdown("""
