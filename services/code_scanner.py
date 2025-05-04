@@ -395,7 +395,8 @@ class CodeScanner:
                 'directory': directory_path,
                 'completed_files': [],
                 'findings': [],
-                'stats': {'files_scanned': 0, 'files_skipped': 0, 'total_findings': 0}
+                'stats': {'files_scanned': 0, 'files_skipped': 0, 'total_findings': 0},
+                'file_types': {}  # Add tracking for file extensions
             }
         
         # Compile ignore patterns
@@ -458,7 +459,14 @@ class CodeScanner:
                 
                 # PERFORMANCE OPTIMIZATION: Prioritize important file types
                 _, ext = os.path.splitext(file)
-                if ext.lower() in priority_extensions:
+                # Track file extension in the count
+                ext_lower = ext.lower()
+                if ext_lower in self.scan_checkpoint_data['file_types']:
+                    self.scan_checkpoint_data['file_types'][ext_lower] += 1
+                else:
+                    self.scan_checkpoint_data['file_types'][ext_lower] = 1
+                    
+                if ext_lower in priority_extensions:
                     priority_files.append(file_path)
                 else:
                     regular_files.append(file_path)
@@ -567,7 +575,8 @@ class CodeScanner:
             'status': 'completed' if len(all_files) == len(self.scan_checkpoint_data['completed_files']) else 'partial',
             'completion_percentage': int(100 * len(self.scan_checkpoint_data['completed_files']) / max(1, len(all_files))),
             'lines_scanned': self.total_lines_scanned,
-            'principles_checked': list(self.principles_checked)
+            'principles_checked': list(self.principles_checked),
+            'file_types': self.scan_checkpoint_data['file_types']  # Add the file types to result
         }
         
         # Clean up checkpoint file if scan completed successfully

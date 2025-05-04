@@ -579,6 +579,9 @@ class RepoScanner:
             scan_results['process_time_seconds'] = time.time() - start_time
             scan_results['clone_time_seconds'] = clone_time
             scan_results['scan_time_seconds'] = scan_time
+            # Pass the file types information to the scan results
+            if 'file_types' in scan_results:
+                scan_results['file_types'] = scan_results['file_types']
             
             # Apply consent analyzer to enhance findings with remediation suggestions
             if progress_callback:
