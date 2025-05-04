@@ -1988,7 +1988,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 finding_description = None
                 for key in ['description', 'message', 'finding_description', 'reason', 'value']:
                     if key in finding and finding[key]:
-                        finding_description = finding[key]
+                        finding_description = str(finding[key])
                         break
                         
                 if not finding_description:
@@ -1998,7 +1998,10 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 finding_location = None
                 for key in ['location', 'file', 'path', 'file_path']:
                     if key in finding and finding[key]:
-                        finding_location = finding[key]
+                        finding_location = str(finding[key])
+                        # Truncate very long paths to prevent overflow
+                        if len(finding_location) > 60:
+                            finding_location = "..." + finding_location[-57:]
                         break
                         
                 if not finding_location and 'line' in finding:
@@ -2015,6 +2018,27 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     finding_description = "Privacy sensitive data"
                 if not finding_location or finding_location == "Unknown":
                     finding_location = "Codebase"
+                    
+                # Clean and format the text data
+                # Limit description to prevent overflow and ensure proper wrapping
+                if len(finding_description) > 200:
+                    finding_description = finding_description[:197] + "..."
+                    
+                # Convert any non-string data to string and clean problematic characters
+                finding_type = str(finding_type)
+                finding_category = str(finding_category)
+                finding_description = str(finding_description)
+                finding_location = str(finding_location)
+                
+                # Replace problematic characters that cause PDF rendering issues
+                finding_type = finding_type.replace('\u2019', "'").replace('\u2018', "'").replace('\u201c', '"').replace('\u201d', '"')
+                finding_category = finding_category.replace('\u2019', "'").replace('\u2018', "'").replace('\u201c', '"').replace('\u201d', '"')
+                finding_description = finding_description.replace('\u2019', "'").replace('\u2018', "'").replace('\u201c', '"').replace('\u201d', '"')
+                finding_location = finding_location.replace('\u2019', "'").replace('\u2018', "'").replace('\u201c', '"').replace('\u201d', '"')
+                
+                # Ensure newlines are handled properly in the PDF table
+                finding_description = finding_description.replace('\n', ' ').replace('\r', ' ')
+                finding_location = finding_location.replace('\n', ' ').replace('\r', ' ')
                     
                 # Log for debugging 
                 import logging
@@ -2046,10 +2070,13 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 # Create a properly sized table for AI model and GDPR findings with improved column widths
                 if report_format == "gdpr_repository":
                     # For GDPR reports, give more room to description and location columns
-                    detailed_table = Table(detailed_data, colWidths=[70, 80, 200, 120, 60])
+                    detailed_table = Table(detailed_data, colWidths=[75, 85, 180, 120, 70])
+                elif report_format == "ai_model":
+                    # For AI model reports, where descriptions tend to be longer
+                    detailed_table = Table(detailed_data, colWidths=[70, 80, 200, 80, 50])
                 else:
-                    # For AI model reports
-                    detailed_table = Table(detailed_data, colWidths=[80, 80, 180, 80, 50])
+                    # Default balanced layout
+                    detailed_table = Table(detailed_data, colWidths=[80, 90, 170, 100, 60])
                 
                 # Define row styles based on risk level with improved badge-style indicators
                 row_styles = []
