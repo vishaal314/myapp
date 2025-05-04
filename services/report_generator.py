@@ -2103,45 +2103,49 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                         finding_location = str(finding[key])
                         break
                         
-                # If we have a location, make it more readable and professional
+                # If we have a location, make it MUCH more readable for the PDF table
                 if finding_location:
-                    # Parse the file path to get a more readable format
+                    # Parse the file path to get a clean format that won't overflow cells
                     if '/' in finding_location:
                         try:
-                            # Extract the filename
+                            # Extract just the filename - most important part
                             filename = os.path.basename(finding_location)
                             
-                            # Check if we're dealing with a long repository scan path
-                            if 'repo_scan_' in finding_location and filename:
-                                # For repo scans, create a cleaner path display
-                                # Extract just the meaningful parts of the path
-                                parts = finding_location.split('/')
-                                if len(parts) > 3:
-                                    # Create a more compact but still informative representation
-                                    if len(filename) > 20:
-                                        # Truncate very long filenames
-                                        filename = filename[:17] + "..."
-                                    finding_location = filename
+                            # Deal with repository scan paths which tend to be extremely long
+                            if 'repo_scan_' in finding_location:
+                                # Special handling for repo scan paths which can be very long
+                                # Extract ID portion for shorter display
+                                if len(filename) > 15:
+                                    # Keep just the name part without the long ID string
+                                    clean_name = filename.split('_')[-1] if '_' in filename else filename
+                                    finding_location = clean_name
                                 else:
                                     finding_location = filename
-                            elif filename:
-                                # For other paths, show parent directory + filename
-                                parent_dir = os.path.basename(os.path.dirname(finding_location))
-                                if parent_dir:
-                                    # Format as clean dir/file display
-                                    finding_location = f"{parent_dir}/{filename}"
+                                
+                                # Add file type indicator for common extensions
+                                if '.' in filename:
+                                    ext = filename.split('.')[-1].lower()
+                                    if ext in ['py', 'js', 'java', 'ts', 'go', 'json', 'yml', 'yaml', 'md', 'txt', 'c', 'cpp', 'cs']:
+                                        finding_location = f"{finding_location} ({ext})"
+                            else:
+                                # For other paths, just show the filename for clean display
+                                if len(filename) > 20:
+                                    # Truncate very long filenames
+                                    finding_location = filename[:17] + "..."
                                 else:
-                                    # Just show filename if no parent dir
                                     finding_location = filename
                         except Exception as e:
-                            # If path parsing fails, fall back to more reliable method
+                            # Fail-safe: Ensure we have a clean, short display that won't break tables
                             parts = finding_location.split('/')
-                            if len(parts) > 2:
-                                # Get just the last two parts of the path with clean formatting
-                                finding_location = f"{parts[-2]}/{parts[-1]}"
-                            elif len(finding_location) > 40:
-                                # More elegant truncation for very long paths
-                                finding_location = "..." + finding_location[-37:]
+                            if len(parts) > 1:
+                                # Get just the last part for absolute safety
+                                finding_location = parts[-1]
+                                # Ensure it's not too long
+                                if len(finding_location) > 25:
+                                    finding_location = finding_location[:22] + "..."
+                            else:
+                                # Ultra-safe display for any path
+                                finding_location = "Repository file"
                         
                 if not finding_location and 'line' in finding:
                     finding_location = f"Line {finding['line']}"
@@ -2206,16 +2210,17 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 detailed_data = [table_headers]
                 detailed_data.extend(finding_items)
                 
-                # Create a properly sized table with optimized column widths for better readability
+                # Create a properly sized table with optimized column widths for better readability and no text overlap
                 if report_format == "gdpr_repository":
-                    # For GDPR reports, optimize column widths based on content expectations
-                    detailed_table = Table(detailed_data, colWidths=[60, 80, 190, 100, 50])
+                    # For GDPR reports, optimize widths to prevent long paths from breaking layout
+                    # Reduced Type column width since it often has the same value repeated
+                    detailed_table = Table(detailed_data, colWidths=[50, 80, 180, 80, 50])
                 elif report_format == "ai_model":
                     # For AI model reports, where descriptions tend to be longer
-                    detailed_table = Table(detailed_data, colWidths=[60, 75, 200, 90, 55])
+                    detailed_table = Table(detailed_data, colWidths=[50, 75, 190, 80, 55])
                 else:
                     # Default balanced layout with emphasis on description readability
-                    detailed_table = Table(detailed_data, colWidths=[65, 80, 195, 90, 50])
+                    detailed_table = Table(detailed_data, colWidths=[50, 80, 190, 80, 50])
                 
                 # Define elegant row styles with professional color scheme and improved readability
                 row_styles = []
@@ -2255,7 +2260,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                         row_styles.append(('ALIGN', (4, i), (4, i), 'CENTER'))  # Center align for badge look
                         row_styles.append(('LINEBELOW', (0, i), (-1, i), 0.25, HexColor('#bae6fd')))  # Subtle bottom border
                 
-                # Apply refined table styling with modern professional appearance
+                # Apply refined table styling with modern professional appearance and clear cell separation
                 table_style = [
                     # Header styling - elegant blue header with improved readability
                     ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1e3a8a')),  # Rich blue header
@@ -2269,15 +2274,25 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     # Content styling with improved readability and professional spacing
                     ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
                     ('FONTSIZE', (0, 1), (-1, -1), 9),  # Optimized font size
-                    ('BOTTOMPADDING', (0, 1), (-1, -1), 7),  # Increased padding for better readability
-                    ('TOPPADDING', (0, 1), (-1, -1), 7),  # Increased padding for better readability
-                    ('GRID', (0, 0), (-1, -1), 0.25, HexColor('#e2e8f0')),  # Very light grid lines
-                    ('BOX', (0, 0), (-1, -1), 0.75, HexColor('#475569')),  # Defined outer border
-                    ('LINEBELOW', (0, 0), (-1, 0), 1.5, HexColor('#1e3a8a')),  # Accent line below header
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 10),  # Increased vertical padding to avoid text overlap
+                    ('TOPPADDING', (0, 1), (-1, -1), 10),  # Increased vertical padding to avoid text overlap
+                    ('RIGHTPADDING', (0, 1), (-1, -1), 10),  # Horizontal padding for better text spacing
+                    ('LEFTPADDING', (0, 1), (-1, -1), 10),  # Horizontal padding for better text spacing
+                    
+                    # Enhanced borders and grid for better visual separation
+                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#e2e8f0')),  # Stronger grid lines for separation
+                    ('BOX', (0, 0), (-1, -1), 1, HexColor('#475569')),  # More visible outer border
+                    ('LINEBELOW', (0, 0), (-1, 0), 2, HexColor('#1e3a8a')),  # Bolder line below header
+                    ('LINEAFTER', (0, 0), (0, -1), 0.5, HexColor('#cbd5e1')),  # Vertical line after first column
+                    ('LINEAFTER', (1, 0), (1, -1), 0.5, HexColor('#cbd5e1')),  # Vertical line after second column
+                    ('LINEAFTER', (2, 0), (2, -1), 0.5, HexColor('#cbd5e1')),  # Vertical line after third column
+                    ('LINEAFTER', (3, 0), (3, -1), 0.5, HexColor('#cbd5e1')),  # Vertical line after fourth column
+                    
+                    # Cell alignment
                     ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),  # Middle align header cells
                     ('VALIGN', (0, 1), (-1, -1), 'TOP'),  # Top align content cells
-                    ('RIGHTPADDING', (0, 1), (-1, -1), 10),  # Additional right padding for better text spacing
-                    ('LEFTPADDING', (0, 1), (-1, -1), 10),  # Additional left padding for better text spacing
+                    ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # Center align type column
+                    ('ALIGN', (1, 1), (1, -1), 'CENTER'),  # Center align category column
                 ]
                 
                 # Add risk-based row styles
@@ -3319,28 +3334,30 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     if not domain:
         domain = f"Scan Type: {scan_type}"
     
-    # Get username from scan_data or session state if available with more fallbacks
-    username = scan_data.get('username', 'Not available')
+    # Get username from session state first for highest priority (logged-in user)
+    username = 'Not available'
+    if hasattr(st, 'session_state'):
+        # First try session state username (current logged in user)
+        if 'username' in st.session_state and st.session_state.username:
+            username = st.session_state.username
+        # If that's not available, try user_info
+        elif 'user_info' in st.session_state and isinstance(st.session_state.user_info, dict):
+            username = st.session_state.user_info.get('name', 
+                      st.session_state.user_info.get('username', 
+                      st.session_state.user_info.get('email', 'Not available')))
     
-    # Fallback to other potential keys
+    # If still not available, try scan_data keys
     if username == 'Not available' or username == 'Unknown' or username == 'Not specified':
-        # Try to find username in other common keys
-        for key in ['user', 'owner', 'repo_owner', 'created_by', 'scanned_by', 'author']:
-            if key in scan_data and scan_data[key]:
-                username = scan_data[key]
-                break
-                
-    # Last resort - check session state
-    if username == 'Not available' or username == 'Unknown' or username == 'Not specified':
-        if hasattr(st, 'session_state'):
-            # Try session state username
-            if 'username' in st.session_state and st.session_state.username:
-                username = st.session_state.username
-            # If that's not available, try user_info
-            elif 'user_info' in st.session_state and isinstance(st.session_state.user_info, dict):
-                username = st.session_state.user_info.get('name', 
-                          st.session_state.user_info.get('username', 
-                          st.session_state.user_info.get('email', 'Not available')))
+        # Try scan_data username first
+        username = scan_data.get('username', 'Not available')
+        
+        # Fallback to other potential keys if needed
+        if username == 'Not available' or username == 'Unknown' or username == 'Not specified':
+            # Try to find username in other common keys
+            for key in ['user', 'owner', 'repo_owner', 'created_by', 'scanned_by', 'author']:
+                if key in scan_data and scan_data[key]:
+                    username = scan_data[key]
+                    break
     
     # Get region with better fallbacks
     region = scan_data.get('region', scan_data.get('cloud_region', 'Global'))
