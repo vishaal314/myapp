@@ -1416,6 +1416,44 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             • C: Confidentiality
             • P: Privacy
             """
+    elif report_format == "gdpr_repository":
+        # Extract repository specific data
+        repo_url = scan_data.get('repo_url', 'Unknown Repository')
+        branch = scan_data.get('branch', 'main')
+        compliance_score = scan_data.get('compliance_score', 0)
+        files_scanned = scan_data.get('files_scanned', 0)
+        files_skipped = scan_data.get('files_skipped', 0)
+        
+        if current_lang == 'nl':
+            summary_text = f"""
+            Dit rapport presenteert de bevindingen van een GDPR repository compliance scan uitgevoerd op <b>{repo_url}</b> 
+            (branch: <b>{branch}</b>) op <b>{timestamp}</b>. De scan analyseerde <b>{files_scanned}</b> bestanden en 
+            identificeerde in totaal <b>{total_pii}</b> instanties van persoonlijk identificeerbare informatie (PII) 
+            met <b>{high_risk}</b> hoog-risico items, <b>{medium_risk}</b> gemiddeld-risico items, en <b>{low_risk}</b> laag-risico items.
+            
+            <b>Compliance score:</b> {compliance_score}/100
+            
+            <b>Repository details:</b>
+            • URL: {repo_url}
+            • Branch: {branch}
+            • Bestanden gescand: {files_scanned}
+            • Bestanden overgeslagen: {files_skipped}
+            """
+        else:
+            summary_text = f"""
+            This report presents the findings of a GDPR repository compliance scan conducted on <b>{repo_url}</b> 
+            (branch: <b>{branch}</b>) on <b>{timestamp}</b>. The scan analyzed <b>{files_scanned}</b> files and 
+            identified a total of <b>{total_pii}</b> instances of personally identifiable information (PII) 
+            with <b>{high_risk}</b> high-risk items, <b>{medium_risk}</b> medium-risk items, and <b>{low_risk}</b> low-risk items.
+            
+            <b>Compliance score:</b> {compliance_score}/100
+            
+            <b>Repository details:</b>
+            • URL: {repo_url}
+            • Branch: {branch}
+            • Files scanned: {files_scanned}
+            • Files skipped: {files_skipped}
+            """
     else:
         if current_lang == 'nl':
             summary_text = f"""
@@ -1557,6 +1595,53 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 [_('report.availability_issues', 'Availability Issues'), str(availability_issues)],
                 [_('report.confidentiality_issues', 'Confidentiality Issues'), str(confidentiality_issues)]
             ]
+    elif report_format == "gdpr_repository":
+        # Extract repository specific data
+        repo_url = scan_data.get('repo_url', 'Unknown Repository')
+        branch = scan_data.get('branch', 'main')
+        compliance_score = scan_data.get('compliance_score', 0)
+        files_scanned = scan_data.get('files_scanned', 0)
+        files_skipped = scan_data.get('files_skipped', 0)
+        
+        # Get top 3 file types scanned if available
+        file_types = scan_data.get('file_types', {})
+        file_types_text = ""
+        if file_types:
+            file_types_list = sorted(file_types.items(), key=lambda x: x[1], reverse=True)[:3]
+            file_types_text = ", ".join([f"{ext} ({count})" for ext, count in file_types_list])
+        else:
+            file_types_text = "Not available"
+        
+        if current_lang == 'nl':
+            summary_data = [
+                [_('report.scan_type', 'Scan Type'), "GDPR Repository Compliance Scan"],
+                [_('report.repo_url', 'Repository URL'), repo_url],
+                [_('report.branch', 'Branch'), branch],
+                [_('report.date_time', 'Datum & Tijd'), timestamp],
+                [_('report.compliance_score', 'Compliance Score'), f"{compliance_score}/100"],
+                [_('report.files_scanned', 'Bestanden Gescand'), str(files_scanned)],
+                [_('report.files_skipped', 'Bestanden Overgeslagen'), str(files_skipped)],
+                [_('report.top_file_types', 'Top Bestandstypes'), file_types_text],
+                [_('report.total_pii', 'Totaal PII Items Gevonden'), str(total_pii)],
+                [_('report.high_risk', 'Hoog Risico Items'), str(high_risk)],
+                [_('report.medium_risk', 'Gemiddeld Risico Items'), str(medium_risk)],
+                [_('report.low_risk', 'Laag Risico Items'), str(low_risk)]
+            ]
+        else:
+            summary_data = [
+                [_('report.scan_type', 'Scan Type'), "GDPR Repository Compliance Scan"],
+                [_('report.repo_url', 'Repository URL'), repo_url],
+                [_('report.branch', 'Branch'), branch],
+                [_('report.date_time', 'Date & Time'), timestamp],
+                [_('report.compliance_score', 'Compliance Score'), f"{compliance_score}/100"],
+                [_('report.files_scanned', 'Files Scanned'), str(files_scanned)],
+                [_('report.files_skipped', 'Files Skipped'), str(files_skipped)],
+                [_('report.top_file_types', 'Top File Types'), file_types_text],
+                [_('report.total_pii', 'Total PII Items Found'), str(total_pii)],
+                [_('report.high_risk', 'High Risk Items'), str(high_risk)],
+                [_('report.medium_risk', 'Medium Risk Items'), str(medium_risk)],
+                [_('report.low_risk', 'Low Risk Items'), str(low_risk)]
+            ]
     else:
         if current_lang == 'nl':
             summary_data = [
@@ -1640,6 +1725,40 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             ('BACKGROUND', (1, 10), (1, 10), HexColor('#e9f7ef')),  # Low risk row
             # SOC2 category rows
             ('BACKGROUND', (1, 11), (1, 13), HexColor('#ebf5fb')),  # SOC2 categories rows
+        ]
+    elif report_format == "gdpr_repository":
+        table_style = [
+            # Header row styling - improved with darker blue for better contrast
+            ('BACKGROUND', (0, 0), (0, -1), HexColor('#1e40af')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.white),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            # Content styling
+            ('BACKGROUND', (1, 0), (1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            # Padding
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            # Grid
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#dfe6e9')),
+            # Group rows - repository info
+            ('BACKGROUND', (1, 0), (1, 0), HexColor('#f0f7ff')),  # Scan type
+            ('BACKGROUND', (1, 1), (1, 1), HexColor('#e4ecff')),  # Repository URL
+            ('BACKGROUND', (1, 2), (1, 2), HexColor('#e4ecff')),  # Branch
+            ('BACKGROUND', (1, 3), (1, 3), HexColor('#f0f7ff')),  # Date & time
+            # Compliance score - special highlight
+            ('BACKGROUND', (1, 4), (1, 4), HexColor('#e4ecff')),  # Compliance score row with bold highlight
+            ('FONTNAME', (1, 4), (1, 4), 'Helvetica-Bold'),
+            # Repository file statistics 
+            ('BACKGROUND', (1, 5), (1, 7), HexColor('#f0f7ff')),  # Files info rows
+            # PII and risk level colors
+            ('BACKGROUND', (1, 8), (1, 8), HexColor('#eaf2f8')),  # Total PII row
+            ('BACKGROUND', (1, 9), (1, 9), HexColor('#fadbd8')),  # High risk row
+            ('BACKGROUND', (1, 10), (1, 10), HexColor('#fef9e7')),  # Medium risk row
+            ('BACKGROUND', (1, 11), (1, 11), HexColor('#e9f7ef')),  # Low risk row
         ]
     else:
         table_style = [
@@ -1772,8 +1891,8 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         elements.append(Paragraph(risk_text, normal_style))
         elements.append(Spacer(1, 12))
     
-    # Add sustainability compliance section - translated (except for SOC2 reports)
-    if report_format != "soc2":
+    # Add sustainability compliance section - translated (except for SOC2 and GDPR Repository reports)
+    if report_format != "soc2" and report_format != "gdpr_repository":
         if current_lang == 'nl':
             sustainability_title = _('report.sustainability_compliance', 'Gegevens Duurzaamheid Naleving')
         else:
