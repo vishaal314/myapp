@@ -3335,8 +3335,14 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         domain = f"Scan Type: {scan_type}"
     
     # Get username from session state first for highest priority (logged-in user)
-    username = 'Not available'
+    username = 'DataGuardian User'  # Default to a more user-friendly name than "Not available" or "Anonymous"
+    
+    # First check if we are authenticated
+    is_authenticated = False
     if hasattr(st, 'session_state'):
+        is_authenticated = st.session_state.get('authenticated', False)
+    
+    if is_authenticated and hasattr(st, 'session_state'):
         # First try session state username (current logged in user)
         if 'username' in st.session_state and st.session_state.username:
             username = st.session_state.username
@@ -3344,23 +3350,30 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         elif 'user_info' in st.session_state and isinstance(st.session_state.user_info, dict):
             username = st.session_state.user_info.get('name', 
                       st.session_state.user_info.get('username', 
-                      st.session_state.user_info.get('email', 'Not available')))
+                      st.session_state.user_info.get('email', 'DataGuardian User')))
     
     # If still not available, try scan_data keys
-    if username == 'Not available' or username == 'Unknown' or username == 'Not specified':
+    if (username == 'Not available' or username == 'Unknown' or 
+        username == 'Not specified' or username == 'Anonymous'):
         # Try scan_data username first
-        username = scan_data.get('username', 'Not available')
+        username = scan_data.get('username', username)
         
         # Fallback to other potential keys if needed
-        if username == 'Not available' or username == 'Unknown' or username == 'Not specified':
+        if (username == 'Not available' or username == 'Unknown' or 
+            username == 'Not specified' or username == 'Anonymous'):
             # Try to find username in other common keys
             for key in ['user', 'owner', 'repo_owner', 'created_by', 'scanned_by', 'author']:
-                if key in scan_data and scan_data[key]:
+                if key in scan_data and scan_data[key] and scan_data[key] not in ['Anonymous', 'Not available', 'Unknown']:
                     username = scan_data[key]
                     break
     
-    # Get region with better fallbacks
-    region = scan_data.get('region', scan_data.get('cloud_region', 'Global'))
+    # Get region with better fallbacks and ensure it's not "Unknown" or similar
+    region = scan_data.get('region', scan_data.get('cloud_region', 'Europe/Netherlands'))
+    
+    # Replace common placeholder values with a meaningful default
+    if region in ['Unknown', 'Not available', 'Not specified', 'Global']:
+        # Use Netherlands as default region (since the application has Dutch GDPR compliance)
+        region = 'Europe/Netherlands'
     
     # Get scan date with formatting
     scan_date = scan_data.get('scan_date', scan_data.get('timestamp', datetime.now().isoformat()))
