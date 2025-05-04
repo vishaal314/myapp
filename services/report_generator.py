@@ -912,9 +912,9 @@ def generate_report(scan_data: Dict[str, Any],
         elif 'soc2' in scan_type.lower():
             report_format = "soc2"
             logging.info("Using SOC2 compliance report format")
-        elif 'sustainability' in scan_type.lower() or 'github' in scan_type.lower() or 'code efficiency' in scan_type.lower():
-            report_format = "sustainability"
-            logging.info("Using Sustainability report format")
+        elif 'repository' in scan_type.lower() or 'code' in scan_type.lower():
+            report_format = "gdpr_repository"
+            logging.info("Using GDPR repository report format")
         else:
             report_format = "standard"
             logging.info("Using standard report format")
@@ -1176,6 +1176,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                         f"""<font size="14" color="#1e3a8a"><b>{
                             _('report.subtitle.ai_model', 'AI Model Risk Analysis Report') if report_format == "ai_model" else
                             _('report.subtitle.soc2', 'SOC2 Compliance Report') if report_format == "soc2" else
+                            _('report.subtitle.gdpr_repository', 'GDPR Repository Compliance Report') if report_format == "gdpr_repository" else
                             _('report.subtitle', 'GDPR Compliance Scan Report')
                         }</b></font>""",
                         ParagraphStyle('ReportTitle', alignment=1)
