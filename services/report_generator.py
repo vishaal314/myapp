@@ -1945,7 +1945,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             import logging
             logging.info(f"Processing {report_format} findings for report. Found {len(findings_list)} findings.")
             
-            for finding in ai_findings:
+            for finding in findings_list:
                 # Translate risk level for display if needed
                 original_risk_level = finding.get('risk_level', 'low')
                 
@@ -1975,12 +1975,12 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     finding.get('location', 'Unknown'),
                     displayed_risk_level
                 ]
-                ai_finding_items.append(finding_data)
+                finding_items.append(finding_data)
                 
                 # Log finding details for debugging
                 logging.info(f"Processing finding: {finding.get('type', 'Unknown')} - {displayed_risk_level}")
             
-            if ai_finding_items:
+            if finding_items:
                 # Create detailed findings table with translated headers
                 if current_lang == 'nl':
                     table_headers = ['Type', 'Categorie', 'Beschrijving', 'Locatie', 'Risiconiveau']
@@ -1988,14 +1988,14 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     table_headers = ['Type', 'Category', 'Description', 'Location', 'Risk Level']
                     
                 detailed_data = [table_headers]
-                detailed_data.extend(ai_finding_items)
+                detailed_data.extend(finding_items)
                 
                 # Create a properly sized table for AI model findings
                 detailed_table = Table(detailed_data, colWidths=[80, 80, 180, 80, 50])
                 
                 # Define row styles based on risk level with improved badge-style indicators
                 row_styles = []
-                for i, item in enumerate(ai_finding_items, 1):  # Starting from 1 to account for header
+                for i, item in enumerate(finding_items, 1):  # Starting from 1 to account for header
                     risk_level = item[4]
                     # Check for both Dutch and English risk levels with more distinct colors
                     if risk_level in ['High', 'Hoog']:
