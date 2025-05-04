@@ -3337,7 +3337,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     # Get username from session state first for highest priority (logged-in user)
     username = 'DataGuardian User'  # Default to a more user-friendly name
     
-    # Force override Anonymous value in all cases
+    # Force override Anonymous value in all cases and ensure we never show Anonymous in the report
     try:
         # First check if we are authenticated
         is_authenticated = False
@@ -3347,40 +3347,48 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             # Get current username from session if available (highest priority)
             if 'username' in st.session_state and st.session_state.username:
                 username = st.session_state.username
-                # If the username is Anonymous, use the default instead
-                if username.lower() == 'anonymous':
-                    username = 'DataGuardian User'
             
             # If username is not in session, try user_info
             elif 'user_info' in st.session_state and isinstance(st.session_state.user_info, dict):
                 user_info = st.session_state.user_info
                 # Try different keys in user_info (name, username, email)
-                if 'name' in user_info and user_info['name'] and user_info['name'].lower() != 'anonymous':
+                if 'name' in user_info and user_info['name']:
                     username = user_info['name']
-                elif 'username' in user_info and user_info['username'] and user_info['username'].lower() != 'anonymous':
+                elif 'username' in user_info and user_info['username']:
                     username = user_info['username']
-                elif 'email' in user_info and user_info['email'] and user_info['email'].lower() != 'anonymous':
+                elif 'email' in user_info and user_info['email']:
                     username = user_info['email']
                     
-        # If still not available or is Anonymous, try scan_data keys
-        if username.lower() == 'anonymous' or username.lower() == 'unknown' or username == 'Not available':
+        # If still not available, try scan_data keys
+        if not username or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
             # Try scan_data username first, then other keys
             for key in ['username', 'user', 'owner', 'repo_owner', 'created_by', 'scanned_by', 'author']:
                 if key in scan_data and scan_data[key] and isinstance(scan_data[key], str):
-                    if scan_data[key].lower() not in ['anonymous', 'unknown', 'not available']:
+                    if scan_data[key].lower() not in ['anonymous', 'unknown', 'not available', 'none']:
                         username = scan_data[key]
                         break
+                        
+        # Final safeguard to never show Anonymous in report
+        if not username or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
+            username = 'DataGuardian User'
     except Exception as e:
         # If anything fails, make sure we have a valid username
-        if username.lower() == 'anonymous':
-            username = 'DataGuardian User'
+        username = 'DataGuardian User'
+        
+    # Force a final check to ensure we never have Anonymous in the report
+    if not username or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
+        username = 'DataGuardian User'
     
     # Get region with better fallbacks and ensure it's not "Unknown" or similar
     region = scan_data.get('region', scan_data.get('cloud_region', 'Europe/Netherlands'))
     
     # Replace common placeholder values with a meaningful default
-    if region in ['Unknown', 'Not available', 'Not specified', 'Global']:
-        # Use Netherlands as default region (since the application has Dutch GDPR compliance)
+    # Force Europe/Netherlands for all reports by default (since the application has Dutch GDPR compliance)
+    if not region or region.lower() in ['unknown', 'not available', 'not specified', 'global', 'default', 'none']:
+        region = 'Europe/Netherlands'
+        
+    # Force override if region is still a placeholder or doesn't look like a proper region name
+    if len(region) < 3 or '/' not in region or region == 'Default':
         region = 'Europe/Netherlands'
     
     # Get scan date with formatting
