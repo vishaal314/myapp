@@ -1606,10 +1606,14 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         # Get top 3 file types scanned if available
         file_types = scan_data.get('file_types', {})
         file_types_text = ""
-        if file_types:
+        if file_types and isinstance(file_types, dict) and len(file_types) > 0:
+            # Add debug logging to check file_types content
+            print(f"DEBUG: Found file_types in scan_data: {file_types}")
             file_types_list = sorted(file_types.items(), key=lambda x: x[1], reverse=True)[:3]
             file_types_text = ", ".join([f"{ext} ({count})" for ext, count in file_types_list])
         else:
+            # For debugging
+            print(f"DEBUG: file_types is empty or invalid: {file_types}")
             file_types_text = "Not available"
         
         if current_lang == 'nl':
@@ -1931,15 +1935,15 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             detailed_findings_title = _('report.detailed_findings', 'Detailed Findings')
         elements.append(Paragraph(detailed_findings_title, heading_style))
         
-        # For AI Model reports, display findings from the findings array directly
-        if report_format == "ai_model" and 'findings' in scan_data and scan_data['findings']:
-            # Create a table for AI model findings
-            ai_findings = scan_data['findings']
-            ai_finding_items = []
+        # Display findings from the findings array for both AI Model and GDPR repository reports
+        if (report_format == "ai_model" or report_format == "gdpr_repository") and 'findings' in scan_data and scan_data['findings']:
+            # Create a table for findings
+            findings_list = scan_data['findings']
+            finding_items = []
             
             # Log findings for debugging purposes
             import logging
-            logging.info(f"Processing AI model findings for report. Found {len(ai_findings)} findings.")
+            logging.info(f"Processing {report_format} findings for report. Found {len(findings_list)} findings.")
             
             for finding in ai_findings:
                 # Translate risk level for display if needed
