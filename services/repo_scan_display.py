@@ -15,6 +15,39 @@ import pandas as pd
 import io
 import plotly.express as px
 import plotly.graph_objects as go
+import logging
+import traceback
+
+# Configure logging for this module
+logger = logging.getLogger('repo_scan_display')
+logger.setLevel(logging.INFO)
+
+# Create file handler if it doesn't exist
+if not logger.handlers:
+    try:
+        # Make sure logs directory exists
+        os.makedirs('logs', exist_ok=True)
+        
+        # Create file handler
+        file_handler = logging.FileHandler('logs/repo_scan.log')
+        file_handler.setLevel(logging.INFO)
+        
+        # Create formatter
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        
+        # Add handler to logger
+        logger.addHandler(file_handler)
+        
+        # Add stream handler for console output
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(logging.INFO)
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+        
+        logger.info("Repo Scan Display Logger initialized successfully")
+    except Exception as e:
+        print(f"Error setting up logger: {str(e)}")
 
 from utils.i18n import _
 from services.report_generator import auto_generate_pdf_report
@@ -165,6 +198,16 @@ def display_repo_scan_results(scan_results: Dict[str, Any], show_download_button
         
         # Use report generator to create PDF
         try:
+            import traceback
+            import logging
+            
+            # Create logger if it doesn't exist
+            logger = logging.getLogger('repo_scan_display')
+            logger.setLevel(logging.INFO)
+            
+            # Log that we're starting PDF generation
+            logger.info(f"Starting PDF report generation for scan ID: {scan_results.get('scan_id', 'unknown')}")
+            
             # Ensure scan results have the right format for report generation
             report_data = {
                 'scan_type': 'repository',
@@ -186,26 +229,114 @@ def display_repo_scan_results(scan_results: Dict[str, Any], show_download_button
                 'region': scan_results.get('region', 'Default'),
             }
             
+            # Log the keys in the report data
+            logger.info(f"Report data keys: {list(report_data.keys())}")
+            
+            # Make sure 'findings' is properly formatted
+            if not report_data.get('findings'):
+                logger.warning("No findings in report data, adding empty list")
+                report_data['findings'] = []
+            
             # Generate PDF report
             with st.spinner("Generating PDF report..."):
-                success, report_path, pdf_bytes = auto_generate_pdf_report(report_data)
-                
-                if success and pdf_bytes:
-                    # Create a download button for the PDF
-                    report_filename = f"repo_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                try:
+                    # Create reports directory if it doesn't exist
+                    os.makedirs("reports", exist_ok=True)
                     
-                    # Use streamlit's download_button for better reliability
-                    st.download_button(
-                        label="📥 Download PDF Report",
-                        data=pdf_bytes,
-                        file_name=report_filename,
-                        mime="application/pdf",
-                        help="Download a detailed PDF report of the repository scan results",
-                        key=f"download_pdf_{scan_results.get('scan_id')}"
-                    )
-                else:
+                    # Call auto_generate_pdf_report with additional error handling
+                    logger.info("Calling auto_generate_pdf_report...")
+                    success, report_path, pdf_bytes = auto_generate_pdf_report(report_data)
+                    logger.info(f"PDF generation result: success={success}, report_path={report_path}, pdf_bytes_len={len(pdf_bytes) if pdf_bytes else 'None'}")
+                    
+                    if success and pdf_bytes:
+                        # Create a download button for the PDF
+                        report_filename = f"repo_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                        logger.info(f"Generated PDF report filename: {report_filename}")
+                        
+                        try:
+                            # Use streamlit's download_button for better reliability
+                            st.download_button(
+                                label="📥 Download PDF Report",
+                                data=pdf_bytes,
+                                file_name=report_filename,
+                                mime="application/pdf",
+                                help="Download a detailed PDF report of the repository scan results",
+                                key=f"download_pdf_{scan_results.get('scan_id')}"
+                            )
+                            logger.info("PDF download button created successfully")
+                        except Exception as button_error:
+                            logger.error(f"Error creating download button: {str(button_error)}")
+                            logger.error(traceback.format_exc())
+                            
+                            # Fallback: Create base64 encoded download link
+                            try:
+                                import base64
+                                b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{report_filename}" class="download-button">📥 Download PDF Report</a>'
+                                st.markdown(f"""
+                                <style>
+                                .download-button {{
+                                    display: inline-block;
+                                    padding: 0.5em 1em;
+                                    color: white;
+                                    background-color: #4CAF50;
+                                    text-align: center;
+                                    border-radius: 4px;
+                                    text-decoration: none;
+                                    font-weight: bold;
+                                }}
+                                </style>
+                                {href}
+                                """, unsafe_allow_html=True)
+                                logger.info("Used fallback base64 download link")
+                            except Exception as fallback_error:
+                                logger.error(f"Fallback method also failed: {str(fallback_error)}")
+                                st.error("Error creating download link. Please try again later.")
+                    else:
+                        # Try direct generation if auto-generate failed
+                        try:
+                            from services.report_generator import generate_report
+                            logger.info("Auto-generate failed, trying direct report generation")
+                            
+                            # Try direct report generation
+                            pdf_bytes = generate_report(
+                                report_data,
+                                include_details=True,
+                                include_charts=True,
+                                include_metadata=True, 
+                                include_recommendations=True,
+                                report_format="gdpr_repository"
+                            )
+                            
+                            if pdf_bytes:
+                                report_filename = f"repo_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                                logger.info(f"Direct generation succeeded, creating download button for {report_filename}")
+                                
+                                # Create download button with direct generation result
+                                st.download_button(
+                                    label="📥 Download PDF Report",
+                                    data=pdf_bytes,
+                                    file_name=report_filename, 
+                                    mime="application/pdf",
+                                    help="Download a detailed PDF report of the repository scan results",
+                                    key=f"direct_pdf_{scan_results.get('scan_id')}"
+                                )
+                                logger.info("Direct PDF generation succeeded")
+                            else:
+                                logger.error("Both PDF generation methods failed")
+                                st.warning("Failed to generate PDF report. Please try again.")
+                        except Exception as direct_gen_error:
+                            logger.error(f"Direct generation also failed: {str(direct_gen_error)}")
+                            logger.error(traceback.format_exc())
+                            st.warning("Failed to generate PDF report. Please try again.")
+                except Exception as pdf_gen_error:
+                    logger.error(f"PDF generation error: {str(pdf_gen_error)}")
+                    logger.error(traceback.format_exc())
                     st.warning("Failed to generate PDF report. Please try again.")
         except Exception as e:
+            # Catch-all exception handler
+            print(f"Error in report generation: {str(e)}")
+            print(traceback.format_exc())
             st.error(f"Error generating report: {str(e)}")
     
     # Display findings table with risk badges
