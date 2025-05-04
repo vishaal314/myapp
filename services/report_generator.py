@@ -3565,9 +3565,10 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         # Get recommendations from scan data
         recommendations = scan_data.get('recommendations', [])
         
-        # If there are no recommendations and this is a sustainability report,
+        # If there are no recommendations and this is a sustainability report
+        # (but not a GDPR repository report),
         # add appropriate default recommendations based on scan findings
-        if not recommendations and 'sustainability' in scan_type.lower():
+        if not recommendations and 'sustainability' in scan_type.lower() and 'repository' not in scan_type.lower():
             # Check findings to generate relevant recommendations
             findings = scan_data.get('findings', [])
             
@@ -3593,8 +3594,8 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                 ]
             })
             
-            # Add code-specific recommendation if relevant
-            if has_code_issues or not (has_cloud_issues or has_infrastructure_issues):
+            # Add code-specific recommendation if relevant (but not for repository GDPR reports)
+            if (has_code_issues or not (has_cloud_issues or has_infrastructure_issues)) and 'repository' not in scan_type.lower():
                 recommendations.append({
                     'description': 'Optimize code efficiency and repository structure',
                     'severity': 'Medium',
@@ -3608,8 +3609,8 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                     ]
                 })
             
-            # Add cloud-specific recommendation if relevant
-            if has_cloud_issues:
+            # Add cloud-specific recommendation if relevant (but not for repository GDPR reports)
+            if has_cloud_issues and 'repository' not in scan_type.lower():
                 recommendations.append({
                     'description': 'Optimize cloud resource utilization',
                     'severity': 'High',
@@ -3623,8 +3624,8 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                     ]
                 })
                 
-            # Add infrastructure-specific recommendation if relevant
-            if has_infrastructure_issues:
+            # Add infrastructure-specific recommendation if relevant (but not for repository GDPR reports)
+            if has_infrastructure_issues and 'repository' not in scan_type.lower():
                 recommendations.append({
                     'description': 'Improve infrastructure efficiency and sustainability',
                     'severity': 'Medium',
@@ -3638,8 +3639,8 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                     ]
                 })
                 
-            # Add a simple recommendation for low findings
-            if len(findings) <= 2:
+            # Add a simple recommendation for low findings (but not for repository GDPR reports)
+            if len(findings) <= 2 and 'repository' not in scan_type.lower():
                 recommendations.append({
                     'description': 'Maintain current sustainability practices',
                     'severity': 'Low',
