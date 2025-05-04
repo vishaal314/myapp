@@ -287,10 +287,11 @@ with st.sidebar:
     # Language selector in sidebar expander with animated flags
     # Removed duplicate language switcher
     
-    # Authentication in the sidebar - only Register button
+    # Authentication in the sidebar - Register button with Login panel below
     if not st.session_state.logged_in:
-        # Always use the register tab
-        st.session_state.active_tab = "register"
+        # Set default tab if not set
+        if "active_tab" not in st.session_state:
+            st.session_state.active_tab = "register"
         
         # Add Register button with clean modern design
         st.markdown(f"""
@@ -304,10 +305,84 @@ with st.sidebar:
         
         # Hidden button to handle register action (won't be visible but remains functional)
         if st.button("Register Tab", key="register_tab_button", help="Register new account", type="secondary", use_container_width=True):
-            # This is just to activate the register form, no action needed here
-            pass
+            st.session_state.active_tab = "register"
+            st.rerun()
+        
+        # Add Login panel with title (always visible)
+        st.markdown("""
+        <div style="background-color: #3B82F6; color: white; font-weight: bold; padding: 10px; 
+                  text-align: center; border-radius: 10px 10px 0 0; margin-top: 20px;">
+            Login
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Login Form
+        with st.container():
+            st.markdown("""
+            <div style="border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 10px 10px; 
+                       padding: 15px; margin-bottom: 20px; background-color: #F9FAFB;">
+            </div>
+            """, unsafe_allow_html=True)
             
-        # Hide the actual button but keep it functional
+            username_or_email = st.text_input("Username or Email", key="sidebar_login_username")
+            password = st.text_input("Password", type="password", key="sidebar_login_password")
+            
+            cols = st.columns([3, 2])
+            with cols[0]:
+                remember = st.checkbox("Remember me", key="sidebar_remember_login")
+            
+            # Blue login button
+            login_button = st.button("Sign In", use_container_width=True, key="visible_sidebar_login", type="primary")
+            
+            if login_button:
+                if not username_or_email or not password:
+                    st.error("Please enter both username/email and password")
+                else:
+                    user_data = authenticate(username_or_email, password)
+                    if user_data:
+                        st.session_state.logged_in = True
+                        st.session_state.username = user_data["username"]
+                        st.session_state.role = user_data["role"]
+                        st.session_state.email = user_data.get("email", "")
+                        st.session_state.permissions = user_data.get("permissions", [])
+                        if not st.session_state.permissions and "role" in user_data:
+                            from services.auth import ROLE_PERMISSIONS
+                            if user_data["role"] in ROLE_PERMISSIONS:
+                                st.session_state.permissions = ROLE_PERMISSIONS[user_data["role"]]["permissions"]
+                        
+                        # Set language persistence (keeping existing language handling code)
+                        lang_sources = {
+                            "_persistent_language": st.session_state.get("_persistent_language"),
+                            "language": st.session_state.get("language"),
+                            "pre_login_language": st.session_state.get("pre_login_language"),
+                            "pre_logout_language": st.session_state.get("pre_logout_language"),
+                            "backup_language": st.session_state.get("backup_language"),
+                            "force_language_after_login": st.session_state.get("force_language_after_login")
+                        }
+                        
+                        # Find first non-None language
+                        current_language = None
+                        for key in ["_persistent_language", "force_language_after_login", "language", 
+                                   "pre_login_language", "pre_logout_language", "backup_language"]:
+                            if lang_sources[key]:
+                                current_language = lang_sources[key]
+                                break
+                        
+                        # Default to English
+                        if not current_language:
+                            current_language = 'en'
+                        
+                        # Store language in session state
+                        st.session_state['_persistent_language'] = current_language
+                        st.session_state['language'] = current_language
+                        
+                        # Success message and rerun
+                        st.success("Login successful!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid username/email or password")
+        
+        # Hide the actual buttons but keep them functional
         st.markdown("""
         <style>
         /* Hide the actual tab buttons but keep them accessible to JavaScript */
