@@ -66,6 +66,52 @@ class RepoScanner:
             except Exception as e:
                 logger.error(f"Error cleaning up temporary directory {temp_dir}: {str(e)}")
     
+    def clean_github_url(self, repo_url: str) -> str:
+        """
+        Clean GitHub URLs to ensure they're in the correct format for cloning.
+        
+        This function removes common patterns that cause clone errors such as:
+        - /blob/master/ or /blob/main/ paths
+        - /tree/master/ or /tree/main/ paths
+        - Any file or directory paths after the repository name
+        
+        Args:
+            repo_url: Original GitHub repository URL
+            
+        Returns:
+            Cleaned repository URL suitable for git clone
+        """
+        # Only process GitHub URLs
+        if 'github.com' not in repo_url:
+            return repo_url
+            
+        logger.info(f"Cleaning GitHub URL: {repo_url}")
+        
+        # Handle /blob/ paths which are very common mistakes
+        blob_pattern = r'(https?://(?:www\.)?github\.com/[^/]+/[^/]+)/blob/[^/]+/.*'
+        blob_match = re.match(blob_pattern, repo_url)
+        if blob_match:
+            cleaned_url = blob_match.group(1)
+            logger.info(f"Removed /blob/ path, cleaned URL: {cleaned_url}")
+            return cleaned_url
+            
+        # Handle /tree/ paths which are also common
+        tree_pattern = r'(https?://(?:www\.)?github\.com/[^/]+/[^/]+)/tree/[^/]+/.*'
+        tree_match = re.match(tree_pattern, repo_url)
+        if tree_match:
+            cleaned_url = tree_match.group(1)
+            logger.info(f"Removed /tree/ path, cleaned URL: {cleaned_url}")
+            return cleaned_url
+        
+        # If the URL has more than 4 path segments (https://github.com/org/repo/extra/paths), truncate it
+        path_segments = repo_url.split('/')
+        if len(path_segments) > 5:  # 5 segments: ['https:', '', 'github.com', 'org', 'repo']
+            cleaned_url = '/'.join(path_segments[:5])
+            logger.info(f"Truncated extra path segments, cleaned URL: {cleaned_url}")
+            return cleaned_url
+            
+        return repo_url
+
     def is_valid_repo_url(self, repo_url: str) -> bool:
         """
         Check if a repository URL is valid.
@@ -146,6 +192,13 @@ class RepoScanner:
             Dictionary with cloning results and local path
         """
         start_time = time.time()
+        
+        # Clean the GitHub URL if it includes paths like /blob/master/ or /tree/master/
+        original_url = repo_url
+        if 'github.com' in repo_url:
+            repo_url = self.clean_github_url(repo_url)
+            if repo_url != original_url:
+                logger.info(f"URL was cleaned for cloning: {original_url} -> {repo_url}")
         
         if not self.is_valid_repo_url(repo_url):
             return {
@@ -449,6 +502,13 @@ class RepoScanner:
             Dictionary with scan results
         """
         start_time = time.time()
+        
+        # Clean GitHub URLs if they contain /blob/master/ or similar patterns
+        original_url = repo_url
+        if 'github.com' in repo_url:
+            repo_url = self.clean_github_url(repo_url)
+            if repo_url != original_url:
+                logger.info(f"URL was cleaned for scanning: {original_url} -> {repo_url}")
         
         # Performance improvement logging
         logger.info(f"Starting optimized repository scan for {repo_url}")
