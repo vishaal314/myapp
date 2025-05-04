@@ -3247,7 +3247,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Regio': region,
                     'Tijdstempel': timestamp,
                     'URL/Domein': url if url and url != 'Not available' else scan_data.get('repo_url', 'Repository URL'),
-                    'Gebruikersnaam': scan_data.get('username', scan_data.get('user', 'Anoniem')),
+                    'Gebruikersnaam': 'DataGuardian Pro Gebruiker', # Always use fixed username
                     'Bestanden Gescand': scan_data.get('file_count', scan_data.get('total_files', scan_data.get('files_scanned', 1)))
                 }
             else:
@@ -3268,15 +3268,25 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 value = 'Onbekend'
             metadata_data.append([key, str(value)])
         
-        metadata_table = Table(metadata_data, colWidths=[150, 300])
+        # Use a modern, clean table style for metadata
+        metadata_table = Table(metadata_data, colWidths=[180, 350])
         metadata_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-            ('TEXTCOLOR', (0, 0), (0, -1), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            # Modern styling with better colors
+            ('BACKGROUND', (0, 0), (0, -1), HexColor('#f0f6ff')),  # Light blue for label column
+            ('BACKGROUND', (1, 0), (1, -1), HexColor('#ffffff')),  # White for value column
+            ('TEXTCOLOR', (0, 0), (0, -1), HexColor('#334155')),   # Dark slate for labels
+            ('TEXTCOLOR', (1, 0), (1, -1), HexColor('#1e293b')),   # Darker slate for values
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),       # Bold for labels
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('GRID', (0, 0), (-1, -1), 1, colors.grey)
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),                # More padding
+            ('TOPPADDING', (0, 0), (-1, -1), 8),                   # More padding
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),                 # More left padding
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),                # More right padding
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#cbd5e1')),  # Lighter grid lines
+            ('LINEBELOW', (0, -1), (1, -1), 1, HexColor('#94a3b8')) # Stronger bottom line
         ]))
         
         elements.append(metadata_table)
