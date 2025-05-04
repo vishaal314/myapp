@@ -1041,6 +1041,71 @@ def generate_report(scan_data: Dict[str, Any],
         buffer.seek(0)
         return buffer.getvalue()
 
+def _format_location_text(location: str) -> str:
+    """
+    Format location text for better readability in PDF reports.
+    Handles file extensions, line numbers, and long text wrapping.
+    
+    Args:
+        location: Original location text
+        
+    Returns:
+        Formatted location text
+    """
+    location = str(location).strip()
+    
+    # Format .extension (ext) patterns first
+    if ' (' in location and ')' in location:
+        # Handle patterns like ".goreleaser.yml (yml)"
+        try:
+            file_part, ext_part = location.split(' (', 1)
+            ext_part = ext_part.rstrip(')')
+            
+            # If parenthesis just repeats the extension, simplify it
+            if '.' in file_part and ext_part.lower() == file_part.split('.')[-1].lower():
+                location = file_part
+        except:
+            # Keep original if splitting fails
+            pass
+                
+    # Handle line numbers - replace "file.py:123" with "file.py (line 123)"
+    if ':' in location and not location.endswith(':'):
+        try:
+            parts = location.split(':', 1)
+            if len(parts) == 2 and parts[1].strip().isdigit():
+                location = f"{parts[0]} (line {parts[1].strip()})"
+        except:
+            # Keep original if conversion fails
+            pass
+    
+    # Format location for better readability and break long lines to prevent overlap
+    if ' ' in location and len(location) > 25:
+        # Add line breaks at logical points if location text is long
+        words = location.split(' ')
+        location_parts = []
+        current_part = ""
+        
+        for word in words:
+            if len(current_part) + len(word) + 1 <= 20:  # +1 for the space
+                if current_part:  # Not the first word
+                    current_part += " " + word
+                else:
+                    current_part = word
+            else:
+                # This word would make the line too long
+                if current_part:  # Save the current line
+                    location_parts.append(current_part)
+                current_part = word
+        
+        # Add the last part if it exists
+        if current_part:
+            location_parts.append(current_part)
+            
+        # Join with line breaks for PDF
+        location = "\n".join(location_parts)
+        
+    return location
+
 def _generate_report_internal(scan_data: Dict[str, Any], 
                    include_details: bool = True,
                    include_charts: bool = True,
