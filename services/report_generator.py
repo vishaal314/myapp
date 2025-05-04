@@ -2999,47 +2999,9 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             for recommendation in nl_recommendations:
                 elements.append(Paragraph(f"• {recommendation}", normal_style))
                 
-        # Sustainability recommendations with translation - skip for SOC2 reports
-        if report_format != "soc2":
-            if current_lang == 'nl':
-                sustainability_title = _('report.sustainability_recommendations', 'Aanbevelingen voor Gegevensduurzaamheid')
-            else:
-                sustainability_title = _('report.sustainability_recommendations', 'Data Sustainability Recommendations')
-            elements.append(Paragraph(sustainability_title, subheading_style))
-            
-            if current_lang == 'nl':
-                sustainability_recommendations = [
-                    "Implementeer praktijken voor gegevensminimalisatie om alleen noodzakelijke persoonsgegevens te verzamelen.",
-                    "Stel duidelijke bewaartermijnen voor gegevens en geautomatiseerde verwijderingsprocessen vast.",
-                    "Controleer en schoon databases regelmatig om overbodige of verouderde gegevens te verwijderen.",
-                    "Ontwerp systemen met privacy-by-design principes om duurzaamheid te verbeteren.",
-                    "Overweeg optimalisatie van gegevensopslag om de milieu-impact van datacenters te verminderen."
-                ]
-            else:
-                sustainability_recommendations = [
-                    "Implement data minimization practices to collect only necessary personal data.",
-                    "Establish clear data retention periods and automated deletion processes.",
-                    "Regularly audit and clean databases to remove redundant or obsolete data.",
-                    "Design systems with privacy by design principles to improve sustainability.",
-                    "Consider data storage optimization to reduce environmental impact of data centers."
-                ]
-            
-            # Use a custom style for sustainability recommendations with green accents
-            sustainability_style = ParagraphStyle(
-                'Sustainability',
-                parent=normal_style,
-                textColor=HexColor('#2ecc71'),
-                leftIndent=10,
-                borderColor=HexColor('#2ecc71'),
-                borderWidth=0,
-                borderPadding=0,
-                borderRadius=0,
-                spaceBefore=2,
-                spaceAfter=2
-            )
-            
-            for recommendation in sustainability_recommendations:
-                elements.append(Paragraph(f"• {recommendation}", sustainability_style))
+        # Sustainability recommendations section has been removed as per user request
+        # This section previously contained recommendations about data minimization, retention periods,
+        # database cleaning, privacy by design, and data storage optimization
     
     # Include metadata if requested
     if include_metadata:
