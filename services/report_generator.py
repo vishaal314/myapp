@@ -1970,10 +1970,42 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 # Create a data row for this finding with improved fallback values
                 # Extract the data from the finding with better fallbacks
                 finding_type = finding.get('type', finding.get('finding_type', finding.get('issue_type', 'PII')))
-                finding_category = finding.get('category', finding.get('gdpr_principle', finding.get('principle', 'Data Protection')))
-                finding_description = finding.get('description', finding.get('message', finding.get('finding_description', 'Potential privacy data detected')))
-                finding_location = finding.get('location', finding.get('file', finding.get('path', 'Repository')))
                 
+                # Get category data with fallbacks
+                finding_category = finding.get('category', None)
+                if not finding_category:
+                    # Try to determine category from other fields
+                    if 'gdpr_principle' in finding:
+                        finding_category = finding['gdpr_principle']
+                    elif 'principle' in finding:
+                        finding_category = finding['principle']
+                    elif 'risk_level' in finding and finding['risk_level'].lower() == 'high':
+                        finding_category = 'Security'
+                    else:
+                        finding_category = 'Data Protection'
+                        
+                # Get description data with multiple fallbacks
+                finding_description = None
+                for key in ['description', 'message', 'finding_description', 'reason', 'value']:
+                    if key in finding and finding[key]:
+                        finding_description = finding[key]
+                        break
+                        
+                if not finding_description:
+                    finding_description = "Potential privacy data detected"
+                    
+                # Get location data with proper fallbacks
+                finding_location = None
+                for key in ['location', 'file', 'path', 'file_path']:
+                    if key in finding and finding[key]:
+                        finding_location = finding[key]
+                        break
+                        
+                if not finding_location and 'line' in finding:
+                    finding_location = f"Line {finding['line']}"
+                elif not finding_location:
+                    finding_location = "Repository"
+                    
                 # Ensure no empty values in displayed data
                 if not finding_type or finding_type == "Unknown":
                     finding_type = "PII Finding"
@@ -1983,6 +2015,11 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     finding_description = "Privacy sensitive data"
                 if not finding_location or finding_location == "Unknown":
                     finding_location = "Codebase"
+                    
+                # Log for debugging 
+                import logging
+                logging.info(f"Original finding: {finding}")
+                logging.info(f"Extracted data - Type: {finding_type}, Category: {finding_category}, Description: {finding_description}, Location: {finding_location}")
                 
                 finding_data = [
                     finding_type,
