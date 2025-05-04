@@ -70,14 +70,46 @@ def auto_generate_pdf_report(scan_data: Dict[str, Any], save_path: Optional[str]
         - Message or file path (str) 
         - Report bytes (or None if failed)
     """
+    # Configure logging for this function
+    import logging
+    logger = logging.getLogger('report_generator')
+    logger.setLevel(logging.INFO)
+    
+    # Create file handler if needed
+    if not logger.handlers:
+        try:
+            # Make sure logs directory exists
+            os.makedirs('logs', exist_ok=True)
+            
+            # Create file handler
+            file_handler = logging.FileHandler('logs/report_generator.log')
+            file_handler.setLevel(logging.INFO)
+            
+            # Create formatter
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            file_handler.setFormatter(formatter)
+            
+            # Add handler to logger
+            logger.addHandler(file_handler)
+            
+            logger.info("Report Generator Logger initialized successfully")
+        except Exception as e:
+            print(f"Error setting up logger: {str(e)}")
+            
+    logger.info(f"Starting auto_generate_pdf_report for scan type: {scan_data.get('scan_type', 'Unknown')}")
+    
     try:
         if not scan_data or not isinstance(scan_data, dict):
+            logger.error("Invalid scan data provided - not a dictionary or None")
             return False, "Invalid scan data provided", None
             
         # Get scan identification information
         scan_id = scan_data.get('scan_id', f"scan_{uuid.uuid4().hex[:8]}")
         scan_type = scan_data.get('scan_type', 'Unknown')
         timestamp = scan_data.get('timestamp', datetime.now().isoformat())
+        
+        logger.info(f"PDF generation for scan_id: {scan_id}, type: {scan_type}")
+        logger.info(f"Available scan data keys: {list(scan_data.keys())}")
         
         # Format timestamp for filename
         try:
@@ -866,8 +898,13 @@ def generate_report(scan_data: Dict[str, Any],
     Returns:
         The PDF report as bytes
     """
+    # Get logger
+    import logging
+    logger = logging.getLogger('report_generator')
+    
     # Ensure we have valid input
     if not scan_data or not isinstance(scan_data, dict):
+        logger.error("Invalid scan data provided to generate_report - not a dictionary or None")
         # Create basic error report if scan_data is invalid
         buffer = io.BytesIO()
         
@@ -889,36 +926,78 @@ def generate_report(scan_data: Dict[str, Any],
         return buffer.getvalue()
     
     try:
-        # Add debug logging
-        import logging
+        # Import required modules - catch reportlab import errors specifically
+        try:
+            from reportlab.lib.pagesizes import letter
+            from reportlab.pdfgen import canvas
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.lib import colors
+            from reportlab.lib.units import inch
+        except ImportError as import_error:
+            logger.error(f"Critical ReportLab import error: {str(import_error)}")
+            
+            # Create very basic error PDF without reportlab
+            buffer = io.BytesIO()
+            
+            # Use basic PDF generator as fallback
+            try:
+                import fpdf
+                pdf = fpdf.FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", size=12)
+                pdf.cell(200, 10, txt="Error: Report Generation Failed", ln=True, align='C')
+                pdf.cell(200, 10, txt=f"Failed to import required libraries: {str(import_error)}", ln=True)
+                pdf.cell(200, 10, txt=f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
+                pdf.output(buffer)
+                buffer.seek(0)
+                logger.info("Used FPDF as fallback for reportlab import error")
+                return buffer.getvalue()
+            except ImportError:
+                # If all PDF libraries fail, create dummy PDF
+                logger.error("All PDF libraries failed, creating dummy PDF")
+                
+                # Create minimal valid PDF using raw bytes
+                pdf_content = b"%PDF-1.4\n1 0 obj\n<</Type/Catalog/Pages 2 0 R>>\nendobj\n2 0 obj\n<</Type/Pages/Kids[3 0 R]/Count 1>>\nendobj\n3 0 obj\n<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>/Contents 4 0 R>>\nendobj\n4 0 obj\n<</Length 21>>\nstream\nBT\n/F1 12 Tf\n100 700 Td\n(Error generating report) Tj\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f\n0000000010 00000 n\n0000000056 00000 n\n0000000111 00000 n\n0000000212 00000 n\ntrailer\n<</Size 5/Root 1 0 R>>\nstartxref\n284\n%%EOF"
+                return pdf_content
         
         # Get scan type to determine report format - use provided format if specified
         if report_format:
             scan_type = report_format
-            logging.info(f"Using provided report format: {report_format}")
+            logger.info(f"Using provided report format: {report_format}")
         else:
             scan_type = scan_data.get('scan_type', 'Unknown')
-            logging.info(f"Detected scan type: {scan_type}")
+            logger.info(f"Detected scan type: {scan_type}")
         
         # Log key data structure elements for debugging
-        logging.info(f"Report generation: scan_data keys: {list(scan_data.keys())}")
+        logger.info(f"Report generation: scan_data keys: {list(scan_data.keys())}")
         if 'findings' in scan_data:
-            logging.info(f"Report generation: found {len(scan_data['findings'])} findings")
+            logger.info(f"Report generation: found {len(scan_data['findings'])} findings")
         
         # Use appropriate report format based on scan type
         if 'ai_model' in scan_type.lower():
             report_format = "ai_model"
-            logging.info("Using AI Model report format")
+            logger.info("Using AI Model report format")
         elif 'soc2' in scan_type.lower():
             report_format = "soc2"
-            logging.info("Using SOC2 compliance report format")
+            logger.info("Using SOC2 compliance report format")
         elif 'repository' in scan_type.lower() or 'code' in scan_type.lower():
             report_format = "gdpr_repository"
-            logging.info("Using GDPR repository report format")
+            logger.info("Using GDPR repository report format")
         else:
             report_format = "standard"
-            logging.info("Using standard report format")
-            
+            logger.info("Using standard report format")
+        
+        # Make sure the findings key exists and is valid
+        if 'findings' not in scan_data:
+            logger.warning("No 'findings' key in scan_data - adding empty list")
+            scan_data['findings'] = []
+        elif not isinstance(scan_data['findings'], list):
+            logger.warning("'findings' key is not a list - replacing with empty list")
+            scan_data['findings'] = []
+        
+        # Call the internal report generator
+        logger.info(f"Calling _generate_report_internal with format: {report_format}")
         return _generate_report_internal(
             scan_data=scan_data,
             include_details=include_details,
@@ -928,23 +1007,37 @@ def generate_report(scan_data: Dict[str, Any],
             report_format=report_format
         )
     except Exception as e:
+        # Log the error with traceback
+        import traceback
+        logger.error(f"Error in generate_report: {str(e)}")
+        logger.error(traceback.format_exc())
+        
         # Create basic error report if something goes wrong
         buffer = io.BytesIO()
         
-        # Create a PDF document with error details
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
-        styles = getSampleStyleSheet()
-        story = []
-        
-        # Add error title
-        story.append(Paragraph("Error: Report Generation Failed", styles['Title']))
-        story.append(Spacer(1, 0.5*inch))
-        story.append(Paragraph(f"An error occurred while generating the report: {str(e)}", styles['Normal']))
-        story.append(Spacer(1, 0.25*inch))
-        story.append(Paragraph(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
-        
-        # Build the PDF document
-        doc.build(story)
+        try:
+            # Create a PDF document with error details
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            styles = getSampleStyleSheet()
+            story = []
+            
+            # Add error title
+            story.append(Paragraph("Error: Report Generation Failed", styles['Title']))
+            story.append(Spacer(1, 0.5*inch))
+            story.append(Paragraph(f"An error occurred while generating the report: {str(e)}", styles['Normal']))
+            story.append(Spacer(1, 0.25*inch))
+            story.append(Paragraph(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+            
+            # Build the PDF document
+            doc.build(story)
+        except Exception as pdf_error:
+            # If even the error report fails, create a minimal valid PDF
+            logger.error(f"Failed to create error report: {str(pdf_error)}")
+            
+            # Create minimal valid PDF using raw bytes
+            pdf_content = b"%PDF-1.4\n1 0 obj\n<</Type/Catalog/Pages 2 0 R>>\nendobj\n2 0 obj\n<</Type/Pages/Kids[3 0 R]/Count 1>>\nendobj\n3 0 obj\n<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>/Contents 4 0 R>>\nendobj\n4 0 obj\n<</Length 21>>\nstream\nBT\n/F1 12 Tf\n100 700 Td\n(Error generating report) Tj\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f\n0000000010 00000 n\n0000000056 00000 n\n0000000111 00000 n\n0000000212 00000 n\ntrailer\n<</Size 5/Root 1 0 R>>\nstartxref\n284\n%%EOF"
+            buffer = io.BytesIO(pdf_content)
+            
         buffer.seek(0)
         return buffer.getvalue()
 
@@ -979,8 +1072,14 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     
     buffer = io.BytesIO()
     
-    # Get current language from session state
-    current_lang = st.session_state.get('language', 'en')
+    # Get current language from session state with error handling
+    try:
+        current_lang = st.session_state.get('language', 'en')
+        logger.info(f"Using language from session state: {current_lang}")
+    except Exception as lang_error:
+        logger.warning(f"Error getting language from session state: {str(lang_error)}")
+        current_lang = 'en'  # Default to English if session state fails
+        logger.info("Defaulted to 'en' language")
     
     # Create PDF document with custom page templates
     doc = SimpleDocTemplate(
