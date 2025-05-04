@@ -1546,7 +1546,7 @@ else:
                 
                 # Use session state to remember the selection
                 if 'repo_source' not in st.session_state:
-                    st.session_state.repo_source = _("scan.upload_files")
+                    st.session_state.repo_source = _("scan.repository_url")  # Default to Repository URL option
                 
                 # Create the radio button and update session state
                 repo_source = st.radio(_("scan.repository_details"), [_("scan.upload_files"), _("scan.repository_url")], 
