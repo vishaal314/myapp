@@ -3622,22 +3622,19 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     
     # Add sustainability score visualization
     elements.append(Spacer(1, 0.1*inch))
-    if current_lang == 'nl':
-        elements.append(Paragraph("<b>Duurzaamheidsscore</b>", subheading_style))
-    else:
-        elements.append(Paragraph("<b>Sustainability Score</b>", subheading_style))
+    elements.append(Paragraph(f"<b>{_('report.sustainability_score', 'Sustainability Score')}</b>", subheading_style))
     
     # Create a visual score meter
     score_color = '#10b981'  # Default green
     if sustainability_score < 40:
         score_color = '#ef4444'  # Red for low scores
-        status_text = "Low"
+        status_text = _("report.risk_levels.low", "Low")
     elif sustainability_score < 70:
         score_color = '#f97316'  # Orange for medium scores
-        status_text = "Medium"
+        status_text = _("report.risk_levels.medium", "Medium")
     else:
         score_color = '#10b981'  # Green for high scores
-        status_text = "High"
+        status_text = _("report.risk_levels.high", "High")
     
     # Ensure the sustainability score is valid and reasonable
     if not isinstance(sustainability_score, (int, float)) or sustainability_score <= 0:
@@ -3651,7 +3648,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     
     # Create a more visually appealing score display with label - avoid using font tags which may not work in PDF
     score_table_data = [
-        ["Sustainability Score"], 
+        [_("report.sustainability_score", "Sustainability Score")], 
         [formatted_score],
         [status_text]
     ]
@@ -3678,10 +3675,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     
     # Findings section
     elements.append(Spacer(1, 0.15*inch))
-    if current_lang == 'nl':
-        elements.append(Paragraph("<b>Bevindingen</b>", subheading_style))
-    else:
-        elements.append(Paragraph("<b>Findings</b>", subheading_style))
+    elements.append(Paragraph(f"<b>{_('report.findings', 'Findings')}</b>", subheading_style))
     
     # Group findings by risk level
     findings = scan_data.get('findings', [])
@@ -3720,16 +3714,14 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             risk_levels[risk_level].append(finding)
     
     # Add section for scan types performed
-    if current_lang == 'nl':
-        elements.append(Paragraph("<b>Uitgevoerde Scan Types</b>", subheading_style))
-    else:
-        elements.append(Paragraph("<b>Scan Types Performed</b>", subheading_style))
+    elements.append(Paragraph(f"<b>{_('report.scan_types_performed', 'Scan Types Performed')}</b>", subheading_style))
     
-    # Create a table with scan types and descriptions
-    if current_lang == 'nl':
-        scan_types_data = [["Scan Type", "Beschrijving", "Dekking"]]
-    else:
-        scan_types_data = [["Scan Type", "Description", "Coverage"]]
+    # Create a table with scan types and descriptions using translations
+    scan_types_data = [[
+        _("report.scan_type", "Scan Type"), 
+        _("report.description", "Description"), 
+        _("report.coverage", "Coverage")
+    ]]
     
     # Define the scan types and descriptions
     scan_types = {
@@ -3796,16 +3788,14 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     elements.append(Spacer(1, 0.2*inch))
     
     # Add section for GDPR policies scanned
-    if current_lang == 'nl':
-        elements.append(Paragraph("<b>GDPR/AVG Beleid Gecontroleerd</b>", subheading_style))
-    else:
-        elements.append(Paragraph("<b>GDPR Policies Scanned</b>", subheading_style))
+    elements.append(Paragraph(f"<b>{_('report.gdpr_policies', 'GDPR Policies Scanned')}</b>", subheading_style))
     
-    # Create a table with policies and their descriptions
-    if current_lang == 'nl':
-        policies_data = [["Beleid", "Artikel", "Beschrijving"]]
-    else:
-        policies_data = [["Policy", "Article", "Description"]]
+    # Create a table with policies and their descriptions using translations
+    policies_data = [[
+        _("report.policy", "Policy"), 
+        _("report.article", "Article"), 
+        _("report.description", "Description")
+    ]]
     
     # Define the policies with articles and descriptions
     policies = [
@@ -3907,16 +3897,14 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     elements.append(Spacer(1, 0.2*inch))
     
     # Add file-level scan details section
-    if current_lang == 'nl':
-        elements.append(Paragraph("<b>Gescande Bestandstypen</b>", subheading_style))
-    else:
-        elements.append(Paragraph("<b>Scanned File Types</b>", subheading_style))
+    elements.append(Paragraph(f"<b>{_('report.scanned_file_types', 'Scanned File Types')}</b>", subheading_style))
     
-    # Create a table with file types and the scans performed
-    if current_lang == 'nl':
-        file_scan_data = [["Bestandstype", "Aantal", "Toegepaste Scans"]]
-    else:
-        file_scan_data = [["File Type", "Count", "Scans Applied"]]
+    # Create a table with file types and the scans performed using translations
+    file_scan_data = [[
+        _("report.file_type", "File Type"), 
+        _("report.count", "Count"), 
+        _("report.scans_applied", "Scans Applied")
+    ]]
     
     # Extract file types from scan_data
     file_types = scan_data.get('file_types', {})
