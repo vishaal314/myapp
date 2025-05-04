@@ -392,7 +392,7 @@ with st.sidebar:
         
         # Add Register button with enhanced design
         st.markdown(f"""
-        <div class="auth-button register-button" onclick="document.getElementById('register_tab_button').click();">
+        <div class="auth-button register-button" id="register_btn_trigger" onclick="document.getElementById('register_tab_button').click();">
             <div style="display: flex; align-items: center; justify-content: center;">
                 <span style="margin-right: 8px;">✓</span>
                 Register New Account
@@ -400,9 +400,17 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
         
-        # Hidden button to handle register action
-        if st.button("Register Tab", key="register_tab_button", help="Register new account", type="secondary", use_container_width=True):
-            st.session_state.active_tab = "register"
+        # Create a toggle button for registration that doesn't auto-display the form
+        register_clicked = st.button("Register Tab", key="register_tab_button", help="Register new account", type="secondary", use_container_width=True)
+        
+        # Only toggle the form state if explicitly clicked (don't auto-display)
+        if register_clicked:
+            # If already showing registration form, switch back to login
+            if st.session_state.active_tab == "register":
+                st.session_state.active_tab = "login"
+            # If showing login, switch to registration
+            else:
+                st.session_state.active_tab = "register"
             st.rerun()
         
         # Add Login panel with improved design
