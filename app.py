@@ -1587,7 +1587,7 @@ else:
             # Use fresh translation via get_text to ensure language consistency
             if scan_type == get_text("scan.code"):
                 # 1. Code Scanner
-                st.subheader("Code Scanner Configuration")
+                st.subheader(_("scan.code_scanner_configuration"))
                 
                 # Use session state to remember the selection
                 if 'repo_source' not in st.session_state:
@@ -1630,7 +1630,7 @@ else:
                     auth_token = st.text_input("Authentication Token (if private)", type="password", key="auth_token")
                     
                     # Git metadata collection options
-                    st.subheader("Git Metadata")
+                    st.subheader(_("scan.git_metadata"))
                     collect_git_metadata = st.checkbox("Collect Git metadata", value=True)
                     st.markdown("""
                     <small>Includes commit hash, author, and last modified date for better traceability of findings.</small>
@@ -1645,7 +1645,7 @@ else:
                 
                 # Multi-language support
                 lang_support = st.multiselect(
-                    "Languages to Scan", 
+                    _("scan.languages_to_scan"), 
                     ["Python", "JavaScript", "Java", "Go", "Ruby", "PHP", "C#", "C/C++", "TypeScript", "Kotlin", "Swift", 
                      "Terraform", "YAML", "JSON", "HTML", "CSS", "SQL", "Bash", "PowerShell", "Rust"],
                     default=["Python", "JavaScript", "Java", "Terraform", "YAML"]
@@ -1696,18 +1696,18 @@ else:
                         file_extensions.extend([".rs"])
                 
                 # Show the automatically selected extensions
-                st.caption("Selected File Extensions:")
+                st.caption(_("scan.file_extensions") + ":")
                 st.code(", ".join(file_extensions), language="text")
                 
                 # Scan targets
                 scan_targets = st.multiselect(
-                    "Scan For", 
+                    _("scan.scan_for"), 
                     ["Secrets", "API Keys", "PII", "Credentials", "Tokens", "Connection Strings", "All"],
                     default=["All"]
                 )
                 
                 # Advanced Secret Detection
-                st.subheader("Secret Detection Configuration")
+                st.subheader(_("scan.secret_detection_configuration"))
                 col1, col2 = st.columns(2)
                 with col1:
                     use_entropy = st.checkbox("Use entropy analysis", value=True)
@@ -1724,7 +1724,7 @@ else:
                     st.markdown("<small>Advanced pattern matching</small>", unsafe_allow_html=True)
                 
                 # Regional PII tagging options
-                st.subheader("Regional PII Tagging")
+                st.subheader(_("scan.regional_pii_tagging"))
                 col1, col2 = st.columns(2)
                 with col1:
                     regional_options = st.multiselect(
@@ -1738,7 +1738,7 @@ else:
                     st.markdown("<small>e.g., GDPR Art. 9 for sensitive data</small>", unsafe_allow_html=True)
                 
                 # False positive suppression
-                st.subheader("False Positive Management")
+                st.subheader(_("scan.false_positive_management"))
                 
                 false_positive_method = st.radio(
                     "False Positive Suppression Method",
@@ -1753,7 +1753,7 @@ else:
                                placeholder="*.test.js\n**/vendor/**\n**/.git/**\nSECRET_*=*\nTEST_*=*")
                 
                 # CI/CD Compatibility
-                st.subheader("CI/CD Integration")
+                st.subheader(_("scan.cicd_integration"))
                 ci_cd_options = st.multiselect(
                     "CI/CD Output Formats",
                     ["JSON", "SARIF", "CSV", "JUnit XML", "HTML", "Markdown"],
