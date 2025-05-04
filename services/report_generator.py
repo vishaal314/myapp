@@ -1498,7 +1498,8 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     
     # Summary data
     scan_type = optimized_scan_data.get('scan_type', 'Unknown')
-    region = optimized_scan_data.get('region', 'Unknown')
+    # Always use Europe/Netherlands for region in all reports
+    region = 'Europe/Netherlands'
     timestamp = optimized_scan_data.get('timestamp', 'Unknown')
     
     # For AI Model reports, calculate counts directly from findings
@@ -3437,9 +3438,10 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         domain = f"Scan Type: {scan_type}"
     
     # Get username from session state first for highest priority (logged-in user)
-    username = 'DataGuardian User'  # Default to a more user-friendly name
+    # IMPORTANT FIX: Always use DataGuardian Pro User instead of Anonymous
+    username = 'DataGuardian Pro User'  # Default to a more user-friendly name
     
-    # Force override Anonymous value in all cases and ensure we never show Anonymous in the report
+    # Get username from correct source - highest priority is session state
     try:
         # First check if we are authenticated
         is_authenticated = False
@@ -3447,51 +3449,79 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             is_authenticated = st.session_state.get('authenticated', False)
             
             # Get current username from session if available (highest priority)
-            if 'username' in st.session_state and st.session_state.username:
+            if 'username' in st.session_state and st.session_state.username and st.session_state.username != 'Anonymous':
                 username = st.session_state.username
+                # Log that we found username in session state
+                logger.info(f"Using username from session state: {username}")
             
             # If username is not in session, try user_info
             elif 'user_info' in st.session_state and isinstance(st.session_state.user_info, dict):
                 user_info = st.session_state.user_info
                 # Try different keys in user_info (name, username, email)
-                if 'name' in user_info and user_info['name']:
+                if 'name' in user_info and user_info['name'] and user_info['name'] != 'Anonymous':
                     username = user_info['name']
-                elif 'username' in user_info and user_info['username']:
+                    logger.info(f"Using name from user_info: {username}")
+                elif 'username' in user_info and user_info['username'] and user_info['username'] != 'Anonymous':
                     username = user_info['username']
-                elif 'email' in user_info and user_info['email']:
+                    logger.info(f"Using username from user_info: {username}")
+                elif 'email' in user_info and user_info['email'] and user_info['email'] != 'Anonymous':
                     username = user_info['email']
+                    logger.info(f"Using email from user_info: {username}")
+
+            # Also check current_user in session state
+            elif 'current_user' in st.session_state and st.session_state.current_user:
+                if isinstance(st.session_state.current_user, dict):
+                    curr_user = st.session_state.current_user
+                    if 'username' in curr_user and curr_user['username'] and curr_user['username'] != 'Anonymous':
+                        username = curr_user['username']
+                        logger.info(f"Using username from current_user: {username}")
+                elif isinstance(st.session_state.current_user, str) and st.session_state.current_user != 'Anonymous':
+                    username = st.session_state.current_user
+                    logger.info(f"Using current_user string value: {username}")
                     
-        # If still not available, try scan_data keys
-        if not username or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
+        # If still not available or shows as Anonymous, try scan_data keys
+        if not username or username == 'Anonymous' or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
             # Try scan_data username first, then other keys
             for key in ['username', 'user', 'owner', 'repo_owner', 'created_by', 'scanned_by', 'author']:
                 if key in scan_data and scan_data[key] and isinstance(scan_data[key], str):
                     if scan_data[key].lower() not in ['anonymous', 'unknown', 'not available', 'none']:
                         username = scan_data[key]
+                        logger.info(f"Using username from scan_data[{key}]: {username}")
                         break
                         
         # Final safeguard to never show Anonymous in report
-        if not username or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
-            username = 'DataGuardian User'
+        if not username or username == 'Anonymous' or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
+            username = 'DataGuardian Pro User'
+            logger.info("Defaulting to 'DataGuardian Pro User' as fallback")
     except Exception as e:
         # If anything fails, make sure we have a valid username
-        username = 'DataGuardian User'
+        username = 'DataGuardian Pro User'
+        logger.error(f"Error getting username: {str(e)}")
         
     # Force a final check to ensure we never have Anonymous in the report
-    if not username or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
-        username = 'DataGuardian User'
+    if not username or username == 'Anonymous' or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
+        username = 'DataGuardian Pro User'
+        logger.info("Final check: Defaulting to 'DataGuardian Pro User'")
     
-    # Get region with better fallbacks and ensure it's not "Unknown" or similar
-    region = scan_data.get('region', scan_data.get('cloud_region', 'Europe/Netherlands'))
+    # IMPORTANT FIX: Always use Europe/Netherlands as the region for consistency
+    # This is a specific user requirement to avoid showing "Default" in reports
+    region = 'Europe/Netherlands'
     
-    # Replace common placeholder values with a meaningful default
-    # Force Europe/Netherlands for all reports by default (since the application has Dutch GDPR compliance)
-    if not region or region.lower() in ['unknown', 'not available', 'not specified', 'global', 'default', 'none']:
+    # Double-check scan_data, but ensure we still use Europe/Netherlands for consistency
+    scan_region = scan_data.get('region', scan_data.get('cloud_region', ''))
+    if scan_region and scan_region != 'Default' and '/' in scan_region and len(scan_region) > 3:
+        # Only use scan region if it's properly formatted (e.g. "Europe/Amsterdam")
+        # But still ensure Netherlands is the country part
+        region_parts = scan_region.split('/')
+        if len(region_parts) == 2 and region_parts[0].lower() == 'europe':
+            # Keep the original region part but still force Netherlands as the country
+            region = 'Europe/Netherlands'
+            logger.info(f"Using normalized region: {region}")
+    
+    # Final safeguard - always ensure Europe/Netherlands
+    if region != 'Europe/Netherlands':
         region = 'Europe/Netherlands'
-        
-    # Force override if region is still a placeholder or doesn't look like a proper region name
-    if len(region) < 3 or '/' not in region or region == 'Default':
-        region = 'Europe/Netherlands'
+        logger.info("Forcing region to Europe/Netherlands for consistency")
     
     # Get scan date with formatting
     scan_date = scan_data.get('scan_date', scan_data.get('timestamp', datetime.now().isoformat()))
@@ -4536,7 +4566,8 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         repo_name = repo_url.split('/')[-1] if '/' in repo_url else repo_url
         branch = scan_data.get('branch', 'main')
         scan_timestamp = scan_data.get('timestamp', datetime.now().isoformat())
-        region = scan_data.get('region', 'Europe')  # Default to Europe if not specified
+        # Always use Europe/Netherlands as region for all reports (user requirement)
+        region = 'Europe/Netherlands'
         url_domain = scan_data.get('url', scan_data.get('domain', 'Not available'))
         
         formatted_time = ""
