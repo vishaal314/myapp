@@ -277,20 +277,68 @@ def display_repo_scan_results(scan_results: Dict[str, Any], show_download_button
                     else:
                         reason = f"Possible {finding_type} found in code"
             
-            # Add GDPR article reference or compliance category
+            # Add GDPR article reference or compliance category with improved specificity
             gdpr_reference = ""
+            gdpr_articles = finding.get('gdpr_articles', [])
+            
             if finding.get('article_mappings'):
                 gdpr_reference = ", ".join(finding.get('article_mappings'))
+            elif gdpr_articles:
+                # Convert article references to human-readable format
+                article_map = {
+                    'article_6_1_a': 'Art. 6(1)(a) - Consent', 
+                    'article_6_1_b': 'Art. 6(1)(b) - Contract',
+                    'article_6_1_c': 'Art. 6(1)(c) - Legal Obligation',
+                    'article_6_1_d': 'Art. 6(1)(d) - Vital Interests',
+                    'article_6_1_e': 'Art. 6(1)(e) - Public Interest',
+                    'article_6_1_f': 'Art. 6(1)(f) - Legitimate Interests',
+                    'article_5_1_b': 'Art. 5(1)(b) - Purpose Limitation',
+                    'article_5_1_c': 'Art. 5(1)(c) - Data Minimization',
+                    'article_5_1_e': 'Art. 5(1)(e) - Storage Limitation',
+                    'article_32': 'Art. 32 - Security',
+                    'article_17': 'Art. 17 - Right to Erasure',
+                    'article_15': 'Art. 15 - Right of Access',
+                    'article_25': 'Art. 25 - Privacy by Design'
+                }
+                article_refs = []
+                for article in gdpr_articles:
+                    if article in article_map:
+                        article_refs.append(article_map[article])
+                    else:
+                        # Handle raw article IDs that might be in the data
+                        article_id = article.replace('article_', 'Art. ').replace('_', '.')
+                        article_refs.append(article_id)
+                
+                if article_refs:
+                    gdpr_reference = ", ".join(article_refs)
+                else:
+                    gdpr_reference = "GDPR Compliance - Multiple Articles"
             elif finding.get('category'):
                 gdpr_reference = finding.get('category')
             else:
-                # Infer GDPR categories based on finding type
+                # Infer GDPR categories based on finding type with more specificity
                 if 'consent' in finding_type.lower() or 'consent' in reason.lower():
-                    gdpr_reference = "Art. 6, 7 (Consent)"
+                    gdpr_reference = "Art. 6(1)(a), 7 (Consent)"
+                elif 'auth' in finding_type.lower() or 'authentication' in reason.lower():
+                    gdpr_reference = "Art. 32 (Security of Processing)"
+                elif 'encrypt' in finding_type.lower() or 'encryption' in reason.lower():
+                    gdpr_reference = "Art. 32 (Security of Processing)"
+                elif 'credential' in finding_type.lower() or 'password' in finding_type.lower():
+                    gdpr_reference = "Art. 32 (Security of Processing)"
+                elif 'api key' in finding_type.lower() or 'token' in finding_type.lower():
+                    gdpr_reference = "Art. 32 (Security of Processing)"
+                elif 'credit card' in finding_type.lower() or 'payment' in finding_type.lower():
+                    gdpr_reference = "Art. 32, 5(1)(f) (Security, Integrity)"
                 elif 'personal' in finding_type.lower() or 'pii' in finding_type.lower():
-                    gdpr_reference = "Art. 4 (Personal Data)"
+                    gdpr_reference = "Art. 4 (Personal Data Definition)"
                 elif 'email' in finding_type.lower() or 'email' in finding_value.lower():
                     gdpr_reference = "Art. 4, 6 (Personal Data, Lawfulness)"
+                elif 'storage' in finding_type.lower() or 'retention' in reason.lower():
+                    gdpr_reference = "Art. 5(1)(e) (Storage Limitation)"
+                elif 'purpose' in finding_type.lower() or 'purpose' in reason.lower():
+                    gdpr_reference = "Art. 5(1)(b) (Purpose Limitation)"
+                elif 'data minimization' in finding_type.lower() or 'excessive' in reason.lower():
+                    gdpr_reference = "Art. 5(1)(c) (Data Minimization)"
                 else:
                     gdpr_reference = "GDPR Compliance"
             
