@@ -3335,37 +3335,45 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         domain = f"Scan Type: {scan_type}"
     
     # Get username from session state first for highest priority (logged-in user)
-    username = 'DataGuardian User'  # Default to a more user-friendly name than "Not available" or "Anonymous"
+    username = 'DataGuardian User'  # Default to a more user-friendly name
     
-    # First check if we are authenticated
-    is_authenticated = False
-    if hasattr(st, 'session_state'):
-        is_authenticated = st.session_state.get('authenticated', False)
-    
-    if is_authenticated and hasattr(st, 'session_state'):
-        # First try session state username (current logged in user)
-        if 'username' in st.session_state and st.session_state.username:
-            username = st.session_state.username
-        # If that's not available, try user_info
-        elif 'user_info' in st.session_state and isinstance(st.session_state.user_info, dict):
-            username = st.session_state.user_info.get('name', 
-                      st.session_state.user_info.get('username', 
-                      st.session_state.user_info.get('email', 'DataGuardian User')))
-    
-    # If still not available, try scan_data keys
-    if (username == 'Not available' or username == 'Unknown' or 
-        username == 'Not specified' or username == 'Anonymous'):
-        # Try scan_data username first
-        username = scan_data.get('username', username)
-        
-        # Fallback to other potential keys if needed
-        if (username == 'Not available' or username == 'Unknown' or 
-            username == 'Not specified' or username == 'Anonymous'):
-            # Try to find username in other common keys
-            for key in ['user', 'owner', 'repo_owner', 'created_by', 'scanned_by', 'author']:
-                if key in scan_data and scan_data[key] and scan_data[key] not in ['Anonymous', 'Not available', 'Unknown']:
-                    username = scan_data[key]
-                    break
+    # Force override Anonymous value in all cases
+    try:
+        # First check if we are authenticated
+        is_authenticated = False
+        if hasattr(st, 'session_state'):
+            is_authenticated = st.session_state.get('authenticated', False)
+            
+            # Get current username from session if available (highest priority)
+            if 'username' in st.session_state and st.session_state.username:
+                username = st.session_state.username
+                # If the username is Anonymous, use the default instead
+                if username.lower() == 'anonymous':
+                    username = 'DataGuardian User'
+            
+            # If username is not in session, try user_info
+            elif 'user_info' in st.session_state and isinstance(st.session_state.user_info, dict):
+                user_info = st.session_state.user_info
+                # Try different keys in user_info (name, username, email)
+                if 'name' in user_info and user_info['name'] and user_info['name'].lower() != 'anonymous':
+                    username = user_info['name']
+                elif 'username' in user_info and user_info['username'] and user_info['username'].lower() != 'anonymous':
+                    username = user_info['username']
+                elif 'email' in user_info and user_info['email'] and user_info['email'].lower() != 'anonymous':
+                    username = user_info['email']
+                    
+        # If still not available or is Anonymous, try scan_data keys
+        if username.lower() == 'anonymous' or username.lower() == 'unknown' or username == 'Not available':
+            # Try scan_data username first, then other keys
+            for key in ['username', 'user', 'owner', 'repo_owner', 'created_by', 'scanned_by', 'author']:
+                if key in scan_data and scan_data[key] and isinstance(scan_data[key], str):
+                    if scan_data[key].lower() not in ['anonymous', 'unknown', 'not available']:
+                        username = scan_data[key]
+                        break
+    except Exception as e:
+        # If anything fails, make sure we have a valid username
+        if username.lower() == 'anonymous':
+            username = 'DataGuardian User'
     
     # Get region with better fallbacks and ensure it's not "Unknown" or similar
     region = scan_data.get('region', scan_data.get('cloud_region', 'Europe/Netherlands'))
@@ -3606,6 +3614,117 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     elements.append(scan_types_table)
     elements.append(Spacer(1, 0.2*inch))
     
+    # Add section for GDPR policies scanned
+    if current_lang == 'nl':
+        elements.append(Paragraph("<b>GDPR/AVG Beleid Gecontroleerd</b>", subheading_style))
+    else:
+        elements.append(Paragraph("<b>GDPR Policies Scanned</b>", subheading_style))
+    
+    # Create a table with policies and their descriptions
+    if current_lang == 'nl':
+        policies_data = [["Beleid", "Artikel", "Beschrijving"]]
+    else:
+        policies_data = [["Policy", "Article", "Description"]]
+    
+    # Define the policies with articles and descriptions
+    policies = [
+        {
+            "name": "Lawfulness, Fairness, and Transparency",
+            "article": "Art. 5(1)(a)",
+            "description": "Personal data shall be processed lawfully, fairly and in a transparent manner."
+        },
+        {
+            "name": "Purpose Limitation",
+            "article": "Art. 5(1)(b)",
+            "description": "Data must be collected for specified, explicit and legitimate purposes and not further processed incompatibly."
+        },
+        {
+            "name": "Data Minimization",
+            "article": "Art. 5(1)(c)",
+            "description": "Personal data shall be adequate, relevant and limited to what is necessary for processing."
+        },
+        {
+            "name": "Accuracy",
+            "article": "Art. 5(1)(d)",
+            "description": "Personal data shall be accurate and kept up to date; inaccurate data must be erased or rectified."
+        },
+        {
+            "name": "Storage Limitation",
+            "article": "Art. 5(1)(e)",
+            "description": "Personal data shall be kept in a form that permits identification for no longer than necessary."
+        },
+        {
+            "name": "Integrity and Confidentiality",
+            "article": "Art. 5(1)(f)",
+            "description": "Personal data shall be processed securely, including protection against unauthorized processing and accidental loss."
+        },
+        {
+            "name": "Accountability",
+            "article": "Art. 5(2)",
+            "description": "The controller shall be responsible for and be able to demonstrate compliance with all principles."
+        },
+        {
+            "name": "Legal Basis for Processing",
+            "article": "Art. 6",
+            "description": "Processing is lawful only if it meets at least one of the six legal bases outlined in Article 6."
+        },
+        {
+            "name": "Conditions for Consent",
+            "article": "Art. 7",
+            "description": "Where processing is based on consent, it must be freely given, specific, informed and unambiguous."
+        },
+        {
+            "name": "Special Categories of Data",
+            "article": "Art. 9",
+            "description": "Processing of special categories (sensitive) data requires explicit conditions beyond standard processing."
+        }
+    ]
+    
+    # If this is a repository scan, add NL-specific policies
+    if 'repository' in scan_type.lower() or 'code' in scan_type.lower():
+        policies.extend([
+            {
+                "name": "Data Retention (NL UAVG)",
+                "article": "UAVG Art. 5-24",
+                "description": "Netherlands-specific requirements for data retention periods and documentation."
+            },
+            {
+                "name": "Data Breach Notification (NL)",
+                "article": "UAVG Art. 33-34",
+                "description": "Enhanced requirements for data breach notifications under Dutch law."
+            },
+            {
+                "name": "Data Protection Impact Assessment",
+                "article": "Art. 35",
+                "description": "Required when processing is likely to result in high risk to rights and freedoms of natural persons."
+            }
+        ])
+    
+    # Add all policies to the table
+    for policy in policies:
+        policies_data.append([policy["name"], policy["article"], policy["description"]])
+    
+    # Create the policies table
+    policies_table = Table(policies_data, colWidths=[2*inch, 1*inch, 3.5*inch])
+    policies_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1e3a8a')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('TOPPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#d2d6de')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('TOPPADDING', (0, 1), (-1, -1), 6),
+        ('WORDWRAP', (0, 1), (-1, -1), True),
+    ]))
+    elements.append(policies_table)
+    elements.append(Spacer(1, 0.2*inch))
+    
     # Add file-level scan details section
     if current_lang == 'nl':
         elements.append(Paragraph("<b>Gescande Bestandstypen</b>", subheading_style))
@@ -3744,6 +3863,32 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             else:
                 location = location_text or "Unknown"
             
+            # Format location for better readability and break long lines to prevent overlap
+            if ' ' in location and len(location) > 25:
+                # Add line breaks at logical points if location text is long
+                words = location.split(' ')
+                location_parts = []
+                current_part = ""
+                
+                for word in words:
+                    if len(current_part) + len(word) + 1 <= 20:  # +1 for the space
+                        if current_part:  # Not the first word
+                            current_part += " " + word
+                        else:
+                            current_part = word
+                    else:
+                        # This word would make the line too long
+                        if current_part:  # Save the current line
+                            location_parts.append(current_part)
+                        current_part = word
+                
+                # Add the last part if it exists
+                if current_part:
+                    location_parts.append(current_part)
+                    
+                # Join with line breaks for PDF
+                location = "\n".join(location_parts)
+            
             # Generate better recommendations based on finding type
             if 'recommendation' in finding and finding['recommendation']:
                 recommendation = finding['recommendation']
@@ -3768,8 +3913,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             # Limit string lengths to ensure they fit in table cells
             if len(description) > 100:
                 description = description[:97] + "..."
-            if len(location) > 50:
-                location = location[:47] + "..."
+            # Don't limit location length now since we've formatted it with line breaks
             if len(recommendation) > 100:
                 recommendation = recommendation[:97] + "..."
                 
@@ -3848,11 +3992,36 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             location = str(location).strip()
             recommendation = str(recommendation).strip()
             
+            # Format location for better readability and break long lines to prevent overlap
+            if ' ' in location and len(location) > 25:
+                # Add line breaks at logical points if location text is long
+                words = location.split(' ')
+                location_parts = []
+                current_part = ""
+                
+                for word in words:
+                    if len(current_part) + len(word) + 1 <= 20:  # +1 for the space
+                        if current_part:  # Not the first word
+                            current_part += " " + word
+                        else:
+                            current_part = word
+                    else:
+                        # This word would make the line too long
+                        if current_part:  # Save the current line
+                            location_parts.append(current_part)
+                        current_part = word
+                
+                # Add the last part if it exists
+                if current_part:
+                    location_parts.append(current_part)
+                    
+                # Join with line breaks for PDF
+                location = "\n".join(location_parts)
+                
             # Limit string lengths to ensure they fit in table cells
             if len(description) > 100:
                 description = description[:97] + "..."
-            if len(location) > 50:
-                location = location[:47] + "..."
+            # Don't limit location length now since we've formatted it with line breaks
             if len(recommendation) > 100:
                 recommendation = recommendation[:97] + "..."
                 
@@ -3931,11 +4100,36 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             location = str(location).strip()
             recommendation = str(recommendation).strip()
             
+            # Format location for better readability and break long lines to prevent overlap
+            if ' ' in location and len(location) > 25:
+                # Add line breaks at logical points if location text is long
+                words = location.split(' ')
+                location_parts = []
+                current_part = ""
+                
+                for word in words:
+                    if len(current_part) + len(word) + 1 <= 20:  # +1 for the space
+                        if current_part:  # Not the first word
+                            current_part += " " + word
+                        else:
+                            current_part = word
+                    else:
+                        # This word would make the line too long
+                        if current_part:  # Save the current line
+                            location_parts.append(current_part)
+                        current_part = word
+                
+                # Add the last part if it exists
+                if current_part:
+                    location_parts.append(current_part)
+                    
+                # Join with line breaks for PDF
+                location = "\n".join(location_parts)
+                
             # Limit string lengths to ensure they fit in table cells
             if len(description) > 100:
                 description = description[:97] + "..."
-            if len(location) > 50:
-                location = location[:47] + "..."
+            # Don't limit location length now since we've formatted it with line breaks
             if len(recommendation) > 100:
                 recommendation = recommendation[:97] + "..."
                 
