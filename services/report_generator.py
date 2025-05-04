@@ -2921,8 +2921,8 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Repository URL': repository_url if repository_url != 'N/A' else 'Not available',
                     'Repository Path': repository_path if repository_path != 'N/A' else 'Not available',
                     'Branch': branch,
-                    'Username': scan_data.get('username', 'Unknown'),
-                    'Files Scanned': scan_data.get('file_count', 0),
+                    'Username': scan_data.get('username', scan_data.get('user', 'Anonymous')),
+                    'Files Scanned': scan_data.get('file_count', scan_data.get('total_files', scan_data.get('files_scanned', 1))),
                     'CC Findings': cc_findings,
                     'A Findings': a_findings,
                     'PI Findings': pi_findings,
@@ -2936,9 +2936,9 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Scan Type': scan_type,
                     'Regio': region,
                     'Tijdstempel': timestamp,
-                    'URL/Domein': url,
-                    'Gebruikersnaam': scan_data.get('username', 'Onbekend'),
-                    'Bestanden Gescand': scan_data.get('file_count', 0)
+                    'URL/Domein': url if url and url != 'Not available' else scan_data.get('repo_url', 'Repository URL'),
+                    'Gebruikersnaam': scan_data.get('username', scan_data.get('user', 'Anoniem')),
+                    'Bestanden Gescand': scan_data.get('file_count', scan_data.get('total_files', scan_data.get('files_scanned', 1)))
                 }
             else:
                 metadata_labels = {
@@ -2946,9 +2946,9 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Scan Type': scan_type,
                     'Region': region,
                     'Timestamp': timestamp,
-                    'URL/Domain': url,
-                    'Username': scan_data.get('username', 'Unknown'),
-                    'Files Scanned': scan_data.get('file_count', 0)
+                    'URL/Domain': url if url and url != 'Not available' else scan_data.get('repo_url', 'Repository URL'),
+                    'Username': scan_data.get('username', scan_data.get('user', 'Anonymous')),
+                    'Files Scanned': scan_data.get('file_count', scan_data.get('total_files', scan_data.get('files_scanned', 1)))
                 }
         
         # Create metadata table
