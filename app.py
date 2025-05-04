@@ -287,52 +287,167 @@ with st.sidebar:
     # Language selector in sidebar expander with animated flags
     # Removed duplicate language switcher
     
-    # Authentication in the sidebar - Register button with Login panel below
+    # Authentication in the sidebar - Enhanced professional design
     if not st.session_state.logged_in:
         # Set default tab if not set
         if "active_tab" not in st.session_state:
             st.session_state.active_tab = "register"
+            
+        # Add custom CSS for professional look
+        st.markdown("""
+        <style>
+        /* Input field styling */
+        div[data-baseweb="input"] input {
+            border-radius: 5px;
+        }
         
-        # Add Register button with clean modern design
+        /* Custom buttons */
+        .auth-button {
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        }
+        
+        .register-button {
+            background-image: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+        }
+        
+        .register-button:hover {
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        /* Auth card styling */
+        .auth-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .auth-header {
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+        }
+        
+        .auth-content {
+            padding: 20px;
+            background-color: white;
+        }
+        
+        /* Remember me row */
+        .remember-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 12px;
+        }
+        
+        .remember-row span {
+            color: #4B5563;
+        }
+        
+        /* Login button */
+        .login-button {
+            background-image: linear-gradient(135deg, #3B82F6, #2563EB);
+            color: white;
+            padding: 10px 15px;
+            font-weight: 600;
+            text-align: center;
+            width: 100%;
+            border-radius: 6px;
+            margin-top: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .login-button:hover {
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        /* Input labels */
+        .input-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # Add Register button with enhanced design
         st.markdown(f"""
-        <div style="background-color: #10B981; color: white; font-weight: bold; padding: 15px; 
-                   text-align: center; border-radius: 10px; margin-bottom: 15px; 
-                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); cursor: pointer;"
-             onclick="document.getElementById('register_tab_button').click();">
-            Register Account
+        <div class="auth-button register-button" onclick="document.getElementById('register_tab_button').click();">
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <span style="margin-right: 8px;">✓</span>
+                Register New Account
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Hidden button to handle register action (won't be visible but remains functional)
+        # Hidden button to handle register action
         if st.button("Register Tab", key="register_tab_button", help="Register new account", type="secondary", use_container_width=True):
             st.session_state.active_tab = "register"
             st.rerun()
         
-        # Add Login panel with title (always visible)
+        # Add Login panel with improved design
         st.markdown("""
-        <div style="background-color: #3B82F6; color: white; font-weight: bold; padding: 10px; 
-                  text-align: center; border-radius: 10px 10px 0 0; margin-top: 20px;">
-            Login
+        <div class="auth-card">
+            <div class="auth-header" style="background-image: linear-gradient(135deg, #3B82F6, #2563EB); color: white;">
+                SIGN IN
+            </div>
+            <div class="auth-content">
+                <div class="input-label">Username or Email</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
         # Login Form
         with st.container():
-            st.markdown("""
-            <div style="border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 10px 10px; 
-                       padding: 15px; margin-bottom: 20px; background-color: #F9FAFB;">
-            </div>
-            """, unsafe_allow_html=True)
+            username_or_email = st.text_input("", placeholder="Enter your username or email", key="sidebar_login_username")
             
-            username_or_email = st.text_input("Username or Email", key="sidebar_login_username")
-            password = st.text_input("Password", type="password", key="sidebar_login_password")
+            st.markdown('<div class="input-label">Password</div>', unsafe_allow_html=True)
+            password = st.text_input("", type="password", placeholder="Enter your password", key="sidebar_login_password")
             
-            cols = st.columns([3, 2])
+            # Remember me with better styling
+            cols = st.columns([1, 1])
             with cols[0]:
                 remember = st.checkbox("Remember me", key="sidebar_remember_login")
+            with cols[1]:
+                st.markdown('<div style="text-align: right;"><a href="#" style="color: #3B82F6; font-size: 12px; text-decoration: none;">Forgot password?</a></div>', unsafe_allow_html=True)
             
-            # Blue login button
-            login_button = st.button("Sign In", use_container_width=True, key="visible_sidebar_login", type="primary")
+            # Enhanced login button
+            st.markdown("""
+            <button class="login-button" id="login_button_trigger" onclick="document.getElementById('login_button_actual').click();">
+                Sign In
+            </button>
+            """, unsafe_allow_html=True)
+            
+            # Actual button (hidden, triggered by the styled one)
+            login_button = st.button("Sign In", key="login_button_actual", help="Sign in to your account", type="primary")
+            st.markdown("""
+            <style>
+            /* Hide the actual button */
+            [data-testid="stButton"] button[kind="primaryButton"] {
+                display: none;
+            }
+            </style>
+            """, unsafe_allow_html=True)
             
             if login_button:
                 if not username_or_email or not password:
@@ -363,7 +478,7 @@ with st.sidebar:
                         # Find first non-None language
                         current_language = None
                         for key in ["_persistent_language", "force_language_after_login", "language", 
-                                   "pre_login_language", "pre_logout_language", "backup_language"]:
+                                  "pre_login_language", "pre_logout_language", "backup_language"]:
                             if lang_sources[key]:
                                 current_language = lang_sources[key]
                                 break
