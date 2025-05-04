@@ -167,7 +167,20 @@
     "regional_pii_tagging": "Regionale PII Tagging",
     "false_positive_management": "Beheer van Valse Positieven",
     "ci_cd_integration": "CI/CD Integratie",
-    "custom_rules_configuration": "Aangepaste Regels Configuratie"
+    "custom_rules_configuration": "Aangepaste Regels Configuratie",
+    "custom_rules_source": "Aangepaste Regels Bron",
+    "upload_file": "Bestand Uploaden",
+    "enter_manually": "Handmatig Invoeren",
+    "git_repository": "Git Repository",
+    "upload_custom_rules_file": "Upload aangepaste regelbestand",
+    "custom_semgrep_rules": "Aangepaste Semgrep Regels (YAML formaat)",
+    "rules_git_repository_url": "Regels Git Repository URL",
+    "repository_path": "Repository Pad",
+    "use_custom_presidio_recognizers": "Gebruik aangepaste Presidio herkenners",
+    "custom_presidio_recognizers": "Aangepaste Presidio Herkenners (Python)",
+    "include_comments_in_scan": "Opmerkingen opnemen in scan",
+    "scan_string_literals": "String literals scannen",
+    "analyze_variable_names": "Variabelenamen analyseren"
   },
   "history": {
     "title": "Geschiedenis"

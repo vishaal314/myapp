@@ -224,7 +224,24 @@
       "high": "#ef4444",
       "medium": "#f97316",
       "low": "#10b981"
-    }
+    },
+    "regional_pii_tagging": "Regional PII Tagging",
+    "false_positive_management": "False Positive Management",
+    "ci_cd_integration": "CI/CD Integration",
+    "custom_rules_configuration": "Custom Rules Configuration",
+    "custom_rules_source": "Custom Rules Source",
+    "upload_file": "Upload File",
+    "enter_manually": "Enter Manually",
+    "git_repository": "Git Repository",
+    "upload_custom_rules_file": "Upload custom rules file",
+    "custom_semgrep_rules": "Custom Semgrep Rules (YAML format)",
+    "rules_git_repository_url": "Rules Git Repository URL",
+    "repository_path": "Repository Path",
+    "use_custom_presidio_recognizers": "Use custom Presidio recognizers",
+    "custom_presidio_recognizers": "Custom Presidio Recognizers (Python)",
+    "include_comments_in_scan": "Include comments in scan",
+    "scan_string_literals": "Scan string literals",
+    "analyze_variable_names": "Analyze variable names"
   },
   "history": {
     "title": "History",
