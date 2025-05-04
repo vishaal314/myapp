@@ -3172,7 +3172,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Model Naam': model_name,
                     'Repository URL': repository_url if repository_url != 'N/A' else 'Niet beschikbaar',
                     'Repository Pad': repository_path if repository_path != 'N/A' else 'Niet beschikbaar',
-                    'Gebruikersnaam': scan_data.get('username', 'Onbekend'),
+                    'Gebruikersnaam': 'DataGuardian Pro Gebruiker',  # Always use fixed username for AI models Dutch
                     'Bestanden Gescand': scan_data.get('file_count', 0)
                 }
             else:
@@ -3264,8 +3264,16 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         # Create metadata table
         metadata_data = []
         for key, value in metadata_labels.items():
+            # Translate Unknown values to local language
             if value == 'Unknown' and current_lang == 'nl':
                 value = 'Onbekend'
+                
+            # Extra safeguard for any usernames that might still be Anonymous
+            if (key == 'Username' and (value == 'Anonymous' or str(value).lower() == 'anonymous')):
+                value = 'DataGuardian Pro User'
+            elif (key == 'Gebruikersnaam' and (value == 'Anonymous' or str(value).lower() == 'anonymous' or value == 'Onbekend')):
+                value = 'DataGuardian Pro Gebruiker'
+                
             metadata_data.append([key, str(value)])
         
         # Use a modern, clean table style for metadata
