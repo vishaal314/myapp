@@ -2610,9 +2610,9 @@ else:
                 start_scan = st.button("Start SOC2 Compliance Scan", use_container_width=True, type="primary", key="main_soc2_scan_button")
             with scan_btn_col2:
                 if 'free_trial_active' in locals() and free_trial_active:
-                    st.success(f"Free Trial: {free_trial_days_left} days left")
+                    st.success(_("free_trial").format(days=free_trial_days_left))
                 else:
-                    st.warning("Premium Feature")
+                    st.warning(_("premium_feature", "Premium Feature"))
         elif scan_type == _("scan.ai_model"):
             # Create a more prominent scan button for AI Model scan
             st.markdown("""
@@ -2728,7 +2728,7 @@ else:
                         st.warning(f"Audit logging failed: {str(e)}")
                 # Check if free trial is active
                 elif free_trial_active:
-                    st.success(f"Using free trial (Days left: {free_trial_days_left}, Scans used: {st.session_state.free_trial_scans_used}/5)")
+                    st.success(_("using_free_trial").format(days=free_trial_days_left, used=st.session_state.free_trial_scans_used, total=5))
                     
                     # Generate a unique scan ID
                     scan_id = str(uuid.uuid4())
