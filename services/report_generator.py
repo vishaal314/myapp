@@ -3455,9 +3455,9 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     if not domain:
         domain = f"Scan Type: {scan_type}"
     
-    # Get username from session state first for highest priority (logged-in user)
-    # IMPORTANT FIX: Always use DataGuardian Pro User instead of Anonymous
-    username = 'DataGuardian Pro User'  # Default to a more user-friendly name
+    # Email ID of logged in user should be used for the username field
+    # Only fall back to "DataGuardian Pro User" if no email is available
+    username = None  # Will be populated with the email ID if found
     
     # Get username from correct source - highest priority is session state
     try:
@@ -3475,37 +3475,60 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             # If username is not in session, try user_info
             elif 'user_info' in st.session_state and isinstance(st.session_state.user_info, dict):
                 user_info = st.session_state.user_info
-                # Try different keys in user_info (name, username, email)
-                if 'name' in user_info and user_info['name'] and user_info['name'] != 'Anonymous':
-                    username = user_info['name']
-                    logger.info(f"Using name from user_info: {username}")
+                # Prioritize email in user_info as per client requirement
+                if 'email' in user_info and user_info['email'] and user_info['email'] != 'Anonymous':
+                    username = user_info['email']
+                    logger.info(f"Using email from user_info as primary username: {username}")
+                # Fallback to other user identifiers if email is not available
                 elif 'username' in user_info and user_info['username'] and user_info['username'] != 'Anonymous':
                     username = user_info['username']
-                    logger.info(f"Using username from user_info: {username}")
-                elif 'email' in user_info and user_info['email'] and user_info['email'] != 'Anonymous':
-                    username = user_info['email']
-                    logger.info(f"Using email from user_info: {username}")
+                    logger.info(f"Using username from user_info (email not available): {username}")
+                elif 'name' in user_info and user_info['name'] and user_info['name'] != 'Anonymous':
+                    username = user_info['name']
+                    logger.info(f"Using name from user_info (email and username not available): {username}")
 
             # Also check current_user in session state
             elif 'current_user' in st.session_state and st.session_state.current_user:
                 if isinstance(st.session_state.current_user, dict):
                     curr_user = st.session_state.current_user
-                    if 'username' in curr_user and curr_user['username'] and curr_user['username'] != 'Anonymous':
+                    # Prioritize email in current_user dictionary as per client requirement
+                    if 'email' in curr_user and curr_user['email'] and curr_user['email'] != 'Anonymous':
+                        username = curr_user['email']
+                        logger.info(f"Using email from current_user: {username}")
+                    # Fall back to username if email is not available
+                    elif 'username' in curr_user and curr_user['username'] and curr_user['username'] != 'Anonymous':
                         username = curr_user['username']
-                        logger.info(f"Using username from current_user: {username}")
+                        logger.info(f"Using username from current_user (email not available): {username}")
+                # If current_user is just a string, use it directly
                 elif isinstance(st.session_state.current_user, str) and st.session_state.current_user != 'Anonymous':
-                    username = st.session_state.current_user
-                    logger.info(f"Using current_user string value: {username}")
+                    # If it looks like an email, that's perfect
+                    if '@' in st.session_state.current_user:
+                        username = st.session_state.current_user
+                        logger.info(f"Using current_user string value (appears to be email): {username}")
+                    else:
+                        username = st.session_state.current_user
+                        logger.info(f"Using current_user string value: {username}")
                     
         # If still not available or shows as Anonymous, try scan_data keys
         if not username or username == 'Anonymous' or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
-            # Try scan_data username first, then other keys
-            for key in ['username', 'user', 'owner', 'repo_owner', 'created_by', 'scanned_by', 'author']:
-                if key in scan_data and scan_data[key] and isinstance(scan_data[key], str):
-                    if scan_data[key].lower() not in ['anonymous', 'unknown', 'not available', 'none']:
-                        username = scan_data[key]
-                        logger.info(f"Using username from scan_data[{key}]: {username}")
-                        break
+            # First specifically check for email in scan_data as per client requirement
+            if 'email' in scan_data and scan_data['email'] and isinstance(scan_data['email'], str):
+                if scan_data['email'].lower() not in ['anonymous', 'unknown', 'not available', 'none']:
+                    username = scan_data['email']
+                    logger.info(f"Using email from scan_data: {username}")
+            # If no email, try other keys in order of preference
+            else:
+                for key in ['username', 'user', 'owner', 'repo_owner', 'created_by', 'scanned_by', 'author']:
+                    if key in scan_data and scan_data[key] and isinstance(scan_data[key], str):
+                        # If any key contains an @ symbol, it's likely an email so prioritize it
+                        if '@' in scan_data[key]:
+                            username = scan_data[key]
+                            logger.info(f"Using email-like value from scan_data[{key}]: {username}")
+                            break
+                        elif scan_data[key].lower() not in ['anonymous', 'unknown', 'not available', 'none']:
+                            username = scan_data[key]
+                            logger.info(f"Using username from scan_data[{key}]: {username}")
+                            break
                         
         # Final safeguard to never show Anonymous in report
         if not username or username == 'Anonymous' or username.lower() in ['anonymous', 'unknown', 'not available', 'none']:
