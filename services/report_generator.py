@@ -2103,30 +2103,45 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                         finding_location = str(finding[key])
                         break
                         
-                # If we have a location, make it more readable
+                # If we have a location, make it more readable and professional
                 if finding_location:
                     # Parse the file path to get a more readable format
                     if '/' in finding_location:
                         try:
-                            # Try to extract just the filename and parent directory
+                            # Extract the filename
                             filename = os.path.basename(finding_location)
-                            if filename:
-                                # Get parent directory name
+                            
+                            # Check if we're dealing with a long repository scan path
+                            if 'repo_scan_' in finding_location and filename:
+                                # For repo scans, create a cleaner path display
+                                # Extract just the meaningful parts of the path
+                                parts = finding_location.split('/')
+                                if len(parts) > 3:
+                                    # Create a more compact but still informative representation
+                                    if len(filename) > 20:
+                                        # Truncate very long filenames
+                                        filename = filename[:17] + "..."
+                                    finding_location = filename
+                                else:
+                                    finding_location = filename
+                            elif filename:
+                                # For other paths, show parent directory + filename
                                 parent_dir = os.path.basename(os.path.dirname(finding_location))
                                 if parent_dir:
+                                    # Format as clean dir/file display
                                     finding_location = f"{parent_dir}/{filename}"
                                 else:
-                                    # If no parent dir, just use filename
+                                    # Just show filename if no parent dir
                                     finding_location = filename
                         except Exception as e:
-                            # If path parsing fails, fall back to simpler method
+                            # If path parsing fails, fall back to more reliable method
                             parts = finding_location.split('/')
                             if len(parts) > 2:
-                                # Get just the last two parts of the path
-                                finding_location = f".../{parts[-2]}/{parts[-1]}"
-                            elif len(finding_location) > 60:
-                                # Simple truncation for very long paths
-                                finding_location = "..." + finding_location[-57:]
+                                # Get just the last two parts of the path with clean formatting
+                                finding_location = f"{parts[-2]}/{parts[-1]}"
+                            elif len(finding_location) > 40:
+                                # More elegant truncation for very long paths
+                                finding_location = "..." + finding_location[-37:]
                         
                 if not finding_location and 'line' in finding:
                     finding_location = f"Line {finding['line']}"
@@ -2191,72 +2206,78 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 detailed_data = [table_headers]
                 detailed_data.extend(finding_items)
                 
-                # Create a properly sized table for AI model and GDPR findings with improved column widths
+                # Create a properly sized table with optimized column widths for better readability
                 if report_format == "gdpr_repository":
-                    # For GDPR reports, give more room to description and location columns
-                    detailed_table = Table(detailed_data, colWidths=[75, 85, 180, 120, 70])
+                    # For GDPR reports, optimize column widths based on content expectations
+                    detailed_table = Table(detailed_data, colWidths=[60, 80, 190, 100, 50])
                 elif report_format == "ai_model":
                     # For AI model reports, where descriptions tend to be longer
-                    detailed_table = Table(detailed_data, colWidths=[70, 80, 200, 80, 50])
+                    detailed_table = Table(detailed_data, colWidths=[60, 75, 200, 90, 55])
                 else:
-                    # Default balanced layout
-                    detailed_table = Table(detailed_data, colWidths=[80, 90, 170, 100, 60])
+                    # Default balanced layout with emphasis on description readability
+                    detailed_table = Table(detailed_data, colWidths=[65, 80, 195, 90, 50])
                 
-                # Define row styles based on risk level with improved badge-style indicators
+                # Define elegant row styles with professional color scheme and improved readability
                 row_styles = []
                 for i, item in enumerate(finding_items, 1):  # Starting from 1 to account for header
                     risk_level = item[4]
-                    # Check for both Dutch and English risk levels with more distinct colors
-                    if risk_level in ['High', 'Hoog']:
-                        bg_color = HexColor('#ffe4e1')  # Lighter red for better readability
-                    elif risk_level in ['Medium', 'Gemiddeld']:
-                        bg_color = HexColor('#fff4e0')  # Lighter orange for better readability
-                    else:  # Low or Laag
-                        bg_color = HexColor('#f0f9ff')  # Light blue for better visibility than white
                     
-                    # Add alternating row styling for better readability
+                    # Modern color scheme with subtle tints for better readability
+                    if risk_level in ['High', 'Hoog']:
+                        bg_color = HexColor('#fef2f2')  # Very light red background
+                    elif risk_level in ['Medium', 'Gemiddeld']:
+                        bg_color = HexColor('#fffbeb')  # Very light orange background
+                    else:  # Low or Laag
+                        bg_color = HexColor('#f0f9ff')  # Light blue background
+                    
+                    # Add subtle alternating row styling for better readability
                     if i % 2 == 0:
-                        bg_color = lightenColor(bg_color, 0.7)  # Make even rows slightly lighter
+                        bg_color = lightenColor(bg_color, 0.6)  # Make even rows slightly darker for contrast
                     
                     row_styles.append(('BACKGROUND', (0, i), (-1, i), bg_color))
                     
-                    # Add badge-style risk indicators for the risk level column (column 4)
+                    # Add modern pill-style risk level indicators with consistent sizing
                     if risk_level in ['High', 'Hoog']:
-                        row_styles.append(('BACKGROUND', (4, i), (4, i), HexColor('#ef4444')))  # Red background
+                        row_styles.append(('BACKGROUND', (4, i), (4, i), HexColor('#dc2626')))  # Deeper red for better contrast
                         row_styles.append(('TEXTCOLOR', (4, i), (4, i), colors.white))  # White text
                         row_styles.append(('FONTNAME', (4, i), (4, i), 'Helvetica-Bold'))  # Bold for emphasis
                         row_styles.append(('ALIGN', (4, i), (4, i), 'CENTER'))  # Center align for badge look
+                        row_styles.append(('LINEBELOW', (0, i), (-1, i), 0.25, HexColor('#fee2e2')))  # Subtle bottom border
                     elif risk_level in ['Medium', 'Gemiddeld']:
-                        row_styles.append(('BACKGROUND', (4, i), (4, i), HexColor('#f97316')))  # Orange background
+                        row_styles.append(('BACKGROUND', (4, i), (4, i), HexColor('#ea580c')))  # Deeper orange for better contrast
                         row_styles.append(('TEXTCOLOR', (4, i), (4, i), colors.white))  # White text
                         row_styles.append(('FONTNAME', (4, i), (4, i), 'Helvetica-Bold'))  # Bold for emphasis
                         row_styles.append(('ALIGN', (4, i), (4, i), 'CENTER'))  # Center align for badge look
+                        row_styles.append(('LINEBELOW', (0, i), (-1, i), 0.25, HexColor('#fed7aa')))  # Subtle bottom border
                     else:
-                        row_styles.append(('BACKGROUND', (4, i), (4, i), HexColor('#0ea5e9')))  # Blue background
+                        row_styles.append(('BACKGROUND', (4, i), (4, i), HexColor('#0284c7')))  # Deeper blue for better contrast
                         row_styles.append(('TEXTCOLOR', (4, i), (4, i), colors.white))  # White text
                         row_styles.append(('ALIGN', (4, i), (4, i), 'CENTER'))  # Center align for badge look
+                        row_styles.append(('LINEBELOW', (0, i), (-1, i), 0.25, HexColor('#bae6fd')))  # Subtle bottom border
                 
-                # Apply improved table styles with better readability and modern look
+                # Apply refined table styling with modern professional appearance
                 table_style = [
-                    # Header styling - more professional darker blue for better contrast
-                    ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1e40af')),  # Darker blue header
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for better contrast
+                    # Header styling - elegant blue header with improved readability
+                    ('BACKGROUND', (0, 0), (-1, 0), HexColor('#1e3a8a')),  # Rich blue header
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for contrast
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold headers
-                    ('FONTSIZE', (0, 0), (-1, 0), 10),  # Larger header font for better readability
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),  # More padding for header
-                    ('TOPPADDING', (0, 0), (-1, 0), 8),  # More padding for header
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),  # Slightly larger header font
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),  # Consistent padding
+                    ('TOPPADDING', (0, 0), (-1, 0), 8),  # Consistent padding
                     ('ALIGN', (0, 0), (-1, 0), 'CENTER'),  # Center align headers
                     
-                    # Content styling with improved formatting
+                    # Content styling with improved readability and professional spacing
                     ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 9),  # Larger font size for better readability
-                    ('BOTTOMPADDING', (0, 1), (-1, -1), 6),  # More padding for content
-                    ('TOPPADDING', (0, 1), (-1, -1), 6),  # More padding for content
-                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#cbd5e1')),  # Lighter grid lines
-                    ('BOX', (0, 0), (-1, -1), 1, HexColor('#475569')),  # Darker outer border
-                    ('LINEBELOW', (0, 0), (-1, 0), 1.5, HexColor('#1e3a8a')),  # Thicker line below header
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),  # Optimized font size
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 7),  # Increased padding for better readability
+                    ('TOPPADDING', (0, 1), (-1, -1), 7),  # Increased padding for better readability
+                    ('GRID', (0, 0), (-1, -1), 0.25, HexColor('#e2e8f0')),  # Very light grid lines
+                    ('BOX', (0, 0), (-1, -1), 0.75, HexColor('#475569')),  # Defined outer border
+                    ('LINEBELOW', (0, 0), (-1, 0), 1.5, HexColor('#1e3a8a')),  # Accent line below header
                     ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),  # Middle align header cells
-                    ('VALIGN', (0, 1), (-1, -1), 'TOP')  # Top align content cells
+                    ('VALIGN', (0, 1), (-1, -1), 'TOP'),  # Top align content cells
+                    ('RIGHTPADDING', (0, 1), (-1, -1), 10),  # Additional right padding for better text spacing
+                    ('LEFTPADDING', (0, 1), (-1, -1), 10),  # Additional left padding for better text spacing
                 ]
                 
                 # Add risk-based row styles
