@@ -1764,32 +1764,32 @@ else:
                 st.markdown("<small>Causes pipeline failure when critical issues are found</small>", unsafe_allow_html=True)
                 
                 # Custom rules (without using expander to avoid nesting issues)
-                st.subheader("Custom Rules Configuration")
+                st.subheader(_("scan.custom_rules_configuration"))
                 rule_source = st.radio(
-                    "Custom Rules Source",
-                    ["Upload File", "Enter Manually", "Git Repository"],
+                    _("scan.custom_rules_source"),
+                    [_("scan.upload_file"), _("scan.enter_manually"), _("scan.git_repository")],
                     index=1
                 )
                 
-                if rule_source == "Upload File":
-                    st.file_uploader("Upload custom rules file", type=["yaml", "yml"], key="custom_rules_file")
-                elif rule_source == "Enter Manually":
-                    st.text_area("Custom Semgrep Rules (YAML format)", 
+                if rule_source == _("scan.upload_file"):
+                    st.file_uploader(_("scan.upload_custom_rules_file"), type=["yaml", "yml"], key="custom_rules_file")
+                elif rule_source == _("scan.enter_manually"):
+                    st.text_area(_("scan.custom_semgrep_rules"), 
                                height=150,
                                placeholder="rules:\n  - id: hardcoded-password\n    pattern: $X = \"password\"\n    message: Hardcoded password\n    severity: WARNING")
-                elif rule_source == "Git Repository":
-                    st.text_input("Rules Git Repository URL", placeholder="https://github.com/username/custom-rules")
-                    st.text_input("Repository Path", placeholder="path/to/rules", value="rules")
+                elif rule_source == _("scan.git_repository"):
+                    st.text_input(_("scan.rules_git_repository_url"), placeholder="https://github.com/username/custom-rules")
+                    st.text_input(_("scan.repository_path"), placeholder="path/to/rules", value="rules")
                         
                     # Custom presidio recognizers
-                    st.checkbox("Use custom Presidio recognizers", value=False)
-                    st.text_area("Custom Presidio Recognizers (Python)", 
+                    st.checkbox(_("scan.use_custom_presidio_recognizers"), value=False)
+                    st.text_area(_("scan.custom_presidio_recognizers"), 
                                placeholder="from presidio_analyzer import PatternRecognizer\n\nmy_recognizer = PatternRecognizer(\n    supported_entity='CUSTOM_ENTITY',\n    patterns=[{\"name\": \"custom pattern\", \"regex\": r'pattern_here'}]\n)")
                     
                 # Code inclusion options
-                include_comments = st.checkbox("Include comments in scan", value=True)
-                include_strings = st.checkbox("Scan string literals", value=True)
-                include_variables = st.checkbox("Analyze variable names", value=True)
+                include_comments = st.checkbox(_("scan.include_comments_in_scan"), value=True)
+                include_strings = st.checkbox(_("scan.scan_string_literals"), value=True)
+                include_variables = st.checkbox(_("scan.analyze_variable_names"), value=True)
                 
             elif scan_type == get_text("scan.document"):
                 # 2. Blob Scanner
