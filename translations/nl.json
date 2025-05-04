@@ -157,9 +157,44 @@
     "title": "Resultaten"
   },
   "report": {
-    "generate": "Rapport Genereren"
+    "generate": "Rapport Genereren",
+    "scan_metadata": "Scan Metadata",
+    "url_domain": "URL/Domein",
+    "repo_url": "Repository URL",
+    "branch": "Branch",
+    "username": "Gebruikersnaam",
+    "region": "Regio",
+    "scan_date": "Scan Datum",
+    "scan_types_performed": "Uitgevoerde Scan Types",
+    "sustainability_score": "Duurzaamheidsscore",
+    "findings": "Bevindingen",
+    "description": "Beschrijving",
+    "coverage": "Dekking", 
+    "scan_type": "Scan Type",
+    "risk_level": "Risico Niveau",
+    "type": "Type",
+    "location": "Locatie",
+    "recommendation": "Aanbeveling",
+    "summary": "Samenvatting",
+    "details": "Details",
+    "policies_scanned": "Gescande Beleidsregels",
+    "remediation": "Correctie",
+    "statistics": "Statistieken",
+    "file_level_details": "Bestand Niveau Details",
+    "files_scanned": "Gescande Bestanden",
+    "risk_levels": {
+      "high": "Hoog",
+      "medium": "Gemiddeld", 
+      "low": "Laag"
+    }
   },
   "admin": {
     "title": "Admin"
+  },
+  "severity": {
+    "low": "Laag",
+    "medium": "Gemiddeld",
+    "high": "Hoog",
+    "critical": "Kritiek"
   }
 }

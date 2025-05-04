@@ -3580,42 +3580,25 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         file_count = scan_data.get('code_stats', {}).get('total_files', 0)
     
     # Create metadata table with two columns
-    if current_lang == 'nl':
-        metadata_data = [
-            ["Scan Metadata", ""],
-            ["Scan Type", scan_type],
-            ["URL/Domein", domain if domain else "N/A"],
-        ]
-    else:
-        metadata_data = [
-            ["Scan Metadata", ""],
-            ["Scan Type", scan_type],
-            ["URL/Domain", domain if domain else "N/A"],
-        ]
+    # Use i18n translations for metadata labels
+    metadata_data = [
+        [_("report.scan_metadata", "Scan Metadata"), ""],
+        [_("report.scan_type", "Scan Type"), scan_type],
+        [_("report.url_domain", "URL/Domain"), domain if domain else "N/A"],
+    ]
     
     # Add repo-specific fields for GitHub scans but avoid duplicate data
     if ('github' in scan_type.lower() or 'repository' in scan_type.lower() or 'code' in scan_type.lower()) and repo_url:
         # Only add Repository URL if it's different from the domain
         if repo_url != domain:
-            if current_lang == 'nl':
-                metadata_data.append(["Repository URL", repo_url])
-            else:
-                metadata_data.append(["Repository URL", repo_url])
+            metadata_data.append([_("report.repo_url", "Repository URL"), repo_url])
         # Add branch information
-        if current_lang == 'nl':
-            metadata_data.append(["Branch", branch])
-        else:
-            metadata_data.append(["Branch", branch])
+        metadata_data.append([_("report.branch", "Branch"), branch])
     
-    # Add username, region and date
-    if current_lang == 'nl':
-        metadata_data.append(["Gebruikersnaam", username])
-        metadata_data.append(["Regio", region])
-        metadata_data.append(["Scan Datum", scan_date])
-    else:
-        metadata_data.append(["Username", username])
-        metadata_data.append(["Region", region])
-        metadata_data.append(["Scan Date", scan_date])
+    # Add username, region and date using i18n translations
+    metadata_data.append([_("report.username", "Username"), username])
+    metadata_data.append([_("report.region", "Region"), region])
+    metadata_data.append([_("report.scan_date", "Scan Date"), scan_date])
     
     # Create and style the metadata table
     metadata_table = Table(metadata_data, colWidths=[1.5*inch, 4*inch])
