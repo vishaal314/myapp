@@ -431,20 +431,27 @@ with st.sidebar:
             with cols[1]:
                 st.markdown('<div style="text-align: right;"><a href="#" style="color: #3B82F6; font-size: 12px; text-decoration: none;">Forgot password?</a></div>', unsafe_allow_html=True)
             
-            # Enhanced login button
-            st.markdown("""
-            <button class="login-button" id="login_button_trigger" onclick="document.getElementById('login_button_actual').click();">
-                Sign In
-            </button>
-            """, unsafe_allow_html=True)
-            
-            # Actual button (hidden, triggered by the styled one)
+            # Enhanced login button with only one implementation
             login_button = st.button("Sign In", key="login_button_actual", help="Sign in to your account", type="primary")
+            
+            # Custom styling for the login button only
             st.markdown("""
             <style>
-            /* Hide the actual button */
-            [data-testid="stButton"] button[kind="primaryButton"] {
-                display: none;
+            /* Style only the specific login button */
+            div[data-testid="stButton"] button[key="login_button_actual"] {
+                background-image: linear-gradient(135deg, #3B82F6, #2563EB);
+                color: white;
+                font-weight: 600;
+                padding: 12px 15px;
+                border: none;
+                border-radius: 6px;
+                text-align: center;
+                box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
+                transition: all 0.2s ease;
+            }
+            div[data-testid="stButton"] button[key="login_button_actual"]:hover {
+                box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+                transform: translateY(-2px);
             }
             </style>
             """, unsafe_allow_html=True)
@@ -542,10 +549,11 @@ with st.sidebar:
             # Green checkmark for terms
             terms = st.checkbox(_("register.terms"))
             
-            # Green gradient register button
+            # Custom CSS for Register button only
             st.markdown("""
             <style>
-            div[data-testid="stButton"] button[kind="primaryButton"] {
+            /* Only style register buttons, not affecting login buttons */
+            div[data-testid="stButton"] button[key="sidebar_register"] {
                 background-image: linear-gradient(to right, #10B981, #059669);
                 border: none;
                 font-weight: bold;
