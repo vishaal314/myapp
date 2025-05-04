@@ -304,6 +304,88 @@ def display_repo_scan_results(scan_results: Dict[str, Any], show_download_button
                 )
     else:
         st.info("No findings detected in this repository.")
+    
+    # Display Consent & Legal Basis AI Remediation Suggestions
+    consent_issues = [f for f in findings if is_consent_related(f)]
+    if consent_issues:
+        st.markdown("---")
+        st.subheader("🛡️ Consent & Legal Basis AI Remediation")
+        
+        st.markdown("""
+        <div style="background-color: #f8fafc; border-radius: 8px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #3b82f6;">
+        <p style="margin-top: 0;">The following issues were detected regarding GDPR consent and legal basis requirements. 
+        Our AI has analyzed the code and provided remediation suggestions to help you fix these compliance issues.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Display each consent issue with its remediation
+        for i, issue in enumerate(consent_issues):
+            with st.expander(f"🔍 {issue.get('description', 'Consent Issue')}"):
+                # Issue details
+                st.markdown(f"**File:** `{issue.get('file_name', 'Unknown')}`")
+                st.markdown(f"**Line:** {issue.get('line_no', 'N/A')}")
+                st.markdown(f"**Risk Level:** {issue.get('risk_level', 'medium').upper()}")
+                
+                # Show code snippet if available
+                if issue.get('line', ''):
+                    st.code(issue.get('line', ''), language=issue.get('language', '').lower())
+                
+                # GDPR article reference
+                if issue.get('article_mappings'):
+                    articles = ', '.join(issue.get('article_mappings', []))
+                    st.markdown(f"**GDPR Articles:** {articles}")
+                
+                # AI Remediation suggestion
+                st.markdown("### 🧠 AI-Suggested Remediation")
+                
+                if issue.get('remediation'):
+                    # Determine language for syntax highlighting
+                    language = issue.get('language', 'Python')
+                    if language in ['Python', 'python']:
+                        lang = 'python'
+                    elif language in ['JavaScript', 'TypeScript', 'JavaScript (React)', 'TypeScript (React)']:
+                        lang = 'javascript'
+                    elif language in ['Java']:
+                        lang = 'java'
+                    else:
+                        lang = 'text'
+                    
+                    st.code(issue.get('remediation'), language=lang)
+                    
+                    # Add a copy button (implemented with HTML/CSS/JS for better UX)
+                    st.markdown(
+                        f"""
+                        <button 
+                            onclick="navigator.clipboard.writeText(`{issue.get('remediation', '').replace('`', '\\`').replace("'", "\\'").replace('"', '\\"')}`)
+                            .then(() => alert('Code copied to clipboard!'))
+                            .catch(err => alert('Error copying code: ' + err));"
+                            style="background-color: #4CAF50; color: white; padding: 10px 15px; 
+                            border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
+                            📋 Copy Remediation Code
+                        </button>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.info("No specific remediation suggestion available for this issue.")
+                
+                # Additional guidance
+                st.markdown("### 📝 Compliance Guidance")
+                st.markdown(f"""
+                - Ensure explicit user consent is collected before processing this data
+                - Clearly document the specific purpose for data collection and processing
+                - Implement proper data retention policies
+                - Add logging for GDPR accountability requirements
+                """)
+                
+        # Add general information about consent remediation
+        st.markdown("""
+        <div style="background-color: #f0f9ff; border-radius: 8px; padding: 15px; margin-top: 20px; border-left: 4px solid #0ea5e9;">
+        <h4 style="margin-top: 0;">About Consent & Legal Basis Remediation</h4>
+        <p>Our AI analyzes your code for GDPR consent and legal basis issues and generates custom remediation suggestions. The remediation code is tailored to your specific programming language and context.</p>
+        <p><strong>Note:</strong> Always review AI-generated code before implementing it in your production systems.</p>
+        </div>
+        """, unsafe_allow_html=True)
         
     # Display charts and visualizations
     st.markdown("---")
