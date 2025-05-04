@@ -554,7 +554,7 @@ class RepoScanner:
                 ignore_patterns=ignore_patterns,
                 max_file_size_mb=20,     # Limit max file size to 20MB
                 continue_from_checkpoint=True,
-                max_files=500            # Limit to 500 files maximum for better performance
+                max_files=2000           # Allow up to 2000 files to ensure more complete repository scans
             )
             
             # Log scan performance
