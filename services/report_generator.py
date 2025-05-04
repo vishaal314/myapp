@@ -3231,7 +3231,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Repository URL': repository_url if repository_url != 'N/A' else 'Not available',
                     'Repository Path': repository_path if repository_path != 'N/A' else 'Not available',
                     'Branch': branch,
-                    'Username': scan_data.get('username', scan_data.get('user', 'Anonymous')),
+                    'Username': 'DataGuardian Pro User', # Always use fixed username
                     'Files Scanned': scan_data.get('file_count', scan_data.get('total_files', scan_data.get('files_scanned', 1))),
                     'CC Findings': cc_findings,
                     'A Findings': a_findings,
@@ -3257,7 +3257,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Region': region,
                     'Timestamp': timestamp,
                     'URL/Domain': url if url and url != 'Not available' else scan_data.get('repo_url', 'Repository URL'),
-                    'Username': scan_data.get('username', scan_data.get('user', 'Anonymous')),
+                    'Username': 'DataGuardian Pro User', # Always use fixed username
                     'Files Scanned': scan_data.get('file_count', scan_data.get('total_files', scan_data.get('files_scanned', 1)))
                 }
         
