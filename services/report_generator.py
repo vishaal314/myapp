@@ -4568,43 +4568,23 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
             formatted_time = str(scan_timestamp)
         
         # Create scan overview table
-        scan_overview_data = []
-        if current_lang == 'nl':
-            scan_overview_data = [
-                ["Scan Type", scan_data.get('scan_type', 'Code Efficiency')],
-                ["Regio", region],
-                ["Datum & Tijd", formatted_time],
-                ["Gescande URL/Domein", url_domain]
-            ]
+        scan_overview_data = [
+            [_("report.scan_type", "Scan Type"), scan_data.get('scan_type', 'Code Efficiency')],
+            [_("report.region", "Region"), region],
+            [_("report.date_time", "Date & Time"), formatted_time],
+            [_("report.scanned_url", "Scanned URL/Domain"), url_domain]
+        ]
+        
+        # Only add repository info if relevant
+        if repo_name and repo_name != 'Unknown':
+            # Add full repository URL and then the name
+            scan_overview_data.append([_("report.repository_url", "Repository URL"), repo_url])
+            scan_overview_data.append([_("report.repository_name", "Repository Name"), repo_name])
+            scan_overview_data.append([_("report.branch", "Branch"), branch])
             
-            # Only add repository info if relevant
-            if repo_name and repo_name != 'Unknown':
-                # Add full repository URL and then the name
-                scan_overview_data.append(["Repository URL", repo_url])
-                scan_overview_data.append(["Repository Naam", repo_name])
-                scan_overview_data.append(["Branch", branch])
-                
-            # Add lines scanned information if available
-            if 'lines_scanned' in scan_data and scan_data['lines_scanned'] > 0:
-                scan_overview_data.append(["Regels Code Gescand", f"{scan_data['lines_scanned']:,}"])
-        else:
-            scan_overview_data = [
-                ["Scan Type", scan_data.get('scan_type', 'Code Efficiency')],
-                ["Region", region],
-                ["Date & Time", formatted_time],
-                ["Scanned URL/Domain", url_domain]
-            ]
-            
-            # Only add repository info if relevant
-            if repo_name and repo_name != 'Unknown':
-                # Add full repository URL and then the name
-                scan_overview_data.append(["Repository URL", repo_url])
-                scan_overview_data.append(["Repository Name", repo_name])
-                scan_overview_data.append(["Branch", branch])
-                
-            # Add lines scanned information if available
-            if 'lines_scanned' in scan_data and scan_data['lines_scanned'] > 0:
-                scan_overview_data.append(["Lines of Code Scanned", f"{scan_data['lines_scanned']:,}"])
+        # Add lines scanned information if available
+        if 'lines_scanned' in scan_data and scan_data['lines_scanned'] > 0:
+            scan_overview_data.append([_("report.lines_scanned", "Lines of Code Scanned"), f"{scan_data['lines_scanned']:,}"])
         
         # Create a well-formatted overview table with improved styling
         scan_overview_table = Table(scan_overview_data, colWidths=[2*inch, 4*inch])
@@ -4809,10 +4789,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         language_breakdown = code_stats.get('language_breakdown', {})
         if language_breakdown:
             elements.append(Spacer(1, 0.2*inch))
-            if current_lang == 'nl':
-                elements.append(Paragraph("<b>Taal Verdeling</b>", normal_style))
-            else:
-                elements.append(Paragraph("<b>Language Breakdown</b>", normal_style))
+            elements.append(Paragraph(f"<b>{_('report.language_breakdown', 'Language Breakdown')}</b>", normal_style))
             
             language_data = [["Language", "Files", "Size (MB)"]]
             for lang, stats in language_breakdown.items():
@@ -4840,10 +4817,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         unused_imports = scan_data.get('unused_imports', [])
         if unused_imports:
             elements.append(Spacer(1, 0.15*inch))
-            if current_lang == 'nl':
-                elements.append(Paragraph("<b>Ongebruikte Imports</b>", normal_style))
-            else:
-                elements.append(Paragraph("<b>Unused Imports</b>", normal_style))
+            elements.append(Paragraph(f"<b>{_('report.unused_imports', 'Unused Imports')}</b>", normal_style))
             
             unused_data = [["File", "Import"]]
             for unused in unused_imports:
@@ -4976,10 +4950,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
         # If there are large files to display
         if large_files:
             elements.append(Spacer(1, 0.15*inch))
-            if current_lang == 'nl':
-                elements.append(Paragraph("<b>Grote Bestanden</b>", normal_style))
-            else:
-                elements.append(Paragraph("<b>Large Files</b>", normal_style))
+            elements.append(Paragraph(f"<b>{_('report.large_files', 'Large Files')}</b>", normal_style))
             
             large_data = [["File", "Size (MB)", "Category"]]
             for large_file in large_files:
