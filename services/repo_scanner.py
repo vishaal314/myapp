@@ -17,6 +17,7 @@ from datetime import datetime
 import uuid
 
 from services.code_scanner import CodeScanner
+from services.consent_analyzer import apply_consent_analyzer, check_consent_patterns
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -578,6 +579,13 @@ class RepoScanner:
             scan_results['process_time_seconds'] = time.time() - start_time
             scan_results['clone_time_seconds'] = clone_time
             scan_results['scan_time_seconds'] = scan_time
+            
+            # Apply consent analyzer to enhance findings with remediation suggestions
+            if progress_callback:
+                progress_callback(95, 100, "Analyzing consent and legal basis issues...")
+            
+            scan_results['repo_path'] = repo_path  # Add repo path for context in consent analyzer
+            scan_results = apply_consent_analyzer(scan_results)
             
             if progress_callback:
                 progress_callback(100, 100, "Scan completed successfully")

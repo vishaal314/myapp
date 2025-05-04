@@ -17,6 +17,7 @@ import plotly.graph_objects as go
 
 from utils.i18n import _
 from services.report_generator import auto_generate_pdf_report
+from services.code_remediation_generator import is_consent_related
 
 
 def display_repo_scan_results(scan_results: Dict[str, Any], show_download_button: bool = True):
