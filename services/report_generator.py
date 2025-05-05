@@ -1545,8 +1545,13 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             else:
                 low_risk += 1
                 
-        # Set total findings count
-        total_pii = len(findings)
+        # Set total findings count as the sum of all risk levels
+        total_pii = high_risk + medium_risk + low_risk
+        
+        # Verify counts match (for debugging)
+        findings_count = len(findings)
+        if total_pii != findings_count:
+            logging.warning(f"Total PII count ({total_pii}) doesn't match findings count ({findings_count})")
         
         # Update the scan_data with calculated counts
         scan_data['total_pii_found'] = total_pii
@@ -1557,10 +1562,27 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         logging.info(f"Calculated AI model counts - Total: {total_pii}, High: {high_risk}, Medium: {medium_risk}, Low: {low_risk}")
     else:
         # Use existing counts from the scan data
-        total_pii = scan_data.get('total_pii_found', 0)
         high_risk = scan_data.get('high_risk_count', 0)
         medium_risk = scan_data.get('medium_risk_count', 0)
         low_risk = scan_data.get('low_risk_count', 0)
+        
+        # Calculate total_pii as the sum of all risk levels
+        stored_total = scan_data.get('total_pii_found', 0)
+        calculated_total = high_risk + medium_risk + low_risk
+        
+        # Use calculated total if we have risk counts, otherwise use stored total
+        if calculated_total > 0:
+            total_pii = calculated_total
+            # Update scan data with correct total
+            scan_data['total_pii_found'] = total_pii
+            
+            # Log any discrepancy for debugging
+            if stored_total != calculated_total and stored_total > 0:
+                import logging
+                logging.warning(f"Corrected total PII count from {stored_total} to {calculated_total}")
+        else:
+            # If no risk counts found, use the stored total
+            total_pii = stored_total
     
     # Get URL information
     url = scan_data.get('url', scan_data.get('domain', 'Not available'))
