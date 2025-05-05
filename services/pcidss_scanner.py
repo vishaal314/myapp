@@ -86,7 +86,7 @@ class PCIDSSScanner:
                        scan_dependencies: bool = True,
                        scan_iac: bool = True,
                        scan_secrets: bool = True,
-                       pci_requirements_filter: List[str] = None) -> Dict[str, Any]:
+                       pci_requirements_filter: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Scan a Git repository for PCI DSS compliance issues.
         
