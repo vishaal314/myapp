@@ -4356,6 +4356,7 @@ else:
                                     st.write(f"**Project:** {scan_results.get('project')}")
                                 st.write(f"**Branch:** {scan_results.get('branch', 'main')}")
                                 
+                                st.write(f"**Region:** {scan_results.get('region', 'Global')}")
                                 # Extract metrics
                                 compliance_score = scan_results.get("compliance_score", 0)
                                 high_risk = scan_results.get("high_risk_count", 0)
