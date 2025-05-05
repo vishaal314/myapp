@@ -3604,6 +3604,9 @@ else:
                         from services.report_generator import generate_report
                         from services.report_templates.pcidss_report_template import generate_pcidss_report
                         
+                        # Initialize uploaded_files variable to prevent errors
+                        uploaded_files = []
+                        
                         # PCI DSS scanner UI with enhanced design
                         st.title(_("scan.pcidss_title", "PCI DSS Compliance Scanner"))
                         
@@ -3648,7 +3651,9 @@ else:
                                 key="pcidss_region_select"
                             )
                             
-                            st.subheader("Repository Configuration")
+                            # Repository Configuration - Enhanced UI section
+                            st.markdown("## Repository Configuration")
+                            st.markdown("### Enter a Git repository URL to scan for PCI DSS compliance")
                             
                             # Repository source selection with unique key
                             repo_source = st.radio(
@@ -3658,11 +3663,12 @@ else:
                                 key="pcidss_repo_source_radio"
                             )
                             
-                            # Repository URL input with unique key
+                            # Repository URL input with unique key - Enhanced and more prominent
                             repo_url = st.text_input(
-                                "Repository URL:",
-                                placeholder=f"Enter {repo_source} repository URL",
-                                key="pcidss_repo_url_input"
+                                "Repository URL: (Required)",
+                                placeholder=f"Enter {repo_source} repository URL (e.g., https://github.com/username/repo)",
+                                key="pcidss_repo_url_input",
+                                help="Enter the complete URL of the repository you want to scan"
                             )
                             
                             # Branch input with unique key
