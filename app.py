@@ -3634,51 +3634,60 @@ else:
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Create tabs for configuration and results
-                        config_tab, results_tab = st.tabs(["PCI DSS Scanner Configuration", "Results"])
+                        # Region selection - standalone without tabs
+                        st.subheader("Region Selection")
+                        region_options = ["Global"] + list(REGIONS.keys())
+                        selected_region = st.selectbox(
+                            "Select Region:",
+                            region_options,
+                            index=0,
+                            key="pcidss_region_select"
+                        )
                         
-                        # Add repository configuration UI
+                        # Repository URL input - standalone without tabs
+                        st.subheader("Repository URL")
+                        st.markdown("Enter a Git repository URL to scan for PCI DSS compliance issues.")
+                        
+                        # Repository source selection with unique key
+                        repo_source = st.radio(
+                            "Repository Source:",
+                            ["GitHub", "BitBucket", "Azure DevOps"],
+                            horizontal=True,
+                            key="pcidss_repo_source_radio"
+                        )
+                        
+                        # Repository URL input with unique key
+                        repo_url = st.text_input(
+                            "Repository URL: (Required)",
+                            placeholder=f"Enter {repo_source} repository URL (e.g., https://github.com/username/repo)",
+                            key="pcidss_repo_url_input",
+                            help="Enter the complete URL of the repository you want to scan"
+                        )
+                        
+                        # Branch input with unique key
+                        branch = st.text_input(
+                            "Branch (optional):",
+                            value="main",
+                            placeholder="Enter branch name (default: main)",
+                            key="pcidss_branch_input"
+                        )
+                        
+                        # Add a clear section divider 
+                        st.markdown("---")
+                        
+                        # Add scan button with proper styling
+                        scan_button = st.button(
+                            "Start PCI DSS Scan",
+                            type="primary",
+                            use_container_width=True,
+                            key="pcidss_start_scan_button"
+                        )
+                        
+                        # Create tabs for advanced configuration and results
+                        config_tab, results_tab = st.tabs(["Advanced Configuration", "Results"])
+                        
+                        # Advanced configuration tab
                         with config_tab:
-                            # Add region selection at the top
-                            st.subheader("Region Selection")
-                            
-                            # Region selection with unique key - using same regions as GDPR scanner
-                            region_options = ["Global"] + list(REGIONS.keys())
-                            selected_region = st.selectbox(
-                                "Select Region:",
-                                region_options,
-                                index=0,
-                                key="pcidss_region_select"
-                            )
-                            
-                            # Repository Configuration - Enhanced UI section
-                            st.markdown("## Repository Configuration")
-                            st.markdown("### Enter a Git repository URL to scan for PCI DSS compliance")
-                            
-                            # Repository source selection with unique key
-                            repo_source = st.radio(
-                                "Repository Source:",
-                                ["GitHub", "BitBucket", "Azure DevOps"],
-                                horizontal=True,
-                                key="pcidss_repo_source_radio"
-                            )
-                            
-                            # Repository URL input with unique key - Enhanced and more prominent
-                            repo_url = st.text_input(
-                                "Repository URL: (Required)",
-                                placeholder=f"Enter {repo_source} repository URL (e.g., https://github.com/username/repo)",
-                                key="pcidss_repo_url_input",
-                                help="Enter the complete URL of the repository you want to scan"
-                            )
-                            
-                            # Branch input with unique key
-                            branch = st.text_input(
-                                "Branch (optional):",
-                                value="main",
-                                placeholder="Enter branch name (default: main)",
-                                key="pcidss_branch_input"
-                            )
-                            
                             # Advanced scan options
                             with st.expander("Advanced Scan Options"):
                                 col1, col2, col3 = st.columns(3)
@@ -3733,15 +3742,7 @@ else:
                                 "Select output formats:",
                                 ["PDF Report", "CSV Export", "JSON Export"],
                                 default=["PDF Report"],
-                                key="pcidss_output_formats"
-                            )
-                            
-                            # Create scan button with proper styling and unique key
-                            scan_button = st.button(
-                                "Start PCI DSS Scan",
-                                type="primary",
-                                use_container_width=True,
-                                key="pcidss_start_scan_button"
+                                key="pcidss_output_formats_config"
                             )
                             
                             if scan_button:
