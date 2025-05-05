@@ -3599,15 +3599,14 @@ else:
                         from services.report_generator import generate_report
                     
                     elif scan_type == _("scan.pcidss"):
-                        # Import PCI DSS scanner components
-                        from services.pcidss_scanner import PCIDSSScanner
-                        from services.report_generator import generate_report
-                        from services.report_templates.pcidss_report_template import generate_pcidss_report
+                        # Import fixed PCI DSS scanner implementation
+                        from fixed_pcidss_scanner import run_fixed_pcidss_scanner
                         
-                        # Initialize uploaded_files variable to prevent errors
-                        uploaded_files = []
+                        # Run the fixed implementation with proper UI layout
+                        run_fixed_pcidss_scanner()
                         
-                        # PCI DSS scanner UI with enhanced design
+                        # Skip the rest of the PCI DSS scanner code in app.py
+                        scan_running = False
                         st.title(_("scan.pcidss_title", "PCI DSS Compliance Scanner"))
                         
                         # Display enhanced description with clear value proposition
