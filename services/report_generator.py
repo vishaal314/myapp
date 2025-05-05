@@ -2041,19 +2041,19 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             ["Article", "Title", "Description"]
         ]
         
-        # Common GDPR articles with descriptions
+        # Common GDPR articles with descriptions (reformatted for clean presentation)
         gdpr_articles_info = {
             "article_5_1_a": ["Art. 5(1)(a)", "Lawfulness, Fairness, and Transparency", "Personal data shall be processed lawfully, fairly and in a transparent manner."],
-            "article_5_1_b": ["Art. 5(1)(b)", "Purpose Limitation", "Data must be collected for specified, explicit and legitimate purposes and not further processed incompatibly."],
+            "article_5_1_b": ["Art. 5(1)(b)", "Purpose Limitation", "Data must be collected for specified, explicit and legitimate purposes."],
             "article_5_1_c": ["Art. 5(1)(c)", "Data Minimization", "Personal data shall be adequate, relevant and limited to what is necessary."],
-            "article_5_1_d": ["Art. 5(1)(d)", "Accuracy", "Personal data shall be accurate and, where necessary, kept up to date."],
-            "article_5_1_e": ["Art. 5(1)(e)", "Storage Limitation", "Data must be kept in a form which permits identification for no longer than necessary."],
-            "article_5_1_f": ["Art. 5(1)(f)", "Integrity and Confidentiality", "Data must be processed securely, including protection against unauthorized processing and accidental loss."],
+            "article_5_1_d": ["Art. 5(1)(d)", "Accuracy", "Personal data shall be accurate and kept up to date where necessary."],
+            "article_5_1_e": ["Art. 5(1)(e)", "Storage Limitation", "Data must be kept in identifiable form for no longer than necessary."],
+            "article_5_1_f": ["Art. 5(1)(f)", "Integrity and Confidentiality", "Data must be processed with appropriate security measures."],
             "article_6_1_a": ["Art. 6(1)(a)", "Consent", "Processing based on the data subject's consent."],
-            "article_6_1_b": ["Art. 6(1)(b)", "Contract", "Processing necessary for contract performance with the data subject."],
+            "article_6_1_b": ["Art. 6(1)(b)", "Contract", "Processing necessary for performance of a contract with the data subject."],
             "article_6_1_c": ["Art. 6(1)(c)", "Legal Obligation", "Processing necessary for compliance with a legal obligation."],
-            "article_6_1_f": ["Art. 6(1)(f)", "Legitimate Interests", "Processing necessary for legitimate interests pursued by the controller."],
-            "article_12": ["Art. 12", "Transparent Information", "Providing transparent information to data subjects about their rights."],
+            "article_6_1_f": ["Art. 6(1)(f)", "Legitimate Interests", "Processing necessary for legitimate interests of the controller."],
+            "article_12": ["Art. 12", "Transparent Information", "Providing clear information to data subjects about their rights."],
             "article_15": ["Art. 15", "Right of Access", "Data subject's right to access their personal data."],
             "article_17": ["Art. 17", "Right to Erasure", "Data subject's right to request erasure of their personal data."],
             "article_25": ["Art. 25", "Data Protection by Design", "Implementing appropriate technical and organizational measures by design."],
@@ -2082,8 +2082,9 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             gdpr_article_data.append(gdpr_articles_info["article_32"])
             gdpr_article_data.append(gdpr_articles_info["article_25"])
         
-        # Create GDPR Articles table
-        gdpr_articles_table = Table(gdpr_article_data, colWidths=[60, 130, 260])
+        # Create GDPR Articles table with wider columns to prevent overlap
+        # Adjusted column widths to prevent text overlap (total width = 450)
+        gdpr_articles_table = Table(gdpr_article_data, colWidths=[75, 145, 230])
         gdpr_articles_table.setStyle(TableStyle([
             # Header styling
             ('BACKGROUND', (0, 0), (2, 0), HexColor('#1e40af')),  # Dark blue header
@@ -2100,9 +2101,13 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             ('FONTNAME', (0, 1), (2, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (2, -1), 9),
             ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # Center align article number
+            ('ALIGN', (1, 1), (1, -1), 'LEFT'),    # Left align titles
+            ('ALIGN', (2, 1), (2, -1), 'LEFT'),    # Left align descriptions
             ('VALIGN', (0, 1), (2, -1), 'MIDDLE'),
-            ('BOTTOMPADDING', (0, 1), (2, -1), 5),
-            ('TOPPADDING', (0, 1), (2, -1), 5),
+            ('BOTTOMPADDING', (0, 1), (2, -1), 6),
+            ('TOPPADDING', (0, 1), (2, -1), 6),
+            ('LEFTPADDING', (0, 1), (2, -1), 8),   # Increased left padding
+            ('RIGHTPADDING', (0, 1), (2, -1), 8),  # Increased right padding
             
             # Grid styling
             ('GRID', (0, 0), (2, -1), 0.5, HexColor('#dfe6e9')),
@@ -2142,17 +2147,18 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     description = finding.get('description', 'Netherlands-specific GDPR requirement')
                     uavg_data.append([f"Art. {article_number}", requirement, description])
         
-        # If no NL findings, add standard UAVG information
+        # If no NL findings, add standard UAVG information with clean descriptions
         if len(uavg_data) == 1:  # Only header row exists
             uavg_data.extend([
-                ["Art. 5", "Minor Consent", "Special protections for children under 16 years - requires parental consent"],
-                ["Art. 33", "Data Breach Notification", "72-hour notification requirement to Dutch DPA (Autoriteit Persoonsgegevens)"],
-                ["Art. 46", "BSN Processing", "Special restrictions on processing Dutch citizen service numbers (BSN)"],
-                ["Art. 47", "Data Sharing", "Netherlands-specific requirements for data sharing, particularly with non-EU countries"]
+                ["Art. 5", "Minor Consent", "Special protections for children under 16 years of age"],
+                ["Art. 33", "Data Breach Notification", "72-hour notification requirement to Dutch DPA"],
+                ["Art. 46", "BSN Processing", "Special restrictions on processing Dutch citizen service numbers"],
+                ["Art. 47", "Data Sharing", "Netherlands-specific requirements for international data transfers"]
             ])
         
-        # Create NL UAVG table with consistent styling
-        uavg_table = Table(uavg_data, colWidths=[70, 120, 260])
+        # Create NL UAVG table with consistent styling and wider columns to prevent overlap
+        # Adjusted column widths to prevent text overlap (total width = 450)
+        uavg_table = Table(uavg_data, colWidths=[75, 145, 230])
         uavg_table.setStyle(TableStyle([
             # Header styling - matching GDPR Articles table style
             ('BACKGROUND', (0, 0), (2, 0), HexColor('#1e40af')),  # Dark blue header
@@ -2169,9 +2175,13 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             ('FONTNAME', (0, 1), (2, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (2, -1), 9),
             ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # Center align article number
+            ('ALIGN', (1, 1), (1, -1), 'LEFT'),    # Left align titles
+            ('ALIGN', (2, 1), (2, -1), 'LEFT'),    # Left align descriptions
             ('VALIGN', (0, 1), (2, -1), 'MIDDLE'),
-            ('BOTTOMPADDING', (0, 1), (2, -1), 5),
-            ('TOPPADDING', (0, 1), (2, -1), 5),
+            ('BOTTOMPADDING', (0, 1), (2, -1), 6),
+            ('TOPPADDING', (0, 1), (2, -1), 6),
+            ('LEFTPADDING', (0, 1), (2, -1), 8),   # Increased left padding
+            ('RIGHTPADDING', (0, 1), (2, -1), 8),  # Increased right padding
             
             # Grid styling - matching GDPR Articles table style
             ('GRID', (0, 0), (2, -1), 0.5, HexColor('#dfe6e9')),
