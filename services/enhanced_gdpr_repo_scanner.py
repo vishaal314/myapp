@@ -9,9 +9,17 @@ import os
 import re
 import json
 import logging
+import tempfile
+import time
 from typing import Dict, List, Any, Tuple, Optional, Set
 import subprocess
 from pathlib import Path
+
+from services.gdpr_risk_categories import (
+    RiskLevel, SeverityLevel, RemediationPriority,
+    calculate_compliance_score, determine_compliance_status,
+    normalize_risk_counts
+)
 
 # Configure logging
 logger = logging.getLogger(__name__)
