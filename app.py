@@ -1219,16 +1219,32 @@ else:
             
                 <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
                     <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">{_("dashboard.sustainability_score")}</h4>
-                    <div style="width: 70px; height: 70px; margin: 10px auto; background-color: #8BC34A; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
-                        <span style="color: white; font-size: 24px; font-weight: 600;">71</span>
+                    <div style="width: 80px; height: 80px; margin: 10px auto; position: relative;">
+                        <svg width="80" height="80" viewBox="0 0 80 80">
+                            <!-- Background circle -->
+                            <circle cx="40" cy="40" r="35" fill="none" stroke="#e6e6e6" stroke-width="8"/>
+                            <!-- Foreground circle with stroke-dasharray for progress -->
+                            <circle cx="40" cy="40" r="35" fill="none" stroke="#8BC34A" stroke-width="8"
+                                    stroke-dasharray="219.91" stroke-dashoffset="63.77"
+                                    transform="rotate(-90 40 40)" />
+                            <!-- Text -->
+                            <text x="40" y="44" text-anchor="middle" dominant-baseline="middle" font-size="20" font-weight="bold" fill="#333333">71</text>
+                        </svg>
                     </div>
                     <p style="margin: 0; color: #6b7280; font-size: 0.85em;">{_("dashboard.status")}: <span style="color: #8BC34A; font-weight: 600;">{_("dashboard.status_good")}</span></p>
                 </div>
             
                 <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); border: 1px solid #f0f0f0;">
                     <h4 style="margin: 0 0 5px 0; color: #1976D2; font-size: 15px;">{_("dashboard.fine_protection")}</h4>
-                    <p style="font-size: 24px; font-weight: 600; color: #9C27B0; margin: 10px 0 5px 0;">92%</p>
-                    <p style="margin: 0; color: #6b7280; font-size: 0.85em;">{_("dashboard.risk_mitigation")}</p>
+                    <div style="position: relative; height: 65px; overflow: hidden;">
+                        <div style="width: 100%; height: 8px; background-color: #f3e8f7; border-radius: 4px; margin: 15px 0;">
+                            <div style="width: 92%; height: 8px; background-color: #9C27B0; border-radius: 4px;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #6b7280; font-size: 0.85em;">{_("dashboard.risk_mitigation")}</span>
+                            <span style="font-size: 22px; font-weight: 600; color: #9C27B0;">92%</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
