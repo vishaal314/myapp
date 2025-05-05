@@ -3599,11 +3599,17 @@ else:
                         from services.report_generator import generate_report
                     
                     elif scan_type == _("scan.pcidss"):
-                        # Import fixed PCI DSS scanner implementation
-                        from fixed_pcidss_scanner import run_fixed_pcidss_scanner
+                        # Redirect to the dedicated PCI DSS scanner page
+                        st.info("The PCI DSS scanner is now available as a dedicated page for better usability.")
                         
-                        # Run the fixed implementation with proper UI layout
-                        run_fixed_pcidss_scanner()
+                        # Add a direct link to the PCI DSS scanner page
+                        st.markdown("""
+                        <a href="/pcidss_scan" target="_self">
+                            <button style="background-color:#FF4B4B; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-weight:bold;">
+                                Go to PCI DSS Scanner
+                            </button>
+                        </a>
+                        """, unsafe_allow_html=True)
                         
                         # Skip the rest of the PCI DSS scanner code in app.py
                         scan_running = False
