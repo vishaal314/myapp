@@ -981,6 +981,9 @@ def generate_report(scan_data: Dict[str, Any],
         elif 'soc2' in scan_type.lower():
             report_format = "soc2"
             logger.info("Using SOC2 compliance report format")
+        elif 'pci' in scan_type.lower() or 'pcidss' in scan_type.lower():
+            report_format = "pcidss"
+            logger.info("Using PCI DSS compliance report format")
         elif 'repository' in scan_type.lower() or 'code' in scan_type.lower():
             report_format = "gdpr_repository"
             logger.info("Using GDPR repository report format")
