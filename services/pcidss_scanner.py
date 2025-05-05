@@ -284,7 +284,8 @@ class PCIDSSScanner:
                 "total_time": round(time.time() - start_time, 2)
             },
             "repository_stats": repo_stats,
-            "recommendations": recommendations
+            "recommendations": recommendations,
+            "region": self.region  # Include the region in the results
         }
     
     def _get_repo_stats(self, repo_path: str) -> Dict[str, Any]:
