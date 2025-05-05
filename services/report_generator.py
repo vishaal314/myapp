@@ -1299,10 +1299,10 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     # Content elements
     elements = []
     
-    # Create a stylish, modern logo and header
+    # Create a modern classic logo and header
     logo_data = [
         [
-            # Modern logo with shield icon and gradient
+            # Classic modern logo with elegant design
             Table(
                 [
                     [
@@ -1310,7 +1310,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                         Table(
                             [
                                 [
-                                    # Modern shield icon with gradient effect
+                                    # Modern classic shield icon with refined effect
                                     Table(
                                         [[Paragraph(
                                             """<font color="#FFFFFF" size="22">🛡️</font>""",
@@ -1319,28 +1319,28 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                                         colWidths=[55],
                                         rowHeights=[55],
                                         style=TableStyle([
-                                            # Create a shield shape with gradient-like effect using multiple background layers
-                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#4f46e5')),  # Base gradient color - indigo
-                                            ('LINEABOVE', (0, 0), (-1, 0), 2, HexColor('#818cf8')),  # Light indigo top accent
-                                            ('LINEBELOW', (0, -1), (-1, -1), 2, HexColor('#312e81')),  # Dark indigo bottom accent
-                                            ('LINEBEFORE', (0, 0), (0, -1), 2, HexColor('#6366f1')),  # Medium indigo left accent
-                                            ('LINEAFTER', (-1, 0), (-1, -1), 2, HexColor('#4338ca')),  # Indigo right accent
+                                            # Create a classic shield shape with elegant styling
+                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')), # Navy blue for classic feel
+                                            ('LINEABOVE', (0, 0), (-1, 0), 2, HexColor('#60a5fa')), # Light blue top accent
+                                            ('LINEBELOW', (0, -1), (-1, -1), 2, HexColor('#1e3a8a')), # Navy blue bottom accent
+                                            ('LINEBEFORE', (0, 0), (0, -1), 2, HexColor('#3b82f6')), # Medium blue left accent
+                                            ('LINEAFTER', (-1, 0), (-1, -1), 2, HexColor('#3b82f6')), # Medium blue right accent
                                             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                                            ('ROUNDEDCORNERS', [8, 8, 8, 8]),  # Shield shape with slightly rounded corners
+                                            ('ROUNDEDCORNERS', [10, 10, 10, 10]), # More rounded corners for modern classic look
                                         ])
                                     ),
-                                    # Enhanced brand text with improved typography and gradient accent
+                                    # Classic brand text with elegant typography
                                     Table(
                                         [
                                             [Paragraph(
-                                                # Enhanced title with modern font styling and spacing
-                                                f"""<font face="Helvetica-Bold" color="#FFFFFF" size="18"><b>Data<font color="#a5b4fc">Guardian</font> Pro</b></font>""", 
+                                                # Classic elegant title styling
+                                                f"""<font face="Helvetica-Bold" color="#FFFFFF" size="18"><b>Data<font color="#93c5fd">Guardian</font> Pro</b></font>""", 
                                                 ParagraphStyle('LogoStyle', alignment=0, leading=22, spaceAfter=2)
                                             )],
                                             [Paragraph(
-                                                # Improved subtitle with letter spacing
-                                                f"""<font face="Helvetica" color="#cbd5e1" size="10">Enterprise Privacy Compliance Platform</font>""", 
+                                                # Refined subtitle with elegant spacing
+                                                f"""<font face="Helvetica" color="#dbeafe" size="10">Enterprise Privacy Compliance Platform</font>""", 
                                                 ParagraphStyle('SubtitleStyle', alignment=0, leading=12, spaceBefore=0)
                                             )]
                                         ],
@@ -1351,24 +1351,24 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                                             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                                             ('LEFTPADDING', (0, 0), (-1, -1), 12),  # More left padding for better alignment
                                             ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-                                            # Gradient-like background with accent border
-                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Dark blue background
-                                            ('LINEAFTER', (-1, 0), (-1, -1), 3, HexColor('#3b82f6')),  # Blue right accent
-                                            ('LINEBELOW', (0, -1), (-1, -1), 1, HexColor('#60a5fa')),  # Light blue bottom accent
+                                            # Classic elegant background with subtle borders
+                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Navy blue background
+                                            ('LINEAFTER', (-1, 0), (-1, -1), 2, HexColor('#60a5fa')),  # Light blue right accent
+                                            ('LINEBELOW', (0, -1), (-1, -1), 1, HexColor('#93c5fd')),  # Very light blue bottom accent
                                         ])
                                     )
                                 ]
                             ],
                             colWidths=[50, 160],
                             style=TableStyle([
-                                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Dark blue background
+                                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Navy blue background
                                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                                 ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
                                 ('TOPPADDING', (0, 0), (-1, -1), 6),
                                 ('LEFTPADDING', (0, 0), (-1, -1), 12),
                                 ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-                                ('ROUNDEDCORNERS', [10, 10, 10, 10]),
+                                ('ROUNDEDCORNERS', [12, 12, 12, 12]), # More rounded corners for a classic modern look
                             ])
                         ),
                     ]
@@ -2043,7 +2043,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         
         # Common GDPR articles with descriptions (reformatted for clean presentation)
         gdpr_articles_info = {
-            "article_5_1_a": ["Art. 5(1)(a)", "Lawfulness, Fairness, and Transparency", "Personal data shall be processed lawfully, fairly and in a transparent manner."],
+            "article_5_1_a": ["Art. 5(1)(a)", "Lawfulness, Fairness, Transparency", "Personal data shall be processed lawfully, fairly and transparently."],
             "article_5_1_b": ["Art. 5(1)(b)", "Purpose Limitation", "Data must be collected for specified, explicit and legitimate purposes."],
             "article_5_1_c": ["Art. 5(1)(c)", "Data Minimization", "Personal data shall be adequate, relevant and limited to what is necessary."],
             "article_5_1_d": ["Art. 5(1)(d)", "Accuracy", "Personal data shall be accurate and kept up to date where necessary."],
