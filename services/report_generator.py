@@ -2238,6 +2238,16 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     import logging
     logging.info(f"Risk assessment - Total PII: {total_pii}, High: {high_risk}, Medium: {medium_risk}, Low: {low_risk}")
     
+    # Fix for "No PII items found" message bug:
+    # Double check that our PII counts actually match the total
+    if has_pii and (high_risk + medium_risk + low_risk) == 0:
+        logging.warning("Inconsistency detected: total_pii > 0 but no items in any risk category")
+        # If we have a total count but no risk counts, try to set at least low risk to match total
+        if total_pii > 0:
+            low_risk = total_pii
+            has_low_risk = True
+            logging.info(f"Auto-correcting low_risk count to {low_risk} to match total_pii")
+    
     if high_risk > 10:
         if current_lang == 'nl':
             risk_level = "Kritisch"
@@ -2268,24 +2278,40 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         risk_color_hex = '#f97316'  # Orange
         angle_start = 180
         angle_end = 270
-    elif medium_risk > 0 or low_risk > 0:
-        # This condition handles both medium and low risk items - the fix for the "No PII items found" issue
+    elif medium_risk > 0:
+        # Handle medium risk items specifically
         if current_lang == 'nl':
             risk_level = "Gemiddeld"
             risk_level_for_meter = "Moderate"  # Keep English for the meter component
             compliance_level = "Gemiddeld"
-            risk_text = "Deze scan heeft PII-items geïdentificeerd die aandacht vereisen. Ook items met laag of gemiddeld risico moeten worden beoordeeld om AVG-naleving te waarborgen en gevoelige informatie te beschermen. Deze items moeten worden beoordeeld en aangepakt volgens het gegevensbeschermingsbeleid van uw organisatie."
+            risk_text = "Deze scan heeft PII-items met gemiddeld risico geïdentificeerd die aandacht vereisen. Items met gemiddeld risico moeten worden beoordeeld om AVG-naleving te waarborgen en gevoelige informatie te beschermen."
         else:
             risk_level = "Moderate"
             risk_level_for_meter = "Moderate"
             compliance_level = "Medium"
-            risk_text = "This scan has identified PII items that require review. Even low and medium risk items need attention to ensure GDPR compliance and protect sensitive information. These items should be reviewed and addressed according to your organization's data protection policies."
+            risk_text = "This scan has identified medium risk PII items that require attention. Medium risk items need to be reviewed to ensure GDPR compliance and protect sensitive information."
         sustainability_score = 75  # Good sustainability score
         risk_color_hex = '#eab308'  # Yellow
         angle_start = 90
         angle_end = 180
+    elif low_risk > 0:
+        # Handle low risk items specifically - fixes the "No PII items found" issue when only low risk items exist
+        if current_lang == 'nl':
+            risk_level = "Laag"
+            risk_level_for_meter = "Low"  # Keep English for the meter component
+            compliance_level = "Gemiddeld"
+            risk_text = "Deze scan heeft PII-items met laag risico geïdentificeerd. Zelfs items met laag risico moeten periodiek worden beoordeeld om AVG-naleving te waarborgen en gevoelige informatie te beschermen."
+        else:
+            risk_level = "Low"
+            risk_level_for_meter = "Low"
+            compliance_level = "Medium"
+            risk_text = "This scan has identified low risk PII items. Even low risk items should be periodically reviewed to ensure GDPR compliance and protect sensitive information."
+        sustainability_score = 85  # Good sustainability score
+        risk_color_hex = '#22c55e'  # Green-yellow
+        angle_start = 45
+        angle_end = 90
     else:
-        # No PII items found - lowest risk level
+        # Truly no PII items found - lowest risk level
         if current_lang == 'nl':
             risk_level = "Geen"
             risk_level_for_meter = "None"  # Keep English for the meter component
