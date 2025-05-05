@@ -2240,44 +2240,33 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         if current_lang == 'nl':
             risk_level = "Gemiddeld"
             risk_level_for_meter = "Moderate"  # Keep English for the meter component
-            compliance_level = "Hoog"
-            risk_text = "Deze scan heeft PII-items geïdentificeerd, maar geen daarvan is geclassificeerd als hoog risico. Bekijk de items voor GDPR-naleving, maar er is geen dringende actie vereist."
+            compliance_level = "Gemiddeld"
+            risk_text = "Deze scan heeft PII-items geïdentificeerd die aandacht vereisen. Ook items met laag of gemiddeld risico moeten worden beoordeeld om AVG-naleving te waarborgen en gevoelige informatie te beschermen. Deze items moeten worden beoordeeld en aangepakt volgens het gegevensbeschermingsbeleid van uw organisatie."
         else:
             risk_level = "Moderate"
             risk_level_for_meter = "Moderate"
-            compliance_level = "High"
-            risk_text = "This scan has identified PII items, but none are classified as high risk. Review the items for GDPR compliance, but no urgent action is required."
+            compliance_level = "Medium"
+            risk_text = "This scan has identified PII items that require review. Even low and medium risk items need attention to ensure GDPR compliance and protect sensitive information. These items should be reviewed and addressed according to your organization's data protection policies."
         sustainability_score = 75  # Good sustainability score
         risk_color_hex = '#eab308'  # Yellow
         angle_start = 90
         angle_end = 180
     else:
+        # No PII items found - lowest risk level
         if current_lang == 'nl':
-            risk_level = "Laag"
-            risk_level_for_meter = "Low"  # Keep English for the meter component
+            risk_level = "Geen"
+            risk_level_for_meter = "None"  # Keep English for the meter component
             compliance_level = "Hoog"
-            risk_text = "Deze scan heeft geen PII-items geïdentificeerd. Geen directe actie vereist, maar we raden aan om doorlopende monitoring te behouden naarmate uw project evolueert."
+            risk_text = "Er zijn geen PII-items gevonden in deze scan. Blijf monitoren om GDPR-naleving te behouden."
         else:
-            risk_level = "Low"
-            risk_level_for_meter = "Low"
+            risk_level = "None"
+            risk_level_for_meter = "None"
             compliance_level = "High"
-            risk_text = "This scan has identified no PII items. No immediate action required, but we recommend maintaining ongoing monitoring as your project evolves."
+            risk_text = "No PII items were found in this scan. Continue monitoring to maintain GDPR compliance."
         sustainability_score = 100  # Perfect sustainability score
         risk_color_hex = '#10b981'  # Green
         angle_start = 0
         angle_end = 90
-    # No PII items found - lowest risk level
-    if current_lang == 'nl':
-        risk_level = "Geen"
-        risk_level_for_meter = "None"  # Keep English for the meter component
-        compliance_level = "Hoog"
-        risk_text = "Er zijn geen PII-items gevonden in deze scan. Blijf monitoren om GDPR-naleving te behouden."
-    else:
-        risk_level = "None"
-        risk_level_for_meter = "None"
-        compliance_level = "High"
-        risk_text = "No PII items were found in this scan. Continue monitoring to maintain GDPR compliance."
-    sustainability_score = 90  # Excellent sustainability score
     
     # Add GDPR fine protection banner with language support (skip for SOC2 reports)
     if report_format != "soc2":
