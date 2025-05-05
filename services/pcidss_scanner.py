@@ -427,6 +427,174 @@ class PCIDSSScanner:
             return "Medium"
         else:
             return "Low"
+    def scan(self, **kwargs) -> Dict[str, Any]:
+        """
+        Main scan method that handles different scan modes and sources.
+        This is the primary interface for scanning in the PCIDSSScanner class.
+        
+        Args:
+            **kwargs: Keyword arguments include:
+                - repo_url: GitHub repository URL (for GitHub repo scanning)
+                - branch: Branch to scan (default: "main")
+                - token: GitHub access token for private repos
+                - uploaded_files: List of files uploaded by the user (for local scanning)
+                - scan_scope: List of scan components to include
+                - requirements: Dictionary mapping PCI DSS requirements to boolean flags
+                - output_formats: List of desired output formats
+                
+        Returns:
+            Dictionary containing scan results, findings, and metadata
+        """
+        # Extract parameters
+        repo_url = kwargs.get('repo_url')
+        branch = kwargs.get('branch', 'main')
+        token = kwargs.get('token')
+        uploaded_files = kwargs.get('uploaded_files', [])
+        scan_scope = kwargs.get('scan_scope', [])
+        requirements = kwargs.get('requirements', {})
+        output_formats = kwargs.get('output_formats', ['PDF'])
+        
+        # Determine scan mode based on inputs
+        if repo_url:
+            # For GitHub repository scanning
+            # Add token to URL if provided
+            if token and 'github.com' in repo_url:
+                # Format: https://{token}@github.com/...
+                if 'https://' in repo_url:
+                    repo_url = repo_url.replace('https://', f'https://{token}@')
+                else:
+                    repo_url = f'https://{token}@github.com/{repo_url.replace("github.com/", "")}'
+            
+            # Convert requirements dict to list of PCI DSS requirement strings
+            pci_requirements_filter = []
+            for req_name, include in requirements.items():
+                if include:
+                    # Convert req1, req2, etc. to 1, 2, etc.
+                    req_num = req_name.replace('req', '')
+                    pci_requirements_filter.append(req_num)
+            
+            # Determine which scan components to include
+            scan_dependencies = "SCA (Software Composition Analysis)" in scan_scope
+            scan_iac = "IaC (Infrastructure-as-Code) Scanning" in scan_scope
+            scan_secrets = "Secrets Detection" in scan_scope
+            
+            # Perform the repository scan
+            results = self.scan_repository(
+                repo_path=repo_url,
+                branch=branch,
+                scan_dependencies=scan_dependencies,
+                scan_iac=scan_iac,
+                scan_secrets=scan_secrets,
+                pci_requirements_filter=pci_requirements_filter
+            )
+            
+            # Add repo URL to results for display
+            results['repo_url'] = repo_url
+            
+        elif uploaded_files:
+            # For local file uploads
+            # Create a temporary directory to store uploaded files
+            import tempfile
+            import os
+            import shutil
+            
+            temp_dir = tempfile.mkdtemp()
+            try:
+                # Save uploaded files to temp directory
+                for uploaded_file in uploaded_files:
+                    file_path = os.path.join(temp_dir, uploaded_file.name)
+                    with open(file_path, 'wb') as f:
+                        f.write(uploaded_file.getbuffer())
+                
+                # Convert requirements dict to list of PCI DSS requirement strings
+                pci_requirements_filter = []
+                for req_name, include in requirements.items():
+                    if include:
+                        req_num = req_name.replace('req', '')
+                        pci_requirements_filter.append(req_num)
+                
+                # Determine which scan components to include
+                scan_dependencies = "SCA (Software Composition Analysis)" in scan_scope
+                scan_iac = "IaC (Infrastructure-as-Code) Scanning" in scan_scope
+                scan_secrets = "Secrets Detection" in scan_scope
+                
+                # Scan the local directory
+                results = self.scan_repository(
+                    repo_path=temp_dir,
+                    scan_dependencies=scan_dependencies,
+                    scan_iac=scan_iac,
+                    scan_secrets=scan_secrets,
+                    pci_requirements_filter=pci_requirements_filter
+                )
+                
+                # Add source info to results
+                results['source'] = 'Local Upload'
+                results['file_count'] = len(uploaded_files)
+                
+            except Exception as e:
+                logger.error(f"Error processing uploaded files: {str(e)}")
+                results = {
+                    "status": "error",
+                    "error": f"Error processing uploaded files: {str(e)}",
+                    "findings": []
+                }
+            finally:
+                # Clean up temp directory
+                try:
+                    shutil.rmtree(temp_dir)
+                except Exception as e:
+                    logger.warning(f"Failed to clean up temporary directory: {str(e)}")
+        else:
+            # No valid scan source provided
+            results = {
+                "status": "error",
+                "error": "No valid scan source provided",
+                "findings": []
+            }
+        
+        # Add PCI DSS categories for reporting
+        results['pci_categories'] = self._count_findings_by_pci_category(results.get('findings', []))
+        
+        return results
+        
+    def _count_findings_by_pci_category(self, findings: List[Dict[str, Any]]) -> Dict[str, int]:
+        """
+        Count findings by PCI DSS requirement category.
+        
+        Args:
+            findings: List of finding dictionaries
+            
+        Returns:
+            Dictionary mapping PCI DSS requirements to counts
+        """
+        categories = {
+            "Req 1": 0,  # Network Security
+            "Req 2": 0,  # Secure Configurations
+            "Req 3": 0,  # Cardholder Data Protection
+            "Req 4": 0,  # Transmission Security
+            "Req 5": 0,  # Malware Protection
+            "Req 6": 0,  # Secure Systems
+            "Req 7": 0,  # Access Control
+            "Req 8": 0,  # Authentication
+            "Req 9": 0,  # Physical Access
+            "Req 10": 0, # System Monitoring
+            "Req 11": 0, # Security Testing
+            "Req 12": 0  # Security Policy
+        }
+        
+        for finding in findings:
+            pci_req = finding.get('pci_requirement', '')
+            if not pci_req:
+                continue
+                
+            # Extract the primary requirement number (e.g., "6.5.1" -> "6")
+            parts = pci_req.split('.')
+            if parts and parts[0].isdigit():
+                req_key = f"Req {parts[0]}"
+                if req_key in categories:
+                    categories[req_key] += 1
+        
+        return categories
     
     def _generate_recommendations(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
