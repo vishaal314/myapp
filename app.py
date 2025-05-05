@@ -3656,6 +3656,140 @@ else:
                         # Create tabs for configuration and results
                         config_tab, results_tab = st.tabs(["PCI DSS Scanner Configuration", "Results"])
                         
+                        # Add repository configuration UI
+                        with config_tab:
+                            st.subheader("Repository Configuration")
+                            
+                            # Repository source selection
+                            repo_source = st.radio(
+                                "Repository Source:",
+                                ["GitHub", "BitBucket", "Azure DevOps"],
+                                horizontal=True
+                            )
+                            
+                            # Repository URL input
+                            repo_url = st.text_input(
+                                "Repository URL:",
+                                placeholder=f"Enter {repo_source} repository URL"
+                            )
+                            
+                            # Branch input
+                            branch = st.text_input(
+                                "Branch (optional):",
+                                value="main",
+                                placeholder="Enter branch name (default: main)"
+                            )
+                            
+                            # Advanced scan options
+                            with st.expander("Advanced Scan Options"):
+                                col1, col2, col3 = st.columns(3)
+                                
+                                with col1:
+                                    scan_dependencies = st.checkbox("Scan Dependencies", value=True,
+                                                                help="Scan third-party libraries for vulnerabilities")
+                                    
+                                with col2:
+                                    scan_iac = st.checkbox("Scan Infrastructure Code", value=True,
+                                                         help="Scan Terraform, CloudFormation, etc.")
+                                    
+                                with col3:
+                                    scan_secrets = st.checkbox("Detect Secrets", value=True,
+                                                            help="Scan for hardcoded credentials")
+                            
+                                # PCI DSS Requirements filter
+                                st.markdown("### PCI DSS Requirements Focus")
+                                st.write("Select specific PCI DSS requirements to focus on (optional):")
+                                
+                                # Create multi-select for requirements
+                                requirements_options = [
+                                    "1. Install and maintain a firewall configuration",
+                                    "2. Change vendor-supplied defaults",
+                                    "3. Protect stored cardholder data",
+                                    "4. Encrypt transmission of cardholder data",
+                                    "5. Use and regularly update anti-virus software",
+                                    "6. Develop and maintain secure systems and applications",
+                                    "7. Restrict access to cardholder data",
+                                    "8. Assign a unique ID to each person with computer access",
+                                    "9. Restrict physical access to cardholder data",
+                                    "10. Track and monitor all access to network resources and cardholder data",
+                                    "11. Regularly test security systems and processes",
+                                    "12. Maintain a policy that addresses information security"
+                                ]
+                                
+                                selected_requirements = st.multiselect(
+                                    "PCI DSS Requirements:",
+                                    requirements_options
+                                )
+                                
+                                # Convert selected requirements to requirement numbers
+                                pci_requirements_filter = [req.split(".")[0] for req in selected_requirements] if selected_requirements else []
+                            
+                            # Create scan button with proper styling
+                            scan_button = st.button(
+                                "Start PCI DSS Scan",
+                                type="primary",
+                                use_container_width=True
+                            )
+                            
+                            if scan_button:
+                                if not repo_url:
+                                    st.error("Please enter a repository URL to scan.")
+                                else:
+                                    # Initialize PCI DSS Scanner
+                                    scanner = PCIDSSScanner(
+                                        region=st.session_state.get('selected_region', "Global"),
+                                        progress_callback=lambda current, total, message: st.session_state.update({
+                                            'pcidss_scan_progress': current / total,
+                                            'pcidss_scan_message': message
+                                        })
+                                    )
+                                    
+                                    # Create progress indicators
+                                    scan_progress = st.progress(0)
+                                    scan_status = st.empty()
+                                    scan_status.text("Preparing to scan repository...")
+                                    
+                                    try:
+                                        with st.spinner("Scanning repository for PCI DSS compliance issues..."):
+                                            # Run the scan
+                                            scan_results = scanner.scan_repository(
+                                                repo_path=repo_url,
+                                                branch=branch,
+                                                scan_dependencies=scan_dependencies,
+                                                scan_iac=scan_iac,
+                                                scan_secrets=scan_secrets,
+                                                pci_requirements_filter=pci_requirements_filter
+                                            )
+                                            
+                                            # Update session state with results
+                                            scan_results["repo_url"] = repo_url
+                                            scan_results["branch"] = branch
+                                            st.session_state.pcidss_scan_results = scan_results
+                                            
+                                            # Add to scan history
+                                            if 'history' not in st.session_state:
+                                                st.session_state.history = {}
+                                                
+                                            history_id = f"pcidss_{int(time.time())}"
+                                            st.session_state.history[history_id] = {
+                                                'type': 'PCI DSS',
+                                                'data': scan_results,
+                                                'timestamp': datetime.now().isoformat(),
+                                                'repository': repo_url
+                                            }
+                                            
+                                            # Show completion message and switch to results tab
+                                            scan_progress.progress(1.0)
+                                            scan_status.success("Scan completed successfully! View results in the Results tab.")
+                                            st.session_state.active_tab_index = 1  # Switch to results tab
+                                            
+                                    except Exception as e:
+                                        scan_status.error(f"Error scanning repository: {str(e)}")
+                                        st.exception(e)
+                                        
+                                    # Add rerun to show results tab
+                                    st.rerun()
+                        
                         # Add content to results tab
                         with results_tab:
                             if 'pcidss_scan_results' in st.session_state:
@@ -3772,12 +3906,28 @@ else:
                                     st.info("No findings available.")
                                 
                                 # Add download report button
-                                st.markdown("### Download Report")
+                                st.markdown("### Download Compliance Report")
                                 
-                                if st.button("Generate PDF Report", type="primary", key="pcidss_results_pdf_report_btn"):
-                                    import base64
-                                    from datetime import datetime
+                                # Report Download Section with better UX
+                                col1, col2 = st.columns([3, 1])
+                                
+                                with col1:
+                                    st.markdown("""
+                                    <div style="margin-bottom: 10px;">
+                                        <p>Download a detailed PCI DSS compliance report with:</p>
+                                        <ul>
+                                            <li>Executive summary</li>
+                                            <li>Detailed findings with risk assessment</li>
+                                            <li>PCI DSS requirements mapping</li>
+                                            <li>Remediation recommendations</li>
+                                        </ul>
+                                    </div>
+                                    """, unsafe_allow_html=True)
                                     
+                                with col2:
+                                    generate_report_button = st.button("Generate Report", type="primary", use_container_width=True, key="pcidss_generate_report_btn")
+                                    
+                                if 'pcidss_report_pdf' not in st.session_state and generate_report_button:
                                     try:
                                         with st.spinner("Generating PDF report..."):
                                             # Generate the report
@@ -3788,25 +3938,36 @@ else:
                                                 report_format="pcidss"
                                             )
                                             
-                                            # Create the download button
-                                            b64_pdf = base64.b64encode(report_bytes).decode('utf-8')
+                                            # Store in session state
+                                            st.session_state.pcidss_report_pdf = report_bytes
+                                            st.session_state.pcidss_report_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                                             
-                                            # Create a formatted filename with timestamp
-                                            report_filename = f"pcidss_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                                            
-                                            # Display the download button
-                                            st.markdown(
-                                                f"""
-                                                <a href="data:application/pdf;base64,{b64_pdf}" download="{report_filename}" style="text-decoration:none;">
-                                                    <div style="background-color:#4CAF50; color:white; padding:10px; border-radius:5px; text-align:center; margin:10px 0;">
-                                                        📥 Download PCI DSS Compliance Report PDF
-                                                    </div>
-                                                </a>
-                                                """,
-                                                unsafe_allow_html=True
-                                            )
+                                            # Rerun to show the download button
+                                            st.rerun()
                                     except Exception as e:
                                         st.error(f"Error generating report: {str(e)}")
+                                
+                                # Show download button if report has been generated
+                                if 'pcidss_report_pdf' in st.session_state:
+                                    report_filename = f"pcidss_compliance_report_{st.session_state.pcidss_report_timestamp}.pdf"
+                                    
+                                    st.download_button(
+                                        label="📥 Download PCI DSS Compliance Report",
+                                        data=st.session_state.pcidss_report_pdf,
+                                        file_name=report_filename,
+                                        mime="application/pdf",
+                                        key="pcidss_download_report_btn",
+                                        use_container_width=True
+                                    )
+                                    
+                                    # Add option to generate a new report
+                                    if st.button("Generate New Report", key="pcidss_new_report_btn"):
+                                        # Clear the existing report
+                                        if 'pcidss_report_pdf' in st.session_state:
+                                            del st.session_state.pcidss_report_pdf
+                                        if 'pcidss_report_timestamp' in st.session_state:
+                                            del st.session_state.pcidss_report_timestamp
+                                        st.rerun()
                             else:
                                 st.info("No PCI DSS scan results available yet. Run a scan in the Configuration tab.")
                         
