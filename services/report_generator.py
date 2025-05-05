@@ -2019,6 +2019,169 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     elements.append(summary_table)
     elements.append(Spacer(1, 20))
     
+    # Add GDPR Articles and NL UAVG Points sections for GDPR repository reports
+    if report_format == "gdpr_repository":
+        # GDPR Articles Scanned Section
+        if current_lang == 'nl':
+            gdpr_articles_title = "Gescande AVG Artikelen"
+        else:
+            gdpr_articles_title = "GDPR Articles Scanned"
+        elements.append(Paragraph(gdpr_articles_title, heading_style))
+        elements.append(Spacer(1, 10))
+        
+        # Extract unique GDPR articles from findings
+        gdpr_articles_found = set()
+        for finding in scan_data.get('findings', []):
+            if 'gdpr_articles' in finding and isinstance(finding['gdpr_articles'], list):
+                for article in finding['gdpr_articles']:
+                    gdpr_articles_found.add(article)
+        
+        # Define the core GDPR articles with descriptions
+        gdpr_article_data = [
+            ["Article", "Title", "Description"]
+        ]
+        
+        # Common GDPR articles with descriptions
+        gdpr_articles_info = {
+            "article_5_1_a": ["Art. 5(1)(a)", "Lawfulness, Fairness, and Transparency", "Personal data shall be processed lawfully, fairly and in a transparent manner."],
+            "article_5_1_b": ["Art. 5(1)(b)", "Purpose Limitation", "Data must be collected for specified, explicit and legitimate purposes and not further processed incompatibly."],
+            "article_5_1_c": ["Art. 5(1)(c)", "Data Minimization", "Personal data shall be adequate, relevant and limited to what is necessary."],
+            "article_5_1_d": ["Art. 5(1)(d)", "Accuracy", "Personal data shall be accurate and, where necessary, kept up to date."],
+            "article_5_1_e": ["Art. 5(1)(e)", "Storage Limitation", "Data must be kept in a form which permits identification for no longer than necessary."],
+            "article_5_1_f": ["Art. 5(1)(f)", "Integrity and Confidentiality", "Data must be processed securely, including protection against unauthorized processing and accidental loss."],
+            "article_6_1_a": ["Art. 6(1)(a)", "Consent", "Processing based on the data subject's consent."],
+            "article_6_1_b": ["Art. 6(1)(b)", "Contract", "Processing necessary for contract performance with the data subject."],
+            "article_6_1_c": ["Art. 6(1)(c)", "Legal Obligation", "Processing necessary for compliance with a legal obligation."],
+            "article_6_1_f": ["Art. 6(1)(f)", "Legitimate Interests", "Processing necessary for legitimate interests pursued by the controller."],
+            "article_12": ["Art. 12", "Transparent Information", "Providing transparent information to data subjects about their rights."],
+            "article_15": ["Art. 15", "Right of Access", "Data subject's right to access their personal data."],
+            "article_17": ["Art. 17", "Right to Erasure", "Data subject's right to request erasure of their personal data."],
+            "article_25": ["Art. 25", "Data Protection by Design", "Implementing appropriate technical and organizational measures by design."],
+            "article_32": ["Art. 32", "Security of Processing", "Implementing appropriate security measures for personal data."],
+            "article_33": ["Art. 33", "Breach Notification", "Notification of personal data breaches to the supervisory authority."],
+            "article_35": ["Art. 35", "Data Protection Impact Assessment", "Assessment for high-risk processing operations."],
+            "article_44": ["Art. 44", "General Principle for Transfers", "Transfers of personal data to third countries or international organizations."]
+        }
+        
+        # Add all found GDPR articles to the table
+        articles_added = False
+        for article_id in sorted(gdpr_articles_found):
+            if article_id in gdpr_articles_info:
+                gdpr_article_data.append(gdpr_articles_info[article_id])
+                articles_added = True
+            else:
+                # Handle unknown articles - extract number and add generic description
+                article_number = article_id.replace('article_', '').replace('_', '.')
+                gdpr_article_data.append([f"Art. {article_number}", "GDPR Requirement", "GDPR compliance requirement"])
+                articles_added = True
+        
+        # If no articles found, add the most common ones
+        if not articles_added:
+            gdpr_article_data.append(gdpr_articles_info["article_5_1_a"])
+            gdpr_article_data.append(gdpr_articles_info["article_6_1_a"])
+            gdpr_article_data.append(gdpr_articles_info["article_32"])
+            gdpr_article_data.append(gdpr_articles_info["article_25"])
+        
+        # Create GDPR Articles table
+        gdpr_articles_table = Table(gdpr_article_data, colWidths=[60, 130, 260])
+        gdpr_articles_table.setStyle(TableStyle([
+            # Header styling
+            ('BACKGROUND', (0, 0), (2, 0), HexColor('#1e40af')),  # Dark blue header
+            ('TEXTCOLOR', (0, 0), (2, 0), colors.white),
+            ('FONTNAME', (0, 0), (2, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (2, 0), 10),
+            ('ALIGN', (0, 0), (2, 0), 'CENTER'),
+            ('VALIGN', (0, 0), (2, 0), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (2, 0), 8),
+            ('TOPPADDING', (0, 0), (2, 0), 8),
+            
+            # Content styling
+            ('BACKGROUND', (0, 1), (2, -1), colors.white),
+            ('FONTNAME', (0, 1), (2, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (2, -1), 9),
+            ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # Center align article number
+            ('VALIGN', (0, 1), (2, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 1), (2, -1), 5),
+            ('TOPPADDING', (0, 1), (2, -1), 5),
+            
+            # Grid styling
+            ('GRID', (0, 0), (2, -1), 0.5, HexColor('#dfe6e9')),
+            ('LINEBELOW', (0, 0), (2, 0), 1, HexColor('#1e40af')),  # Thicker line below header
+        ]))
+        
+        elements.append(gdpr_articles_table)
+        elements.append(Spacer(1, 15))
+        
+        # NL UAVG Section - Add Dutch UAVG specific requirements section
+        if current_lang == 'nl':
+            uavg_title = "Nederlandse UAVG Specifieke Vereisten"
+        else:
+            uavg_title = "Netherlands UAVG Specific Requirements"
+        elements.append(Paragraph(uavg_title, heading_style))
+        elements.append(Spacer(1, 10))
+        
+        # Extract UAVG-specific findings
+        nl_findings = []
+        for finding in scan_data.get('findings', []):
+            if finding.get('country_specific') == 'Netherlands' or finding.get('type') == 'nl_uavg':
+                nl_findings.append(finding)
+        
+        # If no NL-specific findings found, add the standard UAVG requirements
+        uavg_data = [
+            ["UAVG Article", "Requirement", "Description"]
+        ]
+        
+        if nl_findings:
+            # Process NL-specific findings
+            for finding in nl_findings:
+                # Extract UAVG article if available
+                uavg_articles = finding.get('uavg_articles', [])
+                for uavg_art in uavg_articles:
+                    article_number = uavg_art.replace('article_', '').replace('_', '.')
+                    requirement = finding.get('pattern_key', '').replace('nl_', '').replace('_', ' ').title()
+                    description = finding.get('description', 'Netherlands-specific GDPR requirement')
+                    uavg_data.append([f"Art. {article_number}", requirement, description])
+        
+        # If no NL findings, add standard UAVG information
+        if len(uavg_data) == 1:  # Only header row exists
+            uavg_data.extend([
+                ["Art. 5", "Minor Consent", "Special protections for children under 16 years - requires parental consent"],
+                ["Art. 33", "Data Breach Notification", "72-hour notification requirement to Dutch DPA (Autoriteit Persoonsgegevens)"],
+                ["Art. 46", "BSN Processing", "Special restrictions on processing Dutch citizen service numbers (BSN)"],
+                ["Art. 47", "Data Sharing", "Netherlands-specific requirements for data sharing, particularly with non-EU countries"]
+            ])
+        
+        # Create NL UAVG table with consistent styling
+        uavg_table = Table(uavg_data, colWidths=[70, 120, 260])
+        uavg_table.setStyle(TableStyle([
+            # Header styling - matching GDPR Articles table style
+            ('BACKGROUND', (0, 0), (2, 0), HexColor('#1e40af')),  # Dark blue header
+            ('TEXTCOLOR', (0, 0), (2, 0), colors.white),
+            ('FONTNAME', (0, 0), (2, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (2, 0), 10),
+            ('ALIGN', (0, 0), (2, 0), 'CENTER'),
+            ('VALIGN', (0, 0), (2, 0), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (2, 0), 8),
+            ('TOPPADDING', (0, 0), (2, 0), 8),
+            
+            # Content styling - matching GDPR Articles table style
+            ('BACKGROUND', (0, 1), (2, -1), colors.white),
+            ('FONTNAME', (0, 1), (2, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (2, -1), 9),
+            ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # Center align article number
+            ('VALIGN', (0, 1), (2, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 1), (2, -1), 5),
+            ('TOPPADDING', (0, 1), (2, -1), 5),
+            
+            # Grid styling - matching GDPR Articles table style
+            ('GRID', (0, 0), (2, -1), 0.5, HexColor('#dfe6e9')),
+            ('LINEBELOW', (0, 0), (2, 0), 1, HexColor('#1e40af')),  # Thicker line below header
+        ]))
+        
+        elements.append(uavg_table)
+        elements.append(Spacer(1, 15))
+        elements.append(PageBreak())
+    
     # Risk assessment section with visual indicator and GDPR fine protection banner (skip for SOC2 reports)
     # Translate risk assessment title
     if report_format != "soc2":
@@ -3367,6 +3530,64 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         
         
         elements.append(Paragraph(disclaimer_text, disclaimer_style))
+        
+        # Add certificate style personalization for GDPR repository reports
+        if report_format == "gdpr_repository":
+            elements.append(Spacer(1, 30))
+            
+            # Add professional certificate-style formatting
+            # Get user email for personalization
+            user_email = scan_data.get('user_email', '')
+            
+            if user_email:
+                # Certificate seal and personalization
+                certificate_data = [
+                    [
+                        Table(
+                            [[Paragraph(
+                                """<font color="#FFFFFF" size="24">✓</font>""",
+                                ParagraphStyle('SealStyle', alignment=1)
+                            )]],
+                            colWidths=[60],
+                            rowHeights=[60],
+                            style=TableStyle([
+                                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#4f46e5')),  # Indigo seal
+                                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                ('ROUNDEDCORNERS', [30, 30, 30, 30]),  # Circular seal
+                            ])
+                        ),
+                        Table(
+                            [[Paragraph(
+                                f"""<font face="Helvetica-Bold" size="14">This report is prepared for:</font>""",
+                                ParagraphStyle('CertStyle', alignment=1)
+                            )],
+                            [Paragraph(
+                                f"""<font face="Helvetica-Bold" size="16" color="#1e40af">{user_email}</font>""",
+                                ParagraphStyle('CertStyle', alignment=1)
+                            )],
+                            [Paragraph(
+                                f"""<font face="Helvetica" size="11">Generated on {scan_data.get('timestamp', timestamp)}</font>""",
+                                ParagraphStyle('CertStyle', alignment=1)
+                            )]],
+                            colWidths=[400],
+                            style=TableStyle([
+                                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                                ('TOPPADDING', (0, 0), (-1, -1), 5),
+                            ])
+                        )
+                    ]
+                ]
+                
+                cert_table = Table(certificate_data, colWidths=[70, 420])
+                cert_table.setStyle(TableStyle([
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ]))
+                
+                elements.append(cert_table)
     
     # Special handling for sustainability reports, but not for GDPR or SOC2 reports
     if report_format == "sustainability" and not (scan_type.lower() in ["gdpr", "repository", "code", "repo", "soc2"]):
