@@ -3601,31 +3601,6 @@ else:
                         from services.report_generator import generate_report
                         from services.report_templates.pcidss_report_template import generate_pcidss_report
                         
-                        # Hide the Start Scan button and Upload Files section for cleaner UI
-                        st.markdown("""
-                        <style>
-                        /* Hide the Start Scan button */
-                        div.stButton > button:contains("Start Scan") {
-                            display: none !important;
-                        }
-                        
-                        /* Hide upload-related sections */
-                        .main .block-container h2:contains("Upload Files"),
-                        .main .block-container h2:contains("Upload Files") ~ div,
-                        .main .block-container hr:has(+ h2:contains("Upload Files")),
-                        .main .block-container hr:has(~ h2:contains("Upload Files")) {
-                            display: none !important;
-                        }
-                        
-                        /* Additional selector for the specific section after Select Region */
-                        .main .block-container div:has(+ h2:contains("Upload Files")),
-                        .main .block-container div:has(~ label:contains("Select Region")) ~ hr,
-                        .main .block-container div:has(~ label:contains("Select Region")) ~ div:has(h2) {
-                            display: none !important;
-                        }
-                        </style>
-                        """, unsafe_allow_html=True)
-                        
                         # PCI DSS scanner UI with enhanced design
                         st.title(_("scan.pcidss_title", "PCI DSS Compliance Scanner"))
                         
@@ -3660,24 +3635,27 @@ else:
                         with config_tab:
                             st.subheader("Repository Configuration")
                             
-                            # Repository source selection
+                            # Repository source selection with unique key
                             repo_source = st.radio(
                                 "Repository Source:",
                                 ["GitHub", "BitBucket", "Azure DevOps"],
-                                horizontal=True
+                                horizontal=True,
+                                key="pcidss_repo_source_radio"
                             )
                             
-                            # Repository URL input
+                            # Repository URL input with unique key
                             repo_url = st.text_input(
                                 "Repository URL:",
-                                placeholder=f"Enter {repo_source} repository URL"
+                                placeholder=f"Enter {repo_source} repository URL",
+                                key="pcidss_repo_url_input"
                             )
                             
-                            # Branch input
+                            # Branch input with unique key
                             branch = st.text_input(
                                 "Branch (optional):",
                                 value="main",
-                                placeholder="Enter branch name (default: main)"
+                                placeholder="Enter branch name (default: main)",
+                                key="pcidss_branch_input"
                             )
                             
                             # Advanced scan options
@@ -3686,21 +3664,24 @@ else:
                                 
                                 with col1:
                                     scan_dependencies = st.checkbox("Scan Dependencies", value=True,
-                                                                help="Scan third-party libraries for vulnerabilities")
+                                                                help="Scan third-party libraries for vulnerabilities",
+                                                                key="pcidss_scan_deps_checkbox")
                                     
                                 with col2:
                                     scan_iac = st.checkbox("Scan Infrastructure Code", value=True,
-                                                         help="Scan Terraform, CloudFormation, etc.")
+                                                         help="Scan Terraform, CloudFormation, etc.",
+                                                         key="pcidss_scan_iac_checkbox")
                                     
                                 with col3:
                                     scan_secrets = st.checkbox("Detect Secrets", value=True,
-                                                            help="Scan for hardcoded credentials")
+                                                            help="Scan for hardcoded credentials",
+                                                            key="pcidss_scan_secrets_checkbox")
                             
                                 # PCI DSS Requirements filter
                                 st.markdown("### PCI DSS Requirements Focus")
                                 st.write("Select specific PCI DSS requirements to focus on (optional):")
                                 
-                                # Create multi-select for requirements
+                                # Create multi-select for requirements with unique key
                                 requirements_options = [
                                     "1. Install and maintain a firewall configuration",
                                     "2. Change vendor-supplied defaults",
@@ -3718,17 +3699,28 @@ else:
                                 
                                 selected_requirements = st.multiselect(
                                     "PCI DSS Requirements:",
-                                    requirements_options
+                                    requirements_options,
+                                    key="pcidss_requirements_multiselect"
                                 )
                                 
                                 # Convert selected requirements to requirement numbers
                                 pci_requirements_filter = [req.split(".")[0] for req in selected_requirements] if selected_requirements else []
                             
-                            # Create scan button with proper styling
+                            # Output format options with unique key
+                            st.subheader("Output Format")
+                            output_formats = st.multiselect(
+                                "Select output formats:",
+                                ["PDF Report", "CSV Export", "JSON Export"],
+                                default=["PDF Report"],
+                                key="pcidss_output_formats"
+                            )
+                            
+                            # Create scan button with proper styling and unique key
                             scan_button = st.button(
                                 "Start PCI DSS Scan",
                                 type="primary",
-                                use_container_width=True
+                                use_container_width=True,
+                                key="pcidss_start_scan_button"
                             )
                             
                             if scan_button:
@@ -3751,15 +3743,35 @@ else:
                                     
                                     try:
                                         with st.spinner("Scanning repository for PCI DSS compliance issues..."):
-                                            # Run the scan
-                                            scan_results = scanner.scan_repository(
-                                                repo_path=repo_url,
-                                                branch=branch,
-                                                scan_dependencies=scan_dependencies,
-                                                scan_iac=scan_iac,
-                                                scan_secrets=scan_secrets,
-                                                pci_requirements_filter=pci_requirements_filter
-                                            )
+                                            # Prepare scan parameters
+                                            scan_params = {
+                                                "repo_url": repo_url,
+                                                "branch": branch,
+                                                "scan_scope": [
+                                                    "SAST (Static Application Security Testing)",
+                                                    "SCA (Software Composition Analysis)" if scan_dependencies else "",
+                                                    "IaC (Infrastructure-as-Code) Scanning" if scan_iac else "",
+                                                    "Secrets Detection" if scan_secrets else ""
+                                                ],
+                                                "requirements": {
+                                                    "req1": "1" in pci_requirements_filter,
+                                                    "req2": "2" in pci_requirements_filter,
+                                                    "req3": "3" in pci_requirements_filter,
+                                                    "req4": "4" in pci_requirements_filter,
+                                                    "req5": "5" in pci_requirements_filter,
+                                                    "req6": "6" in pci_requirements_filter,
+                                                    "req7": "7" in pci_requirements_filter,
+                                                    "req8": "8" in pci_requirements_filter,
+                                                    "req9": "9" in pci_requirements_filter,
+                                                    "req10": "10" in pci_requirements_filter,
+                                                    "req11": "11" in pci_requirements_filter,
+                                                    "req12": "12" in pci_requirements_filter
+                                                },
+                                                "output_formats": output_formats
+                                            }
+                                            
+                                            # Run the scan using the scan method
+                                            scan_results = scanner.scan(**scan_params)
                                             
                                             # Update session state with results
                                             scan_results["repo_url"] = repo_url
@@ -3781,14 +3793,16 @@ else:
                                             # Show completion message and switch to results tab
                                             scan_progress.progress(1.0)
                                             scan_status.success("Scan completed successfully! View results in the Results tab.")
-                                            st.session_state.active_tab_index = 1  # Switch to results tab
+                                            
+                                            # Switch to results tab
+                                            st.session_state.active_tab = 1
+                                            
+                                            # Force rerun to update UI
+                                            st.rerun()
                                             
                                     except Exception as e:
                                         scan_status.error(f"Error scanning repository: {str(e)}")
                                         st.exception(e)
-                                        
-                                    # Add rerun to show results tab
-                                    st.rerun()
                         
                         # Add content to results tab
                         with results_tab:
@@ -4232,30 +4246,7 @@ else:
                                             import traceback
                                             traceback.print_exc()
                         
-                        # Hide the Start Scan button and Upload Files section for cleaner UI
-                        st.markdown("""
-                        <style>
-                        /* Hide the Start Scan button */
-                        div.stButton > button:contains("Start Scan") {
-                            display: none !important;
-                        }
-                        
-                        /* Hide upload-related sections */
-                        .main .block-container h2:contains("Upload Files"),
-                        .main .block-container h2:contains("Upload Files") ~ div,
-                        .main .block-container hr:has(+ h2:contains("Upload Files")),
-                        .main .block-container hr:has(~ h2:contains("Upload Files")) {
-                            display: none !important;
-                        }
-                        
-                        /* Additional selector for the specific section after Select Region */
-                        .main .block-container div:has(+ h2:contains("Upload Files")),
-                        .main .block-container div:has(~ label:contains("Select Region")) ~ hr,
-                        .main .block-container div:has(~ label:contains("Select Region")) ~ div:has(h2) {
-                            display: none !important;
-                        }
-                        </style>
-                        """, unsafe_allow_html=True)
+                        # SOC2 Scanner section starts here
                         
                         # SOC2 scanner UI with enhanced design
                         st.title(_("scan.soc2_title", "SOC2 Compliance Scanner"))
