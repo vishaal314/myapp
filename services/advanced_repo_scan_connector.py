@@ -69,10 +69,20 @@ def _format_enhanced_results(scan_results: Dict[str, Any]) -> Dict[str, Any]:
         raise ValueError("Missing required fields in scan results")
     
     # Extract findings and convert to application format
+    findings_list = scan_results["findings"]
+    if not isinstance(findings_list, list):
+        # Make sure we're working with a list of findings
+        findings_list = []
+        logger.warning("Expected findings to be a list, received non-list format")
+    
     formatted_findings = []
-    for finding in scan_results["findings"]:
-        formatted_finding = _format_finding(finding)
-        formatted_findings.append(formatted_finding)
+    for finding in findings_list:
+        # Make sure each finding is a dictionary
+        if isinstance(finding, dict):
+            formatted_finding = _format_finding(finding)
+            formatted_findings.append(formatted_finding)
+        else:
+            logger.warning(f"Skipped non-dictionary finding: {finding}")
     
     # Extract statistics and convert to application format
     statistics = scan_results["statistics"]
