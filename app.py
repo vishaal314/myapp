@@ -4629,266 +4629,266 @@ else:
                                     <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
                                     """, unsafe_allow_html=True)
                                 
-                                # Repository URL input
-                                st.subheader(_("scan.azure_repo_details", "Azure DevOps Repository Details"))
-                                repo_url = st.text_input(_("scan.azure_repo_url", "Azure DevOps Repository URL"), 
-                                                placeholder="https://dev.azure.com/organization/project/_git/repository",
-                                                key="azure_soc2_repo_url")
-                                
-                                # Project name is required for Azure DevOps
-                                project = st.text_input(_("scan.azure_project", "Azure DevOps Project"), 
-                                            placeholder="MyProject",
-                                            key="azure_soc2_project")
-                                
-                                # Create columns for the branch and token inputs
-                                col1, col2 = st.columns(2)
-                                with col1:
-                                    branch = st.text_input(_("scan.branch", "Branch (optional)"), 
-                                                        placeholder="main", 
-                                                        key="azure_soc2_branch")
-                                with col2:
-                                    token = st.text_input(_("scan.azure_token", "Azure Personal Access Token (for private repos)"), 
-                                                        type="password",
-                                                        placeholder="Personal Access Token", 
-                                                        key="azure_soc2_token")
-                                
-                                # Store these values in session state for the main scan button to use
-                                if repo_url:
-                                    st.session_state.repo_url = repo_url
-                                if project:
-                                    st.session_state.project = project
-                                if branch:
-                                    st.session_state.branch = branch
-                                if token:
-                                    st.session_state.token = token
-                                
-                                # Store organization if present in the advanced configuration
-                                if 'organization' in locals():
-                                    st.session_state.organization = organization
-                                
-                                st.markdown("</div>", unsafe_allow_html=True)
-                            
-                            # Advanced configuration in an expander
-                            with st.expander(_("scan.advanced_options", "Advanced Configuration")):
-                                # Target check options
-                                st.subheader("Target Checks")
-                                target_checks = st.radio(
-                                    "Select scan scope",
-                                    ["All", "Security Only", "Custom"],
-                                    horizontal=True,
-                                    key="azure_soc2_target_checks"
-                                )
-                                
-                                # Organization field (optional)
-                                organization = st.text_input(
-                                    _("scan.azure_organization", "Organization (optional)"), 
-                                    placeholder="Will be extracted from URL if not provided",
-                                    key="azure_soc2_organization")
+                                    # Repository URL input
+                                    st.subheader(_("scan.azure_repo_details", "Azure DevOps Repository Details"))
+                                    repo_url = st.text_input(_("scan.azure_repo_url", "Azure DevOps Repository URL"), 
+                                                        placeholder="https://dev.azure.com/organization/project/_git/repository",
+                                                        key="azure_soc2_repo_url")
                                     
-                                # Store organization in session state for the main scan button
-                                if organization:
-                                    st.session_state.organization = organization
+                                    # Project name is required for Azure DevOps
+                                    project = st.text_input(_("scan.azure_project", "Azure DevOps Project"), 
+                                                placeholder="MyProject",
+                                                key="azure_soc2_project")
+                                    
+                                    # Create columns for the branch and token inputs
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        branch = st.text_input(_("scan.branch", "Branch (optional)"), 
+                                                            placeholder="main", 
+                                                            key="azure_soc2_branch")
+                                    with col2:
+                                        token = st.text_input(_("scan.azure_token", "Azure Personal Access Token (for private repos)"), 
+                                                            type="password",
+                                                            placeholder="Personal Access Token", 
+                                                            key="azure_soc2_token")
+                                    
+                                    # Store these values in session state for the main scan button to use
+                                    if repo_url:
+                                        st.session_state.repo_url = repo_url
+                                    if project:
+                                        st.session_state.project = project
+                                    if branch:
+                                        st.session_state.branch = branch
+                                    if token:
+                                        st.session_state.token = token
+                                    
+                                    # Store organization if present in the advanced configuration
+                                    if 'organization' in locals():
+                                        st.session_state.organization = organization
+                                    
+                                    st.markdown("</div>", unsafe_allow_html=True)
+                            
+                                # Advanced configuration in an expander
+                                with st.expander(_("scan.advanced_options", "Advanced Configuration")):
+                                    # Target check options
+                                    st.subheader("Target Checks")
+                                    target_checks = st.radio(
+                                        "Select scan scope",
+                                        ["All", "Security Only", "Custom"],
+                                        horizontal=True,
+                                        key="azure_soc2_target_checks"
+                                    )
+                                    
+                                    # Organization field (optional)
+                                    organization = st.text_input(
+                                        _("scan.azure_organization", "Organization (optional)"), 
+                                        placeholder="Will be extracted from URL if not provided",
+                                        key="azure_soc2_organization")
+                                        
+                                    # Store organization in session state for the main scan button
+                                    if organization:
+                                        st.session_state.organization = organization
+                                    
+                                    # Path to config file
+                                    access_control_path = st.text_input(
+                                        "Access Control Config File Path",
+                                        placeholder="/path/to/iam/config.yaml",
+                                        key="azure_soc2_config_path"
+                                    )
+                                    
+                                    # Scan timeframe
+                                    scan_timeframe = st.selectbox(
+                                        "Scan Timeframe",
+                                        ["Last 7 days", "Last 30 days", "Last 90 days", "All time"],
+                                        index=0,
+                                        key="azure_soc2_timeframe"
+                                    )
+                                    
+                                    # Custom ruleset
+                                    st.subheader("Custom SOC2 Ruleset")
+                                    custom_rules = st.text_area(
+                                        "Custom SOC2 rules (JSON format)",
+                                        value="""{\n  "rules": [\n    {\n      "id": "session-timeout",\n      "requirement": "CC6.1",\n      "check": "session_timeout < 15"\n    }\n  ]\n}""",
+                                        height=200,
+                                        key="azure_soc2_custom_rules"
+                                    )
+                            
+                                # SOC2 Categories selection in a stylized container
+                                st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
                                 
-                                # Path to config file
-                                access_control_path = st.text_input(
-                                    "Access Control Config File Path",
-                                    placeholder="/path/to/iam/config.yaml",
-                                    key="azure_soc2_config_path"
+                                # Create a grid of checkboxes with better styling
+                                col1, col2, col3, col4, col5 = st.columns(5)
+                                
+                                with col1:
+                                    security = st.checkbox("Security", value=True, key="azure_soc2_category_security", 
+                                                        help="Focuses on system protection against unauthorized access")
+                                
+                                with col2:
+                                    availability = st.checkbox("Availability", value=True, key="azure_soc2_category_availability",
+                                                            help="Examines system availability for operation and use")
+                                
+                                with col3:
+                                    processing = st.checkbox("Processing Integrity", value=True, key="azure_soc2_category_processing",
+                                                        help="Checks if system processing is complete, accurate, and timely")
+                                
+                                with col4:
+                                    confidentiality = st.checkbox("Confidentiality", value=True, key="azure_soc2_category_confidentiality",
+                                                              help="Ensures information designated as confidential is protected")
+                                
+                                with col5:
+                                    privacy = st.checkbox("Privacy", value=True, key="azure_soc2_category_privacy",
+                                                        help="Verifies personal information is collected and used appropriately")
+                            
+                                # Note about file uploads
+                                st.info(
+                                    "SOC2 scanning does not require file uploads. Configure the repository details "
+                                    "in the Advanced Configuration section and click the scan button below."
                                 )
                                 
-                                # Scan timeframe
-                                scan_timeframe = st.selectbox(
-                                    "Scan Timeframe",
-                                    ["Last 7 days", "Last 30 days", "Last 90 days", "All time"],
-                                    index=0,
-                                    key="azure_soc2_timeframe"
-                                )
+                                # Add expected output information
+                                st.markdown("""
+                                <div style="padding: 10px; border-radius: 5px; background-color: #f0f8ff; margin: 10px 0;">
+                                    <span style="font-weight: bold;">Output:</span> SOC2 checklist + mapped violations
+                                </div>
+                                """, unsafe_allow_html=True)
                                 
-                                # Custom ruleset
-                                st.subheader("Custom SOC2 Ruleset")
-                                custom_rules = st.text_area(
-                                    "Custom SOC2 rules (JSON format)",
-                                    value="""{\n  "rules": [\n    {\n      "id": "session-timeout",\n      "requirement": "CC6.1",\n      "check": "session_timeout < 15"\n    }\n  ]\n}""",
-                                    height=200,
-                                    key="azure_soc2_custom_rules"
-                                )
+                                # Create a prominent scan button with improved styling
+                                st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                                scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
+                                with scan_col2:
+                                    scan_button = st.button(
+                                        "Start Azure SOC2 Compliance Scan",
+                                        type="primary",
+                                        use_container_width=True,
+                                        key="azure_soc2_scan_button"
+                                    )
                             
-                            # SOC2 Categories selection in a stylized container
-                            st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
-                            
-                            # Create a grid of checkboxes with better styling
-                            col1, col2, col3, col4, col5 = st.columns(5)
-                            
-                            with col1:
-                                security = st.checkbox("Security", value=True, key="azure_soc2_category_security", 
-                                                    help="Focuses on system protection against unauthorized access")
-                            
-                            with col2:
-                                availability = st.checkbox("Availability", value=True, key="azure_soc2_category_availability",
-                                                        help="Examines system availability for operation and use")
-                            
-                            with col3:
-                                processing = st.checkbox("Processing Integrity", value=True, key="azure_soc2_category_processing",
-                                                    help="Checks if system processing is complete, accurate, and timely")
-                            
-                            with col4:
-                                confidentiality = st.checkbox("Confidentiality", value=True, key="azure_soc2_category_confidentiality",
-                                                          help="Ensures information designated as confidential is protected")
-                            
-                            with col5:
-                                privacy = st.checkbox("Privacy", value=True, key="azure_soc2_category_privacy",
-                                                    help="Verifies personal information is collected and used appropriately")
-                            
-                            # Note about file uploads
-                            st.info(
-                                "SOC2 scanning does not require file uploads. Configure the repository details "
-                                "in the Advanced Configuration section and click the scan button below."
-                            )
-                            
-                            # Add expected output information
-                            st.markdown("""
-                            <div style="padding: 10px; border-radius: 5px; background-color: #f0f8ff; margin: 10px 0;">
-                                <span style="font-weight: bold;">Output:</span> SOC2 checklist + mapped violations
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # Create a prominent scan button with improved styling
-                            st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-                            scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
-                            with scan_col2:
-                                scan_button = st.button(
-                                    "Start Azure SOC2 Compliance Scan",
-                                    type="primary",
-                                    use_container_width=True,
-                                    key="azure_soc2_scan_button"
-                                )
-                            
-                            # Handle the Azure scan process
-                            if scan_button:
-                                # Validate input
-                                if not repo_url:
-                                    st.error(_("scan.error_no_repo", "Please enter an Azure DevOps repository URL"))
-                                    scan_running = False
-                                elif not repo_url.startswith(("https://dev.azure.com/", "http://dev.azure.com/")):
-                                    st.error(_("scan.error_invalid_azure_repo", "Please enter a valid Azure DevOps repository URL"))
-                                    scan_running = False
-                                elif not project:
-                                    st.error(_("scan.error_no_project", "Please enter the Azure DevOps project name"))
-                                    scan_running = False
-                                else:
-                                    # Valid input, proceed with Azure scan
-                                    with st.status(_("scan.scanning_azure", "Scanning Azure repository for SOC2 compliance issues..."), expanded=True) as status:
-                                        try:
-                                            # Show cloning message
-                                            st.write(_("scan.cloning", "Cloning repository..."))
-                                            
-                                            # Perform Azure scan using enhanced scanner
-                                            scan_results = scan_azure_repository(repo_url, project, branch, token, organization)
-                                            
-                                            # Store the scan_results for PDF report generation
-                                            st.session_state.soc2_scan_results = scan_results
-                                            
-                                            # Check for scan failure (same logic as GitHub)
-                                            if scan_results.get("scan_status") == "failed":
-                                                error_msg = scan_results.get("error", "Unknown error")
-                                                st.error(f"{_('scan.scan_failed', 'Scan failed')}: {error_msg}")
-                                                status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
-                                                scan_running = False
-                                            else:
-                                                # Scan succeeded, show progress
-                                                st.write(_("scan.analyzing", "Analyzing IaC files..."))
-                                                time.sleep(1)  # Give the UI time to update
+                                # Handle the Azure scan process
+                                if scan_button:
+                                    # Validate input
+                                    if not repo_url:
+                                        st.error(_("scan.error_no_repo", "Please enter an Azure DevOps repository URL"))
+                                        scan_running = False
+                                    elif not repo_url.startswith(("https://dev.azure.com/", "http://dev.azure.com/")):
+                                        st.error(_("scan.error_invalid_azure_repo", "Please enter a valid Azure DevOps repository URL"))
+                                        scan_running = False
+                                    elif not project:
+                                        st.error(_("scan.error_no_project", "Please enter the Azure DevOps project name"))
+                                        scan_running = False
+                                    else:
+                                        # Valid input, proceed with Azure scan
+                                        with st.status(_("scan.scanning_azure", "Scanning Azure repository for SOC2 compliance issues..."), expanded=True) as status:
+                                            try:
+                                                # Show cloning message
+                                                st.write(_("scan.cloning", "Cloning repository..."))
                                                 
-                                                st.write(_("scan.generating_report", "Generating compliance report..."))
-                                                status.update(label=_("scan.scan_complete", "Scan complete!"), state="complete")
+                                                # Perform Azure scan using enhanced scanner
+                                                scan_results = scan_azure_repository(repo_url, project, branch, token, organization)
                                                 
-                                                # Display results if we have findings (same format as GitHub)
-                                                if 'findings' in scan_results:
-                                                    st.subheader(_("scan.scan_results", "Scan Results"))
+                                                # Store the scan_results for PDF report generation
+                                                st.session_state.soc2_scan_results = scan_results
+                                                
+                                                # Check for scan failure (same logic as GitHub)
+                                                if scan_results.get("scan_status") == "failed":
+                                                    error_msg = scan_results.get("error", "Unknown error")
+                                                    st.error(f"{_('scan.scan_failed', 'Scan failed')}: {error_msg}")
+                                                    status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
+                                                    scan_running = False
+                                                else:
+                                                    # Scan succeeded, show progress
+                                                    st.write(_("scan.analyzing", "Analyzing IaC files..."))
+                                                    time.sleep(1)  # Give the UI time to update
                                                     
-                                                    # Extract key metrics
-                                                    compliance_score = scan_results.get("compliance_score", 0)
-                                                    high_risk = scan_results.get("high_risk_count", 0)
-                                                    medium_risk = scan_results.get("medium_risk_count", 0)
-                                                    low_risk = scan_results.get("low_risk_count", 0)
-                                                    total_findings = high_risk + medium_risk + low_risk
+                                                    st.write(_("scan.generating_report", "Generating compliance report..."))
+                                                    status.update(label=_("scan.scan_complete", "Scan complete!"), state="complete")
                                                     
-                                                    # Repository info
-                                                    st.write(f"**{_('scan.repository', 'Repository')}:** {scan_results.get('repo_url')}")
-                                                    st.write(f"**{_('scan.project', 'Project')}:** {scan_results.get('project')}")
-                                                    st.write(f"**{_('scan.branch', 'Branch')}:** {scan_results.get('branch', 'main')}")
-                                                    
-                                                    # Create metrics
-                                                    col1, col2, col3, col4 = st.columns(4)
-                                                    
-                                                    # Determine compliance color for styling
-                                                    if compliance_score >= 80:
-                                                        compliance_color_css = "green"
-                                                    elif compliance_score >= 60:
-                                                        compliance_color_css = "orange"
-                                                    else:
-                                                        compliance_color_css = "red"
+                                                    # Display results if we have findings (same format as GitHub)
+                                                    if 'findings' in scan_results:
+                                                        st.subheader(_("scan.scan_results", "Scan Results"))
                                                         
-                                                    with col1:
-                                                        st.metric(_("scan.compliance_score", "Compliance Score"), 
-                                                                f"{compliance_score}/100", 
-                                                                delta=None,
-                                                                delta_color="normal")
-                                                                
-                                                        st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{'✓ Good' if compliance_score >= 80 else '⚠️ Needs Review' if compliance_score >= 60 else '✗ Critical'}</div>", unsafe_allow_html=True)
-                                                    
-                                                    with col2:
-                                                        st.metric(_("scan.high_risk", "High Risk Issues"), 
-                                                                high_risk,
-                                                                delta=None,
-                                                                delta_color="inverse")
-                                                                
-                                                    with col3:
-                                                        st.metric(_("scan.medium_risk", "Medium Risk Issues"), 
-                                                                medium_risk,
-                                                                delta=None,
-                                                                delta_color="inverse")
-                                                                
-                                                    with col4:
-                                                        st.metric(_("scan.low_risk", "Low Risk Issues"), 
-                                                                low_risk,
-                                                                delta=None,
-                                                                delta_color="inverse")
-                                                    
-                                                    # Add PDF Download button
-                                                    st.markdown("### Download Report")
-                                                    if st.button("Generate PDF Report", type="primary", key="azure_soc2_pdf_button"):
-                                                        with st.spinner("Generating PDF report..."):
-                                                            # Generate PDF report
-                                                            pdf_bytes = generate_report(scan_results)
+                                                        # Extract key metrics
+                                                        compliance_score = scan_results.get("compliance_score", 0)
+                                                        high_risk = scan_results.get("high_risk_count", 0)
+                                                        medium_risk = scan_results.get("medium_risk_count", 0)
+                                                        low_risk = scan_results.get("low_risk_count", 0)
+                                                        total_findings = high_risk + medium_risk + low_risk
+                                                        
+                                                        # Repository info
+                                                        st.write(f"**{_('scan.repository', 'Repository')}:** {scan_results.get('repo_url')}")
+                                                        st.write(f"**{_('scan.project', 'Project')}:** {scan_results.get('project')}")
+                                                        st.write(f"**{_('scan.branch', 'Branch')}:** {scan_results.get('branch', 'main')}")
+                                                        
+                                                        # Create metrics
+                                                        col1, col2, col3, col4 = st.columns(4)
+                                                        
+                                                        # Determine compliance color for styling
+                                                        if compliance_score >= 80:
+                                                            compliance_color_css = "green"
+                                                        elif compliance_score >= 60:
+                                                            compliance_color_css = "orange"
+                                                        else:
+                                                            compliance_color_css = "red"
                                                             
-                                                            # Provide download link
-                                                            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-                                                            pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                                                            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
-                                                            st.markdown(href, unsafe_allow_html=True)
-                                                    
-                                                    # Display findings table
-                                                    st.subheader("Compliance Findings")
-                                                    if 'findings' in scan_results and scan_results['findings']:
-                                                        findings_df = pd.DataFrame([
-                                                            {
-                                                                "Risk": f.get("risk_level", "Unknown").upper(),
-                                                                "Category": f.get("category", "Unknown").capitalize(),
-                                                                "Description": f.get("description", "No description"),
-                                                                "File": f.get("file", "Unknown"),
-                                                                "Line": f.get("line", "N/A"),
-                                                            }
-                                                            for f in scan_results['findings'][:10]  # Show top 10 findings
-                                                        ])
-                                                        st.dataframe(findings_df, use_container_width=True)
+                                                        with col1:
+                                                            st.metric(_("scan.compliance_score", "Compliance Score"), 
+                                                                    f"{compliance_score}/100", 
+                                                                    delta=None,
+                                                                    delta_color="normal")
+                                                                    
+                                                            st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{'✓ Good' if compliance_score >= 80 else '⚠️ Needs Review' if compliance_score >= 60 else '✗ Critical'}</div>", unsafe_allow_html=True)
                                                         
-                                                        if len(scan_results['findings']) > 10:
-                                                            st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")
-                                        except Exception as e:
-                                            # Handle any exception during the scan
-                                            st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
-                                            status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
+                                                        with col2:
+                                                            st.metric(_("scan.high_risk", "High Risk Issues"), 
+                                                                    high_risk,
+                                                                    delta=None,
+                                                                    delta_color="inverse")
+                                                                    
+                                                        with col3:
+                                                            st.metric(_("scan.medium_risk", "Medium Risk Issues"), 
+                                                                    medium_risk,
+                                                                    delta=None,
+                                                                    delta_color="inverse")
+                                                                    
+                                                        with col4:
+                                                            st.metric(_("scan.low_risk", "Low Risk Issues"), 
+                                                                    low_risk,
+                                                                    delta=None,
+                                                                    delta_color="inverse")
+                                                        
+                                                        # Add PDF Download button
+                                                        st.markdown("### Download Report")
+                                                        if st.button("Generate PDF Report", type="primary", key="azure_soc2_pdf_button"):
+                                                            with st.spinner("Generating PDF report..."):
+                                                                # Generate PDF report
+                                                                pdf_bytes = generate_report(scan_results)
+                                                                
+                                                                # Provide download link
+                                                                b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+                                                                pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                                                                href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
+                                                                st.markdown(href, unsafe_allow_html=True)
+                                                        
+                                                        # Display findings table
+                                                        st.subheader("Compliance Findings")
+                                                        if 'findings' in scan_results and scan_results['findings']:
+                                                            findings_df = pd.DataFrame([
+                                                                {
+                                                                    "Risk": f.get("risk_level", "Unknown").upper(),
+                                                                    "Category": f.get("category", "Unknown").capitalize(),
+                                                                    "Description": f.get("description", "No description"),
+                                                                    "File": f.get("file", "Unknown"),
+                                                                    "Line": f.get("line", "N/A"),
+                                                                }
+                                                                for f in scan_results['findings'][:10]  # Show top 10 findings
+                                                            ])
+                                                            st.dataframe(findings_df, use_container_width=True)
+                                                            
+                                                            if len(scan_results['findings']) > 10:
+                                                                st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")
+                                            except Exception as e:
+                                                # Handle any exception during the scan
+                                                st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
+                                                status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
                         
                         # Stop normal flow to proceed with only the SOC2 scanner
                         scan_running = False
