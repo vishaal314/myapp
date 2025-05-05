@@ -4375,79 +4375,79 @@ else:
                                 horizontal=True,
                                 key="soc2_repo_source"
                             )
-                        
-                        if repo_source == "GitHub Repository":
-                            # Create a container with a custom border
-                            with st.container():
-                                st.markdown("""
-                                <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
-                                """, unsafe_allow_html=True)
-                                
-                                # Repository URL input
-                                st.subheader(_("scan.repo_details", "Repository Details"))
-                                repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
-                                                    placeholder="https://github.com/username/repository",
-                                                    value="https://github.com/vishaal314/terrascan",
-                                                    key="github_soc2_repo_url")
-                                
-                                # Create columns for the branch and token inputs
-                                col1, col2 = st.columns(2)
-                                with col1:
-                                    branch = st.text_input(_("scan.branch", "Branch (optional)"), 
-                                                        value="main",
-                                                        placeholder="main", 
-                                                        key="github_soc2_branch")
-                                with col2:
-                                    token = st.text_input(_("scan.access_token", "GitHub Access Token (for private repos)"), 
-                                                        type="password", 
-                                                        placeholder="ghp_xxxxxxxxxxxx", 
-                                                        key="github_soc2_token")
-                                    
-                                # Store these values in session state for the main scan button to use
-                                if repo_url:
-                                    st.session_state.repo_url = repo_url
-                                if branch:
-                                    st.session_state.branch = branch
-                                if token:
-                                    st.session_state.token = token
-                                
-                                st.markdown("</div>", unsafe_allow_html=True)
                             
-                            # Advanced configuration in an expander
-                            with st.expander(_("scan.advanced_options", "Advanced Configuration")):
-                                # Target check options
-                                st.subheader("Target Checks")
-                                target_checks = st.radio(
-                                    "Select scan scope",
-                                    ["All", "Security Only", "Custom"],
-                                    horizontal=True,
-                                    key="github_soc2_target_checks"
-                                )
+                            if repo_source == "GitHub Repository":
+                                # Create a container with a custom border
+                                with st.container():
+                                    st.markdown("""
+                                    <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                                    """, unsafe_allow_html=True)
                                 
-                                # Path to config file
-                                access_control_path = st.text_input(
-                                    "Access Control Config File Path",
-                                    placeholder="/path/to/iam/config.yaml",
-                                    value="/path/to/iam/config.yaml",
-                                    key="github_soc2_config_path"
-                                )
-                                
-                                # Scan timeframe
-                                scan_timeframe = st.selectbox(
-                                    "Scan Timeframe",
-                                    ["Last 7 days", "Last 30 days", "Last 90 days", "All time"],
-                                    index=0,
-                                    key="github_soc2_timeframe"
-                                )
-                                
-                                # Custom ruleset
-                                st.subheader("Custom SOC2 Ruleset")
-                                custom_rules = st.text_area(
-                                    "Custom SOC2 rules (JSON format)",
-                                    value="""{\n  "rules": [\n    {\n      "id": "session-timeout",\n      "requirement": "CC6.1",\n      "check": "session_timeout < 15"\n    }\n  ]\n}""",
-                                    height=200,
-                                    key="github_soc2_custom_rules"
-                                )
+                                    # Repository URL input
+                                    st.subheader(_("scan.repo_details", "Repository Details"))
+                                    repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
+                                                        placeholder="https://github.com/username/repository",
+                                                        value="https://github.com/vishaal314/terrascan",
+                                                        key="github_soc2_repo_url")
+                                    
+                                    # Create columns for the branch and token inputs
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        branch = st.text_input(_("scan.branch", "Branch (optional)"), 
+                                                            value="main",
+                                                            placeholder="main", 
+                                                            key="github_soc2_branch")
+                                    with col2:
+                                        token = st.text_input(_("scan.access_token", "GitHub Access Token (for private repos)"), 
+                                                            type="password", 
+                                                            placeholder="ghp_xxxxxxxxxxxx", 
+                                                            key="github_soc2_token")
+                                        
+                                    # Store these values in session state for the main scan button to use
+                                    if repo_url:
+                                        st.session_state.repo_url = repo_url
+                                    if branch:
+                                        st.session_state.branch = branch
+                                    if token:
+                                        st.session_state.token = token
+                                    
+                                    st.markdown("</div>", unsafe_allow_html=True)
+                            
+                                # Advanced configuration in an expander
+                                with st.expander(_("scan.advanced_options", "Advanced Configuration")):
+                                    # Target check options
+                                    st.subheader("Target Checks")
+                                    target_checks = st.radio(
+                                        "Select scan scope",
+                                        ["All", "Security Only", "Custom"],
+                                        horizontal=True,
+                                        key="github_soc2_target_checks"
+                                    )
+                                    
+                                    # Path to config file
+                                    access_control_path = st.text_input(
+                                        "Access Control Config File Path",
+                                        placeholder="/path/to/iam/config.yaml",
+                                        value="/path/to/iam/config.yaml",
+                                        key="github_soc2_config_path"
+                                    )
+                                    
+                                    # Scan timeframe
+                                    scan_timeframe = st.selectbox(
+                                        "Scan Timeframe",
+                                        ["Last 7 days", "Last 30 days", "Last 90 days", "All time"],
+                                        index=0,
+                                        key="github_soc2_timeframe"
+                                    )
+                                    
+                                    # Custom ruleset
+                                    st.subheader("Custom SOC2 Ruleset")
+                                    custom_rules = st.text_area(
+                                        "Custom SOC2 rules (JSON format)",
+                                        value="""{\n  "rules": [\n    {\n      "id": "session-timeout",\n      "requirement": "CC6.1",\n      "check": "session_timeout < 15"\n    }\n  ]\n}""",
+                                        height=200,
+                                        key="github_soc2_custom_rules"
+                                    )
                             
                             # SOC2 Categories selection in a stylized container
                             st.subheader(_("scan.soc2_categories", "SOC2 Categories to Scan"))
@@ -4621,13 +4621,13 @@ else:
                                             # Handle any exception during the scan
                                             st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
                                             status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
-                        
-                        elif repo_source == "Azure DevOps Repository":
-                            # Create a container with a custom border for Azure
-                            with st.container():
-                                st.markdown("""
-                                <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
-                                """, unsafe_allow_html=True)
+                            
+                            elif repo_source == "Azure DevOps Repository":
+                                # Create a container with a custom border for Azure
+                                with st.container():
+                                    st.markdown("""
+                                    <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                                    """, unsafe_allow_html=True)
                                 
                                 # Repository URL input
                                 st.subheader(_("scan.azure_repo_details", "Azure DevOps Repository Details"))
