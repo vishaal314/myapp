@@ -88,6 +88,23 @@ class PCIDSSScanner:
                        scan_secrets: bool = True,
                        pci_requirements_filter: Union[List[str], None] = None) -> Dict[str, Any]:
         """
+        Scans a repository for PCI DSS compliance issues.
+        Uses the region specified during initialization or by the scan method.
+        
+        Args:
+            repo_path: Path or URL to the repository
+            branch: Branch to scan (default: "main")
+            scan_dependencies: Whether to scan dependencies
+            scan_iac: Whether to scan infrastructure-as-code
+            scan_secrets: Whether to scan for secrets
+            pci_requirements_filter: List of PCI DSS requirements to focus on
+            
+        Returns:
+            Dictionary containing scan results, findings, and metadata
+        """
+        # Log region to provide context for scan
+        logger.info(f"Scanning repository for PCI DSS compliance with regional context: {self.region}")
+        """
         Scan a Git repository for PCI DSS compliance issues.
         
         Args:
@@ -441,6 +458,7 @@ class PCIDSSScanner:
                 - scan_scope: List of scan components to include
                 - requirements: Dictionary mapping PCI DSS requirements to boolean flags
                 - output_formats: List of desired output formats
+                - region: Geographic region for compliance context (default: "Global")
                 
         Returns:
             Dictionary containing scan results, findings, and metadata
@@ -453,6 +471,13 @@ class PCIDSSScanner:
         scan_scope = kwargs.get('scan_scope', [])
         requirements = kwargs.get('requirements', {})
         output_formats = kwargs.get('output_formats', ['PDF'])
+        
+        # Allow region override from scan parameters
+        region = kwargs.get('region')
+        if region:
+            self.region = region
+            
+        logger.info(f"Starting PCI DSS scan with region context: {self.region}")
         
         # Determine scan mode based on inputs
         if repo_url:
