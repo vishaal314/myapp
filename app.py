@@ -4023,6 +4023,41 @@ else:
                                         
                                     st.markdown("</div>", unsafe_allow_html=True)
                                 
+                                # Region Selection
+                                st.subheader("Region Selection")
+                                region = st.selectbox(
+                                    "Select Region",
+                                    ["Global", "Europe", "North America", "Asia", "South America", "Africa", "Australia"],
+                                    index=0,
+                                    help="Select the region where your application is deployed to ensure compliance with regional standards",
+                                    key="pcidss_region_select"
+                                )
+                                
+                                # Advanced Configuration with Repository URL
+                                with st.expander("Advanced Configuration"):
+                                    st.subheader("Repository Details")
+                                    repo_url = st.text_input(
+                                        "Repository URL",
+                                        placeholder="https://github.com/username/repository",
+                                        help="Enter the URL of the Git repository to scan",
+                                        key="pcidss_repo_url"
+                                    )
+                                    
+                                    branch = st.text_input(
+                                        "Branch",
+                                        value="main",
+                                        placeholder="main",
+                                        help="The branch to scan (defaults to main)",
+                                        key="pcidss_branch"
+                                    )
+                                    
+                                    access_token = st.text_input(
+                                        "Access Token (for private repositories)",
+                                        type="password",
+                                        help="GitHub/GitLab/BitBucket access token for private repositories",
+                                        key="pcidss_access_token"
+                                    )
+                                
                                 # PCI DSS Scan Scope
                                 st.subheader("PCI DSS Scan Scope")
                                 scan_scope_options = st.multiselect(
@@ -4170,17 +4205,32 @@ else:
                                     # Show scanning status
                                     with st.status("Starting PCI DSS compliance scan...", expanded=True) as status:
                                         try:
-                                            # Initialize the scanner
-                                            pcidss_scanner = PCIDSSScanner()
+                                            # Get region from the selection
+                                            selected_region = st.session_state.get("pcidss_region_select", "Global")
+                                            
+                                            # Get repository URL from advanced configuration if provided
+                                            advanced_repo_url = st.session_state.get("pcidss_repo_url", "")
+                                            repository_url = advanced_repo_url if advanced_repo_url else repo_url
+                                            
+                                            # Get branch from advanced configuration if provided
+                                            advanced_branch = st.session_state.get("pcidss_branch", "")
+                                            repository_branch = advanced_branch if advanced_branch else branch
+                                            
+                                            # Get access token from advanced configuration if provided
+                                            advanced_token = st.session_state.get("pcidss_access_token", "")
+                                            repository_token = advanced_token if advanced_token else token
+                                            
+                                            # Initialize the scanner with selected region
+                                            pcidss_scanner = PCIDSSScanner(region=selected_region)
                                             
                                             # Update status
-                                            status.update(label="Initializing scan components...")
+                                            status.update(label=f"Initializing scan components for {selected_region} region...")
                                             
                                             # Set up scan parameters
                                             scan_params = {
-                                                "repo_url": repo_url if repo_source == "GitHub Repository" else None,
-                                                "branch": branch if repo_source == "GitHub Repository" else "main",
-                                                "token": token if repo_source == "GitHub Repository" and token else None,
+                                                "repo_url": repository_url if repo_source == "GitHub Repository" else None,
+                                                "branch": repository_branch if repo_source == "GitHub Repository" else "main",
+                                                "token": repository_token if repo_source == "GitHub Repository" and repository_token else None,
                                                 "uploaded_files": uploaded_files if repo_source == "Local Upload" else None,
                                                 "scan_scope": scan_scope_options,
                                                 "requirements": {
@@ -4197,7 +4247,8 @@ else:
                                                     "req11": req11,
                                                     "req12": req12
                                                 },
-                                                "output_formats": output_formats
+                                                "output_formats": output_formats,
+                                                "region": selected_region
                                             }
                                             
                                             # Update status
