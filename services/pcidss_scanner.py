@@ -19,7 +19,7 @@ import json
 import logging
 import time
 import subprocess
-from typing import Dict, List, Any, Tuple, Optional, Callable
+from typing import Dict, List, Any, Tuple, Optional, Callable, Union
 from datetime import datetime
 
 # Import the analyzer modules
@@ -86,7 +86,7 @@ class PCIDSSScanner:
                        scan_dependencies: bool = True,
                        scan_iac: bool = True,
                        scan_secrets: bool = True,
-                       pci_requirements_filter: Optional[List[str]] = None) -> Dict[str, Any]:
+                       pci_requirements_filter: Union[List[str], None] = None) -> Dict[str, Any]:
         """
         Scan a Git repository for PCI DSS compliance issues.
         
