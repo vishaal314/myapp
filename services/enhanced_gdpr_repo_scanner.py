@@ -24,6 +24,10 @@ from services.gdpr_risk_categories import (
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# Define scan specific constants
+MAX_FILE_SIZE_MB = 10  # Maximum file size to scan in MB
+SCAN_TIMEOUT = 300  # Maximum time to spend on a single scan in seconds
+
 class GDPRArticleScanner:
     """
     A scanner that analyzes code repositories for GDPR compliance issues, with specific
@@ -41,6 +45,7 @@ class GDPRArticleScanner:
         self.findings = []
         self.article_mappings = self._load_article_mappings()
         self.pattern_rules = self._load_pattern_rules()
+        self.temp_files = []
         
     def _load_article_mappings(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -213,7 +218,7 @@ class GDPRArticleScanner:
                     "severity": "medium",
                     "principle": "Storage Limitation",
                     "remediation": "Implement data retention policies and automatic deletion mechanisms."
-                },
+                }
             ],
             "article_6": [
                 # Legal Basis
@@ -231,7 +236,7 @@ class GDPRArticleScanner:
                     "severity": "high",
                     "principle": "Consent",
                     "remediation": "Implement consent verification before data submission."
-                },
+                }
             ],
             "article_7": [
                 # Consent Management
@@ -249,7 +254,7 @@ class GDPRArticleScanner:
                     "severity": "medium",
                     "principle": "Demonstrable Consent",
                     "remediation": "Record timestamps with consent to demonstrate when it was given."
-                },
+                }
             ],
             "article_12_15": [
                 # Information Provision
@@ -267,7 +272,7 @@ class GDPRArticleScanner:
                     "severity": "medium",
                     "principle": "Access to Data",
                     "remediation": "Ensure all user data is included in access request responses."
-                },
+                }
             ],
             "article_16_17": [
                 # Rectification
@@ -285,7 +290,7 @@ class GDPRArticleScanner:
                     "severity": "high",
                     "principle": "Erasure (Right to be Forgotten)",
                     "remediation": "Implement cascade deletion to ensure all user data is removed."
-                },
+                }
             ],
             "article_25": [
                 # Privacy by Design
@@ -303,7 +308,7 @@ class GDPRArticleScanner:
                     "severity": "low",
                     "principle": "Data Minimization",
                     "remediation": "Review class attributes to ensure only necessary data is collected."
-                },
+                }
             ],
             "article_30": [
                 # Processing Records
@@ -321,7 +326,7 @@ class GDPRArticleScanner:
                     "severity": "low",
                     "principle": "Purpose Documentation",
                     "remediation": "Ensure all processing activities have documented purposes."
-                },
+                }
             ],
             "article_32": [
                 # Encryption
@@ -347,7 +352,7 @@ class GDPRArticleScanner:
                     "severity": "high",
                     "principle": "Confidentiality",
                     "remediation": "Ensure proper authentication mechanisms are in place."
-                },
+                }
             ],
             "article_44_49": [
                 # Cross-border Transfers
@@ -365,33 +370,116 @@ class GDPRArticleScanner:
                     "severity": "high",
                     "principle": "Appropriate Safeguards",
                     "remediation": "Implement and document appropriate safeguards for data transfers."
-                },
-            ],
+                }
+            ]
         }
     
-    def scan_repository(self) -> List[Dict[str, Any]]:
+    def scan_repository(self) -> Dict[str, Any]:
         """
         Scan the repository for GDPR compliance issues.
         
         Returns:
-            List of findings with GDPR article mappings
+            Dictionary with scan results including findings and statistics
+            
+        Raises:
+            ValueError: If repository path is invalid
+            RuntimeError: If scanning process fails
         """
-        logger.info(f"Starting enhanced GDPR scan on repository: {self.repo_path}")
+        if not os.path.exists(self.repo_path):
+            raise ValueError(f"Repository path does not exist: {self.repo_path}")
+            
+        self.findings = []
+        start_time = time.time()
         
-        # Execute pattern-based scanning for each GDPR article
-        for article_id, rules in self.pattern_rules.items():
-            article_findings = self._scan_patterns_for_article(article_id, rules)
-            self.findings.extend(article_findings)
-        
-        # Perform specialized analysis
-        self._analyze_data_protection_by_design()
-        self._analyze_consent_flows()
-        self._analyze_data_retention()
-        self._detect_special_category_data()
-        self._analyze_cross_border_transfers()
-        
-        logger.info(f"GDPR scan completed. Found {len(self.findings)} potential issues.")
-        return self.findings
+        try:
+            # Scan each article's patterns
+            for article_id, rules in self.pattern_rules.items():
+                try:
+                    article_findings = self._scan_patterns_for_article(article_id, rules)
+                    self.findings.extend(article_findings)
+                except Exception as e:
+                    logger.error(f"Error scanning for article {article_id}: {str(e)}")
+                    # Continue with other articles even if one fails
+            
+            # Specialized analysis for specific GDPR concepts
+            # Each wrapped in try-except to prevent one failure from affecting others
+            try:
+                self._analyze_data_protection_by_design()
+            except Exception as e:
+                logger.error(f"Error in data protection by design analysis: {str(e)}")
+                
+            try:
+                self._analyze_consent_flows()
+            except Exception as e:
+                logger.error(f"Error in consent flow analysis: {str(e)}")
+                
+            try:
+                self._analyze_data_retention()
+            except Exception as e:
+                logger.error(f"Error in data retention analysis: {str(e)}")
+                
+            try:
+                self._detect_special_category_data()
+            except Exception as e:
+                logger.error(f"Error in special category data detection: {str(e)}")
+                
+            try:
+                self._analyze_cross_border_transfers()
+            except Exception as e:
+                logger.error(f"Error in cross-border transfer analysis: {str(e)}")
+            
+            # Calculate statistics using standardized risk categories
+            severity_counts = {
+                SeverityLevel.HIGH.value: 0,
+                SeverityLevel.MEDIUM.value: 0,
+                SeverityLevel.LOW.value: 0
+            }
+            
+            for finding in self.findings:
+                severity = finding.get("severity", SeverityLevel.MEDIUM.value).lower()
+                if severity in severity_counts:
+                    severity_counts[severity] += 1
+            
+            # Calculate compliance score using standardized function
+            compliance_score = calculate_compliance_score({
+                RiskLevel.HIGH.value: severity_counts[SeverityLevel.HIGH.value],
+                RiskLevel.MEDIUM.value: severity_counts[SeverityLevel.MEDIUM.value],
+                RiskLevel.LOW.value: severity_counts[SeverityLevel.LOW.value]
+            })
+            
+            # Determine compliance status
+            compliance_status = determine_compliance_status(compliance_score)
+            
+            # Group findings by GDPR article
+            findings_by_article = {}
+            for finding in self.findings:
+                article_id = finding.get("article_id", "unknown")
+                if article_id not in findings_by_article:
+                    findings_by_article[article_id] = []
+                findings_by_article[article_id].append(finding)
+            
+            # Calculate scan duration
+            scan_duration = time.time() - start_time
+            
+            # Return scan results with statistics
+            return {
+                "findings": self.findings,
+                "statistics": {
+                    "total_files_scanned": len(self._get_code_files()),
+                    "total_findings": len(self.findings),
+                    "severity_counts": severity_counts,
+                    "compliance_score": compliance_score,
+                    "compliance_status": compliance_status,
+                    "findings_by_article": findings_by_article,
+                    "scan_duration": round(scan_duration, 2)
+                }
+            }
+        except Exception as e:
+            logger.error(f"Critical error during repository scan: {str(e)}")
+            raise RuntimeError(f"Repository scan failed: {str(e)}")
+        finally:
+            # Cleanup any temporary resources
+            self._cleanup_resources()
     
     def _scan_patterns_for_article(self, article_id: str, rules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -411,6 +499,12 @@ class GDPRArticleScanner:
         
         for file_path in code_files:
             try:
+                # Check file size before reading (avoid large files)
+                file_size_mb = os.path.getsize(os.path.join(self.repo_path, file_path)) / (1024 * 1024)
+                if file_size_mb > MAX_FILE_SIZE_MB:
+                    logger.warning(f"Skipping large file ({file_size_mb:.2f} MB): {file_path}")
+                    continue
+                
                 # Read file content
                 with open(os.path.join(self.repo_path, file_path), 'r', encoding='utf-8', errors='ignore') as f:
                     content = f.read()
@@ -436,7 +530,6 @@ class GDPRArticleScanner:
                         }
                         
                         article_findings.append(finding)
-            
             except Exception as e:
                 logger.warning(f"Error scanning file {file_path}: {str(e)}")
         
@@ -580,6 +673,48 @@ class GDPRArticleScanner:
         # 2. Detection of cloud storage configuration
         # 3. Analysis of data transfer mechanisms
         pass
+        
+    def _cleanup_resources(self):
+        """
+        Clean up any temporary resources used during scanning.
+        This ensures proper resource management even if scanning fails.
+        """
+        try:
+            # Clean up any temporary files created during scanning
+            temp_dir = os.path.join(self.repo_path, ".gdpr_scan_temp")
+            if os.path.exists(temp_dir):
+                logger.info(f"Cleaning up temporary directory: {temp_dir}")
+                for root, dirs, files in os.walk(temp_dir, topdown=False):
+                    for file in files:
+                        try:
+                            os.remove(os.path.join(root, file))
+                        except Exception as e:
+                            logger.warning(f"Failed to remove temporary file: {file}. Error: {str(e)}")
+                    
+                    for dir in dirs:
+                        try:
+                            os.rmdir(os.path.join(root, dir))
+                        except Exception as e:
+                            logger.warning(f"Failed to remove temporary directory: {dir}. Error: {str(e)}")
+                
+                try:
+                    os.rmdir(temp_dir)
+                except Exception as e:
+                    logger.warning(f"Failed to remove main temporary directory: {temp_dir}. Error: {str(e)}")
+            
+            # Clean up any other temporary files
+            for temp_file in self.temp_files:
+                if os.path.exists(temp_file):
+                    try:
+                        os.remove(temp_file)
+                    except Exception as e:
+                        logger.warning(f"Failed to remove temporary file: {temp_file}. Error: {str(e)}")
+            
+            # Release any other resources
+            logger.debug("Cleanup of scanner resources complete")
+        except Exception as e:
+            logger.error(f"Error during cleanup: {str(e)}")
+            # Continue with cleanup despite errors
 
 def scan_repository_for_gdpr_compliance(repo_path: str) -> Dict[str, Any]:
     """
@@ -592,38 +727,4 @@ def scan_repository_for_gdpr_compliance(repo_path: str) -> Dict[str, Any]:
         Dictionary with scan results including findings and statistics
     """
     scanner = GDPRArticleScanner(repo_path)
-    findings = scanner.scan_repository()
-    
-    # Group findings by GDPR article
-    findings_by_article = {}
-    for finding in findings:
-        article_id = finding["article_id"]
-        if article_id not in findings_by_article:
-            findings_by_article[article_id] = []
-        findings_by_article[article_id].append(finding)
-    
-    # Count findings by severity
-    severity_counts = {"high": 0, "medium": 0, "low": 0}
-    for finding in findings:
-        severity = finding["severity"]
-        if severity in severity_counts:
-            severity_counts[severity] += 1
-    
-    # Calculate compliance score (basic algorithm - would be enhanced in production)
-    # High issues count 5 points, medium 3 points, low 1 point
-    # Maximum score is 100
-    issue_points = severity_counts["high"] * 5 + severity_counts["medium"] * 3 + severity_counts["low"] * 1
-    max_points = 100
-    compliance_score = max(0, 100 - min(issue_points, max_points))
-    
-    # Prepare the results
-    results = {
-        "findings": findings,
-        "findings_by_article": findings_by_article,
-        "severity_counts": severity_counts,
-        "compliance_score": compliance_score,
-        "total_findings": len(findings),
-        "scanned_files": len(scanner._get_code_files())
-    }
-    
-    return results
+    return scanner.scan_repository()
