@@ -2213,6 +2213,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     has_low_risk = low_risk > 0
     
     # Log actual counts for debugging
+    import logging
     logging.info(f"Risk assessment - Total PII: {total_pii}, High: {high_risk}, Medium: {medium_risk}, Low: {low_risk}")
     
     if high_risk > 10:
