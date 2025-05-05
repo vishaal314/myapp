@@ -1162,6 +1162,17 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     Returns:
         The PDF report as bytes
     """
+    # Get user information for personalization if available
+    user_email = ""
+    try:
+        if st.session_state.get('logged_in') and st.session_state.get('email'):
+            user_email = st.session_state.get('email', "")
+    except Exception as e:
+        logger.warning(f"Could not get user email for report personalization: {str(e)}")
+    
+    # Add user email to scan data for personalization
+    if user_email:
+        scan_data['user_email'] = user_email
     # Import the optimize function from our utility module
     try:
         from services._optimize_scan_data_for_report import optimize_scan_data_for_report
@@ -1805,6 +1816,9 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         files_scanned = scan_data.get('files_scanned', 0)
         files_skipped = scan_data.get('files_skipped', 0)
         
+        # Get user email for personalization
+        user_email = scan_data.get('user_email', '')
+        
         # Get top 3 file types scanned if available
         file_types = scan_data.get('file_types', {})
         file_types_text = ""
@@ -1818,12 +1832,19 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             print(f"DEBUG: file_types is empty or invalid: {file_types}")
             file_types_text = "Not available"
         
+        # Add personalization with user's email if available
+        if user_email:
+            personalization_text = f"Prepared for: {user_email}" 
+        else:
+            personalization_text = "Official GDPR Compliance Report"
+        
         if current_lang == 'nl':
             summary_data = [
                 [_('report.scan_type', 'Scan Type'), "GDPR Repository Compliance Scan"],
                 [_('report.repo_url', 'Repository URL'), repo_url],
                 [_('report.branch', 'Branch'), branch],
                 [_('report.date_time', 'Datum & Tijd'), timestamp],
+                [_('report.prepared_for', 'Rapport Voor'), personalization_text],
                 [_('report.compliance_score', 'Compliance Score'), f"{compliance_score}/100"],
                 [_('report.files_scanned', 'Bestanden Gescand'), str(files_scanned)],
                 [_('report.files_skipped', 'Bestanden Overgeslagen'), str(files_skipped)],
@@ -1839,6 +1860,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 [_('report.repo_url', 'Repository URL'), repo_url],
                 [_('report.branch', 'Branch'), branch],
                 [_('report.date_time', 'Date & Time'), timestamp],
+                [_('report.prepared_for', 'Report For'), personalization_text],
                 [_('report.compliance_score', 'Compliance Score'), f"{compliance_score}/100"],
                 [_('report.files_scanned', 'Files Scanned'), str(files_scanned)],
                 [_('report.files_skipped', 'Files Skipped'), str(files_skipped)],
