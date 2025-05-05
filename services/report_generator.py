@@ -1165,6 +1165,23 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     Returns:
         The PDF report as bytes
     """
+    # Special case handling for specialized report formats
+    if report_format == "pcidss":
+        try:
+            # Import PCI DSS specialized report generator
+            import traceback
+            import logging
+            logger = logging.getLogger("report_generator")
+            logger.info(f"Using specialized PCI DSS report template")
+            
+            from services.report_templates.pcidss_report_template import generate_pcidss_report
+            return generate_pcidss_report(scan_data)
+        except Exception as e:
+            logger.error(f"Error generating PCI DSS report: {str(e)}")
+            logger.error(traceback.format_exc())
+            # Fall back to standard report format
+            logger.warning("Falling back to standard report format due to PCI DSS report generation failure")
+            # Continue with standard report generation below
     # Get user information for personalization if available
     user_email = ""
     try:
