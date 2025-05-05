@@ -1299,106 +1299,110 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     # Content elements
     elements = []
     
-    # Create a modern classic logo and header
+    # Create a modern premium logo and header with professional design
     logo_data = [
         [
-            # Classic modern logo with elegant design
+            # Premium modern logo with sophisticated design
             Table(
                 [
                     [
-                        # Shield icon with DataGuardian Pro text
+                        # Shield and text logo with premium styling
                         Table(
                             [
                                 [
-                                    # Modern classic shield icon with refined effect
+                                    # Premium shield icon with refined gradient effect
                                     Table(
                                         [[Paragraph(
-                                            """<font color="#FFFFFF" size="22">🛡️</font>""",
+                                            """<font color="#FFFFFF" size="24">🛡️</font>""",
                                             ParagraphStyle('IconStyle', alignment=1)
                                         )]],
-                                        colWidths=[55],
-                                        rowHeights=[55],
+                                        colWidths=[60],
+                                        rowHeights=[60],
                                         style=TableStyle([
-                                            # Create a classic shield shape with elegant styling
-                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')), # Navy blue for classic feel
-                                            ('LINEABOVE', (0, 0), (-1, 0), 2, HexColor('#60a5fa')), # Light blue top accent
-                                            ('LINEBELOW', (0, -1), (-1, -1), 2, HexColor('#1e3a8a')), # Navy blue bottom accent
-                                            ('LINEBEFORE', (0, 0), (0, -1), 2, HexColor('#3b82f6')), # Medium blue left accent
-                                            ('LINEAFTER', (-1, 0), (-1, -1), 2, HexColor('#3b82f6')), # Medium blue right accent
+                                            # Create a premium shield with elegant gradient styling
+                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#0f2557')), # Deep navy for premium feel
+                                            ('LINEABOVE', (0, 0), (-1, 0), 2, HexColor('#4680c2')), # Royal blue top accent
+                                            ('LINEBELOW', (0, -1), (-1, -1), 2, HexColor('#0f2557')), # Deep navy bottom accent
+                                            ('LINEBEFORE', (0, 0), (0, -1), 2, HexColor('#2766c3')), # Medium blue left accent
+                                            ('LINEAFTER', (-1, 0), (-1, -1), 2, HexColor('#2766c3')), # Medium blue right accent
                                             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                                            ('ROUNDEDCORNERS', [10, 10, 10, 10]), # More rounded corners for modern classic look
+                                            ('ROUNDEDCORNERS', [12, 12, 12, 12]), # More rounded corners for premium look
                                         ])
                                     ),
-                                    # Classic brand text with elegant typography
+                                    # Premium brand text with refined typography
                                     Table(
                                         [
                                             [Paragraph(
-                                                # Classic elegant title styling
-                                                f"""<font face="Helvetica-Bold" color="#FFFFFF" size="18"><b>Data<font color="#93c5fd">Guardian</font> Pro</b></font>""", 
-                                                ParagraphStyle('LogoStyle', alignment=0, leading=22, spaceAfter=2)
+                                                # Premium title styling with refined contrast
+                                                f"""<font face="Helvetica-Bold" color="#FFFFFF" size="20"><b>Data<font color="#a3c8ff">Guardian</font> Pro</b></font>""", 
+                                                ParagraphStyle('LogoStyle', alignment=0, leading=24, spaceAfter=2)
                                             )],
                                             [Paragraph(
-                                                # Refined subtitle with elegant spacing
-                                                f"""<font face="Helvetica" color="#dbeafe" size="10">Enterprise Privacy Compliance Platform</font>""", 
-                                                ParagraphStyle('SubtitleStyle', alignment=0, leading=12, spaceBefore=0)
+                                                # Premium subtitle with refined spacing
+                                                f"""<font face="Helvetica" color="#e0edff" size="11">Enterprise Privacy Compliance</font>""", 
+                                                ParagraphStyle('SubtitleStyle', alignment=0, leading=14, spaceBefore=0)
                                             )]
                                         ],
-                                        colWidths=[180],  # Wider for better text layout
-                                        rowHeights=[32, 20],  # Slightly taller for main title
+                                        colWidths=[200],  # Wider for premium text layout
+                                        rowHeights=[34, 22],  # Taller for premium main title
                                         style=TableStyle([
                                             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                                            ('LEFTPADDING', (0, 0), (-1, -1), 12),  # More left padding for better alignment
-                                            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-                                            # Classic elegant background with subtle borders
-                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Navy blue background
-                                            ('LINEAFTER', (-1, 0), (-1, -1), 2, HexColor('#60a5fa')),  # Light blue right accent
-                                            ('LINEBELOW', (0, -1), (-1, -1), 1, HexColor('#93c5fd')),  # Very light blue bottom accent
+                                            ('LEFTPADDING', (0, 0), (-1, -1), 14),  # More left padding for better alignment
+                                            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+                                            # Premium background with refined borders
+                                            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#0f2557')),  # Deep navy background
+                                            ('LINEAFTER', (-1, 0), (-1, -1), 2, HexColor('#4680c2')),  # Royal blue right accent
+                                            ('LINEBELOW', (0, -1), (-1, -1), 1, HexColor('#a3c8ff')),  # Light blue bottom accent
                                         ])
                                     )
                                 ]
                             ],
-                            colWidths=[50, 160],
+                            colWidths=[60, 200],
                             style=TableStyle([
-                                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#1e3a8a')),  # Navy blue background
+                                ('BACKGROUND', (0, 0), (-1, -1), HexColor('#0f2557')),  # Deep navy background
                                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                                ('LEFTPADDING', (0, 0), (-1, -1), 12),
-                                ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-                                ('ROUNDEDCORNERS', [12, 12, 12, 12]), # More rounded corners for a classic modern look
+                                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                                ('LEFTPADDING', (0, 0), (-1, -1), 14),
+                                ('RIGHTPADDING', (0, 0), (-1, -1), 14),
+                                ('ROUNDEDCORNERS', [14, 14, 14, 14]), # More rounded corners for premium look
                             ])
                         ),
                     ]
                 ],
-                colWidths=[220],
+                colWidths=[270],
                 style=TableStyle([
                     ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ])
             ),
             
-            # Report title section
+            # Premium report title section with elegant styling
             Table(
                 [[
-                    # Get the right report title based on format
+                    # Get the right report title based on format with premium styling
                     Paragraph(
-                        f"""<font size="14" color="#1e3a8a"><b>{
+                        f"""<font face="Helvetica-Bold" size="16" color="#0f2557"><b>{
                             _('report.subtitle.ai_model', 'AI Model Risk Analysis Report') if report_format == "ai_model" else
                             _('report.subtitle.soc2', 'SOC2 Compliance Report') if report_format == "soc2" else
                             _('report.subtitle.gdpr_repository', 'GDPR Repository Compliance Report') if report_format == "gdpr_repository" else
                             _('report.subtitle', 'GDPR Compliance Scan Report')
                         }</b></font>""",
-                        ParagraphStyle('ReportTitle', alignment=1)
+                        ParagraphStyle('ReportTitle', alignment=1, spaceBefore=5, spaceAfter=5)
                     )
                 ]],
-                colWidths=[300],
+                colWidths=[270],
                 style=TableStyle([
                     ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                    ('BACKGROUND', (0, 0), (-1, -1), HexColor('#f0f5ff')),  # Light blue background
+                    ('BOX', (0, 0), (-1, -1), 0.5, HexColor('#a3c8ff')),  # Light blue border
+                    ('ROUNDEDCORNERS', [8, 8, 8, 8]),  # Rounded corners for premium look
                 ])
             )
         ]
@@ -1406,7 +1410,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     
     header_table = Table(
         logo_data,
-        colWidths=[220, 320],
+        colWidths=[270, 270],
         style=TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
