@@ -2206,6 +2206,15 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         elements.append(Paragraph(risk_assessment_title, heading_style))
     
     # Determine overall risk level with enhanced terms and visuals
+    # Check if we have any PII items at all first before we continue
+    has_pii = total_pii > 0
+    has_high_risk = high_risk > 0
+    has_medium_risk = medium_risk > 0
+    has_low_risk = low_risk > 0
+    
+    # Log actual counts for debugging
+    logging.info(f"Risk assessment - Total PII: {total_pii}, High: {high_risk}, Medium: {medium_risk}, Low: {low_risk}")
+    
     if high_risk > 10:
         if current_lang == 'nl':
             risk_level = "Kritisch"
@@ -2236,7 +2245,8 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         risk_color_hex = '#f97316'  # Orange
         angle_start = 180
         angle_end = 270
-    elif total_pii > 0:
+    elif medium_risk > 0 or low_risk > 0:
+        # This condition handles both medium and low risk items - the fix for the "No PII items found" issue
         if current_lang == 'nl':
             risk_level = "Gemiddeld"
             risk_level_for_meter = "Moderate"  # Keep English for the meter component
