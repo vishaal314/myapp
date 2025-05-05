@@ -253,9 +253,9 @@ DEFAULT_USERS = [
     {
         "username": "analyst",
         "password_hash": hashlib.sha256("analyst123".encode()).hexdigest(),
-        "role": "analyst",
+        "role": "auditor",
         "email": "analyst@example.com",
-        "permissions": ROLE_PERMISSIONS["analyst"]["permissions"],
+        "permissions": ROLE_PERMISSIONS["auditor"]["permissions"],
         "created_at": datetime.now().isoformat()
     },
     {
