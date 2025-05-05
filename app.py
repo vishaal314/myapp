@@ -4889,193 +4889,193 @@ else:
                                                 # Handle any exception during the scan
                                                 st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
                                                 status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
-                        
-                        # Stop normal flow to proceed with only the SOC2 scanner
-                        scan_running = False
-                    
-                    # Preview of findings with error handling
-                    st.markdown("### Sample Findings")
-                    all_findings = []
-                    
-                    # Process all scan results with enhanced error handling
-                    for result in scan_results:
-                        try:
-                            # For AI model scans, the findings are in a different format
-                            if scan_type == _("scan.ai_model") and 'findings' in result:
-                                for item in result.get('findings', []):
-                                    all_findings.append({
-                                        'Type': item.get('type', 'Unknown'),
-                                        'Risk Level': item.get('risk_level', 'Unknown').upper(),
-                                        'Category': item.get('category', 'Unknown'),
-                                        'Description': item.get('description', 'Unknown')
-                                    })
-                            # For other scan types
-                            else:
-                                for item in result.get('pii_found', []):
-                                    all_findings.append({
-                                        'Type': item.get('type', 'Unknown'),
-                                        'Value': item.get('value', 'Unknown'),
-                                        'Risk Level': item.get('risk_level', 'Unknown'),
-                                        'Location': item.get('location', 'Unknown')
-                                    })
-                        except Exception as findings_error:
-                            # If there's an error processing findings, add a placeholder
-                            st.warning(f"Error processing scan findings: {str(findings_error)}")
-                            all_findings.append({
-                                'Type': 'Error',
-                                'Risk Level': 'MEDIUM',
-                                'Description': f'Error processing scan results: {str(findings_error)}',
-                                'Location': 'Results Processor'
-                            })
-                    
-                    # Display a sample of findings (up to 10 items)
-                    if all_findings:
-                        sample_findings = all_findings[:10]
-                        findings_df = pd.DataFrame(sample_findings)
-                        st.dataframe(findings_df, use_container_width=True)
-                        
-                        # Show how many more findings there are
-                        if len(all_findings) > 10:
-                            st.info(f"Showing 10 of {len(all_findings)} findings. See full results in Scan History.")
-                    else:
-                        st.info("No findings to display.")
-                    
-                    # Action buttons
-                    col1, col2, col3 = st.columns(3)
-                    
-                    with col1:
-                        if st.button("View Full Report", key="view_full_report"):
-                            st.session_state.selected_nav = _("history.title")
-                            st.rerun()
-                    
-                    with col2:
-                        # Report and Certificate Generation
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            if st.button("Generate PDF Report", key="quick_pdf_report", use_container_width=True):
-                                # Import report generator
-                                from services.report_generator import generate_report
                                 
-                                with st.spinner("Generating PDF report..."):
-                                    # Use selected_scan instead of undefined aggregated_result
-                                    pdf_bytes = generate_report(selected_scan)
-                                    
-                                    # Use Streamlit's native download button
-                                    st.success("PDF Report generated successfully!")
-                                    # Display file size information
-                                    size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
-                                    st.info(f"Report size: {size_in_mb} MB")
-                                    
-                                    # Show download button
-                                    st.download_button(
-                                        label="📥 Download PDF Report",
-                                        data=pdf_bytes,
-                                        file_name=f"GDPR_Scan_Report_{display_scan_id}.pdf",
-                                        mime="application/pdf",
-                                        use_container_width=True,
-                                        key=f"download_pdf_{display_scan_id}"
-                                    )
-                        
-                        # Compliance Certificate for Premium users
-                        with col2:
-                            # Check if user is premium
-                            is_premium = st.session_state.role in ["premium", "admin"]
+                                # Stop normal flow to proceed with only the SOC2 scanner
+                                scan_running = False
                             
-                            # Check if scan is fully compliant
-                            cert_generator = CertificateGenerator(language=st.session_state.language)
-                            # Use current_scan_id as fallback if selected_scan is not defined
-                            scan_to_check = locals().get('selected_scan', st.session_state.get('current_scan_id', None))
-                            if scan_to_check:
-                                is_compliant = cert_generator.is_fully_compliant(scan_to_check)
-                            else:
-                                is_compliant = False
+                            # Preview of findings with error handling
+                            st.markdown("### Sample Findings")
+                            all_findings = []
                             
-                            # Button text based on compliance and premium status
-                            if is_premium and is_compliant:
-                                cert_btn_text = _("dashboard.generate_certificate")
-                                cert_btn_disabled = False
-                                cert_btn_help = _("dashboard.generate_certificate_help")
-                            elif not is_premium and is_compliant:
-                                cert_btn_text = _("dashboard.premium_certificate") 
-                                cert_btn_disabled = True
-                                cert_btn_help = _("dashboard.premium_certificate_help")
-                            elif is_premium and not is_compliant:
-                                cert_btn_text = _("dashboard.cannot_generate_certificate")
-                                cert_btn_disabled = True
-                                cert_btn_help = _("dashboard.cannot_generate_certificate_help")
-                            else:
-                                cert_btn_text = _("dashboard.premium_certificate")
-                                cert_btn_disabled = True
-                                cert_btn_help = _("dashboard.premium_certificate_help2")
-                            
-                            if st.button(cert_btn_text, key="generate_certificate", 
-                                        disabled=cert_btn_disabled, help=cert_btn_help,
-                                        use_container_width=True):
-                                
-                                with st.spinner(_("dashboard.generating_certificate")):
-                                    # Get user info for certificate
-                                    user_info = {
-                                        "username": st.session_state.username,
-                                        "role": st.session_state.role,
-                                        "email": st.session_state.email,
-                                        "membership": "premium"  # Since we already checked
-                                    }
-                                    
-                                    # Generate certificate
-                                    company_name = None  # Could be added as an input field if needed
-                                    # Use the same scan_to_check variable we defined earlier
-                                    cert_path = cert_generator.generate_certificate(
-                                        scan_to_check, user_info, company_name
-                                    )
-                                    
-                                    if cert_path and os.path.exists(cert_path):
-                                        # Read the certificate PDF
-                                        with open(cert_path, 'rb') as file:
-                                            cert_bytes = file.read()
-                                        
-                                        # Use Streamlit's native download button
-                                        st.success(_("dashboard.certificate_success"))
-                                        
-                                        # Display file size information
-                                        size_in_mb = round(len(cert_bytes) / (1024 * 1024), 2)
-                                        st.info(f"Certificate size: {size_in_mb} MB")
-                                        
-                                        # Show download button
-                                        st.download_button(
-                                            label="📥 Download Compliance Certificate",
-                                            data=cert_bytes,
-                                            file_name=f"GDPR_Compliance_Certificate_{display_scan_id}.pdf",
-                                            mime="application/pdf",
-                                            use_container_width=True,
-                                            key=f"download_cert_{display_scan_id}"
-                                        )
+                            # Process all scan results with enhanced error handling
+                            for result in scan_results:
+                                try:
+                                    # For AI model scans, the findings are in a different format
+                                    if scan_type == _("scan.ai_model") and 'findings' in result:
+                                        for item in result.get('findings', []):
+                                            all_findings.append({
+                                                'Type': item.get('type', 'Unknown'),
+                                                'Risk Level': item.get('risk_level', 'Unknown').upper(),
+                                                'Category': item.get('category', 'Unknown'),
+                                                'Description': item.get('description', 'Unknown')
+                                            })
+                                    # For other scan types
                                     else:
-                                        st.error(_("dashboard.certificate_error"))
-                                
-                    with col3:
-                        # Quick HTML Report generation
-                        if st.button("Generate HTML Report", key="quick_html_report"):
-                            # Import HTML report generator
-                            from services.html_report_generator import save_html_report
+                                        for item in result.get('pii_found', []):
+                                            all_findings.append({
+                                                'Type': item.get('type', 'Unknown'),
+                                                'Value': item.get('value', 'Unknown'),
+                                                'Risk Level': item.get('risk_level', 'Unknown'),
+                                                'Location': item.get('location', 'Unknown')
+                                            })
+                                except Exception as findings_error:
+                                    # If there's an error processing findings, add a placeholder
+                                    st.warning(f"Error processing scan findings: {str(findings_error)}")
+                                    all_findings.append({
+                                        'Type': 'Error',
+                                        'Risk Level': 'MEDIUM',
+                                        'Description': f'Error processing scan results: {str(findings_error)}',
+                                        'Location': 'Results Processor'
+                                    })
                             
-                            with st.spinner("Generating HTML report..."):
-                                # Create reports directory if it doesn't exist
-                                reports_dir = "reports"
-                                os.makedirs(reports_dir, exist_ok=True)
+                            # Display a sample of findings (up to 10 items)
+                            if all_findings:
+                                sample_findings = all_findings[:10]
+                                findings_df = pd.DataFrame(sample_findings)
+                                st.dataframe(findings_df, use_container_width=True)
                                 
-                                # Save the HTML report
-                                scan_to_generate = locals().get('selected_scan', st.session_state.get('current_scan_id', None))
-                                if scan_to_generate:
-                                    file_path = save_html_report(scan_to_generate, reports_dir)
-                                else:
-                                    st.error("No scan selected for generating report")
-                                    file_path = None
+                                # Show how many more findings there are
+                                if len(all_findings) > 10:
+                                    st.info(f"Showing 10 of {len(all_findings)} findings. See full results in Scan History.")
+                            else:
+                                st.info("No findings to display.")
+                            
+                            # Action buttons
+                            col1, col2, col3 = st.columns(3)
+                            
+                            with col1:
+                                if st.button("View Full Report", key="view_full_report"):
+                                    st.session_state.selected_nav = _("history.title")
+                                    st.rerun()
+                            
+                            with col2:
+                                # Report and Certificate Generation
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    if st.button("Generate PDF Report", key="quick_pdf_report", use_container_width=True):
+                                        # Import report generator
+                                        from services.report_generator import generate_report
+                                        
+                                        with st.spinner("Generating PDF report..."):
+                                            # Use selected_scan instead of undefined aggregated_result
+                                            pdf_bytes = generate_report(selected_scan)
+                                            
+                                            # Use Streamlit's native download button
+                                            st.success("PDF Report generated successfully!")
+                                            # Display file size information
+                                            size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
+                                            st.info(f"Report size: {size_in_mb} MB")
+                                            
+                                            # Show download button
+                                            st.download_button(
+                                                label="📥 Download PDF Report",
+                                                data=pdf_bytes,
+                                                file_name=f"GDPR_Scan_Report_{display_scan_id}.pdf",
+                                                mime="application/pdf",
+                                                use_container_width=True,
+                                                key=f"download_pdf_{display_scan_id}"
+                                            )
                                 
-                                # Success message
-                                st.success(f"HTML report saved. You can access it from the '{_('results.title')}' page.")
-                
-                st.markdown("---")
-                st.info(f"You can also access the full results in the '{_('history.title')}' section.")
+                                # Compliance Certificate for Premium users
+                                with col2:
+                                    # Check if user is premium
+                                    is_premium = st.session_state.role in ["premium", "admin"]
+                                    
+                                    # Check if scan is fully compliant
+                                    cert_generator = CertificateGenerator(language=st.session_state.language)
+                                    # Use current_scan_id as fallback if selected_scan is not defined
+                                    scan_to_check = locals().get('selected_scan', st.session_state.get('current_scan_id', None))
+                                    if scan_to_check:
+                                        is_compliant = cert_generator.is_fully_compliant(scan_to_check)
+                                    else:
+                                        is_compliant = False
+                                    
+                                    # Button text based on compliance and premium status
+                                    if is_premium and is_compliant:
+                                        cert_btn_text = _("dashboard.generate_certificate")
+                                        cert_btn_disabled = False
+                                        cert_btn_help = _("dashboard.generate_certificate_help")
+                                    elif not is_premium and is_compliant:
+                                        cert_btn_text = _("dashboard.premium_certificate") 
+                                        cert_btn_disabled = True
+                                        cert_btn_help = _("dashboard.premium_certificate_help")
+                                    elif is_premium and not is_compliant:
+                                        cert_btn_text = _("dashboard.cannot_generate_certificate")
+                                        cert_btn_disabled = True
+                                        cert_btn_help = _("dashboard.cannot_generate_certificate_help")
+                                    else:
+                                        cert_btn_text = _("dashboard.premium_certificate")
+                                        cert_btn_disabled = True
+                                        cert_btn_help = _("dashboard.premium_certificate_help2")
+                                    
+                                    if st.button(cert_btn_text, key="generate_certificate", 
+                                                disabled=cert_btn_disabled, help=cert_btn_help,
+                                                use_container_width=True):
+                                        
+                                        with st.spinner(_("dashboard.generating_certificate")):
+                                            # Get user info for certificate
+                                            user_info = {
+                                                "username": st.session_state.username,
+                                                "role": st.session_state.role,
+                                                "email": st.session_state.email,
+                                                "membership": "premium"  # Since we already checked
+                                            }
+                                            
+                                            # Generate certificate
+                                            company_name = None  # Could be added as an input field if needed
+                                            # Use the same scan_to_check variable we defined earlier
+                                            cert_path = cert_generator.generate_certificate(
+                                                scan_to_check, user_info, company_name
+                                            )
+                                            
+                                            if cert_path and os.path.exists(cert_path):
+                                                # Read the certificate PDF
+                                                with open(cert_path, 'rb') as file:
+                                                    cert_bytes = file.read()
+                                                
+                                                # Use Streamlit's native download button
+                                                st.success(_("dashboard.certificate_success"))
+                                                
+                                                # Display file size information
+                                                size_in_mb = round(len(cert_bytes) / (1024 * 1024), 2)
+                                                st.info(f"Certificate size: {size_in_mb} MB")
+                                                
+                                                # Show download button
+                                                st.download_button(
+                                                    label="📥 Download Compliance Certificate",
+                                                    data=cert_bytes,
+                                                    file_name=f"GDPR_Compliance_Certificate_{display_scan_id}.pdf",
+                                                    mime="application/pdf",
+                                                    use_container_width=True,
+                                                    key=f"download_cert_{display_scan_id}"
+                                                )
+                                            else:
+                                                st.error(_("dashboard.certificate_error"))
+                                
+                            with col3:
+                                # Quick HTML Report generation
+                                if st.button("Generate HTML Report", key="quick_html_report"):
+                                    # Import HTML report generator
+                                    from services.html_report_generator import save_html_report
+                                    
+                                    with st.spinner("Generating HTML report..."):
+                                        # Create reports directory if it doesn't exist
+                                        reports_dir = "reports"
+                                        os.makedirs(reports_dir, exist_ok=True)
+                                        
+                                        # Save the HTML report
+                                        scan_to_generate = locals().get('selected_scan', st.session_state.get('current_scan_id', None))
+                                        if scan_to_generate:
+                                            file_path = save_html_report(scan_to_generate, reports_dir)
+                                        else:
+                                            st.error("No scan selected for generating report")
+                                            file_path = None
+                                        
+                                        # Success message
+                                        st.success(f"HTML report saved. You can access it from the '{_('results.title')}' page.")
+                            
+                            st.markdown("---")
+                            st.info(f"You can also access the full results in the '{_('history.title')}' section.")
         
     elif selected_nav == _("history.title"):
         # Import permission checking functionality
