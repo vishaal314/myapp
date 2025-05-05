@@ -2681,6 +2681,9 @@ else:
             # Basic scan validation
             proceed_with_scan = False
             
+            # Initialize uploaded_files to empty list by default
+            uploaded_files = []
+            
             # Special case for Repository URL option
             if scan_type == _("scan.code") and st.session_state.repo_source == _("scan.repository_url"):
                 proceed_with_scan = True
@@ -3633,6 +3636,18 @@ else:
                         
                         # Add repository configuration UI
                         with config_tab:
+                            # Add region selection at the top
+                            st.subheader("Region Selection")
+                            
+                            # Region selection with unique key - using same regions as GDPR scanner
+                            region_options = ["Global"] + list(REGIONS.keys())
+                            selected_region = st.selectbox(
+                                "Select Region:",
+                                region_options,
+                                index=0,
+                                key="pcidss_region_select"
+                            )
+                            
                             st.subheader("Repository Configuration")
                             
                             # Repository source selection with unique key
@@ -3727,9 +3742,9 @@ else:
                                 if not repo_url:
                                     st.error("Please enter a repository URL to scan.")
                                 else:
-                                    # Initialize PCI DSS Scanner
+                                    # Initialize PCI DSS Scanner with selected region
                                     scanner = PCIDSSScanner(
-                                        region=st.session_state.get('selected_region', "Global"),
+                                        region=selected_region,
                                         progress_callback=lambda current, total, message: st.session_state.update({
                                             'pcidss_scan_progress': current / total,
                                             'pcidss_scan_message': message
