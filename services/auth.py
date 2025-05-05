@@ -101,11 +101,37 @@ ROLE_PERMISSIONS = {
             'api:access', 'api:manage_keys'
         ]
     },
-    'analyst': {
-        'description': 'Can create and analyze scans, generate reports',
+    'security_engineer': {
+        'description': 'Security engineering and scanning capabilities',
         'permissions': [
             # Scan permissions
-            'scan:create', 'scan:view', 'scan:export', 'scan:premium', 'scan:configure',
+            'scan:create', 'scan:view', 'scan:export', 'scan:premium', 'scan:configure', 
+            'scan:website', 'scan:code', 'scan:document', 'scan:database', 'scan:api',
+            
+            # Limited user management
+            'user:view',
+            
+            # Report permissions
+            'report:create', 'report:view', 'report:export',
+            
+            # Limited system access
+            'system:logs',
+            
+            # Audit permissions
+            'audit:view',
+            
+            # View permissions
+            'dashboard:view', 'history:view',
+            
+            # API permissions
+            'api:access'
+        ]
+    },
+    'auditor': {
+        'description': 'Compliance auditing and reporting capabilities',
+        'permissions': [
+            # Scan permissions
+            'scan:create', 'scan:view', 'scan:export', 'scan:configure',
             'scan:website', 'scan:code', 'scan:document', 'scan:database', 'scan:api',
             
             # Report permissions
