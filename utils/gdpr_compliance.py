@@ -498,6 +498,17 @@ NL_UAVG_PATTERNS = {
         "remediation": "Follow Dutch DPA (Autoriteit Persoonsgegevens) specific guidelines and reporting requirements",
         "gdpr_principle": "accountability",
         "country_specific": "Netherlands"
+    },
+    # Dutch minors consent requirements (under 16 years)
+    "nl_minor_consent": {
+        "pattern": r'(?i)\b(?:minderjarig(?:e|en)?|leeftijdsverificatie|jonger dan 16|onder 16 jaar|leeftijdscontrole|ouderlijke toestemming|toestemming ouders)\b',
+        "description": "Dutch Minor Consent Requirements (UAVG)",
+        "gdpr_articles": ["article_8"],
+        "uavg_articles": ["article_5"],
+        "risk_level": "high",
+        "remediation": "Implement age verification and parental consent for users under 16 years old as required by Dutch UAVG",
+        "gdpr_principle": "lawfulness_fairness_transparency",
+        "country_specific": "Netherlands"
     }
 }
 
@@ -596,7 +607,8 @@ def generate_remediation_suggestion(finding: Dict[str, Any]) -> str:
                 'nl_bsn_processing': "Process BSN (Dutch citizen service number) only when explicitly authorized by law, such as employment, taxation, or social security purposes.",
                 'nl_breach_notification': "Implement Dutch-specific breach notification procedures, including the 72-hour deadline for reporting to Autoriteit Persoonsgegevens.",
                 'nl_data_sharing': "Review and ensure compliance with Dutch regulations for international data transfers, especially when sharing data outside the EU.",
-                'nl_dpa_requirements': "Follow Autoriteit Persoonsgegevens (Dutch DPA) guidelines and ensure appropriate reporting mechanisms are in place."
+                'nl_dpa_requirements': "Follow Autoriteit Persoonsgegevens (Dutch DPA) guidelines and ensure appropriate reporting mechanisms are in place.",
+                'nl_minor_consent': "Implement age verification and parental consent collection for users under 16 years old as required by Dutch UAVG (Article 5)."
             }
             if pattern_key in nl_specific_recommendations:
                 return nl_specific_recommendations[pattern_key]
@@ -613,7 +625,7 @@ def generate_remediation_suggestion(finding: Dict[str, Any]) -> str:
     
     return default_remediation.get(finding_type, "Review this finding for GDPR compliance.")
 
-def calculate_gdpr_risk_score(findings: List[Dict[str, Any]]) -> Tuple[int, Dict[str, int]]:
+def calculate_gdpr_risk_score(findings: List[Dict[str, Any]]) -> Tuple[float, Dict[str, float]]:
     """
     Calculate a GDPR compliance risk score based on findings.
     
@@ -642,15 +654,15 @@ def calculate_gdpr_risk_score(findings: List[Dict[str, Any]]) -> Tuple[int, Dict
     }
     
     # Initialize score and breakdown
-    total_score = 0
+    total_score = 0.0
     score_breakdown = {
-        'pii': 0,
-        'dsar': 0,
-        'consent': 0,
-        'security': 0,
-        'principle': 0,
-        'nl_uavg': 0,
-        'other': 0
+        'pii': 0.0,
+        'dsar': 0.0,
+        'consent': 0.0,
+        'security': 0.0,
+        'principle': 0.0,
+        'nl_uavg': 0.0,
+        'other': 0.0
     }
     
     # Process each finding
@@ -685,7 +697,7 @@ def calculate_gdpr_risk_score(findings: List[Dict[str, Any]]) -> Tuple[int, Dict
     
     return total_score, score_breakdown
 
-def calculate_compliance_score(risk_score: float, max_score: float = 100) -> int:
+def calculate_compliance_score(risk_score: float, max_score: int = 100) -> int:
     """
     Convert a risk score to a compliance score (higher is better).
     
@@ -703,7 +715,8 @@ def calculate_compliance_score(risk_score: float, max_score: float = 100) -> int
     compliance_score = max_score * (1.0 - normalized_risk)
     
     # Ensure the score is between 0 and max_score
-    return max(0, min(int(compliance_score), max_score))
+    compliance_score_int = int(compliance_score)
+    return max(0, min(compliance_score_int, max_score))
 
 def get_remediation_priority(finding: Dict[str, Any]) -> str:
     """
@@ -722,9 +735,9 @@ def get_remediation_priority(finding: Dict[str, Any]) -> str:
     
     # Dutch-specific checks with high priority
     if finding_type == 'nl_uavg' and finding.get('country_specific', '') == 'Netherlands':
-        # BSN processing and data breach notification are critical in Dutch context
+        # BSN processing, data breach notification, and minor consent are critical in Dutch context
         pattern_key = finding.get('pattern_key', '')
-        if pattern_key in ['nl_bsn_processing', 'nl_breach_notification']:
+        if pattern_key in ['nl_bsn_processing', 'nl_breach_notification', 'nl_minor_consent']:
             return "high"
     
     # High risk findings always have high priority
@@ -739,7 +752,7 @@ def get_remediation_priority(finding: Dict[str, Any]) -> str:
     
     # Dutch UAVG-specific prioritization
     if uavg_article_refs:
-        high_priority_uavg_articles = ['article_46']  # Dutch BSN processing article
+        high_priority_uavg_articles = ['article_46', 'article_5']  # Dutch BSN processing and minor consent articles
         for article in uavg_article_refs:
             if article in high_priority_uavg_articles:
                 return "high"
