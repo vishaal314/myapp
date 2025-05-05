@@ -1559,7 +1559,8 @@ else:
             get_text("scan.dpia"),      # Data Protection Impact Assessment
             get_text("scan.sustainability"),
             get_text("scan.ai_model"),
-            get_text("scan.soc2")
+            get_text("scan.soc2"),
+            get_text("scan.pcidss")     # PCI DSS Compliance Scan
         ]
         
         # Add premium tag to premium features
@@ -1571,7 +1572,8 @@ else:
                 get_text("scan.sustainability"), 
                 get_text("scan.ai_model"), 
                 get_text("scan.soc2"), 
-                get_text("scan.dpia")
+                get_text("scan.dpia"),
+                get_text("scan.pcidss")
             ]
             
             for option in scan_type_options:
@@ -3592,6 +3594,482 @@ else:
                         from services.soc2_scanner import SOC2_CATEGORIES  # Only need categories for UI
                         from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository, display_soc2_scan_results
                         from services.report_generator import generate_report
+                    
+                    elif scan_type == _("scan.pcidss"):
+                        # Import PCI DSS scanner components
+                        from services.pcidss_scanner import PCIDSSScanner
+                        from services.report_generator import generate_report
+                        from services.report_templates.pcidss_report_template import generate_pcidss_report
+                        
+                        # Hide the Start Scan button and Upload Files section for cleaner UI
+                        st.markdown("""
+                        <style>
+                        /* Hide the Start Scan button */
+                        div.stButton > button:contains("Start Scan") {
+                            display: none !important;
+                        }
+                        
+                        /* Hide upload-related sections */
+                        .main .block-container h2:contains("Upload Files"),
+                        .main .block-container h2:contains("Upload Files") ~ div,
+                        .main .block-container hr:has(+ h2:contains("Upload Files")),
+                        .main .block-container hr:has(~ h2:contains("Upload Files")) {
+                            display: none !important;
+                        }
+                        
+                        /* Additional selector for the specific section after Select Region */
+                        .main .block-container div:has(+ h2:contains("Upload Files")),
+                        .main .block-container div:has(~ label:contains("Select Region")) ~ hr,
+                        .main .block-container div:has(~ label:contains("Select Region")) ~ div:has(h2) {
+                            display: none !important;
+                        }
+                        </style>
+                        """, unsafe_allow_html=True)
+                        
+                        # PCI DSS scanner UI with enhanced design
+                        st.title(_("scan.pcidss_title", "PCI DSS Compliance Scanner"))
+                        
+                        # Display enhanced description with clear value proposition
+                        st.write(_(
+                            "scan.pcidss_description", 
+                            "Scan your codebase for Payment Card Industry Data Security Standard (PCI DSS) compliance issues. "
+                            "This scanner identifies security vulnerabilities, exposures, and configuration issues that could "
+                            "impact your ability to securely process, store, or transmit credit card data."
+                        ))
+                        
+                        # Add more detailed info about what PCI DSS scanning does
+                        st.info(_(
+                            "scan.pcidss_info",
+                            "PCI DSS scanning analyzes your code against the 12 PCI DSS requirements to identify "
+                            "potential compliance issues. The scanner detects insecure coding patterns, vulnerable "
+                            "dependencies, hardcoded secrets, and insecure infrastructure configurations "
+                            "that could compromise cardholder data security."
+                        ))
+                        
+                        # Add free trial information
+                        st.markdown("""
+                        <div style="padding: 10px; border-radius: 5px; background-color: #f0f2f6; margin-bottom: 20px;">
+                            <span style="font-weight: bold;">Free Trial:</span> 3 days left
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Create tabs for configuration and results
+                        config_tab, results_tab = st.tabs(["PCI DSS Scanner Configuration", "Results"])
+                        
+                        # Add content to results tab
+                        with results_tab:
+                            if 'pcidss_scan_results' in st.session_state:
+                                # Display scan results 
+                                scan_results = st.session_state.pcidss_scan_results
+                                
+                                # Show repository info
+                                st.write(f"**Repository:** {scan_results.get('repo_url')}")
+                                if 'project' in scan_results:
+                                    st.write(f"**Project:** {scan_results.get('project')}")
+                                st.write(f"**Branch:** {scan_results.get('branch', 'main')}")
+                                
+                                # Extract metrics
+                                compliance_score = scan_results.get("compliance_score", 0)
+                                high_risk = scan_results.get("high_risk_count", 0)
+                                medium_risk = scan_results.get("medium_risk_count", 0)
+                                low_risk = scan_results.get("low_risk_count", 0)
+                                
+                                # Display metrics
+                                col1, col2, col3, col4 = st.columns(4)
+                                
+                                # Color coding based on compliance score
+                                if compliance_score >= 80:
+                                    compliance_color_css = "green"
+                                    compliance_status = "✓ Good" 
+                                elif compliance_score >= 60:
+                                    compliance_color_css = "orange"
+                                    compliance_status = "⚠️ Needs Review"
+                                else:
+                                    compliance_color_css = "red"
+                                    compliance_status = "✗ Critical"
+                                    
+                                with col1:
+                                    st.metric("Compliance Score", f"{compliance_score}/100")
+                                    st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{compliance_status}</div>", unsafe_allow_html=True)
+                                
+                                with col2:
+                                    st.metric("High Risk Issues", high_risk, delta_color="inverse")
+                                
+                                with col3:
+                                    st.metric("Medium Risk Issues", medium_risk, delta_color="inverse")
+                                    
+                                with col4:
+                                    st.metric("Low Risk Issues", low_risk, delta_color="inverse")
+                                
+                                # Display PCI DSS Requirements Coverage
+                                st.subheader("PCI DSS Requirements Coverage")
+                                
+                                # Get PCI DSS requirement categories
+                                pci_categories = scan_results.get('pci_categories', {})
+                                
+                                # Create dataframe for requirements coverage
+                                if pci_categories:
+                                    import pandas as pd
+                                    import plotly.express as px
+                                    
+                                    # Create a dataframe for the chart
+                                    pci_df = pd.DataFrame({
+                                        'Requirement': list(pci_categories.keys()),
+                                        'Findings': list(pci_categories.values())
+                                    })
+                                    
+                                    # Sort by requirement number
+                                    pci_df = pci_df.sort_values('Requirement')
+                                    
+                                    # Create a bar chart
+                                    fig = px.bar(
+                                        pci_df, 
+                                        x='Requirement',
+                                        y='Findings',
+                                        color='Findings',
+                                        color_continuous_scale=['green', 'yellow', 'red'],
+                                        labels={'Requirement': 'PCI DSS Requirement', 'Findings': 'Issue Count'},
+                                        title='PCI DSS Requirements Coverage'
+                                    )
+                                    st.plotly_chart(fig, use_container_width=True)
+                                else:
+                                    st.info("No PCI DSS requirements coverage data available.")
+                                
+                                # Display findings
+                                st.subheader("PCI DSS Findings")
+                                findings = scan_results.get('findings', [])
+                                
+                                if findings:
+                                    import pandas as pd
+                                    
+                                    # Create a dataframe for the findings
+                                    findings_data = []
+                                    for finding in findings:
+                                        findings_data.append({
+                                            'Location': finding.get('location', 'N/A'),
+                                            'Description': finding.get('description', 'N/A'),
+                                            'PCI Requirement': finding.get('pci_requirement', 'N/A'),
+                                            'Risk Level': finding.get('risk_level', 'Low')
+                                        })
+                                    
+                                    findings_df = pd.DataFrame(findings_data)
+                                    
+                                    # Add styling based on risk level
+                                    def highlight_risk(val):
+                                        if val == 'High':
+                                            return 'background-color: #ffcccc'
+                                        elif val == 'Medium':
+                                            return 'background-color: #fff2cc'
+                                        else:
+                                            return 'background-color: #e6f3ff'
+                                    
+                                    # Apply the styling
+                                    styled_df = findings_df.style.applymap(highlight_risk, subset=['Risk Level'])
+                                    
+                                    # Display the findings
+                                    st.dataframe(styled_df, use_container_width=True)
+                                else:
+                                    st.info("No findings available.")
+                                
+                                # Add download report button
+                                st.markdown("### Download Report")
+                                
+                                if st.button("Generate PDF Report", type="primary", key="pcidss_results_pdf_report_btn"):
+                                    import base64
+                                    from datetime import datetime
+                                    
+                                    try:
+                                        with st.spinner("Generating PDF report..."):
+                                            # Generate the report
+                                            report_bytes = generate_report(
+                                                scan_results, 
+                                                include_details=True,
+                                                include_charts=True,
+                                                report_format="pcidss"
+                                            )
+                                            
+                                            # Create the download button
+                                            b64_pdf = base64.b64encode(report_bytes).decode('utf-8')
+                                            
+                                            # Create a formatted filename with timestamp
+                                            report_filename = f"pcidss_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                                            
+                                            # Display the download button
+                                            st.markdown(
+                                                f"""
+                                                <a href="data:application/pdf;base64,{b64_pdf}" download="{report_filename}" style="text-decoration:none;">
+                                                    <div style="background-color:#4CAF50; color:white; padding:10px; border-radius:5px; text-align:center; margin:10px 0;">
+                                                        📥 Download PCI DSS Compliance Report PDF
+                                                    </div>
+                                                </a>
+                                                """,
+                                                unsafe_allow_html=True
+                                            )
+                                    except Exception as e:
+                                        st.error(f"Error generating report: {str(e)}")
+                            else:
+                                st.info("No PCI DSS scan results available yet. Run a scan in the Configuration tab.")
+                        
+                        with config_tab:
+                            # Repository selection
+                            st.subheader(_("scan.repo_source", "Repository Source"))
+                            repo_source = st.radio(
+                                "Select Repository Source",
+                                ["GitHub Repository", "Local Upload"],
+                                horizontal=True,
+                                key="pcidss_repo_source"
+                            )
+                            
+                            if repo_source == "GitHub Repository":
+                                # Create a container with a custom border
+                                with st.container():
+                                    st.markdown("""
+                                    <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Repository URL input
+                                    st.subheader(_("scan.repo_details", "Repository Details"))
+                                    repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
+                                                        placeholder="https://github.com/username/repository",
+                                                        value="https://github.com/vishaal314/payment-processor-demo",
+                                                        key="github_pcidss_repo_url")
+                                    
+                                    # Create columns for the branch and token inputs
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        branch = st.text_input(_("scan.branch", "Branch (optional)"), 
+                                                            value="main",
+                                                            placeholder="main", 
+                                                            key="github_pcidss_branch")
+                                    with col2:
+                                        token = st.text_input(_("scan.access_token", "GitHub Access Token (for private repos)"), 
+                                                            type="password", 
+                                                            key="github_pcidss_token")
+                                        
+                                    st.markdown("</div>", unsafe_allow_html=True)
+                                
+                                # PCI DSS Scan Scope
+                                st.subheader("PCI DSS Scan Scope")
+                                scan_scope_options = st.multiselect(
+                                    "Select scan components",
+                                    ["SAST (Static Application Security Testing)", 
+                                     "SCA (Software Composition Analysis)", 
+                                     "Secrets Detection", 
+                                     "IaC (Infrastructure-as-Code) Scanning"],
+                                    default=["SAST (Static Application Security Testing)", 
+                                            "SCA (Software Composition Analysis)", 
+                                            "Secrets Detection", 
+                                            "IaC (Infrastructure-as-Code) Scanning"],
+                                    key="github_pcidss_scan_scope"
+                                )
+                                
+                                # PCI DSS Requirements
+                                st.subheader("PCI DSS Requirements Focus")
+                                req_col1, req_col2 = st.columns(2)
+                                
+                                with req_col1:
+                                    req1 = st.checkbox("Req 1: Network Security", value=True, help="Firewalls and router configurations")
+                                    req2 = st.checkbox("Req 2: Secure Configurations", value=True, help="System passwords and security parameters")
+                                    req3 = st.checkbox("Req 3: Cardholder Data Protection", value=True, help="Storage protection mechanisms")
+                                    req4 = st.checkbox("Req 4: Transmission Security", value=True, help="Encryption during transmission")
+                                    req5 = st.checkbox("Req 5: Malware Protection", value=True, help="Anti-virus mechanisms")
+                                    req6 = st.checkbox("Req 6: Secure Systems", value=True, help="Security vulnerabilities and secure coding")
+                                
+                                with req_col2:
+                                    req7 = st.checkbox("Req 7: Access Control", value=True, help="Access restrictions to cardholder data")
+                                    req8 = st.checkbox("Req 8: Authentication", value=True, help="Identification and authentication")
+                                    req9 = st.checkbox("Req 9: Physical Access", value=False, help="Physical access to cardholder data")
+                                    req10 = st.checkbox("Req 10: System Monitoring", value=True, help="Tracking and monitoring access")
+                                    req11 = st.checkbox("Req 11: Security Testing", value=True, help="Testing security systems regularly")
+                                    req12 = st.checkbox("Req 12: Security Policy", value=False, help="Information security policy maintenance")
+                                
+                                # Advanced Configuration Options
+                                with st.expander("Advanced Configuration Options"):
+                                    # SAST Configuration
+                                    st.subheader("SAST Configuration")
+                                    sast_ruleset = st.selectbox(
+                                        "SAST Ruleset Strictness",
+                                        ["Standard", "Strict", "Custom"],
+                                        index=0,
+                                        key="github_pcidss_sast_ruleset"
+                                    )
+                                    
+                                    if sast_ruleset == "Custom":
+                                        st.text_area(
+                                            "Custom SAST Rules (JSON format)",
+                                            value="""{\n  "rules": [\n    {\n      "id": "sql-injection",\n      "severity": "high",\n      "pattern": ".*execute\\(.*\\$.*\\).*"\n    }\n  ]\n}""",
+                                            height=150,
+                                            key="github_pcidss_custom_sast_rules"
+                                        )
+                                    
+                                    # SCA Configuration
+                                    st.subheader("SCA Configuration")
+                                    sca_min_severity = st.select_slider(
+                                        "Minimum Vulnerability Severity",
+                                        options=["Low", "Medium", "High", "Critical"],
+                                        value="Medium",
+                                        key="github_pcidss_sca_min_severity"
+                                    )
+                                    
+                                    # Secrets Detection Configuration
+                                    st.subheader("Secrets Detection Configuration")
+                                    st.checkbox("Use Entropy Analysis", value=True, key="github_pcidss_use_entropy")
+                                    st.checkbox("Scan Git History", value=False, key="github_pcidss_scan_git_history")
+                                    
+                                    # IaC Scanning Configuration
+                                    st.subheader("IaC Scanning Configuration")
+                                    iac_frameworks = st.multiselect(
+                                        "IaC Frameworks to Scan",
+                                        ["Terraform", "CloudFormation", "Kubernetes", "Docker", "Ansible"],
+                                        default=["Terraform", "CloudFormation", "Kubernetes"],
+                                        key="github_pcidss_iac_frameworks"
+                                    )
+                                    
+                                    # Custom PCI DSS Rules
+                                    st.subheader("Custom PCI DSS Rules")
+                                    custom_pci_rules = st.text_area(
+                                        "Custom PCI DSS rules (JSON format)",
+                                        value="""{\n  "rules": [\n    {\n      "id": "pci-req-3.4",\n      "category": "PCI-DSS-3.4",\n      "check": "pan_number_stored_without_hashing",\n      "description": "PAN must be rendered unreadable through hashing"\n    }\n  ]\n}""",
+                                        height=150,
+                                        key="github_pcidss_custom_rules"
+                                    )
+                            
+                            else:  # Local Upload 
+                                st.subheader("Upload Code for PCI DSS Scanning")
+                                uploaded_files = st.file_uploader(
+                                    "Upload source code files or ZIP archive",
+                                    type=["zip", "py", "js", "java", "rb", "php", "tf", "yml", "yaml", "json", "cs", "go"],
+                                    accept_multiple_files=True,
+                                    key="pcidss_upload_files"
+                                )
+                                
+                                if uploaded_files:
+                                    st.success(f"Successfully uploaded {len(uploaded_files)} files for scanning")
+                            
+                            # Result Format Options
+                            st.subheader("Result Format Options")
+                            include_details = st.checkbox("Include Finding Details", value=True, key="pcidss_include_details")
+                            include_remediation = st.checkbox("Include Remediation Guidance", value=True, key="pcidss_include_remediation")
+                            include_visualizations = st.checkbox("Include Data Visualizations", value=True, key="pcidss_include_visualizations")
+                            
+                            # Output formats
+                            output_formats = st.multiselect(
+                                "Output Formats",
+                                ["PDF Report", "CSV Export", "JSON Export", "HTML Report"],
+                                default=["PDF Report"],
+                                key="pcidss_output_formats"
+                            )
+                            
+                            # Display scan information
+                            st.markdown("""
+                            <div style="padding: 10px; border-radius: 5px; background-color: #f0f8ff; margin: 10px 0;">
+                                <span style="font-weight: bold;">Scanning Process:</span> Comprehensive static code analysis + dependency scanning + secrets detection
+                            </div>
+                            
+                            <div style="padding: 10px; border-radius: 5px; background-color: #f0f8ff; margin: 10px 0;">
+                                <span style="font-weight: bold;">Output:</span> PCI DSS compliance report with findings mapped to PCI DSS requirements
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Create a prominent scan button with improved styling
+                            st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                            scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
+                            with scan_col2:
+                                scan_button = st.button(
+                                    "Start PCI DSS Compliance Scan",
+                                    type="primary",
+                                    use_container_width=True,
+                                    key="github_pcidss_scan_button"
+                                )
+                            
+                            # Handle the scan process
+                            if scan_button:
+                                # Validate input
+                                if repo_source == "GitHub Repository" and not repo_url:
+                                    st.error(_("scan.error_no_repo", "Please enter a GitHub repository URL"))
+                                    scan_running = False
+                                elif repo_source == "Local Upload" and not uploaded_files:
+                                    st.error(_("scan.error_no_files", "Please upload files to scan"))
+                                    scan_running = False
+                                else:
+                                    # Show scanning status
+                                    with st.status("Starting PCI DSS compliance scan...", expanded=True) as status:
+                                        try:
+                                            # Initialize the scanner
+                                            pcidss_scanner = PCIDSSScanner()
+                                            
+                                            # Update status
+                                            status.update(label="Initializing scan components...")
+                                            
+                                            # Set up scan parameters
+                                            scan_params = {
+                                                "repo_url": repo_url if repo_source == "GitHub Repository" else None,
+                                                "branch": branch if repo_source == "GitHub Repository" else "main",
+                                                "token": token if repo_source == "GitHub Repository" and token else None,
+                                                "uploaded_files": uploaded_files if repo_source == "Local Upload" else None,
+                                                "scan_scope": scan_scope_options,
+                                                "requirements": {
+                                                    "req1": req1,
+                                                    "req2": req2,
+                                                    "req3": req3,
+                                                    "req4": req4,
+                                                    "req5": req5,
+                                                    "req6": req6,
+                                                    "req7": req7,
+                                                    "req8": req8,
+                                                    "req9": req9,
+                                                    "req10": req10,
+                                                    "req11": req11,
+                                                    "req12": req12
+                                                },
+                                                "output_formats": output_formats
+                                            }
+                                            
+                                            # Update status
+                                            status.update(label="Scanning repository for PCI DSS compliance issues...")
+                                            
+                                            # Perform scan
+                                            scan_results = pcidss_scanner.scan(**scan_params)
+                                            
+                                            # Generate scan ID
+                                            from datetime import datetime
+                                            import uuid
+                                            scan_id = f"PCI-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8]}"
+                                            scan_results["scan_id"] = scan_id
+                                            
+                                            # Store results in session state
+                                            st.session_state.pcidss_scan_results = scan_results
+                                            
+                                            # Update status
+                                            status.update(label="Scan completed successfully!", state="complete")
+                                            
+                                            # Display scan completion summary
+                                            st.success(f"PCI DSS scan completed with {len(scan_results.get('findings', []))} findings")
+                                            
+                                            # Redirect to results tab
+                                            st.session_state.active_tab = "Results"
+                                            
+                                            try:
+                                                # Log audit event and save scan
+                                                from services.results_aggregator import ResultsAggregator
+                                                results_aggregator = ResultsAggregator()
+                                                results_aggregator.save_scan_result(scan_results)
+                                                
+                                                # Log audit event
+                                                results_aggregator.log_audit_event(
+                                                    username=st.session_state.get('username', 'anonymous'),
+                                                    action="PCIDSS_SCAN_COMPLETED",
+                                                    details={
+                                                        "scan_id": scan_id,
+                                                        "repo_url": repo_url if repo_source == "GitHub Repository" else "Local Upload"
+                                                    }
+                                                )
+                                            except Exception as e:
+                                                st.warning(f"Failed to store scan results: {str(e)}")
+                                        except Exception as e:
+                                            st.error(f"Error during PCI DSS scan: {str(e)}")
+                                            import traceback
+                                            traceback.print_exc()
                         
                         # Hide the Start Scan button and Upload Files section for cleaner UI
                         st.markdown("""
