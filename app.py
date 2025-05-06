@@ -3618,6 +3618,10 @@ else:
                         from services.report_generator import generate_report
                         from services.report_templates.pcidss_report_template import generate_pcidss_report
                         
+                        # Set a flag to track that we're showing the PCI DSS section
+                        # This will prevent duplicate sections from being shown
+                        st.session_state.pcidss_section_shown = True
+                        
                         # PCI DSS Scanner Header with clear styling
                         st.title(_("scan.pcidss_title", "PCI DSS Compliance Scanner"))
                         
@@ -4209,9 +4213,16 @@ else:
                         
                         # Skip further processing of this scan type
                         scan_running = False
-                        st.title(_("scan.pcidss_title", "PCI DSS Compliance Scanner"))
                         
-                        # Display enhanced description with clear value proposition
+                        # Set a session state flag to track that we're showing the PCI DSS scanner section
+                        # to prevent duplicate sections from being rendered
+                        show_scanner = 'pcidss_section_shown' not in st.session_state
+                        
+                        if show_scanner:
+                            st.session_state.pcidss_section_shown = True
+                            st.title(_("scan.pcidss_title", "PCI DSS Compliance Scanner"))
+                            
+                            # Display enhanced description with clear value proposition
                         st.write(_(
                             "scan.pcidss_description", 
                             "Scan your codebase for Payment Card Industry Data Security Standard (PCI DSS) compliance issues. "
