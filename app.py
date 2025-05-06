@@ -4223,144 +4223,144 @@ else:
                             st.title(_("scan.pcidss_title", "PCI DSS Compliance Scanner"))
                             
                             # Display enhanced description with clear value proposition
-                        st.write(_(
-                            "scan.pcidss_description", 
-                            "Scan your codebase for Payment Card Industry Data Security Standard (PCI DSS) compliance issues. "
-                            "This scanner identifies security vulnerabilities, exposures, and configuration issues that could "
-                            "impact your ability to securely process, store, or transmit credit card data."
-                        ))
-                        
-                        # Add more detailed info about what PCI DSS scanning does
-                        st.info(_(
-                            "scan.pcidss_info",
-                            "PCI DSS scanning analyzes your code against the 12 PCI DSS requirements to identify "
-                            "potential compliance issues. The scanner detects insecure coding patterns, vulnerable "
-                            "dependencies, hardcoded secrets, and insecure infrastructure configurations "
-                            "that could compromise cardholder data security."
-                        ))
-                        
-                        # Add free trial information
-                        st.markdown("""
-                        <div style="padding: 10px; border-radius: 5px; background-color: #f0f2f6; margin-bottom: 20px;">
-                            <span style="font-weight: bold;">Free Trial:</span> 3 days left
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Region selection - standalone without tabs
-                        st.subheader("Region Selection")
-                        region_options = ["Global"] + list(REGIONS.keys())
-                        selected_region = st.selectbox(
-                            "Select Region:",
-                            region_options,
-                            index=0,
-                            key="pcidss_region_select"
-                        )
-                        
-                        # Repository URL input - standalone without tabs
-                        st.subheader("Repository URL")
-                        st.markdown("Enter a Git repository URL to scan for PCI DSS compliance issues.")
-                        
-                        # Repository source selection with unique key
-                        repo_source = st.radio(
-                            "Repository Source:",
-                            ["GitHub", "BitBucket", "Azure DevOps"],
-                            horizontal=True,
-                            key="pcidss_repo_source_radio"
-                        )
-                        
-                        # Repository URL input with unique key
-                        repo_url = st.text_input(
-                            "Repository URL: (Required)",
-                            placeholder=f"Enter {repo_source} repository URL (e.g., https://github.com/username/repo)",
-                            key="pcidss_repo_url_input",
-                            help="Enter the complete URL of the repository you want to scan"
-                        )
-                        
-                        # Branch input with unique key
-                        branch = st.text_input(
-                            "Branch (optional):",
-                            value="main",
-                            placeholder="Enter branch name (default: main)",
-                            key="pcidss_branch_input"
-                        )
-                        
-                        # Add a clear section divider 
-                        st.markdown("---")
-                        
-                        # Add scan button with proper styling
-                        # Use a button with conditional display to prevent duplicates
-                        if 'pcidss_scan_button_shown' not in st.session_state:
-                            st.session_state.pcidss_scan_button_shown = True
-                            scan_button = st.button(
-                                "Start PCI DSS Scan",
-                                type="primary",
-                                use_container_width=True,
-                                key="pcidss_start_scan_button_v3"
-                            )
-                        else:
-                            scan_button = False
-                        
-                        # Create tabs for advanced configuration and results
-                        config_tab, results_tab = st.tabs(["Advanced Configuration", "Results"])
-                        
-                        # Advanced configuration tab
-                        with config_tab:
-                            # Advanced scan options
-                            with st.expander("Advanced Scan Options"):
-                                col1, col2, col3 = st.columns(3)
-                                
-                                with col1:
-                                    scan_dependencies = st.checkbox("Scan Dependencies", value=True,
-                                                                help="Scan third-party libraries for vulnerabilities",
-                                                                key="pcidss_scan_deps_checkbox")
-                                    
-                                with col2:
-                                    scan_iac = st.checkbox("Scan Infrastructure Code", value=True,
-                                                         help="Scan Terraform, CloudFormation, etc.",
-                                                         key="pcidss_scan_iac_checkbox")
-                                    
-                                with col3:
-                                    scan_secrets = st.checkbox("Detect Secrets", value=True,
-                                                            help="Scan for hardcoded credentials",
-                                                            key="pcidss_scan_secrets_checkbox")
+                            st.write(_(
+                                "scan.pcidss_description", 
+                                "Scan your codebase for Payment Card Industry Data Security Standard (PCI DSS) compliance issues. "
+                                "This scanner identifies security vulnerabilities, exposures, and configuration issues that could "
+                                "impact your ability to securely process, store, or transmit credit card data."
+                            ))
                             
-                                # PCI DSS Requirements filter
-                                st.markdown("### PCI DSS Requirements Focus")
-                                st.write("Select specific PCI DSS requirements to focus on (optional):")
-                                
-                                # Create multi-select for requirements with unique key
-                                requirements_options = [
-                                    "1. Install and maintain a firewall configuration",
-                                    "2. Change vendor-supplied defaults",
-                                    "3. Protect stored cardholder data",
-                                    "4. Encrypt transmission of cardholder data",
-                                    "5. Use and regularly update anti-virus software",
-                                    "6. Develop and maintain secure systems and applications",
-                                    "7. Restrict access to cardholder data",
-                                    "8. Assign a unique ID to each person with computer access",
-                                    "9. Restrict physical access to cardholder data",
-                                    "10. Track and monitor all access to network resources and cardholder data",
-                                    "11. Regularly test security systems and processes",
-                                    "12. Maintain a policy that addresses information security"
-                                ]
-                                
-                                selected_requirements = st.multiselect(
-                                    "PCI DSS Requirements:",
-                                    requirements_options,
-                                    key="pcidss_requirements_multiselect"
+                            # Add more detailed info about what PCI DSS scanning does
+                            st.info(_(
+                                "scan.pcidss_info",
+                                "PCI DSS scanning analyzes your code against the 12 PCI DSS requirements to identify "
+                                "potential compliance issues. The scanner detects insecure coding patterns, vulnerable "
+                                "dependencies, hardcoded secrets, and insecure infrastructure configurations "
+                                "that could compromise cardholder data security."
+                            ))
+                            
+                            # Add free trial information
+                            st.markdown("""
+                            <div style="padding: 10px; border-radius: 5px; background-color: #f0f2f6; margin-bottom: 20px;">
+                                <span style="font-weight: bold;">Free Trial:</span> 3 days left
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Region selection - standalone without tabs
+                            st.subheader("Region Selection")
+                            region_options = ["Global"] + list(REGIONS.keys())
+                            selected_region = st.selectbox(
+                                "Select Region:",
+                                region_options,
+                                index=0,
+                                key="pcidss_region_select"
+                            )
+                            
+                            # Repository URL input - standalone without tabs
+                            st.subheader("Repository URL")
+                            st.markdown("Enter a Git repository URL to scan for PCI DSS compliance issues.")
+                            
+                            # Repository source selection with unique key
+                            repo_source = st.radio(
+                                "Repository Source:",
+                                ["GitHub", "BitBucket", "Azure DevOps"],
+                                horizontal=True,
+                                key="pcidss_repo_source_radio"
+                            )
+                            
+                            # Repository URL input with unique key
+                            repo_url = st.text_input(
+                                "Repository URL: (Required)",
+                                placeholder=f"Enter {repo_source} repository URL (e.g., https://github.com/username/repo)",
+                                key="pcidss_repo_url_input",
+                                help="Enter the complete URL of the repository you want to scan"
+                            )
+                            
+                            # Branch input with unique key
+                            branch = st.text_input(
+                                "Branch (optional):",
+                                value="main",
+                                placeholder="Enter branch name (default: main)",
+                                key="pcidss_branch_input"
+                            )
+                            
+                            # Add a clear section divider 
+                            st.markdown("---")
+                            
+                            # Add scan button with proper styling
+                            # Use a button with conditional display to prevent duplicates
+                            if 'pcidss_scan_button_shown' not in st.session_state:
+                                st.session_state.pcidss_scan_button_shown = True
+                                scan_button = st.button(
+                                    "Start PCI DSS Scan",
+                                    type="primary",
+                                    use_container_width=True,
+                                    key="pcidss_start_scan_button_v3"
                                 )
-                                
-                                # Convert selected requirements to requirement numbers
-                                pci_requirements_filter = [req.split(".")[0] for req in selected_requirements] if selected_requirements else []
+                            else:
+                                scan_button = False
                             
-                            # Output format options with unique key
-                            st.subheader("Output Format")
-                            output_formats = st.multiselect(
-                                "Select output formats:",
-                                ["PDF Report", "CSV Export", "JSON Export"],
-                                default=["PDF Report"],
-                                key="pcidss_output_formats_config"
-                            )
+                            # Create tabs for advanced configuration and results
+                            config_tab, results_tab = st.tabs(["Advanced Configuration", "Results"])
+                            
+                            # Advanced configuration tab
+                            with config_tab:
+                                # Advanced scan options
+                                with st.expander("Advanced Scan Options"):
+                                    col1, col2, col3 = st.columns(3)
+                                    
+                                    with col1:
+                                        scan_dependencies = st.checkbox("Scan Dependencies", value=True,
+                                                                    help="Scan third-party libraries for vulnerabilities",
+                                                                    key="pcidss_scan_deps_checkbox")
+                                        
+                                    with col2:
+                                        scan_iac = st.checkbox("Scan Infrastructure Code", value=True,
+                                                             help="Scan Terraform, CloudFormation, etc.",
+                                                             key="pcidss_scan_iac_checkbox")
+                                        
+                                    with col3:
+                                        scan_secrets = st.checkbox("Detect Secrets", value=True,
+                                                                help="Scan for hardcoded credentials",
+                                                                key="pcidss_scan_secrets_checkbox")
+                                
+                                    # PCI DSS Requirements filter
+                                    st.markdown("### PCI DSS Requirements Focus")
+                                    st.write("Select specific PCI DSS requirements to focus on (optional):")
+                                    
+                                    # Create multi-select for requirements with unique key
+                                    requirements_options = [
+                                        "1. Install and maintain a firewall configuration",
+                                        "2. Change vendor-supplied defaults",
+                                        "3. Protect stored cardholder data",
+                                        "4. Encrypt transmission of cardholder data",
+                                        "5. Use and regularly update anti-virus software",
+                                        "6. Develop and maintain secure systems and applications",
+                                        "7. Restrict access to cardholder data",
+                                        "8. Assign a unique ID to each person with computer access",
+                                        "9. Restrict physical access to cardholder data",
+                                        "10. Track and monitor all access to network resources and cardholder data",
+                                        "11. Regularly test security systems and processes",
+                                        "12. Maintain a policy that addresses information security"
+                                    ]
+                                    
+                                    selected_requirements = st.multiselect(
+                                        "PCI DSS Requirements:",
+                                        requirements_options,
+                                        key="pcidss_requirements_multiselect"
+                                    )
+                                    
+                                    # Convert selected requirements to requirement numbers
+                                    pci_requirements_filter = [req.split(".")[0] for req in selected_requirements] if selected_requirements else []
+                                
+                                # Output format options with unique key
+                                st.subheader("Output Format")
+                                output_formats = st.multiselect(
+                                    "Select output formats:",
+                                    ["PDF Report", "CSV Export", "JSON Export"],
+                                    default=["PDF Report"],
+                                    key="pcidss_output_formats_config"
+                                )
                             
                             if scan_button:
                                 if not repo_url:
@@ -4442,188 +4442,188 @@ else:
                                     except Exception as e:
                                         scan_status.error(f"Error scanning repository: {str(e)}")
                                         st.exception(e)
-                        
-                        # Add content to results tab
-                        with results_tab:
-                            if 'pcidss_scan_results' in st.session_state:
-                                # Display scan results 
-                                scan_results = st.session_state.pcidss_scan_results
-                                
-                                # Show repository info
-                                st.write(f"**Repository:** {scan_results.get('repo_url')}")
-                                if 'project' in scan_results:
-                                    st.write(f"**Project:** {scan_results.get('project')}")
-                                st.write(f"**Branch:** {scan_results.get('branch', 'main')}")
-                                
-                                st.write(f"**Region:** {scan_results.get('region', 'Global')}")
-                                # Extract metrics
-                                compliance_score = scan_results.get("compliance_score", 0)
-                                high_risk = scan_results.get("high_risk_count", 0)
-                                medium_risk = scan_results.get("medium_risk_count", 0)
-                                low_risk = scan_results.get("low_risk_count", 0)
-                                
-                                # Display metrics
-                                col1, col2, col3, col4 = st.columns(4)
-                                
-                                # Color coding based on compliance score
-                                if compliance_score >= 80:
-                                    compliance_color_css = "green"
-                                    compliance_status = "✓ Good" 
-                                elif compliance_score >= 60:
-                                    compliance_color_css = "orange"
-                                    compliance_status = "⚠️ Needs Review"
-                                else:
-                                    compliance_color_css = "red"
-                                    compliance_status = "✗ Critical"
+                            
+                            # Add content to results tab
+                            with results_tab:
+                                if 'pcidss_scan_results' in st.session_state:
+                                    # Display scan results 
+                                    scan_results = st.session_state.pcidss_scan_results
                                     
-                                with col1:
-                                    st.metric("Compliance Score", f"{compliance_score}/100")
-                                    st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{compliance_status}</div>", unsafe_allow_html=True)
-                                
-                                with col2:
-                                    st.metric("High Risk Issues", high_risk, delta_color="inverse")
-                                
-                                with col3:
-                                    st.metric("Medium Risk Issues", medium_risk, delta_color="inverse")
+                                    # Show repository info
+                                    st.write(f"**Repository:** {scan_results.get('repo_url')}")
+                                    if 'project' in scan_results:
+                                        st.write(f"**Project:** {scan_results.get('project')}")
+                                    st.write(f"**Branch:** {scan_results.get('branch', 'main')}")
                                     
-                                with col4:
-                                    st.metric("Low Risk Issues", low_risk, delta_color="inverse")
-                                
-                                # Display PCI DSS Requirements Coverage
-                                st.subheader("PCI DSS Requirements Coverage")
-                                
-                                # Get PCI DSS requirement categories
-                                pci_categories = scan_results.get('pci_categories', {})
-                                
-                                # Create dataframe for requirements coverage
-                                if pci_categories:
-                                    import pandas as pd
-                                    import plotly.express as px
+                                    st.write(f"**Region:** {scan_results.get('region', 'Global')}")
+                                    # Extract metrics
+                                    compliance_score = scan_results.get("compliance_score", 0)
+                                    high_risk = scan_results.get("high_risk_count", 0)
+                                    medium_risk = scan_results.get("medium_risk_count", 0)
+                                    low_risk = scan_results.get("low_risk_count", 0)
                                     
-                                    # Create a dataframe for the chart
-                                    pci_df = pd.DataFrame({
-                                        'Requirement': list(pci_categories.keys()),
-                                        'Findings': list(pci_categories.values())
-                                    })
+                                    # Display metrics
+                                    col1, col2, col3, col4 = st.columns(4)
                                     
-                                    # Sort by requirement number
-                                    pci_df = pci_df.sort_values('Requirement')
+                                    # Color coding based on compliance score
+                                    if compliance_score >= 80:
+                                        compliance_color_css = "green"
+                                        compliance_status = "✓ Good" 
+                                    elif compliance_score >= 60:
+                                        compliance_color_css = "orange"
+                                        compliance_status = "⚠️ Needs Review"
+                                    else:
+                                        compliance_color_css = "red"
+                                        compliance_status = "✗ Critical"
                                     
-                                    # Create a bar chart
-                                    fig = px.bar(
-                                        pci_df, 
-                                        x='Requirement',
-                                        y='Findings',
-                                        color='Findings',
-                                        color_continuous_scale=['green', 'yellow', 'red'],
-                                        labels={'Requirement': 'PCI DSS Requirement', 'Findings': 'Issue Count'},
-                                        title='PCI DSS Requirements Coverage'
-                                    )
-                                    st.plotly_chart(fig, use_container_width=True)
-                                else:
-                                    st.info("No PCI DSS requirements coverage data available.")
-                                
-                                # Display findings
-                                st.subheader("PCI DSS Findings")
-                                findings = scan_results.get('findings', [])
-                                
-                                if findings:
-                                    import pandas as pd
+                                    with col1:
+                                        st.metric("Compliance Score", f"{compliance_score}/100")
+                                        st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{compliance_status}</div>", unsafe_allow_html=True)
                                     
-                                    # Create a dataframe for the findings
-                                    findings_data = []
-                                    for finding in findings:
-                                        findings_data.append({
-                                            'Location': finding.get('location', 'N/A'),
-                                            'Description': finding.get('description', 'N/A'),
-                                            'PCI Requirement': finding.get('pci_requirement', 'N/A'),
-                                            'Risk Level': finding.get('risk_level', 'Low')
+                                    with col2:
+                                        st.metric("High Risk Issues", high_risk, delta_color="inverse")
+                                    
+                                    with col3:
+                                        st.metric("Medium Risk Issues", medium_risk, delta_color="inverse")
+                                        
+                                    with col4:
+                                        st.metric("Low Risk Issues", low_risk, delta_color="inverse")
+                                    
+                                    # Display PCI DSS Requirements Coverage
+                                    st.subheader("PCI DSS Requirements Coverage")
+                                    
+                                    # Get PCI DSS requirement categories
+                                    pci_categories = scan_results.get('pci_categories', {})
+                                    
+                                    # Create dataframe for requirements coverage
+                                    if pci_categories:
+                                        import pandas as pd
+                                        import plotly.express as px
+                                        
+                                        # Create a dataframe for the chart
+                                        pci_df = pd.DataFrame({
+                                            'Requirement': list(pci_categories.keys()),
+                                            'Findings': list(pci_categories.values())
                                         })
+                                        
+                                        # Sort by requirement number
+                                        pci_df = pci_df.sort_values('Requirement')
+                                        
+                                        # Create a bar chart
+                                        fig = px.bar(
+                                            pci_df, 
+                                            x='Requirement',
+                                            y='Findings',
+                                            color='Findings',
+                                            color_continuous_scale=['green', 'yellow', 'red'],
+                                            labels={'Requirement': 'PCI DSS Requirement', 'Findings': 'Issue Count'},
+                                            title='PCI DSS Requirements Coverage'
+                                        )
+                                        st.plotly_chart(fig, use_container_width=True)
+                                    else:
+                                        st.info("No PCI DSS requirements coverage data available.")
                                     
-                                    findings_df = pd.DataFrame(findings_data)
+                                    # Display findings
+                                    st.subheader("PCI DSS Findings")
+                                    findings = scan_results.get('findings', [])
                                     
-                                    # Add styling based on risk level
-                                    def highlight_risk(val):
-                                        if val == 'High':
-                                            return 'background-color: #ffcccc'
-                                        elif val == 'Medium':
-                                            return 'background-color: #fff2cc'
-                                        else:
-                                            return 'background-color: #e6f3ff'
+                                    if findings:
+                                        import pandas as pd
+                                        
+                                        # Create a dataframe for the findings
+                                        findings_data = []
+                                        for finding in findings:
+                                            findings_data.append({
+                                                'Location': finding.get('location', 'N/A'),
+                                                'Description': finding.get('description', 'N/A'),
+                                                'PCI Requirement': finding.get('pci_requirement', 'N/A'),
+                                                'Risk Level': finding.get('risk_level', 'Low')
+                                            })
+                                        
+                                        findings_df = pd.DataFrame(findings_data)
+                                        
+                                        # Add styling based on risk level
+                                        def highlight_risk(val):
+                                            if val == 'High':
+                                                return 'background-color: #ffcccc'
+                                            elif val == 'Medium':
+                                                return 'background-color: #fff2cc'
+                                            else:
+                                                return 'background-color: #e6f3ff'
+                                        
+                                        # Apply the styling
+                                        styled_df = findings_df.style.applymap(highlight_risk, subset=['Risk Level'])
+                                        
+                                        # Display the findings
+                                        st.dataframe(styled_df, use_container_width=True)
+                                    else:
+                                        st.info("No findings available.")
                                     
-                                    # Apply the styling
-                                    styled_df = findings_df.style.applymap(highlight_risk, subset=['Risk Level'])
+                                    # Add download report button
+                                    st.markdown("### Download Compliance Report")
                                     
-                                    # Display the findings
-                                    st.dataframe(styled_df, use_container_width=True)
-                                else:
-                                    st.info("No findings available.")
-                                
-                                # Add download report button
-                                st.markdown("### Download Compliance Report")
-                                
-                                # Report Download Section with better UX
-                                col1, col2 = st.columns([3, 1])
-                                
-                                with col1:
-                                    st.markdown("""
-                                    <div style="margin-bottom: 10px;">
-                                        <p>Download a detailed PCI DSS compliance report with:</p>
-                                        <ul>
-                                            <li>Executive summary</li>
-                                            <li>Detailed findings with risk assessment</li>
-                                            <li>PCI DSS requirements mapping</li>
-                                            <li>Remediation recommendations</li>
-                                        </ul>
-                                    </div>
-                                    """, unsafe_allow_html=True)
+                                    # Report Download Section with better UX
+                                    col1, col2 = st.columns([3, 1])
                                     
-                                with col2:
-                                    generate_report_button = st.button("Generate Report", type="primary", use_container_width=True, key="pcidss_generate_report_btn")
+                                    with col1:
+                                        st.markdown("""
+                                        <div style="margin-bottom: 10px;">
+                                            <p>Download a detailed PCI DSS compliance report with:</p>
+                                            <ul>
+                                                <li>Executive summary</li>
+                                                <li>Detailed findings with risk assessment</li>
+                                                <li>PCI DSS requirements mapping</li>
+                                                <li>Remediation recommendations</li>
+                                            </ul>
+                                        </div>
+                                        """, unsafe_allow_html=True)
+                                        
+                                    with col2:
+                                        generate_report_button = st.button("Generate Report", type="primary", use_container_width=True, key="pcidss_generate_report_btn")
+                                        
+                                    if 'pcidss_report_pdf' not in st.session_state and generate_report_button:
+                                        try:
+                                            with st.spinner("Generating PDF report..."):
+                                                # Generate the report
+                                                report_bytes = generate_report(
+                                                    scan_results, 
+                                                    include_details=True,
+                                                    include_charts=True,
+                                                    report_format="pcidss"
+                                                )
+                                                
+                                                # Store in session state
+                                                st.session_state.pcidss_report_pdf = report_bytes
+                                                st.session_state.pcidss_report_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                                
+                                                # Rerun to show the download button
+                                                st.rerun()
+                                        except Exception as e:
+                                            st.error(f"Error generating report: {str(e)}")
                                     
-                                if 'pcidss_report_pdf' not in st.session_state and generate_report_button:
-                                    try:
-                                        with st.spinner("Generating PDF report..."):
-                                            # Generate the report
-                                            report_bytes = generate_report(
-                                                scan_results, 
-                                                include_details=True,
-                                                include_charts=True,
-                                                report_format="pcidss"
-                                            )
-                                            
-                                            # Store in session state
-                                            st.session_state.pcidss_report_pdf = report_bytes
-                                            st.session_state.pcidss_report_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                                            
-                                            # Rerun to show the download button
+                                    # Show download button if report has been generated
+                                    if 'pcidss_report_pdf' in st.session_state:
+                                        report_filename = f"pcidss_compliance_report_{st.session_state.pcidss_report_timestamp}.pdf"
+                                        
+                                        st.download_button(
+                                            label="📥 Download PCI DSS Compliance Report",
+                                            data=st.session_state.pcidss_report_pdf,
+                                            file_name=report_filename,
+                                            mime="application/pdf",
+                                            key="pcidss_download_report_btn",
+                                            use_container_width=True
+                                        )
+                                        
+                                        # Add option to generate a new report
+                                        if st.button("Generate New Report", key="pcidss_new_report_btn"):
+                                            # Clear the existing report
+                                            if 'pcidss_report_pdf' in st.session_state:
+                                                del st.session_state.pcidss_report_pdf
+                                            if 'pcidss_report_timestamp' in st.session_state:
+                                                del st.session_state.pcidss_report_timestamp
                                             st.rerun()
-                                    except Exception as e:
-                                        st.error(f"Error generating report: {str(e)}")
-                                
-                                # Show download button if report has been generated
-                                if 'pcidss_report_pdf' in st.session_state:
-                                    report_filename = f"pcidss_compliance_report_{st.session_state.pcidss_report_timestamp}.pdf"
-                                    
-                                    st.download_button(
-                                        label="📥 Download PCI DSS Compliance Report",
-                                        data=st.session_state.pcidss_report_pdf,
-                                        file_name=report_filename,
-                                        mime="application/pdf",
-                                        key="pcidss_download_report_btn",
-                                        use_container_width=True
-                                    )
-                                    
-                                    # Add option to generate a new report
-                                    if st.button("Generate New Report", key="pcidss_new_report_btn"):
-                                        # Clear the existing report
-                                        if 'pcidss_report_pdf' in st.session_state:
-                                            del st.session_state.pcidss_report_pdf
-                                        if 'pcidss_report_timestamp' in st.session_state:
-                                            del st.session_state.pcidss_report_timestamp
-                                        st.rerun()
-                            else:
-                                st.info("No PCI DSS scan results available yet. Run a scan in the Configuration tab.")
+                                else:
+                                    st.info("No PCI DSS scan results available yet. Run a scan in the Configuration tab.")
                         
                         with config_tab:
                             # Repository selection
