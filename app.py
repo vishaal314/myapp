@@ -7,6 +7,8 @@ import random
 import uuid
 import base64
 from datetime import datetime
+import stripe
+import re
 
 # Import scanners - adjust paths as needed
 try:
@@ -52,6 +54,51 @@ except ImportError:
                 "carbon_reduction": random.randint(5, 30)
             }
 
+# Initialize Stripe
+stripe_public_key = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+stripe_secret_key = os.environ.get('STRIPE_SECRET_KEY')
+stripe.api_key = stripe_secret_key
+
+# Define subscription plans
+SUBSCRIPTION_PLANS = {
+    "basic": {
+        "name": "Basic",
+        "price": 49,
+        "features": [
+            "Basic Privacy Scans",
+            "5 repositories",
+            "Weekly scans",
+            "Email support"
+        ],
+        "stripe_price_id": "price_basic123"  # Replace with actual Stripe price ID
+    },
+    "premium": {
+        "name": "Premium",
+        "price": 99,
+        "features": [
+            "All Basic features",
+            "20 repositories",
+            "Daily scans",
+            "SOC2 compliance",
+            "Priority support"
+        ],
+        "stripe_price_id": "price_premium456"  # Replace with actual Stripe price ID
+    },
+    "gold": {
+        "name": "Gold",
+        "price": 199,
+        "features": [
+            "All Premium features",
+            "Unlimited repositories",
+            "Continuous scanning",
+            "Custom integrations",
+            "Dedicated support",
+            "Compliance certification"
+        ],
+        "stripe_price_id": "price_gold789"  # Replace with actual Stripe price ID
+    }
+}
+
 # Page configuration
 st.set_page_config(
     page_title="DataGuardian Pro - Privacy Compliance Platform",
@@ -93,6 +140,89 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Add additional CSS for plans
+st.markdown("""
+<style>
+    .plan-card {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1E3A8A;
+        margin-bottom: 8px;
+    }
+    .plan-price {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #3B82F6;
+        margin-bottom: 16px;
+    }
+    .plan-features {
+        text-align: left;
+        margin-bottom: 20px;
+    }
+    .plan-feature-item {
+        margin-bottom: 8px;
+    }
+    .subscribe-button {
+        background-color: #3B82F6;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .login-options {
+        text-align: center;
+        margin: 20px 0;
+    }
+    .social-login-button {
+        background-color: #ffffff;
+        border: 1px solid #dddddd;
+        color: #333333;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+        margin: 5px;
+        width: 100%;
+    }
+    .google-login-button {
+        background-color: #ffffff;
+        border: 1px solid #dddddd;
+        color: #333333;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+        margin: 5px;
+        width: 100%;
+    }
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #dddddd;
+    }
+    .divider-text {
+        padding: 0 10px;
+        color: #666666;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Initialize session state
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -103,6 +233,7 @@ if "logged_in" not in st.session_state:
     st.session_state.scan_history = []
     st.session_state.current_scan_results = None
     st.session_state.permissions = []
+    st.session_state.subscription_tier = "basic"  # Default subscription tier
 
 # Mock authentication function
 def authenticate(username, password):
@@ -210,6 +341,53 @@ def main():
             st.write(f"Role: {st.session_state.role}")
             st.write(f"Email: {st.session_state.email}")
             
+            # Subscription status
+            st.divider()
+            current_plan = st.session_state.get("subscription_tier", "basic")
+            
+            if current_plan == "basic":
+                st.markdown(f"""
+                <div style='background-color: #f8f9fa; padding: 10px; border-radius: 5px;'>
+                    <strong>Current Plan:</strong> {SUBSCRIPTION_PLANS['basic']['name']}
+                    <br>
+                    <small>Upgrade to unlock advanced features</small>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.button("Upgrade to Premium", key="upgrade_premium")
+                
+            elif current_plan == "premium":
+                st.markdown(f"""
+                <div style='background-color: #e6f3ff; padding: 10px; border-radius: 5px;'>
+                    <strong>Current Plan:</strong> {SUBSCRIPTION_PLANS['premium']['name']}
+                    <br>
+                    <small>You have access to premium features</small>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.button("Upgrade to Gold", key="upgrade_gold")
+                
+            elif current_plan == "gold":
+                st.markdown(f"""
+                <div style='background-color: #fff4e6; padding: 10px; border-radius: 5px; border: 1px solid gold;'>
+                    <strong>Current Plan:</strong> {SUBSCRIPTION_PLANS['gold']['name']}
+                    <br>
+                    <small>You have access to all features</small>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Payment method
+            with st.expander("Manage Payment Methods"):
+                st.markdown("Add or update your payment information")
+                st.text("Card ending in ****4242")
+                st.button("Update Payment Method", key="update_payment")
+            
+            # Billing history
+            with st.expander("Billing History"):
+                st.info("No billing history available")
+            
+            st.divider()
+            
             if st.button("Logout", key="logout_button"):
                 for key in st.session_state.keys():
                     del st.session_state[key]
@@ -220,8 +398,143 @@ def main():
         st.markdown("<h1 class='main-header'>DataGuardian Pro</h1>", unsafe_allow_html=True)
         st.markdown("<p class='sub-header'>Advanced Enterprise Privacy Compliance Platform</p>", unsafe_allow_html=True)
         
+        # Auth tabs
+        auth_tabs = st.tabs(["Sign In", "Register", "Plans"])
+        
+        # Sign In tab
+        with auth_tabs[0]:
+            st.markdown("<h3>Sign in to your account</h3>", unsafe_allow_html=True)
+            
+            # Google Sign In button
+            st.markdown("""
+            <div class="login-options">
+                <button class="google-login-button">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+                         style="height: 18px; margin-right: 8px; vertical-align: middle;"> 
+                    Sign in with Google
+                </button>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Divider
+            st.markdown('<div class="divider"><span class="divider-text">OR</span></div>', unsafe_allow_html=True)
+            
+            # Email login form
+            email = st.text_input("Email", key="login_email")
+            password = st.text_input("Password", type="password", key="login_password_email")
+            
+            if st.button("Sign In", key="signin_button"):
+                if not email or not password:
+                    st.error("Please enter both email and password")
+                elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                    st.error("Please enter a valid email address")
+                else:
+                    # In a real app, validate credentials against database
+                    # For now just set as logged in if email format is valid
+                    st.session_state.logged_in = True
+                    st.session_state.username = email.split('@')[0]
+                    st.session_state.role = "user"
+                    st.session_state.email = email
+                    st.session_state.permissions = ["scan:basic", "report:view"]
+                    st.success("Login successful!")
+                    st.rerun()
+        
+        # Register tab
+        with auth_tabs[1]:
+            st.markdown("<h3>Create a new account</h3>", unsafe_allow_html=True)
+            
+            # Google Registration button
+            st.markdown("""
+            <div class="login-options">
+                <button class="google-login-button">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+                         style="height: 18px; margin-right: 8px; vertical-align: middle;"> 
+                    Register with Google
+                </button>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Divider
+            st.markdown('<div class="divider"><span class="divider-text">OR</span></div>', unsafe_allow_html=True)
+            
+            # Email registration form
+            col1, col2 = st.columns(2)
+            with col1:
+                first_name = st.text_input("First Name", key="reg_first_name")
+                email = st.text_input("Email", key="reg_email")
+            
+            with col2:
+                last_name = st.text_input("Last Name", key="reg_last_name")
+                password = st.text_input("Password", type="password", key="reg_password")
+                
+            company = st.text_input("Company (Optional)", key="reg_company")
+            terms = st.checkbox("I agree to the Terms of Service and Privacy Policy", key="reg_terms")
+            
+            if st.button("Create Account", key="register_button"):
+                if not first_name or not last_name or not email or not password:
+                    st.error("Please fill in all required fields")
+                elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                    st.error("Please enter a valid email address")
+                elif not terms:
+                    st.error("You must agree to the Terms of Service and Privacy Policy")
+                else:
+                    # In a real app, create user in database
+                    st.success("Account created successfully! Please sign in.")
+                    # Switch to sign in tab
+                    st.session_state.active_tab = "login"
+                    
+        # Plans tab
+        with auth_tabs[2]:
+            st.markdown("<h3>Choose your plan</h3>", unsafe_allow_html=True)
+            
+            # Display subscription plans
+            plan_cols = st.columns(3)
+            
+            # Basic plan
+            with plan_cols[0]:
+                st.markdown(f"""
+                <div class="plan-card">
+                    <div class="plan-name">{SUBSCRIPTION_PLANS['basic']['name']}</div>
+                    <div class="plan-price">${SUBSCRIPTION_PLANS['basic']['price']}/mo</div>
+                    <div class="plan-features">
+                        {''.join([f'<div class="plan-feature-item">✓ {feature}</div>' for feature in SUBSCRIPTION_PLANS['basic']['features']])}
+                    </div>
+                    <a href="#" class="subscribe-button">Subscribe</a>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Premium plan
+            with plan_cols[1]:
+                st.markdown(f"""
+                <div class="plan-card" style="border: 2px solid #3B82F6;">
+                    <div class="plan-name">{SUBSCRIPTION_PLANS['premium']['name']}</div>
+                    <div class="plan-price">${SUBSCRIPTION_PLANS['premium']['price']}/mo</div>
+                    <div class="plan-features">
+                        {''.join([f'<div class="plan-feature-item">✓ {feature}</div>' for feature in SUBSCRIPTION_PLANS['premium']['features']])}
+                    </div>
+                    <a href="#" class="subscribe-button" style="background-color: #1E3A8A;">Subscribe</a>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Gold plan
+            with plan_cols[2]:
+                st.markdown(f"""
+                <div class="plan-card">
+                    <div class="plan-name">{SUBSCRIPTION_PLANS['gold']['name']}</div>
+                    <div class="plan-price">${SUBSCRIPTION_PLANS['gold']['price']}/mo</div>
+                    <div class="plan-features">
+                        {''.join([f'<div class="plan-feature-item">✓ {feature}</div>' for feature in SUBSCRIPTION_PLANS['gold']['features']])}
+                    </div>
+                    <a href="#" class="subscribe-button">Subscribe</a>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Note on pricing
+            st.info("All plans include a 14-day free trial. No credit card required to start.")
+        
+        # Feature highlights
         st.markdown("""
-        Welcome to DataGuardian Pro, the most comprehensive privacy compliance platform for businesses.
+        ## Why Choose DataGuardian Pro?
         
         **Key Features:**
         - Multi-service scanning (Code, API, Database, AI Models)
@@ -230,7 +543,7 @@ def main():
         - Enhanced multilingual support
         - Dynamic role-based access control
         
-        Please login to access the platform features.
+        Sign up today and protect your business data!
         """)
     else:
         # Create tabs
