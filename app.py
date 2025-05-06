@@ -4277,12 +4277,17 @@ else:
                         st.markdown("---")
                         
                         # Add scan button with proper styling
-                        scan_button = st.button(
-                            "Start PCI DSS Scan",
-                            type="primary",
-                            use_container_width=True,
-                            key="pcidss_start_scan_button"
-                        )
+                        # Use a button with conditional display to prevent duplicates
+                        if 'pcidss_scan_button_shown' not in st.session_state:
+                            st.session_state.pcidss_scan_button_shown = True
+                            scan_button = st.button(
+                                "Start PCI DSS Scan",
+                                type="primary",
+                                use_container_width=True,
+                                key="pcidss_start_scan_button_v3"
+                            )
+                        else:
+                            scan_button = False
                         
                         # Create tabs for advanced configuration and results
                         config_tab, results_tab = st.tabs(["Advanced Configuration", "Results"])
@@ -4809,12 +4814,20 @@ else:
                             st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
                             scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
                             with scan_col2:
-                                scan_button = st.button(
-                                    "Start PCI DSS Compliance Scan",
-                                    type="primary",
-                                    use_container_width=True,
-                                    key="github_pcidss_scan_button"
-                                )
+                                # Only show this button if we haven't shown other PCI DSS scan buttons
+                                if 'pcidss_scan_button_shown' not in st.session_state:
+                                    scan_button = st.button(
+                                        "Start PCI DSS Compliance Scan",
+                                        type="primary",
+                                        use_container_width=True,
+                                        key="github_pcidss_scan_button_v2"
+                                    )
+                                    # Mark that we've shown a button
+                                    st.session_state.pcidss_scan_button_shown = True
+                                else:
+                                    # Create a placeholder instead of the button
+                                    st.info("Please use the PCI DSS Scan button at the top of the page to start a scan.")
+                                    scan_button = False
                             
                             # Handle the scan process
                             if scan_button:
