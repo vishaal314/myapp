@@ -11,7 +11,7 @@ import re
 import json
 import logging
 import subprocess
-from typing import Dict, List, Any, Optional, Set
+from typing import Dict, List, Any, Optional, Set, Tuple
 
 # Set up logging
 logger = logging.getLogger("sca_analyzer")
