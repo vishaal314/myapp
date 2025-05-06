@@ -18,15 +18,15 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Simplified DataGuardian Pro"
+args = "Streamlit Server"
 
 [[workflows.workflow]]
-name = "Simplified DataGuardian Pro"
+name = "Streamlit Server"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run simplified_app.py --server.port 5000 --server.headless true"
+args = "streamlit run app.py --server.port 5000 --server.headless true"
 waitForPort = 5000
 
 [[ports]]
