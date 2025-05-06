@@ -4654,7 +4654,7 @@ else:
                                     ["Global", "Europe", "North America", "Asia", "South America", "Africa", "Australia"],
                                     index=0,
                                     help="Select the region where your application is deployed to ensure compliance with regional standards",
-                                    key="pcidss_region_select"
+                                    key="pcidss_region_select_v2"
                                 )
                                 
                                 # Advanced Configuration with Repository URL
@@ -4830,7 +4830,7 @@ else:
                                     with st.status("Starting PCI DSS compliance scan...", expanded=True) as status:
                                         try:
                                             # Get region from the selection
-                                            selected_region = st.session_state.get("pcidss_region_select", "Global")
+                                            selected_region = st.session_state.get("pcidss_region_select_v2", "Global")
                                             
                                             # Get repository URL from advanced configuration if provided
                                             advanced_repo_url = st.session_state.get("pcidss_repo_url", "")
