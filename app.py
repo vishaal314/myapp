@@ -2659,7 +2659,11 @@ else:
             # Prominent "Start Scan" button with free trial info
             scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
             with scan_btn_col1:
-                start_scan = st.button("Start Scan", use_container_width=True, type="primary", key="start_scan_button")
+                # Create a special button for PCI DSS scans
+                if scan_type == _("scan.pcidss"):
+                    start_scan = st.button("Start PCI DSS Scan", use_container_width=True, type="primary", key="start_pcidss_button")
+                else:
+                    start_scan = st.button("Start Scan", use_container_width=True, type="primary", key="start_scan_button")
             with scan_btn_col2:
                 if free_trial_active:
                     st.success(f"Free Trial: {free_trial_days_left} days left")
@@ -2710,6 +2714,9 @@ else:
                     proceed_with_scan = True
             elif scan_type == _("scan.dpia"):
                 # For DPIA scans - no validation needed as the form handles its own documents
+                proceed_with_scan = True
+            elif scan_type == _("scan.pcidss"):
+                # For PCI DSS scans - always proceed, the scanner will handle its own validation
                 proceed_with_scan = True
             elif scan_type == _("scan.manual") and not uploaded_files:
                 st.error("Please upload at least one file for manual scanning.")
