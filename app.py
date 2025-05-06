@@ -138,6 +138,26 @@ def generate_mock_scan_results(scan_type):
         "compliance_score": random.randint(60, 95)
     }
     
+    return results
+
+def generate_mock_soc2_results(repo_url, branch=None):
+    """Generate mock SOC2 scan results"""
+    results = {
+        "scan_type": "SOC2 Scanner",
+        "timestamp": datetime.now().isoformat(),
+        "scan_id": str(uuid.uuid4()),
+        "repo_url": repo_url,
+        "branch": branch or "main",
+        "findings": [],
+        "high_risk_count": random.randint(1, 5),
+        "medium_risk_count": random.randint(3, 8),
+        "low_risk_count": random.randint(2, 10),
+        "total_findings": 0,
+        "compliance_score": random.randint(60, 95),
+        "technologies_detected": ["Terraform", "CloudFormation", "Kubernetes", "Docker"],
+        "scan_status": "success"
+    }
+    
     # Generate random findings
     finding_types = ["PII Exposure", "Insecure Configuration", "Missing Encryption", 
                      "Data Retention Policy", "Authentication Issue", "Authorization Gap"]
@@ -261,7 +281,9 @@ def main():
                 "API Scanner", 
                 "Website Scanner", 
                 "AI Model Scanner", 
-                "DPIA Assessment"
+                "DPIA Assessment",
+                "SOC2 Scanner",
+                "Sustainability Scanner"
             ]
             
             selected_scan = st.selectbox("Select Scan Type", scan_types)
@@ -277,15 +299,91 @@ def main():
                 for option in scan_options:
                     st.checkbox(option, value=True, key=f"option_{option}")
             
+            # Show specific options for each scanner type
+            if selected_scan == "SOC2 Scanner":
+                st.subheader("SOC2 Scanner Options")
+                repo_type = st.radio("Repository Type", ["GitHub", "Azure DevOps"], horizontal=True)
+                if repo_type == "Azure DevOps":
+                    st.text_input("Project Name", key="project_name")
+                    st.text_input("Organization", key="organization")
+            
+            elif selected_scan == "Sustainability Scanner":
+                st.subheader("Sustainability Scanner Options")
+                sustainability_scan_type = st.radio("Scan Type", ["Cloud Resources", "GitHub Repository", "Code Analysis"], horizontal=True)
+                
+                if sustainability_scan_type == "Cloud Resources":
+                    st.selectbox("Cloud Provider", ["Azure", "AWS", "GCP"], key="cloud_provider")
+                    st.selectbox("Region", ["Global", "East US", "West US", "Europe"], key="cloud_region")
+                    
             if st.button("Start Scan", key="start_scan"):
                 with st.spinner("Running scan..."):
                     progress_bar = st.progress(0)
-                    for i in range(1, 101):
-                        time.sleep(0.05)  # Simulate scan process
-                        progress_bar.progress(i)
                     
-                    # Generate mock results
-                    results = generate_mock_scan_results(selected_scan)
+                    # Handle different scan types
+                    if selected_scan == "SOC2 Scanner":
+                        # Get inputs
+                        repo_url = st.session_state.get("repo_url", "")
+                        branch = st.session_state.get("branch", "main")
+                        
+                        # Update progress while simulating scan
+                        for i in range(1, 101):
+                            time.sleep(0.02)  # Faster simulation
+                            progress_bar.progress(i)
+                        
+                        # Use the SOC2 scanner based on repository type
+                        if repo_type == "GitHub":
+                            results = soc2_scan_github(repo_url, branch)
+                        else:
+                            project = st.session_state.get("project_name", "")
+                            organization = st.session_state.get("organization", "")
+                            results = soc2_scan_azure(repo_url, project, branch, organization=organization)
+                            
+                        # For mock implementation, set the other required fields
+                        if "total_findings" not in results:
+                            results["total_findings"] = results.get("high_risk_count", 0) + results.get("medium_risk_count", 0) + results.get("low_risk_count", 0)
+                        if "high_risk" not in results:
+                            results["high_risk"] = results.get("high_risk_count", 0)
+                        if "medium_risk" not in results:
+                            results["medium_risk"] = results.get("medium_risk_count", 0)
+                        if "low_risk" not in results:
+                            results["low_risk"] = results.get("low_risk_count", 0)
+                    
+                    elif selected_scan == "Sustainability Scanner":
+                        # Show the standalone Sustainability Scanner instead
+                        try:
+                            # Try to use the actual sustainability scanner
+                            analyzer = SustainabilityAnalyzer()
+                            results = {
+                                "scan_type": "Sustainability Scanner",
+                                "timestamp": datetime.now().isoformat(),
+                                "scan_id": str(uuid.uuid4()),
+                                "findings": [],
+                                "total_findings": random.randint(5, 20),
+                                "high_risk": random.randint(0, 5),
+                                "medium_risk": random.randint(3, 8),
+                                "low_risk": random.randint(2, 10),
+                                "compliance_score": random.randint(60, 95),
+                                "sustainability_analysis": analyzer.analyze()
+                            }
+                            
+                            # Update progress
+                            for i in range(1, 101):
+                                time.sleep(0.02)  # Faster simulation
+                                progress_bar.progress(i)
+                        except Exception as e:
+                            st.error(f"Error running Sustainability Scanner: {str(e)}")
+                            # Fall back to mock results
+                            results = generate_mock_scan_results(selected_scan)
+                    else:
+                        # For other scan types, use the standard approach
+                        for i in range(1, 101):
+                            time.sleep(0.05)  # Standard simulation
+                            progress_bar.progress(i)
+                        
+                        # Generate mock results
+                        results = generate_mock_scan_results(selected_scan)
+                    
+                    # Store the results
                     st.session_state.current_scan_results = results
                     
                     # Add to scan history
@@ -294,7 +392,36 @@ def main():
                         st.session_state.scan_history = st.session_state.scan_history[:5]
                 
                 st.success(f"{selected_scan} completed successfully!")
-                st.json(results)
+                
+                # Display results
+                if selected_scan == "SOC2 Scanner":
+                    # Use the specialized SOC2 display function if available
+                    try:
+                        display_soc2_findings(results)
+                    except:
+                        st.json(results)
+                elif selected_scan == "Sustainability Scanner":
+                    # Display sustainability-specific results
+                    if "sustainability_analysis" in results:
+                        sustainability_score = results["sustainability_analysis"].get("sustainability_score", 0)
+                        potential_savings = results["sustainability_analysis"].get("potential_savings", 0)
+                        carbon_reduction = results["sustainability_analysis"].get("carbon_reduction", 0)
+                        
+                        st.subheader("Sustainability Analysis")
+                        cols = st.columns(3)
+                        with cols[0]:
+                            st.metric("Sustainability Score", f"{sustainability_score}%")
+                        with cols[1]:
+                            st.metric("Potential Cost Savings", f"${potential_savings:,}")
+                        with cols[2]:
+                            st.metric("Carbon Reduction", f"{carbon_reduction}%")
+                            
+                        st.subheader("Detailed Findings")
+                        st.json(results)
+                    else:
+                        st.json(results)
+                else:
+                    st.json(results)
         
         # Reports Tab
         with tabs[2]:
