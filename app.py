@@ -2661,7 +2661,7 @@ else:
             with scan_btn_col1:
                 # Create a special button for PCI DSS scans
                 if scan_type == _("scan.pcidss"):
-                    start_scan = st.button("Start PCI DSS Scan", use_container_width=True, type="primary", key="start_pcidss_button")
+                    start_scan = st.button("Start PCI DSS Scan", use_container_width=True, type="primary", key="main_pcidss_button")
                 else:
                     start_scan = st.button("Start Scan", use_container_width=True, type="primary", key="start_scan_button")
             with scan_btn_col2:
@@ -2670,6 +2670,13 @@ else:
                 else:
                     st.warning("Premium Features")
         
+        # Check if the PCI DSS inner button triggered a scan
+        if 'pcidss_start_scan_triggered' in st.session_state and st.session_state.pcidss_start_scan_triggered:
+            # Reset the trigger
+            st.session_state.pcidss_start_scan_triggered = False
+            # Set start_scan to True to trigger the main scan flow
+            start_scan = True
+            
         if start_scan:
             # Check if user is logged in first
             if not st.session_state.logged_in:
@@ -3644,7 +3651,13 @@ else:
                                     key="pcidss_repo_source_v2"
                                 )
                                 
-                                # Repository URL input field with prominent styling
+                                # Repository URL input field with prominent styling and clear instructions
+                                st.markdown("""
+                                <div style="background-color: #fffaeb; border-left: 5px solid #ff9900; padding: 10px; margin-bottom: 10px;">
+                                <strong>Required:</strong> Please enter a valid repository URL to start the scan.
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
                                 repo_url = st.text_input(
                                     "Repository URL (required):",
                                     placeholder=f"https://{repo_source.lower()}.com/username/repo",
@@ -3781,12 +3794,19 @@ else:
                             # Scan button at the bottom
                             scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
                             with scan_col2:
+                                # Use a button with a unique key that doesn't conflict with the main scan button
                                 scan_button = st.button(
                                     "Start PCI DSS Scan",
-                                    type="primary",
+                                    type="primary", 
                                     use_container_width=True,
-                                    key="pcidss_scan_button_v2"
+                                    key="pcidss_inner_scan_button"
                                 )
+                                
+                                # If this button is clicked, trigger the main scan flow by setting session state
+                                if scan_button and not 'pcidss_start_scan_triggered' in st.session_state:
+                                    st.session_state.pcidss_start_scan_triggered = True
+                                    # Force a rerun to trigger the main scan flow
+                                    st.rerun()
                         
                         # Results Tab
                         with results_tab:
