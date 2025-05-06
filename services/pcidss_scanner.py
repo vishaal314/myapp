@@ -452,13 +452,14 @@ class PCIDSSScanner:
         
         Args:
             **kwargs: Keyword arguments include:
-                - repo_url: GitHub repository URL (for GitHub repo scanning)
+                - repo_url: Repository URL (for GitHub, GitLab, BitBucket, or Azure DevOps)
                 - branch: Branch to scan (default: "main")
-                - token: GitHub access token for private repos
+                - auth_token: Authentication token for private repositories
                 - uploaded_files: List of files uploaded by the user (for local scanning)
-                - scan_scope: List of scan components to include
+                - scan_scope: List of scan components to include (e.g., ["SAST", "SCA", "IaC", "Secrets"])
                 - requirements: Dictionary mapping PCI DSS requirements to boolean flags
-                - output_formats: List of desired output formats
+                - output_formats: List of desired output formats (e.g., ["PDF Report", "CSV Export"])
+                - include_remediation: Whether to include remediation guidance in findings (default: True)
                 - region: Geographic region for compliance context (default: "Global")
                 
         Returns:
@@ -467,11 +468,12 @@ class PCIDSSScanner:
         # Extract parameters
         repo_url = kwargs.get('repo_url')
         branch = kwargs.get('branch', 'main')
-        token = kwargs.get('token')
+        auth_token = kwargs.get('auth_token')
         uploaded_files = kwargs.get('uploaded_files', [])
         scan_scope = kwargs.get('scan_scope', [])
         requirements = kwargs.get('requirements', {})
-        output_formats = kwargs.get('output_formats', ['PDF'])
+        output_formats = kwargs.get('output_formats', ['PDF Report'])
+        include_remediation = kwargs.get('include_remediation', True)
         
         # Allow region override from scan parameters
         region = kwargs.get('region')
@@ -479,17 +481,48 @@ class PCIDSSScanner:
             self.region = region
             
         logger.info(f"Starting PCI DSS scan with region context: {self.region}")
+        logger.info(f"Scan scope: {scan_scope}")
+        
+        # Process scan scope with simplified format from UI
+        scan_dependencies = "SCA" in scan_scope
+        scan_iac = "IaC" in scan_scope
+        scan_secrets = "Secrets" in scan_scope
         
         # Determine scan mode based on inputs
         if repo_url:
-            # For GitHub repository scanning
-            # Add token to URL if provided
-            if token and 'github.com' in repo_url:
-                # Format: https://{token}@github.com/...
-                if 'https://' in repo_url:
-                    repo_url = repo_url.replace('https://', f'https://{token}@')
-                else:
-                    repo_url = f'https://{token}@github.com/{repo_url.replace("github.com/", "")}'
+            # For repository scanning (GitHub, GitLab, BitBucket, Azure DevOps)
+            # Add authentication token to URL if provided
+            if auth_token:
+                logger.info("Using authentication token for repository access")
+                
+                # Apply token differently based on repository type
+                if 'github.com' in repo_url:
+                    # GitHub format: https://{token}@github.com/...
+                    if 'https://' in repo_url:
+                        repo_url = repo_url.replace('https://', f'https://{auth_token}@')
+                    else:
+                        repo_url = f'https://{auth_token}@github.com/{repo_url.replace("github.com/", "")}'
+                        
+                elif 'gitlab.com' in repo_url:
+                    # GitLab format: https://oauth2:{token}@gitlab.com/...
+                    if 'https://' in repo_url:
+                        repo_url = repo_url.replace('https://', f'https://oauth2:{auth_token}@')
+                    else:
+                        repo_url = f'https://oauth2:{auth_token}@gitlab.com/{repo_url.replace("gitlab.com/", "")}'
+                        
+                elif 'bitbucket.org' in repo_url:
+                    # BitBucket format: https://x-token-auth:{token}@bitbucket.org/...
+                    if 'https://' in repo_url:
+                        repo_url = repo_url.replace('https://', f'https://x-token-auth:{auth_token}@')
+                    else:
+                        repo_url = f'https://x-token-auth:{auth_token}@bitbucket.org/{repo_url.replace("bitbucket.org/", "")}'
+                
+                elif 'dev.azure.com' in repo_url:
+                    # Azure DevOps format: https://{token}@dev.azure.com/...
+                    if 'https://' in repo_url:
+                        repo_url = repo_url.replace('https://', f'https://{auth_token}@')
+                    else:
+                        repo_url = f'https://{auth_token}@dev.azure.com/{repo_url.replace("dev.azure.com/", "")}'
             
             # Convert requirements dict to list of PCI DSS requirement strings
             pci_requirements_filter = []
@@ -499,23 +532,22 @@ class PCIDSSScanner:
                     req_num = req_name.replace('req', '')
                     pci_requirements_filter.append(req_num)
             
-            # Determine which scan components to include
-            scan_dependencies = "SCA (Software Composition Analysis)" in scan_scope
-            scan_iac = "IaC (Infrastructure-as-Code) Scanning" in scan_scope
-            scan_secrets = "Secrets Detection" in scan_scope
-            
             # Perform the repository scan
+            self._update_progress(1, 5, f"Scanning repository: {repo_url}")
             results = self.scan_repository(
                 repo_path=repo_url,
                 branch=branch,
                 scan_dependencies=scan_dependencies,
                 scan_iac=scan_iac,
                 scan_secrets=scan_secrets,
-                pci_requirements_filter=pci_requirements_filter
+                pci_requirements_filter=pci_requirements_filter if pci_requirements_filter else None
             )
             
-            # Add repo URL to results for display
+            # Add scan metadata
             results['repo_url'] = repo_url
+            results['branch'] = branch
+            results['scan_time'] = datetime.now().isoformat()
+            results['output_formats'] = output_formats
             
         elif uploaded_files:
             # For local file uploads
@@ -527,6 +559,7 @@ class PCIDSSScanner:
             temp_dir = tempfile.mkdtemp()
             try:
                 # Save uploaded files to temp directory
+                self._update_progress(1, 5, f"Processing {len(uploaded_files)} uploaded files")
                 for uploaded_file in uploaded_files:
                     file_path = os.path.join(temp_dir, uploaded_file.name)
                     with open(file_path, 'wb') as f:
@@ -539,23 +572,21 @@ class PCIDSSScanner:
                         req_num = req_name.replace('req', '')
                         pci_requirements_filter.append(req_num)
                 
-                # Determine which scan components to include
-                scan_dependencies = "SCA (Software Composition Analysis)" in scan_scope
-                scan_iac = "IaC (Infrastructure-as-Code) Scanning" in scan_scope
-                scan_secrets = "Secrets Detection" in scan_scope
-                
                 # Scan the local directory
+                self._update_progress(2, 5, "Analyzing uploaded files")
                 results = self.scan_repository(
                     repo_path=temp_dir,
                     scan_dependencies=scan_dependencies,
                     scan_iac=scan_iac,
                     scan_secrets=scan_secrets,
-                    pci_requirements_filter=pci_requirements_filter
+                    pci_requirements_filter=pci_requirements_filter if pci_requirements_filter else None
                 )
                 
                 # Add source info to results
                 results['source'] = 'Local Upload'
                 results['file_count'] = len(uploaded_files)
+                results['scan_time'] = datetime.now().isoformat()
+                results['output_formats'] = output_formats
                 
             except Exception as e:
                 logger.error(f"Error processing uploaded files: {str(e)}")
@@ -578,10 +609,78 @@ class PCIDSSScanner:
                 "findings": []
             }
         
+        # Remove remediation guidance if not requested
+        if not include_remediation and 'findings' in results:
+            for finding in results.get('findings', []):
+                if 'remediation' in finding:
+                    del finding['remediation']
+        
         # Add PCI DSS categories for reporting
         results['pci_categories'] = self._count_findings_by_pci_category(results.get('findings', []))
         
+        # Calculate risk metrics if not already present
+        if 'high_risk_count' not in results:
+            high_risk = sum(1 for f in results.get('findings', []) if f.get('risk_level', '').lower() == 'high')
+            medium_risk = sum(1 for f in results.get('findings', []) if f.get('risk_level', '').lower() == 'medium')
+            low_risk = sum(1 for f in results.get('findings', []) if f.get('risk_level', '').lower() == 'low')
+            
+            results['high_risk_count'] = high_risk
+            results['medium_risk_count'] = medium_risk
+            results['low_risk_count'] = low_risk
+        
+        # Generate key recommendations based on findings
+        if 'recommendations' not in results:
+            results['recommendations'] = self._generate_recommendations(results.get('findings', []))
+            
         return results
+        
+    def _generate_recommendations(self, findings: List[Dict[str, Any]]) -> List[str]:
+        """
+        Generate key recommendations based on scan findings.
+        
+        Args:
+            findings: List of finding dictionaries
+            
+        Returns:
+            List of recommendation strings
+        """
+        recommendations = []
+        
+        # Count findings by type
+        finding_types = {}
+        for finding in findings:
+            finding_type = finding.get('type', '')
+            if finding_type in finding_types:
+                finding_types[finding_type] += 1
+            else:
+                finding_types[finding_type] = 1
+        
+        # Generate recommendations for the most common findings
+        sorted_types = sorted(finding_types.items(), key=lambda x: x[1], reverse=True)
+        
+        # Add general recommendations based on finding types
+        for finding_type, count in sorted_types[:5]:  # Top 5 finding types
+            if "injection" in finding_type.lower():
+                recommendations.append(f"Implement input validation and parameterized queries to prevent {finding_type} vulnerabilities ({count} instances found).")
+            elif "secret" in finding_type.lower() or "credential" in finding_type.lower():
+                recommendations.append(f"Use a secrets management solution for the {count} hardcoded credentials found in your code.")
+            elif "dependency" in finding_type.lower() or "vulnerable package" in finding_type.lower():
+                recommendations.append(f"Update the {count} vulnerable dependencies identified to their latest secure versions.")
+            elif "xss" in finding_type.lower() or "cross-site" in finding_type.lower():
+                recommendations.append(f"Implement content security policies and output encoding to address the {count} XSS vulnerabilities.")
+            elif "access control" in finding_type.lower() or "permission" in finding_type.lower():
+                recommendations.append(f"Review and strengthen access controls to fix the {count} permission issues found.")
+            elif "configuration" in finding_type.lower():
+                recommendations.append(f"Update insecure configurations following security best practices for the {count} configuration issues identified.")
+            else:
+                recommendations.append(f"Address the {count} instances of {finding_type} according to PCI DSS best practices.")
+        
+        # Add region-specific recommendations if applicable
+        if self.region != "Global":
+            recommendations.append(f"Ensure compliance with {self.region} regional requirements in addition to core PCI DSS standards.")
+        
+        # Limit to a reasonable number of recommendations
+        return recommendations[:8]
         
     def _count_findings_by_pci_category(self, findings: List[Dict[str, Any]]) -> Dict[str, int]:
         """
