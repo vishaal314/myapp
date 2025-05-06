@@ -3833,6 +3833,7 @@ else:
                                 
                                 repo_url = st.text_input(
                                     "Repository URL (required):",
+                                    value="https://github.com/vishaal314/payment-processor-demo", # Default repository for easy testing
                                     placeholder=f"https://{repo_source.lower()}.com/username/repo",
                                     key="pcidss_repo_url_v2",
                                     help="Enter the full URL to your Git repository"
@@ -3964,22 +3965,26 @@ else:
                             # Horizontal rule for separation
                             st.markdown("<hr>", unsafe_allow_html=True)
                             
-                            # Scan button at the bottom
+                            # Scan button at the bottom with clear separation
+                            st.markdown("<hr style='margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+                            
+                            st.markdown("### Start Scan")
+                            st.write("Click the button below to scan the repository for PCI DSS compliance issues.")
+                            
                             scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
                             with scan_col2:
-                                # Use a button with a unique key that doesn't conflict with the main scan button
+                                # Add a directly functioning scan button with no indirection
                                 scan_button = st.button(
-                                    "Start PCI DSS Scan",
+                                    "▶️ Start PCI DSS Scan",
                                     type="primary", 
                                     use_container_width=True,
-                                    key="pcidss_inner_scan_button"
+                                    key="pcidss_direct_scan_button"
                                 )
                                 
-                                # If this button is clicked, trigger the main scan flow by setting session state
-                                if scan_button and not 'pcidss_start_scan_triggered' in st.session_state:
-                                    st.session_state.pcidss_start_scan_triggered = True
-                                    # Force a rerun to trigger the main scan flow
-                                    st.rerun()
+                                # Clear any session state flags that might be interfering
+                                if scan_button:
+                                    if 'pcidss_start_scan_triggered' in st.session_state:
+                                        del st.session_state.pcidss_start_scan_triggered
                         
                         # Results Tab
                         with results_tab:
