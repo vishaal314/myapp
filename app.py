@@ -116,13 +116,16 @@ st.markdown("""
         background-image: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
     }
     
-    /* Header Styling */
+    /* Header Styling with fixed gradient text */
     .main-header {
         font-size: 3.2rem;
         font-weight: 800;
         background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 50%, #7c3aed 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
+        display: inline-block !important;
         margin-bottom: 0;
         padding-bottom: 0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -244,8 +247,11 @@ st.markdown("""
         font-size: 2.2rem;
         font-weight: 700;
         background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
+        display: inline-block !important;
     }
     
     [data-testid="stMetricLabel"] {
@@ -361,8 +367,11 @@ st.markdown("""
         font-size: 2.6rem;
         font-weight: 800;
         background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
+        display: inline-block !important;
         margin-bottom: 20px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         line-height: 1;
