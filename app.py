@@ -107,29 +107,53 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Enhanced professional styling with diverse colors
+# New modern design system with a clean, professional aesthetic
 st.markdown("""
 <style>
-    /* Global Styles */
-    .stApp {
-        background-color: #f8faff;
-        background-image: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+    /* Global Reset and Base Styles */
+    * {
+        box-sizing: border-box;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
     
-    /* Header Styling with fixed gradient text */
-    .main-header {
-        font-size: 3.2rem;
-        font-weight: 800;
-        background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 50%, #7c3aed 100%);
+    /* App Background with subtle gradient */
+    .stApp {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    /* Modern Typography System */
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.025em;
+    }
+    
+    p, li, span {
+        color: #334155;
+        line-height: 1.7;
+    }
+    
+    /* Brand Colors - Midnight Blue to Electric Purple gradient */
+    .brand-gradient {
+        background: linear-gradient(135deg, #0f172a 0%, #3b82f6 50%, #8b5cf6 100%);
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
         color: transparent !important;
         display: inline-block !important;
-        margin-bottom: 0;
-        padding-bottom: 0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        letter-spacing: -0.5px;
+    }
+    
+    /* Hero Header */
+    .hero-header {
+        font-size: clamp(2.5rem, 5vw, 3.75rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, #0f172a 0%, #3b82f6 50%, #8b5cf6 100%);
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
+        display: inline-block !important;
+        margin-bottom: 0.5rem;
         line-height: 1.1;
     }
     
@@ -298,20 +322,90 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Enhanced Subscription Plan Styling
+# New Component System for 2025 Design
 st.markdown("""
 <style>
-    /* Subscription Cards with gradients */
+    /* 
+    * MODERN DESIGN SYSTEM 2025 
+    * DataGuardian Pro Enterprise Platform
+    */
+    
+    /* Cards & Container System */
+    .card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    
+    .card-hover:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 36px rgba(15, 23, 42, 0.1);
+    }
+    
+    .card-header {
+        padding: 24px 28px 0 28px;
+    }
+    
+    .card-body {
+        padding: 20px 28px;
+    }
+    
+    .card-footer {
+        padding: 0 28px 24px 28px;
+        border-top: 1px solid #f1f5f9;
+    }
+    
+    /* Glass Morphism Cards */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(15, 23, 42, 0.1);
+    }
+    
+    /* Status Cards */
+    .status-card {
+        padding: 24px;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        transition: all 0.3s ease;
+    }
+    
+    .status-card-primary {
+        background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+        border: 1px solid #bfdbfe;
+    }
+    
+    .status-card-success {
+        background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%);
+        border: 1px solid #a7f3d0;
+    }
+    
+    .status-card-warning {
+        background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+        border: 1px solid #fde68a;
+    }
+    
+    .status-card-danger {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border: 1px solid #fca5a5;
+    }
+    
+    /* Subscription Cards - Modernized */
     .plan-card {
         background: white;
-        background-position: center;
-        background-size: cover;
-        border-radius: 16px;
-        padding: 32px 24px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-radius: 24px;
+        padding: 40px 32px;
+        box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
         margin-bottom: 24px;
         text-align: center;
-        border: 1px solid rgba(240, 240, 240, 0.8);
+        border: 1px solid rgba(241, 245, 249, 0.8);
         transition: all 0.4s ease;
         height: 100%;
         display: flex;
@@ -830,102 +924,122 @@ def generate_mock_soc2_results(repo_url, branch=None):
 
 # Main application
 def main():
-    # Sidebar with enhanced modern logo
+    # 2025 Modern Sidebar Design
     with st.sidebar:
-        # Enhanced professional logo with multi-color design
+        # New Premium Brand Identity
         st.markdown("""
-        <div style="text-align: center; padding: 15px 0 25px 0;">
-            <div style="position: relative; display: inline-block;">
+        <div style="padding: 20px 0 30px 0; text-align: center;">
+            <div class="card" style="
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                border-radius: 24px;
+                padding: 24px 20px;
+                margin-bottom: 20px;
+                position: relative;
+                overflow: hidden;
+                border: none;
+                box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+            ">
+                <!-- Abstract shapes background -->
+                <div style="position: absolute; width: 150px; height: 150px; border-radius: 75px; background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0) 70%); top: -75px; right: -75px;"></div>
+                <div style="position: absolute; width: 100px; height: 100px; border-radius: 50px; background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0) 70%); bottom: -50px; left: -25px;"></div>
+                
+                <!-- Logo Container -->
                 <div style="
+                    position: relative;
+                    z-index: 5;
                     display: flex;
                     align-items: center;
-                    background: linear-gradient(125deg, #0b3d91 0%, #4f46e5 50%, #7c3aed 100%); 
-                    padding: 12px 18px;
-                    border-radius: 12px;
-                    margin-bottom: 12px;
-                    box-shadow: 0 8px 25px rgba(79, 70, 229, 0.25);
-                    overflow: hidden;
-                    position: relative;
-                    z-index: 1;
+                    justify-content: center;
+                    margin-bottom: 16px;
                 ">
-                    <!-- Decorative elements -->
-                    <div style="position: absolute; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%); top: -60px; right: -60px; z-index: 0;"></div>
-                    <div style="position: absolute; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%); bottom: -40px; left: -20px; z-index: 0;"></div>
-                    
-                    <!-- Shield icon with gradient -->
+                    <!-- Shield Icon -->
                     <div style="
-                        position: relative; 
-                        z-index: 2;
-                        font-size: 28px; 
-                        margin-right: 12px;
-                        background: linear-gradient(135deg, #fff 20%, #e0e7ff 100%);
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-                        text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+                        width: 48px;
+                        height: 48px;
+                        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+                        border-radius: 14px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-right: 14px;
+                        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
                     ">
-                        🛡️
+                        <span style="font-size: 24px; color: white; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));">🛡️</span>
                     </div>
                     
-                    <!-- Text content -->
-                    <div style="position: relative; z-index: 2; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-                        <div style="
+                    <!-- Brand Name -->
+                    <div style="text-align: left;">
+                        <h1 style="
                             font-weight: 800; 
-                            font-size: 24px; 
+                            font-size: 22px; 
                             color: white; 
-                            letter-spacing: -0.3px; 
+                            margin: 0;
+                            padding: 0;
                             line-height: 1.1;
-                            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                        ">
-                            DataGuardian
-                        </div>
+                            letter-spacing: -0.02em;
+                        ">DataGuardian</h1>
                         <div style="
-                            font-weight: 700; 
-                            font-size: 13px; 
-                            background: linear-gradient(90deg, #f0f4ff 0%, #ffffff 100%);
-                            -webkit-background-clip: text;
-                            -webkit-text-fill-color: transparent;
-                            letter-spacing: 2px; 
-                            text-transform: uppercase;
+                            display: flex;
+                            align-items: center;
+                            margin-top: 2px;
                         ">
-                            PRO
+                            <span style="
+                                font-weight: 700; 
+                                font-size: 12px;
+                                background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+                                -webkit-background-clip: text !important;
+                                -webkit-text-fill-color: transparent !important;
+                                background-clip: text !important;
+                                color: transparent !important;
+                                display: inline-block !important;
+                                text-transform: uppercase;
+                                letter-spacing: 0.1em;
+                            ">Pro</span>
+                            <span style="
+                                background: linear-gradient(90deg, #f59e0b, #fbbf24);
+                                color: #0f172a;
+                                font-size: 10px;
+                                font-weight: 700;
+                                padding: 3px 8px;
+                                border-radius: 20px;
+                                margin-left: 8px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.05em;
+                            ">Enterprise</span>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Badge -->
+                <!-- Tagline -->
                 <div style="
-                    position: absolute;
-                    top: -8px;
-                    right: -8px;
-                    background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
-                    color: white;
-                    font-size: 10px;
-                    font-weight: 700;
-                    padding: 4px 8px;
-                    border-radius: 30px;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
-                ">
-                    Enterprise
-                </div>
-            </div>
-            
-            <!-- Tagline with multi-color text -->
-            <div style="margin-top: 8px; font-size: 13px; font-weight: 500;">
-                <span style="background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 50%, #7c3aed 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                    Advanced Privacy Compliance Platform
-                </span>
+                    font-size: 12px;
+                    font-weight: 500;
+                    color: #94a3b8;
+                    margin-top: 8px;
+                    letter-spacing: 0.02em;
+                    line-height: 1.4;
+                ">Advanced AI-Powered Privacy Compliance Platform</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
         if not st.session_state.logged_in:
-            st.subheader("Login")
-            username = st.text_input("Username", key="login_username")
-            password = st.text_input("Password", type="password", key="login_password")
+            st.markdown("""
+            <div class="card" style="padding: 24px; margin-bottom: 20px;">
+                <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 20px; color: #0f172a;">Sign In</h2>
+            </div>
+            """, unsafe_allow_html=True)
             
-            login_button = st.button("Login", key="login_button")
+            username = st.text_input("Username", key="login_username", placeholder="Enter your username")
+            password = st.text_input("Password", type="password", key="login_password", placeholder="Enter your password")
+            
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                remember = st.checkbox("Remember me", value=True)
+            with col2:
+                st.markdown('<div style="text-align: right;"><a href="#" style="color: #4f46e5; font-size: 14px; text-decoration: none;">Forgot password?</a></div>', unsafe_allow_html=True)
+            
+            login_button = st.button("Sign In", key="login_button", use_container_width=True)
             
             if login_button:
                 if not username or not password:
@@ -942,12 +1056,69 @@ def main():
                         st.rerun()
                     else:
                         st.error("Invalid username or password")
-                        
-            st.markdown("Try: **admin/password** or **user/password**")
+            
+            st.markdown("""
+            <div style="text-align: center; margin-top: 15px; font-size: 14px; color: #64748b;">
+                Demo accounts: <code>admin/password</code> or <code>user/password</code>
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.subheader(f"Welcome, {st.session_state.username}!")
-            st.write(f"Role: {st.session_state.role}")
-            st.write(f"Email: {st.session_state.email}")
+            # User Profile Card
+            st.markdown(f"""
+            <div class="card" style="padding: 20px; margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                    <div style="
+                        width: 48px;
+                        height: 48px;
+                        border-radius: 24px;
+                        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-right: 12px;
+                        font-size: 16px;
+                        color: white;
+                        font-weight: 600;
+                    ">{st.session_state.username[0].upper()}</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 16px; color: #0f172a; line-height: 1.2;">
+                            {st.session_state.username}
+                        </div>
+                        <div style="font-size: 14px; color: #64748b;">
+                            {st.session_state.email}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    padding: 8px 12px;
+                    background: rgba(79, 70, 229, 0.1);
+                    border-radius: 8px;
+                    margin-bottom: 16px;
+                ">
+                    <div style="
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 12px;
+                        background: #4f46e5;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-right: 10px;
+                        font-size: 10px;
+                        color: white;
+                    ">
+                        <span style="display: inline-block; transform: translateY(-1px);">👑</span>
+                    </div>
+                    <div style="font-weight: 600; font-size: 14px; color: #4f46e5;">
+                        {st.session_state.role.title()} Account
+                    </div>
+                </div>
+            </div>
+            """
+            , unsafe_allow_html=True)
             
             # Modern subscription status display
             st.markdown("### Your Subscription", help="Manage your subscription plan")
