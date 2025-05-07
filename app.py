@@ -107,118 +107,322 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for styling
+# Modern professional styling
 st.markdown("""
 <style>
+    /* Global Styles */
+    .stApp {
+        background-color: #f8f9fa;
+    }
+    
+    /* Header Styling */
     .main-header {
-        font-size: 2.5rem;
-        color: #1E3A8A;
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #0b3d91;
         margin-bottom: 0;
         padding-bottom: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        letter-spacing: -0.5px;
     }
+    
     .sub-header {
-        font-size: 1.5rem;
-        color: #3B82F6;
+        font-size: 1.4rem;
+        color: #2c5282;
         margin-top: 0;
         padding-top: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        letter-spacing: -0.3px;
+        font-weight: 400;
     }
+    
+    /* Card Components */
     .dashboard-card {
         background-color: white;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 24px;
+        border: 1px solid #f0f0f0;
+        transition: all 0.2s ease-in-out;
     }
+    
+    .dashboard-card:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    /* Navigation Elements */
     .nav-link {
-        color: #3B82F6;
+        color: #2c5282;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+    
+    .nav-link:hover {
+        color: #0b3d91;
         text-decoration: none;
     }
-    .nav-link:hover {
-        color: #1E3A8A;
-        text-decoration: underline;
+    
+    /* Sidebar Customization */
+    .css-1d391kg, .css-163ttbj {
+        background-color: #ffffff;
+    }
+    
+    /* Custom Tab Styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 1px;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: #f8f9fa;
+        border-radius: 4px 4px 0 0;
+        gap: 1px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background-color: white;
+        border-bottom: 2px solid #0b3d91;
+    }
+    
+    /* Button Styling */
+    .stButton > button {
+        background-color: #0b3d91;
+        color: white;
+        border-radius: 4px;
+        padding: 4px 25px;
+        font-weight: 500;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton > button:hover {
+        background-color: #1853b3;
+        box-shadow: 0 4px 12px rgba(44, 82, 130, 0.2);
+    }
+    
+    /* Metric Card Styling */
+    [data-testid="stMetricValue"] {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0b3d91;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        font-weight: 500;
+    }
+    
+    /* Input Field Styling */
+    .stTextInput > div > div > input {
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        padding: 10px 12px;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: #0b3d91;
+        box-shadow: 0 0 0 2px rgba(11, 61, 145, 0.2);
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Add additional CSS for plans
+# Subscription Plan Styling
 st.markdown("""
 <style>
+    /* Subscription Cards */
     .plan-card {
         background-color: white;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        padding: 28px 20px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
         margin-bottom: 20px;
         text-align: center;
+        border: 1px solid #f0f0f0;
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
+    
+    .plan-card:hover {
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12);
+        transform: translateY(-4px);
+    }
+    
     .plan-name {
         font-size: 1.5rem;
-        font-weight: bold;
-        color: #1E3A8A;
+        font-weight: 700;
+        color: #0b3d91;
         margin-bottom: 8px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+    
     .plan-price {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #3B82F6;
+        font-size: 2.4rem;
+        font-weight: 800;
+        color: #2c5282;
         margin-bottom: 16px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+    
     .plan-features {
         text-align: left;
         margin-bottom: 20px;
+        flex-grow: 1;
     }
+    
     .plan-feature-item {
-        margin-bottom: 8px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        font-size: 0.95rem;
     }
+    
+    .plan-feature-item::before {
+        content: "✓";
+        color: #38a169;
+        font-weight: bold;
+        margin-right: 8px;
+        background-color: #f0fff4;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+    
     .subscribe-button {
-        background-color: #3B82F6;
+        background-color: #0b3d91;
         color: white;
-        padding: 8px 16px;
-        border-radius: 4px;
+        padding: 12px 24px;
+        border-radius: 6px;
         text-decoration: none;
         display: inline-block;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
     }
+    
+    .subscribe-button:hover {
+        background-color: #1853b3;
+        box-shadow: 0 4px 12px rgba(44, 82, 130, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    /* Authentication UI */
     .login-options {
         text-align: center;
-        margin: 20px 0;
+        margin: 24px 0;
     }
-    .social-login-button {
-        background-color: #ffffff;
-        border: 1px solid #dddddd;
-        color: #333333;
-        padding: 8px 16px;
-        border-radius: 4px;
-        text-decoration: none;
-        display: inline-block;
-        margin: 5px;
-        width: 100%;
-    }
+    
     .google-login-button {
         background-color: #ffffff;
-        border: 1px solid #dddddd;
+        border: 1px solid #e2e8f0;
         color: #333333;
-        padding: 8px 16px;
-        border-radius: 4px;
+        padding: 12px 24px;
+        border-radius: 6px;
         text-decoration: none;
         display: inline-block;
-        margin: 5px;
+        margin: 8px 0;
         width: 100%;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
+    
+    .google-login-button:hover {
+        background-color: #f8f9fa;
+        border-color: #c1c7cd;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
     .divider {
         display: flex;
         align-items: center;
         text-align: center;
-        margin: 20px 0;
+        margin: 24px 0;
     }
+    
     .divider::before,
     .divider::after {
         content: '';
         flex: 1;
-        border-bottom: 1px solid #dddddd;
+        border-bottom: 1px solid #e2e8f0;
     }
+    
     .divider-text {
-        padding: 0 10px;
-        color: #666666;
+        padding: 0 15px;
+        color: #718096;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    
+    /* Custom Form Elements */
+    .form-container {
+        background-color: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        margin-bottom: 20px;
+    }
+    
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-right: 8px;
+    }
+    
+    .status-high {
+        background-color: #FEE2E2;
+        color: #B91C1C;
+    }
+    
+    .status-medium {
+        background-color: #FEF3C7;
+        color: #92400E;
+    }
+    
+    .status-low {
+        background-color: #ECFDF5;
+        color: #047857;
+    }
+    
+    /* Dashboard Stats */
+    .stat-container {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        text-align: center;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #0b3d91;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #718096;
+        font-weight: 500;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -308,9 +512,26 @@ def generate_mock_soc2_results(repo_url, branch=None):
 
 # Main application
 def main():
-    # Sidebar
+    # Sidebar with modern logo
     with st.sidebar:
-        st.image("https://placehold.co/200x100/1E40AF/FFFFFF?text=DataGuardian+Pro", width=200)
+        # Modern professional logo
+        st.markdown("""
+        <div style="text-align: center; padding: 10px 0 20px 0;">
+            <div style="display: inline-flex; align-items: center; background: linear-gradient(135deg, #0b3d91 0%, #2c5282 100%); 
+                        padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(11, 61, 145, 0.2);">
+                <div style="font-size: 24px; margin-right: 8px; color: white;">🛡️</div>
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                    <div style="font-weight: 800; font-size: 20px; color: white; letter-spacing: -0.5px; line-height: 1.1;">
+                        DataGuardian
+                    </div>
+                    <div style="font-weight: 600; font-size: 12px; color: #e0e7ff; letter-spacing: 1.5px; text-transform: uppercase;">
+                        PRO
+                    </div>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: #718096; margin-top: 5px;">Enterprise Privacy Compliance</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         if not st.session_state.logged_in:
             st.subheader("Login")
@@ -341,50 +562,133 @@ def main():
             st.write(f"Role: {st.session_state.role}")
             st.write(f"Email: {st.session_state.email}")
             
-            # Subscription status
-            st.divider()
+            # Modern subscription status display
+            st.markdown("### Your Subscription", help="Manage your subscription plan")
+            
             current_plan = st.session_state.get("subscription_tier", "basic")
             
+            # Display appropriate plan card based on subscription
             if current_plan == "basic":
                 st.markdown(f"""
-                <div style='background-color: #f8f9fa; padding: 10px; border-radius: 5px;'>
-                    <strong>Current Plan:</strong> {SUBSCRIPTION_PLANS['basic']['name']}
-                    <br>
-                    <small>Upgrade to unlock advanced features</small>
+                <div style='background-color: white; padding: 15px; border-radius: 10px; 
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #f0f0f0;
+                            margin-bottom: 15px;'>
+                    <div style='display: flex; align-items: center; margin-bottom: 10px;'>
+                        <div style='background-color: #EBF4FF; border-radius: 50%; width: 24px; height: 24px; 
+                                    display: flex; align-items: center; justify-content: center; margin-right: 10px;'>
+                            <span style='color: #2C5282; font-weight: bold; font-size: 12px;'>B</span>
+                        </div>
+                        <div style='color: #2C5282; font-weight: 600; font-size: 16px;'>{SUBSCRIPTION_PLANS['basic']['name']}</div>
+                    </div>
+                    <div style='color: #2C5282; font-weight: 700; font-size: 20px; margin-bottom: 5px;'>${SUBSCRIPTION_PLANS['basic']['price']}<span style='color: #718096; font-weight: 400; font-size: 14px;'>/month</span></div>
+                    <div style='color: #718096; font-size: 13px; margin-bottom: 15px;'>Your plan renews on May 12, 2025</div>
+                    <button style='background-color: #0b3d91; color: white; border: none; border-radius: 6px; 
+                                   padding: 8px 16px; width: 100%; font-weight: 600; cursor: pointer;
+                                   transition: all 0.3s ease;'
+                            onmouseover="this.style.backgroundColor='#1853b3'"
+                            onmouseout="this.style.backgroundColor='#0b3d91'">
+                        Upgrade to Premium
+                    </button>
                 </div>
                 """, unsafe_allow_html=True)
-                
-                st.button("Upgrade to Premium", key="upgrade_premium")
                 
             elif current_plan == "premium":
                 st.markdown(f"""
-                <div style='background-color: #e6f3ff; padding: 10px; border-radius: 5px;'>
-                    <strong>Current Plan:</strong> {SUBSCRIPTION_PLANS['premium']['name']}
-                    <br>
-                    <small>You have access to premium features</small>
+                <div style='background-color: white; padding: 15px; border-radius: 10px; 
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #3B82F6;
+                            margin-bottom: 15px;'>
+                    <div style='display: flex; align-items: center; margin-bottom: 10px;'>
+                        <div style='background-color: #2C5282; border-radius: 50%; width: 24px; height: 24px; 
+                                    display: flex; align-items: center; justify-content: center; margin-right: 10px;'>
+                            <span style='color: white; font-weight: bold; font-size: 12px;'>P</span>
+                        </div>
+                        <div style='color: #2C5282; font-weight: 600; font-size: 16px;'>{SUBSCRIPTION_PLANS['premium']['name']}</div>
+                    </div>
+                    <div style='color: #2C5282; font-weight: 700; font-size: 20px; margin-bottom: 5px;'>${SUBSCRIPTION_PLANS['premium']['price']}<span style='color: #718096; font-weight: 400; font-size: 14px;'>/month</span></div>
+                    <div style='color: #718096; font-size: 13px; margin-bottom: 15px;'>Your plan renews on May 12, 2025</div>
+                    <button style='background-color: #0b3d91; color: white; border: none; border-radius: 6px; 
+                                  padding: 8px 16px; width: 100%; font-weight: 600; cursor: pointer;
+                                  transition: all 0.3s ease;'
+                           onmouseover="this.style.backgroundColor='#1853b3'"
+                           onmouseout="this.style.backgroundColor='#0b3d91'">
+                        Upgrade to Gold
+                    </button>
                 </div>
                 """, unsafe_allow_html=True)
-                
-                st.button("Upgrade to Gold", key="upgrade_gold")
                 
             elif current_plan == "gold":
                 st.markdown(f"""
-                <div style='background-color: #fff4e6; padding: 10px; border-radius: 5px; border: 1px solid gold;'>
-                    <strong>Current Plan:</strong> {SUBSCRIPTION_PLANS['gold']['name']}
-                    <br>
-                    <small>You have access to all features</small>
+                <div style='background-color: white; padding: 15px; border-radius: 10px; 
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #F59E0B;
+                            margin-bottom: 15px;'>
+                    <div style='display: flex; align-items: center; margin-bottom: 10px;'>
+                        <div style='background-color: #F59E0B; border-radius: 50%; width: 24px; height: 24px; 
+                                    display: flex; align-items: center; justify-content: center; margin-right: 10px;'>
+                            <span style='color: white; font-weight: bold; font-size: 12px;'>G</span>
+                        </div>
+                        <div style='color: #92400E; font-weight: 600; font-size: 16px;'>{SUBSCRIPTION_PLANS['gold']['name']}</div>
+                    </div>
+                    <div style='color: #92400E; font-weight: 700; font-size: 20px; margin-bottom: 5px;'>${SUBSCRIPTION_PLANS['gold']['price']}<span style='color: #718096; font-weight: 400; font-size: 14px;'>/month</span></div>
+                    <div style='color: #718096; font-size: 13px; margin-bottom: 15px;'>Your plan renews on May 12, 2025</div>
+                    <div style='background-color: #FEF3C7; color: #92400E; border-radius: 6px; 
+                               padding: 8px 16px; text-align: center; font-weight: 600; font-size: 14px;'>
+                        ✓ You're on our highest tier
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
             
+            # Payment & Billing section with improved design
+            st.markdown("### Billing", help="Manage your payment methods and billing history")
+            
             # Payment method
-            with st.expander("Manage Payment Methods"):
-                st.markdown("Add or update your payment information")
-                st.text("Card ending in ****4242")
-                st.button("Update Payment Method", key="update_payment")
+            st.markdown("""
+            <div style='background-color: white; padding: 15px; border-radius: 10px; 
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #f0f0f0;
+                        margin-bottom: 15px;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
+                    <div style='font-weight: 600; color: #2C5282;'>Payment Method</div>
+                    <div style='font-size: 12px; color: #3B82F6; cursor: pointer;'>+ Add New</div>
+                </div>
+                <div style='display: flex; align-items: center;'>
+                    <div style='background-color: #F8F9FA; border-radius: 6px; padding: 10px; margin-right: 10px;'>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="24" height="24" rx="4" fill="#0B3D91" fill-opacity="0.1"/>
+                            <path d="M5 11H19V17C19 17.5523 18.5523 18 18 18H6C5.44772 18 5 17.5523 5 17V11Z" fill="#0B3D91" fill-opacity="0.1"/>
+                            <path d="M5 8C5 7.44772 5.44772 7 6 7H18C18.5523 7 19 7.44772 19 8V11H5V8Z" fill="#0B3D91"/>
+                            <path d="M7 14.5C7 14.2239 7.22386 14 7.5 14H10.5C10.7761 14 11 14.2239 11 14.5C11 14.7761 10.7761 15 10.5 15H7.5C7.22386 15 7 14.7761 7 14.5Z" fill="#0B3D91"/>
+                            <path d="M13 14.5C13 14.2239 13.2239 14 13.5 14H15.5C15.7761 14 16 14.2239 16 14.5C16 14.7761 15.7761 15 15.5 15H13.5C13.2239 15 13 14.7761 13 14.5Z" fill="#0B3D91"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style='font-weight: 500; color: #2D3748;'>•••• •••• •••• 4242</div>
+                        <div style='font-size: 12px; color: #718096;'>Expires 12/2025</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
             # Billing history
-            with st.expander("Billing History"):
-                st.info("No billing history available")
+            st.markdown("""
+            <div style='background-color: white; padding: 15px; border-radius: 10px; 
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #f0f0f0;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;'>
+                    <div style='font-weight: 600; color: #2C5282;'>Recent Invoices</div>
+                    <div style='font-size: 12px; color: #3B82F6; cursor: pointer;'>View All</div>
+                </div>
+                <div style='color: #718096; text-align: center; padding: 20px 0;'>
+                    <div style='margin-bottom: 8px; opacity: 0.6;'>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto; display: block;">
+                            <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15" stroke="#718096" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5C15 6.10457 14.1046 7 13 7H11C9.89543 7 9 6.10457 9 5Z" stroke="#718096" stroke-width="2"/>
+                            <path d="M9 12H15" stroke="#718096" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M9 16H15" stroke="#718096" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div style='font-size: 14px;'>No invoices yet</div>
+                    <div style='font-size: 12px; margin-top: 4px;'>Your billing history will appear here</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
             st.divider()
             
@@ -553,16 +857,96 @@ def main():
         with tabs[0]:
             st.markdown("<h2>Analytics Dashboard</h2>", unsafe_allow_html=True)
             
-            # Summary metrics
-            col1, col2, col3, col4 = st.columns(4)
+            # Modern dashboard header with stats
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #0b3d91 0%, #2c5282 100%); padding: 20px; border-radius: 12px; margin-bottom: 24px; color: white;">
+                <h3 style="margin: 0 0 15px 0; font-weight: 600; font-size: 18px;">Dashboard Overview</h3>
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 120px; background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; margin: 0 8px 8px 0;">
+                        <div style="font-size: 28px; font-weight: 700;">{random.randint(10, 100)}</div>
+                        <div style="font-size: 14px; opacity: 0.8;">Total Scans</div>
+                    </div>
+                    <div style="flex: 1; min-width: 120px; background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; margin: 0 8px 8px 0;">
+                        <div style="font-size: 28px; font-weight: 700;">{random.randint(5, 50)}</div>
+                        <div style="font-size: 14px; opacity: 0.8;">Open Issues</div>
+                    </div>
+                    <div style="flex: 1; min-width: 120px; background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; margin: 0 8px 8px 0;">
+                        <div style="font-size: 28px; font-weight: 700;">{random.randint(70, 95)}%</div>
+                        <div style="font-size: 14px; opacity: 0.8;">Avg. Compliance</div>
+                    </div>
+                    <div style="flex: 1; min-width: 120px; background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; margin: 0 0 8px 0;">
+                        <div style="font-size: 28px; font-weight: 700;">{random.randint(10, 40)}/100</div>
+                        <div style="font-size: 14px; opacity: 0.8;">Risk Score</div>
+                    </div>
+                </div>
+            </div>
+            """
+            , unsafe_allow_html=True)
+            
+            # Additional dashboard content in cards
+            col1, col2 = st.columns(2)
+            
+            # Compliance Trend Card
             with col1:
-                st.metric(label="Total Scans", value=random.randint(10, 100))
+                st.markdown("""
+                <div style="background: white; border-radius: 12px; padding: 20px; height: 250px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 24px;">
+                    <h3 style="margin: 0 0 20px 0; font-weight: 600; font-size: 16px; color: #2C5282;">Compliance Score Trend</h3>
+                    <div style="display: flex; align-items: flex-end; height: 150px; padding-bottom: 20px; position: relative;">
+                        <div style="position: absolute; left: 0; right: 0; bottom: 20px; height: 1px; background-color: #E2E8F0;"></div>
+                        <div style="flex: 1; position: relative; height: 75%;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                        <div style="flex: 1; position: relative; height: 60%; margin: 0 2px;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                        <div style="flex: 1; position: relative; height: 80%; margin: 0 2px;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                        <div style="flex: 1; position: relative; height: 70%; margin: 0 2px;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                        <div style="flex: 1; position: relative; height: 90%; margin: 0 2px;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                        <div style="flex: 1; position: relative; height: 85%;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                        <span style="font-size: 12px; color: #718096;">Mar</span>
+                        <span style="font-size: 12px; color: #718096;">Apr</span>
+                        <span style="font-size: 12px; color: #0b3d91; font-weight: 600;">May</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Risk Distribution Card
             with col2:
-                st.metric(label="Open Issues", value=random.randint(5, 50))
-            with col3:
-                st.metric(label="Avg. Compliance", value=f"{random.randint(70, 95)}%")
-            with col4:
-                st.metric(label="Risk Score", value=f"{random.randint(10, 40)}/100")
+                st.markdown("""
+                <div style="background: white; border-radius: 12px; padding: 20px; height: 250px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 24px;">
+                    <h3 style="margin: 0 0 20px 0; font-weight: 600; font-size: 16px; color: #2C5282;">Risk Distribution</h3>
+                    <div style="display: flex; height: 150px; align-items: center; justify-content: space-around;">
+                        <div style="text-align: center;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; background-color: #FEE2E2; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
+                                <span style="font-size: 24px; font-weight: 700; color: #B91C1C;">{random.randint(3, 8)}</span>
+                            </div>
+                            <div style="font-size: 14px; color: #B91C1C; font-weight: 600;">High</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; background-color: #FEF3C7; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
+                                <span style="font-size: 24px; font-weight: 700; color: #92400E;">{random.randint(10, 20)}</span>
+                            </div>
+                            <div style="font-size: 14px; color: #92400E; font-weight: 600;">Medium</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; background-color: #ECFDF5; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
+                                <span style="font-size: 24px; font-weight: 700; color: #047857;">{random.randint(15, 30)}</span>
+                            </div>
+                            <div style="font-size: 14px; color: #047857; font-weight: 600;">Low</div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
             
             # Recent scans
             st.subheader("Recent Scans")
