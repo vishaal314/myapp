@@ -107,29 +107,33 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Modern professional styling
+# Enhanced professional styling with diverse colors
 st.markdown("""
 <style>
     /* Global Styles */
     .stApp {
-        background-color: #f8f9fa;
+        background-color: #f8faff;
+        background-image: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
     }
     
     /* Header Styling */
     .main-header {
-        font-size: 2.8rem;
-        font-weight: 700;
-        color: #0b3d91;
+        font-size: 3.2rem;
+        font-weight: 800;
+        background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 50%, #7c3aed 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         margin-bottom: 0;
         padding-bottom: 0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         letter-spacing: -0.5px;
+        line-height: 1.1;
     }
     
     .sub-header {
         font-size: 1.4rem;
         color: #2c5282;
-        margin-top: 0;
+        margin-top: 10px;
         padding-top: 0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         letter-spacing: -0.3px;
@@ -139,78 +143,109 @@ st.markdown("""
     /* Card Components */
     .dashboard-card {
         background-color: white;
-        border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        margin-bottom: 24px;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 28px;
         border: 1px solid #f0f0f0;
-        transition: all 0.2s ease-in-out;
+        transition: all 0.3s ease-in-out;
     }
     
     .dashboard-card:hover {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        transform: translateY(-4px);
     }
     
     /* Navigation Elements */
     .nav-link {
-        color: #2c5282;
+        color: #4f46e5;
         text-decoration: none;
         font-weight: 500;
-        transition: color 0.2s ease;
+        transition: all 0.2s ease;
     }
     
     .nav-link:hover {
-        color: #0b3d91;
+        color: #7c3aed;
         text-decoration: none;
+        transform: translateY(-1px);
     }
     
     /* Sidebar Customization */
-    .css-1d391kg, .css-163ttbj {
+    .css-1d391kg, .css-163ttbj, div[data-testid="stSidebar"] {
         background-color: #ffffff;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
     }
     
     /* Custom Tab Styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 1px;
+        gap: 2px;
+        background-color: #f0f4ff;
+        padding: 5px;
+        border-radius: 12px;
     }
 
     .stTabs [data-baseweb="tab"] {
         height: 50px;
         white-space: pre-wrap;
-        background-color: #f8f9fa;
-        border-radius: 4px 4px 0 0;
+        background-color: #f8faff;
+        border-radius: 10px;
         gap: 1px;
-        padding-top: 10px;
-        padding-bottom: 10px;
+        padding: 10px 20px;
+        margin: 0 4px;
+        font-weight: 500;
+        transition: all 0.2s ease;
     }
 
     .stTabs [aria-selected="true"] {
-        background-color: white;
-        border-bottom: 2px solid #0b3d91;
+        background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 100%);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        transform: translateY(-2px);
     }
     
-    /* Button Styling */
+    /* Button Styling - Multi-color options */
     .stButton > button {
-        background-color: #0b3d91;
+        background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 100%);
         color: white;
-        border-radius: 4px;
-        padding: 4px 25px;
-        font-weight: 500;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-weight: 600;
         border: none;
         transition: all 0.3s ease;
+        margin: 10px 0;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
     }
     
     .stButton > button:hover {
-        background-color: #1853b3;
-        box-shadow: 0 4px 12px rgba(44, 82, 130, 0.2);
+        background: linear-gradient(120deg, #1853b3 0%, #6366f1 100%);
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .button-primary {
+        background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 100%) !important;
+    }
+    
+    .button-success {
+        background: linear-gradient(120deg, #059669 0%, #10b981 100%) !important;
+    }
+    
+    .button-warning {
+        background: linear-gradient(120deg, #d97706 0%, #f59e0b 100%) !important;
+    }
+    
+    .button-danger {
+        background: linear-gradient(120deg, #dc2626 0%, #ef4444 100%) !important;
     }
     
     /* Metric Card Styling */
     [data-testid="stMetricValue"] {
-        font-size: 2rem;
+        font-size: 2.2rem;
         font-weight: 700;
-        color: #0b3d91;
+        background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
     
     [data-testid="stMetricLabel"] {
@@ -219,136 +254,287 @@ st.markdown("""
     
     /* Input Field Styling */
     .stTextInput > div > div > input {
-        border-radius: 6px;
+        border-radius: 10px;
         border: 1px solid #e2e8f0;
-        padding: 10px 12px;
+        padding: 12px 16px;
+        transition: all 0.2s ease;
+        font-size: 1rem;
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: #0b3d91;
-        box-shadow: 0 0 0 2px rgba(11, 61, 145, 0.2);
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        transform: translateY(-1px);
+    }
+    
+    /* Select Box Styling */
+    .stSelectbox > div[data-baseweb="select"] > div:first-child {
+        border-radius: 10px;
+        background-color: white;
+    }
+    
+    /* Checkbox Styling */
+    .stCheckbox > div[role="checkbox"] {
+        transform: scale(1.1);
+    }
+    
+    /* Section Spacing */
+    .main-section {
+        padding: 40px 0;
+    }
+    
+    .section-divider {
+        height: 2px;
+        background: linear-gradient(90deg, rgba(79, 70, 229, 0.1) 0%, rgba(79, 70, 229, 0.6) 50%, rgba(79, 70, 229, 0.1) 100%);
+        margin: 30px 0;
+        border-radius: 100px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Subscription Plan Styling
+# Enhanced Subscription Plan Styling
 st.markdown("""
 <style>
-    /* Subscription Cards */
+    /* Subscription Cards with gradients */
     .plan-card {
-        background-color: white;
-        border-radius: 12px;
-        padding: 28px 20px;
-        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
-        margin-bottom: 20px;
+        background: white;
+        background-position: center;
+        background-size: cover;
+        border-radius: 16px;
+        padding: 32px 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 24px;
         text-align: center;
-        border: 1px solid #f0f0f0;
-        transition: all 0.3s ease;
+        border: 1px solid rgba(240, 240, 240, 0.8);
+        transition: all 0.4s ease;
         height: 100%;
         display: flex;
         flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .plan-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        opacity: 0.7;
+        transition: height 0.3s ease;
     }
     
     .plan-card:hover {
-        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12);
-        transform: translateY(-4px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        transform: translateY(-6px);
+    }
+    
+    .plan-card:hover::before {
+        height: 12px;
+    }
+    
+    /* Plan Card Variations */
+    .plan-card.basic::before {
+        background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+    }
+    
+    .plan-card.premium::before {
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    }
+    
+    .plan-card.gold::before {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
     }
     
     .plan-name {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
         font-weight: 700;
-        color: #0b3d91;
-        margin-bottom: 8px;
+        color: #1e293b;
+        margin-bottom: 12px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        position: relative;
     }
     
     .plan-price {
-        font-size: 2.4rem;
+        font-size: 2.6rem;
         font-weight: 800;
-        color: #2c5282;
-        margin-bottom: 16px;
+        background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 20px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1;
+    }
+    
+    .plan-price-period {
+        font-size: 1rem;
+        color: #64748b;
+        font-weight: 500;
+        margin-top: -5px;
+        display: block;
+    }
+    
+    .plan-card.basic .plan-price {
+        background: linear-gradient(120deg, #0ea5e9 0%, #38bdf8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .plan-card.premium .plan-price {
+        background: linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .plan-card.gold .plan-price {
+        background: linear-gradient(120deg, #f59e0b 0%, #fbbf24 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
     
     .plan-features {
         text-align: left;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
         flex-grow: 1;
+        padding: 5px 0;
     }
     
     .plan-feature-item {
-        margin-bottom: 12px;
+        margin-bottom: 16px;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         font-size: 0.95rem;
+        color: #475569;
+        line-height: 1.4;
     }
     
     .plan-feature-item::before {
         content: "✓";
-        color: #38a169;
+        color: white;
         font-weight: bold;
-        margin-right: 8px;
-        background-color: #f0fff4;
-        width: 20px;
-        height: 20px;
+        margin-right: 12px;
+        margin-top: 2px;
+        background: linear-gradient(120deg, #0ea5e9 0%, #38bdf8 100%);
+        min-width: 22px;
+        height: 22px;
         border-radius: 50%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
+    }
+    
+    .plan-card.premium .plan-feature-item::before {
+        background: linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%);
+    }
+    
+    .plan-card.gold .plan-feature-item::before {
+        background: linear-gradient(120deg, #f59e0b 0%, #fbbf24 100%);
     }
     
     .subscribe-button {
-        background-color: #0b3d91;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 6px;
+        margin-top: 10px;
+        padding: 14px 0;
+        border-radius: 12px;
         text-decoration: none;
-        display: inline-block;
+        display: block;
         font-weight: 600;
         transition: all 0.3s ease;
         border: none;
         cursor: pointer;
+        font-size: 1rem;
+        width: 100%;
+        background: linear-gradient(120deg, #0ea5e9 0%, #38bdf8 100%);
+        color: white;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    }
+    
+    .plan-card.premium .subscribe-button {
+        background: linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    
+    .plan-card.gold .subscribe-button {
+        background: linear-gradient(120deg, #f59e0b 0%, #fbbf24 100%);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
     }
     
     .subscribe-button:hover {
-        background-color: #1853b3;
-        box-shadow: 0 4px 12px rgba(44, 82, 130, 0.3);
         transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+    }
+    
+    .plan-card.premium .subscribe-button:hover {
+        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+    }
+    
+    .plan-card.gold .subscribe-button:hover {
+        box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+    }
+    
+    /* Popular badge */
+    .popular-badge {
+        position: absolute;
+        top: -3px;
+        right: -3px;
+        background: linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-radius: 0 16px 0 16px;
+        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        z-index: 1;
     }
     
     /* Authentication UI */
     .login-options {
         text-align: center;
-        margin: 24px 0;
+        margin: 30px 0;
+    }
+    
+    .auth-container {
+        background: white;
+        border-radius: 16px;
+        padding: 35px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        max-width: 500px;
+        margin: 0 auto;
     }
     
     .google-login-button {
-        background-color: #ffffff;
+        background-color: white;
         border: 1px solid #e2e8f0;
         color: #333333;
-        padding: 12px 24px;
-        border-radius: 6px;
+        padding: 14px 24px;
+        border-radius: 12px;
         text-decoration: none;
-        display: inline-block;
-        margin: 8px 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 15px 0;
         width: 100%;
         font-weight: 500;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        font-size: 1rem;
     }
     
     .google-login-button:hover {
         background-color: #f8f9fa;
         border-color: #c1c7cd;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
     }
     
     .divider {
         display: flex;
         align-items: center;
         text-align: center;
-        margin: 24px 0;
+        margin: 30px 0;
     }
     
     .divider::before,
@@ -359,28 +545,74 @@ st.markdown("""
     }
     
     .divider-text {
-        padding: 0 15px;
-        color: #718096;
+        padding: 0 18px;
+        color: #64748b;
         font-weight: 500;
         font-size: 0.9rem;
     }
     
-    /* Custom Form Elements */
+    /* Form styling */
+    .form-header {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+    
     .form-container {
         background-color: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-        margin-bottom: 20px;
+        padding: 35px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 25px;
+    }
+    
+    /* Badge styling */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.35em 0.75em;
+        font-size: 0.75em;
+        font-weight: 600;
+        border-radius: 9999px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .badge-blue {
+        background: rgba(14, 165, 233, 0.1);
+        color: #0284c7;
+    }
+    
+    .badge-purple {
+        background: rgba(79, 70, 229, 0.1);
+        color: #4338ca;
+    }
+    
+    .badge-amber {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
     }
     
     /* Status Badges */
     .status-badge {
-        display: inline-block;
-        padding: 4px 10px;
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
         border-radius: 30px;
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         font-weight: 600;
+        margin-right: 10px;
+    }
+    
+    .status-badge:before {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
         margin-right: 8px;
     }
     
@@ -389,9 +621,17 @@ st.markdown("""
         color: #B91C1C;
     }
     
+    .status-high:before {
+        background-color: #DC2626;
+    }
+    
     .status-medium {
         background-color: #FEF3C7;
         color: #92400E;
+    }
+    
+    .status-medium:before {
+        background-color: #D97706;
     }
     
     .status-low {
@@ -399,30 +639,87 @@ st.markdown("""
         color: #047857;
     }
     
+    .status-low:before {
+        background-color: #10B981;
+    }
+    
     /* Dashboard Stats */
     .stat-container {
         background-color: white;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
         text-align: center;
         height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-container:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     }
     
     .stat-value {
-        font-size: 1.8rem;
+        font-size: 2.2rem;
         font-weight: 700;
-        color: #0b3d91;
-        margin-bottom: 5px;
+        background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 8px;
     }
     
     .stat-label {
-        font-size: 0.9rem;
-        color: #718096;
+        font-size: 1rem;
+        color: #64748b;
         font-weight: 500;
+    }
+    
+    /* Landing page button spacing */
+    .landing-button {
+        margin: 16px 0;
+        padding: 14px 40px !important;
+        font-size: 1.1rem !important;
+        letter-spacing: 0.02em;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 20px;
+        margin: 30px 0;
+    }
+    
+    .landing-features {
+        margin: 50px 0;
+    }
+    
+    .feature-item {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        margin-bottom: 16px;
+        background: linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -512,24 +809,93 @@ def generate_mock_soc2_results(repo_url, branch=None):
 
 # Main application
 def main():
-    # Sidebar with modern logo
+    # Sidebar with enhanced modern logo
     with st.sidebar:
-        # Modern professional logo
+        # Enhanced professional logo with multi-color design
         st.markdown("""
-        <div style="text-align: center; padding: 10px 0 20px 0;">
-            <div style="display: inline-flex; align-items: center; background: linear-gradient(135deg, #0b3d91 0%, #2c5282 100%); 
-                        padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(11, 61, 145, 0.2);">
-                <div style="font-size: 24px; margin-right: 8px; color: white;">🛡️</div>
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-                    <div style="font-weight: 800; font-size: 20px; color: white; letter-spacing: -0.5px; line-height: 1.1;">
-                        DataGuardian
+        <div style="text-align: center; padding: 15px 0 25px 0;">
+            <div style="position: relative; display: inline-block;">
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    background: linear-gradient(125deg, #0b3d91 0%, #4f46e5 50%, #7c3aed 100%); 
+                    padding: 12px 18px;
+                    border-radius: 12px;
+                    margin-bottom: 12px;
+                    box-shadow: 0 8px 25px rgba(79, 70, 229, 0.25);
+                    overflow: hidden;
+                    position: relative;
+                    z-index: 1;
+                ">
+                    <!-- Decorative elements -->
+                    <div style="position: absolute; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%); top: -60px; right: -60px; z-index: 0;"></div>
+                    <div style="position: absolute; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%); bottom: -40px; left: -20px; z-index: 0;"></div>
+                    
+                    <!-- Shield icon with gradient -->
+                    <div style="
+                        position: relative; 
+                        z-index: 2;
+                        font-size: 28px; 
+                        margin-right: 12px;
+                        background: linear-gradient(135deg, #fff 20%, #e0e7ff 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+                    ">
+                        🛡️
                     </div>
-                    <div style="font-weight: 600; font-size: 12px; color: #e0e7ff; letter-spacing: 1.5px; text-transform: uppercase;">
-                        PRO
+                    
+                    <!-- Text content -->
+                    <div style="position: relative; z-index: 2; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                        <div style="
+                            font-weight: 800; 
+                            font-size: 24px; 
+                            color: white; 
+                            letter-spacing: -0.3px; 
+                            line-height: 1.1;
+                            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                        ">
+                            DataGuardian
+                        </div>
+                        <div style="
+                            font-weight: 700; 
+                            font-size: 13px; 
+                            background: linear-gradient(90deg, #f0f4ff 0%, #ffffff 100%);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            letter-spacing: 2px; 
+                            text-transform: uppercase;
+                        ">
+                            PRO
+                        </div>
                     </div>
                 </div>
+                
+                <!-- Badge -->
+                <div style="
+                    position: absolute;
+                    top: -8px;
+                    right: -8px;
+                    background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+                    color: white;
+                    font-size: 10px;
+                    font-weight: 700;
+                    padding: 4px 8px;
+                    border-radius: 30px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+                ">
+                    Enterprise
+                </div>
             </div>
-            <div style="font-size: 12px; color: #718096; margin-top: 5px;">Enterprise Privacy Compliance</div>
+            
+            <!-- Tagline with multi-color text -->
+            <div style="margin-top: 8px; font-size: 13px; font-weight: 500;">
+                <span style="background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 50%, #7c3aed 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Advanced Privacy Compliance Platform
+                </span>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -699,35 +1065,172 @@ def main():
     
     # Main content
     if not st.session_state.logged_in:
-        st.markdown("<h1 class='main-header'>DataGuardian Pro</h1>", unsafe_allow_html=True)
-        st.markdown("<p class='sub-header'>Advanced Enterprise Privacy Compliance Platform</p>", unsafe_allow_html=True)
+        # Enhanced landing page with hero section
+        st.markdown("""
+        <div style="
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(135deg, rgba(240,244,255,0.8) 0%, rgba(230,240,255,0.8) 100%);
+            border-radius: 24px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.06);
+            position: relative;
+            overflow: hidden;
+        ">
+            <!-- Decorative elements -->
+            <div style="position: absolute; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(79,70,229,0.05) 0%, rgba(79,70,229,0) 70%); top: -150px; right: -100px;"></div>
+            <div style="position: absolute; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.05) 0%, rgba(245,158,11,0) 70%); bottom: -100px; left: -50px;"></div>
+            
+            <!-- Content -->
+            <h1 style="
+                font-size: 3.5rem;
+                font-weight: 800;
+                margin-bottom: 15px;
+                background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 50%, #7c3aed 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                padding: 0 20px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                letter-spacing: -1px;
+                line-height: 1.1;
+            ">
+                DataGuardian Pro
+            </h1>
+            
+            <p style="
+                font-size: 1.5rem;
+                color: #4b5563;
+                max-width: 700px;
+                margin: 0 auto 30px auto;
+                font-weight: 400;
+                padding: 0 20px;
+            ">
+                The most comprehensive enterprise privacy compliance platform
+            </p>
+            
+            <!-- Feature badges -->
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 30px; padding: 0 20px;">
+                <span style="
+                    background: rgba(79, 70, 229, 0.1);
+                    color: #4f46e5;
+                    padding: 8px 16px;
+                    border-radius: 50px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                ">
+                    GDPR Compliant
+                </span>
+                
+                <span style="
+                    background: rgba(14, 165, 233, 0.1);
+                    color: #0ea5e9;
+                    padding: 8px 16px;
+                    border-radius: 50px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                ">
+                    SOC2 Ready
+                </span>
+                
+                <span style="
+                    background: rgba(245, 158, 11, 0.1);
+                    color: #f59e0b;
+                    padding: 8px 16px;
+                    border-radius: 50px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                ">
+                    AI-Powered
+                </span>
+                
+                <span style="
+                    background: rgba(16, 185, 129, 0.1);
+                    color: #10b981;
+                    padding: 8px 16px;
+                    border-radius: 50px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                ">
+                    Cloud Native
+                </span>
+            </div>
+            
+            <!-- Action buttons with proper spacing -->
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px; padding: 0 20px;">
+                <a href="#sign-in" style="
+                    background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 100%);
+                    color: white;
+                    font-weight: 600;
+                    padding: 14px 32px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    display: inline-block;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+                    font-size: 1.1rem;
+                ">
+                    Get Started
+                </a>
+                
+                <a href="#plans" style="
+                    background: white;
+                    color: #4f46e5;
+                    font-weight: 600;
+                    padding: 14px 32px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    display: inline-block;
+                    transition: all 0.3s ease;
+                    border: 1px solid rgba(79, 70, 229, 0.3);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                    font-size: 1.1rem;
+                ">
+                    View Plans
+                </a>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Auth tabs
         auth_tabs = st.tabs(["Sign In", "Register", "Plans"])
         
         # Sign In tab
         with auth_tabs[0]:
-            st.markdown("<h3>Sign in to your account</h3>", unsafe_allow_html=True)
-            
-            # Google Sign In button
+            # Enhanced sign in container
             st.markdown("""
-            <div class="login-options">
+            <div class="auth-container">
+                <h2 class="form-header">Sign in to your account</h2>
+                
+                <!-- Google Sign In button -->
                 <button class="google-login-button">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
-                         style="height: 18px; margin-right: 8px; vertical-align: middle;"> 
+                         style="height: 20px; margin-right: 12px; vertical-align: middle;"> 
                     Sign in with Google
                 </button>
+                
+                <!-- Divider -->
+                <div class="divider"><span class="divider-text">OR CONTINUE WITH EMAIL</span></div>
             </div>
             """, unsafe_allow_html=True)
             
-            # Divider
-            st.markdown('<div class="divider"><span class="divider-text">OR</span></div>', unsafe_allow_html=True)
-            
             # Email login form
-            email = st.text_input("Email", key="login_email")
-            password = st.text_input("Password", type="password", key="login_password_email")
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                email = st.text_input("Email", key="login_email", placeholder="Your email address")
+            with col2:
+                st.write("")  # For spacing
             
-            if st.button("Sign In", key="signin_button"):
+            password = st.text_input("Password", type="password", key="login_password_email", placeholder="Your password")
+            
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                remember = st.checkbox("Remember me", value=True)
+            with col2:
+                st.markdown('<div style="text-align: right; margin-top: 5px;"><a href="#" style="color: #4f46e5; text-decoration: none; font-size: 0.9rem; font-weight: 500;">Forgot password?</a></div>', unsafe_allow_html=True)
+            
+            # Button with plenty of spacing
+            st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
+            if st.button("Sign In", key="signin_button", use_container_width=True):
                 if not email or not password:
                     st.error("Please enter both email and password")
                 elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
@@ -742,39 +1245,45 @@ def main():
                     st.session_state.permissions = ["scan:basic", "report:view"]
                     st.success("Login successful!")
                     st.rerun()
+            
+            st.markdown('<div style="text-align: center; margin-top: 20px;"><span style="color: #64748b; font-size: 0.9rem;">Don\'t have an account?</span> <a href="#" style="color: #4f46e5; text-decoration: none; font-weight: 500;">Sign up</a></div>', unsafe_allow_html=True)
         
         # Register tab
         with auth_tabs[1]:
-            st.markdown("<h3>Create a new account</h3>", unsafe_allow_html=True)
-            
-            # Google Registration button
+            # Enhanced registration container
             st.markdown("""
-            <div class="login-options">
+            <div class="auth-container">
+                <h2 class="form-header">Create your account</h2>
+                
+                <!-- Google Registration button -->
                 <button class="google-login-button">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
-                         style="height: 18px; margin-right: 8px; vertical-align: middle;"> 
+                         style="height: 20px; margin-right: 12px; vertical-align: middle;"> 
                     Register with Google
                 </button>
+                
+                <!-- Divider -->
+                <div class="divider"><span class="divider-text">OR REGISTER WITH EMAIL</span></div>
             </div>
             """, unsafe_allow_html=True)
             
-            # Divider
-            st.markdown('<div class="divider"><span class="divider-text">OR</span></div>', unsafe_allow_html=True)
-            
-            # Email registration form
+            # Email registration form with proper spacing
             col1, col2 = st.columns(2)
             with col1:
-                first_name = st.text_input("First Name", key="reg_first_name")
-                email = st.text_input("Email", key="reg_email")
-            
+                first_name = st.text_input("First Name", key="reg_first_name", placeholder="Your first name")
             with col2:
-                last_name = st.text_input("Last Name", key="reg_last_name")
-                password = st.text_input("Password", type="password", key="reg_password")
-                
-            company = st.text_input("Company (Optional)", key="reg_company")
+                last_name = st.text_input("Last Name", key="reg_last_name", placeholder="Your last name")
+            
+            email = st.text_input("Work Email", key="reg_email", placeholder="you@company.com")
+            password = st.text_input("Password", type="password", key="reg_password", placeholder="Create a strong password")
+            company = st.text_input("Company (Optional)", key="reg_company", placeholder="Your organization")
+            
+            st.markdown('<div style="height: 10px;"></div>', unsafe_allow_html=True)
             terms = st.checkbox("I agree to the Terms of Service and Privacy Policy", key="reg_terms")
             
-            if st.button("Create Account", key="register_button"):
+            # Button with plenty of spacing
+            st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
+            if st.button("Create Account", key="register_button", use_container_width=True):
                 if not first_name or not last_name or not email or not password:
                     st.error("Please fill in all required fields")
                 elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
@@ -786,69 +1295,231 @@ def main():
                     st.success("Account created successfully! Please sign in.")
                     # Switch to sign in tab
                     st.session_state.active_tab = "login"
-                    
-        # Plans tab
-        with auth_tabs[2]:
-            st.markdown("<h3>Choose your plan</h3>", unsafe_allow_html=True)
             
-            # Display subscription plans
+            st.markdown('<div style="text-align: center; margin-top: 20px;"><span style="color: #64748b; font-size: 0.9rem;">Already have an account?</span> <a href="#" style="color: #4f46e5; text-decoration: none; font-weight: 500;">Sign in</a></div>', unsafe_allow_html=True)
+                    
+        # Plans tab with enhanced styling
+        with auth_tabs[2]:
+            st.markdown("""
+            <div style="text-align: center; margin-bottom: 40px;">
+                <h2 style="font-size: 2.2rem; font-weight: 700; color: #1e293b; margin-bottom: 15px;">Choose the right plan for your needs</h2>
+                <p style="color: #64748b; max-width: 600px; margin: 0 auto;">Our flexible plans are designed to meet the needs of businesses of all sizes, from startups to enterprises.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Display subscription plans with enhanced styling
             plan_cols = st.columns(3)
             
             # Basic plan
             with plan_cols[0]:
                 st.markdown(f"""
-                <div class="plan-card">
+                <div class="plan-card basic">
                     <div class="plan-name">{SUBSCRIPTION_PLANS['basic']['name']}</div>
-                    <div class="plan-price">${SUBSCRIPTION_PLANS['basic']['price']}/mo</div>
+                    <div class="plan-price">${SUBSCRIPTION_PLANS['basic']['price']}<span class="plan-price-period">/month</span></div>
                     <div class="plan-features">
-                        {''.join([f'<div class="plan-feature-item">✓ {feature}</div>' for feature in SUBSCRIPTION_PLANS['basic']['features']])}
+                        {''.join([f'<div class="plan-feature-item">{feature}</div>' for feature in SUBSCRIPTION_PLANS['basic']['features']])}
                     </div>
-                    <a href="#" class="subscribe-button">Subscribe</a>
+                    <a href="#" class="subscribe-button">Subscribe Now</a>
                 </div>
                 """, unsafe_allow_html=True)
             
-            # Premium plan
+            # Premium plan with popular badge
             with plan_cols[1]:
                 st.markdown(f"""
-                <div class="plan-card" style="border: 2px solid #3B82F6;">
+                <div class="plan-card premium">
+                    <div class="popular-badge">Popular</div>
                     <div class="plan-name">{SUBSCRIPTION_PLANS['premium']['name']}</div>
-                    <div class="plan-price">${SUBSCRIPTION_PLANS['premium']['price']}/mo</div>
+                    <div class="plan-price">${SUBSCRIPTION_PLANS['premium']['price']}<span class="plan-price-period">/month</span></div>
                     <div class="plan-features">
-                        {''.join([f'<div class="plan-feature-item">✓ {feature}</div>' for feature in SUBSCRIPTION_PLANS['premium']['features']])}
+                        {''.join([f'<div class="plan-feature-item">{feature}</div>' for feature in SUBSCRIPTION_PLANS['premium']['features']])}
                     </div>
-                    <a href="#" class="subscribe-button" style="background-color: #1E3A8A;">Subscribe</a>
+                    <a href="#" class="subscribe-button">Subscribe Now</a>
                 </div>
                 """, unsafe_allow_html=True)
             
             # Gold plan
             with plan_cols[2]:
                 st.markdown(f"""
-                <div class="plan-card">
+                <div class="plan-card gold">
                     <div class="plan-name">{SUBSCRIPTION_PLANS['gold']['name']}</div>
-                    <div class="plan-price">${SUBSCRIPTION_PLANS['gold']['price']}/mo</div>
+                    <div class="plan-price">${SUBSCRIPTION_PLANS['gold']['price']}<span class="plan-price-period">/month</span></div>
                     <div class="plan-features">
-                        {''.join([f'<div class="plan-feature-item">✓ {feature}</div>' for feature in SUBSCRIPTION_PLANS['gold']['features']])}
+                        {''.join([f'<div class="plan-feature-item">{feature}</div>' for feature in SUBSCRIPTION_PLANS['gold']['features']])}
                     </div>
-                    <a href="#" class="subscribe-button">Subscribe</a>
+                    <a href="#" class="subscribe-button">Subscribe Now</a>
                 </div>
                 """, unsafe_allow_html=True)
             
-            # Note on pricing
-            st.info("All plans include a 14-day free trial. No credit card required to start.")
+            # Enhanced pricing note
+            st.markdown("""
+            <div style="
+                background: linear-gradient(to right, rgba(14, 165, 233, 0.05), rgba(79, 70, 229, 0.05));
+                padding: 20px;
+                border-radius: 12px;
+                text-align: center;
+                margin-top: 20px;
+                border: 1px solid rgba(79, 70, 229, 0.1);
+            ">
+                <div style="color: #4f46e5; font-weight: 600; margin-bottom: 5px;">All plans include a 14-day free trial</div>
+                <div style="color: #64748b;">No credit card required to get started. Cancel anytime.</div>
+            </div>
+            """, unsafe_allow_html=True)
         
-        # Feature highlights
+        # Feature highlights section with enhanced styling
         st.markdown("""
-        ## Why Choose DataGuardian Pro?
+        <div style="margin: 60px 0;">
+            <h2 style="font-size: 2.2rem; font-weight: 700; color: #1e293b; margin-bottom: 40px; text-align: center;">Why Choose DataGuardian Pro?</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                <!-- Feature 1 -->
+                <div style="
+                    background: white;
+                    border-radius: 16px;
+                    padding: 30px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+                    transition: all 0.3s ease;
+                ">
+                    <div style="
+                        width: 60px;
+                        height: 60px;
+                        border-radius: 12px;
+                        background: linear-gradient(120deg, #0ea5e9 0%, #38bdf8 100%);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 24px;
+                        color: white;
+                        margin-bottom: 20px;
+                    ">📊</div>
+                    <h3 style="font-size: 1.3rem; font-weight: 700; color: #1e293b; margin-bottom: 10px;">
+                        Multi-Service Scanning
+                    </h3>
+                    <p style="color: #64748b; line-height: 1.6;">
+                        Comprehensive scanning of code, API, database, and AI models to detect privacy risks and compliance issues.
+                    </p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div style="
+                    background: white;
+                    border-radius: 16px;
+                    padding: 30px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+                    transition: all 0.3s ease;
+                ">
+                    <div style="
+                        width: 60px;
+                        height: 60px;
+                        border-radius: 12px;
+                        background: linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 24px;
+                        color: white;
+                        margin-bottom: 20px;
+                    ">🧠</div>
+                    <h3 style="font-size: 1.3rem; font-weight: 700; color: #1e293b; margin-bottom: 10px;">
+                        AI-Powered Risk Detection
+                    </h3>
+                    <p style="color: #64748b; line-height: 1.6;">
+                        Machine learning algorithms that detect and prioritize privacy risks with higher accuracy than traditional methods.
+                    </p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div style="
+                    background: white;
+                    border-radius: 16px;
+                    padding: 30px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+                    transition: all 0.3s ease;
+                ">
+                    <div style="
+                        width: 60px;
+                        height: 60px;
+                        border-radius: 12px;
+                        background: linear-gradient(120deg, #f59e0b 0%, #fbbf24 100%);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 24px;
+                        color: white;
+                        margin-bottom: 20px;
+                    ">📝</div>
+                    <h3 style="font-size: 1.3rem; font-weight: 700; color: #1e293b; margin-bottom: 10px;">
+                        Detailed Compliance Reporting
+                    </h3>
+                    <p style="color: #64748b; line-height: 1.6;">
+                        Generate comprehensive compliance reports with actionable insights and remediation recommendations.
+                    </p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        **Key Features:**
-        - Multi-service scanning (Code, API, Database, AI Models)
-        - Machine learning-powered risk detection
-        - Advanced compliance reporting with detailed findings
-        - Enhanced multilingual support
-        - Dynamic role-based access control
-        
-        Sign up today and protect your business data!
-        """)
+        # Call to action section
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #0b3d91 0%, #4f46e5 50%, #7c3aed 100%);
+            padding: 60px 40px;
+            border-radius: 24px;
+            text-align: center;
+            color: white;
+            margin: 60px 0 40px 0;
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.2);
+        ">
+            <h2 style="
+                font-size: 2.4rem;
+                font-weight: 700;
+                margin-bottom: 20px;
+                max-width: 700px;
+                margin-left: auto;
+                margin-right: auto;
+            ">Ready to take control of your data privacy?</h2>
+            
+            <p style="
+                font-size: 1.2rem;
+                opacity: 0.9;
+                max-width: 600px;
+                margin: 0 auto 30px auto;
+            ">
+                Join thousands of companies that trust DataGuardian Pro to secure their data and ensure compliance.
+            </p>
+            
+            <a href="#" style="
+                background: white;
+                color: #4f46e5;
+                font-weight: 600;
+                padding: 16px 36px;
+                border-radius: 12px;
+                text-decoration: none;
+                display: inline-block;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                font-size: 1.1rem;
+                margin: 0 10px;
+            ">
+                Start Free Trial
+            </a>
+            
+            <a href="#" style="
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                font-weight: 600;
+                padding: 16px 36px;
+                border-radius: 12px;
+                text-decoration: none;
+                display: inline-block;
+                transition: all 0.3s ease;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                font-size: 1.1rem;
+                margin: 0 10px;
+            ">
+                Contact Sales
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
     else:
         # Create tabs
         tabs = st.tabs(["Dashboard", "Scan", "Reports", "Admin"])
