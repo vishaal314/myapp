@@ -1035,7 +1035,7 @@ def main():
             
             col1, col2 = st.columns([1, 1])
             with col1:
-                remember = st.checkbox("Remember me", value=True)
+                remember = st.checkbox("Remember me", value=True, key="remember_me_checkbox")
             with col2:
                 st.markdown('<div style="text-align: right;"><a href="#" style="color: #4f46e5; font-size: 14px; text-decoration: none;">Forgot password?</a></div>', unsafe_allow_html=True)
             
