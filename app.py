@@ -387,20 +387,29 @@ st.markdown("""
     
     .plan-card.basic .plan-price {
         background: linear-gradient(120deg, #0ea5e9 0%, #38bdf8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
+        display: inline-block !important;
     }
     
     .plan-card.premium .plan-price {
         background: linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
+        display: inline-block !important;
     }
     
     .plan-card.gold .plan-price {
         background: linear-gradient(120deg, #f59e0b 0%, #fbbf24 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
+        display: inline-block !important;
     }
     
     .plan-features {
@@ -675,8 +684,11 @@ st.markdown("""
         font-size: 2.2rem;
         font-weight: 700;
         background: linear-gradient(120deg, #0b3d91 0%, #4f46e5 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
+        display: inline-block !important;
         margin-bottom: 8px;
     }
     
