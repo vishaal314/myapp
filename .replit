@@ -18,15 +18,15 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Streamlit Server"
+args = "Streamlined App"
 
 [[workflows.workflow]]
-name = "Streamlit Server"
+name = "Streamlined App"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run app.py --server.port 5000 --server.headless true"
+args = "streamlit run streamlined_app.py --server.port 5000 --server.headless true"
 waitForPort = 5000
 
 [[ports]]
