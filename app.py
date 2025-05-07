@@ -7,6 +7,97 @@ import random
 import uuid
 import base64
 from datetime import datetime
+import stripe
+import re
+
+# Import scanners - adjust paths as needed
+try:
+    from services.enhanced_soc2_scanner import scan_github_repository as soc2_scan_github
+    from services.enhanced_soc2_scanner import scan_azure_repository as soc2_scan_azure
+    from services.soc2_display import display_soc2_findings
+except ImportError:
+    # Mock implementations if modules not found
+    def soc2_scan_github(repo_url, branch=None, token=None):
+        """Mock SOC2 scanner implementation"""
+        return generate_mock_soc2_results(repo_url, branch)
+        
+    def soc2_scan_azure(repo_url, project, branch=None, token=None, organization=None):
+        """Mock SOC2 scanner implementation for Azure"""
+        return generate_mock_soc2_results(repo_url, branch)
+        
+    def display_soc2_findings(results):
+        """Mock SOC2 findings display"""
+        st.json(results)
+
+# Import sustainability scanner
+try:
+    from utils.scanners.sustainability_scanner import run_sustainability_scanner
+    from utils.sustainability_analyzer import SustainabilityAnalyzer
+except ImportError:
+    # Mock implementation
+    def run_sustainability_scanner():
+        """Mock sustainability scanner implementation"""
+        st.title("Sustainability Scanner")
+        st.info("Running mock implementation of Sustainability Scanner")
+        
+    class SustainabilityAnalyzer:
+        """Mock sustainability analyzer"""
+        def __init__(self, scan_results=None, industry="average"):
+            self.scan_results = scan_results
+            self.industry = industry
+            
+        def analyze(self):
+            """Return mock analysis"""
+            return {
+                "sustainability_score": random.randint(60, 95),
+                "potential_savings": random.randint(10000, 50000),
+                "carbon_reduction": random.randint(5, 30)
+            }
+
+# Initialize Stripe
+stripe_public_key = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+stripe_secret_key = os.environ.get('STRIPE_SECRET_KEY')
+stripe.api_key = stripe_secret_key
+
+# Define subscription plans
+SUBSCRIPTION_PLANS = {
+    "basic": {
+        "name": "Basic",
+        "price": 49,
+        "features": [
+            "Basic Privacy Scans",
+            "5 repositories",
+            "Weekly scans",
+            "Email support"
+        ],
+        "stripe_price_id": "price_basic123"  # Replace with actual Stripe price ID
+    },
+    "premium": {
+        "name": "Premium",
+        "price": 99,
+        "features": [
+            "All Basic features",
+            "20 repositories",
+            "Daily scans",
+            "SOC2 compliance",
+            "Priority support"
+        ],
+        "stripe_price_id": "price_premium456"  # Replace with actual Stripe price ID
+    },
+    "gold": {
+        "name": "Gold",
+        "price": 199,
+        "features": [
+            "All Premium features",
+            "Unlimited repositories",
+            "Continuous scanning",
+            "Custom integrations",
+            "Dedicated support",
+            "Compliance certification"
+        ],
+        "stripe_price_id": "price_gold789"  # Replace with actual Stripe price ID
+    }
+}
 
 # Page configuration
 st.set_page_config(
@@ -16,35 +107,322 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for styling
+# Modern professional styling
 st.markdown("""
 <style>
+    /* Global Styles */
+    .stApp {
+        background-color: #f8f9fa;
+    }
+    
+    /* Header Styling */
     .main-header {
-        font-size: 2.5rem;
-        color: #1E3A8A;
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #0b3d91;
         margin-bottom: 0;
         padding-bottom: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        letter-spacing: -0.5px;
     }
+    
     .sub-header {
-        font-size: 1.5rem;
-        color: #3B82F6;
+        font-size: 1.4rem;
+        color: #2c5282;
         margin-top: 0;
         padding-top: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        letter-spacing: -0.3px;
+        font-weight: 400;
     }
+    
+    /* Card Components */
     .dashboard-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 24px;
+        border: 1px solid #f0f0f0;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .dashboard-card:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    /* Navigation Elements */
+    .nav-link {
+        color: #2c5282;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+    
+    .nav-link:hover {
+        color: #0b3d91;
+        text-decoration: none;
+    }
+    
+    /* Sidebar Customization */
+    .css-1d391kg, .css-163ttbj {
+        background-color: #ffffff;
+    }
+    
+    /* Custom Tab Styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 1px;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: #f8f9fa;
+        border-radius: 4px 4px 0 0;
+        gap: 1px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background-color: white;
+        border-bottom: 2px solid #0b3d91;
+    }
+    
+    /* Button Styling */
+    .stButton > button {
+        background-color: #0b3d91;
+        color: white;
+        border-radius: 4px;
+        padding: 4px 25px;
+        font-weight: 500;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton > button:hover {
+        background-color: #1853b3;
+        box-shadow: 0 4px 12px rgba(44, 82, 130, 0.2);
+    }
+    
+    /* Metric Card Styling */
+    [data-testid="stMetricValue"] {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0b3d91;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        font-weight: 500;
+    }
+    
+    /* Input Field Styling */
+    .stTextInput > div > div > input {
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        padding: 10px 12px;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: #0b3d91;
+        box-shadow: 0 0 0 2px rgba(11, 61, 145, 0.2);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Subscription Plan Styling
+st.markdown("""
+<style>
+    /* Subscription Cards */
+    .plan-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 28px 20px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+        text-align: center;
+        border: 1px solid #f0f0f0;
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .plan-card:hover {
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12);
+        transform: translateY(-4px);
+    }
+    
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0b3d91;
+        margin-bottom: 8px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .plan-price {
+        font-size: 2.4rem;
+        font-weight: 800;
+        color: #2c5282;
+        margin-bottom: 16px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .plan-features {
+        text-align: left;
+        margin-bottom: 20px;
+        flex-grow: 1;
+    }
+    
+    .plan-feature-item {
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        font-size: 0.95rem;
+    }
+    
+    .plan-feature-item::before {
+        content: "✓";
+        color: #38a169;
+        font-weight: bold;
+        margin-right: 8px;
+        background-color: #f0fff4;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+    
+    .subscribe-button {
+        background-color: #0b3d91;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-block;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .subscribe-button:hover {
+        background-color: #1853b3;
+        box-shadow: 0 4px 12px rgba(44, 82, 130, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    /* Authentication UI */
+    .login-options {
+        text-align: center;
+        margin: 24px 0;
+    }
+    
+    .google-login-button {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: #333333;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-block;
+        margin: 8px 0;
+        width: 100%;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .google-login-button:hover {
+        background-color: #f8f9fa;
+        border-color: #c1c7cd;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 24px 0;
+    }
+    
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .divider-text {
+        padding: 0 15px;
+        color: #718096;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    
+    /* Custom Form Elements */
+    .form-container {
+        background-color: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        margin-bottom: 20px;
+    }
+    
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-right: 8px;
+    }
+    
+    .status-high {
+        background-color: #FEE2E2;
+        color: #B91C1C;
+    }
+    
+    .status-medium {
+        background-color: #FEF3C7;
+        color: #92400E;
+    }
+    
+    .status-low {
+        background-color: #ECFDF5;
+        color: #047857;
+    }
+    
+    /* Dashboard Stats */
+    .stat-container {
         background-color: white;
         border-radius: 10px;
         padding: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        text-align: center;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
-    .nav-link {
-        color: #3B82F6;
-        text-decoration: none;
+    
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #0b3d91;
+        margin-bottom: 5px;
     }
-    .nav-link:hover {
-        color: #1E3A8A;
-        text-decoration: underline;
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #718096;
+        font-weight: 500;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -59,6 +437,7 @@ if "logged_in" not in st.session_state:
     st.session_state.scan_history = []
     st.session_state.current_scan_results = None
     st.session_state.permissions = []
+    st.session_state.subscription_tier = "basic"  # Default subscription tier
 
 # Mock authentication function
 def authenticate(username, password):
@@ -94,6 +473,26 @@ def generate_mock_scan_results(scan_type):
         "compliance_score": random.randint(60, 95)
     }
     
+    return results
+
+def generate_mock_soc2_results(repo_url, branch=None):
+    """Generate mock SOC2 scan results"""
+    results = {
+        "scan_type": "SOC2 Scanner",
+        "timestamp": datetime.now().isoformat(),
+        "scan_id": str(uuid.uuid4()),
+        "repo_url": repo_url,
+        "branch": branch or "main",
+        "findings": [],
+        "high_risk_count": random.randint(1, 5),
+        "medium_risk_count": random.randint(3, 8),
+        "low_risk_count": random.randint(2, 10),
+        "total_findings": 0,
+        "compliance_score": random.randint(60, 95),
+        "technologies_detected": ["Terraform", "CloudFormation", "Kubernetes", "Docker"],
+        "scan_status": "success"
+    }
+    
     # Generate random findings
     finding_types = ["PII Exposure", "Insecure Configuration", "Missing Encryption", 
                      "Data Retention Policy", "Authentication Issue", "Authorization Gap"]
@@ -113,9 +512,26 @@ def generate_mock_scan_results(scan_type):
 
 # Main application
 def main():
-    # Sidebar
+    # Sidebar with modern logo
     with st.sidebar:
-        st.image("https://placehold.co/200x100/1E40AF/FFFFFF?text=DataGuardian+Pro", width=200)
+        # Modern professional logo
+        st.markdown("""
+        <div style="text-align: center; padding: 10px 0 20px 0;">
+            <div style="display: inline-flex; align-items: center; background: linear-gradient(135deg, #0b3d91 0%, #2c5282 100%); 
+                        padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(11, 61, 145, 0.2);">
+                <div style="font-size: 24px; margin-right: 8px; color: white;">🛡️</div>
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                    <div style="font-weight: 800; font-size: 20px; color: white; letter-spacing: -0.5px; line-height: 1.1;">
+                        DataGuardian
+                    </div>
+                    <div style="font-weight: 600; font-size: 12px; color: #e0e7ff; letter-spacing: 1.5px; text-transform: uppercase;">
+                        PRO
+                    </div>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: #718096; margin-top: 5px;">Enterprise Privacy Compliance</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         if not st.session_state.logged_in:
             st.subheader("Login")
@@ -146,6 +562,136 @@ def main():
             st.write(f"Role: {st.session_state.role}")
             st.write(f"Email: {st.session_state.email}")
             
+            # Modern subscription status display
+            st.markdown("### Your Subscription", help="Manage your subscription plan")
+            
+            current_plan = st.session_state.get("subscription_tier", "basic")
+            
+            # Display appropriate plan card based on subscription
+            if current_plan == "basic":
+                st.markdown(f"""
+                <div style='background-color: white; padding: 15px; border-radius: 10px; 
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #f0f0f0;
+                            margin-bottom: 15px;'>
+                    <div style='display: flex; align-items: center; margin-bottom: 10px;'>
+                        <div style='background-color: #EBF4FF; border-radius: 50%; width: 24px; height: 24px; 
+                                    display: flex; align-items: center; justify-content: center; margin-right: 10px;'>
+                            <span style='color: #2C5282; font-weight: bold; font-size: 12px;'>B</span>
+                        </div>
+                        <div style='color: #2C5282; font-weight: 600; font-size: 16px;'>{SUBSCRIPTION_PLANS['basic']['name']}</div>
+                    </div>
+                    <div style='color: #2C5282; font-weight: 700; font-size: 20px; margin-bottom: 5px;'>${SUBSCRIPTION_PLANS['basic']['price']}<span style='color: #718096; font-weight: 400; font-size: 14px;'>/month</span></div>
+                    <div style='color: #718096; font-size: 13px; margin-bottom: 15px;'>Your plan renews on May 12, 2025</div>
+                    <button style='background-color: #0b3d91; color: white; border: none; border-radius: 6px; 
+                                   padding: 8px 16px; width: 100%; font-weight: 600; cursor: pointer;
+                                   transition: all 0.3s ease;'
+                            onmouseover="this.style.backgroundColor='#1853b3'"
+                            onmouseout="this.style.backgroundColor='#0b3d91'">
+                        Upgrade to Premium
+                    </button>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            elif current_plan == "premium":
+                st.markdown(f"""
+                <div style='background-color: white; padding: 15px; border-radius: 10px; 
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #3B82F6;
+                            margin-bottom: 15px;'>
+                    <div style='display: flex; align-items: center; margin-bottom: 10px;'>
+                        <div style='background-color: #2C5282; border-radius: 50%; width: 24px; height: 24px; 
+                                    display: flex; align-items: center; justify-content: center; margin-right: 10px;'>
+                            <span style='color: white; font-weight: bold; font-size: 12px;'>P</span>
+                        </div>
+                        <div style='color: #2C5282; font-weight: 600; font-size: 16px;'>{SUBSCRIPTION_PLANS['premium']['name']}</div>
+                    </div>
+                    <div style='color: #2C5282; font-weight: 700; font-size: 20px; margin-bottom: 5px;'>${SUBSCRIPTION_PLANS['premium']['price']}<span style='color: #718096; font-weight: 400; font-size: 14px;'>/month</span></div>
+                    <div style='color: #718096; font-size: 13px; margin-bottom: 15px;'>Your plan renews on May 12, 2025</div>
+                    <button style='background-color: #0b3d91; color: white; border: none; border-radius: 6px; 
+                                  padding: 8px 16px; width: 100%; font-weight: 600; cursor: pointer;
+                                  transition: all 0.3s ease;'
+                           onmouseover="this.style.backgroundColor='#1853b3'"
+                           onmouseout="this.style.backgroundColor='#0b3d91'">
+                        Upgrade to Gold
+                    </button>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            elif current_plan == "gold":
+                st.markdown(f"""
+                <div style='background-color: white; padding: 15px; border-radius: 10px; 
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #F59E0B;
+                            margin-bottom: 15px;'>
+                    <div style='display: flex; align-items: center; margin-bottom: 10px;'>
+                        <div style='background-color: #F59E0B; border-radius: 50%; width: 24px; height: 24px; 
+                                    display: flex; align-items: center; justify-content: center; margin-right: 10px;'>
+                            <span style='color: white; font-weight: bold; font-size: 12px;'>G</span>
+                        </div>
+                        <div style='color: #92400E; font-weight: 600; font-size: 16px;'>{SUBSCRIPTION_PLANS['gold']['name']}</div>
+                    </div>
+                    <div style='color: #92400E; font-weight: 700; font-size: 20px; margin-bottom: 5px;'>${SUBSCRIPTION_PLANS['gold']['price']}<span style='color: #718096; font-weight: 400; font-size: 14px;'>/month</span></div>
+                    <div style='color: #718096; font-size: 13px; margin-bottom: 15px;'>Your plan renews on May 12, 2025</div>
+                    <div style='background-color: #FEF3C7; color: #92400E; border-radius: 6px; 
+                               padding: 8px 16px; text-align: center; font-weight: 600; font-size: 14px;'>
+                        ✓ You're on our highest tier
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Payment & Billing section with improved design
+            st.markdown("### Billing", help="Manage your payment methods and billing history")
+            
+            # Payment method
+            st.markdown("""
+            <div style='background-color: white; padding: 15px; border-radius: 10px; 
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #f0f0f0;
+                        margin-bottom: 15px;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
+                    <div style='font-weight: 600; color: #2C5282;'>Payment Method</div>
+                    <div style='font-size: 12px; color: #3B82F6; cursor: pointer;'>+ Add New</div>
+                </div>
+                <div style='display: flex; align-items: center;'>
+                    <div style='background-color: #F8F9FA; border-radius: 6px; padding: 10px; margin-right: 10px;'>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="24" height="24" rx="4" fill="#0B3D91" fill-opacity="0.1"/>
+                            <path d="M5 11H19V17C19 17.5523 18.5523 18 18 18H6C5.44772 18 5 17.5523 5 17V11Z" fill="#0B3D91" fill-opacity="0.1"/>
+                            <path d="M5 8C5 7.44772 5.44772 7 6 7H18C18.5523 7 19 7.44772 19 8V11H5V8Z" fill="#0B3D91"/>
+                            <path d="M7 14.5C7 14.2239 7.22386 14 7.5 14H10.5C10.7761 14 11 14.2239 11 14.5C11 14.7761 10.7761 15 10.5 15H7.5C7.22386 15 7 14.7761 7 14.5Z" fill="#0B3D91"/>
+                            <path d="M13 14.5C13 14.2239 13.2239 14 13.5 14H15.5C15.7761 14 16 14.2239 16 14.5C16 14.7761 15.7761 15 15.5 15H13.5C13.2239 15 13 14.7761 13 14.5Z" fill="#0B3D91"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style='font-weight: 500; color: #2D3748;'>•••• •••• •••• 4242</div>
+                        <div style='font-size: 12px; color: #718096;'>Expires 12/2025</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Billing history
+            st.markdown("""
+            <div style='background-color: white; padding: 15px; border-radius: 10px; 
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #f0f0f0;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;'>
+                    <div style='font-weight: 600; color: #2C5282;'>Recent Invoices</div>
+                    <div style='font-size: 12px; color: #3B82F6; cursor: pointer;'>View All</div>
+                </div>
+                <div style='color: #718096; text-align: center; padding: 20px 0;'>
+                    <div style='margin-bottom: 8px; opacity: 0.6;'>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto; display: block;">
+                            <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15" stroke="#718096" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5C15 6.10457 14.1046 7 13 7H11C9.89543 7 9 6.10457 9 5Z" stroke="#718096" stroke-width="2"/>
+                            <path d="M9 12H15" stroke="#718096" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M9 16H15" stroke="#718096" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div style='font-size: 14px;'>No invoices yet</div>
+                    <div style='font-size: 12px; margin-top: 4px;'>Your billing history will appear here</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.divider()
+            
             if st.button("Logout", key="logout_button"):
                 for key in st.session_state.keys():
                     del st.session_state[key]
@@ -156,8 +702,143 @@ def main():
         st.markdown("<h1 class='main-header'>DataGuardian Pro</h1>", unsafe_allow_html=True)
         st.markdown("<p class='sub-header'>Advanced Enterprise Privacy Compliance Platform</p>", unsafe_allow_html=True)
         
+        # Auth tabs
+        auth_tabs = st.tabs(["Sign In", "Register", "Plans"])
+        
+        # Sign In tab
+        with auth_tabs[0]:
+            st.markdown("<h3>Sign in to your account</h3>", unsafe_allow_html=True)
+            
+            # Google Sign In button
+            st.markdown("""
+            <div class="login-options">
+                <button class="google-login-button">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+                         style="height: 18px; margin-right: 8px; vertical-align: middle;"> 
+                    Sign in with Google
+                </button>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Divider
+            st.markdown('<div class="divider"><span class="divider-text">OR</span></div>', unsafe_allow_html=True)
+            
+            # Email login form
+            email = st.text_input("Email", key="login_email")
+            password = st.text_input("Password", type="password", key="login_password_email")
+            
+            if st.button("Sign In", key="signin_button"):
+                if not email or not password:
+                    st.error("Please enter both email and password")
+                elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                    st.error("Please enter a valid email address")
+                else:
+                    # In a real app, validate credentials against database
+                    # For now just set as logged in if email format is valid
+                    st.session_state.logged_in = True
+                    st.session_state.username = email.split('@')[0]
+                    st.session_state.role = "user"
+                    st.session_state.email = email
+                    st.session_state.permissions = ["scan:basic", "report:view"]
+                    st.success("Login successful!")
+                    st.rerun()
+        
+        # Register tab
+        with auth_tabs[1]:
+            st.markdown("<h3>Create a new account</h3>", unsafe_allow_html=True)
+            
+            # Google Registration button
+            st.markdown("""
+            <div class="login-options">
+                <button class="google-login-button">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+                         style="height: 18px; margin-right: 8px; vertical-align: middle;"> 
+                    Register with Google
+                </button>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Divider
+            st.markdown('<div class="divider"><span class="divider-text">OR</span></div>', unsafe_allow_html=True)
+            
+            # Email registration form
+            col1, col2 = st.columns(2)
+            with col1:
+                first_name = st.text_input("First Name", key="reg_first_name")
+                email = st.text_input("Email", key="reg_email")
+            
+            with col2:
+                last_name = st.text_input("Last Name", key="reg_last_name")
+                password = st.text_input("Password", type="password", key="reg_password")
+                
+            company = st.text_input("Company (Optional)", key="reg_company")
+            terms = st.checkbox("I agree to the Terms of Service and Privacy Policy", key="reg_terms")
+            
+            if st.button("Create Account", key="register_button"):
+                if not first_name or not last_name or not email or not password:
+                    st.error("Please fill in all required fields")
+                elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                    st.error("Please enter a valid email address")
+                elif not terms:
+                    st.error("You must agree to the Terms of Service and Privacy Policy")
+                else:
+                    # In a real app, create user in database
+                    st.success("Account created successfully! Please sign in.")
+                    # Switch to sign in tab
+                    st.session_state.active_tab = "login"
+                    
+        # Plans tab
+        with auth_tabs[2]:
+            st.markdown("<h3>Choose your plan</h3>", unsafe_allow_html=True)
+            
+            # Display subscription plans
+            plan_cols = st.columns(3)
+            
+            # Basic plan
+            with plan_cols[0]:
+                st.markdown(f"""
+                <div class="plan-card">
+                    <div class="plan-name">{SUBSCRIPTION_PLANS['basic']['name']}</div>
+                    <div class="plan-price">${SUBSCRIPTION_PLANS['basic']['price']}/mo</div>
+                    <div class="plan-features">
+                        {''.join([f'<div class="plan-feature-item">✓ {feature}</div>' for feature in SUBSCRIPTION_PLANS['basic']['features']])}
+                    </div>
+                    <a href="#" class="subscribe-button">Subscribe</a>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Premium plan
+            with plan_cols[1]:
+                st.markdown(f"""
+                <div class="plan-card" style="border: 2px solid #3B82F6;">
+                    <div class="plan-name">{SUBSCRIPTION_PLANS['premium']['name']}</div>
+                    <div class="plan-price">${SUBSCRIPTION_PLANS['premium']['price']}/mo</div>
+                    <div class="plan-features">
+                        {''.join([f'<div class="plan-feature-item">✓ {feature}</div>' for feature in SUBSCRIPTION_PLANS['premium']['features']])}
+                    </div>
+                    <a href="#" class="subscribe-button" style="background-color: #1E3A8A;">Subscribe</a>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Gold plan
+            with plan_cols[2]:
+                st.markdown(f"""
+                <div class="plan-card">
+                    <div class="plan-name">{SUBSCRIPTION_PLANS['gold']['name']}</div>
+                    <div class="plan-price">${SUBSCRIPTION_PLANS['gold']['price']}/mo</div>
+                    <div class="plan-features">
+                        {''.join([f'<div class="plan-feature-item">✓ {feature}</div>' for feature in SUBSCRIPTION_PLANS['gold']['features']])}
+                    </div>
+                    <a href="#" class="subscribe-button">Subscribe</a>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Note on pricing
+            st.info("All plans include a 14-day free trial. No credit card required to start.")
+        
+        # Feature highlights
         st.markdown("""
-        Welcome to DataGuardian Pro, the most comprehensive privacy compliance platform for businesses.
+        ## Why Choose DataGuardian Pro?
         
         **Key Features:**
         - Multi-service scanning (Code, API, Database, AI Models)
@@ -166,7 +847,7 @@ def main():
         - Enhanced multilingual support
         - Dynamic role-based access control
         
-        Please login to access the platform features.
+        Sign up today and protect your business data!
         """)
     else:
         # Create tabs
@@ -176,16 +857,96 @@ def main():
         with tabs[0]:
             st.markdown("<h2>Analytics Dashboard</h2>", unsafe_allow_html=True)
             
-            # Summary metrics
-            col1, col2, col3, col4 = st.columns(4)
+            # Modern dashboard header with stats
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #0b3d91 0%, #2c5282 100%); padding: 20px; border-radius: 12px; margin-bottom: 24px; color: white;">
+                <h3 style="margin: 0 0 15px 0; font-weight: 600; font-size: 18px;">Dashboard Overview</h3>
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 120px; background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; margin: 0 8px 8px 0;">
+                        <div style="font-size: 28px; font-weight: 700;">{random.randint(10, 100)}</div>
+                        <div style="font-size: 14px; opacity: 0.8;">Total Scans</div>
+                    </div>
+                    <div style="flex: 1; min-width: 120px; background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; margin: 0 8px 8px 0;">
+                        <div style="font-size: 28px; font-weight: 700;">{random.randint(5, 50)}</div>
+                        <div style="font-size: 14px; opacity: 0.8;">Open Issues</div>
+                    </div>
+                    <div style="flex: 1; min-width: 120px; background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; margin: 0 8px 8px 0;">
+                        <div style="font-size: 28px; font-weight: 700;">{random.randint(70, 95)}%</div>
+                        <div style="font-size: 14px; opacity: 0.8;">Avg. Compliance</div>
+                    </div>
+                    <div style="flex: 1; min-width: 120px; background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; margin: 0 0 8px 0;">
+                        <div style="font-size: 28px; font-weight: 700;">{random.randint(10, 40)}/100</div>
+                        <div style="font-size: 14px; opacity: 0.8;">Risk Score</div>
+                    </div>
+                </div>
+            </div>
+            """
+            , unsafe_allow_html=True)
+            
+            # Additional dashboard content in cards
+            col1, col2 = st.columns(2)
+            
+            # Compliance Trend Card
             with col1:
-                st.metric(label="Total Scans", value=random.randint(10, 100))
+                st.markdown("""
+                <div style="background: white; border-radius: 12px; padding: 20px; height: 250px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 24px;">
+                    <h3 style="margin: 0 0 20px 0; font-weight: 600; font-size: 16px; color: #2C5282;">Compliance Score Trend</h3>
+                    <div style="display: flex; align-items: flex-end; height: 150px; padding-bottom: 20px; position: relative;">
+                        <div style="position: absolute; left: 0; right: 0; bottom: 20px; height: 1px; background-color: #E2E8F0;"></div>
+                        <div style="flex: 1; position: relative; height: 75%;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                        <div style="flex: 1; position: relative; height: 60%; margin: 0 2px;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                        <div style="flex: 1; position: relative; height: 80%; margin: 0 2px;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                        <div style="flex: 1; position: relative; height: 70%; margin: 0 2px;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                        <div style="flex: 1; position: relative; height: 90%; margin: 0 2px;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                        <div style="flex: 1; position: relative; height: 85%;">
+                            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(to top, #0b3d91, #3B82F6); border-radius: 4px 4px 0 0;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                        <span style="font-size: 12px; color: #718096;">Mar</span>
+                        <span style="font-size: 12px; color: #718096;">Apr</span>
+                        <span style="font-size: 12px; color: #0b3d91; font-weight: 600;">May</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Risk Distribution Card
             with col2:
-                st.metric(label="Open Issues", value=random.randint(5, 50))
-            with col3:
-                st.metric(label="Avg. Compliance", value=f"{random.randint(70, 95)}%")
-            with col4:
-                st.metric(label="Risk Score", value=f"{random.randint(10, 40)}/100")
+                st.markdown("""
+                <div style="background: white; border-radius: 12px; padding: 20px; height: 250px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 24px;">
+                    <h3 style="margin: 0 0 20px 0; font-weight: 600; font-size: 16px; color: #2C5282;">Risk Distribution</h3>
+                    <div style="display: flex; height: 150px; align-items: center; justify-content: space-around;">
+                        <div style="text-align: center;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; background-color: #FEE2E2; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
+                                <span style="font-size: 24px; font-weight: 700; color: #B91C1C;">{random.randint(3, 8)}</span>
+                            </div>
+                            <div style="font-size: 14px; color: #B91C1C; font-weight: 600;">High</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; background-color: #FEF3C7; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
+                                <span style="font-size: 24px; font-weight: 700; color: #92400E;">{random.randint(10, 20)}</span>
+                            </div>
+                            <div style="font-size: 14px; color: #92400E; font-weight: 600;">Medium</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; background-color: #ECFDF5; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
+                                <span style="font-size: 24px; font-weight: 700; color: #047857;">{random.randint(15, 30)}</span>
+                            </div>
+                            <div style="font-size: 14px; color: #047857; font-weight: 600;">Low</div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
             
             # Recent scans
             st.subheader("Recent Scans")
@@ -217,7 +978,9 @@ def main():
                 "API Scanner", 
                 "Website Scanner", 
                 "AI Model Scanner", 
-                "DPIA Assessment"
+                "DPIA Assessment",
+                "SOC2 Scanner",
+                "Sustainability Scanner"
             ]
             
             selected_scan = st.selectbox("Select Scan Type", scan_types)
@@ -233,15 +996,91 @@ def main():
                 for option in scan_options:
                     st.checkbox(option, value=True, key=f"option_{option}")
             
+            # Show specific options for each scanner type
+            if selected_scan == "SOC2 Scanner":
+                st.subheader("SOC2 Scanner Options")
+                repo_type = st.radio("Repository Type", ["GitHub", "Azure DevOps"], horizontal=True)
+                if repo_type == "Azure DevOps":
+                    st.text_input("Project Name", key="project_name")
+                    st.text_input("Organization", key="organization")
+            
+            elif selected_scan == "Sustainability Scanner":
+                st.subheader("Sustainability Scanner Options")
+                sustainability_scan_type = st.radio("Scan Type", ["Cloud Resources", "GitHub Repository", "Code Analysis"], horizontal=True)
+                
+                if sustainability_scan_type == "Cloud Resources":
+                    st.selectbox("Cloud Provider", ["Azure", "AWS", "GCP"], key="cloud_provider")
+                    st.selectbox("Region", ["Global", "East US", "West US", "Europe"], key="cloud_region")
+                    
             if st.button("Start Scan", key="start_scan"):
                 with st.spinner("Running scan..."):
                     progress_bar = st.progress(0)
-                    for i in range(1, 101):
-                        time.sleep(0.05)  # Simulate scan process
-                        progress_bar.progress(i)
                     
-                    # Generate mock results
-                    results = generate_mock_scan_results(selected_scan)
+                    # Handle different scan types
+                    if selected_scan == "SOC2 Scanner":
+                        # Get inputs
+                        repo_url = st.session_state.get("repo_url", "")
+                        branch = st.session_state.get("branch", "main")
+                        
+                        # Update progress while simulating scan
+                        for i in range(1, 101):
+                            time.sleep(0.02)  # Faster simulation
+                            progress_bar.progress(i)
+                        
+                        # Use the SOC2 scanner based on repository type
+                        if repo_type == "GitHub":
+                            results = soc2_scan_github(repo_url, branch)
+                        else:
+                            project = st.session_state.get("project_name", "")
+                            organization = st.session_state.get("organization", "")
+                            results = soc2_scan_azure(repo_url, project, branch, organization=organization)
+                            
+                        # For mock implementation, set the other required fields
+                        if "total_findings" not in results:
+                            results["total_findings"] = results.get("high_risk_count", 0) + results.get("medium_risk_count", 0) + results.get("low_risk_count", 0)
+                        if "high_risk" not in results:
+                            results["high_risk"] = results.get("high_risk_count", 0)
+                        if "medium_risk" not in results:
+                            results["medium_risk"] = results.get("medium_risk_count", 0)
+                        if "low_risk" not in results:
+                            results["low_risk"] = results.get("low_risk_count", 0)
+                    
+                    elif selected_scan == "Sustainability Scanner":
+                        # Show the standalone Sustainability Scanner instead
+                        try:
+                            # Try to use the actual sustainability scanner
+                            analyzer = SustainabilityAnalyzer()
+                            results = {
+                                "scan_type": "Sustainability Scanner",
+                                "timestamp": datetime.now().isoformat(),
+                                "scan_id": str(uuid.uuid4()),
+                                "findings": [],
+                                "total_findings": random.randint(5, 20),
+                                "high_risk": random.randint(0, 5),
+                                "medium_risk": random.randint(3, 8),
+                                "low_risk": random.randint(2, 10),
+                                "compliance_score": random.randint(60, 95),
+                                "sustainability_analysis": analyzer.analyze()
+                            }
+                            
+                            # Update progress
+                            for i in range(1, 101):
+                                time.sleep(0.02)  # Faster simulation
+                                progress_bar.progress(i)
+                        except Exception as e:
+                            st.error(f"Error running Sustainability Scanner: {str(e)}")
+                            # Fall back to mock results
+                            results = generate_mock_scan_results(selected_scan)
+                    else:
+                        # For other scan types, use the standard approach
+                        for i in range(1, 101):
+                            time.sleep(0.05)  # Standard simulation
+                            progress_bar.progress(i)
+                        
+                        # Generate mock results
+                        results = generate_mock_scan_results(selected_scan)
+                    
+                    # Store the results
                     st.session_state.current_scan_results = results
                     
                     # Add to scan history
@@ -250,7 +1089,36 @@ def main():
                         st.session_state.scan_history = st.session_state.scan_history[:5]
                 
                 st.success(f"{selected_scan} completed successfully!")
-                st.json(results)
+                
+                # Display results
+                if selected_scan == "SOC2 Scanner":
+                    # Use the specialized SOC2 display function if available
+                    try:
+                        display_soc2_findings(results)
+                    except:
+                        st.json(results)
+                elif selected_scan == "Sustainability Scanner":
+                    # Display sustainability-specific results
+                    if "sustainability_analysis" in results:
+                        sustainability_score = results["sustainability_analysis"].get("sustainability_score", 0)
+                        potential_savings = results["sustainability_analysis"].get("potential_savings", 0)
+                        carbon_reduction = results["sustainability_analysis"].get("carbon_reduction", 0)
+                        
+                        st.subheader("Sustainability Analysis")
+                        cols = st.columns(3)
+                        with cols[0]:
+                            st.metric("Sustainability Score", f"{sustainability_score}%")
+                        with cols[1]:
+                            st.metric("Potential Cost Savings", f"${potential_savings:,}")
+                        with cols[2]:
+                            st.metric("Carbon Reduction", f"{carbon_reduction}%")
+                            
+                        st.subheader("Detailed Findings")
+                        st.json(results)
+                    else:
+                        st.json(results)
+                else:
+                    st.json(results)
         
         # Reports Tab
         with tabs[2]:
