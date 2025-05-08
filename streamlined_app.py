@@ -3,6 +3,7 @@ import pandas as pd
 import time
 import json
 import os
+import io
 import random
 import uuid
 from datetime import datetime
@@ -726,13 +727,189 @@ def render_reports_section():
                     ])
                     st.dataframe(findings_df, use_container_width=True)
                 
-                # Add a download button with safe access
-                st.download_button(
-                    label="Download Report (PDF)",
-                    data="This would be a PDF report in a real application",
-                    file_name=f"{scan_data.get('scan_type', 'compliance_report').replace(' ', '_')}_report.pdf",
-                    mime="application/pdf"
-                )
+                # Generate a basic PDF report with proper error handling
+                try:
+                    # Create PDF buffer
+                    buffer = io.BytesIO()
+                    
+                    try:
+                        # Try to use reportlab to generate PDF
+                        from reportlab.lib.pagesizes import letter
+                        from reportlab.lib import colors
+                        from reportlab.lib.units import inch
+                        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+                        
+                        # Create document
+                        doc = SimpleDocTemplate(buffer, pagesize=letter)
+                        styles = getSampleStyleSheet()
+                        story = []
+                        
+                        # Add report header
+                        title_style = ParagraphStyle(
+                            name='Title',
+                            parent=styles['Title'],
+                            fontSize=16,
+                            leading=20,
+                        )
+                        story.append(Paragraph(f"{scan_data.get('scan_type', 'Compliance')} Report", title_style))
+                        story.append(Spacer(1, 0.25*inch))
+                        
+                        # Add date and scan info
+                        story.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+                        story.append(Paragraph(f"Scan ID: {scan_data.get('scan_id', 'N/A')}", styles['Normal']))
+                        story.append(Spacer(1, 0.25*inch))
+                        
+                        # Add summary table
+                        summary_data = [
+                            ['Metric', 'Value'],
+                            ['Total Findings', str(scan_data.get('total_findings', scan_data.get('findings_count', 0)))],
+                            ['High Risk', str(scan_data.get('high_risk', 0))],
+                            ['Medium Risk', str(scan_data.get('medium_risk', 0))],
+                            ['Low Risk', str(scan_data.get('low_risk', 0))],
+                            ['Compliance Score', f"{scan_data.get('compliance_score', 0)}%"],
+                        ]
+                        
+                        summary_table = Table(summary_data, colWidths=[2*inch, 2*inch])
+                        summary_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (1, 0), colors.lightgrey),
+                            ('TEXTCOLOR', (0, 0), (1, 0), colors.black),
+                            ('ALIGN', (0, 0), (1, 0), 'CENTER'),
+                            ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
+                            ('BOTTOMPADDING', (0, 0), (1, 0), 12),
+                            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ]))
+                        
+                        story.append(summary_table)
+                        story.append(Spacer(1, 0.25*inch))
+                        
+                        # Add findings section
+                        story.append(Paragraph("Key Findings", styles['Heading2']))
+                        
+                        if findings:
+                            # Create findings table data
+                            findings_table_data = [['ID', 'Title', 'Severity', 'Location']]
+                            
+                            for i, finding in enumerate(findings[:5]):  # Show top 5 findings
+                                findings_table_data.append([
+                                    finding.get('id', f"FIND-{i+1}"),
+                                    finding.get('title', f"Finding {i+1}"),
+                                    finding.get('severity', 'medium').upper(),
+                                    finding.get('location', 'N/A')
+                                ])
+                            
+                            findings_table = Table(findings_table_data, colWidths=[0.75*inch, 3*inch, 1*inch, 1.5*inch])
+                            findings_table.setStyle(TableStyle([
+                                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                            ]))
+                            
+                            story.append(findings_table)
+                        else:
+                            story.append(Paragraph("No findings were detected in this scan.", styles['Normal']))
+                        
+                        # Add additional sections - recommendations
+                        story.append(Spacer(1, 0.25*inch))
+                        story.append(Paragraph("Recommendations", styles['Heading2']))
+                        
+                        recommendations = scan_data.get('recommendations', [])
+                        if recommendations:
+                            for i, recommendation in enumerate(recommendations[:3]):  # Top 3 recommendations
+                                story.append(Paragraph(f"{i+1}. {recommendation}", styles['Normal']))
+                                story.append(Spacer(1, 0.1*inch))
+                        else:
+                            story.append(Paragraph("No specific recommendations for this scan.", styles['Normal']))
+                        
+                        # Build the PDF
+                        doc.build(story)
+                        pdf_data = buffer.getvalue()
+                        buffer.close()
+                        
+                    except ImportError:
+                        # Fallback to a very simple PDF if reportlab isn't available
+                        pdf_data = f"""
+                        %PDF-1.4
+                        1 0 obj
+                        <<
+                        /Type /Catalog
+                        /Pages 2 0 R
+                        >>
+                        endobj
+                        2 0 obj
+                        <<
+                        /Type /Pages
+                        /Kids [3 0 R]
+                        /Count 1
+                        >>
+                        endobj
+                        3 0 obj
+                        <<
+                        /Type /Page
+                        /Parent 2 0 R
+                        /Resources <<
+                        /Font <<
+                        /F1 4 0 R
+                        >>
+                        >>
+                        /MediaBox [0 0 612 792]
+                        /Contents 5 0 R
+                        >>
+                        endobj
+                        4 0 obj
+                        <<
+                        /Type /Font
+                        /Subtype /Type1
+                        /Name /F1
+                        /BaseFont /Helvetica
+                        >>
+                        endobj
+                        5 0 obj
+                        << /Length 172 >>
+                        stream
+                        BT
+                        /F1 24 Tf
+                        72 700 Td
+                        ({scan_data.get('scan_type', 'Compliance')} Report) Tj
+                        /F1 12 Tf
+                        0 -40 Td
+                        (Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}) Tj
+                        ET
+                        endstream
+                        endobj
+                        xref
+                        0 6
+                        0000000000 65535 f
+                        0000000010 00000 n
+                        0000000060 00000 n
+                        0000000120 00000 n
+                        0000000270 00000 n
+                        0000000350 00000 n
+                        trailer
+                        <<
+                        /Size 6
+                        /Root 1 0 R
+                        >>
+                        startxref
+                        580
+                        %%EOF
+                        """.encode('utf-8')
+                    
+                    # Add download button with the generated PDF
+                    st.download_button(
+                        label="Download Report (PDF)",
+                        data=pdf_data,
+                        file_name=f"{scan_data.get('scan_type', 'compliance_report').replace(' ', '_')}_report.pdf",
+                        mime="application/pdf"
+                    )
+                except Exception as e:
+                    st.error(f"Error generating PDF report: {str(e)}")
+                    st.info("Please try again or contact support if the problem persists.")
 
 def render_admin_section():
     """Render admin section"""
