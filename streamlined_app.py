@@ -364,93 +364,59 @@ def render_brand_logo():
     <div style="padding: 20px 0; text-align: center;">
         <div style="
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border-radius: 24px;
-            padding: 24px 20px;
+            border-radius: 16px;
+            padding: 20px;
             position: relative;
             overflow: hidden;
             border: none;
-            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
         ">
-            <!-- Abstract shapes background -->
-            <div style="position: absolute; width: 150px; height: 150px; border-radius: 75px; background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0) 70%); top: -75px; right: -75px;"></div>
-            <div style="position: absolute; width: 100px; height: 100px; border-radius: 50px; background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0) 70%); bottom: -50px; left: -25px;"></div>
-            
-            <!-- Logo Container -->
+            <!-- Simple logo container -->
             <div style="
-                position: relative;
-                z-index: 5;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin-bottom: 16px;
+                margin-bottom: 12px;
             ">
                 <!-- Shield Icon -->
                 <div style="
-                    width: 48px;
-                    height: 48px;
+                    width: 40px;
+                    height: 40px;
                     background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-                    border-radius: 14px;
+                    border-radius: 10px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin-right: 14px;
-                    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
+                    margin-right: 12px;
                 ">
-                    <span style="font-size: 24px; color: white; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));">🛡️</span>
+                    <span style="font-size: 20px; color: white;">🛡️</span>
                 </div>
                 
                 <!-- Brand Name -->
                 <div style="text-align: left;">
                     <h1 style="
                         font-weight: 800; 
-                        font-size: 22px; 
+                        font-size: 20px; 
                         color: white; 
                         margin: 0;
                         padding: 0;
                         line-height: 1.1;
-                        letter-spacing: -0.02em;
-                    ">DataGuardian</h1>
+                    ">DataGuardian Pro</h1>
                     <div style="
-                        display: flex;
-                        align-items: center;
-                        margin-top: 2px;
-                    ">
-                        <span style="
-                            font-weight: 700; 
-                            font-size: 12px;
-                            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-                            -webkit-background-clip: text !important;
-                            -webkit-text-fill-color: transparent !important;
-                            background-clip: text !important;
-                            color: transparent !important;
-                            display: inline-block !important;
-                            text-transform: uppercase;
-                            letter-spacing: 0.1em;
-                        ">Pro</span>
-                        <span style="
-                            background: linear-gradient(90deg, #f59e0b, #fbbf24);
-                            color: #0f172a;
-                            font-size: 10px;
-                            font-weight: 700;
-                            padding: 3px 8px;
-                            border-radius: 20px;
-                            margin-left: 8px;
-                            text-transform: uppercase;
-                            letter-spacing: 0.05em;
-                        ">Enterprise</span>
-                    </div>
+                        font-size: 12px;
+                        color: #94a3b8;
+                        margin-top: 4px;
+                    ">Enterprise Edition</div>
                 </div>
             </div>
             
-            <!-- Tagline -->
+            <!-- Simple tagline -->
             <div style="
                 font-size: 12px;
-                font-weight: 500;
-                color: #94a3b8;
-                margin-top: 8px;
-                letter-spacing: 0.02em;
-                line-height: 1.4;
-            ">Advanced AI-Powered Privacy Compliance Platform</div>
+                color: #cbd5e1;
+                padding-top: 8px;
+                border-top: 1px solid rgba(255,255,255,0.1);
+            ">Advanced Privacy Compliance Platform</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -713,11 +679,12 @@ def render_landing_page():
             
             <!-- Title -->
             <h1 style="
-                font-size: 48px;
+                font-size: 42px;
                 font-weight: 800;
                 color: #0f172a;
                 margin-bottom: 16px;
                 line-height: 1.1;
+                display: inline-block;
             ">DataGuardian Pro</h1>
             
             <!-- Subtitle -->
