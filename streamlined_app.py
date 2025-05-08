@@ -583,15 +583,16 @@ def render_scan_history():
     if not st.session_state.scan_history:
         st.info("No scan history available. Run a scan to see results here.")
     else:
+        # Create a dataframe with safe access to dictionary keys using .get() method
         scan_df = pd.DataFrame([
             {
-                "Date": datetime.fromisoformat(scan["timestamp"]).strftime("%Y-%m-%d %H:%M"),
-                "Type": scan["scan_type"],
-                "Findings": scan["total_findings"],
-                "High Risk": scan["high_risk"],
-                "Medium Risk": scan["medium_risk"],
-                "Low Risk": scan["low_risk"],
-                "Compliance Score": f"{scan['compliance_score']}%"
+                "Date": datetime.fromisoformat(scan.get("timestamp", datetime.now().isoformat())).strftime("%Y-%m-%d %H:%M"),
+                "Type": scan.get("scan_type", "Unknown"),
+                "Findings": scan.get("total_findings", scan.get("findings_count", 0)),
+                "High Risk": scan.get("high_risk", 0),
+                "Medium Risk": scan.get("medium_risk", 0),
+                "Low Risk": scan.get("low_risk", 0),
+                "Compliance Score": f"{scan.get('compliance_score', 0)}%"
             } for scan in st.session_state.scan_history
         ])
         st.dataframe(scan_df, use_container_width=True)
@@ -677,8 +678,11 @@ def render_reports_section():
     if not st.session_state.scan_history:
         st.info("No scan history available. Run a scan to generate reports.")
     else:
-        scan_options = [f"{scan['scan_type']} - {datetime.fromisoformat(scan['timestamp']).strftime('%Y-%m-%d %H:%M')}" 
-                       for scan in st.session_state.scan_history]
+        # Create scan options list with safe dictionary access
+        scan_options = [
+            f"{scan.get('scan_type', 'Scan')} - {datetime.fromisoformat(scan.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}" 
+            for scan in st.session_state.scan_history
+        ]
         selected_report = st.selectbox("Select Scan for Report", scan_options, key="report_select")
         
         report_types = ["Summary Report", "Full Report", "Technical Report", "Executive Report"]
@@ -692,40 +696,41 @@ def render_reports_section():
                 selected_index = scan_options.index(selected_report)
                 scan_data = st.session_state.scan_history[selected_index]
                 
-                st.subheader(f"{report_format}: {scan_data['scan_type']}")
+                st.subheader(f"{report_format}: {scan_data.get('scan_type', 'Compliance Analysis')}")
                 
-                # Display report content
+                # Display report content using .get() for safe access
                 st.markdown(f"""
-                ## {scan_data['scan_type']} Compliance Report
-                **Generated:** {datetime.fromisoformat(scan_data['timestamp']).strftime('%Y-%m-%d %H:%M')}
+                ## {scan_data.get('scan_type', 'Compliance')} Compliance Report
+                **Generated:** {datetime.fromisoformat(scan_data.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}
                 
                 ### Summary
-                - **Total Findings:** {scan_data['total_findings']}
-                - **High Risk Issues:** {scan_data['high_risk']}
-                - **Medium Risk Issues:** {scan_data['medium_risk']}
-                - **Low Risk Issues:** {scan_data['low_risk']}
-                - **Overall Compliance Score:** {scan_data['compliance_score']}%
+                - **Total Findings:** {scan_data.get('total_findings', scan_data.get('findings_count', 0))}
+                - **High Risk Issues:** {scan_data.get('high_risk', 0)}
+                - **Medium Risk Issues:** {scan_data.get('medium_risk', 0)}
+                - **Low Risk Issues:** {scan_data.get('low_risk', 0)}
+                - **Overall Compliance Score:** {scan_data.get('compliance_score', 0)}%
                 
                 ### Key Findings
                 """)
                 
-                # Display findings in a table
-                if scan_data['findings']:
+                # Display findings in a table with safe access
+                findings = scan_data.get('findings', [])
+                if findings:
                     findings_df = pd.DataFrame([
                         {
                             "ID": finding.get("id", f"FIND-{i+1}"),
                             "Title": finding.get("title", f"Finding {i+1}"),
                             "Severity": finding.get("severity", "medium").upper(),
                             "Location": finding.get("location", "N/A")
-                        } for i, finding in enumerate(scan_data['findings'][:5])  # Show top 5 findings
+                        } for i, finding in enumerate(findings[:5])  # Show top 5 findings
                     ])
                     st.dataframe(findings_df, use_container_width=True)
                 
-                # Add a download button
+                # Add a download button with safe access
                 st.download_button(
                     label="Download Report (PDF)",
                     data="This would be a PDF report in a real application",
-                    file_name=f"{scan_data['scan_type'].replace(' ', '_')}_report.pdf",
+                    file_name=f"{scan_data.get('scan_type', 'compliance_report').replace(' ', '_')}_report.pdf",
                     mime="application/pdf"
                 )
 
