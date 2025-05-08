@@ -413,184 +413,97 @@ def render_login_form():
     """, unsafe_allow_html=True)
 
 def render_user_profile():
-    """Render the user profile card"""
+    """Render the user profile card with native Streamlit components"""
     initial = st.session_state.username[0].upper()
     
+    # Create a simple user info section
+    col1, col2 = st.columns([1, 3])
+    
+    # Avatar with initial
+    with col1:
+        st.markdown(f"""
+        <div style="background-color:#3b82f6; color:white; width:48px; height:48px; 
+                 border-radius:50%; text-align:center; line-height:48px; font-weight:bold; font-size:20px;">
+            {initial}
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Name and email
+    with col2:
+        st.markdown(f"**{st.session_state.username}**")
+        st.markdown(f"<span style='color:#64748b; font-size:14px;'>{st.session_state.email}</span>", unsafe_allow_html=True)
+    
+    # Account type with simple badge
     st.markdown(f"""
-    <div style="padding: 20px; margin-bottom: 24px;">
-        <div style="display: flex; align-items: center; margin-bottom: 16px;">
-            <div style="
-                width: 48px;
-                height: 48px;
-                border-radius: 24px;
-                background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-right: 12px;
-                font-size: 16px;
-                color: white;
-                font-weight: 600;
-            ">{initial}</div>
-            <div>
-                <div style="font-weight: 700; font-size: 16px; color: #0f172a; line-height: 1.2;">
-                    {st.session_state.username}
-                </div>
-                <div style="font-size: 14px; color: #64748b;">
-                    {st.session_state.email}
-                </div>
-            </div>
-        </div>
-        
-        <div style="
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            background: rgba(79, 70, 229, 0.1);
-            border-radius: 8px;
-            margin-bottom: 16px;
-        ">
-            <div style="
-                width: 24px;
-                height: 24px;
-                border-radius: 12px;
-                background: #4f46e5;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-right: 10px;
-                font-size: 10px;
-                color: white;
-            ">
-                <span style="display: inline-block; transform: translateY(-1px);">👑</span>
-            </div>
-            <div style="font-weight: 600; font-size: 14px; color: #4f46e5;">
-                {st.session_state.role.title()} Account
-            </div>
-        </div>
+    <div style="background-color:#EEF2FF; padding:8px; border-radius:8px; margin:16px 0;">
+        <span style="color:#4f46e5; font-weight:bold;">👑 {st.session_state.role.title()} Account</span>
     </div>
     """, unsafe_allow_html=True)
 
 def render_subscription_card(tier="basic"):
-    """Render a subscription plan card"""
+    """Render a subscription plan card using native Streamlit components"""
     plan = SUBSCRIPTION_PLANS[tier]
     
+    # Simple card with border
+    st.markdown(f"""
+    <div style="border:1px solid #e2e8f0; border-radius:10px; padding:15px; margin-bottom:15px; background-color:white;">
+        <h3 style="margin-top:0; color:#1e3a8a;">{plan['name']} Plan</h3>
+        <p style="font-size:24px; font-weight:bold; margin:10px 0;">${plan['price']}<span style="font-size:14px; color:#64748b; font-weight:normal;"> /month</span></p>
+        <p style="font-size:13px; color:#64748b; margin-bottom:15px;">Your plan renews on May 12, 2025</p>
+    """, unsafe_allow_html=True)
+    
+    # List plan features
+    for feature in plan['features']:
+        st.markdown(f"✓ {feature}")
+    
+    # Add appropriate button based on tier
     if tier == "basic":
-        st.markdown(f"""
-        <div style='background-color: white; padding: 15px; border-radius: 10px; 
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #f0f0f0;
-                    margin-bottom: 15px;'>
-            <div style='display: flex; align-items: center; margin-bottom: 10px;'>
-                <div style='background-color: #EBF4FF; border-radius: 50%; width: 24px; height: 24px; 
-                            display: flex; align-items: center; justify-content: center; margin-right: 10px;'>
-                    <span style='color: #2C5282; font-weight: bold; font-size: 12px;'>B</span>
-                </div>
-                <div style='color: #2C5282; font-weight: 600; font-size: 16px;'>{plan['name']}</div>
-            </div>
-            <div style='color: #2C5282; font-weight: 700; font-size: 20px; margin-bottom: 5px;'>${plan['price']}<span style='color: #718096; font-weight: 400; font-size: 14px;'>/month</span></div>
-            <div style='color: #718096; font-size: 13px; margin-bottom: 15px;'>Your plan renews on May 12, 2025</div>
-            <button style='background-color: #0b3d91; color: white; border: none; border-radius: 6px; 
-                           padding: 8px 16px; width: 100%; font-weight: 600; cursor: pointer;
-                           transition: all 0.3s ease;'
-                    onmouseover="this.style.backgroundColor='#1853b3'"
-                    onmouseout="this.style.backgroundColor='#0b3d91'">
-                Upgrade to Premium
-            </button>
-        </div>
-        """, unsafe_allow_html=True)
+        st.button("Upgrade to Premium", use_container_width=True)
     elif tier == "premium":
-        st.markdown(f"""
-        <div style='background-color: white; padding: 15px; border-radius: 10px; 
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #3B82F6;
-                    margin-bottom: 15px;'>
-            <div style='display: flex; align-items: center; margin-bottom: 10px;'>
-                <div style='background-color: #2C5282; border-radius: 50%; width: 24px; height: 24px; 
-                            display: flex; align-items: center; justify-content: center; margin-right: 10px;'>
-                    <span style='color: white; font-weight: bold; font-size: 12px;'>P</span>
-                </div>
-                <div style='color: #2C5282; font-weight: 600; font-size: 16px;'>{plan['name']}</div>
-            </div>
-            <div style='color: #2C5282; font-weight: 700; font-size: 20px; margin-bottom: 5px;'>${plan['price']}<span style='color: #718096; font-weight: 400; font-size: 14px;'>/month</span></div>
-            <div style='color: #718096; font-size: 13px; margin-bottom: 15px;'>Your plan renews on May 12, 2025</div>
-            <button style='background-color: #0b3d91; color: white; border: none; border-radius: 6px; 
-                          padding: 8px 16px; width: 100%; font-weight: 600; cursor: pointer;
-                          transition: all 0.3s ease;'
-                   onmouseover="this.style.backgroundColor='#1853b3'"
-                   onmouseout="this.style.backgroundColor='#0b3d91'">
-                Upgrade to Gold
-            </button>
-        </div>
-        """, unsafe_allow_html=True)
+        st.button("Upgrade to Gold", use_container_width=True)
     elif tier == "gold":
-        st.markdown(f"""
-        <div style='background-color: white; padding: 15px; border-radius: 10px; 
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #F59E0B;
-                    margin-bottom: 15px;'>
-            <div style='display: flex; align-items: center; margin-bottom: 10px;'>
-                <div style='background-color: #F59E0B; border-radius: 50%; width: 24px; height: 24px; 
-                            display: flex; align-items: center; justify-content: center; margin-right: 10px;'>
-                    <span style='color: white; font-weight: bold; font-size: 12px;'>G</span>
-                </div>
-                <div style='color: #92400E; font-weight: 600; font-size: 16px;'>{plan['name']}</div>
-            </div>
-            <div style='color: #92400E; font-weight: 700; font-size: 20px; margin-bottom: 5px;'>${plan['price']}<span style='color: #718096; font-weight: 400; font-size: 14px;'>/month</span></div>
-            <div style='color: #718096; font-size: 13px; margin-bottom: 15px;'>Your plan renews on May 12, 2025</div>
-            <div style='background-color: #FEF3C7; color: #92400E; border-radius: 6px; 
-                       padding: 8px 16px; text-align: center; font-weight: 600; font-size: 14px;'>
-                ✓ You're on our highest tier
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.success("✓ You're on our highest tier")
+    
+    # Close the div
+    st.markdown("</div>", unsafe_allow_html=True)
 
 def render_payment_method():
-    """Render payment method card"""
+    """Render payment method card using native Streamlit components"""
+    # Header with two columns for the title and add button
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.subheader("Payment Method")
+    with col2:
+        st.markdown('<div style="text-align:right"><a href="#" style="color:#3B82F6; font-size:12px; text-decoration:none;">+ Add New</a></div>', unsafe_allow_html=True)
+    
+    # Card with simple styling
     st.markdown("""
-    <div style='background-color: white; padding: 15px; border-radius: 10px; 
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #f0f0f0;
-                margin-bottom: 15px;'>
-        <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
-            <div style='font-weight: 600; color: #2C5282;'>Payment Method</div>
-            <div style='font-size: 12px; color: #3B82F6; cursor: pointer;'>+ Add New</div>
-        </div>
-        <div style='display: flex; align-items: center;'>
-            <div style='background-color: #F8F9FA; border-radius: 6px; padding: 10px; margin-right: 10px;'>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="24" height="24" rx="4" fill="#0B3D91" fill-opacity="0.1"/>
-                    <path d="M5 11H19V17C19 17.5523 18.5523 18 18 18H6C5.44772 18 5 17.5523 5 17V11Z" fill="#0B3D91" fill-opacity="0.1"/>
-                    <path d="M5 8C5 7.44772 5.44772 7 6 7H18C18.5523 7 19 7.44772 19 8V11H5V8Z" fill="#0B3D91"/>
-                    <path d="M7 14.5C7 14.2239 7.22386 14 7.5 14H10.5C10.7761 14 11 14.2239 11 14.5C11 14.7761 10.7761 15 10.5 15H7.5C7.22386 15 7 14.7761 7 14.5Z" fill="#0B3D91"/>
-                    <path d="M13 14.5C13 14.2239 13.2239 14 13.5 14H15.5C15.7761 14 16 14.2239 16 14.5C16 14.7761 15.7761 15 15.5 15H13.5C13.2239 15 13 14.7761 13 14.5Z" fill="#0B3D91"/>
-                </svg>
-            </div>
+    <div style="border:1px solid #e2e8f0; border-radius:10px; padding:15px; background-color:#f8fafc;">
+        <div style="display:flex; align-items:center;">
+            <span style="background:#e2e8f0; color:#4a5568; padding:8px; border-radius:5px; margin-right:10px;">💳</span>
             <div>
-                <div style='font-weight: 500; color: #2D3748;'>•••• •••• •••• 4242</div>
-                <div style='font-size: 12px; color: #718096;'>Expires 12/2025</div>
+                <div style="font-weight:500;">•••• •••• •••• 4242</div>
+                <div style="font-size:12px; color:#718096;">Expires 12/2025</div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 def render_billing_history():
-    """Render billing history card"""
+    """Render billing history using native Streamlit components"""
+    # Header with two columns for the title and view all link
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.subheader("Recent Invoices")
+    with col2:
+        st.markdown('<div style="text-align:right"><a href="#" style="color:#3B82F6; font-size:12px; text-decoration:none;">View All</a></div>', unsafe_allow_html=True)
+    
+    # Empty state with icon and message
     st.markdown("""
-    <div style='background-color: white; padding: 15px; border-radius: 10px; 
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #f0f0f0;'>
-        <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;'>
-            <div style='font-weight: 600; color: #2C5282;'>Recent Invoices</div>
-            <div style='font-size: 12px; color: #3B82F6; cursor: pointer;'>View All</div>
-        </div>
-        <div style='color: #718096; text-align: center; padding: 20px 0;'>
-            <div style='margin-bottom: 8px; opacity: 0.6;'>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto; display: block;">
-                    <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15" stroke="#718096" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5C15 6.10457 14.1046 7 13 7H11C9.89543 7 9 6.10457 9 5Z" stroke="#718096" stroke-width="2"/>
-                    <path d="M9 12H15" stroke="#718096" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M9 16H15" stroke="#718096" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-            </div>
-            <div style='font-size: 14px;'>No invoices yet</div>
-            <div style='font-size: 12px; margin-top: 4px;'>Your billing history will appear here</div>
-        </div>
+    <div style="text-align:center; padding:20px; color:#718096; background-color:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+        <div style="font-size:24px; margin-bottom:10px;">📄</div>
+        <div style="font-size:14px; font-weight:500;">No invoices yet</div>
+        <div style="font-size:12px; margin-top:5px;">Your billing history will appear here</div>
     </div>
     """, unsafe_allow_html=True)
 
