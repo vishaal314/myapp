@@ -647,261 +647,68 @@ def render_billing_history():
     """, unsafe_allow_html=True)
 
 def render_landing_page():
-    """Render a simple, clear landing page"""
+    """Render a simple, clear landing page with minimal styling"""
+    
+    # Hero section with logo, title, subtitle and CTA button
     st.markdown("""
-    <div style="
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 40px 20px;
-    ">
-        <!-- Hero Section -->
-        <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding-bottom: 40px;
-            border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 40px;
-        ">
-            <!-- Logo -->
-            <div style="
-                width: 80px;
-                height: 80px;
-                background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-                border-radius: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-bottom: 24px;
-                box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
-            ">
-                <span style="font-size: 40px; color: white;">🛡️</span>
-            </div>
-            
-            <!-- Title - fixed styling -->
-            <div style="margin-bottom: 16px;">
-                <h1 style="
-                    font-size: 40px;
-                    font-weight: 800;
-                    color: #0f172a;
-                    margin: 0 0 16px 0;
-                    padding: 0;
-                    line-height: 1.2;
-                    display: block;
-                ">DataGuardian Pro</h1>
-            </div>
-            
-            <!-- Subtitle - fixed styling -->
-            <div style="
-                margin-bottom: 32px;
-                width: 100%;
-                max-width: 600px;
-                margin-left: auto;
-                margin-right: auto;
-            ">
-                <p style="
-                    font-size: 20px;
-                    color: #64748b;
-                    margin: 0;
-                    padding: 0;
-                    line-height: 1.5;
-                ">Protect your data. Ensure compliance. Build trust.</p>
-            </div>
-            
-            <!-- CTA Button -->
-            <a href="#" style="
-                background: #3b82f6;
-                color: white;
-                font-weight: 600;
-                font-size: 18px;
-                padding: 14px 28px;
-                border-radius: 8px;
-                text-decoration: none;
-                transition: all 0.2s ease;
-                box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
-            ">Start Free Trial</a>
+    <div style="text-align:center; padding:40px 20px; max-width:1000px; margin:0 auto;">
+        <!-- Logo -->
+        <div style="width:80px; height:80px; background:#3b82f6; border-radius:16px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:24px;">
+            <span style="font-size:40px; color:white;">🛡️</span>
         </div>
         
-        <!-- Three Simple Feature Blocks -->
-        <div style="margin-bottom: 60px;">
-            <h2 style="
-                font-size: 32px;
-                font-weight: 700;
-                color: #0f172a;
-                text-align: center;
-                margin-bottom: 40px;
-            ">How It Works</h2>
+        <!-- Title -->
+        <h1 style="font-size:38px; font-weight:800; color:#1e293b; margin-bottom:16px;">DataGuardian Pro</h1>
+        
+        <!-- Subtitle -->
+        <p style="font-size:18px; color:#64748b; max-width:600px; margin:0 auto 32px auto; line-height:1.5;">Protect your data. Ensure compliance. Build trust.</p>
+        
+        <!-- CTA Button -->
+        <a href="#" style="display:inline-block; background:#3b82f6; color:white; font-weight:600; padding:12px 24px; border-radius:8px; text-decoration:none; margin-bottom:60px;">Start Free Trial</a>
+        
+        <!-- Separator -->
+        <hr style="border:none; height:1px; background:#e2e8f0; margin-bottom:60px;">
+        
+        <!-- How It Works -->
+        <h2 style="font-size:30px; font-weight:700; color:#1e293b; margin-bottom:40px;">How It Works</h2>
+        
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-bottom:60px;">
+            <!-- Step 1 -->
+            <div style="flex:1; min-width:280px; background:white; border-radius:12px; padding:24px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+                <div style="width:50px; height:50px; background:#eef2ff; border-radius:25px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto; font-weight:bold;">1</div>
+                <h3 style="font-size:18px; font-weight:600; color:#1e293b; margin-bottom:8px;">Scan</h3>
+                <p style="color:#64748b; font-size:15px; line-height:1.5;">Quickly scan your systems for sensitive data and compliance issues.</p>
+            </div>
             
-            <div style="
-                display: flex;
-                gap: 30px;
-                justify-content: center;
-                flex-wrap: wrap;
-            ">
-                <!-- Feature 1 -->
-                <div style="
-                    flex: 1;
-                    min-width: 280px;
-                    background: white;
-                    border-radius: 16px;
-                    padding: 30px;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-                    text-align: center;
-                ">
-                    <div style="
-                        width: 60px;
-                        height: 60px;
-                        background: #eef2ff;
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto 20px auto;
-                        font-size: 24px;
-                    ">1</div>
-                    <h3 style="
-                        font-size: 20px;
-                        font-weight: 600;
-                        color: #1e293b;
-                        margin-bottom: 12px;
-                    ">Scan</h3>
-                    <p style="
-                        color: #64748b;
-                        font-size: 16px;
-                        line-height: 1.5;
-                    ">Quickly scan your systems for sensitive data and compliance issues.</p>
-                </div>
-                
-                <!-- Feature 2 -->
-                <div style="
-                    flex: 1;
-                    min-width: 280px;
-                    background: white;
-                    border-radius: 16px;
-                    padding: 30px;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-                    text-align: center;
-                ">
-                    <div style="
-                        width: 60px;
-                        height: 60px;
-                        background: #eef2ff;
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto 20px auto;
-                        font-size: 24px;
-                    ">2</div>
-                    <h3 style="
-                        font-size: 20px;
-                        font-weight: 600;
-                        color: #1e293b;
-                        margin-bottom: 12px;
-                    ">Analyze</h3>
-                    <p style="
-                        color: #64748b;
-                        font-size: 16px;
-                        line-height: 1.5;
-                    ">Our AI identifies risks and prioritizes issues that need attention.</p>
-                </div>
-                
-                <!-- Feature 3 -->
-                <div style="
-                    flex: 1;
-                    min-width: 280px;
-                    background: white;
-                    border-radius: 16px;
-                    padding: 30px;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-                    text-align: center;
-                ">
-                    <div style="
-                        width: 60px;
-                        height: 60px;
-                        background: #eef2ff;
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto 20px auto;
-                        font-size: 24px;
-                    ">3</div>
-                    <h3 style="
-                        font-size: 20px;
-                        font-weight: 600;
-                        color: #1e293b;
-                        margin-bottom: 12px;
-                    ">Fix</h3>
-                    <p style="
-                        color: #64748b;
-                        font-size: 16px;
-                        line-height: 1.5;
-                    ">Get clear recommendations to resolve issues and maintain compliance.</p>
-                </div>
+            <!-- Step 2 -->
+            <div style="flex:1; min-width:280px; background:white; border-radius:12px; padding:24px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+                <div style="width:50px; height:50px; background:#eef2ff; border-radius:25px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto; font-weight:bold;">2</div>
+                <h3 style="font-size:18px; font-weight:600; color:#1e293b; margin-bottom:8px;">Analyze</h3>
+                <p style="color:#64748b; font-size:15px; line-height:1.5;">Our AI identifies risks and prioritizes issues that need attention.</p>
+            </div>
+            
+            <!-- Step 3 -->
+            <div style="flex:1; min-width:280px; background:white; border-radius:12px; padding:24px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+                <div style="width:50px; height:50px; background:#eef2ff; border-radius:25px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto; font-weight:bold;">3</div>
+                <h3 style="font-size:18px; font-weight:600; color:#1e293b; margin-bottom:8px;">Fix</h3>
+                <p style="color:#64748b; font-size:15px; line-height:1.5;">Get clear recommendations to resolve issues and maintain compliance.</p>
             </div>
         </div>
         
-        <!-- Simple Testimonial -->
-        <div style="
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 60px;
-        ">
-            <div style="
-                font-size: 24px;
-                color: #0f172a;
-                font-weight: 500;
-                font-style: italic;
-                margin-bottom: 24px;
-                line-height: 1.5;
-                max-width: 700px;
-                margin-left: auto;
-                margin-right: auto;
-            ">
+        <!-- Testimonial -->
+        <div style="background:#f8fafc; border-radius:12px; padding:32px; text-align:center; margin-bottom:60px;">
+            <p style="font-size:20px; color:#1e293b; font-style:italic; margin-bottom:20px; line-height:1.5;">
                 "DataGuardian Pro helped us identify privacy risks we didn't even know existed. Our compliance score improved by 40% in just one month."
-            </div>
-            <div style="
-                font-weight: 600;
-                color: #334155;
-            ">Sarah Johnson, CTO</div>
-            <div style="
-                color: #64748b;
-                font-size: 14px;
-            ">Enterprise Solutions Inc.</div>
+            </p>
+            <p style="font-weight:600; color:#334155; margin-bottom:4px;">Sarah Johnson, CTO</p>
+            <p style="color:#64748b; font-size:14px;">Enterprise Solutions Inc.</p>
         </div>
         
-        <!-- Simple CTA -->
-        <div style="
-            text-align: center;
-            padding: 40px;
-            background: #0f172a;
-            border-radius: 16px;
-        ">
-            <h2 style="
-                font-size: 28px;
-                font-weight: 700;
-                color: white;
-                margin-bottom: 16px;
-            ">Ready to protect your data?</h2>
-            <p style="
-                color: #cbd5e1;
-                margin-bottom: 24px;
-                font-size: 16px;
-            ">Get started with a free trial today. No credit card required.</p>
-            <a href="#" style="
-                background: white;
-                color: #0f172a;
-                font-weight: 600;
-                font-size: 16px;
-                padding: 12px 24px;
-                border-radius: 8px;
-                text-decoration: none;
-                display: inline-block;
-            ">Sign Up Now</a>
+        <!-- Final CTA -->
+        <div style="background:#1e293b; border-radius:12px; padding:32px; text-align:center;">
+            <h2 style="font-size:24px; font-weight:700; color:white; margin-bottom:16px;">Ready to protect your data?</h2>
+            <p style="color:#cbd5e1; margin-bottom:24px; font-size:16px;">Get started with a free trial today. No credit card required.</p>
+            <a href="#" style="display:inline-block; background:white; color:#1e293b; font-weight:600; padding:12px 24px; border-radius:8px; text-decoration:none;">Sign Up Now</a>
         </div>
     </div>
     """, unsafe_allow_html=True)
