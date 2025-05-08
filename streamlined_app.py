@@ -359,66 +359,14 @@ if "logged_in" not in st.session_state:
 # =============================================================================
 
 def render_brand_logo():
-    """Render the DataGuardian Pro logo"""
+    """Render the DataGuardian Pro logo with ultra-simple HTML"""
     st.markdown("""
-    <div style="padding: 20px 0; text-align: center;">
-        <div style="
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border-radius: 16px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-            border: none;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
-        ">
-            <!-- Simple logo container -->
-            <div style="
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-bottom: 12px;
-            ">
-                <!-- Shield Icon -->
-                <div style="
-                    width: 40px;
-                    height: 40px;
-                    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-                    border-radius: 10px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    margin-right: 12px;
-                ">
-                    <span style="font-size: 20px; color: white;">🛡️</span>
-                </div>
-                
-                <!-- Brand Name -->
-                <div style="text-align: left;">
-                    <h1 style="
-                        font-weight: 800; 
-                        font-size: 20px; 
-                        color: white; 
-                        margin: 0;
-                        padding: 0;
-                        line-height: 1.2;
-                        display: block;
-                    ">DataGuardian Pro</h1>
-                    <div style="
-                        font-size: 12px;
-                        color: #94a3b8;
-                        margin-top: 4px;
-                        display: block;
-                    ">Enterprise Edition</div>
-                </div>
-            </div>
-            
-            <!-- Simple tagline -->
-            <div style="
-                font-size: 12px;
-                color: #cbd5e1;
-                padding-top: 8px;
-                border-top: 1px solid rgba(255,255,255,0.1);
-            ">Advanced Privacy Compliance Platform</div>
+    <div style="background-color:#1e293b; padding:20px; text-align:center; border-radius:10px; margin:20px 0;">
+        <div style="font-size:28px; margin-bottom:10px;">🛡️</div>
+        <div style="color:white; font-weight:bold; font-size:18px;">DataGuardian Pro</div>
+        <div style="color:#94a3b8; font-size:12px; margin-top:5px;">Enterprise Edition</div>
+        <div style="color:#cbd5e1; font-size:11px; margin-top:10px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
+            Advanced Privacy Compliance Platform
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -647,71 +595,58 @@ def render_billing_history():
     """, unsafe_allow_html=True)
 
 def render_landing_page():
-    """Render a simple, clear landing page with minimal styling"""
+    """Render an ultra-simple landing page with minimal HTML structure"""
     
-    # Hero section with logo, title, subtitle and CTA button
+    # Logo (using emoji directly)
+    st.markdown("<div style='font-size:60px; text-align:center;'>🛡️</div>", unsafe_allow_html=True)
+    
+    # Title and subtitle using native Streamlit components
+    st.title("DataGuardian Pro")
+    st.subheader("Protect your data. Ensure compliance. Build trust.")
+    
+    # CTA Button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.button("Start Free Trial", type="primary", use_container_width=True)
+    
+    st.markdown("---")  # Separator
+    
+    # How It Works section
+    st.header("How It Works")
+    
+    # Use columns for the 3 steps
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("### 1. Scan")
+        st.markdown("Quickly scan your systems for sensitive data and compliance issues.")
+    
+    with col2:
+        st.markdown("### 2. Analyze")
+        st.markdown("Our AI identifies risks and prioritizes issues that need attention.")
+    
+    with col3:
+        st.markdown("### 3. Fix")
+        st.markdown("Get clear recommendations to resolve issues and maintain compliance.")
+    
+    st.markdown("---")  # Separator
+    
+    # Testimonial
     st.markdown("""
-    <div style="text-align:center; padding:40px 20px; max-width:1000px; margin:0 auto;">
-        <!-- Logo -->
-        <div style="width:80px; height:80px; background:#3b82f6; border-radius:16px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:24px;">
-            <span style="font-size:40px; color:white;">🛡️</span>
-        </div>
-        
-        <!-- Title -->
-        <h1 style="font-size:38px; font-weight:800; color:#1e293b; margin-bottom:16px;">DataGuardian Pro</h1>
-        
-        <!-- Subtitle -->
-        <p style="font-size:18px; color:#64748b; max-width:600px; margin:0 auto 32px auto; line-height:1.5;">Protect your data. Ensure compliance. Build trust.</p>
-        
-        <!-- CTA Button -->
-        <a href="#" style="display:inline-block; background:#3b82f6; color:white; font-weight:600; padding:12px 24px; border-radius:8px; text-decoration:none; margin-bottom:60px;">Start Free Trial</a>
-        
-        <!-- Separator -->
-        <hr style="border:none; height:1px; background:#e2e8f0; margin-bottom:60px;">
-        
-        <!-- How It Works -->
-        <h2 style="font-size:30px; font-weight:700; color:#1e293b; margin-bottom:40px;">How It Works</h2>
-        
-        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-bottom:60px;">
-            <!-- Step 1 -->
-            <div style="flex:1; min-width:280px; background:white; border-radius:12px; padding:24px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
-                <div style="width:50px; height:50px; background:#eef2ff; border-radius:25px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto; font-weight:bold;">1</div>
-                <h3 style="font-size:18px; font-weight:600; color:#1e293b; margin-bottom:8px;">Scan</h3>
-                <p style="color:#64748b; font-size:15px; line-height:1.5;">Quickly scan your systems for sensitive data and compliance issues.</p>
-            </div>
-            
-            <!-- Step 2 -->
-            <div style="flex:1; min-width:280px; background:white; border-radius:12px; padding:24px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
-                <div style="width:50px; height:50px; background:#eef2ff; border-radius:25px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto; font-weight:bold;">2</div>
-                <h3 style="font-size:18px; font-weight:600; color:#1e293b; margin-bottom:8px;">Analyze</h3>
-                <p style="color:#64748b; font-size:15px; line-height:1.5;">Our AI identifies risks and prioritizes issues that need attention.</p>
-            </div>
-            
-            <!-- Step 3 -->
-            <div style="flex:1; min-width:280px; background:white; border-radius:12px; padding:24px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
-                <div style="width:50px; height:50px; background:#eef2ff; border-radius:25px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto; font-weight:bold;">3</div>
-                <h3 style="font-size:18px; font-weight:600; color:#1e293b; margin-bottom:8px;">Fix</h3>
-                <p style="color:#64748b; font-size:15px; line-height:1.5;">Get clear recommendations to resolve issues and maintain compliance.</p>
-            </div>
-        </div>
-        
-        <!-- Testimonial -->
-        <div style="background:#f8fafc; border-radius:12px; padding:32px; text-align:center; margin-bottom:60px;">
-            <p style="font-size:20px; color:#1e293b; font-style:italic; margin-bottom:20px; line-height:1.5;">
-                "DataGuardian Pro helped us identify privacy risks we didn't even know existed. Our compliance score improved by 40% in just one month."
-            </p>
-            <p style="font-weight:600; color:#334155; margin-bottom:4px;">Sarah Johnson, CTO</p>
-            <p style="color:#64748b; font-size:14px;">Enterprise Solutions Inc.</p>
-        </div>
-        
-        <!-- Final CTA -->
-        <div style="background:#1e293b; border-radius:12px; padding:32px; text-align:center;">
-            <h2 style="font-size:24px; font-weight:700; color:white; margin-bottom:16px;">Ready to protect your data?</h2>
-            <p style="color:#cbd5e1; margin-bottom:24px; font-size:16px;">Get started with a free trial today. No credit card required.</p>
-            <a href="#" style="display:inline-block; background:white; color:#1e293b; font-weight:600; padding:12px 24px; border-radius:8px; text-decoration:none;">Sign Up Now</a>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    > "DataGuardian Pro helped us identify privacy risks we didn't even know existed. Our compliance score improved by 40% in just one month."
+    >
+    > **Sarah Johnson, CTO** - Enterprise Solutions Inc.
+    """)
+    
+    st.markdown("---")  # Separator
+    
+    # Final CTA section
+    st.header("Ready to protect your data?")
+    st.markdown("Get started with a free trial today. No credit card required.")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.button("Sign Up Now", type="primary", use_container_width=True, key="signup_button")
 
 # =============================================================================
 # DASHBOARD COMPONENTS
