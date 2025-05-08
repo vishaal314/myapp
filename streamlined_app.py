@@ -400,12 +400,14 @@ def render_brand_logo():
                         color: white; 
                         margin: 0;
                         padding: 0;
-                        line-height: 1.1;
+                        line-height: 1.2;
+                        display: block;
                     ">DataGuardian Pro</h1>
                     <div style="
                         font-size: 12px;
                         color: #94a3b8;
                         margin-top: 4px;
+                        display: block;
                     ">Enterprise Edition</div>
                 </div>
             </div>
@@ -677,24 +679,35 @@ def render_landing_page():
                 <span style="font-size: 40px; color: white;">🛡️</span>
             </div>
             
-            <!-- Title -->
-            <h1 style="
-                font-size: 42px;
-                font-weight: 800;
-                color: #0f172a;
-                margin-bottom: 16px;
-                line-height: 1.1;
-                display: inline-block;
-            ">DataGuardian Pro</h1>
+            <!-- Title - fixed styling -->
+            <div style="margin-bottom: 16px;">
+                <h1 style="
+                    font-size: 40px;
+                    font-weight: 800;
+                    color: #0f172a;
+                    margin: 0 0 16px 0;
+                    padding: 0;
+                    line-height: 1.2;
+                    display: block;
+                ">DataGuardian Pro</h1>
+            </div>
             
-            <!-- Subtitle -->
-            <p style="
-                font-size: 20px;
-                color: #64748b;
-                max-width: 600px;
+            <!-- Subtitle - fixed styling -->
+            <div style="
                 margin-bottom: 32px;
-                line-height: 1.5;
-            ">Protect your data. Ensure compliance. Build trust.</p>
+                width: 100%;
+                max-width: 600px;
+                margin-left: auto;
+                margin-right: auto;
+            ">
+                <p style="
+                    font-size: 20px;
+                    color: #64748b;
+                    margin: 0;
+                    padding: 0;
+                    line-height: 1.5;
+                ">Protect your data. Ensure compliance. Build trust.</p>
+            </div>
             
             <!-- CTA Button -->
             <a href="#" style="
