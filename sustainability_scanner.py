@@ -1060,6 +1060,27 @@ def generate_sustainability_report(scan_results):
                 backColor=colors.HexColor('#F5F5F5')  # Light gray
             )
             
+            subheading_style = ParagraphStyle(
+                name='SubHeading',
+                parent=styles['Heading3'],
+                fontSize=12,
+                leading=14,
+                textColor=colors.HexColor('#2E7D32'),  # Medium green
+                backColor=colors.white,
+                fontName='Helvetica-Bold',
+                spaceAfter=0.1*inch
+            )
+            
+            item_heading_style = ParagraphStyle(
+                name='ItemHeading',
+                parent=styles['Heading4'],
+                fontSize=10,
+                leading=12,
+                textColor=colors.HexColor('#388E3C'),  # Light green
+                fontName='Helvetica-Bold',
+                spaceAfter=0.05*inch
+            )
+            
             # Generate leaf logo as SVG - converted to a data URI
             leaf_logo_svg = """
             <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1265,25 +1286,25 @@ def generate_sustainability_report(scan_results):
                 
                 # Show high risk findings
                 if high_risk:
-                    story.append(Paragraph("High Risk Findings", styles['Heading3']))
+                    story.append(Paragraph("High Risk Findings", subheading_style))
                     
                     for f in high_risk:
-                        story.append(Paragraph(f"{f.get('id', 'FIND')}: {f.get('title', 'Unknown Finding')}", styles['Heading4']))
+                        story.append(Paragraph(f"{f.get('id', 'FIND')}: {f.get('title', 'Unknown Finding')}", item_heading_style))
                         story.append(Paragraph(f"{f.get('description', '')}", styles['Normal']))
                         story.append(Spacer(1, 0.1*inch))
                 
                 # Show medium risk findings
                 if medium_risk:
-                    story.append(Paragraph("Medium Risk Findings", styles['Heading3']))
+                    story.append(Paragraph("Medium Risk Findings", subheading_style))
                     
                     for f in medium_risk:
-                        story.append(Paragraph(f"{f.get('id', 'FIND')}: {f.get('title', 'Unknown Finding')}", styles['Heading4']))
+                        story.append(Paragraph(f"{f.get('id', 'FIND')}: {f.get('title', 'Unknown Finding')}", item_heading_style))
                         story.append(Paragraph(f"{f.get('description', '')}", styles['Normal']))
                         story.append(Spacer(1, 0.1*inch))
                 
                 # Show low risk findings summary
                 if low_risk:
-                    story.append(Paragraph(f"Low Risk Findings: {len(low_risk)} items", styles['Heading3']))
+                    story.append(Paragraph(f"Low Risk Findings: {len(low_risk)} items", subheading_style))
                     story.append(Paragraph(f"See full report for details on low risk findings.", styles['Normal']))
             else:
                 story.append(Paragraph("No findings detected.", styles['Normal']))
@@ -1291,22 +1312,40 @@ def generate_sustainability_report(scan_results):
             story.append(Spacer(1, 0.25*inch))
             
             # Recommendations
-            story.append(Paragraph("Recommendations", styles['Heading2']))
+            story.append(Paragraph("Recommendations", heading_style))
+            story.append(Spacer(1, 0.1*inch))
             recommendations = scan_results.get("recommendations", [])
             
             if recommendations:
                 for i, rec in enumerate(recommendations):
-                    story.append(Paragraph(f"{i+1}. {rec.get('title')} ({rec.get('impact', 'medium').title()} Impact)", styles['Heading3']))
+                    # Recommendation title with impact color
+                    impact = rec.get('impact', 'medium').lower()
+                    impact_color = "#4CAF50"  # Default green
+                    
+                    if impact == "high":
+                        impact_color = "#388E3C"  # Darker green
+                    elif impact == "medium":
+                        impact_color = "#4CAF50"  # Medium green
+                    elif impact == "low":
+                        impact_color = "#81C784"  # Light green
+                    
+                    story.append(Paragraph(
+                        f"{i+1}. {rec.get('title')} <font color=\"{impact_color}\">({impact.title()} Impact)</font>", 
+                        subheading_style
+                    ))
                     story.append(Paragraph(f"{rec.get('description')}", styles['Normal']))
                     
                     # Show implementation steps
-                    steps_text = ""
-                    for j, step in enumerate(rec.get("steps", [])):
-                        steps_text += f"   {j+1}. {step}\n"
-                    
-                    if steps_text:
-                        story.append(Paragraph("Implementation Steps:", styles['Normal']))
-                        story.append(Paragraph(steps_text, styles['Normal']))
+                    steps = rec.get("steps", [])
+                    if steps:
+                        story.append(Paragraph("Implementation Steps:", item_heading_style))
+                        
+                        for j, step in enumerate(steps):
+                            story.append(Paragraph(f"   {j+1}. {step}", styles['Normal']))
+                            
+                    # Add green checkmark for completed items (if any)
+                    if rec.get("completed", False):
+                        story.append(Paragraph("<font color=\"#4CAF50\">✓ Action item completed</font>", styles['Normal']))
                     
                     story.append(Spacer(1, 0.1*inch))
             else:
