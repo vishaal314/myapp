@@ -1081,69 +1081,31 @@ def generate_sustainability_report(scan_results):
                 spaceAfter=0.05*inch
             )
             
-            # Generate modern colorful logo as SVG - converted to a data URI
-            modern_logo_svg = """
-            <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Shield background -->
-                <path d="M60 5C39.5 5 25 19.5 25 40C25 60.5 40 75 60 75C80 75 95 60.5 95 40C95 19.5 80.5 5 60 5Z" fill="url(#shield_gradient)"/>
-                
-                <!-- Leaf elements -->
-                <path d="M75 25C65 25 57.5 32.5 57.5 42.5C57.5 52.5 65 60 75 60C85 60 92.5 52.5 92.5 42.5C92.5 32.5 85 25 75 25Z" fill="#81C784"/>
-                <path d="M75 25C65 25 57.5 32.5 57.5 42.5H75V25Z" fill="#A5D6A7"/>
-                
-                <!-- Data visualization bars -->
-                <rect x="30" y="35" width="6" height="25" rx="2" fill="#64B5F6"/>
-                <rect x="40" y="30" width="6" height="30" rx="2" fill="#42A5F5"/>
-                <rect x="50" y="25" width="6" height="35" rx="2" fill="#2196F3"/>
-                
-                <!-- Lock icon -->
-                <circle cx="45" cy="45" r="12" fill="#FFCA28" fill-opacity="0.8"/>
-                <rect x="40" y="45" width="10" height="8" rx="1" fill="#FFA000"/>
-                <rect x="42" y="39" width="6" height="8" rx="3" stroke="#FFA000" stroke-width="2"/>
-                
-                <!-- Gradient definitions -->
-                <defs>
-                    <linearGradient id="shield_gradient" x1="25" y1="5" x2="95" y2="75" gradientUnits="userSpaceOnUse">
-                        <stop offset="0" stop-color="#1E5C37"/>
-                        <stop offset="1" stop-color="#4CAF50"/>
-                    </linearGradient>
-                </defs>
-            </svg>
-            """
+            # We're using a text-based approach now for maximum compatibility
+            # No SVG logo needed
             
-            svg_data_uri = f"data:image/svg+xml;base64,{base64.b64encode(modern_logo_svg.encode()).decode()}"
+            # Use a reliable text-based colorful logo instead of image
+            # This avoids potential SVG rendering issues
+            logo_text = '''
+            <font color="#1E5C37" size="18"><b>DataGuardian</b></font>
+            <font color="#4CAF50" size="14"><b>ECO</b></font>
+            <br/>
+            <font color="#388E3C">●</font>
+            <font color="#4CAF50">●</font>
+            <font color="#81C784">●</font>
+            <font color="#C8E6C9">●</font>
+            '''
             
-            # Add header with modern logo image
-            from reportlab.platypus import Image
+            cert_text = '''
+            <font color="#808080" size="10"><b>CERTIFIED</b><br/>SUSTAINABILITY REPORT</font>
+            '''
             
-            # Create a temp logo file
-            import tempfile
-            logo_temp = tempfile.NamedTemporaryFile(suffix='.svg', delete=False)
-            logo_temp.write(modern_logo_svg.encode())
-            logo_temp.flush()
-            
-            # Use the image in the header alongside the text
-            try:
-                logo_img = Image(logo_temp.name, width=1.5*inch, height=1*inch)
-                
-                header_data = [
-                    [
-                        Table(
-                            [[logo_img], 
-                            [Paragraph('<font color="#1E5C37" size="18"><b>DataGuardian</b></font><br/><font color="#4CAF50" size="14">ECO</font>', styles['Normal'])]],
-                            colWidths=[1.5*inch]
-                        ),
-                        Paragraph('<font color="#808080" size="10">CERTIFIED<br/>SUSTAINABILITY REPORT</font>', styles['Normal'])
-                    ]
+            header_data = [
+                [
+                    Paragraph(logo_text, styles['Normal']),
+                    Paragraph(cert_text, styles['Normal'])
                 ]
-            except:
-                # Fallback to text logo if image fails
-                header_data = [
-                    [
-                        Paragraph('<font color="#1E5C37" size="18"><b>DataGuardian</b></font><br/><font color="#4CAF50" size="14">ECO</font>', styles['Normal']),
-                        Paragraph('<font color="#808080" size="10">CERTIFIED<br/>SUSTAINABILITY REPORT</font>', styles['Normal'])
-                    ]
-                ]
+            ]
             
             header_table = Table(header_data, colWidths=[4*inch, 2*inch])
             header_table.setStyle(TableStyle([
@@ -1399,13 +1361,7 @@ def generate_sustainability_report(scan_results):
             pdf_data = buffer.getvalue()
             buffer.close()
             
-            # Close and remove temp files
-            try:
-                import os
-                logo_temp.close()
-                os.unlink(logo_temp.name)
-            except:
-                pass
+            # No temp files to clean up in this implementation
             
             return pdf_data
             
