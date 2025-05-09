@@ -993,7 +993,7 @@ def display_findings(findings):
 
 def generate_sustainability_report(scan_results):
     """
-    Generate a PDF report of sustainability scan results.
+    Generate a professional certification-style PDF report of sustainability scan results.
     
     Args:
         scan_results: Dictionary with scan results
@@ -1011,51 +1011,165 @@ def generate_sustainability_report(scan_results):
             from reportlab.lib import colors
             from reportlab.lib.units import inch
             from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
+            from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
             
-            # Create document
-            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            # Create document with margins
+            doc = SimpleDocTemplate(
+                buffer, 
+                pagesize=letter,
+                leftMargin=0.75*inch,
+                rightMargin=0.75*inch,
+                topMargin=0.75*inch,
+                bottomMargin=0.75*inch
+            )
+            
             styles = getSampleStyleSheet()
             story = []
             
-            # Title
+            # Create custom styles
             title_style = ParagraphStyle(
-                name='Title',
+                name='CustomTitle',
                 parent=styles['Title'],
-                fontSize=16,
-                leading=20,
+                fontSize=22,
+                leading=26,
+                alignment=TA_CENTER,
+                textColor=colors.HexColor('#1E5C37'),  # Dark green
+                spaceAfter=0.15*inch
             )
-            story.append(Paragraph("Sustainability Scan Report", title_style))
+            
+            subtitle_style = ParagraphStyle(
+                name='SubTitle',
+                parent=styles['Normal'],
+                fontSize=14,
+                leading=18,
+                alignment=TA_CENTER,
+                textColor=colors.HexColor('#1E5C37'),  # Dark green
+                spaceAfter=0.25*inch
+            )
+            
+            heading_style = ParagraphStyle(
+                name='CustomHeading',
+                parent=styles['Heading2'],
+                fontSize=14,
+                leading=18,
+                textColor=colors.HexColor('#1E5C37'),  # Dark green
+                borderWidth=0,
+                borderColor=colors.HexColor('#1E5C37'),
+                borderPadding=5,
+                backColor=colors.HexColor('#F5F5F5')  # Light gray
+            )
+            
+            # Generate leaf logo as SVG - converted to a data URI
+            leaf_logo_svg = """
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M40 5C27.85 5 18 14.85 18 27C18 39.15 27.85 49 40 49C52.15 49 62 39.15 62 27C62 14.85 52.15 5 40 5Z" fill="#4CAF50" />
+                <path d="M40 49C27.85 49 18 58.85 18 71C18 71 27.85 75 40 75C52.15 75 62 71 62 71C62 58.85 52.15 49 40 49Z" fill="#388E3C" />
+                <path d="M42 11V40H38V11H42Z" fill="#1B5E20" />
+                <path d="M56 27C56 35.28 48.84 42 40 42C31.16 42 24 35.28 24 27C24 18.72 31.16 12 40 12C48.84 12 56 18.72 56 27Z" fill="#81C784" />
+                <path d="M40 12C48.84 12 56 18.72 56 27H40V12Z" fill="#A5D6A7" />
+            </svg>
+            """
+            
+            svg_data_uri = f"data:image/svg+xml;base64,{base64.b64encode(leaf_logo_svg.encode()).decode()}"
+            
+            # Add header with logo
+            header_data = [
+                [
+                    # This would be replaced with an actual logo image
+                    # For now, we'll use a placeholder text
+                    Paragraph('<font color="#1E5C37" size="20"><b>DataGuardian</b></font><br/><font color="#4CAF50" size="18">ECO</font>', styles['Normal']),
+                    Paragraph('<font color="#808080" size="10">CERTIFIED<br/>SUSTAINABILITY REPORT</font>', styles['Normal'])
+                ]
+            ]
+            
+            header_table = Table(header_data, colWidths=[4*inch, 2*inch])
+            header_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]))
+            
+            story.append(header_table)
+            story.append(Spacer(1, 0.5*inch))
+            
+            # Main title
+            story.append(Paragraph("Sustainability Certification Report", title_style))
+            
+            # Certificate border
+            current_date = datetime.now().strftime("%B %d, %Y")
+            story.append(Paragraph(f"Issued on {current_date}", subtitle_style))
             story.append(Spacer(1, 0.25*inch))
             
-            # Header info
-            story.append(Paragraph(f"Scan ID: {scan_results.get('scan_id', 'Unknown')}", styles['Normal']))
-            story.append(Paragraph(f"Provider: {scan_results.get('provider', 'Unknown')}", styles['Normal']))
-            story.append(Paragraph(f"Region: {scan_results.get('region', 'Unknown')}", styles['Normal']))
+            # Create certification box
+            sustainability_score = scan_results.get("sustainability_score", 0)
+            
+            # Determine sustainability status and color
+            status = "Critical"
+            status_color = "#FF5252"  # Red
+            
+            if sustainability_score >= 80:
+                status = "Excellent"
+                status_color = "#4CAF50"  # Green
+            elif sustainability_score >= 70:
+                status = "Good"
+                status_color = "#8BC34A"  # Light green
+            elif sustainability_score >= 60:
+                status = "Average"
+                status_color = "#FFC107"  # Amber
+            elif sustainability_score >= 50:
+                status = "Below Average"
+                status_color = "#FF9800"  # Orange
+            
+            cert_data = [
+                [Paragraph(f'<font size="14"><b>Overall Rating</b></font>', styles['Normal'])],
+                [Paragraph(f'<font size="30" color="{status_color}"><b>{sustainability_score}</b></font>', styles['Normal'])],
+                [Paragraph(f'<font size="14" color="{status_color}"><b>{status}</b></font>', styles['Normal'])],
+            ]
+            
+            cert_table = Table(cert_data, colWidths=[6*inch])
+            cert_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('LINEBELOW', (0, 0), (0, 0), 1, colors.gray),
+                ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#F5F5F5')),
+                ('BOTTOMPADDING', (0, 0), (0, 0), 10),
+                ('BOTTOMPADDING', (0, 1), (0, 1), 5),
+            ]))
+            
+            story.append(cert_table)
+            story.append(Spacer(1, 0.4*inch))
+            
+            # Organization details
+            org_data = [
+                ["Organization", f"{scan_results.get('provider', 'Unknown').title()} Cloud Platform"],
+                ["Region", f"{scan_results.get('region', 'Unknown')}"],
+                ["Scan ID", f"{scan_results.get('scan_id', 'Unknown')}"],
+            ]
+            
+            # Format timestamp
             timestamp_iso = scan_results.get('timestamp', datetime.now().isoformat())
             try:
                 timestamp = datetime.fromisoformat(timestamp_iso).strftime("%Y-%m-%d %H:%M:%S")
             except:
                 timestamp = timestamp_iso
-            story.append(Paragraph(f"Date: {timestamp}", styles['Normal']))
-            story.append(Spacer(1, 0.25*inch))
+            
+            org_data.append(["Date Issued", timestamp])
+            
+            org_table = Table(org_data, colWidths=[1.5*inch, 4.5*inch])
+            org_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#F5F5F5')),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.gray),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('PADDING', (0, 0), (-1, -1), 6),
+            ]))
+            
+            story.append(org_table)
+            story.append(Spacer(1, 0.3*inch))
             
             # Summary
-            story.append(Paragraph("Executive Summary", styles['Heading2']))
-            sustainability_score = scan_results.get("sustainability_score", 0)
-            
-            # Determine sustainability status
-            status = "Poor"
-            if sustainability_score >= 80:
-                status = "Excellent"
-            elif sustainability_score >= 70:
-                status = "Good"
-            elif sustainability_score >= 60:
-                status = "Average"
-            elif sustainability_score >= 50:
-                status = "Below Average"
-            
-            story.append(Paragraph(f"Overall Sustainability Score: {sustainability_score}/100 ({status})", styles['Normal']))
+            story.append(Paragraph("Executive Summary", heading_style))
+            story.append(Spacer(1, 0.1*inch))
             
             # Key metrics
             resource_metrics = scan_results.get("resource_metrics", {})
@@ -1089,7 +1203,8 @@ def generate_sustainability_report(scan_results):
             story.append(Spacer(1, 0.25*inch))
             
             # Resource utilization
-            story.append(Paragraph("Resource Utilization", styles['Heading2']))
+            story.append(Paragraph("Resource Utilization", heading_style))
+            story.append(Spacer(1, 0.1*inch))
             resources = scan_results.get("resources", [])
             
             if resources:
@@ -1121,7 +1236,8 @@ def generate_sustainability_report(scan_results):
             story.append(Spacer(1, 0.25*inch))
             
             # Carbon footprint
-            story.append(Paragraph("Carbon Footprint", styles['Heading2']))
+            story.append(Paragraph("Carbon Footprint", heading_style))
+            story.append(Spacer(1, 0.1*inch))
             
             if carbon_footprint:
                 carbon_text = f"""
@@ -1137,7 +1253,8 @@ def generate_sustainability_report(scan_results):
             story.append(Spacer(1, 0.25*inch))
             
             # Findings
-            story.append(Paragraph("Key Findings", styles['Heading2']))
+            story.append(Paragraph("Key Findings", heading_style))
+            story.append(Spacer(1, 0.1*inch))
             findings = scan_results.get("findings", [])
             
             if findings:
