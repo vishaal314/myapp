@@ -169,7 +169,8 @@ def run_sustainability_scanner():
         st.info("Configure and run a scan to see sustainability metrics.")
 
 
-def perform_sustainability_scan(provider, region, repo_url=None, scan_depth="Standard"):
+def perform_sustainability_scan(provider, region, repo_url=None, scan_depth="Standard", 
+                      co2_analysis=True, idle_detection=True, code_efficiency=True, **kwargs):
     """
     Perform a sustainability scan and return the results.
     
@@ -178,6 +179,10 @@ def perform_sustainability_scan(provider, region, repo_url=None, scan_depth="Sta
         region: Cloud region
         repo_url: Optional repository URL
         scan_depth: Scan depth (Quick, Standard, Deep)
+        co2_analysis: Whether to perform CO₂ footprint analysis
+        idle_detection: Whether to detect idle resources
+        code_efficiency: Whether to analyze code efficiency
+        **kwargs: Additional scan options
     
     Returns:
         Dictionary with scan results
@@ -210,19 +215,63 @@ def perform_sustainability_scan(provider, region, repo_url=None, scan_depth="Sta
     # Different scan depth provides different levels of detail
     detail_level = {"Quick": 0.5, "Standard": 1.0, "Deep": 1.5}[scan_depth]
     
+    # Track enabled scan components
+    scan_components = {
+        "co2_analysis": co2_analysis,
+        "idle_detection": idle_detection,
+        "code_efficiency": code_efficiency
+    }
+    
+    # Log what's being scanned
+    components_active = [comp for comp, enabled in scan_components.items() if enabled]
+    st.info(f"Scanning with components: {', '.join(components_active)}")
+    
     # Generate list of cloud resources with utilization
     resources = generate_cloud_resources(provider, detail_level)
     
-    # Calculate resource utilization metrics
+    # Calculate resource utilization metrics if idle detection is enabled
     total_resources = sum(r.get('count', 0) for r in resources)
-    idle_resources = sum(r.get('idle', 0) for r in resources)
+    idle_resources = 0
+    
+    if idle_detection:
+        idle_resources = sum(r.get('idle', 0) for r in resources)
+    
     idle_percentage = (idle_resources / total_resources * 100) if total_resources > 0 else 0
     
-    # Calculate CO2 footprint
-    carbon_footprint = calculate_carbon_footprint(resources, provider, region)
+    # Calculate CO2 footprint if CO2 analysis is enabled
+    carbon_footprint = {}
+    if co2_analysis:
+        carbon_footprint = calculate_carbon_footprint(resources, provider, region)
+    else:
+        # Minimal carbon footprint data structure when analysis is disabled
+        carbon_footprint = {
+            "total_co2e_kg": 0,
+            "idle_co2e_kg": 0,
+            "emissions_reduction_potential_kg": 0,
+            "by_region": {region: 0},
+            "carbon_intensity": 0,
+            "power_consumption_kwh": 0
+        }
     
-    # Generate findings based on idle resources and carbon footprint
-    findings = generate_sustainability_findings(resources, carbon_footprint, provider)
+    # Generate findings based on enabled scan components
+    findings = []
+    
+    # Add code efficiency analysis if enabled and repo URL is provided
+    if code_efficiency and repo_url:
+        code_findings = analyze_code_efficiency(repo_url, provider, detail_level)
+        if code_findings:
+            findings.extend(code_findings)
+    
+    # Add resource and carbon findings if enabled
+    if idle_detection or co2_analysis:
+        resource_findings = generate_sustainability_findings(
+            resources, 
+            carbon_footprint, 
+            provider,
+            include_idle=idle_detection,
+            include_carbon=co2_analysis
+        )
+        findings.extend(resource_findings)
     
     # Generate recommendations
     recommendations = generate_sustainability_recommendations(findings, provider)
@@ -378,7 +427,8 @@ def calculate_carbon_footprint(resources, provider, region):
     }
 
 
-def generate_sustainability_findings(resources, carbon_footprint, provider):
+def generate_sustainability_findings(resources, carbon_footprint, provider, 
+                             include_idle=True, include_carbon=True):
     """
     Generate sustainability findings based on resources and carbon footprint.
     
@@ -386,6 +436,8 @@ def generate_sustainability_findings(resources, carbon_footprint, provider):
         resources: List of resource dictionaries
         carbon_footprint: Carbon footprint data
         provider: Cloud provider
+        include_idle: Whether to include idle resource findings
+        include_carbon: Whether to include carbon footprint findings
     
     Returns:
         List of finding dictionaries
@@ -393,87 +445,89 @@ def generate_sustainability_findings(resources, carbon_footprint, provider):
     findings = []
     
     # Find idle resources
-    for resource in resources:
-        if resource.get("idle", 0) > 0:
-            idle_count = resource.get("idle", 0)
-            resource_type = resource.get("type", "Unknown")
-            
-            risk_level = "low"
-            if idle_count >= 10:
-                risk_level = "high"
-            elif idle_count >= 5:
-                risk_level = "medium"
-            
-            findings.append({
-                "id": f"SUST-IDLE-{len(findings) + 1}",
-                "title": f"Idle {resource_type} Detected",
-                "description": f"Found {idle_count} idle {resource_type} that are consuming resources without providing value.",
-                "resource_type": resource_type,
-                "count": idle_count,
-                "risk_level": risk_level,
-                "category": "idle_resources"
-            })
+    if include_idle:
+        for resource in resources:
+            if resource.get("idle", 0) > 0:
+                idle_count = resource.get("idle", 0)
+                resource_type = resource.get("type", "Unknown")
+                
+                risk_level = "low"
+                if idle_count >= 10:
+                    risk_level = "high"
+                elif idle_count >= 5:
+                    risk_level = "medium"
+                
+                findings.append({
+                    "id": f"SUST-IDLE-{len(findings) + 1}",
+                    "title": f"Idle {resource_type} Detected",
+                    "description": f"Found {idle_count} idle {resource_type} that are consuming resources without providing value.",
+                    "resource_type": resource_type,
+                    "count": idle_count,
+                    "risk_level": risk_level,
+                    "category": "idle_resources"
+                })
     
     # Carbon footprint findings
-    total_co2e = carbon_footprint.get("total_co2e_kg", 0)
-    idle_co2e = carbon_footprint.get("idle_co2e_kg", 0)
-    
-    if total_co2e > 1000:
-        findings.append({
-            "id": f"SUST-CARB-{len(findings) + 1}",
-            "title": "High Carbon Footprint",
-            "description": f"Total carbon footprint of {total_co2e:.1f} kg CO₂e per month exceeds recommended thresholds.",
-            "resource_type": "All",
-            "count": None,
-            "risk_level": "high",
-            "category": "carbon_footprint"
-        })
-    elif total_co2e > 500:
-        findings.append({
-            "id": f"SUST-CARB-{len(findings) + 1}",
-            "title": "Moderate Carbon Footprint",
-            "description": f"Total carbon footprint of {total_co2e:.1f} kg CO₂e per month is moderate but can be improved.",
-            "resource_type": "All",
-            "count": None,
-            "risk_level": "medium",
-            "category": "carbon_footprint"
-        })
-    
-    if idle_co2e > 200:
-        findings.append({
-            "id": f"SUST-IDLE-CARB-{len(findings) + 1}",
-            "title": "High Idle Resource Emissions",
-            "description": f"Idle resources contribute {idle_co2e:.1f} kg CO₂e per month unnecessarily.",
-            "resource_type": "All",
-            "count": None,
-            "risk_level": "high",
-            "category": "idle_emissions"
-        })
-    elif idle_co2e > 50:
-        findings.append({
-            "id": f"SUST-IDLE-CARB-{len(findings) + 1}",
-            "title": "Moderate Idle Resource Emissions",
-            "description": f"Idle resources contribute {idle_co2e:.1f} kg CO₂e per month unnecessarily.",
-            "resource_type": "All",
-            "count": None,
-            "risk_level": "medium",
-            "category": "idle_emissions"
-        })
-    
-    # Region-specific findings
-    region = list(carbon_footprint.get("by_region", {}).keys())[0] if carbon_footprint.get("by_region") else "unknown"
-    carbon_intensity = carbon_footprint.get("carbon_intensity", 0)
-    
-    if carbon_intensity > 400:
-        findings.append({
-            "id": f"SUST-REG-{len(findings) + 1}",
-            "title": "High Carbon Intensity Region",
-            "description": f"The {region} region has a high carbon intensity of {carbon_intensity} g CO₂e/kWh. Consider using a region with cleaner energy.",
-            "resource_type": "Region",
-            "count": None,
-            "risk_level": "medium",
-            "category": "region_selection"
-        })
+    if include_carbon:
+        total_co2e = carbon_footprint.get("total_co2e_kg", 0)
+        idle_co2e = carbon_footprint.get("idle_co2e_kg", 0)
+        
+        if total_co2e > 1000:
+            findings.append({
+                "id": f"SUST-CARB-{len(findings) + 1}",
+                "title": "High Carbon Footprint",
+                "description": f"Total carbon footprint of {total_co2e:.1f} kg CO₂e per month exceeds recommended thresholds.",
+                "resource_type": "All",
+                "count": None,
+                "risk_level": "high",
+                "category": "carbon_footprint"
+            })
+        elif total_co2e > 500:
+            findings.append({
+                "id": f"SUST-CARB-{len(findings) + 1}",
+                "title": "Moderate Carbon Footprint",
+                "description": f"Total carbon footprint of {total_co2e:.1f} kg CO₂e per month is moderate but can be improved.",
+                "resource_type": "All",
+                "count": None,
+                "risk_level": "medium",
+                "category": "carbon_footprint"
+            })
+        
+        if include_idle and idle_co2e > 200:
+            findings.append({
+                "id": f"SUST-IDLE-CARB-{len(findings) + 1}",
+                "title": "High Idle Resource Emissions",
+                "description": f"Idle resources contribute {idle_co2e:.1f} kg CO₂e per month unnecessarily.",
+                "resource_type": "All",
+                "count": None,
+                "risk_level": "high",
+                "category": "idle_emissions"
+            })
+        elif include_idle and idle_co2e > 50:
+            findings.append({
+                "id": f"SUST-IDLE-CARB-{len(findings) + 1}",
+                "title": "Moderate Idle Resource Emissions",
+                "description": f"Idle resources contribute {idle_co2e:.1f} kg CO₂e per month unnecessarily.",
+                "resource_type": "All",
+                "count": None,
+                "risk_level": "medium",
+                "category": "idle_emissions"
+            })
+        
+        # Region-specific findings
+        region = list(carbon_footprint.get("by_region", {}).keys())[0] if carbon_footprint.get("by_region") else "unknown"
+        carbon_intensity = carbon_footprint.get("carbon_intensity", 0)
+        
+        if carbon_intensity > 400:
+            findings.append({
+                "id": f"SUST-REG-{len(findings) + 1}",
+                "title": "High Carbon Intensity Region",
+                "description": f"The {region} region has a high carbon intensity of {carbon_intensity} g CO₂e/kWh. Consider using a region with cleaner energy.",
+                "resource_type": "Region",
+                "count": None,
+                "risk_level": "medium",
+                "category": "region_selection"
+            })
     
     return findings
 
@@ -568,6 +622,100 @@ def generate_sustainability_recommendations(findings, provider):
     })
     
     return recommendations
+
+
+def analyze_code_efficiency(repo_url, provider, detail_level=1.0):
+    """
+    Analyze code efficiency for a repository.
+    
+    Args:
+        repo_url: Repository URL
+        provider: Cloud provider
+        detail_level: Level of detail for the analysis
+    
+    Returns:
+        List of code efficiency findings
+    """
+    # Extract repository owner and name from URL
+    repo_parts = repo_url.strip("/").split("/")
+    if len(repo_parts) < 2:
+        return []
+        
+    repo_name = repo_parts[-1]
+    repo_owner = repo_parts[-2] if len(repo_parts) > 2 else "unknown"
+    
+    # Simulated code efficiency findings
+    code_findings = []
+    
+    # Number of findings based on detail level
+    num_findings = int(3 * detail_level)
+    
+    # Common code efficiency issues
+    efficiency_issues = [
+        {
+            "id": "CODE-BLOAT-1",
+            "title": "Large JavaScript Bundles",
+            "description": "Detected large JavaScript bundles (>500KB) in the application. Consider code splitting and lazy loading to reduce initial load time and memory usage.",
+            "resource_type": "Code",
+            "file_path": f"{repo_name}/src/main.js",
+            "risk_level": "medium",
+            "category": "code_efficiency",
+            "energy_impact": "high",
+            "optimization_potential": "75%"
+        },
+        {
+            "id": "CODE-BLOAT-2",
+            "title": "Inefficient Database Queries",
+            "description": "Found database queries without proper indexing, causing full table scans and excessive CPU usage.",
+            "resource_type": "Code",
+            "file_path": f"{repo_name}/src/data/repository.js",
+            "risk_level": "high",
+            "category": "code_efficiency",
+            "energy_impact": "high",
+            "optimization_potential": "60%"
+        },
+        {
+            "id": "CODE-BLOAT-3",
+            "title": "Unused Dependencies",
+            "description": "Detected multiple unused npm packages that are increasing bundle size and load times.",
+            "resource_type": "Code",
+            "file_path": f"{repo_name}/package.json",
+            "risk_level": "low",
+            "category": "code_efficiency",
+            "energy_impact": "medium",
+            "optimization_potential": "40%"
+        },
+        {
+            "id": "CODE-BLOAT-4",
+            "title": "Inefficient Image Loading",
+            "description": "Images are not optimized or using modern formats like WebP, increasing bandwidth usage and processing power.",
+            "resource_type": "Code",
+            "file_path": f"{repo_name}/public/images/",
+            "risk_level": "medium",
+            "category": "code_efficiency",
+            "energy_impact": "medium",
+            "optimization_potential": "50%"
+        },
+        {
+            "id": "CODE-BLOAT-5",
+            "title": "Memory Leaks Detected",
+            "description": "Potential memory leaks found in frontend code causing increased memory usage over time.",
+            "resource_type": "Code",
+            "file_path": f"{repo_name}/src/components/",
+            "risk_level": "high",
+            "category": "code_efficiency",
+            "energy_impact": "high",
+            "optimization_potential": "90%"
+        }
+    ]
+    
+    # Add findings based on detail level
+    for i in range(min(num_findings, len(efficiency_issues))):
+        finding = efficiency_issues[i].copy()
+        finding["id"] = f"SUST-CODE-{i+1}"
+        code_findings.append(finding)
+    
+    return code_findings
 
 
 def calculate_sustainability_score(findings, idle_percentage, carbon_footprint):

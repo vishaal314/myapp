@@ -736,8 +736,7 @@ def render_scan_form():
                     scan_options = {
                         "co2_analysis": st.session_state.get("option_co2_analysis", True),
                         "idle_detection": st.session_state.get("option_idle_detection", True),
-                        "code_efficiency": st.session_state.get("option_code_efficiency", True),
-                        "scan_depth": scan_depth
+                        "code_efficiency": st.session_state.get("option_code_efficiency", True)
                     }
                     
                     # Run scan with full options
