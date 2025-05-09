@@ -634,15 +634,72 @@ def render_scan_form():
                 st.text_input("Azure DevOps URL", value="https://dev.azure.com/org/project", key="repo_url")
                 st.text_input("Project", value="example-project", key="project")
                 st.text_input("Branch", value="main", key="branch")
+        elif selected_scan == "Sustainability Scanner":
+            # Provider selection
+            provider = st.selectbox(
+                "Cloud Provider",
+                ["AWS", "Azure", "GCP", "None/Local"],
+                index=1,
+                key="cloud_provider"
+            )
+            
+            # Region selection based on provider
+            region_options = {
+                "AWS": ["us-east-1", "us-west-1", "eu-west-1", "ap-southeast-1"],
+                "Azure": ["eastus", "westus", "northeurope", "westeurope", "eastasia"],
+                "GCP": ["us-central1", "europe-west1", "asia-east1"],
+                "None/Local": ["default"]
+            }
+            
+            provider_key = provider
+            regions = region_options.get(provider_key, ["default"])
+            
+            st.selectbox(
+                "Region",
+                regions,
+                index=0,
+                key="cloud_region"
+            )
+            
+            # Optional code repository
+            st.text_input("Repository URL (Optional)", 
+                         value="https://github.com/example/repo", 
+                         key="repo_url",
+                         help="Optional: Include code repository for analysis")
         else:
             st.text_input("Repository URL", value="https://github.com/example/repo", key="repo_url")
             st.text_input("Branch", value="main", key="branch")
     
     with col2:
-        scan_options = ["Detect PII", "Check Compliance", "Generate Recommendations"]
-        for option in scan_options:
-            st.checkbox(option, value=True, key=f"option_{option}")
+        if selected_scan == "Sustainability Scanner":
+            # Custom options for sustainability scanner
+            st.subheader("Sustainability Options")
+            
+            # Scan options specific to sustainability
+            st.checkbox("CO₂ Footprint Analysis", value=True, key="option_co2_analysis",
+                       help="Calculate carbon emissions from cloud resources")
+            
+            st.checkbox("Idle Resource Detection", value=True, key="option_idle_detection",
+                       help="Identify unused or underutilized resources")
+            
+            st.checkbox("Code Efficiency Analysis", value=True, key="option_code_efficiency",
+                       help="Analyze code for resource efficiency and bloat")
+            
+            # Scan depth
+            st.select_slider(
+                "Scan Depth",
+                options=["Quick", "Standard", "Deep"],
+                value="Standard",
+                key="scan_depth",
+                help="Quick: Basic analysis, Standard: Comprehensive, Deep: Detailed with historical data"
+            )
+        else:
+            # Regular scan options for other scanners
+            scan_options = ["Detect PII", "Check Compliance", "Generate Recommendations"]
+            for option in scan_options:
+                st.checkbox(option, value=True, key=f"option_{option}")
         
+        # Output format option (for all scanners)
         st.selectbox(
             "Output Format",
             ["PDF Report", "CSV Export", "JSON Export"],
@@ -656,9 +713,44 @@ def render_scan_form():
                 time.sleep(0.02)  # Simulate scan process
                 progress_bar.progress(i/100)
             
-            # Generate mock results
+            # Generate results based on scan type
             if selected_scan == "SOC2 Scanner":
                 results = generate_mock_soc2_results(st.session_state.repo_url)
+            elif selected_scan == "Sustainability Scanner":
+                # Import and use the sustainability scanner
+                try:
+                    from sustainability_scanner import perform_sustainability_scan
+                    
+                    # Get user-selected provider and region
+                    provider = st.session_state.get("cloud_provider", "Azure")
+                    if provider == "None/Local":
+                        provider = "none"
+                    else:
+                        provider = provider.lower()
+                    
+                    region = st.session_state.get("cloud_region", "eastus")
+                    repo_url = st.session_state.get("repo_url", "")
+                    scan_depth = st.session_state.get("scan_depth", "Standard")
+                    
+                    # Get scan options
+                    scan_options = {
+                        "co2_analysis": st.session_state.get("option_co2_analysis", True),
+                        "idle_detection": st.session_state.get("option_idle_detection", True),
+                        "code_efficiency": st.session_state.get("option_code_efficiency", True),
+                        "scan_depth": scan_depth
+                    }
+                    
+                    # Run scan with full options
+                    results = perform_sustainability_scan(
+                        provider=provider, 
+                        region=region, 
+                        repo_url=repo_url,
+                        scan_depth=scan_depth,
+                        **scan_options
+                    )
+                except Exception as e:
+                    st.error(f"Error running sustainability scan: {str(e)}")
+                    results = generate_mock_scan_results(selected_scan)
             else:
                 results = generate_mock_scan_results(selected_scan)
             
@@ -670,7 +762,17 @@ def render_scan_form():
                 st.session_state.scan_history = st.session_state.scan_history[:5]
         
         st.success(f"{selected_scan} completed successfully!")
-        st.json(results)
+        
+        # Handle different types of scan results
+        if selected_scan == "Sustainability Scanner":
+            try:
+                from sustainability_scanner import display_sustainability_scan_results
+                display_sustainability_scan_results(results)
+            except Exception as e:
+                st.error(f"Error displaying sustainability results: {str(e)}")
+                st.json(results)
+        else:
+            st.json(results)
 
 def render_reports_section():
     """Render reports section"""
