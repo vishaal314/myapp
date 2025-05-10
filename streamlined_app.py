@@ -1,4 +1,5 @@
 import streamlit as st
+import soc2_scanner  # Import our new SOC2 scanner module
 import pandas as pd
 import time
 import json
