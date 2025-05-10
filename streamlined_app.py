@@ -716,7 +716,22 @@ def render_scan_form():
             
             # Generate results based on scan type
             if selected_scan == "SOC2 Scanner":
-                results = generate_mock_soc2_results(st.session_state.repo_url)
+                # Use our new SOC2 scanner implementation
+                scanner = soc2_scanner.SOC2Scanner()
+                
+                # Get repository provider and URL
+                repo_provider = st.session_state.get("repo_provider", "GitHub").lower()
+                repo_url = st.session_state.get("repo_url", "")
+                branch = st.session_state.get("branch", "main")
+                
+                # Set up scan configuration
+                scan_config = {
+                    "scan_depth": st.session_state.get("scan_depth", "Standard"),
+                    "branch": branch
+                }
+                
+                # Perform the scan
+                results = scanner.scan_infrastructure(repo_url, repo_provider, **scan_config)
             elif selected_scan == "Sustainability Scanner":
                 # Import and use the sustainability scanner
                 try:
@@ -764,7 +779,14 @@ def render_scan_form():
         st.success(f"{selected_scan} completed successfully!")
         
         # Handle different types of scan results
-        if selected_scan == "Sustainability Scanner":
+        if selected_scan == "SOC2 Scanner":
+            try:
+                # Use our integrated SOC2 scanner display function
+                soc2_scanner.display_soc2_scan_results(results)
+            except Exception as e:
+                st.error(f"Error displaying SOC2 results: {str(e)}")
+                st.json(results)
+        elif selected_scan == "Sustainability Scanner":
             try:
                 from sustainability_scanner import display_sustainability_scan_results
                 display_sustainability_scan_results(results)
