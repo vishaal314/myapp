@@ -245,22 +245,77 @@ st.markdown("""
 
 def authenticate(username, password):
     """Authenticate a user with username and password"""
-    # Mock authentication - in a real app, this would check against a database
+    import json
+    import hashlib
+    
+    try:
+        # Load users from JSON file
+        with open("users.json", "r") as f:
+            users = json.load(f)
+        
+        # Check if username exists
+        if username in users:
+            user_data = users[username]
+            
+            # Hash the provided password for comparison
+            password_hash = hashlib.sha256(password.encode()).hexdigest()
+            
+            # Check if password matches (in production, use secure password hashing)
+            # For this demo, we'll also allow "password" for any account
+            if user_data["password_hash"] == password_hash or password == "password":
+                # Create result with user data, including subscription information
+                result = {
+                    "username": username,
+                    "role": user_data.get("role", "viewer"),
+                    "email": user_data.get("email", f"{username}@dataguardian.pro"),
+                    "permissions": get_permissions_for_role(user_data.get("role", "viewer")),
+                    
+                    # Add subscription data
+                    "subscription_tier": user_data.get("subscription_tier", "basic"),
+                    "subscription_active": user_data.get("subscription_active", True),
+                    "stripe_customer_id": user_data.get("stripe_customer_id"),
+                    "subscription_id": user_data.get("subscription_id"),
+                    "user_id": user_data.get("user_id"),
+                    "subscription_renewal_date": user_data.get("subscription_renewal_date")
+                }
+                return result
+                
+    except Exception as e:
+        st.error(f"Authentication error: {str(e)}")
+        # Fall back to default authentication
+        
+    # Also allow default users for testing    
     if username == "admin" and password == "password":
         return {
             "username": "admin",
             "role": "admin",
             "email": "admin@dataguardian.pro",
-            "permissions": ["scan:all", "report:all", "admin:all"]
+            "permissions": ["scan:all", "report:all", "admin:all"],
+            "subscription_tier": "gold",
+            "subscription_active": True
         }
     elif username == "user" and password == "password":
         return {
             "username": "user",
             "role": "viewer",
             "email": "user@dataguardian.pro",
-            "permissions": ["scan:basic", "report:view"]
+            "permissions": ["scan:basic", "report:view"],
+            "subscription_tier": "basic",
+            "subscription_active": True
         }
+        
     return None
+
+def get_permissions_for_role(role):
+    """Get permissions for a specific role"""
+    if role == "admin":
+        return ["scan:all", "report:all", "admin:all"]
+    elif role == "security_engineer":
+        return ["scan:all", "report:all", "admin:config"]
+    elif role == "auditor":
+        return ["scan:read", "report:all"]
+    else:  # viewer or any other role
+        return ["scan:basic", "report:view"]
 
 # =============================================================================
 # MOCK SCAN FUNCTIONS
@@ -403,6 +458,31 @@ def render_login_form():
                 st.session_state.role = user_data["role"]
                 st.session_state.email = user_data.get("email", "")
                 st.session_state.permissions = user_data.get("permissions", [])
+                
+                # Add subscription data to session state
+                st.session_state.subscription_tier = user_data.get("subscription_tier", "basic")
+                st.session_state.subscription_active = user_data.get("subscription_active", True)
+                st.session_state.stripe_customer_id = user_data.get("stripe_customer_id")
+                st.session_state.subscription_id = user_data.get("subscription_id")
+                st.session_state.user_id = user_data.get("user_id")
+                st.session_state.subscription_renewal_date = user_data.get("subscription_renewal_date")
+                
+                # If we have a Stripe customer ID, get the latest subscription data
+                if st.session_state.stripe_customer_id:
+                    try:
+                        # Import here to avoid circular import
+                        from billing.stripe_integration import get_customer_subscription_data
+                        
+                        # Get the latest subscription data
+                        subscription_data = get_customer_subscription_data(st.session_state.stripe_customer_id)
+                        st.session_state.subscription_data = subscription_data
+                        
+                        # Update subscription tier if it's different
+                        if subscription_data.get("has_subscription"):
+                            st.session_state.subscription_tier = subscription_data.get("plan_tier", st.session_state.subscription_tier)
+                    except Exception as e:
+                        st.warning(f"Could not fetch latest subscription data: {str(e)}")
+                
                 st.success("Login successful!")
                 st.rerun()
             else:
