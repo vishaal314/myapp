@@ -3,24 +3,48 @@
     "username": "admin",
     "password_hash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
     "role": "security_engineer",
-    "email": "admin@example.com"
+    "email": "admin@example.com",
+    "subscription_tier": "gold",
+    "subscription_active": true,
+    "stripe_customer_id": null,
+    "subscription_id": null,
+    "user_id": "usr_admin123",
+    "subscription_renewal_date": "2025-06-10"
   },
   "analyst": {
     "username": "analyst",
     "password_hash": "20249749412d73a3f5799f6f1dcf910e7b4aa3ce4de133b1f8a63c044792a4e9",
     "role": "auditor",
-    "email": "analyst@example.com"
+    "email": "analyst@example.com",
+    "subscription_tier": "premium",
+    "subscription_active": true,
+    "stripe_customer_id": null,
+    "subscription_id": null,
+    "user_id": "usr_analyst123",
+    "subscription_renewal_date": "2025-06-05"
   },
   "viewer": {
     "username": "viewer",
     "password_hash": "65375049b9e4d7cad6c9ba286fdeb9394b28135a3e84136404cfccfdcc438894",
     "role": "viewer",
-    "email": "viewer@example.com"
+    "email": "viewer@example.com",
+    "subscription_tier": "basic",
+    "subscription_active": true,
+    "stripe_customer_id": null,
+    "subscription_id": null,
+    "user_id": "usr_viewer123",
+    "subscription_renewal_date": "2025-06-15"
   },
   "vishaal": {
     "username": "vishaal",
     "password_hash": "531ffc17cd645ccb7578ea6d18ce459dab088ad66125bff36c90033715f8cf64",
     "role": "admin",
-    "email": "vishaal314@gmail.com"
+    "email": "vishaal314@gmail.com",
+    "subscription_tier": "gold",
+    "subscription_active": true,
+    "stripe_customer_id": null,
+    "subscription_id": null,
+    "user_id": "usr_vishaal123",
+    "subscription_renewal_date": "2025-06-01"
   }
 }
