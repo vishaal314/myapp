@@ -12,6 +12,8 @@ import base64
 
 # Import enhanced AI model scanner
 from services.enhanced_ai_model_scanner import EnhancedAIModelScanner
+# Import website scanner
+from services.website_scanner import WebsiteScanner, display_website_scan_results
 
 # Import RBAC components
 from access_control import (
@@ -861,6 +863,58 @@ def render_scan_form():
                 st.text_input("Azure DevOps URL", value="https://dev.azure.com/org/project", key="repo_url")
                 st.text_input("Project", value="example-project", key="project")
                 st.text_input("Branch", value="main", key="branch")
+        elif selected_scan == "Website Scanner":
+            # Website URL input
+            st.text_input("Website URL", placeholder="https://example.com", key="website_url")
+            
+            # Website name (optional)
+            st.text_input("Website Name (Optional)", placeholder="Example Website", key="website_name")
+            
+            # Region selection for compliance rules
+            st.selectbox(
+                "Region",
+                ["EU", "Global", "Netherlands"],
+                key="region",
+                help="Region to apply compliance rules for"
+            )
+            
+            # Advanced options in an expandable section
+            with st.expander("GDPR Compliance Options"):
+                st.multiselect(
+                    "Compliance Areas to Check",
+                    [
+                        "Cookie Consent", 
+                        "Privacy Policy", 
+                        "Data Processing", 
+                        "Data Subject Rights",
+                        "Forms & Consent Mechanisms", 
+                        "Security & Encryption"
+                    ],
+                    default=[
+                        "Cookie Consent", 
+                        "Privacy Policy", 
+                        "Data Processing", 
+                        "Data Subject Rights",
+                        "Forms & Consent Mechanisms"
+                    ],
+                    key="compliance_areas"
+                )
+                
+                st.radio(
+                    "Depth of Analysis",
+                    ["Basic", "Standard", "Comprehensive"],
+                    index=1,
+                    key="scan_depth",
+                    help="Basic: Surface checks only, Standard: Detailed scan, Comprehensive: In-depth analysis with content extraction"
+                )
+                
+                st.checkbox(
+                    "Include Screenshots in Report", 
+                    value=False, 
+                    key="include_screenshots",
+                    help="Capture screenshots of the website for evidence in the report"
+                )
+                
         elif selected_scan == "AI Model Scanner":
             # Model source selection
             model_source = st.selectbox(

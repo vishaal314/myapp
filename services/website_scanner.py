@@ -1,831 +1,840 @@
 """
-Website Scanner module for comprehensive privacy compliance scanning of websites.
+Website Scanner for GDPR Compliance
 
-This module simulates a real visitor journey, analyzing pageviews and actions
-to provide detailed reports on data collection, tracking pixels, cookies,
-and consent choices across a website.
+This module provides a scanner to analyze websites for GDPR compliance issues.
+It checks for cookie consent banners, privacy policies, data processing agreements,
+and other key GDPR requirements.
 """
 
-import os
-import re
-import json
-import time
-import logging
+import streamlit as st
 import requests
-import fnmatch
-import hashlib
-import tldextract
-import threading
-from datetime import datetime
-from typing import Dict, List, Any, Optional, Set, Tuple
-from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
-from trafilatura import fetch_url, extract
-import whois
-import dns.resolver
+import re
+import time
+import json
+import uuid
+import os
+import random
+from datetime import datetime
+import trafilatura
+from urllib.parse import urlparse
+import tldextract
+import pandas as pd
+from io import BytesIO
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch, cm
+import matplotlib.pyplot as plt
+import base64
+import logging
 
-# Configure logging
+# Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('website_scanner')
 
 class WebsiteScanner:
-    """
-    A comprehensive scanner that analyzes websites for privacy compliance issues,
-    tracking technologies, cookies, and consent mechanisms.
-    """
+    """GDPR-compliant website scanner"""
     
-    def __init__(self, max_pages=100, max_depth=3, crawl_delay=1, 
-                 save_screenshots=False, simulate_user=True, check_ssl=True,
-                 check_dns=True, region="Netherlands"):
+    def __init__(self, region="EU", progress_callback=None):
         """
-        Initialize the website scanner.
+        Initialize the scanner
         
         Args:
-            max_pages: Maximum number of pages to scan (default: 100)
-            max_depth: Maximum depth of crawling (default: 3)
-            crawl_delay: Delay between requests in seconds (default: 1)
-            save_screenshots: Whether to save screenshots of pages (default: False)
-            simulate_user: Whether to simulate user interactions (default: True)
-            check_ssl: Whether to check SSL/TLS configuration (default: True)
-            check_dns: Whether to check DNS records (default: True)
-            region: Region for applying GDPR rules (default: "Netherlands")
+            region: The region to apply compliance rules for (EU, Global)
+            progress_callback: Function to call with progress updates
         """
-        self.max_pages = max_pages
-        self.max_depth = max_depth
-        self.crawl_delay = crawl_delay
-        self.save_screenshots = save_screenshots
-        self.simulate_user = simulate_user
-        self.check_ssl = check_ssl
-        self.check_dns = check_dns
         self.region = region
+        self.progress_callback = progress_callback
+        self.scan_id = str(uuid.uuid4())
+        self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         
-        # Session with headers that mimic a real browser
-        self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'DNT': '1',  # Do Not Track header
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1'
-        })
-        
-        # Initialize tracking databases
-        self._load_tracking_databases()
-        
-        # Known consent management platforms
-        self.consent_platforms = [
-            {'name': 'OneTrust', 'patterns': ['otSDKStub', 'OneTrust', 'onetrust', 'optanon']},
-            {'name': 'TrustArc', 'patterns': ['truste', 'TrustArc', 'trustarc.com']},
-            {'name': 'Cookiebot', 'patterns': ['cookiebot', 'Cookiebot', 'CookieDeclaration']},
-            {'name': 'CookiePro', 'patterns': ['cookiepro', 'CookiePro']},
-            {'name': 'Osano', 'patterns': ['osano', 'Osano', 'osano.com']},
-            {'name': 'Quantcast Choice', 'patterns': ['quantcast', 'Quantcast', 'quantcast.mgr.consensu.org']},
-            {'name': 'CivicUK', 'patterns': ['civicuk', 'CivicUK', 'civic-cookie-control']},
-            {'name': 'CookieYes', 'patterns': ['cookieyes', 'CookieYes']},
-            {'name': 'GDPR Cookie Consent', 'patterns': ['gdpr-cookie-consent', 'gdpr_cookie_consent', 'GDPRCookieConsent']},
-            {'name': 'Didomi', 'patterns': ['didomi', 'Didomi']},
-            {'name': 'Termly', 'patterns': ['termly', 'Termly']},
-            {'name': 'Usercentrics', 'patterns': ['usercentrics', 'Usercentrics']},
-            {'name': 'iubenda', 'patterns': ['iubenda', 'Iubenda']},
-            {'name': 'Complianz', 'patterns': ['complianz', 'Complianz']},
-            {'name': 'CookieHub', 'patterns': ['cookiehub', 'CookieHub']},
-            {'name': 'Consent Manager', 'patterns': ['consent-manager', 'ConsentManager']},
-            {'name': 'Seers CMP', 'patterns': ['seers', 'Seers', 'seersco.io']},
-            {'name': 'Onetrust Banner', 'patterns': ['onetrust-banner', 'OneTrustBanner']}
-        ]
-        
-        # Known cookie categories
-        self.cookie_categories = {
-            'essential': ['session', 'csrf', 'security', 'auth', 'login', 'cookie_notice', 'gdpr'],
-            'functional': ['preferences', 'settings', 'language', 'timezone', 'region', 'country', 'user_settings'],
-            'analytics': ['ga', 'google', 'analytics', '_ga', '_gid', '_gat', 'utma', 'utmb', 'utmc', 'utmz', 'utmv', 'utmk'],
-            'advertising': ['ad', 'ads', 'advert', 'doubleclick', 'google_ad', 'facebook', 'fb', 'twitter', 'linkedin'],
-            'social': ['facebook', 'twitter', 'linkedin', 'pinterest', 'instagram', 'youtube', 'vimeo', 'tumblr']
-        }
-        
-        # Progress tracking
-        self.progress_callback = None
-        self.is_running = False
+    def set_progress_callback(self, callback):
+        """Set progress callback function"""
+        self.progress_callback = callback
     
-    def _load_tracking_databases(self):
-        """Load known tracking databases from JSON files"""
-        
-        # Define default trackers if database files don't exist
-        self.known_trackers = {
-            'Google Analytics': {
-                'domains': ['google-analytics.com', 'analytics.google.com'],
-                'patterns': ['ga', 'gtag', 'gtm', 'analytics']
-            },
-            'Google Tag Manager': {
-                'domains': ['googletagmanager.com', 'tagmanager.google.com'],
-                'patterns': ['gtm', 'tagmanager']
-            },
-            'Facebook Pixel': {
-                'domains': ['facebook.com', 'facebook.net', 'fbcdn.net'],
-                'patterns': ['fbq', 'fbevents', 'facebook-jssdk']
-            },
-            'LinkedIn Insight': {
-                'domains': ['linkedin.com', 'licdn.com'],
-                'patterns': ['_linkedin_partner_id', 'linkedin_data_partner']
-            },
-            'Twitter Pixel': {
-                'domains': ['twitter.com', 'ads-twitter.com'],
-                'patterns': ['twq', 'twitter_pixel']
-            },
-            'HotJar': {
-                'domains': ['hotjar.com', 'hotjar.io'],
-                'patterns': ['hjLaunchSurvey', 'hjSiteSettings', 'hjUserAttributes']
-            },
-            'Mixpanel': {
-                'domains': ['mixpanel.com'],
-                'patterns': ['mixpanel']
-            },
-            'Hubspot': {
-                'domains': ['hs-scripts.com', 'hubspot.com'],
-                'patterns': ['hs-script', 'hubspot']
-            },
-            'Intercom': {
-                'domains': ['intercom.io', 'intercom.com'],
-                'patterns': ['intercom']
-            },
-            'Segment': {
-                'domains': ['segment.io', 'segment.com'],
-                'patterns': ['segment']
-            },
-            'Amplitude': {
-                'domains': ['amplitude.com'],
-                'patterns': ['amplitude']
-            },
-            'Crazy Egg': {
-                'domains': ['crazyegg.com'],
-                'patterns': ['crazyegg', 'cetrk']
-            },
-            'FullStory': {
-                'domains': ['fullstory.com'],
-                'patterns': ['fullstory', 'FS']
-            },
-            'Lucky Orange': {
-                'domains': ['luckyorange.com', 'luckyorange.net'],
-                'patterns': ['LuckyOrange', 'LOTC']
-            },
-            'Mouseflow': {
-                'domains': ['mouseflow.com'],
-                'patterns': ['mouseflow', 'MF']
-            },
-            'Optimizely': {
-                'domains': ['optimizely.com'],
-                'patterns': ['optimizely']
-            },
-            'VWO': {
-                'domains': ['visualwebsiteoptimizer.com', 'vwo.com'],
-                'patterns': ['vwo', '_vis_opt']
-            },
-            'Matomo': {
-                'domains': ['matomo.org', 'matomo.cloud'],
-                'patterns': ['matomo', 'piwik']
-            },
-            'Adobe Analytics': {
-                'domains': ['omtrdc.net', 'adobe.com'],
-                'patterns': ['s_code', 's.trackingServer', 'sc.omtrdc']
-            }
-        }
-        
-        # Try to load trackers from a JSON file if it exists
-        try:
-            trackers_path = os.path.join('data', 'trackers_database.json')
-            if os.path.exists(trackers_path):
-                with open(trackers_path, 'r') as f:
-                    self.known_trackers = json.load(f)
-        except Exception as e:
-            logger.warning(f"Failed to load trackers database: {str(e)}")
-    
-    def set_progress_callback(self, callback_function):
-        """
-        Set a callback function for progress updates during website scanning.
-        
-        Args:
-            callback_function: A function that takes current, total, and current URL
-        """
-        self.progress_callback = callback_function
-    
-    def scan_website(self, url: str, follow_links: bool = True) -> Dict[str, Any]:
-        """
-        Perform a comprehensive scan of a website.
-        
-        Args:
-            url: The URL of the website to scan
-            follow_links: Whether to follow links during crawling (default: True)
-            
-        Returns:
-            Dictionary with comprehensive scan results
-        """
-        # Initialize scan data
-        self.start_time = datetime.now()
-        self.is_running = True
-        
-        # Generate a unique scan ID
-        scan_id = hashlib.md5(f"{url}:{self.start_time.isoformat()}".encode()).hexdigest()[:10]
-        
-        # Parse and normalize the starting URL
-        parsed_url = urlparse(url)
-        if not parsed_url.scheme:
-            url = f"https://{url}"
-            parsed_url = urlparse(url)
-        
-        base_domain = parsed_url.netloc
-        base_url = f"{parsed_url.scheme}://{base_domain}"
-        
-        # Initialize scan data structures
-        visited_urls = set()
-        pages_data = []
-        findings = []
-        cookies = {}
-        trackers = {}
-        all_links = set()
-        same_domain_links = set()
-        external_links = set()
-        
-        # Queue for BFS crawling
-        queue = [(url, 0)]  # (url, depth)
-        
-        # Perform domain registration and DNS checks
-        domain_info = self._check_domain_info(base_domain)
-        
-        # Scan the website by following links
-        page_count = 0
-        
-        # Report initial progress
+    def update_progress(self, current, total, message):
+        """Update progress indicator"""
         if self.progress_callback:
-            self.progress_callback(0, self.max_pages, url)
-        
-        while queue and page_count < self.max_pages and self.is_running:
-            current_url, depth = queue.pop(0)
-            
-            # Skip if URL already visited or depth exceeded
-            if current_url in visited_urls or depth > self.max_depth:
-                continue
-            
-            visited_urls.add(current_url)
-            
-            # Scan the current page
-            logger.info(f"Scanning page: {current_url}")
-            
-            try:
-                # Respect crawl delay
-                time.sleep(self.crawl_delay)
-                
-                # Fetch the page
-                response = self.session.get(current_url, timeout=10)
-                
-                # Skip non-HTML responses
-                if 'text/html' not in response.headers.get('Content-Type', ''):
-                    continue
-                
-                # Analyze the page
-                page_data = self._analyze_page(current_url, response.text, depth)
-                pages_data.append(page_data)
-                
-                # Extract and analyze cookies
-                page_cookies = self._extract_cookies(response)
-                for cookie_name, cookie_data in page_cookies.items():
-                    cookies[cookie_name] = cookie_data
-                
-                # Find trackers
-                page_trackers = page_data.get('trackers', [])
-                for tracker in page_trackers:
-                    tracker_name = tracker.get('name')
-                    if tracker_name:
-                        trackers[tracker_name] = tracker
-                
-                # Add findings from the page
-                page_findings = page_data.get('findings', [])
-                findings.extend(page_findings)
-                
-                # Update links
-                all_links.update(page_data.get('all_links', []))
-                same_domain_links.update(page_data.get('same_domain_links', []))
-                external_links.update(page_data.get('external_links', []))
-                
-                # Follow links if enabled
-                if follow_links and depth < self.max_depth:
-                    for link in page_data.get('same_domain_links', []):
-                        if link not in visited_urls:
-                            queue.append((link, depth + 1))
-                
-                # Increment page count
-                page_count += 1
-                
-                # Report progress
-                if self.progress_callback:
-                    self.progress_callback(page_count, self.max_pages, current_url)
-                    
-            except Exception as e:
-                logger.error(f"Error scanning {current_url}: {str(e)}")
-                findings.append({
-                    'type': 'error',
-                    'url': current_url,
-                    'description': f"Failed to scan page: {str(e)}",
-                    'severity': 'Medium'
-                })
-        
-        # Check SSL/TLS configuration
-        ssl_info = None
-        if self.check_ssl:
-            ssl_info = self._check_ssl(base_url)
-        
-        # Summarize findings
-        self.is_running = False
-        end_time = datetime.now()
-        duration = (end_time - self.start_time).total_seconds()
-        
-        # Generate statistics
-        stats = {
-            'pages_scanned': page_count,
-            'total_cookies': len(cookies),
-            'total_trackers': len(trackers),
-            'total_findings': len(findings),
-            'total_links': len(all_links),
-            'internal_links': len(same_domain_links),
-            'external_links': len(external_links),
-            'scan_duration_seconds': duration
-        }
-        
-        # Categorize cookies
-        cookie_categories = self._categorize_cookies(cookies)
-        
-        # Generate the final scan results
-        scan_results = {
-            'scan_id': scan_id,
-            'scan_time': self.start_time.isoformat(),
-            'completion_time': end_time.isoformat(),
-            'duration_seconds': duration,
-            'url': url,
-            'base_domain': base_domain,
-            'pages_data': pages_data,
-            'findings': findings,
-            'cookies': cookies,
-            'cookie_categories': cookie_categories,
-            'trackers': list(trackers.values()),
-            'links': {
-                'all': list(all_links),
-                'internal': list(same_domain_links),
-                'external': list(external_links)
-            },
-            'domain_info': domain_info,
-            'ssl_info': ssl_info,
-            'stats': stats,
-            'scan_type': 'website'
-        }
-        
-        return scan_results
+            self.progress_callback(current, total, message)
     
-    def _analyze_page(self, url: str, html_content: str, depth: int) -> Dict[str, Any]:
+    def scan_website(self, website_url, website_name=None, **kwargs):
         """
-        Analyze a single webpage for privacy issues.
+        Scan a website for GDPR compliance issues
         
         Args:
-            url: The URL of the page
-            html_content: The HTML content of the page
-            depth: The crawl depth
+            website_url: URL of the website to scan
+            website_name: Name of the website (optional)
+            **kwargs: Additional scan options
             
         Returns:
-            Dictionary with page analysis results
+            Dict with scan results
         """
-        # Parse the URL
-        parsed_url = urlparse(url)
-        domain = parsed_url.netloc
-        
-        # Parse the HTML content
-        soup = BeautifulSoup(html_content, 'html.parser')
-        
-        # Extract page title and metadata
-        title = soup.title.text.strip() if soup.title else "No title"
-        
-        meta_description = None
-        meta_tags = []
-        for meta in soup.find_all('meta'):
-            meta_dict = {key: meta.get(key) for key in meta.attrs}
-            meta_tags.append(meta_dict)
-            if meta.get('name') == 'description':
-                meta_description = meta.get('content', '')
-        
-        # Extract links
-        all_links = set()
-        same_domain_links = set()
-        external_links = set()
-        
-        for link in soup.find_all('a', href=True):
-            href = link.get('href').strip()
-            
-            # Skip empty links, anchors, javascript, and mailto
-            if not href or href.startswith('#') or href.startswith('javascript:') or href.startswith('mailto:'):
-                continue
-            
-            # Normalize the URL
-            absolute_url = urljoin(url, href)
-            parsed_link = urlparse(absolute_url)
-            
-            # Skip non-HTTP(S) links
-            if parsed_link.scheme not in ('http', 'https'):
-                continue
-            
-            clean_url = f"{parsed_link.scheme}://{parsed_link.netloc}{parsed_link.path}"
-            if parsed_link.query:
-                clean_url += f"?{parsed_link.query}"
-                
-            all_links.add(clean_url)
-            
-            # Classify as internal or external
-            if parsed_link.netloc == domain:
-                same_domain_links.add(clean_url)
-            else:
-                external_links.add(clean_url)
-        
-        # Detect trackers and cookies in the JavaScript
-        scripts = soup.find_all('script')
-        trackers = []
-        findings = []
-        
-        # Check for inline scripts containing tracker patterns
-        for script in scripts:
-            # Check for src attribute
-            src = script.get('src', '')
-            if src:
-                # Check external script sources against known trackers
-                for tracker_name, tracker_info in self.known_trackers.items():
-                    for domain_pattern in tracker_info['domains']:
-                        if domain_pattern in src:
-                            trackers.append({
-                                'name': tracker_name,
-                                'url': src,
-                                'type': 'external',
-                                'found_on': url
-                            })
-                            findings.append({
-                                'type': 'tracker',
-                                'subtype': tracker_name,
-                                'url': url,
-                                'element': src,
-                                'description': f"External tracker script from {tracker_name}",
-                                'severity': 'Medium',
-                                'gdpr_article': 'Art. 6(1)(a), Art. 7'
-                            })
-                            break
-            
-            # Check inline script content for tracker patterns
-            elif script.string:
-                script_content = script.string
-                for tracker_name, tracker_info in self.known_trackers.items():
-                    for pattern in tracker_info['patterns']:
-                        if pattern in script_content:
-                            trackers.append({
-                                'name': tracker_name,
-                                'type': 'inline',
-                                'found_on': url
-                            })
-                            findings.append({
-                                'type': 'tracker',
-                                'subtype': tracker_name,
-                                'url': url,
-                                'element': f"Inline script containing '{pattern}'",
-                                'description': f"Inline tracker script for {tracker_name}",
-                                'severity': 'Medium',
-                                'gdpr_article': 'Art. 6(1)(a), Art. 7'
-                            })
-                            break
-        
-        # Detect consent management platforms
-        consent_management = []
-        for platform in self.consent_platforms:
-            for pattern in platform['patterns']:
-                if pattern in html_content:
-                    consent_management.append({
-                        'name': platform['name'],
-                        'found_on': url
-                    })
-                    findings.append({
-                        'type': 'consent_management',
-                        'subtype': platform['name'],
-                        'url': url,
-                        'description': f"Using {platform['name']} consent management platform",
-                        'severity': 'Info',
-                        'gdpr_article': 'Art. 7, Art. 13'
-                    })
-                    break
-        
-        # Check for tracking pixels
-        img_tags = soup.find_all('img')
-        tracking_pixels = []
-        
-        for img in img_tags:
-            src = img.get('src', '')
-            height = img.get('height', '')
-            width = img.get('width', '')
-            
-            # Check for 1x1 pixel images or known tracking domains
-            if (height == '1' and width == '1') or ('pixel' in src.lower()):
-                tracking_pixels.append({
-                    'url': src,
-                    'found_on': url
-                })
-                findings.append({
-                    'type': 'tracking_pixel',
-                    'url': url,
-                    'element': src,
-                    'description': f"Tracking pixel detected: {src}",
-                    'severity': 'Medium',
-                    'gdpr_article': 'Art. 6(1)(a), Art. 7'
-                })
-        
-        # Extract main text content
         try:
-            main_content = extract(html_content) or "No content extracted"
-        except:
-            main_content = "Failed to extract content"
-        
-        # Check for privacy-related content
-        privacy_terms = {
-            'privacy_policy': ['privacy', 'privacy policy', 'privacy statement', 'data policy', 'data protection'],
-            'cookie_policy': ['cookie', 'cookie policy', 'cookie statement', 'cookie notice', 'cookie preferences'],
-            'terms_of_service': ['terms', 'terms of service', 'terms of use', 'terms and conditions', 'legal'],
-            'gdpr': ['gdpr', 'general data protection regulation', 'data protection', 'eu regulation']
-        }
-        
-        privacy_links = {}
-        
-        for link in soup.find_all('a', href=True):
-            href = link.get('href').strip()
-            text = link.get_text().lower()
+            # Ensure the URL has a scheme
+            if not website_url.startswith(('http://', 'https://')):
+                website_url = 'https://' + website_url
             
-            for policy_type, terms in privacy_terms.items():
-                if any(term in text for term in terms):
-                    absolute_url = urljoin(url, href)
-                    privacy_links[policy_type] = absolute_url
+            # Extract domain if website_name not provided
+            if not website_name:
+                parsed_url = urlparse(website_url)
+                extracted = tldextract.extract(parsed_url.netloc)
+                website_name = f"{extracted.domain}.{extracted.suffix}"
+            
+            self.update_progress(5, 100, "Initializing scan...")
+            
+            # Start with basic result structure
+            results = {
+                "scan_type": "Website Scanner",
+                "scan_id": self.scan_id,
+                "timestamp": datetime.now().isoformat(),
+                "website_url": website_url,
+                "website_name": website_name,
+                "findings": [],
+                "categories": {
+                    "cookie_consent": {"score": 0, "max_score": 100, "findings": []},
+                    "privacy_policy": {"score": 0, "max_score": 100, "findings": []},
+                    "data_processing": {"score": 0, "max_score": 100, "findings": []},
+                    "data_access": {"score": 0, "max_score": 100, "findings": []},
+                    "forms_and_consent": {"score": 0, "max_score": 100, "findings": []},
+                    "security": {"score": 0, "max_score": 100, "findings": []}
+                },
+                "total_issues": 0,
+                "compliance_score": 0,
+                "critical_issues": 0,
+                "high_risk": 0,
+                "medium_risk": 0,
+                "low_risk": 0
+            }
+            
+            self.update_progress(10, 100, "Fetching website content...")
+            
+            # Fetch website content
+            try:
+                headers = {'User-Agent': self.user_agent}
+                response = requests.get(website_url, headers=headers, timeout=15)
+                html_content = response.text
+                status_code = response.status_code
+                
+                # Simple check for server response
+                if status_code != 200:
+                    self._add_finding(results, "security", "Server Error", 
+                                     f"Server responded with status code {status_code}", 
+                                     "critical", "Ensure the website is properly functioning.")
+            except requests.RequestException as e:
+                self._add_finding(results, "security", "Connection Error", 
+                                 f"Failed to connect to website: {str(e)}", 
+                                 "critical", "Check website availability and DNS configuration.")
+                
+                # Return partial results since we can't proceed
+                self._finalize_results(results)
+                return results
+                
+            # Extract text content
+            self.update_progress(20, 100, "Extracting text content...")
+            text_content = self._extract_text_content(website_url)
+            
+            # Parse HTML
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+            # Start scanning for GDPR compliance
+            self.update_progress(30, 100, "Checking cookie consent...")
+            self._check_cookie_consent(results, soup, html_content)
+            
+            self.update_progress(40, 100, "Analyzing privacy policy...")
+            self._check_privacy_policy(results, soup, html_content, text_content)
+            
+            self.update_progress(50, 100, "Checking data processing agreements...")
+            self._check_data_processing(results, soup, html_content, text_content)
+            
+            self.update_progress(60, 100, "Analyzing data access rights...")
+            self._check_data_access_rights(results, soup, html_content, text_content)
+            
+            self.update_progress(70, 100, "Examining forms and consent mechanisms...")
+            self._check_forms_and_consent(results, soup, html_content)
+            
+            self.update_progress(80, 100, "Evaluating security practices...")
+            self._check_security_practices(results, soup, html_content, response)
+            
+            self.update_progress(90, 100, "Finalizing results...")
+            self._finalize_results(results)
+            
+            self.update_progress(100, 100, "Scan completed!")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error during website scan: {str(e)}", exc_info=True)
+            return {
+                "scan_type": "Website Scanner",
+                "scan_id": self.scan_id,
+                "timestamp": datetime.now().isoformat(),
+                "website_url": website_url,
+                "website_name": website_name if website_name else "Unknown",
+                "error": f"Scan failed: {str(e)}",
+                "compliance_score": 0
+            }
+    
+    def _extract_text_content(self, url):
+        """Extract text content from website"""
+        try:
+            downloaded = trafilatura.fetch_url(url)
+            text = trafilatura.extract(downloaded)
+            return text if text else ""
+        except Exception as e:
+            logger.warning(f"Error extracting text content: {str(e)}")
+            return ""
+    
+    def _check_cookie_consent(self, results, soup, html_content):
+        """Check for cookie consent banner and compliance"""
+        # Check for common cookie consent elements
+        common_cookie_ids = ['cookie-banner', 'cookie-consent', 'gdpr-consent', 'cookie-law', 'cookiebanner']
+        common_cookie_classes = ['cookie-banner', 'cookie-consent', 'gdpr-consent', 'cookie-notice', 'cookie-policy']
+        common_cookie_texts = ['cookie', 'gdpr', 'consent', 'accept cookies', 'cookie policy']
+        
+        # Check for cookie consent banners
+        found_banner = False
+        for id_name in common_cookie_ids:
+            element = soup.find(id=id_name)
+            if element:
+                found_banner = True
+                break
+                
+        if not found_banner:
+            for class_name in common_cookie_classes:
+                elements = soup.find_all(class_=lambda c: c and class_name.lower() in c.lower())
+                if elements:
+                    found_banner = True
                     break
         
-        # Check for cookie banner
-        cookie_banner = None
-        cookie_banner_selectors = [
-            '#cookie-banner', '.cookie-banner', '#cookieBanner', '.cookieBanner',
-            '#cookie-notice', '.cookie-notice', '#cookieNotice', '.cookieNotice',
-            '#gdpr-banner', '.gdpr-banner', '#gdprBanner', '.gdprBanner',
-            '#cookie-consent', '.cookie-consent', '#cookieConsent', '.cookieConsent',
-            '[class*="cookie"]', '[id*="cookie"]', '[class*="gdpr"]', '[id*="gdpr"]',
-            '[class*="consent"]', '[id*="consent"]'
-        ]
+        if not found_banner:
+            for text in common_cookie_texts:
+                elements = soup.find_all(string=lambda s: s and text.lower() in s.lower())
+                visible_elements = [e for e in elements if self._is_visible(e)]
+                if visible_elements:
+                    found_banner = True
+                    break
         
-        for selector in cookie_banner_selectors:
-            elements = soup.select(selector)
-            if elements:
-                cookie_banner = {
-                    'found': True,
-                    'selector': selector,
-                    'count': len(elements),
-                    'text': elements[0].get_text()[:200] + '...' if len(elements[0].get_text()) > 200 else elements[0].get_text()
-                }
+        # Evaluate results
+        if not found_banner:
+            self._add_finding(results, "cookie_consent", "Missing Cookie Consent", 
+                             "No cookie consent banner detected on the website", 
+                             "critical", "Implement a cookie consent banner that appears before setting any non-essential cookies")
+        else:
+            # Check for prior consent - banner must have accept/reject options
+            accept_buttons = soup.find_all(string=lambda s: s and any(word in s.lower() for word in ['accept', 'agree', 'allow', 'consent']))
+            reject_buttons = soup.find_all(string=lambda s: s and any(word in s.lower() for word in ['reject', 'decline', 'refuse', 'no thanks', 'opt-out']))
+            
+            if not reject_buttons:
+                self._add_finding(results, "cookie_consent", "No Reject Option", 
+                                 "Cookie banner provides no clear way to reject cookies", 
+                                 "high", "Add a 'Reject All' option that is as visible as the accept option")
+            
+            if not accept_buttons and not reject_buttons:
+                self._add_finding(results, "cookie_consent", "No Consent Options", 
+                                 "Cookie banner doesn't provide clear consent options", 
+                                 "high", "Add clear 'Accept' and 'Reject' options to the cookie banner")
+            
+            # Check for cookie setting before consent
+            if 'document.cookie' in html_content and not 'document.cookie' in html_content.lower().split('consent')[1:]:
+                self._add_finding(results, "cookie_consent", "Cookies Before Consent", 
+                                 "Site appears to set cookies before obtaining consent", 
+                                 "high", "Ensure no non-essential cookies are set before user provides consent")
+    
+    def _check_privacy_policy(self, results, soup, html_content, text_content):
+        """Check for privacy policy presence and content"""
+        # Look for privacy policy links
+        privacy_links = []
+        for a in soup.find_all('a'):
+            if a.text and any(term in a.text.lower() for term in ['privacy', 'privacy policy', 'data protection']):
+                privacy_links.append(a)
+        
+        if not privacy_links:
+            self._add_finding(results, "privacy_policy", "Missing Privacy Policy", 
+                             "No privacy policy link found on the website", 
+                             "critical", "Add a clearly visible privacy policy link in the website footer")
+            return
+        
+        # Check if privacy policy is easy to access
+        footer = soup.find('footer')
+        if footer and not any(a in footer.find_all('a') for a in privacy_links):
+            self._add_finding(results, "privacy_policy", "Privacy Policy Not in Footer", 
+                             "Privacy policy link not found in website footer", 
+                             "medium", "Add privacy policy link to website footer for better accessibility")
+        
+        # Simple content analysis for privacy policy if text was extracted
+        if text_content:
+            required_topics = [
+                ("purpose", "Explanation of data processing purposes"),
+                ("legal basis", "Legal basis for processing"),
+                ("data categories", "Categories of personal data collected"),
+                ("retention", "Data retention period"),
+                ("rights", "User rights explanation"),
+                ("contact", "Contact details for data protection matters")
+            ]
+            
+            for keyword, description in required_topics:
+                if keyword not in text_content.lower():
+                    self._add_finding(results, "privacy_policy", f"Missing {description}", 
+                                     f"Privacy policy may not include {description}", 
+                                     "medium", f"Ensure the privacy policy includes information about {description}")
+    
+    def _check_data_processing(self, results, soup, html_content, text_content):
+        """Check for data processing agreements and third party data sharing"""
+        # Look for mentions of third parties
+        third_party_terms = ['third part', 'third-part', 'data processor', 'service provider', 'analytics provider']
+        
+        third_party_found = False
+        for term in third_party_terms:
+            if term in text_content.lower():
+                third_party_found = True
                 break
         
-        # Return the page analysis results
-        return {
-            'url': url,
-            'depth': depth,
-            'title': title,
-            'meta_description': meta_description,
-            'meta_tags': meta_tags,
-            'all_links': all_links,
-            'same_domain_links': same_domain_links,
-            'external_links': external_links,
-            'trackers': trackers,
-            'consent_management': consent_management,
-            'tracking_pixels': tracking_pixels,
-            'privacy_links': privacy_links,
-            'cookie_banner': cookie_banner,
-            'main_content_sample': main_content[:1000] + '...' if len(main_content) > 1000 else main_content,
-            'findings': findings
-        }
+        # Check for common third-party services in page source
+        common_services = [
+            ('google analytics', 'Google Analytics'),
+            ('facebook pixel', 'Facebook Pixel'),
+            ('hotjar', 'Hotjar'),
+            ('amplitude', 'Amplitude'),
+            ('segment', 'Segment')
+        ]
+        
+        detected_services = []
+        for keyword, service_name in common_services:
+            if keyword in html_content.lower():
+                detected_services.append(service_name)
+        
+        # Add findings based on analysis
+        if detected_services and not third_party_found:
+            services_list = ", ".join(detected_services)
+            self._add_finding(results, "data_processing", "Undisclosed Third Parties", 
+                             f"Third-party services detected ({services_list}) but not disclosed in privacy policy", 
+                             "high", "Update privacy policy to disclose all third-party data processors")
+        
+        # Check for standard contractual clauses mention for international transfers
+        international_terms = ['international transfer', 'outside the eu', 'outside the eea', 'standard contractual clauses', 'privacy shield']
+        international_found = any(term in text_content.lower() for term in international_terms)
+        
+        if any(s in ['Google Analytics', 'Facebook Pixel'] for s in detected_services) and not international_found:
+            self._add_finding(results, "data_processing", "International Transfers Not Addressed", 
+                             "International data transfers likely occur but are not addressed in the privacy policy", 
+                             "high", "Address international data transfers in privacy policy and implement appropriate safeguards")
     
-    def _extract_cookies(self, response) -> Dict[str, Any]:
-        """
-        Extract cookies from a response.
+    def _check_data_access_rights(self, results, soup, html_content, text_content):
+        """Check for data access and deletion rights"""
+        # Look for GDPR rights mentions
+        rights_terms = [
+            ('right to access', 'access right'), 
+            ('right to delete', 'deletion right', 'right to be forgotten'), 
+            ('right to object', 'objection right'),
+            ('right to rectification', 'correction right'),
+            ('right to data portability', 'portability right')
+        ]
         
-        Args:
-            response: The HTTP response object
+        missing_rights = []
+        for right_group in rights_terms:
+            if not any(term in text_content.lower() for term in right_group):
+                # Use the first term as the reference
+                missing_rights.append(right_group[0])
+        
+        # Check if contact method is provided for exercising rights
+        contact_methods = ['email', 'form', 'contact us', 'request form', 'data protection officer']
+        has_contact_method = any(method in text_content.lower() for method in contact_methods)
+        
+        # Add findings
+        if missing_rights:
+            rights_list = ", ".join(missing_rights)
+            self._add_finding(results, "data_access", "Missing Data Subject Rights", 
+                             f"Privacy policy may not address all GDPR data subject rights. Missing: {rights_list}", 
+                             "high", "Ensure privacy policy covers all GDPR data subject rights")
+        
+        if not has_contact_method:
+            self._add_finding(results, "data_access", "No Rights Exercise Method", 
+                             "No clear method provided for users to exercise their data subject rights", 
+                             "high", "Add clear instructions for how users can exercise their GDPR rights")
+    
+    def _check_forms_and_consent(self, results, soup, html_content):
+        """Check for proper consent mechanisms in forms"""
+        # Find all forms
+        forms = soup.find_all('form')
+        
+        if not forms:
+            # No forms found, no findings to add
+            return
+        
+        # Check each form for proper consent
+        for i, form in enumerate(forms):
+            # Look for checkboxes that might be consent mechanisms
+            checkboxes = form.find_all('input', type='checkbox')
             
-        Returns:
-            Dictionary of cookies with metadata
-        """
-        cookies = {}
-        
-        for cookie in response.cookies:
-            # Skip if cookie already processed
-            if cookie.name in cookies:
-                continue
+            # Look for email inputs (likely newsletter signups)
+            email_inputs = form.find_all('input', attrs={'type': 'email'})
+            
+            # Check for pre-ticked boxes
+            pre_ticked = [cb for cb in checkboxes if cb.has_attr('checked')]
+            
+            # If form has email input but no checkbox for consent
+            if email_inputs and not checkboxes:
+                self._add_finding(results, "forms_and_consent", f"Missing Consent in Form #{i+1}", 
+                                 "Form with email field does not have explicit consent mechanism", 
+                                 "high", "Add explicit opt-in checkbox for marketing communications")
+            
+            # If form has pre-ticked consent boxes
+            if pre_ticked:
+                self._add_finding(results, "forms_and_consent", f"Pre-ticked Consent in Form #{i+1}", 
+                                 "Form contains pre-ticked consent checkboxes", 
+                                 "high", "Remove pre-ticked checkboxes as explicit consent requires active opt-in")
+            
+            # Check newsletter-like forms for terms references
+            if email_inputs:
+                form_text = form.get_text().lower()
+                has_privacy_reference = any(term in form_text for term in ['privacy', 'terms', 'policy'])
                 
-            # Analyze cookie properties
-            secure = cookie.secure
-            httponly = cookie.has_nonstandard_attr('httponly')
-            samesite = cookie.get_nonstandard_attr('samesite', None)
-            
-            expiry = None
-            if cookie.expires:
-                try:
-                    expiry = datetime.fromtimestamp(cookie.expires).isoformat()
-                except:
-                    expiry = str(cookie.expires)
-            
-            # Categorize the cookie
-            category = self._categorize_cookie(cookie.name, cookie.domain)
-            
-            # Evaluate cookie compliance
-            compliance_issues = []
-            if not secure:
-                compliance_issues.append("Cookie not marked as Secure")
-            if not httponly and category == 'essential':
-                compliance_issues.append("Essential cookie not marked as HttpOnly")
-            if not samesite and category != 'essential':
-                compliance_issues.append("Missing SameSite attribute")
-            if category in ['advertising', 'analytics'] and not samesite == 'None':
-                compliance_issues.append("Tracking cookie should use SameSite=None")
-            
-            # Add cookie data
-            cookies[cookie.name] = {
-                'name': cookie.name,
-                'domain': cookie.domain,
-                'path': cookie.path,
-                'value_length': len(cookie.value),
-                'secure': secure,
-                'httponly': httponly,
-                'samesite': samesite,
-                'expiry': expiry,
-                'session': cookie.expires is None,
-                'category': category,
-                'compliance_issues': compliance_issues
-            }
-        
-        return cookies
+                if not has_privacy_reference:
+                    self._add_finding(results, "forms_and_consent", f"No Privacy Reference in Form #{i+1}", 
+                                     "Form collecting personal data does not reference privacy policy", 
+                                     "medium", "Add privacy policy reference near form submission button")
     
-    def _categorize_cookie(self, name: str, domain: str = None) -> str:
-        """
-        Categorize a cookie based on its name and domain.
+    def _check_security_practices(self, results, soup, html_content, response):
+        """Check for basic security practices"""
+        # Check if site uses HTTPS
+        if not response.url.startswith('https://'):
+            self._add_finding(results, "security", "No HTTPS", 
+                             "Website does not use HTTPS encryption", 
+                             "critical", "Implement HTTPS across the entire website")
         
-        Args:
-            name: Cookie name
-            domain: Cookie domain (optional)
+        # Check for secure cookies
+        if 'Set-Cookie' in response.headers:
+            cookies = response.headers.get('Set-Cookie')
+            if 'secure' not in cookies.lower():
+                self._add_finding(results, "security", "Insecure Cookies", 
+                                 "Cookies are set without the Secure flag", 
+                                 "high", "Set the Secure flag on all cookies")
             
-        Returns:
-            Category name (essential, functional, analytics, advertising, social, or unknown)
-        """
-        name_lower = name.lower()
+            if 'httponly' not in cookies.lower():
+                self._add_finding(results, "security", "Non-HttpOnly Cookies", 
+                                 "Cookies are set without the HttpOnly flag", 
+                                 "medium", "Set the HttpOnly flag on cookies that don't need JavaScript access")
         
-        # First check by domain, then by name
-        if domain:
-            domain_lower = domain.lower()
-            if any(tracker in domain_lower for tracker in ['google-analytics', 'analytics.google']):
-                return 'analytics'
-            if any(tracker in domain_lower for tracker in ['doubleclick', 'googleadservices']):
-                return 'advertising'
-            if any(social in domain_lower for social in ['facebook', 'twitter', 'linkedin', 'instagram']):
-                return 'social'
-        
-        # Check by cookie name against known categories
-        for category, patterns in self.cookie_categories.items():
-            for pattern in patterns:
-                if pattern in name_lower:
-                    return category
-        
-        # Return unknown if no match
-        return 'unknown'
+        # Check for Content-Security-Policy header
+        if 'Content-Security-Policy' not in response.headers:
+            self._add_finding(results, "security", "Missing CSP", 
+                             "Content-Security-Policy header is not set", 
+                             "medium", "Implement a Content-Security-Policy header to mitigate XSS risks")
     
-    def _categorize_cookies(self, cookies: Dict[str, Any]) -> Dict[str, List[str]]:
-        """
-        Categorize all cookies.
-        
-        Args:
-            cookies: Dictionary of cookie data
+    def _is_visible(self, element):
+        """Check if an element would be visible to users"""
+        # This is a simplified check - a real implementation would be more complex
+        if not element.parent:
+            return False
             
-        Returns:
-            Dictionary with categories and cookie names
-        """
-        categories = {
-            'essential': [],
-            'functional': [],
-            'analytics': [],
-            'advertising': [],
-            'social': [],
-            'unknown': []
+        style = element.parent.get('style', '')
+        display_none = 'display:none' in style or 'display: none' in style
+        visibility_hidden = 'visibility:hidden' in style or 'visibility: hidden' in style
+        
+        return not (display_none or visibility_hidden)
+    
+    def _add_finding(self, results, category, title, description, severity, recommendation):
+        """Add a finding to the results"""
+        severity_values = {
+            "critical": 100,
+            "high": 70,
+            "medium": 40,
+            "low": 10,
+            "info": 0
         }
         
-        for cookie_name, cookie_data in cookies.items():
-            category = cookie_data.get('category', 'unknown')
-            categories.setdefault(category, []).append(cookie_name)
-        
-        return categories
-    
-    def _check_domain_info(self, domain: str) -> Dict[str, Any]:
-        """
-        Check domain registration information.
-        
-        Args:
-            domain: The domain name to check
-            
-        Returns:
-            Dictionary with domain registration information
-        """
-        # Extract the base domain without subdomains
-        extracted = tldextract.extract(domain)
-        base_domain = f"{extracted.domain}.{extracted.suffix}"
-        
-        domain_info = {
-            'domain': base_domain,
-            'registration': None,
-            'registrar': None,
-            'creation_date': None,
-            'expiration_date': None,
-            'dns_records': {}
+        finding = {
+            "id": str(uuid.uuid4()),
+            "category": category,
+            "title": title,
+            "description": description,
+            "severity": severity,
+            "severity_value": severity_values.get(severity, 0),
+            "recommendation": recommendation
         }
         
-        # Get WHOIS information
-        try:
-            w = whois.whois(base_domain)
-            domain_info['registration'] = {
-                'registrar': w.registrar,
-                'creation_date': w.creation_date.isoformat() if hasattr(w, 'creation_date') and w.creation_date else None,
-                'expiration_date': w.expiration_date.isoformat() if hasattr(w, 'expiration_date') and w.expiration_date else None,
-                'name_servers': w.name_servers if hasattr(w, 'name_servers') else None
-            }
-        except Exception as e:
-            logger.warning(f"Failed to get WHOIS information for {base_domain}: {str(e)}")
-            domain_info['registration'] = {'error': str(e)}
+        # Add to overall findings list
+        results["findings"].append(finding)
         
-        # Get DNS records if enabled
-        if self.check_dns:
-            try:
-                # Get A records
-                try:
-                    answers = dns.resolver.resolve(base_domain, 'A')
-                    domain_info['dns_records']['A'] = [answer.address for answer in answers]
-                except Exception as e:
-                    logger.warning(f"Failed to get A records for {base_domain}: {str(e)}")
+        # Add to category-specific findings
+        if category in results["categories"]:
+            results["categories"][category]["findings"].append(finding)
+        
+        # Update risk counters
+        if severity == "critical":
+            results["critical_issues"] += 1
+        elif severity == "high":
+            results["high_risk"] += 1
+        elif severity == "medium":
+            results["medium_risk"] += 1
+        elif severity == "low":
+            results["low_risk"] += 1
+    
+    def _finalize_results(self, results):
+        """Calculate final scores and counts"""
+        # Count total issues
+        results["total_issues"] = (
+            results["critical_issues"] + 
+            results["high_risk"] + 
+            results["medium_risk"] + 
+            results["low_risk"]
+        )
+        
+        # Calculate category scores
+        for category, data in results["categories"].items():
+            if data["findings"]:
+                # Higher severity findings reduce score more
+                total_severity = sum(finding["severity_value"] for finding in data["findings"])
+                max_possible = len(data["findings"]) * 100  # If all were critical
                 
-                # Get MX records
-                try:
-                    answers = dns.resolver.resolve(base_domain, 'MX')
-                    domain_info['dns_records']['MX'] = [str(answer.exchange) for answer in answers]
-                except Exception as e:
-                    logger.warning(f"Failed to get MX records for {base_domain}: {str(e)}")
-                
-                # Get TXT records
-                try:
-                    answers = dns.resolver.resolve(base_domain, 'TXT')
-                    domain_info['dns_records']['TXT'] = [str(answer) for answer in answers]
-                except Exception as e:
-                    logger.warning(f"Failed to get TXT records for {base_domain}: {str(e)}")
-            except Exception as e:
-                logger.warning(f"Failed to get DNS records for {base_domain}: {str(e)}")
-        
-        return domain_info
-    
-    def _check_ssl(self, url: str) -> Dict[str, Any]:
-        """
-        Check SSL/TLS configuration.
-        
-        Args:
-            url: The URL to check SSL for
-            
-        Returns:
-            Dictionary with SSL/TLS information
-        """
-        ssl_info = {
-            'enabled': False,
-            'certificate': None,
-            'expiry': None,
-            'issuer': None,
-            'protocols': [],
-            'issues': []
-        }
-        
-        try:
-            response = requests.get(url, verify=True, timeout=10)
-            
-            # Check if HTTPS is enabled
-            ssl_info['enabled'] = response.url.startswith('https://')
-            
-            if ssl_info['enabled']:
-                # Unfortunately, requests doesn't provide detailed SSL/TLS info
-                # Here we would need to use a library like pyOpenSSL or subprocess to openssl
-                # For now, just mark that SSL is enabled
-                ssl_info['certificate'] = "Valid (details not available)"
+                # Score is inversely proportional to severity (100 - percentage of max severity)
+                if max_possible > 0:
+                    data["score"] = max(0, 100 - int((total_severity / max_possible) * 100))
+                else:
+                    data["score"] = 100
             else:
-                ssl_info['issues'].append("HTTPS not enabled")
-                
-        except requests.exceptions.SSLError as e:
-            ssl_info['issues'].append(f"SSL Error: {str(e)}")
-        except Exception as e:
-            ssl_info['issues'].append(f"Error checking SSL: {str(e)}")
+                # No findings means perfect score
+                data["score"] = 100
         
-        return ssl_info
+        # Calculate overall compliance score (weighted average of category scores)
+        category_weights = {
+            "cookie_consent": 0.2,
+            "privacy_policy": 0.2,
+            "data_processing": 0.15,
+            "data_access": 0.15,
+            "forms_and_consent": 0.15,
+            "security": 0.15
+        }
+        
+        weighted_sum = sum(
+            results["categories"][cat]["score"] * weight 
+            for cat, weight in category_weights.items()
+        )
+        
+        results["compliance_score"] = int(weighted_sum)
+        
+        # Add compliance status
+        if results["compliance_score"] >= 90:
+            results["compliance_status"] = "Compliant"
+        elif results["compliance_score"] >= 70:
+            results["compliance_status"] = "Partially Compliant"
+        else:
+            results["compliance_status"] = "Non-Compliant"
+
+
+def generate_gdpr_report(results):
+    """
+    Generate a PDF report for GDPR compliance scan results
     
-    def cancel_scan(self):
-        """Cancel the current scan if running"""
-        self.is_running = False
+    Args:
+        results: The scan results dictionary
+    
+    Returns:
+        BytesIO object containing the PDF report
+    """
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    styles = getSampleStyleSheet()
+    elements = []
+    
+    # Add custom styles
+    styles.add(ParagraphStyle(
+        name='Title',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=12
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='Subtitle',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=10
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='Normal',
+        parent=styles['Normal'],
+        fontSize=10,
+        spaceAfter=6
+    ))
+    
+    # Add title
+    elements.append(Paragraph(f"GDPR Compliance Report: {results['website_name']}", styles['Title']))
+    elements.append(Paragraph(f"Scan Date: {datetime.fromisoformat(results['timestamp']).strftime('%B %d, %Y')}", styles['Normal']))
+    elements.append(Paragraph(f"Scan ID: {results['scan_id']}", styles['Normal']))
+    elements.append(Spacer(1, 0.2*inch))
+    
+    # Add compliance score and status
+    compliance_score = results.get('compliance_score', 0)
+    compliance_status = results.get('compliance_status', 'Unknown')
+    
+    # Create chart for compliance score
+    plt.figure(figsize=(5, 2))
+    plt.barh(["Compliance Score"], [compliance_score], color='green' if compliance_score >= 70 else 'orange' if compliance_score >= 50 else 'red')
+    plt.xlim(0, 100)
+    for i, v in enumerate([compliance_score]):
+        plt.text(v + 3, i, f"{v}%", va='center')
+    plt.tight_layout()
+    
+    # Save chart to a BytesIO object
+    chart_buffer = BytesIO()
+    plt.savefig(chart_buffer, format='png')
+    chart_buffer.seek(0)
+    plt.close()
+    
+    # Add chart to PDF
+    img = Image(chart_buffer, width=4*inch, height=1.5*inch)
+    elements.append(img)
+    elements.append(Spacer(1, 0.1*inch))
+    
+    # Add compliance status table
+    status_color = 'green' if compliance_score >= 90 else 'orange' if compliance_score >= 70 else 'red'
+    status_data = [
+        ["Compliance Status", compliance_status]
+    ]
+    status_table = Table(status_data, colWidths=[2*inch, 3*inch])
+    status_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, 0), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (0, 0), colors.black),
+        ('BACKGROUND', (1, 0), (1, 0), getattr(colors, status_color)),
+        ('TEXTCOLOR', (1, 0), (1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOX', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(status_table)
+    elements.append(Spacer(1, 0.2*inch))
+    
+    # Add executive summary
+    elements.append(Paragraph("Executive Summary", styles['Subtitle']))
+    total_issues = results.get('total_issues', 0)
+    critical_issues = results.get('critical_issues', 0)
+    high_risk = results.get('high_risk', 0)
+    medium_risk = results.get('medium_risk', 0)
+    low_risk = results.get('low_risk', 0)
+    
+    summary_text = f"""
+    This report presents the findings of a GDPR compliance scan conducted on {results['website_name']} ({results['website_url']}).
+    The overall compliance score is {compliance_score}%, which indicates a {compliance_status.lower()} level of GDPR readiness.
+    
+    The scan identified a total of {total_issues} compliance issues:
+    - {critical_issues} critical issues
+    - {high_risk} high-risk issues
+    - {medium_risk} medium-risk issues
+    - {low_risk} low-risk issues
+    
+    Please review the detailed findings and recommendations below to improve GDPR compliance.
+    """
+    elements.append(Paragraph(summary_text, styles['Normal']))
+    elements.append(Spacer(1, 0.2*inch))
+    
+    # Add category scores
+    elements.append(Paragraph("Compliance by Category", styles['Subtitle']))
+    
+    # Create chart for category scores
+    categories = []
+    scores = []
+    for category, data in results.get('categories', {}).items():
+        categories.append(category.replace('_', ' ').title())
+        scores.append(data.get('score', 0))
+    
+    plt.figure(figsize=(6, 3))
+    bars = plt.barh(categories, scores, color=['green' if s >= 90 else 'orange' if s >= 70 else 'red' for s in scores])
+    plt.xlim(0, 100)
+    for bar, score in zip(bars, scores):
+        plt.text(score + 3, bar.get_y() + bar.get_height()/2, f"{score}%", va='center')
+    plt.tight_layout()
+    
+    # Save chart to a BytesIO object
+    cat_chart_buffer = BytesIO()
+    plt.savefig(cat_chart_buffer, format='png')
+    cat_chart_buffer.seek(0)
+    plt.close()
+    
+    # Add chart to PDF
+    cat_img = Image(cat_chart_buffer, width=5*inch, height=3*inch)
+    elements.append(cat_img)
+    elements.append(Spacer(1, 0.2*inch))
+    
+    # Add detailed findings
+    elements.append(Paragraph("Detailed Findings", styles['Subtitle']))
+    
+    findings = results.get('findings', [])
+    if findings:
+        for category, data in results.get('categories', {}).items():
+            category_findings = data.get('findings', [])
+            if category_findings:
+                elements.append(Paragraph(f"{category.replace('_', ' ').title()} Issues", styles['Subtitle']))
+                
+                findings_data = [["Severity", "Finding", "Recommendation"]]
+                for finding in category_findings:
+                    severity = finding.get('severity', 'unknown')
+                    title = finding.get('title', 'Unknown Issue')
+                    description = finding.get('description', '')
+                    recommendation = finding.get('recommendation', '')
+                    
+                    findings_data.append([
+                        severity.upper(),
+                        f"{title}\n{description}",
+                        recommendation
+                    ])
+                
+                findings_table = Table(findings_data, colWidths=[1*inch, 2.5*inch, 2.5*inch])
+                
+                # Add styling to table
+                table_style = [
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+                    ('BACKGROUND', (0, 1), (0, -1), colors.whitesmoke),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ]
+                
+                # Add severity-specific colors
+                for i, row in enumerate(findings_data[1:], 1):
+                    severity = row[0].lower()
+                    if severity == 'critical':
+                        table_style.append(('TEXTCOLOR', (0, i), (0, i), colors.red))
+                    elif severity == 'high':
+                        table_style.append(('TEXTCOLOR', (0, i), (0, i), colors.orange))
+                    elif severity == 'medium':
+                        table_style.append(('TEXTCOLOR', (0, i), (0, i), colors.darkgoldenrod))
+                    elif severity == 'low':
+                        table_style.append(('TEXTCOLOR', (0, i), (0, i), colors.green))
+                
+                findings_table.setStyle(TableStyle(table_style))
+                elements.append(findings_table)
+                elements.append(Spacer(1, 0.2*inch))
+    else:
+        elements.append(Paragraph("No specific findings were identified during the scan.", styles['Normal']))
+    
+    # Add recommendations section
+    elements.append(Paragraph("Key Recommendations", styles['Subtitle']))
+    
+    # Extract top recommendations based on severity
+    top_recommendations = []
+    for finding in sorted(findings, key=lambda x: {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}.get(x.get('severity', 'low'), 4))[:5]:
+        top_recommendations.append(f"• {finding.get('recommendation', '')}")
+    
+    if top_recommendations:
+        for rec in top_recommendations:
+            elements.append(Paragraph(rec, styles['Normal']))
+    else:
+        elements.append(Paragraph("No specific recommendations available.", styles['Normal']))
+    
+    # Add certification footer
+    elements.append(Spacer(1, 0.5*inch))
+    disclaimer_text = """
+    Disclaimer: This report provides an assessment of GDPR compliance based on automated scanning. 
+    It is not a substitute for legal advice. The findings should be reviewed by a qualified data protection professional.
+    """
+    elements.append(Paragraph(disclaimer_text, styles['Normal']))
+    
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+
+def display_website_scan_results(results):
+    """
+    Display the website scan results in the Streamlit UI
+    
+    Args:
+        results: Scan results dictionary
+    """
+    st.subheader("GDPR Website Compliance Scan Results")
+    
+    # Display scan info
+    st.markdown(f"**Website:** {results['website_name']} ({results['website_url']})")
+    st.markdown(f"**Scan Date:** {datetime.fromisoformat(results['timestamp']).strftime('%B %d, %Y')}")
+    
+    # Handle error case
+    if 'error' in results:
+        st.error(f"Scan failed: {results['error']}")
+        return
+    
+    # Display compliance score with color
+    compliance_score = results.get('compliance_score', 0)
+    compliance_status = results.get('compliance_status', 'Unknown')
+    
+    score_color = 'green' if compliance_score >= 90 else 'orange' if compliance_score >= 70 else 'red'
+    st.markdown(f"### Compliance Score: <span style='color:{score_color}'>{compliance_score}%</span> ({compliance_status})", unsafe_allow_html=True)
+    
+    # Create columns for issues summary
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Critical Issues", results.get('critical_issues', 0))
+    with col2:
+        st.metric("High Risk", results.get('high_risk', 0))
+    with col3:
+        st.metric("Medium Risk", results.get('medium_risk', 0))
+    with col4:
+        st.metric("Low Risk", results.get('low_risk', 0))
+    
+    # Show category scores
+    st.subheader("Compliance by Category")
+    
+    categories_df = []
+    for category, data in results.get('categories', {}).items():
+        categories_df.append({
+            'Category': category.replace('_', ' ').title(),
+            'Score': data.get('score', 0)
+        })
+    
+    df = pd.DataFrame(categories_df)
+    if not df.empty:
+        # Add color coding to scores
+        def color_score(val):
+            color = 'green' if val >= 90 else 'orange' if val >= 70 else 'red'
+            return f'background-color: {color}; color: white'
+        
+        # Apply styling and display
+        styled_df = df.style.format({'Score': '{:0.0f}%'}).applymap(color_score, subset=['Score'])
+        st.dataframe(styled_df)
+    
+    # Key findings
+    st.subheader("Key Findings")
+    
+    tabs = st.tabs([cat.replace('_', ' ').title() for cat in results.get('categories', {})])
+    
+    for i, (category, tab) in enumerate(zip(results.get('categories', {}), tabs)):
+        with tab:
+            findings = results['categories'][category].get('findings', [])
+            if findings:
+                for finding in findings:
+                    severity = finding.get('severity', '').upper()
+                    severity_color = {
+                        'CRITICAL': 'red',
+                        'HIGH': 'orange',
+                        'MEDIUM': 'darkorange',
+                        'LOW': 'green',
+                        'INFO': 'blue'
+                    }.get(severity, 'gray')
+                    
+                    st.markdown(f"**{finding.get('title', '')}** - <span style='color:{severity_color}'>{severity}</span>", unsafe_allow_html=True)
+                    st.markdown(f"{finding.get('description', '')}")
+                    st.info(f"**Recommendation:** {finding.get('recommendation', '')}")
+                    st.markdown("---")
+            else:
+                st.success(f"No issues found in {category.replace('_', ' ').title()} category")
+    
+    # Download report option
+    pdf_report = generate_gdpr_report(results)
+    st.download_button(
+        label="Download Full PDF Report",
+        data=pdf_report,
+        file_name=f"GDPR_Compliance_Report_{results['website_name']}_{datetime.now().strftime('%Y%m%d')}.pdf",
+        mime="application/pdf",
+        key="download_report_button"
+    )
