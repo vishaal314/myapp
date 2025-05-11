@@ -147,7 +147,7 @@ def check_role(role: str) -> bool:
     
     return role_priority >= required_priority
 
-def render_access_denied(permission: str = None, role: str = None) -> None:
+def render_access_denied(permission: str = "", role: str = "") -> None:
     """
     Render an access denied message
     
@@ -155,7 +155,7 @@ def render_access_denied(permission: str = None, role: str = None) -> None:
         permission: Optional permission that was denied
         role: Optional role that was required
     """
-    if permission:
+    if permission and permission != "":
         from access_control.roles_config import PERMISSIONS, TIER_REQUIRED_FEATURES
         
         permission_name = PERMISSIONS.get(permission, permission)
@@ -171,7 +171,7 @@ def render_access_denied(permission: str = None, role: str = None) -> None:
                 st.rerun()
         else:
             st.error(f"Access denied: You don't have the required permission ({permission_name}).")
-    elif role:
+    elif role and role != "":
         from access_control.roles_config import ROLES
         
         role_name = ROLES.get(role, {}).get("name", role)

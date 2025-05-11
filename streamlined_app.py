@@ -304,36 +304,105 @@ def authenticate(username, password):
         
     # Also allow default users for testing    
     if username == "admin" and password == "password":
+        # Admin has full system access
         return {
             "username": "admin",
             "role": "admin",
             "email": "admin@dataguardian.pro",
-            "permissions": ["scan:all", "report:all", "admin:all"],
+            "permissions": get_permissions_for_role("admin"),
             "subscription_tier": "gold",
-            "subscription_active": True
+            "subscription_active": True,
+            "user_id": "admin-" + str(uuid.uuid4())
         }
     elif username == "user" and password == "password":
+        # Regular user with basic permissions
         return {
             "username": "user",
             "role": "viewer",
             "email": "user@dataguardian.pro",
-            "permissions": ["scan:basic", "report:view"],
+            "permissions": get_permissions_for_role("viewer"),
             "subscription_tier": "basic",
-            "subscription_active": True
+            "subscription_active": True,
+            "user_id": "user-" + str(uuid.uuid4())
+        }
+    elif username == "auditor" and password == "password":
+        # Auditor with report access
+        return {
+            "username": "auditor",
+            "role": "auditor",
+            "email": "auditor@dataguardian.pro",
+            "permissions": get_permissions_for_role("auditor"),
+            "subscription_tier": "professional",
+            "subscription_active": True,
+            "user_id": "auditor-" + str(uuid.uuid4())
+        }
+    elif username == "security" and password == "password":
+        # Security engineer with advanced scanning capabilities
+        return {
+            "username": "security",
+            "role": "security_engineer",
+            "email": "security@dataguardian.pro",
+            "permissions": get_permissions_for_role("security_engineer"),
+            "subscription_tier": "professional",
+            "subscription_active": True,
+            "user_id": "security-" + str(uuid.uuid4())
         }
         
     return None
 
 def get_permissions_for_role(role):
-    """Get permissions for a specific role"""
+    """Get permissions for a specific role from RBAC system"""
+    # Map roles to their specific permissions
     if role == "admin":
-        return ["scan:all", "report:all", "admin:all"]
+        # Admin has full system access
+        return [
+            "admin:all",
+            "user:manage",
+            "scan:run_basic",
+            "scan:run_advanced",
+            "scan:view_results",
+            "scan:export",
+            "reports:view",
+            "reports:create",
+            "reports:download",
+            "reports:share",
+            "dashboard:view_metrics",
+            "dashboard:view_scan_history",
+            "settings:edit"
+        ]
     elif role == "security_engineer":
-        return ["scan:all", "report:all", "admin:config"]
+        # Security engineer has advanced scanning capabilities
+        return [
+            "scan:run_basic",
+            "scan:run_advanced",
+            "scan:view_results",
+            "scan:export",
+            "reports:view",
+            "reports:create",
+            "reports:download",
+            "dashboard:view_metrics",
+            "dashboard:view_scan_history",
+            "settings:view"
+        ]
     elif role == "auditor":
-        return ["scan:read", "report:all"]
+        # Auditor focuses on report access
+        return [
+            "scan:view_results",
+            "reports:view",
+            "reports:download",
+            "reports:share",
+            "dashboard:view_metrics",
+            "dashboard:view_scan_history"
+        ]
     else:  # viewer or any other role
-        return ["scan:basic", "report:view"]
+        # Basic permissions for regular users
+        return [
+            "scan:run_basic",
+            "scan:view_results",
+            "reports:view",
+            "dashboard:view_metrics",
+            "dashboard:view_scan_history"
+        ]
 
 # =============================================================================
 # MOCK SCAN FUNCTIONS
