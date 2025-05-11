@@ -21,9 +21,14 @@ import requests
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable, Tuple, Union
 
-# For report generation
-from services.report_generator import auto_generate_pdf_report
+# Base scanner
 from services.ai_model_scanner import AIModelScanner
+
+# For report generation
+# Import both report generators - we'll use the enhanced one but fall back to the standard one if needed
+from services.report_generator import auto_generate_pdf_report
+# Import our enhanced report generator specifically for AI Model scans
+from services.ai_model_report_generator import create_ai_model_scan_report
 
 class EnhancedAIModelScanner(AIModelScanner):
     """
@@ -229,13 +234,44 @@ class EnhancedAIModelScanner(AIModelScanner):
                     "total_findings": len(scan_result["findings"])
                 })
 
-            # Generate PDF report
-            success, report_path, report_bytes = auto_generate_pdf_report(scan_result)
-            if success:
-                scan_result["report_path"] = report_path
-                self.logger.info(f"Generated PDF report at: {report_path}")
-            else:
-                self.logger.error("Failed to generate PDF report")
+            # Generate PDF report using our enhanced AI model report generator
+            try:
+                # Use the specialized AI model report generator with modern design
+                report_bytes = create_ai_model_scan_report(scan_result)
+                
+                if report_bytes and len(report_bytes) > 0:
+                    self.logger.info("Successfully generated enhanced AI model PDF report")
+                    
+                    # Check if a report path was already set by the report generator
+                    if "report_path" not in scan_result:
+                        # Save the report to a file if not already done
+                        os.makedirs("reports", exist_ok=True)
+                        report_filename = f"ai_model_scan_{scan_result['scan_id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                        report_path = os.path.join("reports", report_filename)
+                        
+                        with open(report_path, "wb") as f:
+                            f.write(report_bytes)
+                            
+                        scan_result["report_path"] = report_path
+                        self.logger.info(f"Generated PDF report at: {report_path}")
+                else:
+                    # Fallback to standard report generator if enhanced one fails
+                    self.logger.warning("Enhanced report generation failed, falling back to standard generator")
+                    success, report_path, report_bytes = auto_generate_pdf_report(scan_result)
+                    if success:
+                        scan_result["report_path"] = report_path
+                        self.logger.info(f"Generated fallback PDF report at: {report_path}")
+                    else:
+                        self.logger.error("Failed to generate PDF report")
+            except Exception as e:
+                self.logger.error(f"Error generating PDF report: {str(e)}")
+                # Fallback to standard report generator
+                success, report_path, report_bytes = auto_generate_pdf_report(scan_result)
+                if success:
+                    scan_result["report_path"] = report_path
+                    self.logger.info(f"Generated fallback PDF report at: {report_path}")
+                else:
+                    self.logger.error("Failed to generate PDF report")
 
             return scan_result
 

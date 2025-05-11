@@ -233,7 +233,8 @@ class PieChartWithLegend(Flowable):
         ]
         
         pie.data = pie_data
-        pie.labels = [f"{l}: {v}" for l, v in zip(labels, pie_data)]
+        # Labels are handled manually with the legend instead of using pie.labels
+        # since the Pie object doesn't support labels properly
         pie.slices.strokeWidth = 0.5
         for i, color in enumerate(colors[:len(pie_data)]):
             pie.slices[i].fillColor = color
@@ -297,7 +298,8 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
     # Check for required fields
     if not scan_data or not isinstance(scan_data, dict):
         logger.error("Invalid scan data provided - not a dictionary or None")
-        return None
+        # Return empty PDF bytes rather than None to avoid type errors
+        return b''
     
     # Ensure all required fields are present
     scan_id = scan_data.get('scan_id', f"AIMOD-{uuid.uuid4().hex[:8]}")
@@ -695,21 +697,26 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
         return pdf_bytes
     except Exception as build_error:
         logger.error(f"Error building PDF: {str(build_error)}")
-        return None
+        # Return empty PDF bytes rather than None to avoid type errors
+        return b''
 
 class HorizontalRule(Flowable):
     """Custom flowable to draw a horizontal rule"""
     
     def __init__(self, width=None, thickness=0.5, color=None):
         Flowable.__init__(self)
-        self.width = width or '100%'
+        # Store a numeric width or None to be calculated later
+        self.width = width
+        self.use_full_width = width is None
         self.thickness = thickness
         self.color = color or HexColor(BRANDING_COLORS["primary"])
         
     def wrap(self, availWidth, availHeight):
-        if self.width == '100%':
+        # Calculate width based on available width if needed
+        if self.use_full_width:
             self.width = availWidth
-        return (self.width, self.thickness)
+        # Always return integers for width and height
+        return (int(self.width), int(self.thickness))
         
     def draw(self):
         self.canv.setStrokeColor(self.color)
