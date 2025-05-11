@@ -42,7 +42,7 @@ def render_subscription_info(username: str, subscription_data: Dict[str, Any]):
                   border-radius:8px; padding:16px; text-align:center;">
             <div style="font-size:28px; margin-bottom:8px;">{plan.get('icon', '✨')}</div>
             <div style="font-weight:bold; font-size:18px;">{plan.get('name', 'Basic')} Plan</div>
-            <div style="margin-top:8px;">${plan.get('price', 0)}/{plan.get('unit', 'month')}</div>
+            <div style="margin-top:8px;">€{plan.get('price', 0)}/{plan.get('unit', 'month')}</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -287,7 +287,7 @@ def render_plan_selection():
                     {plan_data.get('name', 'Basic')}
                 </h3>
                 <div style="text-align:center; font-size:24px; font-weight:bold; margin:15px 0;">
-                    ${plan_data.get('price', 0)}
+                    €{plan_data.get('price', 0)}
                     <span style="font-size:14px; font-weight:normal; color:#718096;">
                         /{plan_data.get('unit', 'month')}
                     </span>

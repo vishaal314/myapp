@@ -16,6 +16,7 @@ SUBSCRIPTION_PLANS = {
         "name": "Basic",
         "description": "Essential compliance scanning for small teams",
         "price": 49,
+        "currency": "EUR",  # Using EUR for iDEAL compatibility
         "unit": "month",
         "features": [
             "Basic Privacy Scans",
@@ -40,6 +41,7 @@ SUBSCRIPTION_PLANS = {
         "name": "Premium",
         "description": "Advanced compliance for growing organizations",
         "price": 99,
+        "currency": "EUR",  # Using EUR for iDEAL compatibility
         "unit": "month",
         "features": [
             "All Basic features",
@@ -65,6 +67,7 @@ SUBSCRIPTION_PLANS = {
         "name": "Gold",
         "description": "Enterprise-grade compliance solution",
         "price": 199,
+        "currency": "EUR",  # Using EUR for iDEAL compatibility
         "unit": "month",
         "features": [
             "All Premium features",

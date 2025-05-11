@@ -133,7 +133,8 @@ def create_checkout_session(
     customer_id: str, 
     price_id: str, 
     mode: str = 'subscription',
-    payment_methods: List[str] = None
+    payment_methods: List[str] = None,
+    currency: str = 'eur'  # Default to EUR for iDEAL compatibility
 ) -> Optional[str]:
     """
     Create a Stripe Checkout session
@@ -143,6 +144,7 @@ def create_checkout_session(
         price_id: Stripe price ID for the selected plan
         mode: Checkout mode ('subscription' or 'payment')
         payment_methods: List of payment methods to support (default: card, ideal)
+        currency: Currency to use for the transaction (default: eur for iDEAL compatibility)
         
     Returns:
         Checkout session URL if successful, None otherwise
