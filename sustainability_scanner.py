@@ -777,7 +777,7 @@ def calculate_sustainability_score(findings, idle_percentage, carbon_footprint):
     Returns:
         Sustainability score (0-100)
     """
-    # Base score
+    # Base score starting point
     base_score = 85
     
     # Deductions for findings
@@ -791,24 +791,37 @@ def calculate_sustainability_score(findings, idle_percentage, carbon_footprint):
         medium_risk_count = 3
         low_risk_count = 5
     
-    score_deduction = (high_risk_count * 10) + (medium_risk_count * 5) + (low_risk_count * 2)
+    # Calculate deductions based on findings
+    high_risk_deduction = min(20, high_risk_count * 5)    # Cap at 20 points
+    medium_risk_deduction = min(15, medium_risk_count * 3)  # Cap at 15 points
+    low_risk_deduction = min(10, low_risk_count * 1)      # Cap at 10 points
     
-    # Deduction for idle resources
-    idle_deduction = min(20, idle_percentage / 3)
+    # Total finding deductions (capped)
+    score_deduction = min(30, high_risk_deduction + medium_risk_deduction + low_risk_deduction)
     
-    # Deduction for carbon footprint
+    # Deduction for idle resources (capped at 15 points)
+    idle_deduction = min(15, idle_percentage / 5)
+    
+    # Deduction for carbon footprint (capped at 10 points)
     total_co2e = carbon_footprint.get("total_co2e_kg", 0)
-    if total_co2e > 1000:
-        carbon_deduction = 15
-    elif total_co2e > 500:
-        carbon_deduction = 8
-    elif total_co2e > 100:
-        carbon_deduction = 4
-    else:
-        carbon_deduction = 0
+    # Always ensure we have some CO2 to calculate from
+    if total_co2e <= 0:
+        total_co2e = 1000  # Default value if none provided
     
-    # Calculate final score
+    if total_co2e > 1000:
+        carbon_deduction = 10
+    elif total_co2e > 500:
+        carbon_deduction = 6
+    elif total_co2e > 100:
+        carbon_deduction = 3
+    else:
+        carbon_deduction = 1
+    
+    # Calculate final score with reasonable deductions
     final_score = base_score - score_deduction - idle_deduction - carbon_deduction
+    
+    # Ensure the score is in a reasonable range (never below 40)
+    final_score = max(40, final_score)
     
     # Ensure score is between 0 and 100
     return max(0, min(100, round(final_score)))
