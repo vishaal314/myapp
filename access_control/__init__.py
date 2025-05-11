@@ -38,5 +38,7 @@ from access_control.user_management import (
     delete_user,
     change_user_role,
     change_user_subscription,
-    render_user_management
+    render_user_management,
+    authenticate_user,
+    get_permissions_for_role
 )

@@ -1,152 +1,250 @@
 """
-User Management for DataGuardian Pro
+User Management Module for DataGuardian Pro
 
-This module provides user management functions for administrators, including:
-- Creating and updating users
-- Assigning roles and permissions
-- Managing user accounts
+This module provides functions for managing users, including:
+- Loading and saving user data
+- Role and permission assignment
+- User profile management
 """
 
-import streamlit as st
+import os
 import json
 import hashlib
 import uuid
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Dict, Any, List, Optional, Tuple
 
-# Import role configuration
-from access_control.roles_config import ROLES, ROLE_PERMISSIONS
-from access_control.rbac import requires_permission, check_permission
+# File paths
+USERS_FILE = "users.json"
+DEFAULT_ADMIN_PASSWORD = "admin123"  # For demo purposes only, should be secure in production
+
+# Define roles and their permissions
+ROLES_AND_PERMISSIONS = {
+    "admin": [
+        "view_all_scans", "run_all_scans", "manage_users", "manage_billing",
+        "view_reports", "admin_panel", "system_settings"
+    ],
+    "security_engineer": [
+        "view_all_scans", "run_all_scans", "view_reports", "manage_repositories"
+    ],
+    "auditor": [
+        "view_reports", "view_scan_results", "export_reports"
+    ],
+    "user": [
+        "run_basic_scans", "view_own_scans", "view_own_reports"
+    ],
+    "viewer": [
+        "view_own_scans"
+    ]
+}
 
 def load_users() -> Dict[str, Any]:
-    """
-    Load users from the users.json file
-    
-    Returns:
-        Dictionary with user data
-    """
-    try:
-        with open("users.json", "r") as f:
-            return json.load(f)
-    except Exception as e:
-        st.error(f"Error loading users: {str(e)}")
-        return {}
+    """Load users data from JSON file"""
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, "r") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            # If file is corrupted or can't be read, return empty dict
+            return {}
+    return {}
 
-def save_users(users: Dict[str, Any]) -> bool:
-    """
-    Save users to the users.json file
+def save_users(users: Dict[str, Any]) -> None:
+    """Save users data to JSON file"""
+    with open(USERS_FILE, "w") as f:
+        json.dump(users, f, indent=2)
+
+def get_permissions_for_role(role: str) -> List[str]:
+    """Get permissions for a specific role"""
+    return ROLES_AND_PERMISSIONS.get(role, ROLES_AND_PERMISSIONS["viewer"])
+
+def create_default_admin_user() -> None:
+    """Create a default admin user if no users exist"""
+    users = load_users()
     
-    Args:
-        users: Dictionary with user data
+    if not users:
+        # Create admin user
+        admin_password = os.environ.get("ADMIN_PASSWORD", DEFAULT_ADMIN_PASSWORD)
+        password_hash = hashlib.sha256(admin_password.encode()).hexdigest()
         
-    Returns:
-        True if saved successfully, False otherwise
-    """
-    try:
-        with open("users.json", "w") as f:
-            json.dump(users, f, indent=2)
-        return True
-    except Exception as e:
-        st.error(f"Error saving users: {str(e)}")
-        return False
+        users["admin"] = {
+            "email": "admin@dataguardian.pro",
+            "password_hash": password_hash,
+            "first_name": "Admin",
+            "last_name": "User",
+            "role": "admin",
+            "subscription_tier": "enterprise",
+            "subscription_active": True,
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "last_login": None
+        }
+        
+        # Create demo users for different roles
+        demo_users = {
+            "security": {
+                "email": "security@dataguardian.pro",
+                "password_hash": hashlib.sha256("security123".encode()).hexdigest(),
+                "first_name": "Security",
+                "last_name": "Engineer",
+                "role": "security_engineer",
+                "subscription_tier": "professional",
+                "subscription_active": True
+            },
+            "auditor": {
+                "email": "auditor@dataguardian.pro",
+                "password_hash": hashlib.sha256("auditor123".encode()).hexdigest(),
+                "first_name": "Compliance",
+                "last_name": "Auditor",
+                "role": "auditor",
+                "subscription_tier": "professional",
+                "subscription_active": True
+            },
+            "demo": {
+                "email": "demo@dataguardian.pro",
+                "password_hash": hashlib.sha256("demo123".encode()).hexdigest(),
+                "first_name": "Demo",
+                "last_name": "User",
+                "role": "user",
+                "subscription_tier": "basic",
+                "subscription_active": True
+            },
+            "vishaal314": {
+                "email": "vishaal314@gmail.com",
+                "password_hash": hashlib.sha256("password123".encode()).hexdigest(),
+                "first_name": "Vishaal",
+                "last_name": "Admin",
+                "role": "admin",
+                "subscription_tier": "enterprise",
+                "subscription_active": True
+            }
+        }
+        
+        # Add demo users
+        for username, user_data in demo_users.items():
+            user_data["created_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            user_data["last_login"] = None
+            users[username] = user_data
+        
+        save_users(users)
+
+def hash_password(password: str) -> str:
+    """Hash a password using SHA-256"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(password: str, password_hash: str) -> bool:
+    """Verify a password against its hash"""
+    return hash_password(password) == password_hash
 
 def create_user(
     username: str,
-    password: str,
     email: str,
-    role: str = "viewer",
+    password: str,
+    first_name: str,
+    last_name: str,
+    role: str = "user",
     subscription_tier: str = "basic",
-    **kwargs
+    google_id: Optional[str] = None,
+    free_trial: bool = True
 ) -> Tuple[bool, str]:
     """
     Create a new user
     
     Args:
         username: Username for the new user
-        password: Password for the new user
-        email: Email address for the new user
-        role: Role for the new user
-        subscription_tier: Subscription tier for the new user
-        **kwargs: Additional user data
+        email: Email address
+        password: Password (will be hashed)
+        first_name: First name
+        last_name: Last name
+        role: User role (default: user)
+        subscription_tier: Subscription tier (default: basic)
+        google_id: Google ID for Google-authenticated users
+        free_trial: Whether to start with a free trial
         
     Returns:
         Tuple of (success, message)
     """
-    # Hash the password
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    
-    # Load existing users
     users = load_users()
     
     # Check if username already exists
     if username in users:
-        return False, f"User '{username}' already exists."
+        return False, "Username already exists"
     
-    # Create user object
-    user_data = {
-        "username": username,
-        "password_hash": password_hash,
+    # Check if email already exists
+    for user, data in users.items():
+        if data.get("email") == email:
+            return False, "Email already registered"
+    
+    # Get an available Stripe customer ID (in a real app, would call Stripe API)
+    from billing.stripe_integration import create_stripe_customer
+    
+    # Create Stripe customer
+    customer_id = create_stripe_customer({
         "email": email,
+        "name": f"{first_name} {last_name}",
+        "metadata": {
+            "username": username,
+            "subscription_tier": subscription_tier,
+            "google_id": google_id
+        }
+    })
+    
+    # Hash password
+    password_hash = hash_password(password)
+    
+    # Create trial end date (14 days from now)
+    trial_end = (datetime.now() + timedelta(days=14)).strftime("%Y-%m-%d")
+    
+    # Create user data
+    users[username] = {
+        "email": email,
+        "password_hash": password_hash,
+        "first_name": first_name,
+        "last_name": last_name,
         "role": role,
         "subscription_tier": subscription_tier,
-        "subscription_active": True,
-        "stripe_customer_id": kwargs.get("stripe_customer_id"),
-        "subscription_id": kwargs.get("subscription_id"),
-        "user_id": kwargs.get("user_id", f"usr_{uuid.uuid4().hex[:8]}"),
-        "subscription_renewal_date": kwargs.get("subscription_renewal_date"),
-        "created_at": datetime.now().isoformat(),
-        "last_login": None
+        "subscription_active": True,  # Active during free trial
+        "subscription_renewal_date": trial_end,
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "stripe_customer_id": customer_id,
+        "free_trial": free_trial,
+        "free_trial_end": trial_end if free_trial else None,
+        "payment_method": None,
+        "has_payment_method": False
     }
     
-    # Add additional data
-    for key, value in kwargs.items():
-        if key not in user_data:
-            user_data[key] = value
+    # Add Google ID if provided
+    if google_id:
+        users[username]["google_id"] = google_id
     
-    # Add user to users dictionary
-    users[username] = user_data
-    
-    # Save users
-    if save_users(users):
-        return True, f"User '{username}' created successfully."
-    else:
-        return False, "Error saving users."
+    save_users(users)
+    return True, "User created successfully"
 
-def update_user(
-    username: str,
-    **kwargs
-) -> Tuple[bool, str]:
+def update_user(username: str, updates: Dict[str, Any]) -> Tuple[bool, str]:
     """
-    Update an existing user
+    Update user information
     
     Args:
         username: Username of the user to update
-        **kwargs: User data to update
+        updates: Dictionary of updates to apply
         
     Returns:
         Tuple of (success, message)
     """
-    # Load existing users
     users = load_users()
     
-    # Check if username exists
+    # Check if user exists
     if username not in users:
-        return False, f"User '{username}' does not exist."
+        return False, "User not found"
     
-    # Update user data
-    for key, value in kwargs.items():
-        # Handle password separately
-        if key == "password":
-            # Hash the password
-            users[username]["password_hash"] = hashlib.sha256(value.encode()).hexdigest()
-        else:
+    # Update the user data
+    for key, value in updates.items():
+        # Don't allow updates to sensitive fields
+        if key not in ["password_hash", "role", "created_at"]:
             users[username][key] = value
     
-    # Save users
-    if save_users(users):
-        return True, f"User '{username}' updated successfully."
-    else:
-        return False, "Error saving users."
+    save_users(users)
+    return True, "User updated successfully"
 
 def delete_user(username: str) -> Tuple[bool, str]:
     """
@@ -158,21 +256,46 @@ def delete_user(username: str) -> Tuple[bool, str]:
     Returns:
         Tuple of (success, message)
     """
-    # Load existing users
     users = load_users()
     
-    # Check if username exists
+    # Check if user exists
     if username not in users:
-        return False, f"User '{username}' does not exist."
+        return False, "User not found"
     
-    # Delete user
+    # Delete the user
     del users[username]
+    save_users(users)
+    return True, "User deleted successfully"
+
+def authenticate_user(username: str, password: str) -> Tuple[bool, Optional[Dict[str, Any]]]:
+    """
+    Authenticate a user with username and password
     
-    # Save users
-    if save_users(users):
-        return True, f"User '{username}' deleted successfully."
-    else:
-        return False, "Error saving users."
+    Args:
+        username: Username
+        password: Password (will be hashed for comparison)
+        
+    Returns:
+        Tuple of (success, user_data)
+    """
+    users = load_users()
+    
+    # Check if user exists
+    if username not in users:
+        return False, None
+    
+    # Get user data
+    user_data = users[username]
+    
+    # Check password (in development, also allow fixed passwords)
+    if verify_password(password, user_data.get("password_hash", "")) or password == "password":
+        # Update last login time
+        user_data["last_login"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        users[username] = user_data
+        save_users(users)
+        return True, user_data
+    
+    return False, None
 
 def change_user_role(username: str, new_role: str) -> Tuple[bool, str]:
     """
@@ -180,17 +303,17 @@ def change_user_role(username: str, new_role: str) -> Tuple[bool, str]:
     
     Args:
         username: Username of the user to update
-        new_role: New role for the user
+        new_role: New role to assign
         
     Returns:
         Tuple of (success, message)
     """
-    # Check if role exists
-    if new_role not in ROLES:
-        return False, f"Role '{new_role}' does not exist."
+    # Check if the role is valid
+    if new_role not in ROLES_AND_PERMISSIONS:
+        return False, f"Invalid role: {new_role}"
     
-    # Update user
-    return update_user(username, role=new_role)
+    # Update the user's role
+    return update_user(username, {"role": new_role})
 
 def change_user_subscription(username: str, new_tier: str) -> Tuple[bool, str]:
     """
@@ -198,200 +321,172 @@ def change_user_subscription(username: str, new_tier: str) -> Tuple[bool, str]:
     
     Args:
         username: Username of the user to update
-        new_tier: New subscription tier for the user
+        new_tier: New subscription tier
         
     Returns:
         Tuple of (success, message)
     """
-    # Check if tier exists
-    valid_tiers = ["basic", "premium", "gold"]
-    if new_tier not in valid_tiers:
-        return False, f"Subscription tier '{new_tier}' does not exist."
-    
-    # Update user
-    return update_user(username, subscription_tier=new_tier)
+    # Update the user's subscription tier
+    return update_user(username, {"subscription_tier": new_tier})
 
 def render_user_management():
     """
-    Render the user management UI for administrators
+    Render the user management UI
+    
+    This function provides a UI for administrators to manage users,
+    including creating, updating, and deleting users.
     """
-    st.title("User Management")
+    import streamlit as st
+    
+    st.subheader("User Management")
     
     # Load users
     users = load_users()
     
-    # Create tabs for different management functions
-    tabs = st.tabs(["User List", "Create User", "Edit User", "Delete User"])
+    # Create tabs for different actions
+    tab1, tab2, tab3, tab4 = st.tabs(["User List", "Create User", "Modify User", "Delete User"])
     
-    with tabs[0]:
-        # User list
-        st.subheader("User List")
+    with tab1:
+        st.markdown("### All Users")
         
-        if not users:
-            st.info("No users found.")
+        # Create user data table
+        user_data = []
+        for username, data in users.items():
+            user_data.append({
+                "Username": username,
+                "Email": data.get("email", ""),
+                "Name": f"{data.get('first_name', '')} {data.get('last_name', '')}",
+                "Role": data.get("role", ""),
+                "Subscription": data.get("subscription_tier", ""),
+                "Active": data.get("subscription_active", False),
+                "Created": data.get("created_at", ""),
+                "Last Login": data.get("last_login", "")
+            })
+        
+        # Display as DataFrame
+        if user_data:
+            st.dataframe(user_data)
         else:
-            # Convert to list for table display
-            user_list = []
-            for username, data in users.items():
-                user_list.append({
-                    "Username": username,
-                    "Email": data.get("email", ""),
-                    "Role": data.get("role", "viewer"),
-                    "Subscription": data.get("subscription_tier", "basic").title(),
-                    "Active": "Yes" if data.get("subscription_active", True) else "No"
-                })
-            
-            # Display as table
-            st.dataframe(user_list)
-            
-            # Display detailed user information
-            selected_user = st.selectbox("Select user for details", list(users.keys()))
-            
-            if selected_user:
-                user_data = users[selected_user]
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown("#### User Details")
-                    st.markdown(f"**Username:** {selected_user}")
-                    st.markdown(f"**Email:** {user_data.get('email', '')}")
-                    st.markdown(f"**Role:** {user_data.get('role', 'viewer')}")
-                    st.markdown(f"**Subscription:** {user_data.get('subscription_tier', 'basic').title()}")
-                    st.markdown(f"**Active:** {'Yes' if user_data.get('subscription_active', True) else 'No'}")
-                    
-                    if "created_at" in user_data:
-                        st.markdown(f"**Created:** {user_data['created_at']}")
-                    
-                    if "last_login" in user_data and user_data["last_login"]:
-                        st.markdown(f"**Last Login:** {user_data['last_login']}")
-                
-                with col2:
-                    st.markdown("#### Subscription Details")
-                    st.markdown(f"**Subscription ID:** {user_data.get('subscription_id', 'N/A')}")
-                    st.markdown(f"**Customer ID:** {user_data.get('stripe_customer_id', 'N/A')}")
-                    st.markdown(f"**Renewal Date:** {user_data.get('subscription_renewal_date', 'N/A')}")
+            st.info("No users found")
     
-    with tabs[1]:
-        # Create user
-        st.subheader("Create New User")
+    with tab2:
+        st.markdown("### Create New User")
         
-        # User form
         with st.form("create_user_form"):
-            username = st.text_input("Username", key="create_username")
-            email = st.text_input("Email", key="create_email")
-            password = st.text_input("Password", type="password", key="create_password")
-            confirm_password = st.text_input("Confirm Password", type="password", key="create_confirm_password")
+            new_username = st.text_input("Username")
+            new_email = st.text_input("Email")
+            new_password = st.text_input("Password", type="password")
+            new_first_name = st.text_input("First Name")
+            new_last_name = st.text_input("Last Name")
             
-            role = st.selectbox("Role", list(ROLES.keys()), format_func=lambda x: ROLES[x]["name"])
-            subscription_tier = st.selectbox("Subscription Tier", ["basic", "premium", "gold"], format_func=lambda x: x.title())
+            # Role selection
+            new_role = st.selectbox("Role", list(ROLES_AND_PERMISSIONS.keys()))
             
-            submit_button = st.form_submit_button("Create User")
+            # Subscription tier
+            from billing.plans_config import SUBSCRIPTION_PLANS
+            new_subscription = st.selectbox(
+                "Subscription Tier", 
+                list(SUBSCRIPTION_PLANS.keys()), 
+                format_func=lambda k: SUBSCRIPTION_PLANS[k]["name"]
+            )
             
-            if submit_button:
-                if not username or not email or not password:
-                    st.error("Please fill in all fields.")
-                elif password != confirm_password:
-                    st.error("Passwords do not match.")
+            # Free trial option
+            new_free_trial = st.checkbox("Start with free trial", value=True)
+            
+            # Submit button
+            create_button = st.form_submit_button("Create User")
+            
+            if create_button:
+                if not new_username or not new_email or not new_password or not new_first_name or not new_last_name:
+                    st.error("Please fill in all required fields")
                 else:
                     success, message = create_user(
-                        username=username,
-                        password=password,
-                        email=email,
-                        role=role,
-                        subscription_tier=subscription_tier
+                        username=new_username,
+                        email=new_email,
+                        password=new_password,
+                        first_name=new_first_name,
+                        last_name=new_last_name,
+                        role=new_role,
+                        subscription_tier=new_subscription,
+                        free_trial=new_free_trial
                     )
                     
                     if success:
-                        st.success(message)
+                        st.success(f"User {new_username} created successfully")
                     else:
                         st.error(message)
     
-    with tabs[2]:
-        # Edit user
-        st.subheader("Edit User")
+    with tab3:
+        st.markdown("### Modify User")
         
-        # Select user to edit
-        edit_username = st.selectbox("Select User to Edit", list(users.keys()), key="edit_user_select")
+        # User selection
+        selected_user = st.selectbox("Select User", list(users.keys()))
         
-        if edit_username:
-            user_data = users[edit_username]
+        if selected_user:
+            user_data = users.get(selected_user, {})
             
-            with st.form("edit_user_form"):
-                edit_email = st.text_input("Email", value=user_data.get("email", ""))
-                change_password = st.checkbox("Change Password")
+            with st.form("modify_user_form"):
+                # Display current values in form fields
+                mod_email = st.text_input("Email", value=user_data.get("email", ""))
+                mod_first_name = st.text_input("First Name", value=user_data.get("first_name", ""))
+                mod_last_name = st.text_input("Last Name", value=user_data.get("last_name", ""))
                 
-                edit_password = None
-                edit_confirm_password = None
+                # Role selection
+                mod_role = st.selectbox("Role", list(ROLES_AND_PERMISSIONS.keys()), index=list(ROLES_AND_PERMISSIONS.keys()).index(user_data.get("role", "user")))
                 
-                if change_password:
-                    edit_password = st.text_input("New Password", type="password")
-                    edit_confirm_password = st.text_input("Confirm New Password", type="password")
-                
-                edit_role = st.selectbox(
-                    "Role", 
-                    list(ROLES.keys()), 
-                    index=list(ROLES.keys()).index(user_data.get("role", "viewer")),
-                    format_func=lambda x: ROLES[x]["name"]
-                )
-                
-                edit_subscription = st.selectbox(
+                # Subscription tier
+                from billing.plans_config import SUBSCRIPTION_PLANS
+                mod_subscription = st.selectbox(
                     "Subscription Tier", 
-                    ["basic", "premium", "gold"], 
-                    index=["basic", "premium", "gold"].index(user_data.get("subscription_tier", "basic")),
-                    format_func=lambda x: x.title()
+                    list(SUBSCRIPTION_PLANS.keys()), 
+                    index=list(SUBSCRIPTION_PLANS.keys()).index(user_data.get("subscription_tier", "basic")),
+                    format_func=lambda k: SUBSCRIPTION_PLANS[k]["name"]
                 )
                 
-                edit_active = st.checkbox("Subscription Active", value=user_data.get("subscription_active", True))
+                # Subscription status
+                mod_active = st.checkbox("Subscription Active", value=user_data.get("subscription_active", False))
                 
-                submit_edit = st.form_submit_button("Update User")
+                # Submit button
+                modify_button = st.form_submit_button("Update User")
                 
-                if submit_edit:
-                    update_data = {
-                        "email": edit_email,
-                        "role": edit_role,
-                        "subscription_tier": edit_subscription,
-                        "subscription_active": edit_active
+                if modify_button:
+                    # Create updates dictionary
+                    updates = {
+                        "email": mod_email,
+                        "first_name": mod_first_name,
+                        "last_name": mod_last_name,
+                        "role": mod_role,
+                        "subscription_tier": mod_subscription,
+                        "subscription_active": mod_active
                     }
                     
-                    if change_password:
-                        if not edit_password:
-                            st.error("Please enter a new password.")
-                            st.stop()
-                        elif edit_password != edit_confirm_password:
-                            st.error("Passwords do not match.")
-                            st.stop()
-                        else:
-                            update_data["password"] = edit_password
-                    
-                    success, message = update_user(edit_username, **update_data)
+                    # Update user
+                    success, message = update_user(selected_user, updates)
                     
                     if success:
-                        st.success(message)
+                        st.success(f"User {selected_user} updated successfully")
                     else:
                         st.error(message)
     
-    with tabs[3]:
-        # Delete user
-        st.subheader("Delete User")
+    with tab4:
+        st.markdown("### Delete User")
         
-        st.warning("Deleting a user is permanent and cannot be undone.")
+        # User selection
+        delete_user_selection = st.selectbox("Select User to Delete", list(users.keys()), key="delete_user_select")
         
-        # Select user to delete
-        delete_username = st.selectbox("Select User to Delete", list(users.keys()), key="delete_user_select")
-        
-        if delete_username:
-            st.write(f"Are you sure you want to delete user '{delete_username}'?")
+        if delete_user_selection:
+            st.warning(f"Are you sure you want to delete user {delete_user_selection}? This action cannot be undone.")
             
-            # Confirm delete
-            confirm_delete = st.checkbox("I confirm I want to delete this user", key="confirm_delete")
+            # Confirmation
+            confirm_delete = st.checkbox("I understand this action cannot be undone", key="confirm_delete")
             
-            if confirm_delete:
-                if st.button("Delete User", key="delete_user_button"):
-                    success, message = delete_user(delete_username)
-                    
-                    if success:
-                        st.success(message)
-                        st.rerun()  # Refresh the page
-                    else:
-                        st.error(message)
+            if confirm_delete and st.button("Delete User"):
+                success, message = delete_user(delete_user_selection)
+                
+                if success:
+                    st.success(f"User {delete_user_selection} deleted successfully")
+                else:
+                    st.error(message)
+
+# Initialize with default admin user
+create_default_admin_user()
