@@ -1341,12 +1341,20 @@ def render_admin_section():
 
 def main():
     """Main application entry point"""
+    # Import signup flow components
+    from signup_flow import (
+        render_signup_page, 
+        render_trial_expiry_notice,
+        render_payment_method_selection
+    )
+    
     # Sidebar content
     with st.sidebar:
         render_brand_logo()
         
         if not st.session_state.logged_in:
-            render_login_form()
+            if st.session_state.get("current_view") not in ["signup", "payment_method"]:
+                render_login_form()
         else:
             render_user_profile()
             
@@ -1367,39 +1375,59 @@ def main():
                     del st.session_state[key]
                 st.rerun()
     
-    # Main content
+    # Main content for logged out users - Landing, Signup, or Payment flows
     if not st.session_state.logged_in:
-        render_landing_page()
+        # Handle different views for logged-out users
+        current_view = st.session_state.get("current_view", "landing")
+        
+        if current_view == "landing":
+            render_landing_page()
+        elif current_view == "signup":
+            render_signup_page()
+        elif current_view == "login":
+            st.info("Please log in using the form in the sidebar.")
+        elif current_view == "payment_method":
+            st.warning("You need to create an account or log in before adding a payment method.")
+            if st.button("Back to Signup", key="back_to_signup"):
+                st.session_state.current_view = "signup"
+                st.rerun()
     else:
-        # Create tabs for main content
-        tabs = st.tabs(["Dashboard", "Scan", "Reports", "Profile", "Admin"])
+        # Check for trial expiry notice for logged-in users
+        render_trial_expiry_notice()
         
-        # Dashboard Tab
-        with tabs[0]:
-            st.header("Analytics Dashboard")
-            render_summary_metrics()
-            render_scan_history()
-        
-        # Scan Tab
-        with tabs[1]:
-            st.header("Privacy Compliance Scan")
-            render_scan_form()
-        
-        # Reports Tab
-        with tabs[2]:
-            st.header("Compliance Reports")
-            render_reports_section()
-        
-        # Profile Tab
-        with tabs[3]:
-            st.header("User Profile")
-            render_user_profile_page()
+        # Handle payment method addition for users who've just signed up
+        if st.session_state.get("current_view") == "payment_method":
+            render_payment_method_selection()
+        else:
+            # Create tabs for main dashboard content
+            tabs = st.tabs(["Dashboard", "Scan", "Reports", "Profile", "Admin"])
             
-        # Admin Tab
-        with tabs[4]:
-            st.header("Administration")
-            # Use our RBAC-protected admin section
-            render_admin_section()
+            # Dashboard Tab
+            with tabs[0]:
+                st.header("Analytics Dashboard")
+                render_summary_metrics()
+                render_scan_history()
+            
+            # Scan Tab
+            with tabs[1]:
+                st.header("Privacy Compliance Scan")
+                render_scan_form()
+            
+            # Reports Tab
+            with tabs[2]:
+                st.header("Compliance Reports")
+                render_reports_section()
+            
+            # Profile Tab
+            with tabs[3]:
+                st.header("User Profile")
+                render_user_profile_page()
+                
+            # Admin Tab
+            with tabs[4]:
+                st.header("Administration")
+                # Use our RBAC-protected admin section
+                render_admin_section()
 
 if __name__ == "__main__":
     main()
