@@ -1080,20 +1080,89 @@ def render_reports_section():
                         from reportlab.lib import colors
                         from reportlab.lib.units import inch
                         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-                        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+                        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
+                        from reportlab.graphics.shapes import Drawing, Rect, Line, Circle, String
+                        from reportlab.graphics.charts.lineplots import LinePlot
+                        from reportlab.graphics import renderPDF
                         
-                        # Create document
-                        doc = SimpleDocTemplate(buffer, pagesize=letter)
+                        # Create document with margins
+                        doc = SimpleDocTemplate(
+                            buffer, 
+                            pagesize=letter,
+                            topMargin=0.5*inch,
+                            bottomMargin=0.5*inch,
+                            leftMargin=0.5*inch,
+                            rightMargin=0.5*inch
+                        )
                         styles = getSampleStyleSheet()
+                        
+                        # Create a custom style for the title
+                        title_style = ParagraphStyle(
+                            'Title',
+                            parent=styles['Heading1'],
+                            fontSize=16,
+                            textColor=colors.HexColor('#1E5288'),
+                            spaceAfter=12
+                        )
+                        
+                        # Create a better normal text style
+                        normal_style = ParagraphStyle(
+                            'CustomNormal',
+                            parent=styles['Normal'],
+                            fontSize=10,
+                            leading=14,
+                            spaceBefore=6,
+                            spaceAfter=6
+                        )
+                        
+                        # Create a DataGuardian Pro logo using ReportLab drawing
+                        logo_width, logo_height = int(1.5*inch), int(0.75*inch)
+                        logo = Drawing(logo_width, logo_height)
+                        
+                        # Add a shield shape
+                        shield = Rect(
+                            x=0.3*inch, y=0.1*inch, 
+                            width=0.4*inch, height=0.5*inch, 
+                            fillColor=colors.HexColor('#1E5288'),
+                            strokeColor=None
+                        )
+                        logo.add(shield)
+                        
+                        # Add data lines to represent scanning
+                        for i in range(3):
+                            y_pos = 0.2*inch + i*0.12*inch
+                            line = Line(
+                                x1=0.4*inch, y1=y_pos,
+                                x2=0.6*inch, y2=y_pos,
+                                strokeColor=colors.white,
+                                strokeWidth=2
+                            )
+                            logo.add(line)
+                        
+                        # Add a checkmark for compliance
+                        circle = Circle(
+                            cx=0.5*inch, cy=0.4*inch,
+                            r=0.12*inch,
+                            fillColor=colors.white,
+                            strokeColor=None
+                        )
+                        logo.add(circle)
+                        
+                        # Add company name
+                        company_name = String(
+                            x=0.75*inch, y=0.35*inch,
+                            text="DataGuardian Pro",
+                            fontSize=14,
+                            fillColor=colors.HexColor('#1E5288')
+                        )
+                        logo.add(company_name)
+                        
+                        # Initialize the story for the PDF
                         story = []
                         
-                        # Add report header
-                        title_style = ParagraphStyle(
-                            name='Title',
-                            parent=styles['Title'],
-                            fontSize=16,
-                            leading=20,
-                        )
+                        # Add report header with logo
+                        story.append(logo)
+                        story.append(Spacer(1, 0.1*inch))
                         story.append(Paragraph(f"{scan_data.get('scan_type', 'Compliance')} Report", title_style))
                         story.append(Spacer(1, 0.25*inch))
                         

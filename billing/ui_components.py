@@ -183,14 +183,43 @@ def render_payment_methods(subscription_data: Dict[str, Any]):
         </div>
         """, unsafe_allow_html=True)
     
-    # Update payment method button
+    # Display accepted payment methods
+    st.markdown("""
+    <div style="margin-top:15px; margin-bottom:10px;">
+        <div style="font-weight:500; margin-bottom:5px;">Accepted Payment Methods:</div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <div style="background-color:#1A1F71; color:white; padding:5px 10px; border-radius:5px; font-size:14px;">
+                VISA
+            </div>
+            <div style="background-color:#0066FF; color:white; padding:5px 10px; border-radius:5px; font-size:14px;">
+                iDEAL
+            </div>
+            <div style="background-color:#231F20; color:white; padding:5px 10px; border-radius:5px; font-size:14px;">
+                MasterCard
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Payment method action buttons
     if "stripe_customer_id" in st.session_state:
         customer_id = st.session_state["stripe_customer_id"]
-        if st.button("Update Payment Method", key="update_payment"):
-            portal_url = create_customer_portal_session(customer_id)
-            if portal_url:
-                st.markdown(f"[Click here to update your payment method]({portal_url})")
-                st.info("You'll be redirected to Stripe's secure portal.")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("Update Payment Method", key="update_payment"):
+                portal_url = create_customer_portal_session(customer_id)
+                if portal_url:
+                    st.markdown(f"[Click here to update your payment method]({portal_url})")
+                    st.info("You'll be redirected to Stripe's secure portal.")
+        
+        with col2:
+            if st.button("Add New Payment Method", key="add_payment"):
+                portal_url = create_customer_portal_session(customer_id, return_path="/customer/payment_methods")
+                if portal_url:
+                    st.markdown(f"[Click here to add a new payment method]({portal_url})")
+                    st.info("You'll be redirected to Stripe's secure portal.")
 
 def render_invoice_history(customer_id: Optional[str] = None):
     """
@@ -294,14 +323,21 @@ def render_plan_selection():
             else:
                 if st.button(f"Subscribe to {plan_data['name']}", key=f"subscribe_{plan_id}"):
                     if "stripe_customer_id" in st.session_state:
-                        # Create checkout session
+                        # Create checkout session with VISA and iDEAL support
                         customer_id = st.session_state["stripe_customer_id"]
                         price_id = plan_data.get("stripe_price_id")
                         
-                        checkout_url = create_checkout_session(customer_id, price_id)
+                        # Default to card and iDEAL for all subscriptions
+                        payment_methods = ['card', 'ideal']
+                        
+                        checkout_url = create_checkout_session(
+                            customer_id, 
+                            price_id, 
+                            payment_methods=payment_methods
+                        )
                         if checkout_url:
                             st.markdown(f"[Click here to complete your subscription]({checkout_url})")
-                            st.info("You'll be redirected to Stripe's secure checkout.")
+                            st.info("You'll be redirected to Stripe's secure checkout with VISA and iDEAL support.")
                     else:
                         st.error("You need to be logged in with a Stripe account to subscribe.")
             

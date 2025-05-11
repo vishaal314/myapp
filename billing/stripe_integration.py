@@ -132,7 +132,8 @@ def get_customer_subscription_data(customer_id: str) -> Dict[str, Any]:
 def create_checkout_session(
     customer_id: str, 
     price_id: str, 
-    mode: str = 'subscription'
+    mode: str = 'subscription',
+    payment_methods: List[str] = None
 ) -> Optional[str]:
     """
     Create a Stripe Checkout session
@@ -141,14 +142,20 @@ def create_checkout_session(
         customer_id: Stripe customer ID
         price_id: Stripe price ID for the selected plan
         mode: Checkout mode ('subscription' or 'payment')
+        payment_methods: List of payment methods to support (default: card, ideal)
         
     Returns:
         Checkout session URL if successful, None otherwise
     """
     try:
+        # Default payment methods (VISA is included in 'card')
+        if payment_methods is None:
+            payment_methods = ['card', 'ideal']
+        
+        # Create checkout session with specified payment methods
         checkout_session = stripe.checkout.Session.create(
             customer=customer_id,
-            payment_method_types=['card'],
+            payment_method_types=payment_methods,
             line_items=[{
                 'price': price_id,
                 'quantity': 1,
@@ -156,27 +163,56 @@ def create_checkout_session(
             mode=mode,
             success_url=SUCCESS_URL,
             cancel_url=CANCEL_URL,
+            # Add payment method options for better user experience
+            payment_method_options={
+                'card': {
+                    'setup_future_usage': 'off_session'  # For subscriptions
+                },
+                'ideal': {
+                    'setup_future_usage': 'off_session'  # For recurring iDEAL payments
+                }
+            }
         )
         return checkout_session.url
     except stripe.error.StripeError as e:
         st.error(f"Error creating checkout session: {str(e)}")
         return None
 
-def create_customer_portal_session(customer_id: str) -> Optional[str]:
+def create_customer_portal_session(customer_id: str, return_path: Optional[str] = None) -> Optional[str]:
     """
     Create a Stripe Customer Portal session
     
     Args:
         customer_id: Stripe customer ID
+        return_path: Optional specific path in the customer portal to direct to
         
     Returns:
         Portal session URL if successful, None otherwise
     """
     try:
-        session = stripe.billing_portal.Session.create(
-            customer=customer_id,
-            return_url=BASE_URL,
-        )
+        # Configure session parameters
+        portal_params = {
+            "customer": customer_id,
+            "return_url": BASE_URL,
+        }
+        
+        # Add configuration if a specific flow is requested
+        if return_path:
+            portal_params["configuration"] = stripe.billing_portal.Configuration.create(
+                features={
+                    "customer_update": {
+                        "enabled": True,
+                        "allowed_updates": ["email", "address", "shipping", "phone", "tax_id"],
+                    },
+                    "payment_method_update": {
+                        "enabled": True
+                    },
+                    "invoice_history": {"enabled": True},
+                }
+            )
+        
+        # Create the session
+        session = stripe.billing_portal.Session.create(**portal_params)
         return session.url
     except stripe.error.StripeError as e:
         st.error(f"Error creating customer portal session: {str(e)}")
