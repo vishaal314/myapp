@@ -1183,9 +1183,68 @@ def generate_gdpr_report(results):
     """
     
     footer_para = Paragraph(footer_text, styles['CertInfo'])
-    seal_text = Paragraph("CERTIFIED BY<br/><b>DataGuardian Pro</b>", styles['CertInfo'])
     
-    footer_table = Table([[footer_para, seal_text]], colWidths=[4.5*inch, 1.5*inch])
+    # Create a modern seal design with "CERTIFIED BY DataGuardian Pro" text
+    seal_buffer = BytesIO()
+    plt.figure(figsize=(3, 3), dpi=100)
+    
+    # Create a circular seal with gradient effect
+    circle1 = plt.Circle((0.5, 0.5), 0.45, color='#1E3A8A', alpha=0.8)  # Dark blue circle
+    circle2 = plt.Circle((0.5, 0.5), 0.43, color='white')  # White inner circle
+    circle3 = plt.Circle((0.5, 0.5), 0.40, color='#EBF4FF')  # Light blue inner circle
+    
+    ax = plt.gca()
+    ax.add_patch(circle1)
+    ax.add_patch(circle2)
+    ax.add_patch(circle3)
+    
+    # Add "CERTIFIED BY" text
+    plt.text(0.5, 0.65, "CERTIFIED BY", 
+             ha='center', va='center', 
+             fontsize=10, 
+             fontweight='bold', 
+             color='#1E3A8A',
+             family='sans-serif')
+    
+    # Add "DataGuardian Pro" text
+    plt.text(0.5, 0.5, "DataGuardian", 
+             ha='center', va='center', 
+             fontsize=12, 
+             fontweight='bold', 
+             color='#1E3A8A',
+             family='sans-serif')
+    
+    plt.text(0.5, 0.4, "Pro", 
+             ha='center', va='center', 
+             fontsize=10, 
+             fontweight='regular', 
+             color='#2563EB',
+             family='sans-serif')
+    
+    # Add certification date
+    date_text = datetime.now().strftime('%b %d, %Y')
+    plt.text(0.5, 0.25, date_text, 
+             ha='center', va='center', 
+             fontsize=8, 
+             color='#4B5563',
+             family='sans-serif')
+    
+    # Remove axes and set equal aspect ratio
+    plt.axis('off')
+    ax.set_aspect('equal')
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    
+    # Save to buffer
+    plt.savefig(seal_buffer, format='png', transparent=True, bbox_inches='tight')
+    seal_buffer.seek(0)
+    plt.close()
+    
+    # Add the seal image to the PDF
+    seal_img = Image(seal_buffer, width=1.5*inch, height=1.5*inch)
+    
+    # Create footer table with text and seal
+    footer_table = Table([[footer_para, seal_img]], colWidths=[4.5*inch, 1.5*inch])
     footer_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (1, 0), (1, 0), 'CENTER'),
