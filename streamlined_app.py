@@ -1073,11 +1073,7 @@ def render_scan_form():
                             "file_path": st.session_state.get("file_path", "")
                         }
                     
-                    # Get advanced options
-                    leakage_types = st.session_state.get("leakage_types", ["PII in Training Data", "PII in Model Output"])
-                    fairness_metrics = st.session_state.get("fairness_metrics", ["Disparate Impact"])
-                    explainability_checks = st.session_state.get("explainability_checks", ["Feature Importance", "Model Interpretability"])
-                    context = st.session_state.get("context", ["General"])
+                    # Advanced options already collected above
                     
                     # Process sample inputs from text area
                     sample_inputs_text = st.session_state.get("sample_inputs", "")
