@@ -10,6 +10,9 @@ import uuid
 from datetime import datetime
 import base64
 
+# Import enhanced AI model scanner
+from services.enhanced_ai_model_scanner import EnhancedAIModelScanner
+
 # Import RBAC components
 from access_control import (
     requires_permission,
@@ -858,6 +861,70 @@ def render_scan_form():
                 st.text_input("Azure DevOps URL", value="https://dev.azure.com/org/project", key="repo_url")
                 st.text_input("Project", value="example-project", key="project")
                 st.text_input("Branch", value="main", key="branch")
+        elif selected_scan == "AI Model Scanner":
+            # Model source selection
+            model_source = st.selectbox(
+                "Model Source",
+                ["Repository URL", "Model Hub", "API Endpoint", "Local File"],
+                key="model_source"
+            )
+            
+            # Model type selection
+            model_type = st.selectbox(
+                "Model Type",
+                ["ONNX", "TensorFlow", "PyTorch", "Linear Model", "Decision Tree", "Neural Network"],
+                key="model_type"
+            )
+            
+            # Source details based on selection
+            if model_source == "Repository URL":
+                st.text_input("Repository URL", value="https://github.com/example/model-repo", key="repo_url")
+                st.text_input("Branch", value="main", key="branch")
+            elif model_source == "Model Hub":
+                st.text_input("Hub URL", value="https://huggingface.co/model/example", key="hub_url")
+                st.text_input("Model Path", value="/path/to/model", key="repository_path")
+            elif model_source == "API Endpoint":
+                st.text_input("API Endpoint", value="https://api.example.com/v1/model", key="api_endpoint")
+                st.text_input("Model Path", value="/path/to/model", key="repository_path")
+            elif model_source == "Local File":
+                st.text_input("File Path", value="/path/to/local/model.onnx", key="file_path")
+            
+            # Advanced options in an expandable section
+            with st.expander("Advanced Analysis Options"):
+                st.multiselect(
+                    "PII Detection Types",
+                    ["PII in Training Data", "PII in Model Output", "PII in Model Parameters"],
+                    default=["PII in Training Data", "PII in Model Output"],
+                    key="leakage_types"
+                )
+                
+                st.multiselect(
+                    "Fairness Metrics",
+                    ["Disparate Impact", "Equal Opportunity", "Predictive Parity"],
+                    default=["Disparate Impact"],
+                    key="fairness_metrics"
+                )
+                
+                st.multiselect(
+                    "Explainability Checks",
+                    ["Feature Importance", "Decision Path", "Model Interpretability"],
+                    default=["Feature Importance", "Model Interpretability"],
+                    key="explainability_checks"
+                )
+                
+                st.multiselect(
+                    "Context",
+                    ["General", "Health", "Finance", "Education", "Employment"],
+                    default=["General"],
+                    key="context"
+                )
+                
+                sample_inputs = st.text_area(
+                    "Sample Inputs (one per line)",
+                    "",
+                    key="sample_inputs"
+                )
+        
         elif selected_scan == "Sustainability Scanner":
             # Provider selection
             provider = st.selectbox(
@@ -955,6 +1022,85 @@ def render_scan_form():
                 
                 # Perform the scan
                 results = scanner.scan_infrastructure(repo_url, repo_provider, **scan_config)
+            elif selected_scan == "AI Model Scanner":
+                # Use our enhanced AI model scanner
+                def update_progress(current, total, message):
+                    progress = min(current / total, 1.0)
+                    progress_bar.progress(progress)
+                    if message:
+                        st.info(message)
+                
+                try:
+                    # Create scanner instance with progress callback
+                    scanner = EnhancedAIModelScanner(region="Global")
+                    scanner.set_progress_callback(update_progress)
+                    
+                    # Get model source and details
+                    model_source = st.session_state.get("model_source", "Repository URL")
+                    model_type = st.session_state.get("model_type", "ONNX")
+                    
+                    # Prepare model details based on source
+                    model_details = {}
+                    if model_source == "Repository URL":
+                        model_details = {
+                            "repo_url": st.session_state.get("repo_url", ""),
+                            "branch_name": st.session_state.get("branch", "main")
+                        }
+                    elif model_source == "Model Hub":
+                        model_details = {
+                            "hub_url": st.session_state.get("hub_url", ""),
+                            "repository_path": st.session_state.get("repository_path", "")
+                        }
+                    elif model_source == "API Endpoint":
+                        model_details = {
+                            "api_endpoint": st.session_state.get("api_endpoint", ""),
+                            "repository_path": st.session_state.get("repository_path", "")
+                        }
+                    elif model_source == "Local File":
+                        model_details = {
+                            "file_path": st.session_state.get("file_path", "")
+                        }
+                    
+                    # Get advanced options
+                    leakage_types = st.session_state.get("leakage_types", ["PII in Training Data", "PII in Model Output"])
+                    fairness_metrics = st.session_state.get("fairness_metrics", ["Disparate Impact"])
+                    explainability_checks = st.session_state.get("explainability_checks", ["Feature Importance", "Model Interpretability"])
+                    context = st.session_state.get("context", ["General"])
+                    
+                    # Process sample inputs from text area
+                    sample_inputs_text = st.session_state.get("sample_inputs", "")
+                    sample_inputs = [line.strip() for line in sample_inputs_text.split("\n") if line.strip()]
+                    
+                    # Perform the enhanced AI model scan
+                    results = scanner.scan_model(
+                        model_source=model_source,
+                        model_details=model_details,
+                        model_type=model_type,
+                        leakage_types=leakage_types,
+                        fairness_metrics=fairness_metrics,
+                        explainability_checks=explainability_checks,
+                        sample_inputs=sample_inputs,
+                        context=context
+                    )
+                
+                except Exception as e:
+                    st.error(f"Error running AI Model scan: {str(e)}")
+                    results = {
+                        "scan_id": f"ERROR-{str(uuid.uuid4())[:8]}",
+                        "scan_type": "AI Model",
+                        "timestamp": datetime.now().isoformat(),
+                        "error": str(e),
+                        "findings": [{
+                            "id": f"ERROR-{str(uuid.uuid4())[:8]}",
+                            "type": "Scanner Error",
+                            "category": "Execution Failure",
+                            "description": f"AI Model scanner encountered an error: {str(e)}",
+                            "risk_level": "high",
+                            "location": "Scanner Execution"
+                        }],
+                        "status": "error"
+                    }
+                    
             elif selected_scan == "Sustainability Scanner":
                 # Import and use the sustainability scanner
                 try:
@@ -1008,6 +1154,256 @@ def render_scan_form():
                 soc2_scanner.display_soc2_scan_results(results)
             except Exception as e:
                 st.error(f"Error displaying SOC2 results: {str(e)}")
+                st.json(results)
+        elif selected_scan == "AI Model Scanner":
+            try:
+                # Display AI model scan results
+                st.subheader("AI Model Scan Results")
+                
+                # Display scan metadata
+                st.markdown("### Scan Overview")
+                
+                # Create a grid for better organization
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown(f"**Scan ID:** {results.get('scan_id', 'Unknown')}")
+                    st.markdown(f"**Model Type:** {results.get('model_type', 'Unknown')}")
+                    st.markdown(f"**Scan Date:** {datetime.fromisoformat(results.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}")
+                
+                with col2:
+                    # Show the risk score with proper formatting
+                    risk_score = results.get("risk_score", 0)
+                    if risk_score >= 75:
+                        risk_color = "#ef4444"  # Red for high risk
+                        risk_text = "Critical"
+                    elif risk_score >= 50:
+                        risk_color = "#f97316"  # Orange for medium risk
+                        risk_text = "High"
+                    elif risk_score >= 25:
+                        risk_color = "#eab308"  # Yellow for moderate risk
+                        risk_text = "Medium"
+                    else:
+                        risk_color = "#10b981"  # Green for low risk
+                        risk_text = "Low"
+                    
+                    st.markdown(f"**Risk Level:** <span style='color:{risk_color};font-weight:bold'>{risk_text}</span>", unsafe_allow_html=True)
+                    
+                    # Display explainability score
+                    explainability_score = results.get("explainability_score", 0)
+                    if explainability_score >= 75:
+                        exp_color = "#10b981"  # Green for high explainability
+                        exp_text = "High"
+                    elif explainability_score >= 50:
+                        exp_color = "#eab308"  # Yellow for medium explainability
+                        exp_text = "Medium"
+                    else:
+                        exp_color = "#f97316"  # Orange for low explainability
+                        exp_text = "Low"
+                        
+                    st.markdown(f"**Explainability:** <span style='color:{exp_color};font-weight:bold'>{exp_text} ({explainability_score}/100)</span>", unsafe_allow_html=True)
+                
+                # Show model source information
+                st.markdown("### Model Source Information")
+                if results.get("model_source") == "Repository URL":
+                    st.markdown(f"**Repository URL:** {results.get('repository_url', 'Not specified')}")
+                    st.markdown(f"**Branch:** {results.get('branch', 'Not specified')}")
+                elif results.get("model_source") == "Model Hub":
+                    st.markdown(f"**Hub URL:** {results.get('model_name', 'Not specified')}")
+                    st.markdown(f"**Path:** {results.get('repository_path', 'Not specified')}")
+                elif results.get("model_source") == "API Endpoint":
+                    st.markdown(f"**API Endpoint:** {results.get('api_endpoint', 'Not specified')}")
+                    st.markdown(f"**Path:** {results.get('repository_path', 'Not specified')}")
+                elif results.get("model_source") == "Local File":
+                    st.markdown(f"**File Path:** {results.get('model_path', 'Not specified')}")
+                
+                # Display key findings summary
+                st.markdown("### Key Findings Summary")
+                
+                # Create metrics for PII, bias, and explainability findings
+                metric_cols = st.columns(4)
+                with metric_cols[0]:
+                    st.metric("Total Findings", len(results.get("findings", [])))
+                with metric_cols[1]:
+                    st.metric("High Risk Findings", results.get("high_risk_count", results.get("risk_counts", {}).get("high", 0)))
+                with metric_cols[2]:
+                    st.metric("Medium Risk Findings", results.get("medium_risk_count", results.get("risk_counts", {}).get("medium", 0)))
+                with metric_cols[3]:
+                    st.metric("Low Risk Findings", results.get("low_risk_count", results.get("risk_counts", {}).get("low", 0)))
+                
+                # Show PII and bias information
+                pii_detected = results.get("personal_data_detected", False)
+                bias_detected = results.get("bias_detected", False)
+                
+                st.markdown(f"**Personal Data Detected:** {'Yes' if pii_detected else 'No'}")
+                st.markdown(f"**Bias/Fairness Issues:** {'Yes' if bias_detected else 'No'}")
+                
+                # Display detailed findings in an expandable section
+                st.markdown("### Detailed Findings")
+                findings = results.get("findings", [])
+                
+                if findings:
+                    # Create tabs for different categories
+                    tab_names = ["All Findings", "PII Detection", "Model Bias", "Explainability", "Architecture", "Compliance"]
+                    tabs = st.tabs(tab_names)
+                    
+                    with tabs[0]:  # All Findings
+                        for i, finding in enumerate(findings):
+                            with st.expander(f"{finding.get('type', 'Finding')} - {finding.get('category', 'Unknown')} ({finding.get('risk_level', 'medium')})"):
+                                st.markdown(f"**Description:** {finding.get('description', 'No description')}")
+                                st.markdown(f"**Risk Level:** {finding.get('risk_level', 'medium')}")
+                                st.markdown(f"**Location:** {finding.get('location', 'Unknown')}")
+                                
+                                # Show finding details if available
+                                if "details" in finding and finding["details"]:
+                                    st.markdown("**Details:**")
+                                    details = finding["details"]
+                                    for key, value in details.items():
+                                        if isinstance(value, list):
+                                            st.markdown(f"**{key.capitalize()}:**")
+                                            for item in value:
+                                                st.markdown(f"- {item}")
+                                        else:
+                                            st.markdown(f"**{key.capitalize()}:** {value}")
+                    
+                    def filter_findings(category_type):
+                        return [f for f in findings if category_type.lower() in f.get("category", "").lower()]
+                    
+                    with tabs[1]:  # PII Detection
+                        pii_findings = filter_findings("PII")
+                        if pii_findings:
+                            for finding in pii_findings:
+                                with st.expander(f"{finding.get('type', 'Finding')} ({finding.get('risk_level', 'medium')})"):
+                                    st.markdown(f"**Description:** {finding.get('description', 'No description')}")
+                                    st.markdown(f"**Risk Level:** {finding.get('risk_level', 'medium')}")
+                                    st.markdown(f"**Location:** {finding.get('location', 'Unknown')}")
+                                    
+                                    # Show finding details if available
+                                    if "details" in finding and finding["details"]:
+                                        st.markdown("**Details:**")
+                                        details = finding["details"]
+                                        for key, value in details.items():
+                                            if isinstance(value, list):
+                                                st.markdown(f"**{key.capitalize()}:**")
+                                                for item in value:
+                                                    st.markdown(f"- {item}")
+                                            else:
+                                                st.markdown(f"**{key.capitalize()}:** {value}")
+                        else:
+                            st.info("No PII detection findings")
+                    
+                    with tabs[2]:  # Model Bias
+                        bias_findings = filter_findings("Bias")
+                        if bias_findings:
+                            for finding in bias_findings:
+                                with st.expander(f"{finding.get('type', 'Finding')} ({finding.get('risk_level', 'medium')})"):
+                                    st.markdown(f"**Description:** {finding.get('description', 'No description')}")
+                                    st.markdown(f"**Risk Level:** {finding.get('risk_level', 'medium')}")
+                                    st.markdown(f"**Location:** {finding.get('location', 'Unknown')}")
+                                    
+                                    # Show finding details if available
+                                    if "details" in finding and finding["details"]:
+                                        st.markdown("**Details:**")
+                                        details = finding["details"]
+                                        for key, value in details.items():
+                                            if isinstance(value, list):
+                                                st.markdown(f"**{key.capitalize()}:**")
+                                                for item in value:
+                                                    st.markdown(f"- {item}")
+                                            else:
+                                                st.markdown(f"**{key.capitalize()}:** {value}")
+                        else:
+                            st.info("No model bias findings")
+                            
+                    with tabs[3]:  # Explainability
+                        explainability_findings = filter_findings("Explainability")
+                        if explainability_findings:
+                            for finding in explainability_findings:
+                                with st.expander(f"{finding.get('type', 'Finding')} ({finding.get('risk_level', 'medium')})"):
+                                    st.markdown(f"**Description:** {finding.get('description', 'No description')}")
+                                    st.markdown(f"**Risk Level:** {finding.get('risk_level', 'medium')}")
+                                    st.markdown(f"**Location:** {finding.get('location', 'Unknown')}")
+                                    
+                                    # Show finding details if available
+                                    if "details" in finding and finding["details"]:
+                                        st.markdown("**Details:**")
+                                        details = finding["details"]
+                                        for key, value in details.items():
+                                            if isinstance(value, list):
+                                                st.markdown(f"**{key.capitalize()}:**")
+                                                for item in value:
+                                                    st.markdown(f"- {item}")
+                                            else:
+                                                st.markdown(f"**{key.capitalize()}:** {value}")
+                        else:
+                            st.info("No explainability findings")
+                            
+                    with tabs[4]:  # Architecture
+                        arch_findings = filter_findings("Architecture")
+                        if arch_findings:
+                            for finding in arch_findings:
+                                with st.expander(f"{finding.get('type', 'Finding')} ({finding.get('risk_level', 'medium')})"):
+                                    st.markdown(f"**Description:** {finding.get('description', 'No description')}")
+                                    st.markdown(f"**Risk Level:** {finding.get('risk_level', 'medium')}")
+                                    st.markdown(f"**Location:** {finding.get('location', 'Unknown')}")
+                                    
+                                    # Show finding details if available
+                                    if "details" in finding and finding["details"]:
+                                        st.markdown("**Details:**")
+                                        details = finding["details"]
+                                        for key, value in details.items():
+                                            if isinstance(value, list):
+                                                st.markdown(f"**{key.capitalize()}:**")
+                                                for item in value:
+                                                    st.markdown(f"- {item}")
+                                            else:
+                                                st.markdown(f"**{key.capitalize()}:** {value}")
+                        else:
+                            st.info("No architecture findings")
+                            
+                    with tabs[5]:  # Compliance
+                        compliance_findings = filter_findings("Compliance")
+                        if compliance_findings:
+                            for finding in compliance_findings:
+                                with st.expander(f"{finding.get('type', 'Finding')} ({finding.get('risk_level', 'medium')})"):
+                                    st.markdown(f"**Description:** {finding.get('description', 'No description')}")
+                                    st.markdown(f"**Risk Level:** {finding.get('risk_level', 'medium')}")
+                                    st.markdown(f"**Location:** {finding.get('location', 'Unknown')}")
+                                    
+                                    # Show finding details if available
+                                    if "details" in finding and finding["details"]:
+                                        st.markdown("**Details:**")
+                                        details = finding["details"]
+                                        for key, value in details.items():
+                                            if isinstance(value, list):
+                                                st.markdown(f"**{key.capitalize()}:**")
+                                                for item in value:
+                                                    st.markdown(f"- {item}")
+                                            else:
+                                                st.markdown(f"**{key.capitalize()}:** {value}")
+                        else:
+                            st.info("No compliance findings")
+                else:
+                    st.info("No findings were identified in this scan.")
+
+                # Display PDF report download if available
+                if "report_path" in results and results["report_path"]:
+                    try:
+                        with open(results["report_path"], "rb") as f:
+                            report_data = f.read()
+                            
+                        st.download_button(
+                            label="Download PDF Report",
+                            data=report_data,
+                            file_name=f"ai_model_scan_{results.get('scan_id', 'report')}.pdf",
+                            mime="application/pdf",
+                            key="download_ai_model_report"
+                        )
+                    except Exception as e:
+                        st.warning(f"Error loading PDF report: {str(e)}")
+                        
+            except Exception as e:
+                st.error(f"Error displaying AI Model scan results: {str(e)}")
                 st.json(results)
         elif selected_scan == "Sustainability Scanner":
             try:
