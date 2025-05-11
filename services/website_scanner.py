@@ -799,9 +799,19 @@ def display_website_scan_results(results):
             color = 'green' if val >= 90 else 'orange' if val >= 70 else 'red'
             return f'background-color: {color}; color: white'
         
-        # Apply styling and display
-        styled_df = df.style.format({'Score': '{:0.0f}%'}).applymap(color_score, subset=['Score'])
-        st.dataframe(styled_df)
+        # Format and display dataframe with styling
+        st.dataframe(
+            df,
+            column_config={
+                "Score": st.column_config.ProgressColumn(
+                    "Score",
+                    format="%d%%",
+                    min_value=0,
+                    max_value=100,
+                )
+            },
+            hide_index=True
+        )
     
     # Key findings
     st.subheader("Key Findings")

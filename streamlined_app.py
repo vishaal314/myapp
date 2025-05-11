@@ -1076,6 +1076,49 @@ def render_scan_form():
                 
                 # Perform the scan
                 results = scanner.scan_infrastructure(repo_url, repo_provider, **scan_config)
+            elif selected_scan == "Website Scanner":
+                # Define progress callback function
+                def update_progress(current, total, message):
+                    progress = min(current / total, 1.0)
+                    progress_bar.progress(progress)
+                    if message:
+                        st.info(message)
+                
+                try:
+                    # Create scanner instance with progress callback
+                    region = st.session_state.get("region", "EU")
+                    scanner = WebsiteScanner(region=region)
+                    scanner.set_progress_callback(update_progress)
+                    
+                    # Get website URL and name
+                    website_url = st.session_state.get("website_url", "")
+                    website_name = st.session_state.get("website_name", "")
+                    
+                    if not website_url:
+                        st.error("Please enter a website URL to scan")
+                        return
+                    
+                    # Set up scan configuration
+                    scan_config = {
+                        "compliance_areas": st.session_state.get("compliance_areas", []),
+                        "scan_depth": st.session_state.get("scan_depth", "Standard"),
+                        "include_screenshots": st.session_state.get("include_screenshots", False)
+                    }
+                    
+                    # Perform the scan
+                    results = scanner.scan_website(website_url, website_name, **scan_config)
+                    
+                except Exception as e:
+                    st.error(f"Error during website scan: {str(e)}")
+                    website_url = st.session_state.get("website_url", "Unknown website")
+                    results = {
+                        "scan_type": "Website Scanner",
+                        "scan_id": str(uuid.uuid4()),
+                        "timestamp": datetime.now().isoformat(),
+                        "website_url": website_url,
+                        "error": f"Scan failed: {str(e)}",
+                        "compliance_score": 0
+                    }
             elif selected_scan == "AI Model Scanner":
                 # Use our enhanced AI model scanner
                 def update_progress(current, total, message):
@@ -1214,6 +1257,13 @@ def render_scan_form():
                 soc2_scanner.display_soc2_scan_results(results)
             except Exception as e:
                 st.error(f"Error displaying SOC2 results: {str(e)}")
+                st.json(results)
+        elif selected_scan == "Website Scanner":
+            try:
+                # Use our website scanner display function
+                display_website_scan_results(results)
+            except Exception as e:
+                st.error(f"Error displaying website scan results: {str(e)}")
                 st.json(results)
         elif selected_scan == "AI Model Scanner":
             try:
