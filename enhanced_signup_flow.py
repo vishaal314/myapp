@@ -593,27 +593,31 @@ def render_login_page():
                 # Authenticate user
                 from access_control.user_management import authenticate_user, get_permissions_for_role
                 
-                success, user_data = authenticate_user(username, password)
-                
-                if success:
-                    # Set login session state
-                    st.session_state.logged_in = True
-                    st.session_state.username = username
-                    st.session_state.user_data = user_data
+                try:
+                    success, user_data = authenticate_user(username, password)
                     
-                    # Set role and permissions
-                    role = user_data.get("role", "user")
-                    permissions = get_permissions_for_role(role)
-                    st.session_state.user_role = role
-                    st.session_state.user_permissions = permissions
-                    
-                    st.success(f"Welcome back, {user_data.get('first_name', username)}!")
-                    
-                    # Redirect to dashboard
-                    st.session_state.current_view = "dashboard"
-                    st.rerun()
-                else:
-                    st.error("Invalid username or password.")
+                    if success and user_data:
+                        # Set login session state
+                        st.session_state.logged_in = True
+                        st.session_state.username = username
+                        st.session_state.user_data = user_data
+                        
+                        # Set role and permissions
+                        role = user_data.get("role", "user")
+                        permissions = get_permissions_for_role(role)
+                        st.session_state.user_role = role
+                        st.session_state.user_permissions = permissions
+                        
+                        first_name = user_data.get('first_name', username)
+                        st.success(f"Welcome back, {first_name}!")
+                        
+                        # Redirect to dashboard only if login successful
+                        st.session_state.current_view = "dashboard"
+                        st.rerun()
+                    else:
+                        st.error("Invalid username or password.")
+                except Exception as e:
+                    st.error(f"An error occurred during login: {str(e)}")
     
     # Password reset and signup links
     st.markdown("""
