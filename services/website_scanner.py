@@ -538,32 +538,32 @@ def generate_gdpr_report(results):
     styles = getSampleStyleSheet()
     elements = []
     
-    # Add custom styles
+    # Add custom styles with unique names
     styles.add(ParagraphStyle(
-        name='Title',
+        name='GDPRTitle',
         parent=styles['Heading1'],
         fontSize=16,
         spaceAfter=12
     ))
     
     styles.add(ParagraphStyle(
-        name='Subtitle',
+        name='GDPRSubtitle',
         parent=styles['Heading2'],
         fontSize=14,
         spaceAfter=10
     ))
     
     styles.add(ParagraphStyle(
-        name='Normal',
+        name='GDPRNormal',
         parent=styles['Normal'],
         fontSize=10,
         spaceAfter=6
     ))
     
     # Add title
-    elements.append(Paragraph(f"GDPR Compliance Report: {results['website_name']}", styles['Title']))
-    elements.append(Paragraph(f"Scan Date: {datetime.fromisoformat(results['timestamp']).strftime('%B %d, %Y')}", styles['Normal']))
-    elements.append(Paragraph(f"Scan ID: {results['scan_id']}", styles['Normal']))
+    elements.append(Paragraph(f"GDPR Compliance Report: {results['website_name']}", styles['GDPRTitle']))
+    elements.append(Paragraph(f"Scan Date: {datetime.fromisoformat(results['timestamp']).strftime('%B %d, %Y')}", styles['GDPRNormal']))
+    elements.append(Paragraph(f"Scan ID: {results['scan_id']}", styles['GDPRNormal']))
     elements.append(Spacer(1, 0.2*inch))
     
     # Add compliance score and status
@@ -611,7 +611,7 @@ def generate_gdpr_report(results):
     elements.append(Spacer(1, 0.2*inch))
     
     # Add executive summary
-    elements.append(Paragraph("Executive Summary", styles['Subtitle']))
+    elements.append(Paragraph("Executive Summary", styles['GDPRSubtitle']))
     total_issues = results.get('total_issues', 0)
     critical_issues = results.get('critical_issues', 0)
     high_risk = results.get('high_risk', 0)
@@ -630,11 +630,11 @@ def generate_gdpr_report(results):
     
     Please review the detailed findings and recommendations below to improve GDPR compliance.
     """
-    elements.append(Paragraph(summary_text, styles['Normal']))
+    elements.append(Paragraph(summary_text, styles['GDPRNormal']))
     elements.append(Spacer(1, 0.2*inch))
     
     # Add category scores
-    elements.append(Paragraph("Compliance by Category", styles['Subtitle']))
+    elements.append(Paragraph("Compliance by Category", styles['GDPRSubtitle']))
     
     # Create chart for category scores
     categories = []
@@ -662,14 +662,14 @@ def generate_gdpr_report(results):
     elements.append(Spacer(1, 0.2*inch))
     
     # Add detailed findings
-    elements.append(Paragraph("Detailed Findings", styles['Subtitle']))
+    elements.append(Paragraph("Detailed Findings", styles['GDPRSubtitle']))
     
     findings = results.get('findings', [])
     if findings:
         for category, data in results.get('categories', {}).items():
             category_findings = data.get('findings', [])
             if category_findings:
-                elements.append(Paragraph(f"{category.replace('_', ' ').title()} Issues", styles['Subtitle']))
+                elements.append(Paragraph(f"{category.replace('_', ' ').title()} Issues", styles['GDPRSubtitle']))
                 
                 findings_data = [["Severity", "Finding", "Recommendation"]]
                 for finding in category_findings:
@@ -716,10 +716,10 @@ def generate_gdpr_report(results):
                 elements.append(findings_table)
                 elements.append(Spacer(1, 0.2*inch))
     else:
-        elements.append(Paragraph("No specific findings were identified during the scan.", styles['Normal']))
+        elements.append(Paragraph("No specific findings were identified during the scan.", styles['GDPRNormal']))
     
     # Add recommendations section
-    elements.append(Paragraph("Key Recommendations", styles['Subtitle']))
+    elements.append(Paragraph("Key Recommendations", styles['GDPRSubtitle']))
     
     # Extract top recommendations based on severity
     top_recommendations = []
@@ -728,9 +728,9 @@ def generate_gdpr_report(results):
     
     if top_recommendations:
         for rec in top_recommendations:
-            elements.append(Paragraph(rec, styles['Normal']))
+            elements.append(Paragraph(rec, styles['GDPRNormal']))
     else:
-        elements.append(Paragraph("No specific recommendations available.", styles['Normal']))
+        elements.append(Paragraph("No specific recommendations available.", styles['GDPRNormal']))
     
     # Add certification footer
     elements.append(Spacer(1, 0.5*inch))
@@ -738,7 +738,7 @@ def generate_gdpr_report(results):
     Disclaimer: This report provides an assessment of GDPR compliance based on automated scanning. 
     It is not a substitute for legal advice. The findings should be reviewed by a qualified data protection professional.
     """
-    elements.append(Paragraph(disclaimer_text, styles['Normal']))
+    elements.append(Paragraph(disclaimer_text, styles['GDPRNormal']))
     
     # Build PDF
     doc.build(elements)
