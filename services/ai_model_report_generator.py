@@ -442,11 +442,11 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
     
     # Create a modern certificate-style header with enhanced logo
     try:
-        # Try multiple paths for logo with preference for SVG
+        # Use the clean logo without text for the report
         logo_paths = [
+            os.path.join(os.getcwd(), "static", "logo_clean.svg"),
             os.path.join(os.getcwd(), "static", "logo.svg"),
-            os.path.join(os.getcwd(), "static", "logo.png"),
-            os.path.join(os.getcwd(), "static", "logo.jpg")
+            os.path.join(os.getcwd(), "static", "logo.png")
         ]
         
         logo_image = None
@@ -486,16 +486,15 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
             # Add subtle styling for a certificate-like appearance
             elements.append(Spacer(1, 0.3*inch))
             
-            # Create a frame for the logo with a light background and border
+            # Create a cleaner frame for the logo without borders or background
             frame_data = [[logo_image]]
             logo_frame = Table(frame_data, colWidths=[6*inch])
             logo_frame.setStyle(TableStyle([
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('TOPPADDING', (0, 0), (-1, -1), 12),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-                ('BACKGROUND', (0, 0), (-1, -1), colors.white),
-                ('LINEBELOW', (0, 0), (-1, 0), 0.5, HexColor(BRANDING_COLORS["primary"])),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 18),
+                # No background or border for a cleaner look
             ]))
             elements.append(logo_frame)
             elements.append(Spacer(1, 0.3*inch))
@@ -511,10 +510,9 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
     # Create modern certificate-style title block with border and background
     elements.append(Spacer(1, 0.3*inch))
     
-    # Certificate border and background
+    # Certificate style - clean and minimal without borders
     cert_style = TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), HexColor("#f9fafb")),  # Light gray background
-        ('BOX', (0, 0), (-1, -1), 1, HexColor(BRANDING_COLORS["primary"])),  # Border
+        # No background for cleaner look
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('TOPPADDING', (0, 0), (-1, -1), 15),
@@ -622,11 +620,11 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
         )]
     ]
     
-    # Create a better styled table for the summary with subtle background
+    # Create a clean, minimal table for the summary without heavy styling
     summary_table = Table(summary_content, colWidths=[6*inch])
     summary_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), HexColor("#f8fafc")),  # Subtle light blue background
-        ('BOX', (0, 0), (-1, -1), 1, HexColor(BRANDING_COLORS["primary"])),  # Border
+        # No background or heavy borders for a cleaner look
+        ('LINEBELOW', (0, -1), (-1, -1), 0.25, colors.lightgrey),  # Just a subtle bottom line
         ('TOPPADDING', (0, 0), (-1, -1), 10),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
         ('LEFTPADDING', (0, 0), (-1, -1), 20),
@@ -688,14 +686,13 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
                 ParagraphStyle('ValueStyle', alignment=0, fontSize=9, spaceBefore=4, spaceAfter=4))
         ])
     
-    # Build a clean, modern details table
+    # Build a clean, modern details table with minimal styling
     details_table = Table(
         details_rows, 
         colWidths=[1.5*inch, 4*inch],
         style=TableStyle([
-            # Borders and shading
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-            ('BOX', (0, 0), (-1, -1), 1, HexColor(BRANDING_COLORS["primary"])),
+            # Minimal borders for cleaner look
+            ('LINEBELOW', (0, 0), (-1, -1), 0.25, colors.lightgrey),
             
             # Alignment
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -708,11 +705,7 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
             ('TOPPADDING', (0, 0), (-1, -1), 6),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
             
-            # Alternating row colors for better readability
-            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#f1f5f9')),  # Header row
-            ('BACKGROUND', (0, 2), (-1, 2), HexColor('#f1f5f9')),  # Even rows
-            ('BACKGROUND', (0, 4), (-1, 4), HexColor('#f1f5f9')),
-            ('BACKGROUND', (0, 6), (-1, 6), HexColor('#f1f5f9')),
+            # No background colors for cleaner look
         ])
     )
     elements.append(details_table)
