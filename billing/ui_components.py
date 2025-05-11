@@ -330,10 +330,14 @@ def render_plan_selection():
                         # Default to card and iDEAL for all subscriptions
                         payment_methods = ['card', 'ideal']
                         
+                        # Get currency from plan data
+                        currency = plan_data.get("currency", "EUR")
+                        
                         checkout_url = create_checkout_session(
                             customer_id, 
                             price_id, 
-                            payment_methods=payment_methods
+                            payment_methods=payment_methods,
+                            currency=currency.lower()  # Stripe prefers lowercase currency codes
                         )
                         if checkout_url:
                             st.markdown(f"[Click here to complete your subscription]({checkout_url})")

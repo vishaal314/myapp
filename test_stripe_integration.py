@@ -89,10 +89,11 @@ def test_checkout_session_creation():
             mode='subscription',
             success_url="https://example.com/success",
             cancel_url="https://example.com/cancel",
+            currency="eur"  # Specify EUR for iDEAL compatibility
         )
         
-        # Clean up (delete test resources)
-        price.delete()
+        # Clean up (no need to try to delete the price)
+        # Note: we can't delete prices in Stripe, they're archived
         customer.delete()
         
         print(f"✅ Successfully created checkout session with payment method types: {session.payment_method_types}")
@@ -158,6 +159,56 @@ def test_customer_portal_creation():
         print(f"❌ Failed to create customer portal session: {str(e)}")
         return False
 
+def test_checkout_with_ideal():
+    """Test creating a checkout session with iDEAL payment method"""
+    print("\nTesting checkout with iDEAL payment method...")
+    
+    # Set API key from environment variable
+    stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
+    
+    try:
+        # Create a test customer
+        customer = stripe.Customer.create(
+            email="test_ideal@example.com",
+            name="Test iDEAL Customer"
+        )
+        
+        # Create a test price
+        # NOTE: iDEAL only supports EUR currency
+        price = stripe.Price.create(
+            unit_amount=1500,  # €15.00
+            currency="eur",  # MUST be EUR for iDEAL
+            recurring={"interval": "month"},
+            product_data={"name": "iDEAL Test Subscription"}
+        )
+        
+        # Create a checkout session with iDEAL as the payment method
+        session = stripe.checkout.Session.create(
+            customer=customer.id,
+            payment_method_types=['ideal'],  # Only iDEAL
+            line_items=[{
+                'price': price.id,
+                'quantity': 1,
+            }],
+            mode='subscription',
+            success_url="https://example.com/success",
+            cancel_url="https://example.com/cancel",
+            currency="eur"  # MUST be EUR for iDEAL
+        )
+        
+        # Clean up test resources
+        # Note: Prices cannot be deleted, only archived
+        customer.delete()
+        
+        print(f"✅ Successfully created iDEAL checkout session: {session.id}")
+        print(f"  Payment method types: {session.payment_method_types}")
+        print(f"  Currency: {session.currency}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Failed to create iDEAL checkout session: {str(e)}")
+        return False
+
 def run_all_tests():
     """Run all stripe integration tests"""
     print("Running Stripe integration tests...\n")
@@ -177,7 +228,11 @@ def run_all_tests():
     if not test_checkout_session_creation():
         success = False
     
-    # Test 4: Customer portal creation
+    # Test 4: iDEAL-specific checkout test
+    if not test_checkout_with_ideal():
+        success = False
+    
+    # Test 5: Customer portal creation
     if not test_customer_portal_creation():
         success = False
         

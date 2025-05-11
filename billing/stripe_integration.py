@@ -173,7 +173,9 @@ def create_checkout_session(
                 'ideal': {
                     'setup_future_usage': 'off_session'  # For recurring iDEAL payments
                 }
-            }
+            },
+            # Specify currency (for any additional items or future one-time payments)
+            currency=currency
         )
         return checkout_session.url
     except stripe.error.StripeError as e:
