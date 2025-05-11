@@ -12,11 +12,11 @@ import json
 from typing import Dict, List, Any, Optional
 
 # Import RBAC components
-from access_control import (
+from access_control.rbac import (
     requires_permission,
-    requires_role,
-    render_user_management
+    requires_role
 )
+from access_control.user_management import render_user_management
 
 @requires_role("admin")
 def render_admin_panel():

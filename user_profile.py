@@ -13,11 +13,11 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 # Import RBAC components
-from access_control import (
-    ROLES,
+from access_control.rbac import (
     get_user_permissions,
     render_permission_ui
 )
+from access_control.roles_config import ROLES
 
 def render_user_profile_page():
     """
