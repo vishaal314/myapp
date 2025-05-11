@@ -49,6 +49,26 @@ if not logger.handlers:
     except Exception as e:
         print(f"Error setting up logger: {str(e)}")
 
+# Helper function to determine security level based on risk score
+def get_security_level(risk_score: int) -> str:
+    """
+    Determine the security certification level based on risk score
+    
+    Args:
+        risk_score: The risk score (0-100)
+        
+    Returns:
+        Security level string
+    """
+    if risk_score < 25:
+        return "AAA (Excellent)"
+    elif risk_score < 50:
+        return "AA (Very Good)"
+    elif risk_score < 75:
+        return "A (Good)"
+    else:
+        return "B (Needs Improvement)"
+
 # Define color palette for consistent branding
 BRANDING_COLORS = {
     "primary": "#4f46e5",     # Primary brand color
@@ -420,71 +440,189 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
         spaceAfter=6
     )
     
-    # Add logo and header
+    # Create a professional certificate-style header
+    # First, create a header table with logo and title
     try:
-        logo_path = os.path.join(os.getcwd(), "static", "logo.png")
-        if os.path.exists(logo_path):
-            logo = Image(logo_path, width=1.5*inch, height=0.5*inch)
-            elements.append(logo)
+        # Try multiple paths for logo
+        logo_paths = [
+            os.path.join(os.getcwd(), "static", "logo.png"),
+            os.path.join(os.getcwd(), "static", "logo.svg"),
+            os.path.join(os.getcwd(), "static", "logo.jpg")
+        ]
+        
+        logo_image = None
+        for path in logo_paths:
+            if os.path.exists(path):
+                # Create larger logo for certificate style
+                logo_image = Image(path, width=2.5*inch, height=1*inch)
+                break
+                
+        if logo_image:
+            # Create a centered table for logo and title
+            header_data = [[logo_image]]
+            header_table = Table(header_data, colWidths=[6*inch])
+            header_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]))
+            elements.append(header_table)
         else:
-            logger.warning(f"Logo file not found at {logo_path}")
-            # Create text-based header as fallback
-            elements.append(Paragraph("DataGuardian Pro", title_style))
+            logger.warning("Logo file not found in any of the expected locations")
+            # Create text-based header as fallback with certificate styling
+            header_text = Paragraph(
+                '<font size="24" color="#4f46e5"><b>DataGuardian Pro</b></font>', 
+                styles['Title']
+            )
+            elements.append(header_text)
     except Exception as e:
         logger.error(f"Error adding logo: {str(e)}")
         # Create text-based header as fallback
-        elements.append(Paragraph("DataGuardian Pro", title_style))
+        header_text = Paragraph(
+            '<font size="24" color="#4f46e5"><b>DataGuardian Pro</b></font>', 
+            styles['Title']
+        )
+        elements.append(header_text)
     
-    # Add report title
-    elements.append(Paragraph("AI Model Risk Analysis Report", title_style))
-    elements.append(Paragraph(f"Generated on {timestamp_str}", subtitle_style))
+    # Add certificate-like title with decorative elements
+    elements.append(Spacer(1, 0.3*inch))
+    
+    elements.append(Paragraph(
+        '<font size="18">AI Model Security Certification</font>', 
+        ParagraphStyle(
+            'CertificateTitle',
+            parent=styles['Title'],
+            alignment=1,  # Center alignment
+            textColor=HexColor(BRANDING_COLORS["primary"]),
+        )
+    ))
+    
+    # Add decorative line
+    elements.append(Spacer(1, 0.1*inch))
+    line = Drawing(400, 10)
+    line.add(Line(
+        50, 5, 350, 5, 
+        strokeColor=HexColor(BRANDING_COLORS["secondary"]),
+        strokeWidth=2
+    ))
+    elements.append(line)
+    
+    # Add report subtitle
+    elements.append(Spacer(1, 0.1*inch))
+    elements.append(Paragraph(
+        f"Risk Analysis Report • Generated on {timestamp_str}", 
+        ParagraphStyle(
+            'CertificateSubtitle',
+            parent=subtitle_style,
+            alignment=1,  # Center alignment
+        )
+    ))
     
     # Add horizontal line
     elements.append(Spacer(1, 0.1*inch))
     elements.append(HorizontalRule())
     elements.append(Spacer(1, 0.2*inch))
     
-    # Executive summary section
-    elements.append(Paragraph("Executive Summary", heading_style))
+    # Executive summary section with certificate-like styling
+    elements.append(
+        Paragraph(
+            '<font size="14" color="#4f46e5">Executive Summary</font>',
+            ParagraphStyle(
+                'CertHeading',
+                parent=heading_style,
+                alignment=1,  # Center
+                spaceBefore=12,
+                spaceAfter=10,
+            )
+        )
+    )
     
-    # Summary text
+    # Create a boxed summary
+    elements.append(Spacer(1, 0.1*inch))
+    
+    # Summary text with better formatting
     summary_text = f"""
-    This report presents the findings of an AI model risk assessment conducted on {timestamp_str}.
-    The assessment evaluated a {model_type} model from {model_source} for privacy risks, bias concerns,
-    and explainability issues. The analysis identified a total of {len(findings)} findings across
-    multiple risk categories.
+    <para alignment="center">
+    This document certifies that a comprehensive AI model risk assessment has been conducted
+    on <b>{timestamp_str}</b> by <b>DataGuardian Pro</b>.
+    </para>
+    <para alignment="center">
+    The assessment evaluated a <b>{model_type}</b> model from <b>{model_source}</b> for privacy risks,
+    bias concerns, and explainability issues in accordance with industry best practices and regulatory guidelines.
+    </para>
+    <para alignment="center">
+    The analysis identified a total of <b>{len(findings)}</b> findings across multiple risk categories,
+    resulting in a risk score of <b>{risk_score}/100</b>.
+    </para>
     """
-    elements.append(Paragraph(summary_text, body_style))
     
-    # Create 2-column layout for summary metrics
-    summary_data = [
-        ["Scan ID:", scan_id],
-        ["Model Type:", model_type],
-        ["Model Source:", model_source],
-        ["Scan Date:", timestamp_str],
-        ["Risk Score:", f"{risk_score}/100"],
-        ["Total Findings:", str(len(findings))],
+    # Create boxed summary
+    summary_style = ParagraphStyle(
+        'SummaryText',
+        parent=body_style,
+        alignment=1,  # Center
+        borderWidth=1,
+        borderColor=HexColor(BRANDING_COLORS["secondary"]),
+        borderPadding=10,
+        backColor=HexColor("#F8FAFC"),  # Light background for the box
+        spaceBefore=5,
+        spaceAfter=15,
+    )
+    elements.append(Paragraph(summary_text, summary_style))
+    
+    # Create certification details with a clean, modern table
+    cert_data = []
+    
+    # Title row
+    cert_data.append([Paragraph("<b>CERTIFICATION DETAILS</b>",
+                     ParagraphStyle('TableHeader', parent=body_style, alignment=1))])
+    
+    # Details in two-column format
+    details = [
+        ["Certificate ID", scan_id],
+        ["Model Type", model_type],
+        ["Security Level", get_security_level(risk_score)],
+        ["Certification Date", timestamp_str],
+        ["Validity Period", "1 year from issue date"],
     ]
     
     # Add repository information if available
     if model_source == "Repository URL":
-        summary_data.append(["Repository URL:", scan_data.get('repository_url', 'Not specified')])
-        summary_data.append(["Branch:", scan_data.get('branch', 'Not specified')])
+        details.append(["Repository URL", scan_data.get('repository_url', 'Not specified')])
+        details.append(["Branch", scan_data.get('branch', 'Not specified')])
     
-    # Create summary table
-    summary_table = Table(summary_data, colWidths=[1.5*inch, 4*inch])
-    summary_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), HexColor(BRANDING_COLORS["primary"])),
-        ('TEXTCOLOR', (0, 0), (0, -1), colors.white),
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+    # Create a nice 2-column layout with alternating colors
+    for i, (label, value) in enumerate(details):
+        bg_color = "#F8FAFC" if i % 2 == 0 else "#FFFFFF"  # Alternating row colors
+        cert_data.append([
+            Table(
+                [[
+                    Paragraph(f"<b>{label}:</b>", body_style),
+                    Paragraph(f"{value}", body_style)
+                ]], 
+                colWidths=[1.5*inch, 4*inch],
+                style=TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), HexColor(bg_color)),
+                    ('ALIGN', (0, 0), (0, 0), 'RIGHT'),
+                    ('ALIGN', (1, 0), (1, 0), 'LEFT'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                    ('TOPPADDING', (0, 0), (-1, -1), 5),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                ])
+            )
+        ])
+    
+    # Assemble the entire certification details table
+    cert_table = Table(cert_data, colWidths=[6*inch])
+    cert_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('PADDING', (0, 0), (-1, -1), 6),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BOX', (0, 0), (-1, -1), 1, HexColor(BRANDING_COLORS["primary"])),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, HexColor(BRANDING_COLORS["primary"])),
+        ('BACKGROUND', (0, 0), (-1, 0), HexColor(BRANDING_COLORS["primary"])),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
     ]))
-    
-    elements.append(summary_table)
+    elements.append(cert_table)
     elements.append(Spacer(1, 0.2*inch))
     
     # Risk assessment summary with visual meter
