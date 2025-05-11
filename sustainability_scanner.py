@@ -1118,6 +1118,12 @@ def display_sustainability_scan_results(scan_results):
     scan_results["medium_risk"] = len(medium_risk)
     scan_results["low_risk"] = len(low_risk)
     
+    # Verify that the sum of risk categories matches total_findings
+    risk_sum = len(high_risk) + len(medium_risk) + len(low_risk)
+    if risk_sum != len(findings):
+        st.warning(f"Warning: Risk category sum ({risk_sum}) does not match total findings ({len(findings)})")
+        # This is a development warning and will be removed in production
+    
     col1, col2, col3 = st.columns(3)
     
     with col1:

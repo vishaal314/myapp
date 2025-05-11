@@ -1053,6 +1053,7 @@ def render_reports_section():
                 - **Overall Compliance Score:** {scan_data.get('compliance_score', 0)}%
                 
                 ### Key Findings
+                Total: {scan_data.get('total_findings', scan_data.get('findings_count', 0))} findings ({scan_data.get('high_risk', 0)} high, {scan_data.get('medium_risk', 0)} medium, {scan_data.get('low_risk', 0)} low risk)
                 """)
                 
                 # Display findings in a table with safe access
@@ -1064,7 +1065,7 @@ def render_reports_section():
                             "Title": finding.get("title", f"Finding {i+1}"),
                             "Severity": finding.get("severity", finding.get("risk_level", "medium")).upper(),
                             "Location": finding.get("location", finding.get("resource_type", "N/A"))
-                        } for i, finding in enumerate(findings[:5])  # Show top 5 findings
+                        } for i, finding in enumerate(findings)  # Show all findings
                     ])
                     st.dataframe(findings_df, use_container_width=True)
                 
@@ -1125,14 +1126,16 @@ def render_reports_section():
                         story.append(summary_table)
                         story.append(Spacer(1, 0.25*inch))
                         
-                        # Add findings section
+                        # Add findings section with counts
                         story.append(Paragraph("Key Findings", styles['Heading2']))
+                        story.append(Paragraph(f"Total: {scan_data.get('total_findings', scan_data.get('findings_count', 0))} findings ({scan_data.get('high_risk', 0)} high, {scan_data.get('medium_risk', 0)} medium, {scan_data.get('low_risk', 0)} low risk)", styles['Normal']))
+                        story.append(Spacer(1, 0.15*inch))
                         
                         if findings:
                             # Create findings table data
                             findings_table_data = [['ID', 'Title', 'Severity', 'Location']]
                             
-                            for i, finding in enumerate(findings[:5]):  # Show top 5 findings
+                            for i, finding in enumerate(findings):  # Show all findings
                                 findings_table_data.append([
                                     finding.get('id', f"FIND-{i+1}"),
                                     finding.get('title', f"Finding {i+1}"),
