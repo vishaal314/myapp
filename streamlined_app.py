@@ -261,11 +261,11 @@ def authenticate(username, password):
     """Authenticate a user with username and password"""
     import json
     import hashlib
+    from access_control.user_management import load_users
     
     try:
-        # Load users from JSON file
-        with open("users.json", "r") as f:
-            users = json.load(f)
+        # Load users from the user management system
+        users = load_users()
         
         # Check if username exists
         if username in users:
@@ -277,19 +277,23 @@ def authenticate(username, password):
             # Check if password matches (in production, use secure password hashing)
             # For this demo, we'll also allow "password" for any account
             if user_data["password_hash"] == password_hash or password == "password":
+                # Get user role and permissions from RBAC system
+                role = user_data.get("role", "viewer")
+                permissions = get_permissions_for_role(role)
+                
                 # Create result with user data, including subscription information
                 result = {
                     "username": username,
-                    "role": user_data.get("role", "viewer"),
+                    "role": role,
                     "email": user_data.get("email", f"{username}@dataguardian.pro"),
-                    "permissions": get_permissions_for_role(user_data.get("role", "viewer")),
+                    "permissions": permissions,
                     
                     # Add subscription data
                     "subscription_tier": user_data.get("subscription_tier", "basic"),
                     "subscription_active": user_data.get("subscription_active", True),
                     "stripe_customer_id": user_data.get("stripe_customer_id"),
                     "subscription_id": user_data.get("subscription_id"),
-                    "user_id": user_data.get("user_id"),
+                    "user_id": user_data.get("user_id", str(uuid.uuid4())),
                     "subscription_renewal_date": user_data.get("subscription_renewal_date")
                 }
                 return result
@@ -661,8 +665,9 @@ def render_landing_page():
 # DASHBOARD COMPONENTS
 # =============================================================================
 
+@requires_permission("dashboard:view_metrics")
 def render_summary_metrics():
-    """Render summary metrics for the dashboard"""
+    """Render summary metrics for the dashboard with permission control"""
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(label="Total Scans", value=random.randint(10, 100))
@@ -673,8 +678,9 @@ def render_summary_metrics():
     with col4:
         st.metric(label="Risk Score", value=f"{random.randint(10, 40)}/100")
 
+@requires_permission("dashboard:view_scan_history")
 def render_scan_history():
-    """Render scan history table"""
+    """Render scan history table with permission control"""
     st.subheader("Recent Scans")
     if not st.session_state.scan_history:
         st.info("No scan history available. Run a scan to see results here.")
@@ -891,8 +897,9 @@ def render_scan_form():
         else:
             st.json(results)
 
+@requires_permission("reports:view")
 def render_reports_section():
-    """Render reports section"""
+    """Render reports section with permission control"""
     st.subheader("Compliance Reports")
     
     if not st.session_state.scan_history:
