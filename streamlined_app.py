@@ -10,6 +10,20 @@ import uuid
 from datetime import datetime
 import base64
 
+# Import RBAC components
+from access_control import (
+    requires_permission,
+    requires_role,
+    check_permission,
+    check_role,
+    render_access_denied,
+    get_user_permissions
+)
+
+# Import admin panel and user profile
+from admin_panel import render_admin_panel
+from user_profile import render_user_profile_page
+
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
