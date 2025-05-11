@@ -1065,6 +1065,13 @@ def display_sustainability_scan_results(scan_results):
             }
         ]
         
+        # Update scan_results with default findings for consistency in reports
+        scan_results["findings"] = findings
+        scan_results["total_findings"] = len(findings)
+        scan_results["high_risk"] = sum(1 for f in findings if f.get("risk_level") == "high")
+        scan_results["medium_risk"] = sum(1 for f in findings if f.get("risk_level") == "medium")
+        scan_results["low_risk"] = sum(1 for f in findings if f.get("risk_level") == "low")
+        
     # Group findings by risk level
     high_risk = [f for f in findings if f.get("risk_level") == "high"]
     medium_risk = [f for f in findings if f.get("risk_level") == "medium"]
@@ -1103,6 +1110,13 @@ def display_sustainability_scan_results(scan_results):
             "category": "configuration"
         }]
         findings.extend(low_risk)
+    
+    # Update scan_results with the updated findings after adding fallbacks
+    scan_results["findings"] = findings
+    scan_results["total_findings"] = len(findings)
+    scan_results["high_risk"] = len(high_risk)
+    scan_results["medium_risk"] = len(medium_risk)
+    scan_results["low_risk"] = len(low_risk)
     
     col1, col2, col3 = st.columns(3)
     

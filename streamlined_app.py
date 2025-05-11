@@ -1062,8 +1062,8 @@ def render_reports_section():
                         {
                             "ID": finding.get("id", f"FIND-{i+1}"),
                             "Title": finding.get("title", f"Finding {i+1}"),
-                            "Severity": finding.get("severity", "medium").upper(),
-                            "Location": finding.get("location", "N/A")
+                            "Severity": finding.get("severity", finding.get("risk_level", "medium")).upper(),
+                            "Location": finding.get("location", finding.get("resource_type", "N/A"))
                         } for i, finding in enumerate(findings[:5])  # Show top 5 findings
                     ])
                     st.dataframe(findings_df, use_container_width=True)
