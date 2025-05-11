@@ -665,8 +665,9 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
     def add_page_number(canvas, doc):
         canvas.saveState()
         canvas.setFont('Helvetica', 9)
-        canvas.drawString(inch, 0.5 * inch, f"Page {doc.page} of {doc.pageCount}")
-        canvas.drawRightString(doc.width + inch, 0.5 * inch, "DataGuardian Pro")
+        # Use page number but don't reference pageCount which isn't available
+        canvas.drawString(inch, 0.5 * inch, f"Page {canvas.getPageNumber()}")
+        canvas.drawRightString(7 * inch, 0.5 * inch, "DataGuardian Pro")
         canvas.restoreState()
     
     # Build the PDF document
@@ -715,8 +716,13 @@ class HorizontalRule(Flowable):
         # Calculate width based on available width if needed
         if self.use_full_width:
             self.width = availWidth
-        # Always return integers for width and height
-        return (int(self.width), int(self.thickness))
+        
+        # Make sure width is always an int
+        calculated_width = int(self.width) if self.width is not None else int(availWidth)
+        calculated_height = int(self.thickness)
+        
+        # Return tuple of integers
+        return (calculated_width, calculated_height)
         
     def draw(self):
         self.canv.setStrokeColor(self.color)

@@ -1165,13 +1165,15 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     Returns:
         The PDF report as bytes
     """
+    # Initialize logger at the beginning of the function to ensure it's available throughout
+    import logging
+    logger = logging.getLogger("report_generator")
+    
     # Special case handling for specialized report formats
     if report_format == "pcidss":
         try:
             # Import PCI DSS specialized report generator
             import traceback
-            import logging
-            logger = logging.getLogger("report_generator")
             logger.info(f"Using specialized PCI DSS report template")
             
             from services.report_templates.pcidss_report_template import generate_pcidss_report
