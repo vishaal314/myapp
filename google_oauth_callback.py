@@ -25,11 +25,11 @@ def process_google_oauth_callback():
         True if successful authentication, False otherwise
     """
     # Get current URL parameters
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params
     
     # Check if we have a code and state from Google OAuth
-    code = query_params.get("code", [None])[0]
-    state = query_params.get("state", [None])[0]
+    code = query_params.get("code")
+    state = query_params.get("state")
     
     if not code or not state:
         st.warning("Missing authentication parameters. Please try again.")

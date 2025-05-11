@@ -1893,7 +1893,7 @@ def main():
     )
     
     # Check for Google OAuth callback
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params
     if "code" in query_params and "state" in query_params and not st.session_state.get("logged_in", False):
         from google_oauth_callback import process_google_oauth_callback
         process_google_oauth_callback()
