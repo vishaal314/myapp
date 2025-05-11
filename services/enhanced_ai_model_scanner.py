@@ -51,6 +51,77 @@ class EnhancedAIModelScanner(AIModelScanner):
                 self.logger.addHandler(file_handler)
             except Exception as e:
                 print(f"Error setting up logger: {str(e)}")
+    
+    def _calculate_risk_metrics(self, findings: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Calculate risk metrics based on findings
+        
+        Args:
+            findings: List of findings from the scan
+        
+        Returns:
+            Dictionary with risk metrics
+        """
+        # Count findings by risk level
+        risk_counts = {
+            "critical": 0,
+            "high": 0, 
+            "medium": 0,
+            "low": 0
+        }
+        
+        for finding in findings:
+            risk_level = finding.get("risk_level", "").lower()
+            if risk_level in risk_counts:
+                risk_counts[risk_level] += 1
+        
+        # Calculate risk score (lower is better, since 0 would be perfect security with no risks)
+        # Weighted calculation: critical findings have highest impact, followed by high, medium, low
+        weights = {
+            "critical": 25,
+            "high": 15,
+            "medium": 7,
+            "low": 3
+        }
+        
+        weighted_score = 0
+        for level, count in risk_counts.items():
+            weighted_score += count * weights[level]
+        
+        # Cap maximum score at 95 (we never want to show 100% risk)
+        weighted_score = min(weighted_score, 95)
+        
+        # Base score - even with no findings, there's some baseline risk
+        base_score = 5 if len(findings) == 0 else 0
+        
+        # Final risk score (higher = more risk)
+        risk_score = base_score + weighted_score
+        
+        # Determine severity level based on risk score
+        if risk_score >= 70:
+            severity_level = "critical"
+            severity_color = "#dc2626"  # Red
+        elif risk_score >= 40:
+            severity_level = "high"
+            severity_color = "#ef4444"  # Light red
+        elif risk_score >= 20:
+            severity_level = "medium"
+            severity_color = "#f59e0b"  # Orange
+        else:
+            severity_level = "low"
+            severity_color = "#10b981"  # Green
+        
+        return {
+            "risk_score": risk_score,
+            "severity_level": severity_level,
+            "severity_color": severity_color,
+            "risk_counts": risk_counts,
+            "total_findings": len(findings),
+            "critical_risk_count": risk_counts["critical"],
+            "high_risk_count": risk_counts["high"],
+            "medium_risk_count": risk_counts["medium"],
+            "low_risk_count": risk_counts["low"]
+        }
 
     def scan_model(
             self,
