@@ -586,25 +586,37 @@ def render_login_form():
     
     # Google Sign-In Option
     from access_control.google_auth import get_google_auth_url, login_with_google
+    import os
     
-    # Display Google login button
-    google_auth_url = get_google_auth_url()
-    st.markdown(f"""
-    <a href="{google_auth_url}" style="display: flex; align-items: center; justify-content: center; 
-        padding: 12px 16px; background-color: white; color: #333; border-radius: 8px;
-        border: 1px solid #e2e8f0; width: 100%; text-decoration: none; font-weight: 500;
-        transition: all 0.2s ease; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
-             alt="Google logo" style="height: 24px; margin-right: 12px;"> 
-        Sign in with Google
-    </a>
+    # Check if Google OAuth is configured
+    google_oauth_configured = bool(os.environ.get("GOOGLE_CLIENT_ID") and os.environ.get("GOOGLE_CLIENT_SECRET"))
     
-    <div style="display: flex; align-items: center; text-align: center; margin: 30px 0;">
-        <div style="flex: 1; border-bottom: 1px solid #e2e8f0;"></div>
-        <span style="padding: 0 10px; color: #a0aec0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">OR SIGN IN WITH EMAIL</span>
-        <div style="flex: 1; border-bottom: 1px solid #e2e8f0;"></div>
-    </div>
-    """, unsafe_allow_html=True)
+    if google_oauth_configured:
+        # Display Google login button if credentials are available
+        google_auth_url = get_google_auth_url()
+        st.markdown(f"""
+        <a href="{google_auth_url}" style="display: flex; align-items: center; justify-content: center; 
+            padding: 12px 16px; background-color: white; color: #333; border-radius: 8px;
+            border: 1px solid #e2e8f0; width: 100%; text-decoration: none; font-weight: 500;
+            transition: all 0.2s ease; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+                 alt="Google logo" style="height: 24px; margin-right: 12px;"> 
+            Sign in with Google
+        </a>
+        
+        <div style="display: flex; align-items: center; text-align: center; margin: 30px 0;">
+            <div style="flex: 1; border-bottom: 1px solid #e2e8f0;"></div>
+            <span style="padding: 0 10px; color: #a0aec0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">OR SIGN IN WITH EMAIL</span>
+            <div style="flex: 1; border-bottom: 1px solid #e2e8f0;"></div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # Show a simplified header for email login
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h3 style="font-size: 1.1rem; color: #4a5568;">Sign in with your account</h3>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Standard login form
     username = st.text_input("Username or Email", key="login_username", placeholder="Enter your username or email")

@@ -257,17 +257,29 @@ def render_enhanced_signup_page():
     elif current_step == 2:
         st.subheader("Create Your Account")
         
-        # Google signup button
-        google_auth_url = get_google_auth_url()
-        st.markdown(f"""
-        <a href="{google_auth_url}" class="google-btn">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
-                 alt="Google logo"> 
-            Sign up with Google
-        </a>
+        # Check if Google OAuth is configured
+        import os
+        google_oauth_configured = bool(os.environ.get("GOOGLE_CLIENT_ID") and os.environ.get("GOOGLE_CLIENT_SECRET"))
         
-        <div class="divider"><span class="divider-text">OR SIGN UP WITH EMAIL</span></div>
-        """, unsafe_allow_html=True)
+        if google_oauth_configured:
+            # Google signup button with OAuth available
+            google_auth_url = get_google_auth_url()
+            st.markdown(f"""
+            <a href="{google_auth_url}" class="google-btn">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+                     alt="Google logo"> 
+                Sign up with Google
+            </a>
+            
+            <div class="divider"><span class="divider-text">OR SIGN UP WITH EMAIL</span></div>
+            """, unsafe_allow_html=True)
+        else:
+            # Show a simplified header for email signup
+            st.markdown("""
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h3 style="font-size: 1.1rem; color: #4a5568;">Create your account with email</h3>
+            </div>
+            """, unsafe_allow_html=True)
         
         # Email registration form
         with st.form("signup_form"):
