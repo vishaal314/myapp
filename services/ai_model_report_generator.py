@@ -440,38 +440,77 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
         spaceAfter=6
     )
     
-    # Create a professional certificate-style header
-    # First, create a header table with logo and title
+    # Create a modern certificate-style header with enhanced logo
     try:
-        # Try multiple paths for logo
+        # Try multiple paths for logo with preference for SVG
         logo_paths = [
-            os.path.join(os.getcwd(), "static", "logo.png"),
             os.path.join(os.getcwd(), "static", "logo.svg"),
+            os.path.join(os.getcwd(), "static", "logo.png"),
             os.path.join(os.getcwd(), "static", "logo.jpg")
         ]
         
         logo_image = None
         for path in logo_paths:
             if os.path.exists(path):
-                # Create larger logo for certificate style
-                logo_image = Image(path, width=2.5*inch, height=1*inch)
-                break
+                try:
+                    # Use SVG when available for crisp rendering
+                    if path.endswith('.svg'):
+                        try:
+                            # Try to use cairosvg for better SVG rendering
+                            import cairosvg
+                            import tempfile
+                            
+                            # Create a temporary PNG file
+                            temp_png = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+                            temp_png.close()
+                            
+                            # Convert SVG to PNG with white background for better visibility
+                            cairosvg.svg2png(url=path, write_to=temp_png.name, background_color="white", 
+                                           output_width=600, output_height=240)
+                            
+                            # Use the converted PNG with proper dimensions
+                            logo_image = Image(temp_png.name, width=2*inch, height=0.8*inch)
+                        except ImportError:
+                            # Fallback to direct SVG loading if cairosvg not available
+                            logo_image = Image(path, width=2*inch, height=0.8*inch)
+                    else:
+                        # Use PNG or JPG with proper proportions
+                        logo_image = Image(path, width=2*inch, height=0.8*inch)
+                    break
+                except Exception as img_err:
+                    logger.debug(f"Could not load logo from {path}: {str(img_err)}")
+                    continue
                 
         if logo_image:
-            # Create a centered table for logo and title
-            header_data = [[logo_image]]
-            header_table = Table(header_data, colWidths=[6*inch])
-            header_table.setStyle(TableStyle([
+            # Create a modern header with logo in a bordered container
+            # Add subtle styling for a certificate-like appearance
+            elements.append(Spacer(1, 0.3*inch))
+            
+            # Create a frame for the logo with a light background and border
+            frame_data = [[logo_image]]
+            logo_frame = Table(frame_data, colWidths=[6*inch])
+            logo_frame.setStyle(TableStyle([
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, -1), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                ('BACKGROUND', (0, 0), (-1, -1), colors.white),
+                ('LINEBELOW', (0, 0), (-1, 0), 0.5, HexColor(BRANDING_COLORS["primary"])),
             ]))
-            elements.append(header_table)
+            elements.append(logo_frame)
+            elements.append(Spacer(1, 0.3*inch))
         else:
             logger.warning("Logo file not found in any of the expected locations")
-            # Create text-based header as fallback with certificate styling
+            # Create modern text-based header as fallback with enhanced styling
+            elements.append(Spacer(1, 0.3*inch))
             header_text = Paragraph(
                 '<font size="24" color="#4f46e5"><b>DataGuardian Pro</b></font>', 
-                styles['Title']
+                ParagraphStyle(
+                    'CertificateHeader',
+                    parent=styles['Title'],
+                    alignment=1,
+                    spaceAfter=16
+                )
             )
             elements.append(header_text)
     except Exception as e:
@@ -700,37 +739,64 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
         elements.append(Paragraph(category, subheading_style))
         
         # Create table of findings in this category
+        # Modern table design with improved readability
         finding_rows = [["ID", "Type", "Description", "Risk Level"]]
         
         for finding in category_findings:
-            # Truncate description if too long
+            # Truncate description if too long (shorter to prevent overlap)
             description = finding.get('description', 'No description')
-            if len(description) > 100:
-                description = description[:97] + "..."
+            if len(description) > 80:  # Reduced from 100 to prevent overflow
+                description = description[:77] + "..."
                 
             # Format risk level with color
             risk_level = finding.get('risk_level', 'low').lower()
             risk_color = RISK_COLORS.get(risk_level, RISK_COLORS["low"])
             
+            # Handle potential long IDs by truncating
+            finding_id = finding.get('id', '')
+            if len(finding_id) > 15:  # Limit ID length to prevent overflow
+                finding_id = finding_id[:12] + "..."
+            
             finding_rows.append([
-                finding.get('id', ''),
-                finding.get('type', ''),
+                finding_id,
+                finding.get('type', '')[:15],  # Limit type length
                 description,
                 risk_level.capitalize()
             ])
         
-        # Create findings table
-        findings_table = Table(finding_rows, colWidths=[0.8*inch, 1.2*inch, 3.5*inch, 0.8*inch])
+        # Create findings table with better proportions and spacing
+        findings_table = Table(
+            finding_rows, 
+            colWidths=[1.0*inch, 1.0*inch, 3.3*inch, 1.0*inch],
+            repeatRows=1  # Repeat header row on new pages
+        )
+        
+        # Modern table styling with better readability
         findings_table.setStyle(TableStyle([
+            # Header row styling
             ('BACKGROUND', (0, 0), (-1, 0), HexColor(BRANDING_COLORS["primary"])),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('PADDING', (0, 0), (-1, -1), 4),
+            
+            # Cell borders and padding
+            ('GRID', (0, 0), (-1, -1), 0.25, colors.lightgrey),  # Lighter grid lines
+            ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),  # Stronger outer border
+            ('PADDING', (0, 0), (-1, -1), 6),  # Increased padding for readability
+            
+            # Content alignment
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 1), (0, -1), 'LEFT'),  # ID column
+            ('ALIGN', (1, 1), (1, -1), 'LEFT'),  # Type column
+            ('ALIGN', (2, 1), (2, -1), 'LEFT'),  # Description column
+            ('ALIGN', (3, 1), (3, -1), 'CENTER'),  # Risk Level column
+            
+            # Font settings for content rows
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 8),
+            
+            # Alternating row colors for better readability
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ]))
         
         # Apply risk level colors - need to do this row by row
