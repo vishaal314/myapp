@@ -20,6 +20,7 @@ import trafilatura
 from urllib.parse import urlparse
 import tldextract
 import pandas as pd
+import numpy as np
 from io import BytesIO
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib import colors
@@ -525,7 +526,7 @@ class WebsiteScanner:
 
 def generate_gdpr_report(results):
     """
-    Generate a PDF report for GDPR compliance scan results
+    Generate a modern, certification-style PDF report for GDPR compliance scan results
     
     Args:
         results: The scan results dictionary
@@ -534,192 +535,359 @@ def generate_gdpr_report(results):
         BytesIO object containing the PDF report
     """
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    
+    # Use A4 landscape for a more modern look
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=A4,
+        leftMargin=1*cm,
+        rightMargin=1*cm,
+        topMargin=1.5*cm,
+        bottomMargin=1.5*cm
+    )
+    
     styles = getSampleStyleSheet()
     elements = []
     
-    # Add custom styles with unique names
+    # Add modern styles with unique names
     styles.add(ParagraphStyle(
-        name='GDPRTitle',
+        name='CertTitle',
         parent=styles['Heading1'],
-        fontSize=16,
+        fontSize=22,
+        fontName='Helvetica-Bold',
+        textColor=colors.darkblue,
+        alignment=1,  # Center alignment
         spaceAfter=12
     ))
     
     styles.add(ParagraphStyle(
-        name='GDPRSubtitle',
+        name='CertSubtitle',
         parent=styles['Heading2'],
-        fontSize=14,
+        fontSize=16,
+        fontName='Helvetica-Bold',
+        textColor=colors.darkblue,
+        alignment=0,  # Left alignment
+        borderWidth=0,
+        borderColor=colors.darkblue,
+        borderPadding=5,
         spaceAfter=10
     ))
     
     styles.add(ParagraphStyle(
-        name='GDPRNormal',
+        name='CertNormal',
         parent=styles['Normal'],
         fontSize=10,
-        spaceAfter=6
+        fontName='Helvetica',
+        spaceAfter=8
     ))
     
-    # Add title
-    elements.append(Paragraph(f"GDPR Compliance Report: {results['website_name']}", styles['GDPRTitle']))
-    elements.append(Paragraph(f"Scan Date: {datetime.fromisoformat(results['timestamp']).strftime('%B %d, %Y')}", styles['GDPRNormal']))
-    elements.append(Paragraph(f"Scan ID: {results['scan_id']}", styles['GDPRNormal']))
-    elements.append(Spacer(1, 0.2*inch))
+    styles.add(ParagraphStyle(
+        name='CertInfo',
+        parent=styles['Normal'],
+        fontSize=9,
+        fontName='Helvetica',
+        textColor=colors.grey,
+        alignment=1,  # Center alignment
+        spaceAfter=5
+    ))
+    
+    # Add title with modern certificate look
+    elements.append(Spacer(1, 0.25*inch))
+    elements.append(Paragraph("GDPR Compliance Certificate", styles['CertTitle']))
+    elements.append(Paragraph(f"For: {results['website_name']}", styles['CertSubtitle']))
+    
+    # Add certification box
+    elements.append(Spacer(1, 0.25*inch))
+    
+    # Display date and ID in certificate style
+    info_text = f"Scan performed on {datetime.fromisoformat(results['timestamp']).strftime('%B %d, %Y')}"
+    elements.append(Paragraph(info_text, styles['CertInfo']))
+    elements.append(Paragraph(f"Certificate ID: {results['scan_id']}", styles['CertInfo']))
+    elements.append(Spacer(1, 0.35*inch))
     
     # Add compliance score and status
     compliance_score = results.get('compliance_score', 0)
     compliance_status = results.get('compliance_status', 'Unknown')
     
-    # Create chart for compliance score
-    plt.figure(figsize=(5, 2))
-    plt.barh(["Compliance Score"], [compliance_score], color='green' if compliance_score >= 70 else 'orange' if compliance_score >= 50 else 'red')
-    plt.xlim(0, 100)
-    for i, v in enumerate([compliance_score]):
-        plt.text(v + 3, i, f"{v}%", va='center')
+    # Create a more certificate-like display for compliance status
+    status_color = colors.green if compliance_score >= 90 else colors.orange if compliance_score >= 70 else colors.red
+    
+    # Create a more modern, circular gauge for compliance score
+    plt.figure(figsize=(6, 3), facecolor='white')
+    ax = plt.subplot(111, polar=True)
+    
+    # Determine the color based on compliance score
+    color = 'green' if compliance_score >= 90 else 'orange' if compliance_score >= 70 else 'red'
+    
+    # Plot the gauge
+    theta = np.linspace(0, 2*np.pi, 100)
+    radii = np.ones_like(theta)
+    
+    # Background circle (light gray)
+    ax.plot(theta, radii, color='lightgray', linewidth=20, alpha=0.5)
+    
+    # Compliance progress arc
+    end_angle = 2*np.pi * (compliance_score / 100)
+    arc_theta = np.linspace(0, end_angle, 100)
+    arc_radii = np.ones_like(arc_theta)
+    ax.plot(arc_theta, arc_radii, color=color, linewidth=20, alpha=0.8)
+    
+    # Remove grid and axes
+    ax.grid(False)
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.set_yticks([])
+    
+    # Add compliance score in the center
+    ax.text(0, 0, f"{compliance_score}%", fontsize=24, fontweight='bold', color=color,
+            ha='center', va='center')
+    
+    # Add compliance status below
+    plt.figtext(0.5, 0.15, f"Status: {compliance_status}", fontsize=14, ha='center', color='darkblue')
+    
     plt.tight_layout()
     
     # Save chart to a BytesIO object
     chart_buffer = BytesIO()
-    plt.savefig(chart_buffer, format='png')
+    plt.savefig(chart_buffer, format='png', dpi=150, bbox_inches='tight')
     chart_buffer.seek(0)
     plt.close()
     
     # Add chart to PDF
-    img = Image(chart_buffer, width=4*inch, height=1.5*inch)
-    elements.append(img)
-    elements.append(Spacer(1, 0.1*inch))
+    score_img = Image(chart_buffer, width=4*inch, height=2.5*inch)
     
-    # Add compliance status table
-    status_color = 'green' if compliance_score >= 90 else 'orange' if compliance_score >= 70 else 'red'
-    status_data = [
-        ["Compliance Status", compliance_status]
-    ]
-    status_table = Table(status_data, colWidths=[2*inch, 3*inch])
-    status_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, 0), colors.lightgrey),
-        ('TEXTCOLOR', (0, 0), (0, 0), colors.black),
-        ('BACKGROUND', (1, 0), (1, 0), getattr(colors, status_color)),
-        ('TEXTCOLOR', (1, 0), (1, 0), colors.white),
+    # Create a table to hold the compliance score image
+    score_table = Table([[score_img]], colWidths=[6*inch])
+    score_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOX', (0, 0), (-1, -1), 1, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.white),
+        ('BOX', (0, 0), (-1, -1), 1, colors.lightgrey),
+        ('ROUNDEDCORNERS', [10, 10, 10, 10]),
     ]))
-    elements.append(status_table)
-    elements.append(Spacer(1, 0.2*inch))
     
-    # Add executive summary
-    elements.append(Paragraph("Executive Summary", styles['GDPRSubtitle']))
+    elements.append(score_table)
+    elements.append(Spacer(1, 0.3*inch))
+    
+    # Add executive summary in certificate style
+    elements.append(Paragraph("Certification Summary", styles['CertSubtitle']))
     total_issues = results.get('total_issues', 0)
     critical_issues = results.get('critical_issues', 0)
     high_risk = results.get('high_risk', 0)
     medium_risk = results.get('medium_risk', 0)
     low_risk = results.get('low_risk', 0)
     
+    # Create a more structured certificate-like summary
     summary_text = f"""
-    This report presents the findings of a GDPR compliance scan conducted on {results['website_name']} ({results['website_url']}).
-    The overall compliance score is {compliance_score}%, which indicates a {compliance_status.lower()} level of GDPR readiness.
+    This certificate validates that {results['website_name']} ({results['website_url']}) has been 
+    evaluated against GDPR compliance requirements and has achieved a compliance score of {compliance_score}%.
     
-    The scan identified a total of {total_issues} compliance issues:
-    - {critical_issues} critical issues
-    - {high_risk} high-risk issues
-    - {medium_risk} medium-risk issues
-    - {low_risk} low-risk issues
-    
-    Please review the detailed findings and recommendations below to improve GDPR compliance.
+    Based on this assessment, the website is considered {compliance_status.lower()} with GDPR requirements.
     """
-    elements.append(Paragraph(summary_text, styles['GDPRNormal']))
-    elements.append(Spacer(1, 0.2*inch))
+    elements.append(Paragraph(summary_text, styles['CertNormal']))
     
-    # Add category scores
-    elements.append(Paragraph("Compliance by Category", styles['GDPRSubtitle']))
+    # Create a table for compliance findings with modern styling
+    findings_data = [
+        ["Issue Type", "Count", "Impact"],
+        ["Critical Issues", str(critical_issues), "Immediate Action Required"],
+        ["High Risk Issues", str(high_risk), "Significant Concern"],
+        ["Medium Risk Issues", str(medium_risk), "Moderate Concern"],
+        ["Low Risk Issues", str(low_risk), "Minor Concern"],
+    ]
     
-    # Create chart for category scores
+    findings_table = Table(findings_data, colWidths=[2.5*inch, 1*inch, 2.5*inch])
+    findings_table.setStyle(TableStyle([
+        # Header row
+        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        
+        # Critical row
+        ('BACKGROUND', (0, 1), (-1, 1), colors.pink),
+        ('TEXTCOLOR', (0, 1), (-1, 1), colors.darkred),
+        
+        # High risk row
+        ('BACKGROUND', (0, 2), (-1, 2), colors.lavender),
+        ('TEXTCOLOR', (0, 2), (-1, 2), colors.darkblue),
+        
+        # Medium risk row
+        ('BACKGROUND', (0, 3), (-1, 3), colors.lightgrey),
+        ('TEXTCOLOR', (0, 3), (-1, 3), colors.black),
+        
+        # Low risk row
+        ('BACKGROUND', (0, 4), (-1, 4), colors.whitesmoke),
+        ('TEXTCOLOR', (0, 4), (-1, 4), colors.black),
+        
+        # Overall table styling
+        ('ALIGN', (1, 1), (1, -1), 'CENTER'),
+        ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+    ]))
+    
+    elements.append(findings_table)
+    elements.append(Spacer(1, 0.3*inch))
+    
+    # Add category scores in certificate style
+    elements.append(Paragraph("Compliance by Category", styles['CertSubtitle']))
+    
+    # Create modern chart for category scores
     categories = []
     scores = []
     for category, data in results.get('categories', {}).items():
         categories.append(category.replace('_', ' ').title())
         scores.append(data.get('score', 0))
     
-    plt.figure(figsize=(6, 3))
-    bars = plt.barh(categories, scores, color=['green' if s >= 90 else 'orange' if s >= 70 else 'red' for s in scores])
-    plt.xlim(0, 100)
+    # Create a modern horizontal bar chart with custom styling
+    plt.figure(figsize=(7, 4), facecolor='white')
+    
+    # Set color map for different score ranges
+    colors = ['#FF5252' if s < 70 else '#FFA726' if s < 90 else '#66BB6A' for s in scores]
+    
+    # Create the horizontal bar chart with rounded corners effect
+    bars = plt.barh(categories, scores, color=colors, height=0.6, edgecolor='white', linewidth=1)
+    
+    # Set chart limits and remove spines
+    plt.xlim(0, 105)
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
+    plt.gca().spines['bottom'].set_color('#DDDDDD')
+    plt.gca().spines['left'].set_color('#DDDDDD')
+    
+    # Add percentage labels
     for bar, score in zip(bars, scores):
-        plt.text(score + 3, bar.get_y() + bar.get_height()/2, f"{score}%", va='center')
+        plt.text(min(score + 5, 100), bar.get_y() + bar.get_height()/2, 
+                f"{score}%", va='center', fontweight='bold', 
+                color='#444444' if score >= 25 else 'white')
+    
+    # Set background grid for better readability
+    plt.grid(axis='x', linestyle='--', alpha=0.7, color='#DDDDDD')
+    plt.gca().set_axisbelow(True)
+    
+    # Add title
+    plt.title('Compliance Score by Category', fontsize=14, pad=20, color='#444444', fontweight='bold')
+    
+    # Tight layout for better spacing
     plt.tight_layout()
     
-    # Save chart to a BytesIO object
+    # Save chart to a BytesIO object with higher DPI for better quality
     cat_chart_buffer = BytesIO()
-    plt.savefig(cat_chart_buffer, format='png')
+    plt.savefig(cat_chart_buffer, format='png', dpi=150, bbox_inches='tight')
     cat_chart_buffer.seek(0)
     plt.close()
     
     # Add chart to PDF
-    cat_img = Image(cat_chart_buffer, width=5*inch, height=3*inch)
-    elements.append(cat_img)
-    elements.append(Spacer(1, 0.2*inch))
+    cat_img = Image(cat_chart_buffer, width=6*inch, height=3.5*inch)
     
-    # Add detailed findings
-    elements.append(Paragraph("Detailed Findings", styles['GDPRSubtitle']))
+    # Create a table to hold the chart with subtle styling
+    cat_table = Table([[cat_img]], colWidths=[6.5*inch])
+    cat_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    
+    elements.append(cat_table)
+    elements.append(Spacer(1, 0.3*inch))
+    
+    # Add detailed findings in certificate style
+    elements.append(Paragraph("Detailed Findings", styles['CertSubtitle']))
     
     findings = results.get('findings', [])
     if findings:
+        # Group findings by category and display in modern certificate format
         for category, data in results.get('categories', {}).items():
             category_findings = data.get('findings', [])
             if category_findings:
-                elements.append(Paragraph(f"{category.replace('_', ' ').title()} Issues", styles['GDPRSubtitle']))
+                # Add a category header with styling
+                category_name = category.replace('_', ' ').title()
                 
-                findings_data = [["Severity", "Finding", "Recommendation"]]
+                # Create custom style for category headers
+                category_style = ParagraphStyle(
+                    name=f'Cat_{category}',
+                    parent=styles['CertSubtitle'],
+                    fontSize=12,
+                    textColor=colors.darkblue,
+                    borderWidth=0,
+                    borderRadius=5,
+                    borderColor=colors.darkblue,
+                    borderPadding=10,
+                    backColor=colors.aliceblue,
+                    spaceAfter=10
+                )
+                
+                elements.append(Paragraph(f"{category_name} Issues", category_style))
+                
+                # Create modern finding cards instead of a traditional table
                 for finding in category_findings:
                     severity = finding.get('severity', 'unknown')
                     title = finding.get('title', 'Unknown Issue')
                     description = finding.get('description', '')
                     recommendation = finding.get('recommendation', '')
                     
-                    findings_data.append([
-                        severity.upper(),
-                        f"{title}\n{description}",
-                        recommendation
-                    ])
-                
-                findings_table = Table(findings_data, colWidths=[1*inch, 2.5*inch, 2.5*inch])
-                
-                # Add styling to table
-                table_style = [
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 10),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-                    ('BACKGROUND', (0, 1), (0, -1), colors.whitesmoke),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 8),
-                ]
-                
-                # Add severity-specific colors
-                for i, row in enumerate(findings_data[1:], 1):
-                    severity = row[0].lower()
+                    # Determine severity color
                     if severity == 'critical':
-                        table_style.append(('TEXTCOLOR', (0, i), (0, i), colors.red))
+                        severity_color = colors.red
+                        bg_color = colors.mistyrose
                     elif severity == 'high':
-                        table_style.append(('TEXTCOLOR', (0, i), (0, i), colors.orange))
+                        severity_color = colors.darkorange
+                        bg_color = colors.antiquewhite
                     elif severity == 'medium':
-                        table_style.append(('TEXTCOLOR', (0, i), (0, i), colors.darkgoldenrod))
+                        severity_color = colors.darkgoldenrod
+                        bg_color = colors.beige
                     elif severity == 'low':
-                        table_style.append(('TEXTCOLOR', (0, i), (0, i), colors.green))
+                        severity_color = colors.darkgreen
+                        bg_color = colors.lightgreen
+                    else:
+                        severity_color = colors.grey
+                        bg_color = colors.whitesmoke
+                    
+                    # Create a card-like table for each finding
+                    finding_title_style = ParagraphStyle(
+                        name=f'Finding_{finding.get("id", "unknown")}',
+                        parent=styles['CertNormal'],
+                        fontName='Helvetica-Bold',
+                        fontSize=10,
+                        textColor=severity_color
+                    )
+                    
+                    # Create finding card content
+                    card_data = [
+                        [Paragraph(f"{severity.upper()}: {title}", finding_title_style)],
+                        [Paragraph(description, styles['CertNormal'])],
+                        [Paragraph(f"<b>Recommendation:</b> {recommendation}", styles['CertNormal'])]
+                    ]
+                    
+                    card = Table(card_data, colWidths=[6*inch])
+                    card.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, 0), bg_color),
+                        ('BACKGROUND', (0, 1), (0, -1), colors.white),
+                        ('TEXTCOLOR', (0, 0), (0, 0), severity_color),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                        ('BOX', (0, 0), (-1, -1), 1, severity_color),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                        ('TOPPADDING', (0, 0), (-1, -1), 8),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                    ]))
+                    
+                    elements.append(card)
+                    elements.append(Spacer(1, 0.1*inch))
                 
-                findings_table.setStyle(TableStyle(table_style))
-                elements.append(findings_table)
                 elements.append(Spacer(1, 0.2*inch))
     else:
-        elements.append(Paragraph("No specific findings were identified during the scan.", styles['GDPRNormal']))
+        compliance_text = "No specific findings were identified during the scan. The website appears to be in good compliance with GDPR requirements."
+        elements.append(Paragraph(compliance_text, styles['CertNormal']))
     
     # Add recommendations section
-    elements.append(Paragraph("Key Recommendations", styles['GDPRSubtitle']))
+    elements.append(Paragraph("Key Recommendations", styles['CertSubtitle']))
     
     # Extract top recommendations based on severity
     top_recommendations = []
@@ -727,18 +895,69 @@ def generate_gdpr_report(results):
         top_recommendations.append(f"• {finding.get('recommendation', '')}")
     
     if top_recommendations:
+        # Create a styled recommendations box
+        recommendations_data = [[Paragraph("Priority Actions to Improve Compliance", styles['CertNormal'])]]
+        
         for rec in top_recommendations:
-            elements.append(Paragraph(rec, styles['GDPRNormal']))
+            recommendations_data.append([Paragraph(rec, styles['CertNormal'])])
+        
+        recommendations_table = Table(recommendations_data, colWidths=[6*inch])
+        recommendations_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.aliceblue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.darkblue),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.lightblue),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        
+        elements.append(recommendations_table)
     else:
-        elements.append(Paragraph("No specific recommendations available.", styles['GDPRNormal']))
+        # Add a certificate of compliance if no issues found
+        certificate_text = "This website has been assessed and found to be in compliance with GDPR requirements. No specific recommendations are necessary at this time."
+        certificate_para = Paragraph(certificate_text, styles['CertNormal'])
+        
+        cert_table = Table([[certificate_para]], colWidths=[6*inch])
+        cert_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.honeydew),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('BOX', (0, 0), (-1, -1), 1, colors.green),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ]))
+        
+        elements.append(cert_table)
     
-    # Add certification footer
-    elements.append(Spacer(1, 0.5*inch))
-    disclaimer_text = """
-    Disclaimer: This report provides an assessment of GDPR compliance based on automated scanning. 
-    It is not a substitute for legal advice. The findings should be reviewed by a qualified data protection professional.
+    # Add certification footer with seal-like styling
+    elements.append(Spacer(1, 0.8*inch))
+    
+    # Create a footer table with certificate-like appearance
+    current_date = datetime.now().strftime("%B %d, %Y")
+    
+    footer_text = f"""
+    This GDPR compliance certificate was generated by DataGuardian Pro on {current_date}.
+    It represents an automated assessment based on current GDPR requirements and best practices.
+    While comprehensive, this assessment is not a substitute for legal advice.
     """
-    elements.append(Paragraph(disclaimer_text, styles['GDPRNormal']))
+    
+    footer_para = Paragraph(footer_text, styles['CertInfo'])
+    seal_text = Paragraph("CERTIFIED BY<br/><b>DataGuardian Pro</b>", styles['CertInfo'])
+    
+    footer_table = Table([[footer_para, seal_text]], colWidths=[4.5*inch, 1.5*inch])
+    footer_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('LINEABOVE', (0, 0), (-1, 0), 1, colors.grey),
+    ]))
+    
+    elements.append(footer_table)
     
     # Build PDF
     doc.build(elements)
