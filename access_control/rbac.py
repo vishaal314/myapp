@@ -39,7 +39,11 @@ def requires_permission(permission: str, message: Optional[str] = None) -> Calla
             user_role = st.session_state.get("role", "viewer")
             subscription_tier = st.session_state.get("subscription_tier", "basic")
             
-            # Check permission
+            # Admin users automatically have all permissions
+            if user_role == "admin":
+                return func(*args, **kwargs)
+                
+            # Check permission for other roles
             if has_permission(user_role, permission, subscription_tier):
                 return func(*args, **kwargs)
             else:
@@ -84,7 +88,11 @@ def requires_role(role: str, message: Optional[str] = None) -> Callable:
             # Get user role
             user_role = st.session_state.get("role", "viewer")
             
-            # Check role
+            # Admin users automatically have all roles
+            if user_role == "admin":
+                return func(*args, **kwargs)
+                
+            # Check role for other users
             from access_control.roles_config import ROLES
             
             role_priority = ROLES.get(user_role, {}).get("priority", 0)
