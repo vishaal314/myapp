@@ -354,21 +354,71 @@ def get_permissions_for_role(role):
     """Get permissions for a specific role from RBAC system"""
     # Map roles to their specific permissions
     if role == "admin":
-        # Admin has full system access
+        # Admin has full system access - include ALL possible permissions
         return [
-            "admin:all",
+            # Admin permissions
+            "admin:all", 
+            "admin:users",
+            "admin:roles",
+            "admin:settings",
+            "admin:billing",
+            "admin:api_keys",
+            
+            # User permissions
             "user:manage",
+            "user:create",
+            "user:edit",
+            "user:delete",
+            
+            # Scan permissions
+            "scan:all",
             "scan:run_basic",
             "scan:run_advanced",
+            "scan:run_any",
             "scan:view_results",
+            "scan:view_all",
+            "scan:view_own",
             "scan:export",
+            "scan:delete",
+            "scan:configure",
+            
+            # Report permissions
+            "reports:all",
             "reports:view",
+            "reports:view_all", 
+            "reports:view_own",
             "reports:create",
+            "reports:generate",
             "reports:download",
+            "reports:export",
             "reports:share",
+            "reports:delete",
+            
+            # Dashboard permissions
+            "dashboard:all",
             "dashboard:view_metrics",
             "dashboard:view_scan_history",
-            "settings:edit"
+            
+            # Settings permissions
+            "settings:all",
+            "settings:edit",
+            "settings:view",
+            
+            # Feature permissions
+            "feature:all",
+            "feature:advanced_analytics",
+            "feature:custom_policies",
+            "feature:integrations",
+            "feature:api_access",
+            "feature:soc2",
+            "feature:sustainability",
+            
+            # Team permissions
+            "team:all",
+            "team:view",
+            "team:invite",
+            "team:remove",
+            "team:assign_role"
         ]
     elif role == "security_engineer":
         # Security engineer has advanced scanning capabilities

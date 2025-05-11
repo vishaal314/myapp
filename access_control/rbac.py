@@ -119,7 +119,11 @@ def check_permission(permission: str) -> bool:
     user_role = st.session_state.get("role", "viewer")
     subscription_tier = st.session_state.get("subscription_tier", "basic")
     
-    # Check permission
+    # Admin users have all permissions automatically
+    if user_role == "admin":
+        return True
+    
+    # Check permission for other roles
     return has_permission(user_role, permission, subscription_tier)
 
 def check_role(role: str) -> bool:
