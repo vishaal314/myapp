@@ -573,14 +573,41 @@ def render_brand_logo():
     """, unsafe_allow_html=True)
 
 def render_login_form():
-    """Render the login form"""
+    """Render the login form with Google OAuth option"""
+    # Import Google auth function
+    from enhanced_signup_flow import render_login_page
+    
+    # We'll maintain the original login form structure but enhance it with Google OAuth
     st.markdown("""
     <div style="padding: 24px; margin-bottom: 20px;">
         <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 20px; color: #0f172a;">Sign In</h2>
     </div>
     """, unsafe_allow_html=True)
     
-    username = st.text_input("Username", key="login_username", placeholder="Enter your username")
+    # Google Sign-In Option
+    from access_control.google_auth import get_google_auth_url, login_with_google
+    
+    # Display Google login button
+    google_auth_url = get_google_auth_url()
+    st.markdown(f"""
+    <a href="{google_auth_url}" style="display: flex; align-items: center; justify-content: center; 
+        padding: 12px 16px; background-color: white; color: #333; border-radius: 8px;
+        border: 1px solid #e2e8f0; width: 100%; text-decoration: none; font-weight: 500;
+        transition: all 0.2s ease; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+             alt="Google logo" style="height: 24px; margin-right: 12px;"> 
+        Sign in with Google
+    </a>
+    
+    <div style="display: flex; align-items: center; text-align: center; margin: 30px 0;">
+        <div style="flex: 1; border-bottom: 1px solid #e2e8f0;"></div>
+        <span style="padding: 0 10px; color: #a0aec0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">OR SIGN IN WITH EMAIL</span>
+        <div style="flex: 1; border-bottom: 1px solid #e2e8f0;"></div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Standard login form
+    username = st.text_input("Username or Email", key="login_username", placeholder="Enter your username or email")
     password = st.text_input("Password", type="password", key="login_password", placeholder="Enter your password")
     
     col1, col2 = st.columns([1, 1])
@@ -590,6 +617,15 @@ def render_login_form():
         st.markdown('<div style="text-align: right;"><a href="#" style="color: #4f46e5; font-size: 14px; text-decoration: none;">Forgot password?</a></div>', unsafe_allow_html=True)
     
     login_button = st.button("Sign In", key="login_button", use_container_width=True)
+    
+    # Add a "Sign Up" button 
+    st.markdown("<div style='text-align: center; margin-top: 20px;'>Don't have an account?</div>", unsafe_allow_html=True)
+    signup_button = st.button("Create Account", key="create_account_button", use_container_width=True)
+    
+    if signup_button:
+        # Redirect to signup page
+        st.session_state.current_view = "signup"
+        st.rerun()
     
     if login_button:
         if not username or not password:
@@ -1847,12 +1883,20 @@ def render_admin_section():
 
 def main():
     """Main application entry point"""
-    # Import signup flow components
+    # Import enhanced signup flow components
+    from enhanced_signup_flow import render_enhanced_signup_page as render_signup_page
+    
+    # Import remaining components from signup_flow
     from signup_flow import (
-        render_signup_page, 
         render_trial_expiry_notice,
         render_payment_method_selection
     )
+    
+    # Check for Google OAuth callback
+    query_params = st.experimental_get_query_params()
+    if "code" in query_params and "state" in query_params and not st.session_state.get("logged_in", False):
+        from google_oauth_callback import process_google_oauth_callback
+        process_google_oauth_callback()
     
     # Sidebar content
     with st.sidebar:
