@@ -693,8 +693,9 @@ def render_scan_history():
         ])
         st.dataframe(scan_df, use_container_width=True)
 
+@requires_permission("scan:run_basic")
 def render_scan_form():
-    """Render scan configuration form"""
+    """Render scan configuration form with RBAC protection"""
     st.subheader("Configure Scan")
     
     scan_types = [
@@ -1129,8 +1130,9 @@ def render_reports_section():
                     st.error(f"Error generating PDF report: {str(e)}")
                     st.info("Please try again or contact support if the problem persists.")
 
+@requires_role("admin")
 def render_admin_section():
-    """Render admin section"""
+    """Render admin section with role-based access control"""
     # Use our new admin panel with RBAC protection
     render_admin_panel()
 
@@ -1171,7 +1173,7 @@ def main():
         render_landing_page()
     else:
         # Create tabs for main content
-        tabs = st.tabs(["Dashboard", "Scan", "Reports", "Admin"])
+        tabs = st.tabs(["Dashboard", "Scan", "Reports", "Profile", "Admin"])
         
         # Dashboard Tab
         with tabs[0]:
@@ -1189,9 +1191,15 @@ def main():
             st.header("Compliance Reports")
             render_reports_section()
         
-        # Admin Tab
+        # Profile Tab
         with tabs[3]:
+            st.header("User Profile")
+            render_user_profile_page()
+            
+        # Admin Tab
+        with tabs[4]:
             st.header("Administration")
+            # Use our RBAC-protected admin section
             render_admin_section()
 
 if __name__ == "__main__":
