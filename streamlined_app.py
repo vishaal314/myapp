@@ -1136,8 +1136,8 @@ def render_reports_section():
                                 findings_table_data.append([
                                     finding.get('id', f"FIND-{i+1}"),
                                     finding.get('title', f"Finding {i+1}"),
-                                    finding.get('severity', 'medium').upper(),
-                                    finding.get('location', 'N/A')
+                                    finding.get('severity', finding.get('risk_level', 'medium')).upper(),
+                                    finding.get('location', finding.get('resource_type', 'N/A'))
                                 ])
                             
                             findings_table = Table(findings_table_data, colWidths=[0.75*inch, 3*inch, 1*inch, 1.5*inch])
