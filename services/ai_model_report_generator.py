@@ -522,31 +522,58 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
         )
         elements.append(header_text)
     
-    # Add certificate-like title with decorative elements
+    # Create modern certificate-style title block with border and background
     elements.append(Spacer(1, 0.3*inch))
     
-    elements.append(Paragraph(
-        '<font size="18">AI Model Security Certification</font>', 
-        ParagraphStyle(
-            'CertificateTitle',
-            parent=styles['Title'],
-            alignment=1,  # Center alignment
-            textColor=HexColor(BRANDING_COLORS["primary"]),
-        )
-    ))
+    # Certificate border and background
+    cert_style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), HexColor("#f9fafb")),  # Light gray background
+        ('BOX', (0, 0), (-1, -1), 1, HexColor(BRANDING_COLORS["primary"])),  # Border
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 15),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+    ])
+    
+    # Create certificate title with enhanced styling
+    title_paragraph = Paragraph(
+        f'<font size="16" color="{BRANDING_COLORS["primary"]}"><b>AI Model Security Certification</b></font>', 
+        ParagraphStyle('CertTitle', alignment=1)
+    )
+    
+    # Add security seal/badge styling
+    badge_style = ParagraphStyle(
+        'SecurityBadge',
+        alignment=1,
+        spaceAfter=6,
+        textColor=HexColor("#065f46"),  # Dark green for security
+        fontSize=10
+    )
+    
+    # Security level based on risk score
+    security_level = get_security_level(risk_score)
+    security_badge = Paragraph(
+        f'<font name="Helvetica-Bold">SECURITY LEVEL: {security_level}</font>',
+        badge_style
+    )
     
     # Add decorative line
-    elements.append(Spacer(1, 0.1*inch))
     line = Drawing(400, 10)
     line.add(Line(
-        50, 5, 350, 5, 
+        150, 5, 250, 5, 
         strokeColor=HexColor(BRANDING_COLORS["secondary"]),
         strokeWidth=2
     ))
-    elements.append(line)
+    
+    # Create table for certificate header
+    cert_data = [[title_paragraph], [security_badge], [line]]
+    cert_table = Table(cert_data, colWidths=[6*inch])
+    cert_table.setStyle(cert_style)
+    
+    elements.append(cert_table)
+    elements.append(Spacer(1, 0.2*inch))
     
     # Add report subtitle
-    elements.append(Spacer(1, 0.1*inch))
     elements.append(Paragraph(
         f"Risk Analysis Report • Generated on {timestamp_str}", 
         ParagraphStyle(
@@ -575,34 +602,55 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
         )
     )
     
-    # Create a boxed summary
-    elements.append(Spacer(1, 0.1*inch))
+    # Create a modern boxed summary with better visual styling
+    elements.append(Spacer(1, 0.2*inch))
     
-    # Summary text with proper formatting (without para tags that cause issues)
-    summary_text = f"""
-    This document certifies that a comprehensive AI model risk assessment has been conducted
-    on <b>{timestamp_str}</b> by <b>DataGuardian Pro</b>.
+    # Enhanced summary content with modern formatting
+    summary_content = [
+        [Paragraph(
+            f'''
+            <font size="11" color="{BRANDING_COLORS["primary"]}"><b>OFFICIAL CERTIFICATION STATEMENT</b></font>
+            ''', 
+            ParagraphStyle('SummaryHeader', alignment=1, spaceBefore=4, spaceAfter=8)
+        )],
+        [Paragraph(
+            f'''
+            This document certifies that a comprehensive AI model risk assessment has been conducted
+            on <b>{timestamp_str}</b> by <b>DataGuardian Pro</b>.
+            ''',
+            ParagraphStyle('SummaryText', alignment=1, spaceBefore=2, spaceAfter=6)
+        )],
+        [Paragraph(
+            f'''
+            The assessment evaluated a <b>{model_type}</b> model from <b>{model_source}</b> for privacy risks,
+            bias concerns, and explainability issues in accordance with industry best practices and regulatory guidelines.
+            ''',
+            ParagraphStyle('SummaryText', alignment=1, spaceBefore=2, spaceAfter=6)
+        )],
+        [Paragraph(
+            f'''
+            The analysis identified a total of <b>{len(findings)}</b> findings across multiple risk categories,
+            resulting in a risk score of <b>{risk_score}/100</b>.
+            ''',
+            ParagraphStyle('SummaryText', alignment=1, spaceBefore=2, spaceAfter=2)
+        )]
+    ]
     
-    The assessment evaluated a <b>{model_type}</b> model from <b>{model_source}</b> for privacy risks,
-    bias concerns, and explainability issues in accordance with industry best practices and regulatory guidelines.
+    # Create a better styled table for the summary with subtle background
+    summary_table = Table(summary_content, colWidths=[6*inch])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), HexColor("#f8fafc")),  # Subtle light blue background
+        ('BOX', (0, 0), (-1, -1), 1, HexColor(BRANDING_COLORS["primary"])),  # Border
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('LEFTPADDING', (0, 0), (-1, -1), 20),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 20),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
     
-    The analysis identified a total of <b>{len(findings)}</b> findings across multiple risk categories,
-    resulting in a risk score of <b>{risk_score}/100</b>.
-    """
-    
-    # Create boxed summary
-    summary_style = ParagraphStyle(
-        'SummaryText',
-        parent=body_style,
-        alignment=1,  # Center
-        borderWidth=1,
-        borderColor=HexColor(BRANDING_COLORS["secondary"]),
-        borderPadding=10,
-        backColor=HexColor("#F8FAFC"),  # Light background for the box
-        spaceBefore=5,
-        spaceAfter=15,
-    )
-    elements.append(Paragraph(summary_text, summary_style))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 0.2*inch))
     
     # Create certification details with a clean, modern table
     cert_data = []
