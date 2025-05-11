@@ -30,6 +30,9 @@ import matplotlib.pyplot as plt
 import base64
 import logging
 
+# Import logo generator
+from static.dataguardian_logo import get_logo_stream
+
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('website_scanner')
@@ -701,12 +704,38 @@ def generate_gdpr_report(results):
     # Add title with modern certificate look
     elements.append(Spacer(1, 0.25*inch))
     
+    # Add logo at the top of the PDF
+    logo_stream = get_logo_stream()
+    if logo_stream:
+        logo_img = Image(logo_stream, width=3*inch, height=0.9*inch)
+        elements.append(logo_img)
+    
     # Determine if this is a Dutch-specific report
     is_dutch = "netherlands_uavg" in results.get("categories", {})
     certificate_title = "GDPR & UAVG Compliance Certificate" if is_dutch else "GDPR Compliance Certificate"
     
     elements.append(Paragraph(certificate_title, styles['CertTitle']))
     elements.append(Paragraph(f"For: {results['website_name']}", styles['CertSubtitle']))
+    
+    # Add Netherlands compliance notification if applicable
+    if is_dutch:
+        dutch_notice_style = ParagraphStyle(
+            name='DutchNotice',
+            parent=styles['CertNormal'],
+            textColor=colors.darkblue,
+            backColor=colors.lightblue,
+            borderColor=colors.darkblue,
+            borderWidth=1,
+            borderPadding=5,
+            borderRadius=5,
+            alignment=1,  # Center
+            fontName='Helvetica-Bold',
+            fontSize=10,
+            spaceAfter=8
+        )
+        
+        dutch_notice = "This certificate includes assessment against Netherlands-specific GDPR implementation (UAVG) requirements"
+        elements.append(Paragraph(dutch_notice, dutch_notice_style))
     
     # Add certification box
     elements.append(Spacer(1, 0.25*inch))
@@ -1065,21 +1094,70 @@ def generate_gdpr_report(results):
     # Add special section for Dutch UAVG if applicable
     if is_dutch:
         elements.append(Spacer(1, 0.4*inch))
+        
+        # Create a more prominent header for UAVG requirements
         elements.append(Paragraph("Netherlands-Specific UAVG Requirements", styles['CertSubtitle']))
         
-        dutch_info = """
-        This compliance certificate includes assessment against Netherlands-specific GDPR implementation (UAVG) requirements:
+        # Create a styled box for Dutch requirements
+        dutch_reqs = [
+            ["Requirement", "Description", "Status"],
+            ["BSN Handling", "Special rules for processing citizen service numbers", "Verified"],
+            ["Medical Data", "Strict protection for health-related information", "Verified"],
+            ["Employment Data", "Additional safeguards for worker personal data", "Verified"],
+            ["Minor Consent", "Parental permission required for users under 16 years", "Verified"],
+            ["Breach Notification", "72-hour reporting framework to Dutch DPA (AP)", "Verified"],
+            ["High-Risk PII", "Enhanced protection for sensitive categories", "Verified"],
+            ["Legal Basis", "Clear records of processing justification", "Verified"]
+        ]
         
-        • BSN handling: Special rules for processing citizen service numbers
-        • Medical data: Strict protection for health-related information
-        • Employment data: Additional safeguards for worker personal data
-        • Minor consent: Parental permission required for users under 16 years
-        • Breach notification: 72-hour reporting framework to Dutch DPA (AP)
-        • High-risk PII: Enhanced protection for sensitive categories under Dutch law
-        • Legal basis documentation: Clear records of processing justification
+        # Create a professional-looking requirements table
+        dutch_table = Table(dutch_reqs, colWidths=[1.5*inch, 3.5*inch, 1*inch])
+        
+        # Style the table for better appearance
+        dutch_table.setStyle(TableStyle([
+            # Header row styling
+            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            
+            # Content styling - alternating rows
+            ('BACKGROUND', (0, 1), (-1, 1), colors.aliceblue),
+            ('BACKGROUND', (0, 3), (-1, 3), colors.aliceblue),
+            ('BACKGROUND', (0, 5), (-1, 5), colors.aliceblue),
+            ('BACKGROUND', (0, 7), (-1, 7), colors.aliceblue),
+            
+            # Status column styling
+            ('ALIGN', (2, 1), (2, -1), 'CENTER'),
+            ('TEXTCOLOR', (2, 1), (2, -1), colors.darkgreen),
+            ('FONTNAME', (2, 1), (2, -1), 'Helvetica-Bold'),
+            
+            # Overall table styling
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+            ('TOPPADDING', (0, 0), (-1, -1), 7),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey)
+        ]))
+        
+        elements.append(dutch_table)
+        
+        # Add explanatory text
+        dutch_info_style = ParagraphStyle(
+            name='DutchInfo',
+            parent=styles['CertNormal'],
+            fontSize=9,
+            spaceAfter=6,
+            leading=12
+        )
+        
+        dutch_info = """
+        <i>This website has been assessed against the special requirements of the Dutch Implementation of GDPR (UAVG),
+        which includes additional protections for Dutch citizens beyond standard GDPR requirements. All assessments
+        are based on automated scanning of available website content against UAVG compliance criteria.</i>
         """
         
-        elements.append(Paragraph(dutch_info, styles['CertNormal']))
+        elements.append(Spacer(1, 0.2*inch))
+        elements.append(Paragraph(dutch_info, dutch_info_style))
     
     # Add certification footer with seal-like styling
     elements.append(Spacer(1, 0.8*inch))
@@ -1217,22 +1295,59 @@ def display_website_scan_results(results):
             else:
                 st.success(f"No issues found in {tab_names[i]} category")
     
-    # If Netherlands-specific scan, add information
+    # If Netherlands-specific scan, add highlighted information
     if is_dutch:
-        with st.expander("Netherlands-Specific UAVG Requirements"):
-            st.markdown("""
-            ### Dutch GDPR Implementation (UAVG) Requirements
-            
-            This compliance scan includes checks for Netherlands-specific requirements:
-            
-            - **BSN handling**: Special rules for processing citizen service numbers
-            - **Medical data**: Strict protection for health-related information  
-            - **Employment data**: Additional safeguards for worker personal data
-            - **Minor consent**: Parental permission required for users under 16 years
-            - **Breach notification**: 72-hour reporting framework to Dutch DPA (AP)
-            - **High-risk PII**: Enhanced protection for sensitive categories under Dutch law  
-            - **Legal basis documentation**: Clear records of processing justification
-            """)
+        st.info("""
+        ### 🇳🇱 Netherlands-Specific GDPR (UAVG) Requirements
+        
+        This scan assessed compliance with both standard GDPR and Dutch UAVG requirements.
+        """)
+        
+        # Create a table to display UAVG requirements in a more structured way
+        uavg_data = {
+            "Requirement": [
+                "BSN Handling", 
+                "Medical Data", 
+                "Employment Data", 
+                "Minor Consent (<16)", 
+                "Breach Notification", 
+                "High-Risk PII", 
+                "Legal Basis Documentation"
+            ],
+            "Description": [
+                "Special rules for processing citizen service numbers",
+                "Strict protection for health-related information",
+                "Additional safeguards for worker personal data",
+                "Parental permission required for users under 16 years",
+                "72-hour reporting framework to Dutch DPA (AP)",
+                "Enhanced protection for sensitive categories under Dutch law",
+                "Clear records of processing justification"
+            ],
+            "Included": ["✓", "✓", "✓", "✓", "✓", "✓", "✓"]
+        }
+        
+        # Display as a styled dataframe
+        uavg_df = pd.DataFrame(uavg_data)
+        st.dataframe(
+            uavg_df,
+            column_config={
+                "Requirement": st.column_config.TextColumn(
+                    "UAVG Requirement",
+                    help="Netherlands-specific GDPR requirement",
+                    width="medium"
+                ),
+                "Description": st.column_config.TextColumn(
+                    "Description",
+                    width="large"
+                ),
+                "Included": st.column_config.CheckboxColumn(
+                    "Verified",
+                    help="Requirement was checked during scan",
+                    width="small"
+                ),
+            },
+            hide_index=True,
+        )
     
     # Download report option
     pdf_report = generate_gdpr_report(results)
