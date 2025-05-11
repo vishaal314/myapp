@@ -539,20 +539,16 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
     # Create a boxed summary
     elements.append(Spacer(1, 0.1*inch))
     
-    # Summary text with better formatting
+    # Summary text with proper formatting (without para tags that cause issues)
     summary_text = f"""
-    <para alignment="center">
     This document certifies that a comprehensive AI model risk assessment has been conducted
     on <b>{timestamp_str}</b> by <b>DataGuardian Pro</b>.
-    </para>
-    <para alignment="center">
+    
     The assessment evaluated a <b>{model_type}</b> model from <b>{model_source}</b> for privacy risks,
     bias concerns, and explainability issues in accordance with industry best practices and regulatory guidelines.
-    </para>
-    <para alignment="center">
+    
     The analysis identified a total of <b>{len(findings)}</b> findings across multiple risk categories,
     resulting in a risk score of <b>{risk_score}/100</b>.
-    </para>
     """
     
     # Create boxed summary
@@ -749,41 +745,125 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
         elements.append(findings_table)
         elements.append(Spacer(1, 0.1*inch))
     
-    # Recommendations section
-    elements.append(Paragraph("Recommendations", heading_style))
+    # Recommendations section with modern design
+    elements.append(Spacer(1, 0.3*inch))
+    elements.append(
+        Paragraph(
+            '<font size="14" color="#4f46e5">Expert Recommendations</font>',
+            ParagraphStyle(
+                'RecommendationsHeading',
+                parent=heading_style,
+                alignment=1,  # Center
+                spaceBefore=12,
+                spaceAfter=10,
+            )
+        )
+    )
     
-    # Generate recommendations based on findings
-    recommendations = []
+    # Add visual separator
+    elements.append(Spacer(1, 0.1*inch))
+    separator = Drawing(400, 10)
+    separator.add(Line(
+        50, 5, 350, 5, 
+        strokeColor=HexColor(BRANDING_COLORS["secondary"]),
+        strokeWidth=1
+    ))
+    elements.append(separator)
+    elements.append(Spacer(1, 0.2*inch))
+    
+    # Generate AI-specific recommendations based on findings
+    # Group recommendations by category for a more structured approach
+    recommendation_categories = {
+        "Privacy & Compliance": [],
+        "Model Security": [], 
+        "Fairness & Ethics": [],
+        "Explainability": [],
+        "High Priority Actions": []
+    }
+    
+    # Add privacy recommendations
     if pii_detected:
-        recommendations.append("Implement data minimization techniques to remove unnecessary personal data from the model")
-        recommendations.append("Conduct a Data Protection Impact Assessment (DPIA) for this AI model")
-        recommendations.append("Apply differential privacy to your training process")
+        recommendation_categories["Privacy & Compliance"].extend([
+            "Implement data minimization techniques to remove unnecessary PII from the model",
+            "Conduct a comprehensive Data Protection Impact Assessment (DPIA)",
+            "Apply differential privacy with appropriate epsilon values for training data"
+        ])
+    else:
+        recommendation_categories["Privacy & Compliance"].append(
+            "Continue monitoring for potential PII leakage in model outputs"
+        )
     
+    # Add bias recommendations
     if bias_detected:
-        recommendations.append("Implement bias mitigation techniques like reweighting or adversarial debiasing")
-        recommendations.append("Ensure diverse and representative training data")
-        recommendations.append("Use fairness constraints during model training")
+        recommendation_categories["Fairness & Ethics"].extend([
+            "Implement algorithmic fairness techniques like adversarial debiasing",
+            "Ensure demographically balanced representative training datasets",
+            "Apply fairness constraints during model training process"
+        ])
+    else:
+        recommendation_categories["Fairness & Ethics"].append(
+            "Maintain bias monitoring processes for future model versions"
+        )
     
+    # Add explainability recommendations
     if explainability_score < 75:
-        recommendations.append("Enhance model transparency with feature importance visualization")
-        recommendations.append("Consider using more interpretable model architectures")
-        recommendations.append("Implement SHAP or LIME explanations for individual predictions")
+        recommendation_categories["Explainability"].extend([
+            "Implement SHAP or LIME for local explanations of individual predictions",
+            "Consider more interpretable model architectures where appropriate",
+            "Create model cards documenting training data, performance metrics and limitations"
+        ])
+    else:
+        recommendation_categories["Explainability"].append(
+            "Enhance documentation of model decisions for non-technical stakeholders"
+        )
     
-    # If we have high or critical findings, add specific recommendations
+    # Add security recommendations
+    recommendation_categories["Model Security"].extend([
+        "Implement model API access controls with proper authentication",
+        "Apply rate limiting to prevent model extraction attacks",
+        "Establish monitoring for adversarial inputs and unusual query patterns"
+    ])
+    
+    # Add high priority recommendations based on critical/high findings
     high_findings = [f for f in findings if f.get('risk_level', '').lower() in ['high', 'critical']]
     if high_findings:
-        recommendations.append("Prioritize addressing high and critical risk findings")
-        recommendations.append("Conduct regular AI model audits and ethical reviews")
+        for finding in high_findings[:3]:  # Add recommendations for up to 3 high findings
+            category = finding.get('category', 'high-risk issue')
+            desc = finding.get('description', '')
+            recommendation_categories["High Priority Actions"].append(f"Address {category}: {desc}")
     
-    # Add default recommendations if we have none
-    if not recommendations:
-        recommendations.append("Maintain current privacy and security controls")
-        recommendations.append("Continue monitoring model performance and behavior")
-        recommendations.append("Implement a regular model review process")
+    # Always add some default recommendations to Model Security category
+    recommendation_categories["Model Security"].extend([
+        "Maintain current privacy and security controls",
+        "Continue monitoring model performance and behavior",
+        "Implement a regular model review process"
+    ])
     
-    # Add recommendations to report
-    for i, recommendation in enumerate(recommendations, 1):
-        elements.append(Paragraph(f"{i}. {recommendation}", body_style))
+    # Add recommendations to report by category
+    for category, recs in recommendation_categories.items():
+        if recs:  # Only show categories with recommendations
+            # Category header with modern styling
+            category_style = ParagraphStyle(
+                'CategoryStyle',
+                parent=body_style,
+                fontName='Helvetica-Bold',
+                fontSize=10,
+                textColor=HexColor(BRANDING_COLORS["primary"]),
+                spaceBefore=10,
+                spaceAfter=5
+            )
+            elements.append(Paragraph(f"{category}", category_style))
+            
+            # Recommendations with modern styling
+            for i, rec in enumerate(recs, 1):
+                bullet_style = ParagraphStyle(
+                    'BulletStyle',
+                    parent=body_style,
+                    leftIndent=15,
+                    spaceBefore=2,
+                    spaceAfter=2
+                )
+                elements.append(Paragraph(f"• {rec}", bullet_style))
     
     elements.append(Spacer(1, 0.2*inch))
     
