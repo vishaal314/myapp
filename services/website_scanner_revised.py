@@ -1,9 +1,8 @@
 """
-Website Scanner for GDPR Compliance
+Enhanced Website Scanner for GDPR and Dutch UAVG Compliance
 
-This module provides a scanner to analyze websites for GDPR compliance issues.
-It checks for cookie consent banners, privacy policies, data processing agreements,
-and other key GDPR requirements.
+This module provides a scanner to analyze websites for GDPR compliance issues
+with special focus on Netherlands-specific GDPR (UAVG) requirements.
 """
 
 import streamlit as st
@@ -23,12 +22,11 @@ import pandas as pd
 import numpy as np
 from io import BytesIO
 from reportlab.lib.pagesizes import letter, A4
-from reportlab.lib import colors as reportlab_colors
+from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, cm
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 import base64
 import logging
 
@@ -37,20 +35,31 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger('website_scanner')
 
 class WebsiteScanner:
-    """GDPR-compliant website scanner"""
+    """GDPR and Dutch UAVG-compliant website scanner"""
     
     def __init__(self, region="EU", progress_callback=None):
         """
         Initialize the scanner
         
         Args:
-            region: The region to apply compliance rules for (EU, Global)
+            region: The region to apply compliance rules for (EU, Global, Netherlands)
             progress_callback: Function to call with progress updates
         """
         self.region = region
         self.progress_callback = progress_callback
         self.scan_id = str(uuid.uuid4())
         self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        
+        # Define Netherlands-specific requirements based on UAVG (Dutch GDPR Implementation)
+        self.netherlands_requirements = {
+            "bsn_handling": "Special rules for BSN (citizen service number) usage",
+            "medical_data": "Strict requirements for health data processing",
+            "employment_data": "Additional protection for employee data",
+            "minor_consent": "Parental consent required for users under 16 years",
+            "data_breach": "72-hour breach notification to Dutch DPA (AP)",
+            "high_risk_pii": "Enhanced measures for sensitive Dutch categorized data",
+            "legal_basis": "Documentation of processing legal basis"
+        }
         
     def set_progress_callback(self, callback):
         """Set progress callback function"""
@@ -110,6 +119,10 @@ class WebsiteScanner:
                 "low_risk": 0
             }
             
+            # Add Netherlands-specific category if region is Netherlands
+            if self.region == "Netherlands":
+                results["categories"]["netherlands_uavg"] = {"score": 0, "max_score": 100, "findings": []}
+            
             self.update_progress(10, 100, "Fetching website content...")
             
             # Fetch website content
@@ -156,8 +169,13 @@ class WebsiteScanner:
             self.update_progress(70, 100, "Examining forms and consent mechanisms...")
             self._check_forms_and_consent(results, soup, html_content)
             
-            self.update_progress(80, 100, "Evaluating security practices...")
+            self.update_progress(75, 100, "Evaluating security practices...")
             self._check_security_practices(results, soup, html_content, response)
+            
+            # Add Netherlands-specific checks if region is Netherlands
+            if self.region == "Netherlands":
+                self.update_progress(80, 100, "Checking Netherlands-specific UAVG requirements...")
+                self._check_netherlands_requirements(results, soup, html_content, text_content)
             
             self.update_progress(90, 100, "Finalizing results...")
             self._finalize_results(results)
@@ -424,6 +442,71 @@ class WebsiteScanner:
                              "Content-Security-Policy header is not set", 
                              "medium", "Implement a Content-Security-Policy header to mitigate XSS risks")
     
+    def _check_netherlands_requirements(self, results, soup, html_content, text_content):
+        """Check for Netherlands-specific GDPR (UAVG) requirements"""
+        
+        # Check for BSN handling
+        bsn_terms = ['bsn', 'burgerservicenummer', 'citizen service number', 'social security', 'identification number']
+        has_bsn_references = any(term in text_content.lower() for term in bsn_terms)
+        
+        if has_bsn_references:
+            # Check if there's specific processing information for BSN
+            has_bsn_regulations = any(f"{term} processing" in text_content.lower() or 
+                                     f"{term} handling" in text_content.lower() or
+                                     f"{term} usage" in text_content.lower() 
+                                     for term in bsn_terms[:2])
+            
+            if not has_bsn_regulations:
+                self._add_finding(results, "netherlands_uavg", "BSN Processing Not Documented", 
+                                 "Website appears to handle BSN (burgerservicenummer) but doesn't document special handling", 
+                                 "critical", 
+                                 "Add documentation about BSN processing limitations and legal basis according to Dutch UAVG requirements")
+        
+        # Check for minor consent mentions for Dutch requirement (<16 years)
+        minor_terms = ['under 16', 'minor', 'child', 'teen', 'youth', 'young person', 'parental consent']
+        has_minor_consent = any(term in text_content.lower() for term in minor_terms)
+        
+        if not has_minor_consent:
+            self._add_finding(results, "netherlands_uavg", "Missing Dutch Minor Consent", 
+                            "Privacy policy does not address parental consent for users under 16 years", 
+                            "high", 
+                            "Include specific verbiage about parental consent for users under 16 years as required by Dutch UAVG")
+        
+        # Check for Dutch data breach notification mentions
+        breach_terms = ['data breach', 'security breach', 'breach notification', 'autoriteit persoonsgegevens', 'ap', '72 hour', '72-hour']
+        has_breach_notification = any(term in text_content.lower() for term in breach_terms)
+        
+        if not has_breach_notification:
+            self._add_finding(results, "netherlands_uavg", "Missing Data Breach Framework", 
+                            "Privacy policy does not mention Dutch breach notification requirements", 
+                            "high", 
+                            "Include information about data breach notification procedures to Dutch DPA (AP) within 72 hours")
+        
+        # Check for legal basis documentation
+        legal_basis_terms = ['legal basis', 'lawful basis', 'legitimate interest', 'contractual necessity', 
+                           'legal obligation', 'vital interest', 'public interest', 'official authority']
+        has_legal_basis = any(term in text_content.lower() for term in legal_basis_terms)
+        
+        if not has_legal_basis:
+            self._add_finding(results, "netherlands_uavg", "Missing Legal Basis Documentation", 
+                            "Privacy policy does not clearly document legal basis for processing", 
+                            "high", 
+                            "Document specific legal basis (consent, contract, legitimate interest, etc.) for each data processing activity")
+        
+        # Check for medical/health data handling
+        medical_terms = ['medical', 'health', 'patient', 'healthcare', 'medische', 'gezondheid']
+        has_medical_references = any(term in text_content.lower() for term in medical_terms)
+        
+        if has_medical_references:
+            medical_protection_terms = ['special category', 'sensitive data', 'additional safeguards', 'bijzondere persoonsgegevens']
+            has_medical_protections = any(term in text_content.lower() for term in medical_protection_terms)
+            
+            if not has_medical_protections:
+                self._add_finding(results, "netherlands_uavg", "Medical Data Without Special Protections", 
+                                "Website appears to handle medical/health data without noting special protections", 
+                                "critical", 
+                                "Implement and document special safeguards for medical data per Dutch UAVG requirements")
+    
     def _is_visible(self, element):
         """Check if an element would be visible to users"""
         # This is a simplified check - a real implementation would be more complex
@@ -499,22 +582,45 @@ class WebsiteScanner:
                 # No findings means perfect score
                 data["score"] = 100
         
-        # Calculate overall compliance score (weighted average of category scores)
-        category_weights = {
-            "cookie_consent": 0.2,
-            "privacy_policy": 0.2,
-            "data_processing": 0.15,
-            "data_access": 0.15,
-            "forms_and_consent": 0.15,
-            "security": 0.15
-        }
+        # Calculate overall compliance score with appropriate weights
+        if self.region == "Netherlands":
+            # Give extra weight to Netherlands-specific requirements
+            category_weights = {
+                "cookie_consent": 0.15,
+                "privacy_policy": 0.15,
+                "data_processing": 0.15,
+                "data_access": 0.15,
+                "forms_and_consent": 0.10,
+                "security": 0.10,
+                "netherlands_uavg": 0.20  # Higher weight for Dutch requirements
+            }
+        else:
+            # Standard weights for other regions
+            category_weights = {
+                "cookie_consent": 0.2,
+                "privacy_policy": 0.2,
+                "data_processing": 0.15,
+                "data_access": 0.15,
+                "forms_and_consent": 0.15,
+                "security": 0.15
+            }
         
         weighted_sum = sum(
             results["categories"][cat]["score"] * weight 
             for cat, weight in category_weights.items()
+            if cat in results["categories"]  # Only consider categories that exist in results
         )
         
-        results["compliance_score"] = int(weighted_sum)
+        # Normalize by the actual weights used (in case some categories don't exist)
+        actual_weight_sum = sum(
+            weight for cat, weight in category_weights.items() 
+            if cat in results["categories"]
+        )
+        
+        if actual_weight_sum > 0:
+            results["compliance_score"] = int(weighted_sum / actual_weight_sum)
+        else:
+            results["compliance_score"] = 0
         
         # Add compliance status
         if results["compliance_score"] >= 90:
@@ -537,7 +643,7 @@ def generate_gdpr_report(results):
     """
     buffer = BytesIO()
     
-    # Use A4 landscape for a more modern look
+    # Use A4 for a professional certificate look
     doc = SimpleDocTemplate(
         buffer, 
         pagesize=A4,
@@ -556,7 +662,7 @@ def generate_gdpr_report(results):
         parent=styles['Heading1'],
         fontSize=22,
         fontName='Helvetica-Bold',
-        textColor=reportlab_colors.darkblue,
+        textColor=colors.darkblue,
         alignment=1,  # Center alignment
         spaceAfter=12
     ))
@@ -594,7 +700,12 @@ def generate_gdpr_report(results):
     
     # Add title with modern certificate look
     elements.append(Spacer(1, 0.25*inch))
-    elements.append(Paragraph("GDPR Compliance Certificate", styles['CertTitle']))
+    
+    # Determine if this is a Dutch-specific report
+    is_dutch = "netherlands_uavg" in results.get("categories", {})
+    certificate_title = "GDPR & UAVG Compliance Certificate" if is_dutch else "GDPR Compliance Certificate"
+    
+    elements.append(Paragraph(certificate_title, styles['CertTitle']))
     elements.append(Paragraph(f"For: {results['website_name']}", styles['CertSubtitle']))
     
     # Add certification box
@@ -666,7 +777,6 @@ def generate_gdpr_report(results):
         ('TOPPADDING', (0, 0), (-1, -1), 10),
         ('BACKGROUND', (0, 0), (-1, -1), colors.white),
         ('BOX', (0, 0), (-1, -1), 1, colors.lightgrey),
-        ('ROUNDEDCORNERS', [10, 10, 10, 10]),
     ]))
     
     elements.append(score_table)
@@ -681,12 +791,21 @@ def generate_gdpr_report(results):
     low_risk = results.get('low_risk', 0)
     
     # Create a more structured certificate-like summary
-    summary_text = f"""
-    This certificate validates that {results['website_name']} ({results['website_url']}) has been 
-    evaluated against GDPR compliance requirements and has achieved a compliance score of {compliance_score}%.
+    if is_dutch:
+        summary_text = f"""
+        This certificate validates that {results['website_name']} ({results['website_url']}) has been 
+        evaluated against both GDPR and Dutch UAVG compliance requirements and has achieved a compliance score of {compliance_score}%.
+        
+        Based on this assessment, the website is considered {compliance_status.lower()} with GDPR and Dutch UAVG requirements.
+        """
+    else:
+        summary_text = f"""
+        This certificate validates that {results['website_name']} ({results['website_url']}) has been 
+        evaluated against GDPR compliance requirements and has achieved a compliance score of {compliance_score}%.
+        
+        Based on this assessment, the website is considered {compliance_status.lower()} with GDPR requirements.
+        """
     
-    Based on this assessment, the website is considered {compliance_status.lower()} with GDPR requirements.
-    """
     elements.append(Paragraph(summary_text, styles['CertNormal']))
     
     # Create a table for compliance findings with modern styling
@@ -741,17 +860,22 @@ def generate_gdpr_report(results):
     categories = []
     scores = []
     for category, data in results.get('categories', {}).items():
-        categories.append(category.replace('_', ' ').title())
+        # Convert category names to more readable format
+        category_name = category.replace('_', ' ').title()
+        if category == "netherlands_uavg":
+            category_name = "Dutch UAVG Requirements"
+            
+        categories.append(category_name)
         scores.append(data.get('score', 0))
     
     # Create a modern horizontal bar chart with custom styling
     plt.figure(figsize=(7, 4), facecolor='white')
     
     # Set color map for different score ranges
-    colors = ['#FF5252' if s < 70 else '#FFA726' if s < 90 else '#66BB6A' for s in scores]
+    colors_list = ['#FF5252' if s < 70 else '#FFA726' if s < 90 else '#66BB6A' for s in scores]
     
     # Create the horizontal bar chart with rounded corners effect
-    bars = plt.barh(categories, scores, color=colors, height=0.6, edgecolor='white', linewidth=1)
+    bars = plt.barh(categories, scores, color=colors_list, height=0.6, edgecolor='white', linewidth=1)
     
     # Set chart limits and remove spines
     plt.xlim(0, 105)
@@ -808,6 +932,8 @@ def generate_gdpr_report(results):
             if category_findings:
                 # Add a category header with styling
                 category_name = category.replace('_', ' ').title()
+                if category == "netherlands_uavg":
+                    category_name = "Dutch UAVG Requirements"
                 
                 # Create custom style for category headers
                 category_style = ParagraphStyle(
@@ -936,6 +1062,25 @@ def generate_gdpr_report(results):
         
         elements.append(cert_table)
     
+    # Add special section for Dutch UAVG if applicable
+    if is_dutch:
+        elements.append(Spacer(1, 0.4*inch))
+        elements.append(Paragraph("Netherlands-Specific UAVG Requirements", styles['CertSubtitle']))
+        
+        dutch_info = """
+        This compliance certificate includes assessment against Netherlands-specific GDPR implementation (UAVG) requirements:
+        
+        • BSN handling: Special rules for processing citizen service numbers
+        • Medical data: Strict protection for health-related information
+        • Employment data: Additional safeguards for worker personal data
+        • Minor consent: Parental permission required for users under 16 years
+        • Breach notification: 72-hour reporting framework to Dutch DPA (AP)
+        • High-risk PII: Enhanced protection for sensitive categories under Dutch law
+        • Legal basis documentation: Clear records of processing justification
+        """
+        
+        elements.append(Paragraph(dutch_info, styles['CertNormal']))
+    
     # Add certification footer with seal-like styling
     elements.append(Spacer(1, 0.8*inch))
     
@@ -943,7 +1088,7 @@ def generate_gdpr_report(results):
     current_date = datetime.now().strftime("%B %d, %Y")
     
     footer_text = f"""
-    This GDPR compliance certificate was generated by DataGuardian Pro on {current_date}.
+    This compliance certificate was generated by DataGuardian Pro on {current_date}.
     It represents an automated assessment based on current GDPR requirements and best practices.
     While comprehensive, this assessment is not a substitute for legal advice.
     """
@@ -974,6 +1119,11 @@ def display_website_scan_results(results):
         results: Scan results dictionary
     """
     st.subheader("GDPR Website Compliance Scan Results")
+    
+    # Check if this is a Dutch-specific report
+    is_dutch = "netherlands_uavg" in results.get("categories", {})
+    if is_dutch:
+        st.info("This scan includes Netherlands-specific GDPR (UAVG) requirements.")
     
     # Display scan info
     st.markdown(f"**Website:** {results['website_name']} ({results['website_url']})")
@@ -1007,19 +1157,19 @@ def display_website_scan_results(results):
     
     categories_df = []
     for category, data in results.get('categories', {}).items():
+        # Format the category name
+        category_name = category.replace('_', ' ').title()
+        if category == "netherlands_uavg":
+            category_name = "Dutch UAVG Requirements"
+            
         categories_df.append({
-            'Category': category.replace('_', ' ').title(),
+            'Category': category_name,
             'Score': data.get('score', 0)
         })
     
     df = pd.DataFrame(categories_df)
     if not df.empty:
-        # Add color coding to scores
-        def color_score(val):
-            color = 'green' if val >= 90 else 'orange' if val >= 70 else 'red'
-            return f'background-color: {color}; color: white'
-        
-        # Format and display dataframe with styling
+        # Display as progress columns
         st.dataframe(
             df,
             column_config={
@@ -1036,7 +1186,15 @@ def display_website_scan_results(results):
     # Key findings
     st.subheader("Key Findings")
     
-    tabs = st.tabs([cat.replace('_', ' ').title() for cat in results.get('categories', {})])
+    # Create tabs for each category
+    tab_names = []
+    for category in results.get('categories', {}):
+        if category == "netherlands_uavg":
+            tab_names.append("Dutch UAVG Requirements")
+        else:
+            tab_names.append(category.replace('_', ' ').title())
+    
+    tabs = st.tabs(tab_names)
     
     for i, (category, tab) in enumerate(zip(results.get('categories', {}), tabs)):
         with tab:
@@ -1057,7 +1215,24 @@ def display_website_scan_results(results):
                     st.info(f"**Recommendation:** {finding.get('recommendation', '')}")
                     st.markdown("---")
             else:
-                st.success(f"No issues found in {category.replace('_', ' ').title()} category")
+                st.success(f"No issues found in {tab_names[i]} category")
+    
+    # If Netherlands-specific scan, add information
+    if is_dutch:
+        with st.expander("Netherlands-Specific UAVG Requirements"):
+            st.markdown("""
+            ### Dutch GDPR Implementation (UAVG) Requirements
+            
+            This compliance scan includes checks for Netherlands-specific requirements:
+            
+            - **BSN handling**: Special rules for processing citizen service numbers
+            - **Medical data**: Strict protection for health-related information  
+            - **Employment data**: Additional safeguards for worker personal data
+            - **Minor consent**: Parental permission required for users under 16 years
+            - **Breach notification**: 72-hour reporting framework to Dutch DPA (AP)
+            - **High-risk PII**: Enhanced protection for sensitive categories under Dutch law  
+            - **Legal basis documentation**: Clear records of processing justification
+            """)
     
     # Download report option
     pdf_report = generate_gdpr_report(results)

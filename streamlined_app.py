@@ -12,8 +12,8 @@ import base64
 
 # Import enhanced AI model scanner
 from services.enhanced_ai_model_scanner import EnhancedAIModelScanner
-# Import website scanner
-from services.website_scanner import WebsiteScanner, display_website_scan_results
+# Import revised website scanner
+from services.website_scanner_revised import WebsiteScanner, display_website_scan_results
 
 # Import RBAC components
 from access_control import (
