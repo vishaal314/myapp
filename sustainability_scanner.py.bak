@@ -1532,6 +1532,7 @@ def generate_sustainability_report(scan_results):
             story.append(Spacer(1, 0.1*inch))
             
             # Ensure we use the same findings that were calculated in the executive summary
+            # This ensures consistency throughout the report
             if not 'findings' in locals():
                 findings = scan_results.get("findings", [])
                 high_risk = [f for f in findings if f.get("risk_level") == "high"]
@@ -1550,20 +1551,25 @@ def generate_sustainability_report(scan_results):
             story.append(Spacer(1, 0.15*inch))
             
             if findings:
+                # Show high risk findings
                 if high_risk:
                     story.append(Paragraph("High Risk Findings", subheading_style))
+                    
                     for f in high_risk:
                         story.append(Paragraph(f"{f.get('id', 'FIND')}: {f.get('title', 'Unknown Finding')}", item_heading_style))
                         story.append(Paragraph(f"{f.get('description', '')}", styles['Normal']))
                         story.append(Spacer(1, 0.1*inch))
                 
+                # Show medium risk findings
                 if medium_risk:
                     story.append(Paragraph("Medium Risk Findings", subheading_style))
+                    
                     for f in medium_risk:
                         story.append(Paragraph(f"{f.get('id', 'FIND')}: {f.get('title', 'Unknown Finding')}", item_heading_style))
                         story.append(Paragraph(f"{f.get('description', '')}", styles['Normal']))
                         story.append(Spacer(1, 0.1*inch))
                 
+                # Show low risk findings summary
                 if low_risk:
                     story.append(Paragraph(f"Low Risk Findings: {len(low_risk)} items", subheading_style))
                     story.append(Paragraph(f"See full report for details on low risk findings.", styles['Normal']))
