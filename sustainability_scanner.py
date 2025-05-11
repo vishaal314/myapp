@@ -1426,6 +1426,22 @@ def generate_sustainability_report(scan_results):
             story.append(Paragraph("Executive Summary", heading_style))
             story.append(Spacer(1, 0.1*inch))
             
+            # Get findings data for summary
+            findings = scan_results.get("findings", [])
+            high_risk = [f for f in findings if f.get("risk_level") == "high"]
+            medium_risk = [f for f in findings if f.get("risk_level") == "medium"]
+            low_risk = [f for f in findings if f.get("risk_level") == "low"]
+            
+            # Brief narrative summary of findings
+            summary_text = f"""
+            This sustainability scan identified {len(findings)} issues across your infrastructure 
+            and codebase. Among these, {len(high_risk)} high-risk, {len(medium_risk)} medium-risk, 
+            and {len(low_risk)} low-risk findings were detected that may impact your organization's 
+            carbon footprint and resource efficiency.
+            """
+            story.append(Paragraph(summary_text, styles['Normal']))
+            story.append(Spacer(1, 0.15*inch))
+            
             # Key metrics
             resource_metrics = scan_results.get("resource_metrics", {})
             carbon_footprint = scan_results.get("carbon_footprint", {})
@@ -1437,6 +1453,10 @@ def generate_sustainability_report(scan_results):
             summary_data = [
                 ["Metric", "Value"],
                 ["Sustainability Score", f"{sustainability_score}/100"],
+                ["Total Findings", str(len(findings))],
+                ["High Risk Issues", str(len(high_risk))],
+                ["Medium Risk Issues", str(len(medium_risk))],
+                ["Low Risk Issues", str(len(low_risk))],
                 ["Idle Resources", f"{idle_percentage:.1f}%"],
                 ["Monthly CO₂ Emissions", f"{total_co2e:.2f} kg"],
                 ["Annual CO₂ Emissions", f"{total_co2e * 12:.2f} kg"],
@@ -1510,16 +1530,28 @@ def generate_sustainability_report(scan_results):
             # Findings
             story.append(Paragraph("Key Findings", heading_style))
             story.append(Spacer(1, 0.1*inch))
-            findings = scan_results.get("findings", [])
             
-            if findings:
-                # Group by risk level
+            # Ensure we use the same findings that were calculated in the executive summary
+            # This ensures consistency throughout the report
+            if not 'findings' in locals():
+                findings = scan_results.get("findings", [])
                 high_risk = [f for f in findings if f.get("risk_level") == "high"]
                 medium_risk = [f for f in findings if f.get("risk_level") == "medium"]
                 low_risk = [f for f in findings if f.get("risk_level") == "low"]
-                
-                # Show high risk findings
-                if high_risk:
+            
+            # Add findings overview
+            findings_overview = f"""
+            The sustainability scan identified a total of {len(findings)} findings that may impact 
+            resource efficiency and carbon footprint. These findings are categorized by severity:
+            • {len(high_risk)} High Risk Issues: Require immediate attention
+            • {len(medium_risk)} Medium Risk Issues: Should be addressed in the near term
+            • {len(low_risk)} Low Risk Issues: Represent optimization opportunities
+            """
+            story.append(Paragraph(findings_overview, styles['Normal']))
+            story.append(Spacer(1, 0.15*inch))
+            
+            # Show high risk findings
+            if high_risk:
                     story.append(Paragraph("High Risk Findings", subheading_style))
                     
                     for f in high_risk:
