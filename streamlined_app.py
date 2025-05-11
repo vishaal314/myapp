@@ -1039,13 +1039,25 @@ def render_scan_form():
                     model_source = st.session_state.get("model_source", "Repository URL")
                     model_type = st.session_state.get("model_type", "ONNX")
                     
+                    # Get advanced options for AI model scan
+                    leakage_types = st.session_state.get("leakage_types", ["PII in Training Data", "PII in Model Output"])
+                    fairness_metrics = st.session_state.get("fairness_metrics", ["Disparate Impact"])
+                    explainability_checks = st.session_state.get("explainability_checks", ["Feature Importance", "Model Interpretability"])
+                    context = st.session_state.get("context", ["General"])
+                    
                     # Prepare model details based on source
-                    model_details = {}
+                    model_details = {
+                        # Include model_type and other parameters in model_details
+                        "model_type": model_type,
+                        "fairness_metrics": fairness_metrics,
+                        "explainability_checks": explainability_checks
+                    }
+                    
                     if model_source == "Repository URL":
-                        model_details = {
+                        model_details.update({
                             "repo_url": st.session_state.get("repo_url", ""),
                             "branch_name": st.session_state.get("branch", "main")
-                        }
+                        })
                     elif model_source == "Model Hub":
                         model_details = {
                             "hub_url": st.session_state.get("hub_url", ""),
@@ -1072,15 +1084,13 @@ def render_scan_form():
                     sample_inputs = [line.strip() for line in sample_inputs_text.split("\n") if line.strip()]
                     
                     # Perform the enhanced AI model scan
+                    # Call scan_model with only the parameters supported by the parent class
                     results = scanner.scan_model(
                         model_source=model_source,
                         model_details=model_details,
-                        model_type=model_type,
                         leakage_types=leakage_types,
-                        fairness_metrics=fairness_metrics,
-                        explainability_checks=explainability_checks,
-                        sample_inputs=sample_inputs,
-                        context=context
+                        context=context,
+                        sample_inputs=sample_inputs
                     )
                 
                 except Exception as e:
