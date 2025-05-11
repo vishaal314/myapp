@@ -211,7 +211,6 @@ def change_user_subscription(username: str, new_tier: str) -> Tuple[bool, str]:
     # Update user
     return update_user(username, subscription_tier=new_tier)
 
-@requires_permission("admin:users")
 def render_user_management():
     """
     Render the user management UI for administrators

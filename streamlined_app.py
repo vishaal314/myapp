@@ -784,9 +784,8 @@ def render_landing_page():
 # DASHBOARD COMPONENTS
 # =============================================================================
 
-@requires_permission("dashboard:view_metrics")
 def render_summary_metrics():
-    """Render summary metrics for the dashboard with permission control"""
+    """Render summary metrics for the dashboard"""
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(label="Total Scans", value=random.randint(10, 100))
@@ -797,9 +796,8 @@ def render_summary_metrics():
     with col4:
         st.metric(label="Risk Score", value=f"{random.randint(10, 40)}/100")
 
-@requires_permission("dashboard:view_scan_history")
 def render_scan_history():
-    """Render scan history table with permission control"""
+    """Render scan history table"""
     st.subheader("Recent Scans")
     if not st.session_state.scan_history:
         st.info("No scan history available. Run a scan to see results here.")
@@ -818,9 +816,8 @@ def render_scan_history():
         ])
         st.dataframe(scan_df, use_container_width=True)
 
-@requires_permission("scan:run_basic")
 def render_scan_form():
-    """Render scan configuration form with RBAC protection"""
+    """Render scan configuration form"""
     st.subheader("Configure Scan")
     
     scan_types = [
@@ -1016,9 +1013,8 @@ def render_scan_form():
         else:
             st.json(results)
 
-@requires_permission("reports:view")
 def render_reports_section():
-    """Render reports section with permission control"""
+    """Render reports section"""
     st.subheader("Compliance Reports")
     
     if not st.session_state.scan_history:
@@ -1256,9 +1252,8 @@ def render_reports_section():
                     st.error(f"Error generating PDF report: {str(e)}")
                     st.info("Please try again or contact support if the problem persists.")
 
-@requires_role("admin")
 def render_admin_section():
-    """Render admin section with role-based access control"""
+    """Render admin section"""
     # Use our new admin panel with RBAC protection
     render_admin_panel()
 

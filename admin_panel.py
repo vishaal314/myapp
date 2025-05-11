@@ -18,7 +18,6 @@ from access_control.rbac import (
 )
 from access_control.user_management import render_user_management
 
-@requires_role("admin")
 def render_admin_panel():
     """
     Render the admin panel
