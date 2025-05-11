@@ -547,6 +547,8 @@ if "logged_in" not in st.session_state:
     st.session_state.current_scan_results = None
     st.session_state.permissions = []
     st.session_state.subscription_tier = "basic"  # Default subscription tier
+    st.session_state.current_view = "landing"  # Default view (landing, signup, payment_method)
+    st.session_state.signup_success = False  # Track if signup was successful
 
 # =============================================================================
 # UI COMPONENTS
@@ -739,7 +741,9 @@ def render_landing_page():
     # CTA Button
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.button("Start Free Trial", type="primary", use_container_width=True)
+        if st.button("Start Free Trial", type="primary", use_container_width=True, key="start_trial_button"):
+            st.session_state.current_view = "signup"
+            st.rerun()
     
     st.markdown("---")  # Separator
     
@@ -778,7 +782,9 @@ def render_landing_page():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.button("Sign Up Now", type="primary", use_container_width=True, key="signup_button")
+        if st.button("Sign Up Now", type="primary", use_container_width=True, key="signup_button"):
+            st.session_state.current_view = "signup"
+            st.rerun()
 
 # =============================================================================
 # DASHBOARD COMPONENTS

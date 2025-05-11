@@ -352,7 +352,10 @@ def render_trial_expiry_notice():
         return
     
     # Check if user is on free trial
-    username = st.session_state.get("username")
+    username = st.session_state.get("username", "")
+    if not username:
+        return
+        
     users = load_users()
     if username not in users:
         return
@@ -396,7 +399,11 @@ def render_payment_method_selection():
         st.warning("Please log in to add a payment method.")
         return
     
-    username = st.session_state.get("username")
+    username = st.session_state.get("username", "")
+    if not username:
+        st.error("Username not found in session")
+        return
+        
     users = load_users()
     if username not in users:
         st.error("User not found")
@@ -432,13 +439,16 @@ def render_payment_method_selection():
         st.info("You'll be redirected to your bank's iDEAL payment page to complete the subscription.")
     
     # Get stripe customer ID
-    customer_id = user_data.get("stripe_customer_id")
+    customer_id = user_data.get("stripe_customer_id", "")
     if not customer_id:
         st.error("Error retrieving customer information. Please contact support.")
         return
     
     # Get price ID for the selected plan
-    price_id = plan.get("stripe_price_id")
+    price_id = plan.get("stripe_price_id", "")
+    if not price_id:
+        st.error("Error retrieving plan information. Please contact support.")
+        return
     
     # Create checkout button
     if st.button("Continue to Payment", type="primary"):
