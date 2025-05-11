@@ -501,26 +501,12 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
             elements.append(Spacer(1, 0.3*inch))
         else:
             logger.warning("Logo file not found in any of the expected locations")
-            # Create modern text-based header as fallback with enhanced styling
-            elements.append(Spacer(1, 0.3*inch))
-            header_text = Paragraph(
-                '<font size="24" color="#4f46e5"><b>DataGuardian Pro</b></font>', 
-                ParagraphStyle(
-                    'CertificateHeader',
-                    parent=styles['Title'],
-                    alignment=1,
-                    spaceAfter=16
-                )
-            )
-            elements.append(header_text)
+            # Create an empty space instead of text header
+            elements.append(Spacer(1, 0.5*inch))
     except Exception as e:
         logger.error(f"Error adding logo: {str(e)}")
-        # Create text-based header as fallback
-        header_text = Paragraph(
-            '<font size="24" color="#4f46e5"><b>DataGuardian Pro</b></font>', 
-            styles['Title']
-        )
-        elements.append(header_text)
+        # Just add space instead of text header
+        elements.append(Spacer(1, 0.5*inch))
     
     # Create modern certificate-style title block with border and background
     elements.append(Spacer(1, 0.3*inch))
@@ -652,14 +638,33 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
     elements.append(summary_table)
     elements.append(Spacer(1, 0.2*inch))
     
-    # Create certification details with a clean, modern table
-    cert_data = []
+    # Create a modern certificate details section with clean formatting
+    elements.append(Spacer(1, 0.3*inch))
     
-    # Title row
-    cert_data.append([Paragraph("<b>CERTIFICATION DETAILS</b>",
-                     ParagraphStyle('TableHeader', parent=body_style, alignment=1))])
+    # Certificate section title with modern styling
+    elements.append(
+        Paragraph(
+            f'<font size="12" color="{BRANDING_COLORS["primary"]}"><b>CERTIFICATION DETAILS</b></font>',
+            ParagraphStyle(
+                'CertDetailsTitle',
+                alignment=1,  # Center
+                spaceBefore=6,
+                spaceAfter=10,
+            )
+        )
+    )
     
-    # Details in two-column format
+    # Add a subtle separator line
+    separator = Drawing(400, 10)
+    separator.add(Line(
+        100, 5, 300, 5, 
+        strokeColor=HexColor(BRANDING_COLORS["secondary"]),
+        strokeWidth=1
+    ))
+    elements.append(separator)
+    elements.append(Spacer(1, 0.15*inch))
+    
+    # Create details in a cleaner, more modern two-column layout
     details = [
         ["Certificate ID", scan_id],
         ["Model Type", model_type],
@@ -673,39 +678,44 @@ def create_ai_model_scan_report(scan_data: Dict[str, Any]) -> bytes:
         details.append(["Repository URL", scan_data.get('repository_url', 'Not specified')])
         details.append(["Branch", scan_data.get('branch', 'Not specified')])
     
-    # Create a nice 2-column layout with alternating colors
-    for i, (label, value) in enumerate(details):
-        bg_color = "#F8FAFC" if i % 2 == 0 else "#FFFFFF"  # Alternating row colors
-        cert_data.append([
-            Table(
-                [[
-                    Paragraph(f"<b>{label}:</b>", body_style),
-                    Paragraph(f"{value}", body_style)
-                ]], 
-                colWidths=[1.5*inch, 4*inch],
-                style=TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, -1), HexColor(bg_color)),
-                    ('ALIGN', (0, 0), (0, 0), 'RIGHT'),
-                    ('ALIGN', (1, 0), (1, 0), 'LEFT'),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
-                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-                    ('TOPPADDING', (0, 0), (-1, -1), 5),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-                ])
-            )
+    # Create a more modern details table with cleaner layout
+    details_rows = []
+    for label, value in details:
+        details_rows.append([
+            Paragraph(f"<b>{label}</b>", 
+                ParagraphStyle('LabelStyle', alignment=0, fontSize=9, spaceBefore=4, spaceAfter=4)),
+            Paragraph(f"{value}", 
+                ParagraphStyle('ValueStyle', alignment=0, fontSize=9, spaceBefore=4, spaceAfter=4))
         ])
     
-    # Assemble the entire certification details table
-    cert_table = Table(cert_data, colWidths=[6*inch])
-    cert_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('BOX', (0, 0), (-1, -1), 1, HexColor(BRANDING_COLORS["primary"])),
-        ('LINEBELOW', (0, 0), (-1, 0), 1, HexColor(BRANDING_COLORS["primary"])),
-        ('BACKGROUND', (0, 0), (-1, 0), HexColor(BRANDING_COLORS["primary"])),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-    ]))
-    elements.append(cert_table)
+    # Build a clean, modern details table
+    details_table = Table(
+        details_rows, 
+        colWidths=[1.5*inch, 4*inch],
+        style=TableStyle([
+            # Borders and shading
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, HexColor(BRANDING_COLORS["primary"])),
+            
+            # Alignment
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),  # Label column right-aligned
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),   # Value column left-aligned
+            
+            # Padding for readability
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            
+            # Alternating row colors for better readability
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#f1f5f9')),  # Header row
+            ('BACKGROUND', (0, 2), (-1, 2), HexColor('#f1f5f9')),  # Even rows
+            ('BACKGROUND', (0, 4), (-1, 4), HexColor('#f1f5f9')),
+            ('BACKGROUND', (0, 6), (-1, 6), HexColor('#f1f5f9')),
+        ])
+    )
+    elements.append(details_table)
     elements.append(Spacer(1, 0.2*inch))
     
     # Risk assessment summary with visual meter
