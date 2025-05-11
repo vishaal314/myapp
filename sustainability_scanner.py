@@ -279,6 +279,11 @@ def perform_sustainability_scan(provider, region, repo_url=None, scan_depth="Sta
     # Calculate sustainability score
     sustainability_score = calculate_sustainability_score(findings, idle_percentage, carbon_footprint)
     
+    # Count findings by risk level
+    high_risk_count = sum(1 for f in findings if f.get("risk_level") == "high")
+    medium_risk_count = sum(1 for f in findings if f.get("risk_level") == "medium")
+    low_risk_count = sum(1 for f in findings if f.get("risk_level") == "low")
+    
     # Create full scan results
     scan_results = {
         "scan_id": scan_id,
@@ -297,7 +302,13 @@ def perform_sustainability_scan(provider, region, repo_url=None, scan_depth="Sta
         },
         "carbon_footprint": carbon_footprint,
         "findings": findings,
-        "recommendations": recommendations
+        "recommendations": recommendations,
+        # Add top-level properties used by reporting system
+        "total_findings": len(findings),
+        "high_risk": high_risk_count,
+        "medium_risk": medium_risk_count,
+        "low_risk": low_risk_count,
+        "compliance_score": sustainability_score
     }
     
     return scan_results
