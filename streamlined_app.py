@@ -1131,82 +1131,8 @@ def render_reports_section():
 
 def render_admin_section():
     """Render admin section"""
-    if "admin:all" not in st.session_state.permissions:
-        st.warning("You do not have permission to access the administration section.")
-        return
-        
-    st.subheader("Administration")
-    
-    admin_tabs = st.tabs(["Users", "Settings", "Advanced"])
-    
-    # Users Tab
-    with admin_tabs[0]:
-        st.subheader("User Management")
-        
-        # Mock user data
-        users = [
-            {"username": "admin", "role": "admin", "email": "admin@dataguardian.pro", "last_login": "2023-04-30 10:15"},
-            {"username": "user", "role": "viewer", "email": "user@dataguardian.pro", "last_login": "2023-04-29 14:22"},
-            {"username": "security", "role": "security_engineer", "email": "security@dataguardian.pro", "last_login": "2023-04-28 09:45"}
-        ]
-        
-        users_df = pd.DataFrame(users)
-        st.dataframe(users_df, use_container_width=True)
-        
-        # User creation form
-        with st.expander("Add New User"):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.text_input("Username", key="new_username")
-                st.text_input("Email", key="new_email")
-            with col2:
-                st.text_input("Password", type="password", key="new_password")
-                st.selectbox("Role", ["admin", "security_engineer", "auditor", "viewer"], key="new_role")
-            
-            if st.button("Create User", key="create_user_button"):
-                st.success("User created successfully (mock)")
-    
-    # Settings Tab
-    with admin_tabs[1]:
-        st.subheader("System Settings")
-        
-        settings_tabs = st.tabs(["General", "Security", "Integrations"])
-        
-        with settings_tabs[0]:
-            st.text_input("Company Name", value="Example Corporation")
-            st.number_input("Session Timeout (minutes)", min_value=5, max_value=120, value=30)
-            st.selectbox("Default Language", ["English", "Dutch", "French", "German", "Spanish"])
-        
-        with settings_tabs[1]:
-            st.checkbox("Enable 2FA", value=True, key="enable_2fa")
-            st.checkbox("Enforce Password Complexity", value=True, key="enforce_pwd_complexity")
-            st.slider("Minimum Password Length", min_value=8, max_value=24, value=12)
-        
-        with settings_tabs[2]:
-            st.text_input("API Key", value="sk_test_*********************", type="password")
-            st.text_input("Webhook URL")
-            st.multiselect("Active Integrations", 
-                           ["GitHub", "GitLab", "Bitbucket", "Jira", "Slack", "Microsoft Teams"],
-                           ["GitHub", "Slack"])
-    
-    # Advanced Tab
-    with admin_tabs[2]:
-        st.subheader("Advanced Settings")
-        
-        st.info("Note: Changes to advanced settings may require system restart")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.slider("Scan Threads", min_value=1, max_value=16, value=4)
-            st.checkbox("Enable Deep Scanning", value=False, key="enable_deep_scan")
-            st.checkbox("Debug Mode", value=False, key="debug_mode")
-        
-        with col2:
-            st.selectbox("Log Level", ["ERROR", "WARNING", "INFO", "DEBUG"])
-            st.text_area("Custom Scan Rules")
-            
-        if st.button("Apply Settings", key="apply_settings_button"):
-            st.success("Settings applied successfully")
+    # Use our new admin panel with RBAC protection
+    render_admin_panel()
 
 # =============================================================================
 # MAIN APPLICATION
