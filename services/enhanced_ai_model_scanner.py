@@ -56,28 +56,26 @@ class EnhancedAIModelScanner(AIModelScanner):
             self,
             model_source: str,
             model_details: Dict[str, Any],
-            model_type: str = "Unknown",
             leakage_types: Optional[List[str]] = None,
-            fairness_metrics: Optional[List[str]] = None,
-            explainability_checks: Optional[List[str]] = None,
-            sample_inputs: Optional[List[str]] = None,
-            context: Optional[List[str]] = None) -> Dict[str, Any]:
+            context: Optional[List[str]] = None,
+            sample_inputs: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Scan AI model for privacy and ethical concerns
         
         Args:
             model_source: Source of the model ("Repository URL", "Model Hub", "API Endpoint", "Local File")
             model_details: Details of the model source (paths, URLs, etc.)
-            model_type: Type of model ("ONNX", "TensorFlow", "PyTorch", etc.)
             leakage_types: Types of leakage to check for
-            fairness_metrics: Fairness metrics to evaluate
-            explainability_checks: Explainability checks to perform
-            sample_inputs: Sample inputs for testing
             context: Context for the scan
+            sample_inputs: Sample inputs for testing
             
         Returns:
             Dictionary with scan results
         """
+        # Extract extended parameters from model_details
+        model_type = model_details.get("model_type", "Unknown") 
+        fairness_metrics = model_details.get("fairness_metrics")
+        explainability_checks = model_details.get("explainability_checks")
         if leakage_types is None:
             leakage_types = ["PII in Training Data", "PII in Model Output", "PII in Model Parameters"]
         if fairness_metrics is None:
