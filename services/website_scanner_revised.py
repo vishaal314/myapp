@@ -701,14 +701,25 @@ def generate_gdpr_report(results):
         spaceAfter=5
     ))
     
-    # Add title with modern certificate look
-    elements.append(Spacer(1, 0.25*inch))
+    # Add spacer at the top of the document
+    elements.append(Spacer(1, 0.5*inch))
     
-    # Add logo at the top of the PDF
+    # Create a centered table for the logo
     logo_stream = get_logo_stream()
     if logo_stream:
-        logo_img = Image(logo_stream, width=3*inch, height=0.9*inch)
-        elements.append(logo_img)
+        # Create a larger logo image for modern minimalistic design
+        logo_img = Image(logo_stream, width=2.5*inch, height=2.5*inch)
+        
+        # Center the logo using a single-cell table
+        logo_table = Table([[logo_img]], colWidths=[6.5*inch])
+        logo_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+            ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
+        ]))
+        elements.append(logo_table)
+    
+    # Add some space after the logo
+    elements.append(Spacer(1, 0.5*inch))
     
     # Determine if this is a Dutch-specific report
     is_dutch = "netherlands_uavg" in results.get("categories", {})
