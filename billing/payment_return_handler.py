@@ -100,8 +100,11 @@ def handle_payment_return() -> Tuple[bool, Dict[str, Any]]:
     # Check the payment status from Stripe if we have a payment intent
     elif payment_intent_id:
         try:
+            # Check if we're in live mode
+            is_live_mode = st.session_state.get("use_live_mode", False)
+            
             # Check payment status (either real or mock)
-            payment_status = check_payment_status(payment_intent_id)
+            payment_status = check_payment_status(payment_intent_id, live_mode=is_live_mode)
             
             # Update result with payment status
             status = payment_status.get("status", "unknown")

@@ -874,16 +874,19 @@ def process_ideal_payment(customer_id: str, amount: int, currency: str = "eur",
         }
 
 
-def check_payment_status(payment_intent_id: str) -> Dict[str, Any]:
+def check_payment_status(payment_intent_id: str, live_mode: bool = False) -> Dict[str, Any]:
     """
     Check the status of a payment intent
     
     Args:
         payment_intent_id: The Stripe PaymentIntent ID
+        live_mode: If True, use live mode for real transactions
         
     Returns:
         Dictionary with payment status details
     """
+    # Initialize Stripe with the correct mode
+    init_stripe(live_mode=live_mode)
     # Check if this is a mock payment ID
     is_mock = payment_intent_id and (
         (payment_intent_id.startswith("pi_") and "_" in payment_intent_id) or

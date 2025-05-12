@@ -378,15 +378,40 @@ def render_ideal_payment_page(username: str, user_data: Dict[str, Any]):
             st.info("Payment is processing...")
             status_class = "pending"
         elif status == "requires_action" and redirect_url:
-            st.warning("Your bank requires authentication to complete this payment.")
+            # Check if we're in live mode or test mode
+            is_live_mode = st.session_state.get("use_live_mode", False)
             
-            # Add a button to start bank auth simulator instead of external link
-            if st.button("Click here to authenticate with your bank", type="primary", key="start_bank_auth"):
-                # Set session state for bank auth mode
-                st.session_state.in_bank_auth_mode = True
-                st.session_state.bank_auth_payment_id = payment_id
-                st.session_state.bank_auth_return_url = redirect_url
-                st.rerun()
+            if is_live_mode:
+                st.warning("Your bank requires authentication to complete this payment.")
+                st.info("You will be redirected to your bank's secure payment page to authenticate this transaction.")
+                
+                # Mode indicator for live mode
+                st.error("⚠️ LIVE MODE: This will process a real payment at your bank")
+                
+                # Add a button to redirect directly to the real bank in live mode
+                if st.button("Proceed to Bank Authentication", type="primary", key="go_to_real_bank"):
+                    # Use JavaScript to redirect to the real bank
+                    st.markdown(f"""
+                    <script>
+                        window.location.href = "{redirect_url}";
+                    </script>
+                    """, unsafe_allow_html=True)
+                    
+                    st.info("Redirecting to your bank's secure payment page...")
+                    st.markdown(f"If you are not automatically redirected, [click here to continue to your bank]({redirect_url}).")
+            else:
+                st.warning("Your bank requires authentication to complete this payment.")
+                
+                # Mode indicator for test mode
+                st.info("TEST MODE: This will use our simulated bank environment")
+                
+                # Add a button to start bank auth simulator in test mode
+                if st.button("Click here to authenticate with your bank", type="primary", key="start_bank_auth"):
+                    # Set session state for bank auth mode
+                    st.session_state.in_bank_auth_mode = True
+                    st.session_state.bank_auth_payment_id = payment_id
+                    st.session_state.bank_auth_return_url = redirect_url
+                    st.rerun()
                 
             status_class = "pending"
         else:
