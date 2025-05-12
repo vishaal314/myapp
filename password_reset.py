@@ -104,9 +104,10 @@ def show_request_reset_form():
                     success, message, token = generate_password_reset_token(email)
                     
                     if success and token:
-                        # Create reset URL
-                        # In production, this would be a proper URL, but for demo we use the current page with a token parameter
-                        reset_url = f"http://localhost:5000/?token={token}"
+                        # Create reset URL that works in the current environment
+                        # Get the base URL from the request to ensure it works in any environment
+                        # In a real production environment, you would use a proper domain
+                        reset_url = f"/?token={token}"
                         
                         # Send email
                         email_sent, email_message = send_password_reset_email(email, reset_url)
@@ -116,8 +117,17 @@ def show_request_reset_form():
                             st.session_state.pwd_reset_email = email
                             st.success("Password reset link has been sent to your email address. Please check your inbox.")
                             
-                            # Display the link for demo purposes only
-                            st.info(f"Since this is a demo, here's your reset link: [Reset Password]({reset_url})", icon="ℹ️")
+                            # Display the link for demo purposes only with a direct button
+                            st.info("Since this is a demo, you can use the reset link below:", icon="ℹ️")
+                            
+                            # Store token for direct use
+                            st.session_state.reset_direct_token = token
+                            
+                            # Add a direct button to reset with this token
+                            if st.button("Click to Reset Password Now", key="direct_reset_btn", type="primary"):
+                                st.session_state.reset_token = token
+                                st.session_state.reset_step = 2
+                                st.rerun()
                         else:
                             st.error(f"Failed to send email: {email_message}")
                     else:
