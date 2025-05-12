@@ -1,4 +1,16 @@
 {
+  "vishaal314": {
+    "username": "vishaal314",
+    "password_hash": "a30a49de387f4c40919644097781974361f8384a7542cb6ac1c4d90a8abfcae6",
+    "role": "admin",
+    "email": "vishaal314@gmail.com",
+    "subscription_tier": "gold",
+    "subscription_active": true,
+    "stripe_customer_id": null,
+    "subscription_id": null,
+    "user_id": "usr_vishaal314",
+    "subscription_renewal_date": "2025-06-01"
+  },
   "admin": {
     "username": "admin",
     "password_hash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
@@ -37,7 +49,7 @@
   },
   "vishaal": {
     "username": "vishaal",
-    "password_hash": "b3e25f1e51569600c3fa6897fa1f4516a44fe8d2b3cea3f39d4a249c51b65473",
+    "password_hash": "a30a49de387f4c40919644097781974361f8384a7542cb6ac1c4d90a8abfcae6",
     "role": "admin",
     "email": "vishaal314@gmail.com",
     "subscription_tier": "gold",
