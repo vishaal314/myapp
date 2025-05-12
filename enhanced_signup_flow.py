@@ -361,6 +361,20 @@ def render_enhanced_signup_page():
                             st.rerun()
                         else:
                             st.error(message)
+                            
+        # Add "Forgot Password" link below the form
+        st.markdown("""
+        <div style="text-align: center; margin-top: 20px;">
+            <p style="font-size: 14px; color: #4a5568;">
+                Already have an account but <a href="#forgot_password" style="color: #4f46e5; text-decoration: none;">forgot your password?</a>
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Check if the "Forgot password?" link was clicked
+        if "forgot_password" in st.query_params:
+            st.session_state.current_view = "password_reset"
+            st.rerun()
         
         # Back button to return to Plan Selection
         if st.button("Back to Plan Selection"):
