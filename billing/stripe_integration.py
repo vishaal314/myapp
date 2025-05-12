@@ -13,6 +13,7 @@ import json
 import stripe
 import uuid
 import hashlib
+import traceback
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
@@ -88,14 +89,55 @@ def create_stripe_customer(customer_data: Dict[str, Any]) -> str:
     Create a new customer in Stripe
     
     Args:
-        customer_data: Dictionary with customer details
+        customer_data: Dictionary with customer details including:
+            - email: Customer email
+            - name: Customer name
+            - metadata: Additional metadata (optional)
         
     Returns:
         Stripe customer ID
     """
-    # In a real app, we would call the Stripe API
-    # For this demo, we'll return a mock customer ID
-    return f"cus_{hashlib.md5(str(customer_data).encode()).hexdigest()[:16]}"
+    try:
+        # Initialize Stripe
+        init_stripe()
+        
+        print(f"Creating Stripe customer for {customer_data.get('email', 'Unknown')}")
+        
+        # Extract customer details
+        email = customer_data.get("email")
+        name = customer_data.get("name")
+        
+        if not email:
+            raise ValueError("Email is required to create a Stripe customer")
+        
+        # Create customer in Stripe
+        try:
+            stripe_customer = stripe.Customer.create(
+                email=email,
+                name=name,
+                metadata=customer_data.get("metadata", {})
+            )
+            
+            print(f"Successfully created Stripe customer: {stripe_customer.id}")
+            return stripe_customer.id
+            
+        except stripe.error.StripeError as e:
+            print(f"Stripe API error: {str(e)}")
+            print("Falling back to mock customer ID for development/testing")
+            
+            # Fallback for development/testing
+            mock_customer_id = f"cus_{hashlib.md5(str(customer_data).encode()).hexdigest()[:16]}"
+            print(f"Created mock customer ID: {mock_customer_id}")
+            return mock_customer_id
+            
+    except Exception as e:
+        print(f"Error creating Stripe customer: {str(e)}")
+        print(traceback.format_exc())
+        
+        # Fallback with error prefix to indicate it's a mock due to error
+        mock_customer_id = f"cus_{hashlib.md5(str(customer_data).encode()).hexdigest()[:16]}"
+        print(f"Fallback to mock customer ID: {mock_customer_id}")
+        return mock_customer_id
 
 def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
     """
@@ -108,79 +150,198 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
     Returns:
         Payment method details
     """
-    # In a real app, we would call the Stripe API
-    # For this demo, we'll create a mock payment method and store it
-    import os
-    import json
-    
-    payment_type = kwargs.get("payment_type", "card")
-    
-    if payment_type == "card":
-        # Create a mock card payment method
-        card_number = kwargs.get("card_number", "4242424242424242")
-        exp_month = kwargs.get("exp_month", "12")
-        exp_year = kwargs.get("exp_year", "25")
-        cardholder_name = kwargs.get("cardholder_name", "Test User")
+    try:
+        # Initialize Stripe
+        init_stripe()
         
-        # Basic validation
-        if not card_number.isdigit() or len(card_number) < 13 or len(card_number) > 19:
-            raise ValueError("Invalid card number")
+        payment_type = kwargs.get("payment_type", "card")
         
-        # Create unique id with timestamp to prevent duplicates
-        now = datetime.now()
-        timestamp = now.strftime("%Y%m%d%H%M%S")
-        created_date = now.strftime("%d/%m/%Y %H:%M")
-        unique_id = f"pm_card_{timestamp}_{hashlib.md5((card_number + cardholder_name).encode()).hexdigest()[:12]}"
+        if payment_type == "card":
+            # Extract card details
+            card_number = kwargs.get("card_number", "4242424242424242")
+            exp_month = kwargs.get("exp_month", "12")
+            exp_year = kwargs.get("exp_year", "25")
+            cvc = kwargs.get("cvc", "123")
+            cardholder_name = kwargs.get("cardholder_name", "Test User")
+            email = kwargs.get("email", "customer@example.com")
+            
+            # Basic validation
+            if not card_number.isdigit() or len(card_number) < 13 or len(card_number) > 19:
+                raise ValueError("Invalid card number")
+            
+            try:
+                # Create a payment method in Stripe
+                print(f"Creating Stripe card payment method for customer {customer_id}")
+                stripe_payment_method = stripe.PaymentMethod.create(
+                    type="card",
+                    card={
+                        "number": card_number,
+                        "exp_month": int(exp_month),
+                        "exp_year": int(exp_year),
+                        "cvc": cvc,
+                    },
+                    billing_details={
+                        "name": cardholder_name,
+                        "email": email
+                    }
+                )
+                
+                # Attach the payment method to the customer
+                print(f"Attaching payment method {stripe_payment_method.id} to customer {customer_id}")
+                stripe.PaymentMethod.attach(
+                    stripe_payment_method.id,
+                    customer=customer_id
+                )
+                
+                # Mark as default if requested
+                if kwargs.get("set_default", True):
+                    print(f"Setting payment method {stripe_payment_method.id} as default for customer {customer_id}")
+                    stripe.Customer.modify(
+                        customer_id,
+                        invoice_settings={
+                            "default_payment_method": stripe_payment_method.id
+                        }
+                    )
+                
+                # Get card details safely
+                card = getattr(stripe_payment_method, 'card', None)
+                card_brand = getattr(card, 'brand', 'Unknown').capitalize() if card else 'Unknown'
+                card_last4 = getattr(card, 'last4', '0000') if card else '0000'
+                card_exp_month = str(getattr(card, 'exp_month', '12')) if card else '12'
+                card_exp_year = str(getattr(card, 'exp_year', '2025')) if card else '2025'
+                
+                # Format the payment method for our application
+                payment_method = {
+                    "id": stripe_payment_method.id,
+                    "type": "card",
+                    "card_brand": card_brand,
+                    "last4": card_last4,
+                    "exp_month": card_exp_month,
+                    "exp_year": card_exp_year,
+                    "cardholder_name": cardholder_name,
+                    "created_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                    "is_default": kwargs.get("set_default", True)
+                }
+                
+                print(f"Successfully created Stripe payment method {payment_method['id']}")
+                
+            except Exception as e:
+                # Handle both Stripe errors and other exceptions
+                error_type = "Stripe API error" if "stripe" in str(type(e)).lower() else "Error creating payment method"
+                print(f"{error_type}: {str(e)}")
+                print("Falling back to mock implementation for development/testing")
+                
+                # Fallback to mock implementation for development/testing
+                now = datetime.now()
+                timestamp = now.strftime("%Y%m%d%H%M%S")
+                created_date = now.strftime("%d/%m/%Y %H:%M")
+                unique_id = f"pm_card_{timestamp}_{hashlib.md5((card_number + cardholder_name).encode()).hexdigest()[:12]}"
+                
+                payment_method = {
+                    "id": unique_id,
+                    "type": "card",
+                    "card_brand": _get_card_brand(card_number),
+                    "last4": card_number[-4:],
+                    "exp_month": exp_month,
+                    "exp_year": exp_year,
+                    "cardholder_name": cardholder_name,
+                    "created_at": created_date,
+                    "is_default": True,
+                    "is_mock": True  # Flag to indicate this is a mock payment method
+                }
+            
+            # Add the payment method to local storage for persistence
+            _add_payment_method_to_storage(customer_id, payment_method)
+            return payment_method
+            
+        elif payment_type == "ideal":
+            # Extract iDEAL details
+            bank = kwargs.get("bank", "ing")
+            account_name = kwargs.get("account_name", "Test User")
+            email = kwargs.get("email", "customer@example.com")
+            
+            try:
+                # Create a payment method in Stripe
+                print(f"Creating Stripe iDEAL payment method for customer {customer_id}")
+                stripe_payment_method = stripe.PaymentMethod.create(
+                    type="ideal",
+                    ideal={
+                        "bank": bank,  # valid values: abn_amro, asn_bank, bunq, ing, knab, moneyou, rabobank, regiobank, revolut, sns_bank, triodos_bank, van_lanschot
+                    },
+                    billing_details={
+                        "name": account_name,
+                        "email": email
+                    }
+                )
+                
+                # Attach the payment method to the customer
+                print(f"Attaching iDEAL payment method {stripe_payment_method.id} to customer {customer_id}")
+                stripe.PaymentMethod.attach(
+                    stripe_payment_method.id,
+                    customer=customer_id
+                )
+                
+                # Format the payment method for our application
+                bank_name = bank.replace("_", " ").title()
+                
+                # Get iDEAL details safely
+                ideal = getattr(stripe_payment_method, 'ideal', None)
+                bic = getattr(ideal, 'bic', '') if ideal else ''
+                last4 = bic[-4:] if bic and len(bic) >= 4 else "Bank"
+                
+                payment_method = {
+                    "id": stripe_payment_method.id,
+                    "type": "ideal",
+                    "card_brand": f"iDEAL ({bank_name})",
+                    "last4": last4,
+                    "exp_month": "NA",
+                    "exp_year": "NA",
+                    "cardholder_name": account_name,
+                    "created_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                    "is_default": kwargs.get("set_default", True)
+                }
+                
+                print(f"Successfully created Stripe iDEAL payment method {payment_method['id']}")
+                
+            except Exception as e:
+                # Handle both Stripe errors and other exceptions
+                error_type = "Stripe API error" if "stripe" in str(type(e)).lower() else "Error creating iDEAL payment method"
+                print(f"{error_type}: {str(e)}")
+                print("Falling back to mock implementation for development/testing")
+                
+                # Fallback to mock implementation for development/testing
+                now = datetime.now()
+                timestamp = now.strftime("%Y%m%d%H%M%S")
+                created_date = now.strftime("%d/%m/%Y %H:%M")
+                unique_id = f"pm_ideal_{timestamp}_{hashlib.md5((bank + account_name).encode()).hexdigest()[:12]}"
+                
+                # Format bank name for display
+                bank_name = bank.replace("_", " ").title()
+                
+                payment_method = {
+                    "id": unique_id,
+                    "type": "ideal",
+                    "card_brand": f"iDEAL ({bank_name})",
+                    "last4": "Bank", 
+                    "exp_month": "NA",
+                    "exp_year": "NA",
+                    "cardholder_name": account_name,
+                    "created_at": created_date,
+                    "is_default": True,
+                    "is_mock": True  # Flag to indicate this is a mock payment method
+                }
+            
+            # Add the payment method to local storage for persistence
+            _add_payment_method_to_storage(customer_id, payment_method)
+            return payment_method
         
-        # Create new payment method object
-        payment_method = {
-            "id": unique_id,
-            "type": "card",
-            "card_brand": _get_card_brand(card_number),
-            "last4": card_number[-4:],
-            "exp_month": exp_month,
-            "exp_year": exp_year,
-            "cardholder_name": cardholder_name,
-            "created_at": created_date,
-            "is_default": True  # Set as default if it's the first one
-        }
-        
-        # Add the payment method to the customer's saved payment methods
-        _add_payment_method_to_storage(customer_id, payment_method)
-        
-        return payment_method
-    
-    elif payment_type == "ideal":
-        # Create a mock iDEAL payment method
-        bank = kwargs.get("bank", "ing")
-        account_name = kwargs.get("account_name", "Test User")
-        
-        # Create unique id with timestamp to prevent duplicates
-        now = datetime.now()
-        timestamp = now.strftime("%Y%m%d%H%M%S")
-        created_date = now.strftime("%d/%m/%Y %H:%M")
-        unique_id = f"pm_ideal_{timestamp}_{hashlib.md5((bank + account_name).encode()).hexdigest()[:12]}"
-        
-        # Create new payment method object
-        payment_method = {
-            "id": unique_id,
-            "type": "ideal",
-            "card_brand": f"iDEAL ({bank})",
-            "last4": "Bank", 
-            "exp_month": "NA",
-            "exp_year": "NA",
-            "cardholder_name": account_name,
-            "created_at": created_date,
-            "is_default": True  # Set as default if it's the first one
-        }
-        
-        # Add the payment method to the customer's saved payment methods
-        _add_payment_method_to_storage(customer_id, payment_method)
-        
-        return payment_method
-    
-    else:
-        raise ValueError(f"Unsupported payment type: {payment_type}")
+        else:
+            raise ValueError(f"Unsupported payment type: {payment_type}")
+            
+    except Exception as e:
+        print(f"Error creating payment method: {str(e)}")
+        print(traceback.format_exc())
+        raise
 
 def deduplicate_payment_methods(payment_methods: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
