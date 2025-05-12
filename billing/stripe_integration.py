@@ -1,405 +1,264 @@
 """
-Stripe Integration Module for DataGuardian Pro
+Stripe Integration for DataGuardian Pro
 
-This module handles all Stripe-related functionality including:
-- Customer creation and management
-- Subscription handling and checkout flows
-- Webhook processing
-- Payment history retrieval
+This module provides the Stripe integration for payment processing including:
+- Customer management
+- Payment method handling
+- Subscription management
+- Invoice generation and retrieval
 """
 
 import os
 import json
 import stripe
-import streamlit as st
-from typing import Dict, Any, Optional, List, Tuple
-from datetime import datetime
 import uuid
-import hmac
 import hashlib
+from datetime import datetime, timedelta
+from typing import Dict, Any, List, Optional
 
-# Initialize Stripe with API keys from environment variables
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
-stripe_publishable_key = os.environ.get('STRIPE_PUBLISHABLE_KEY')
-webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+# Initialize Stripe with the API key
+def init_stripe():
+    """Initialize Stripe with the API key from environment variables"""
+    # Get API key from environment, or use a mock key for testing
+    stripe_secret_key = os.environ.get("STRIPE_SECRET_KEY", "sk_test_mock")
+    
+    # In a real app, we would use the actual Stripe API
+    # For this demo, we'll mock the API calls
+    return stripe_secret_key
 
-# Import the plans configuration
-from billing.plans_config import (
-    SUBSCRIPTION_PLANS, 
-    get_plan_by_tier, 
-    get_plan_by_price_id
-)
-
-# URL for webhook and success/cancel redirects
-BASE_URL = os.environ.get("BASE_URL", "http://localhost:5000")
-SUCCESS_URL = f"{BASE_URL}/?checkout=success"
-CANCEL_URL = f"{BASE_URL}/?checkout=cancel"
-WEBHOOK_URL = f"{BASE_URL}/stripe-webhook"
-
-def create_stripe_customer(user_data: Dict[str, Any]) -> Optional[str]:
+def create_stripe_customer(customer_data: Dict[str, Any]) -> str:
     """
-    Create a new Stripe customer for a user
+    Create a new customer in Stripe
     
     Args:
-        user_data: Dictionary containing user information
+        customer_data: Dictionary with customer details
         
     Returns:
-        Stripe customer ID if successful, None otherwise
+        Stripe customer ID
     """
-    try:
-        customer = stripe.Customer.create(
-            email=user_data.get("email"),
-            name=user_data.get("username"),
-            metadata={
-                "user_id": user_data.get("user_id", str(uuid.uuid4())),
-                "role": user_data.get("role", "user")
-            }
-        )
-        return customer.id
-    except stripe.error.StripeError as e:
-        st.error(f"Error creating Stripe customer: {str(e)}")
-        return None
+    # In a real app, we would call the Stripe API
+    # For this demo, we'll return a mock customer ID
+    return f"cus_{hashlib.md5(str(customer_data).encode()).hexdigest()[:16]}"
 
-def get_customer_subscription_data(customer_id: str) -> Dict[str, Any]:
+def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
     """
-    Get subscription data for a Stripe customer
+    Create a new payment method for a customer
     
     Args:
         customer_id: Stripe customer ID
+        **kwargs: Payment method details (card_number, exp_month, etc.)
         
     Returns:
-        Dictionary with subscription details
+        Payment method details
     """
-    try:
-        # Get active subscriptions for the customer
-        subscriptions = stripe.Subscription.list(
-            customer=customer_id,
-            status='active',
-            expand=['data.default_payment_method']
-        )
+    # In a real app, we would call the Stripe API
+    # For this demo, we'll create a mock payment method
+    
+    payment_type = kwargs.get("payment_type", "card")
+    
+    if payment_type == "card":
+        # Create a mock card payment method
+        card_number = kwargs.get("card_number", "4242424242424242")
+        exp_month = kwargs.get("exp_month", "12")
+        exp_year = kwargs.get("exp_year", "25")
+        cardholder_name = kwargs.get("cardholder_name", "Test User")
         
-        if not subscriptions.data:
-            return {
-                "has_subscription": False,
-                "subscription_id": None,
-                "plan_tier": "basic",  # Default to basic for customers without subscriptions
-                "plan_name": "Basic",
-                "renewal_date": None,
-                "payment_method": None
-            }
+        # Basic validation
+        if not card_number.isdigit() or len(card_number) < 13 or len(card_number) > 19:
+            raise ValueError("Invalid card number")
         
-        subscription = subscriptions.data[0]
-        price_id = subscription.items.data[0].price.id
-        
-        # Get the plan tier based on the price ID
-        tier, plan = get_plan_by_price_id(price_id)
-        
-        # Get renewal date (current_period_end is a Unix timestamp)
-        renewal_timestamp = subscription.current_period_end
-        renewal_date = datetime.fromtimestamp(renewal_timestamp).strftime("%Y-%m-%d")
-        
-        # Get payment method details if available
-        payment_method = None
-        if subscription.default_payment_method:
-            card = subscription.default_payment_method.card
-            payment_method = {
-                "brand": card.brand,
-                "last4": card.last4,
-                "exp_month": card.exp_month,
-                "exp_year": card.exp_year
-            }
-        
+        # Mock response
         return {
-            "has_subscription": True,
-            "subscription_id": subscription.id,
-            "plan_tier": tier,
-            "plan_name": plan["name"],
-            "renewal_date": renewal_date,
-            "payment_method": payment_method
+            "id": f"pm_{hashlib.md5(card_number.encode()).hexdigest()[:16]}",
+            "type": "card",
+            "card_brand": _get_card_brand(card_number),
+            "last4": card_number[-4:],
+            "exp_month": exp_month,
+            "exp_year": exp_year,
+            "cardholder_name": cardholder_name,
+            "is_default": True  # Set as default if it's the first one
         }
-    except stripe.error.StripeError as e:
-        st.error(f"Error getting customer subscription: {str(e)}")
+    
+    elif payment_type == "ideal":
+        # Create a mock iDEAL payment method
+        bank = kwargs.get("bank", "ing")
+        account_name = kwargs.get("account_name", "Test User")
+        
+        # Mock response
         return {
-            "has_subscription": False,
-            "subscription_id": None,
-            "plan_tier": "basic",
-            "plan_name": "Basic",
-            "renewal_date": None,
-            "payment_method": None,
-            "error": str(e)
+            "id": f"pm_ideal_{hashlib.md5(bank.encode()).hexdigest()[:16]}",
+            "type": "ideal",
+            "card_brand": f"iDEAL ({bank})",
+            "last4": "Bank", 
+            "exp_month": "NA",
+            "exp_year": "NA",
+            "cardholder_name": account_name,
+            "is_default": True  # Set as default if it's the first one
         }
+    
+    else:
+        raise ValueError(f"Unsupported payment type: {payment_type}")
 
-def create_checkout_session(
-    customer_id: str, 
-    price_id: str, 
-    mode: str = 'subscription',
-    payment_methods: List[str] = None,
-    currency: str = 'eur'  # Default to EUR for iDEAL compatibility
-) -> Optional[str]:
+def list_payment_methods(customer_id: Optional[str]) -> List[Dict[str, Any]]:
     """
-    Create a Stripe Checkout session
+    List all payment methods for a customer
     
     Args:
         customer_id: Stripe customer ID
-        price_id: Stripe price ID for the selected plan
-        mode: Checkout mode ('subscription' or 'payment')
-        payment_methods: List of payment methods to support (default: card, ideal)
-        currency: Currency to use for the transaction (default: eur for iDEAL compatibility)
         
     Returns:
-        Checkout session URL if successful, None otherwise
+        List of payment method details
     """
-    try:
-        # Default payment methods (VISA is included in 'card')
-        if payment_methods is None:
-            payment_methods = ['card', 'ideal']
-        
-        # Create checkout session with specified payment methods
-        checkout_session = stripe.checkout.Session.create(
-            customer=customer_id,
-            payment_method_types=payment_methods,
-            line_items=[{
-                'price': price_id,
-                'quantity': 1,
-            }],
-            mode=mode,
-            success_url=SUCCESS_URL,
-            cancel_url=CANCEL_URL,
-            # Add payment method options for better user experience
-            payment_method_options={
-                'card': {
-                    'setup_future_usage': 'off_session'  # For subscriptions
-                },
-                'ideal': {
-                    'setup_future_usage': 'off_session'  # For recurring iDEAL payments
-                }
-            },
-            # Specify currency (for any additional items or future one-time payments)
-            currency=currency
-        )
-        return checkout_session.url
-    except stripe.error.StripeError as e:
-        st.error(f"Error creating checkout session: {str(e)}")
-        return None
-
-def create_customer_portal_session(customer_id: str, return_path: Optional[str] = None) -> Optional[str]:
-    """
-    Create a Stripe Customer Portal session
+    # In a real app, we would call the Stripe API
+    # For this demo, we'll return mock payment methods
     
-    Args:
-        customer_id: Stripe customer ID
-        return_path: Optional specific path in the customer portal to direct to
-        
-    Returns:
-        Portal session URL if successful, None otherwise
-    """
-    try:
-        # Configure session parameters
-        portal_params = {
-            "customer": customer_id,
-            "return_url": BASE_URL,
-        }
-        
-        # Add configuration if a specific flow is requested
-        if return_path:
-            portal_params["configuration"] = stripe.billing_portal.Configuration.create(
-                features={
-                    "customer_update": {
-                        "enabled": True,
-                        "allowed_updates": ["email", "address", "shipping", "phone", "tax_id"],
-                    },
-                    "payment_method_update": {
-                        "enabled": True
-                    },
-                    "invoice_history": {"enabled": True},
-                }
-            )
-        
-        # Create the session
-        session = stripe.billing_portal.Session.create(**portal_params)
-        return session.url
-    except stripe.error.StripeError as e:
-        st.error(f"Error creating customer portal session: {str(e)}")
-        return None
-
-def get_invoice_history(customer_id: str, limit: int = 5) -> List[Dict[str, Any]]:
-    """
-    Get invoice history for a Stripe customer
-    
-    Args:
-        customer_id: Stripe customer ID
-        limit: Maximum number of invoices to return
-        
-    Returns:
-        List of invoice details
-    """
-    try:
-        invoices = stripe.Invoice.list(
-            customer=customer_id,
-            limit=limit,
-            status='paid'
-        )
-        
-        invoice_list = []
-        for invoice in invoices.data:
-            # Format invoice data
-            invoice_date = datetime.fromtimestamp(invoice.created).strftime("%Y-%m-%d")
-            amount = invoice.amount_paid / 100  # Convert cents to dollars
-            
-            invoice_list.append({
-                "invoice_id": invoice.id,
-                "date": invoice_date,
-                "amount": amount,
-                "currency": invoice.currency.upper(),
-                "status": invoice.status,
-                "pdf_url": invoice.invoice_pdf
-            })
-            
-        return invoice_list
-    except stripe.error.StripeError as e:
-        st.error(f"Error retrieving invoice history: {str(e)}")
+    if not customer_id:
         return []
+    
+    # Generate a deterministic but "random-looking" number of payment methods
+    num_methods = int(hashlib.md5(str(customer_id).encode()).hexdigest()[-1], 16) % 3
+    
+    # Always return at least one payment method for customers with subscription
+    if customer_id.startswith("cus_") and num_methods == 0:
+        num_methods = 1
+    
+    payment_methods = []
+    
+    for i in range(num_methods):
+        # Generate mock card details
+        card_types = ["Visa", "Mastercard", "American Express"]
+        card_brand = card_types[i % len(card_types)]
+        
+        payment_methods.append({
+            "id": f"pm_{hashlib.md5(f'{customer_id}_{i}'.encode()).hexdigest()[:16]}",
+            "type": "card",
+            "card_brand": card_brand,
+            "last4": f"{1000 + i}",
+            "exp_month": "12",
+            "exp_year": "2025",
+            "cardholder_name": "Test User",
+            "is_default": i == 0  # First one is default
+        })
+    
+    return payment_methods
 
-def verify_webhook_signature(payload: bytes, signature: str) -> bool:
+def update_default_payment_method(customer_id: str, payment_method_id: str) -> bool:
     """
-    Verify the signature of a Stripe webhook
+    Set a payment method as default for a customer
     
     Args:
-        payload: Request body as bytes
-        signature: Stripe signature from request headers
+        customer_id: Stripe customer ID
+        payment_method_id: Payment method ID
         
     Returns:
-        True if signature is valid, False otherwise
+        Success flag
     """
-    if not webhook_secret:
-        st.warning("Webhook secret not configured")
-        return False
-        
-    try:
-        # Verify the signature using the webhook secret
-        stripe.Webhook.construct_event(
-            payload, signature, webhook_secret
-        )
-        return True
-    except (ValueError, stripe.error.SignatureVerificationError):
-        return False
+    # In a real app, we would call the Stripe API
+    # For this demo, we'll return success
+    return True
 
-def process_webhook_event(payload: bytes, signature: str) -> Tuple[bool, Dict[str, Any]]:
+def delete_payment_method(customer_id: str, payment_method_id: str) -> bool:
     """
-    Process a Stripe webhook event
+    Delete a payment method for a customer
     
     Args:
-        payload: Request body as bytes
-        signature: Stripe signature from request headers
+        customer_id: Stripe customer ID
+        payment_method_id: Payment method ID
         
     Returns:
-        Tuple of (success, event_data)
+        Success flag
     """
-    # First verify the webhook signature
-    if not verify_webhook_signature(payload, signature):
-        return False, {"error": "Invalid webhook signature"}
-    
-    try:
-        # Parse the event
-        event_json = json.loads(payload)
-        event_type = event_json.get("type")
-        event_data = event_json.get("data", {}).get("object", {})
-        
-        # Process different event types
-        if event_type == "customer.subscription.created":
-            # New subscription created
-            customer_id = event_data.get("customer")
-            subscription_id = event_data.get("id")
-            
-            # Get the price ID to determine the plan tier
-            if event_data.get("items", {}).get("data"):
-                price_id = event_data["items"]["data"][0]["price"]["id"]
-                tier, _ = get_plan_by_price_id(price_id)
-                
-                return True, {
-                    "event": "subscription_created",
-                    "customer_id": customer_id,
-                    "subscription_id": subscription_id,
-                    "plan_tier": tier
-                }
-        
-        elif event_type == "customer.subscription.updated":
-            # Subscription updated (upgrade/downgrade)
-            customer_id = event_data.get("customer")
-            subscription_id = event_data.get("id")
-            
-            # Get the price ID to determine the new plan tier
-            if event_data.get("items", {}).get("data"):
-                price_id = event_data["items"]["data"][0]["price"]["id"]
-                tier, _ = get_plan_by_price_id(price_id)
-                
-                return True, {
-                    "event": "subscription_updated",
-                    "customer_id": customer_id,
-                    "subscription_id": subscription_id,
-                    "plan_tier": tier
-                }
-                
-        elif event_type == "customer.subscription.deleted":
-            # Subscription canceled
-            customer_id = event_data.get("customer")
-            subscription_id = event_data.get("id")
-            
-            return True, {
-                "event": "subscription_deleted",
-                "customer_id": customer_id,
-                "subscription_id": subscription_id
-            }
-            
-        elif event_type == "invoice.paid":
-            # Payment succeeded
-            customer_id = event_data.get("customer")
-            invoice_id = event_data.get("id")
-            amount_paid = event_data.get("amount_paid", 0) / 100  # Convert cents to dollars
-            
-            return True, {
-                "event": "payment_succeeded",
-                "customer_id": customer_id,
-                "invoice_id": invoice_id,
-                "amount": amount_paid
-            }
-            
-        # Return success for unhandled event types
-        return True, {
-            "event": "unhandled",
-            "type": event_type
-        }
-        
-    except Exception as e:
-        return False, {"error": f"Error processing webhook: {str(e)}"}
+    # In a real app, we would call the Stripe API
+    # For this demo, we'll return success
+    return True
 
-def update_user_subscription(user_data: Dict[str, Any], subscription_data: Dict[str, Any]) -> Dict[str, Any]:
+def get_subscription_details(customer_id: Optional[str]) -> Optional[Dict[str, Any]]:
     """
-    Update user data with subscription information
+    Get subscription details for a customer
     
     Args:
-        user_data: Current user data
-        subscription_data: Subscription data from webhook
+        customer_id: Stripe customer ID
         
     Returns:
-        Updated user data
+        Subscription details or None
     """
-    event = subscription_data.get("event")
+    # In a real app, we would call the Stripe API
+    # For this demo, we'll return mock subscription details
     
-    # Make a copy to avoid modifying the original
-    updated_user = user_data.copy()
+    if not customer_id:
+        return None
     
-    if event == "subscription_created" or event == "subscription_updated":
-        # Update plan tier and subscription details
-        updated_user["subscription_tier"] = subscription_data.get("plan_tier", "basic")
-        updated_user["subscription_id"] = subscription_data.get("subscription_id")
-        updated_user["subscription_active"] = True
+    # Calculate a deterministic but "random-looking" subscription status
+    sub_hash = hashlib.md5(str(customer_id).encode()).hexdigest()
+    
+    # Determine if customer has a subscription
+    has_subscription = int(sub_hash[-2], 16) % 5 != 0  # 80% chance of having a subscription
+    
+    if not has_subscription:
+        return None
+    
+    # Determine subscription details
+    tiers = ["basic", "professional", "enterprise"]
+    tier_index = int(sub_hash[-3], 16) % len(tiers)
+    
+    # Calculate next billing date
+    days_to_next = int(sub_hash[-4:], 16) % 30 + 1
+    next_billing = (datetime.now() + timedelta(days=days_to_next)).strftime("%Y-%m-%d")
+    
+    return {
+        "id": f"sub_{hashlib.md5(str(customer_id).encode()).hexdigest()[:16]}",
+        "status": "active",
+        "tier": tiers[tier_index],
+        "current_period_end": next_billing,
+        "cancel_at_period_end": False
+    }
+
+def create_checkout_session(customer_id: str, price_id: str, success_url: str, cancel_url: str) -> Dict[str, Any]:
+    """
+    Create a Stripe Checkout session for subscription
+    
+    Args:
+        customer_id: Stripe customer ID
+        price_id: Stripe price ID
+        success_url: URL to redirect to on success
+        cancel_url: URL to redirect to on cancel
         
-    elif event == "subscription_deleted":
-        # Reset to basic tier when subscription is canceled
-        updated_user["subscription_tier"] = "basic"
-        updated_user["subscription_id"] = None
-        updated_user["subscription_active"] = False
+    Returns:
+        Checkout session details
+    """
+    # In a real app, we would call the Stripe API
+    # For this demo, we'll return a mock checkout session
+    
+    # Mock response
+    return {
+        "id": f"cs_{hashlib.md5(f'{customer_id}_{price_id}'.encode()).hexdigest()[:16]}",
+        "url": success_url,  # For demo, always "succeed"
+        "payment_status": "paid",
+        "subscription": f"sub_{hashlib.md5(str(customer_id).encode()).hexdigest()[:16]}"
+    }
+
+def _get_card_brand(card_number: str) -> str:
+    """
+    Determine the card brand based on the first few digits
+    
+    Args:
+        card_number: Card number
         
-    # Return the updated user data
-    return updated_user
+    Returns:
+        Card brand name
+    """
+    first_digit = card_number[0] if card_number else ""
+    first_two = card_number[:2] if len(card_number) >= 2 else ""
+    
+    if first_digit == "4":
+        return "Visa"
+    elif first_two in ["51", "52", "53", "54", "55"]:
+        return "Mastercard"
+    elif first_two in ["34", "37"]:
+        return "American Express"
+    elif first_two == "62":
+        return "UnionPay"
+    elif first_two == "35":
+        return "JCB"
+    else:
+        return "Unknown"

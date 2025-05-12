@@ -698,15 +698,15 @@ def render_login_form():
                 if st.session_state.stripe_customer_id:
                     try:
                         # Import here to avoid circular import
-                        from billing.stripe_integration import get_customer_subscription_data
+                        from billing.stripe_integration import get_subscription_details
                         
                         # Get the latest subscription data
-                        subscription_data = get_customer_subscription_data(st.session_state.stripe_customer_id)
+                        subscription_data = get_subscription_details(st.session_state.stripe_customer_id)
                         st.session_state.subscription_data = subscription_data
                         
                         # Update subscription tier if it's different
-                        if subscription_data.get("has_subscription"):
-                            st.session_state.subscription_tier = subscription_data.get("plan_tier", st.session_state.subscription_tier)
+                        if subscription_data and subscription_data.get("has_subscription"):
+                            st.session_state.subscription_tier = subscription_data.get("tier", st.session_state.subscription_tier)
                     except Exception as e:
                         st.warning(f"Could not fetch latest subscription data: {str(e)}")
                 

@@ -1,130 +1,140 @@
 """
 Subscription Plans Configuration for DataGuardian Pro
 
-This module defines the subscription plans and their attributes for the application.
-Plans include pricing, features, limitations, and associated Stripe product IDs.
+This module defines the subscription plans and pricing for the application.
 """
 
-import os
-
-# Define plan tiers
-PLAN_TIERS = ["basic", "premium", "gold"]
-
-# Define subscription plans with Stripe product and price IDs
+# Define available subscription plans and their features
 SUBSCRIPTION_PLANS = {
     "basic": {
         "name": "Basic",
-        "description": "Essential compliance scanning for small teams",
-        "price": 49,
-        "currency": "EUR",  # Using EUR for iDEAL compatibility
-        "unit": "month",
+        "price": 9.99,
+        "currency": "EUR",
+        "description": "Essential compliance scanning for small businesses",
         "features": [
-            "Basic Privacy Scans",
-            "5 repositories",
-            "Weekly scans (10/month)",
+            "5 GDPR Scans per month",
+            "Basic reporting",
             "Email support",
-            "Basic PDF reports"
+            "Dashboard access",
+            "Single user account"
         ],
-        "limitations": {
-            "repositories": 5,
-            "scans_per_month": 10,
-            "report_retention_days": 30,
-            "custom_policies": False,
-            "team_members": 2
-        },
-        "color": "blue", 
-        "icon": "🔍",
-        "stripe_product_id": os.environ.get("STRIPE_BASIC_PRODUCT_ID", "prod_basic"),
-        "stripe_price_id": os.environ.get("STRIPE_BASIC_PRICE_ID", "price_basic")
+        "max_users": 1,
+        "scan_limits": {
+            "gdpr": 5,
+            "soc2": 0,
+            "ai_model": 0
+        }
     },
-    "premium": {
-        "name": "Premium",
-        "description": "Advanced compliance for growing organizations",
-        "price": 99,
-        "currency": "EUR",  # Using EUR for iDEAL compatibility
-        "unit": "month",
+    "professional": {
+        "name": "Professional",
+        "price": 49.99,
+        "currency": "EUR",
+        "description": "Advanced compliance for growing businesses",
         "features": [
-            "All Basic features",
-            "20 repositories",
-            "Daily scans (30/month)",
-            "SOC2 compliance",
-            "Priority support",
-            "Advanced reporting"
+            "20 GDPR Scans per month",
+            "10 SOC2 Scans per month",
+            "Advanced reporting",
+            "Priority email support",
+            "Dashboard access",
+            "Up to 5 user accounts",
+            "Compliance certificate generation"
         ],
-        "limitations": {
-            "repositories": 20,
-            "scans_per_month": 30,
-            "report_retention_days": 90,
-            "custom_policies": True,
-            "team_members": 5
-        },
-        "color": "indigo",
-        "icon": "⚡",
-        "stripe_product_id": os.environ.get("STRIPE_PREMIUM_PRODUCT_ID", "prod_premium"),
-        "stripe_price_id": os.environ.get("STRIPE_PREMIUM_PRICE_ID", "price_premium")
+        "max_users": 5,
+        "scan_limits": {
+            "gdpr": 20,
+            "soc2": 10,
+            "ai_model": 0
+        }
     },
-    "gold": {
+    "enterprise": {
+        "name": "Enterprise",
+        "price": 99.99,
+        "currency": "EUR",
+        "description": "Complete compliance solution for organizations",
+        "features": [
+            "Unlimited GDPR Scans",
+            "Unlimited SOC2 Scans",
+            "Advanced AI Model Scans",
+            "Premium reporting with risk analysis",
+            "24/7 Priority support",
+            "Full dashboard access",
+            "Unlimited user accounts",
+            "Compliance certificate generation",
+            "Custom compliance policy development",
+            "Dedicated compliance officer"
+        ],
+        "max_users": float('inf'),  # Unlimited users
+        "scan_limits": {
+            "gdpr": float('inf'),  # Unlimited
+            "soc2": float('inf'),  # Unlimited
+            "ai_model": float('inf')  # Unlimited
+        }
+    },
+    "gold": {  # Gold is an alias for Enterprise
         "name": "Gold",
-        "description": "Enterprise-grade compliance solution",
-        "price": 199,
-        "currency": "EUR",  # Using EUR for iDEAL compatibility
-        "unit": "month",
+        "price": 99.99,
+        "currency": "EUR",
+        "description": "Complete compliance solution for organizations",
         "features": [
-            "All Premium features",
-            "Unlimited repositories",
-            "Continuous scanning",
-            "Custom compliance policies",
-            "Dedicated support agent",
-            "White-labeled reports",
-            "API access"
+            "Unlimited GDPR Scans",
+            "Unlimited SOC2 Scans",
+            "Advanced AI Model Scans",
+            "Premium reporting with risk analysis",
+            "24/7 Priority support",
+            "Full dashboard access",
+            "Unlimited user accounts",
+            "Compliance certificate generation",
+            "Custom compliance policy development",
+            "Dedicated compliance officer"
         ],
-        "limitations": {
-            "repositories": float('inf'),  # Unlimited
-            "scans_per_month": float('inf'),  # Unlimited
-            "report_retention_days": 365,
-            "custom_policies": True,
-            "team_members": 10
-        },
-        "color": "amber",
-        "icon": "👑",
-        "stripe_product_id": os.environ.get("STRIPE_GOLD_PRODUCT_ID", "prod_gold"),
-        "stripe_price_id": os.environ.get("STRIPE_GOLD_PRICE_ID", "price_gold")
+        "max_users": float('inf'),  # Unlimited users
+        "scan_limits": {
+            "gdpr": float('inf'),  # Unlimited
+            "soc2": float('inf'),  # Unlimited
+            "ai_model": float('inf')  # Unlimited
+        }
     }
 }
 
-# Mapping from Stripe price ID to plan tier for webhook processing
-PRICE_ID_TO_TIER = {
-    plan_data["stripe_price_id"]: tier
-    for tier, plan_data in SUBSCRIPTION_PLANS.items()
+# Define trial plan details
+TRIAL_PLAN = {
+    "duration_days": 14,
+    "plan": "professional"  # Trial users get Professional features
 }
 
-def get_plan_by_tier(tier):
-    """Get the plan configuration for a specific tier"""
-    return SUBSCRIPTION_PLANS.get(tier, SUBSCRIPTION_PLANS["basic"])
+# Define payment method types and their display settings
+PAYMENT_METHODS = {
+    "card": {
+        "display_name": "Credit Card",
+        "icon": "💳",
+        "supported_brands": ["visa", "mastercard", "amex"]
+    },
+    "ideal": {
+        "display_name": "iDEAL (Netherlands)",
+        "icon": "🏦",
+        "supported_banks": [
+            "ABN AMRO",
+            "ASN Bank",
+            "Bunq",
+            "Handelsbanken",
+            "ING Bank",
+            "Knab",
+            "Moneyou",
+            "Rabobank",
+            "RegioBank",
+            "SNS Bank",
+            "Triodos Bank",
+            "Van Lanschot"
+        ]
+    }
+}
 
-def get_plan_by_price_id(price_id):
-    """Get the plan tier based on a Stripe price ID"""
-    tier = PRICE_ID_TO_TIER.get(price_id)
-    if tier:
-        return tier, SUBSCRIPTION_PLANS[tier]
-    return "basic", SUBSCRIPTION_PLANS["basic"]
-
-def is_feature_available(tier, feature_name):
-    """Check if a specific feature is available in the given tier"""
-    plan = get_plan_by_tier(tier)
-    
-    # Check if it's a standard feature
-    for feature in plan["features"]:
-        if feature_name.lower() in feature.lower():
-            return True
-    
-    # Check in limitations with boolean values
-    if feature_name in plan["limitations"]:
-        return bool(plan["limitations"][feature_name])
-    
-    return False
-
-def get_limit(tier, limit_name):
-    """Get the numeric limit for a specific feature in the given tier"""
-    plan = get_plan_by_tier(tier)
-    return plan["limitations"].get(limit_name, 0)
+# Format functions for displaying prices
+def format_price(amount, currency="EUR"):
+    """Format a price amount with currency symbol"""
+    if currency == "EUR":
+        return f"€{amount:.2f}"
+    elif currency == "USD":
+        return f"${amount:.2f}"
+    else:
+        return f"{amount:.2f} {currency}"
