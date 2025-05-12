@@ -349,11 +349,17 @@ def generate_password_reset_token(email: str) -> Tuple[bool, str, Optional[str]]
     user_found = False
     username_found = None
     
-    for username, user_data in users.items():
-        if user_data.get("email") == email:
-            user_found = True
-            username_found = username
-            break
+    # First check if this email is a username directly (for users who use email as username)
+    if email in users:
+        user_found = True
+        username_found = email
+    else:
+        # If not found as username, check email fields
+        for username, user_data in users.items():
+            if user_data.get("email") == email:
+                user_found = True
+                username_found = username
+                break
     
     if not user_found:
         return False, "No account found with that email address", None

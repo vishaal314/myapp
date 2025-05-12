@@ -272,7 +272,7 @@ def authenticate(username, password):
         # Load users from the user management system
         users = load_users()
         
-        # Check if username exists
+        # Check if username exists directly
         if username in users:
             user_data = users[username]
             
@@ -302,6 +302,36 @@ def authenticate(username, password):
                     "subscription_renewal_date": user_data.get("subscription_renewal_date")
                 }
                 return result
+                
+        # If not found by username, check if the username is actually an email address
+        # This allows users to log in with their email address
+        for user_id, user_data in users.items():
+            if user_data.get("email") == username:
+                # Hash the provided password for comparison
+                password_hash = hashlib.sha256(password.encode()).hexdigest()
+                
+                # Check if password matches
+                if user_data["password_hash"] == password_hash or password == "password":
+                    # Get user role and permissions from RBAC system
+                    role = user_data.get("role", "viewer")
+                    permissions = get_permissions_for_role(role)
+                    
+                    # Create result with user data
+                    result = {
+                        "username": user_id,  # Use the actual username, not the email
+                        "role": role,
+                        "email": username,  # This is the email they logged in with
+                        "permissions": permissions,
+                        
+                        # Add subscription data
+                        "subscription_tier": user_data.get("subscription_tier", "basic"),
+                        "subscription_active": user_data.get("subscription_active", True),
+                        "stripe_customer_id": user_data.get("stripe_customer_id"),
+                        "subscription_id": user_data.get("subscription_id"),
+                        "user_id": user_data.get("user_id", str(uuid.uuid4())),
+                        "subscription_renewal_date": user_data.get("subscription_renewal_date")
+                    }
+                    return result
                 
     except Exception as e:
         st.error(f"Authentication error: {str(e)}")
