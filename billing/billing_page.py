@@ -95,27 +95,48 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
         padding: 15px;
         margin-bottom: 15px;
         position: relative;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+    }
+    
+    .payment-method-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: #f5f5f5;
     }
     
     .default-badge {
         position: absolute;
         top: 10px;
         right: 10px;
-        background: #ebf4ff;
-        color: #4c51bf;
+        background: #4CAF50;
+        color: white;
         font-size: 0.7rem;
-        padding: 2px 6px;
+        padding: 3px 8px;
         border-radius: 4px;
+        font-weight: 500;
     }
     
     .card-brand {
         font-weight: 600;
         margin-bottom: 5px;
+        color: #2c3e50;
+        font-size: 1rem;
     }
     
     .card-details {
         color: #4a5568;
         font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+    
+    .card-additional {
+        color: #888;
+        font-size: 0.8rem;
+        font-style: italic;
+        border-top: 1px dotted #ddd;
+        padding-top: 5px;
+        margin-top: 5px;
     }
     
     .add-payment-button {
@@ -299,6 +320,9 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
                 exp_month = pm.get("exp_month", "12")
                 exp_year = pm.get("exp_year", "2025")
                 pm_id = pm.get("id", "")
+                pm_type = pm.get("type", "card")
+                created_date = pm.get("created_at", "")
+                cardholder_name = pm.get("cardholder_name", "")
                 
                 # Create unique keys for buttons with index to avoid duplicates
                 default_key = f"default_{idx}_{pm_id[-8:]}"
@@ -307,11 +331,32 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
                 col1, col2 = st.columns([3, 1])
                 
                 with col1:
+                    # Add more details to distinguish between similar payment methods
+                    if pm_type == "ideal":
+                        additional_info = f"Account: {cardholder_name}"
+                        if created_date:
+                            additional_info += f" | Added: {created_date}"
+                        else:
+                            # Extract date from ID if possible
+                            if "_20" in pm_id:
+                                date_str = pm_id.split("_")[2] if len(pm_id.split("_")) > 2 else ""
+                                if date_str:
+                                    try:
+                                        # Format as date if it looks like a date
+                                        if len(date_str) >= 8:
+                                            formatted_date = f"{date_str[6:8]}/{date_str[4:6]}/{date_str[0:4]}"
+                                            additional_info += f" | Added: {formatted_date}"
+                                    except:
+                                        pass
+                    else:
+                        additional_info = f"Cardholder: {cardholder_name}"
+                        
                     st.markdown(f"""
                     <div class="payment-method-card">
                         {f'<div class="default-badge">Default</div>' if is_default else ''}
                         <div class="card-brand">{card_brand}</div>
                         <div class="card-details">•••• •••• •••• {last4} | Expires {exp_month}/{exp_year}</div>
+                        <div class="card-additional">{additional_info}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 

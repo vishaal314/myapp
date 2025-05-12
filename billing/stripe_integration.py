@@ -127,8 +127,10 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
             raise ValueError("Invalid card number")
         
         # Create unique id with timestamp to prevent duplicates
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        unique_id = f"pm_card_{hashlib.md5((card_number + timestamp + cardholder_name).encode()).hexdigest()[:16]}"
+        now = datetime.now()
+        timestamp = now.strftime("%Y%m%d%H%M%S")
+        created_date = now.strftime("%d/%m/%Y %H:%M")
+        unique_id = f"pm_card_{timestamp}_{hashlib.md5((card_number + cardholder_name).encode()).hexdigest()[:12]}"
         
         # Create new payment method object
         payment_method = {
@@ -139,6 +141,7 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
             "exp_month": exp_month,
             "exp_year": exp_year,
             "cardholder_name": cardholder_name,
+            "created_at": created_date,
             "is_default": True  # Set as default if it's the first one
         }
         
@@ -153,8 +156,10 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
         account_name = kwargs.get("account_name", "Test User")
         
         # Create unique id with timestamp to prevent duplicates
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        unique_id = f"pm_ideal_{hashlib.md5((bank + timestamp + account_name).encode()).hexdigest()[:16]}"
+        now = datetime.now()
+        timestamp = now.strftime("%Y%m%d%H%M%S")
+        created_date = now.strftime("%d/%m/%Y %H:%M")
+        unique_id = f"pm_ideal_{timestamp}_{hashlib.md5((bank + account_name).encode()).hexdigest()[:12]}"
         
         # Create new payment method object
         payment_method = {
@@ -165,6 +170,7 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
             "exp_month": "NA",
             "exp_year": "NA",
             "cardholder_name": account_name,
+            "created_at": created_date,
             "is_default": True  # Set as default if it's the first one
         }
         
@@ -229,8 +235,10 @@ def list_payment_methods(customer_id: Optional[str]) -> List[Dict[str, Any]]:
         card_brand = card_types[i % len(card_types)]
         
         # Create unique ID with index and timestamp
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        unique_id = f"pm_mock_{i}_{hashlib.md5((customer_id + str(i) + timestamp).encode()).hexdigest()[:12]}"
+        now = datetime.now()
+        timestamp = now.strftime("%Y%m%d%H%M%S")
+        created_date = now.strftime("%d/%m/%Y %H:%M")
+        unique_id = f"pm_mock_{timestamp}_{i}_{hashlib.md5((customer_id + str(i)).encode()).hexdigest()[:8]}"
         
         payment_methods.append({
             "id": unique_id,
@@ -240,6 +248,7 @@ def list_payment_methods(customer_id: Optional[str]) -> List[Dict[str, Any]]:
             "exp_month": "12",
             "exp_year": "2025",
             "cardholder_name": "Test User",
+            "created_at": created_date,
             "is_default": i == 0  # First one is default
         })
     
