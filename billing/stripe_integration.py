@@ -26,6 +26,49 @@ def init_stripe():
     # For this demo, we'll mock the API calls
     return stripe_secret_key
 
+def _add_payment_method_to_storage(customer_id: str, payment_method: Dict[str, Any]) -> None:
+    """
+    Helper function to save a payment method to persistent storage
+    
+    Args:
+        customer_id: Stripe customer ID
+        payment_method: Payment method object to save
+    """
+    import os
+    import json
+    
+    # Create data directory if it doesn't exist
+    data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+    os.makedirs(data_dir, exist_ok=True)
+    
+    # Path to store customer payment methods
+    storage_path = os.path.join(data_dir, f"payment_methods_{customer_id}.json")
+    
+    # Load existing payment methods
+    payment_methods = []
+    if os.path.exists(storage_path):
+        try:
+            with open(storage_path, 'r') as f:
+                payment_methods = json.load(f)
+        except Exception as e:
+            print(f"Error loading payment methods: {e}")
+    
+    # Set new payment method as default if specified
+    if payment_method.get("is_default", False):
+        for pm in payment_methods:
+            pm["is_default"] = False
+    
+    # Add the new payment method
+    payment_methods.append(payment_method)
+    
+    # Save updated payment methods
+    try:
+        with open(storage_path, 'w') as f:
+            json.dump(payment_methods, f)
+        print(f"Saved payment method {payment_method['id']} for customer {customer_id}")
+    except Exception as e:
+        print(f"Error saving payment methods: {e}")
+
 def create_stripe_customer(customer_data: Dict[str, Any]) -> str:
     """
     Create a new customer in Stripe
@@ -122,13 +165,35 @@ def list_payment_methods(customer_id: Optional[str]) -> List[Dict[str, Any]]:
         List of payment method details
     """
     # In a real app, we would call the Stripe API
-    # For this demo, we'll return mock payment methods
+    # For this demo, we'll use our storage system for persistence
     
     if not customer_id:
         return []
     
+    import os
+    import json
+    
+    # Define storage path
+    data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+    os.makedirs(data_dir, exist_ok=True)
+    storage_path = os.path.join(data_dir, f"payment_methods_{customer_id}.json")
+    
+    # Try to load saved payment methods
+    if os.path.exists(storage_path):
+        try:
+            with open(storage_path, 'r') as f:
+                saved_methods = json.load(f)
+                if saved_methods:
+                    print(f"Loaded {len(saved_methods)} payment methods for customer {customer_id}")
+                    return saved_methods
+        except Exception as e:
+            print(f"Error loading payment methods: {e}")
+    
+    # If no saved methods exist, generate some mock ones
+    print(f"No saved payment methods found for {customer_id}, generating mock data")
+    
     # Generate a deterministic but "random-looking" number of payment methods
-    num_methods = int(hashlib.md5(str(customer_id).encode()).hexdigest()[-1], 16) % 3
+    num_methods = int(hashlib.md5(str(customer_id).encode()).hexdigest()[-1], 16) % 2
     
     # Always return at least one payment method for customers with subscription
     if customer_id.startswith("cus_") and num_methods == 0:
@@ -152,6 +217,15 @@ def list_payment_methods(customer_id: Optional[str]) -> List[Dict[str, Any]]:
             "is_default": i == 0  # First one is default
         })
     
+    # Save these initial methods to storage
+    if payment_methods:
+        try:
+            with open(storage_path, 'w') as f:
+                json.dump(payment_methods, f)
+            print(f"Saved {len(payment_methods)} initial payment methods for customer {customer_id}")
+        except Exception as e:
+            print(f"Error saving initial payment methods: {e}")
+    
     return payment_methods
 
 def update_default_payment_method(customer_id: str, payment_method_id: str) -> bool:
@@ -166,8 +240,50 @@ def update_default_payment_method(customer_id: str, payment_method_id: str) -> b
         Success flag
     """
     # In a real app, we would call the Stripe API
-    # For this demo, we'll return success
-    return True
+    # For this demo, we'll use our storage system
+    
+    import os
+    import json
+    
+    # Define storage path
+    data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+    storage_path = os.path.join(data_dir, f"payment_methods_{customer_id}.json")
+    
+    # Check if file exists
+    if not os.path.exists(storage_path):
+        print(f"No payment methods found for customer {customer_id}")
+        return False
+    
+    # Load payment methods
+    try:
+        with open(storage_path, 'r') as f:
+            payment_methods = json.load(f)
+    except Exception as e:
+        print(f"Error loading payment methods: {e}")
+        return False
+    
+    # Find the payment method to set as default
+    found = False
+    for pm in payment_methods:
+        if pm.get("id") == payment_method_id:
+            pm["is_default"] = True
+            found = True
+        else:
+            pm["is_default"] = False
+    
+    if not found:
+        print(f"Payment method {payment_method_id} not found for customer {customer_id}")
+        return False
+    
+    # Save updated payment methods
+    try:
+        with open(storage_path, 'w') as f:
+            json.dump(payment_methods, f)
+        print(f"Updated default payment method to {payment_method_id} for customer {customer_id}")
+        return True
+    except Exception as e:
+        print(f"Error saving payment methods: {e}")
+        return False
 
 def delete_payment_method(customer_id: str, payment_method_id: str) -> bool:
     """
@@ -181,8 +297,54 @@ def delete_payment_method(customer_id: str, payment_method_id: str) -> bool:
         Success flag
     """
     # In a real app, we would call the Stripe API
-    # For this demo, we'll return success
-    return True
+    # For this demo, we'll use our storage system
+    
+    import os
+    import json
+    
+    # Define storage path
+    data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+    storage_path = os.path.join(data_dir, f"payment_methods_{customer_id}.json")
+    
+    # Check if file exists
+    if not os.path.exists(storage_path):
+        print(f"No payment methods found for customer {customer_id}")
+        return False
+    
+    # Load payment methods
+    try:
+        with open(storage_path, 'r') as f:
+            payment_methods = json.load(f)
+    except Exception as e:
+        print(f"Error loading payment methods: {e}")
+        return False
+    
+    # Find the payment method to delete
+    was_default = False
+    new_payment_methods = []
+    for pm in payment_methods:
+        if pm.get("id") == payment_method_id:
+            was_default = pm.get("is_default", False)
+            continue  # Skip this payment method (delete it)
+        new_payment_methods.append(pm)
+    
+    if len(new_payment_methods) == len(payment_methods):
+        print(f"Payment method {payment_method_id} not found for customer {customer_id}")
+        return False
+    
+    # If the deleted payment method was the default, set the first remaining one as default
+    if was_default and new_payment_methods:
+        new_payment_methods[0]["is_default"] = True
+    
+    # Save updated payment methods
+    try:
+        with open(storage_path, 'w') as f:
+            json.dump(new_payment_methods, f)
+        print(f"Deleted payment method {payment_method_id} for customer {customer_id}")
+        return True
+    except Exception as e:
+        print(f"Error saving payment methods: {e}")
+        return False
 
 def get_subscription_details(customer_id: Optional[str]) -> Optional[Dict[str, Any]]:
     """
