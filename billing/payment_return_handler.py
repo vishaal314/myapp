@@ -20,7 +20,7 @@ def parse_return_parameters() -> Dict[str, str]:
         Dictionary with payment parameters
     """
     # Get query parameters
-    query_params = st.experimental_get_query_params()
+    query_params = dict(st.query_params.items())
     
     # Extract common payment parameters
     params = {
@@ -182,7 +182,7 @@ def render_payment_return_page():
     with col1:
         if st.button("Return to Dashboard", type="primary"):
             # Clear query parameters by redirecting
-            st.experimental_set_query_params()
+            st.query_params.clear()
             st.rerun()
             
     with col2:
@@ -194,5 +194,5 @@ def render_payment_return_page():
             st.session_state.in_bank_auth_mode = False
             
             # Clear query parameters by redirecting
-            st.experimental_set_query_params()
+            st.query_params.clear()
             st.rerun()

@@ -2043,7 +2043,7 @@ def main():
                         "stripe_customer_id": st.session_state.get("stripe_customer_id", "")
                     }
                 # Check if we have return parameters from bank payment
-                query_params = st.experimental_get_query_params()
+                query_params = dict(st.query_params.items())
                 has_payment_return = any(param in query_params for param in [
                     "payment_intent", "payment_success", "payment_canceled"
                 ])
