@@ -626,7 +626,13 @@ def render_login_form():
     with col1:
         remember = st.checkbox("Remember me", value=True, key="remember_me_checkbox")
     with col2:
-        st.markdown('<div style="text-align: right;"><a href="#" style="color: #4f46e5; font-size: 14px; text-decoration: none;">Forgot password?</a></div>', unsafe_allow_html=True)
+        # Link to password reset page
+        forgot_password = st.markdown('<div style="text-align: right;"><a href="#forgot_password" style="color: #4f46e5; font-size: 14px; text-decoration: none;">Forgot password?</a></div>', unsafe_allow_html=True)
+        
+    # Check if the "Forgot password?" link was clicked (via URL hash check)
+    if "forgot_password" in st.experimental_get_query_params().get("", []) or "forgot_password" in st.experimental_get_query_params().get("#", []):
+        st.session_state.current_view = "password_reset"
+        st.rerun()
     
     login_button = st.button("Sign In", key="login_button", use_container_width=True)
     
@@ -1948,6 +1954,10 @@ def main():
             render_signup_page()
         elif current_view == "login":
             st.info("Please log in using the form in the sidebar.")
+        elif current_view == "password_reset":
+            # Import and run the password reset flow
+            from password_reset import run_password_reset_flow
+            run_password_reset_flow()
         elif current_view == "payment_method":
             st.warning("You need to create an account or log in before adding a payment method.")
             if st.button("Back to Signup", key="back_to_signup"):

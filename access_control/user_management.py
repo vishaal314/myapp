@@ -11,6 +11,10 @@ import os
 import json
 import hashlib
 import uuid
+import secrets
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 
@@ -328,6 +332,187 @@ def change_user_subscription(username: str, new_tier: str) -> Tuple[bool, str]:
     """
     # Update the user's subscription tier
     return update_user(username, {"subscription_tier": new_tier})
+
+def generate_password_reset_token(email: str) -> Tuple[bool, str, Optional[str]]:
+    """
+    Generate a password reset token for a user
+    
+    Args:
+        email: Email address of the user
+        
+    Returns:
+        Tuple of (success, message, token)
+    """
+    users = load_users()
+    
+    # Find user by email
+    user_found = False
+    username_found = None
+    
+    for username, user_data in users.items():
+        if user_data.get("email") == email:
+            user_found = True
+            username_found = username
+            break
+    
+    if not user_found:
+        return False, "No account found with that email address", None
+    
+    # Generate token
+    token = secrets.token_urlsafe(32)
+    token_expiry = (datetime.now() + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Double-check that username_found is not None before using it as an index
+    if username_found is None:
+        return False, "User not found", None
+        
+    # Store token in user data
+    users[username_found]["reset_token"] = token
+    users[username_found]["reset_token_expiry"] = token_expiry
+    save_users(users)
+    
+    return True, "Password reset token generated", token
+
+def send_password_reset_email(email: str, reset_url: str) -> Tuple[bool, str]:
+    """
+    Send a password reset email to the user
+    
+    Args:
+        email: User's email address
+        reset_url: URL for password reset
+        
+    Returns:
+        Tuple of (success, message)
+    """
+    # This is a mock implementation - in a real app, you would send an actual email
+    try:
+        # In a real production environment, we would set up proper email sending
+        # For this demo, we'll just log the reset URL
+        print(f"Password reset link for {email}: {reset_url}")
+        
+        # If we had actual email credentials, we would set them up like this
+        # The following is commented out code to show how it would be implemented
+        '''
+        EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+        EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+        EMAIL_USER = os.environ.get("EMAIL_USER", "")
+        EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
+        
+        if not EMAIL_USER or not EMAIL_PASSWORD:
+            return False, "Email service not configured"
+            
+        # Create message
+        msg = MIMEMultipart()
+        msg["From"] = EMAIL_USER
+        msg["To"] = email
+        msg["Subject"] = "DataGuardian Pro Password Reset"
+        
+        body = f"""
+        <html>
+            <body>
+                <h2>DataGuardian Pro Password Reset</h2>
+                <p>You have requested a password reset for your DataGuardian Pro account.</p>
+                <p>Click the link below to reset your password:</p>
+                <p><a href="{reset_url}">{reset_url}</a></p>
+                <p>This link will expire in 24 hours.</p>
+                <p>If you did not request this reset, please ignore this email.</p>
+            </body>
+        </html>
+        """
+        msg.attach(MIMEText(body, "html"))
+        
+        # Send email
+        server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
+        server.starttls()
+        server.login(EMAIL_USER, EMAIL_PASSWORD)
+        text = msg.as_string()
+        server.sendmail(EMAIL_USER, email, text)
+        server.quit()
+        '''
+        
+        return True, "Password reset email sent"
+    except Exception as e:
+        return False, f"Error sending email: {str(e)}"
+
+def verify_reset_token(token: str) -> Tuple[bool, str, Optional[str]]:
+    """
+    Verify a password reset token
+    
+    Args:
+        token: The reset token to verify
+        
+    Returns:
+        Tuple of (valid, message, username)
+    """
+    users = load_users()
+    
+    # Find user with this token
+    for username, user_data in users.items():
+        if user_data.get("reset_token") == token:
+            # Check if token has expired
+            expiry_str = user_data.get("reset_token_expiry", "")
+            if not expiry_str:
+                return False, "Invalid reset token", None
+                
+            try:
+                expiry = datetime.strptime(expiry_str, "%Y-%m-%d %H:%M:%S")
+                if expiry < datetime.now():
+                    return False, "Reset token has expired", None
+                return True, "Valid reset token", username
+            except:
+                return False, "Invalid reset token format", None
+    
+    return False, "Invalid reset token", None
+
+def reset_password(username: str, new_password: str) -> Tuple[bool, str]:
+    """
+    Reset a user's password
+    
+    Args:
+        username: Username of the user
+        new_password: New password
+        
+    Returns:
+        Tuple of (success, message)
+    """
+    users = load_users()
+    
+    # Check if user exists
+    if username not in users:
+        return False, "User not found"
+    
+    # Validate password strength
+    password_valid = True
+    password_message = ""
+    
+    # Basic validation
+    if len(new_password) < 8:
+        password_valid = False
+        password_message = "Password must be at least 8 characters long"
+    elif not any(c.isupper() for c in new_password):
+        password_valid = False
+        password_message = "Password must contain at least one uppercase letter"
+    elif not any(c.isdigit() for c in new_password):
+        password_valid = False
+        password_message = "Password must contain at least one number"
+    elif not any(c in "!@#$%^&*()-_=+[]{}|;:,.<>?/`~" for c in new_password):
+        password_valid = False
+        password_message = "Password must contain at least one special character"
+    
+    if not password_valid:
+        return False, password_message
+    
+    # Update password
+    users[username]["password_hash"] = hash_password(new_password)
+    
+    # Clear reset token
+    if "reset_token" in users[username]:
+        del users[username]["reset_token"]
+    if "reset_token_expiry" in users[username]:
+        del users[username]["reset_token_expiry"]
+    
+    save_users(users)
+    return True, "Password successfully reset"
 
 def render_user_management():
     """
