@@ -88,7 +88,7 @@ def show_request_reset_form():
     
     # Email input form
     with st.form("reset_request_form"):
-        email = st.text_input("Email Address", key="reset_email", placeholder="Enter your registered email address")
+        email = st.text_input("Email Address", key="reset_email_input", placeholder="Enter your registered email address")
         submit_button = st.form_submit_button("Send Reset Link", use_container_width=True)
         
         if submit_button:
@@ -112,7 +112,8 @@ def show_request_reset_form():
                         email_sent, email_message = send_password_reset_email(email, reset_url)
                         
                         if email_sent:
-                            st.session_state.reset_email = email
+                            # Store email in a different session state key
+                            st.session_state.pwd_reset_email = email
                             st.success("Password reset link has been sent to your email address. Please check your inbox.")
                             
                             # Display the link for demo purposes only
