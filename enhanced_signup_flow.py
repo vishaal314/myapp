@@ -362,17 +362,17 @@ def render_enhanced_signup_page():
                         else:
                             st.error(message)
                             
-        # Add "Forgot Password" link below the form
+        # Add "Forgot Password" link below the form as a Streamlit button
         st.markdown("""
         <div style="text-align: center; margin-top: 20px;">
             <p style="font-size: 14px; color: #4a5568;">
-                Already have an account but <a href="#forgot_password" style="color: #4f46e5; text-decoration: none;">forgot your password?</a>
+                Already have an account but forgot your password?
             </p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Check if the "Forgot password?" link was clicked
-        if "forgot_password" in st.query_params:
+        # Direct button to reset password page
+        if st.button("Reset Password", key="forgot_password_button", type="secondary"):
             st.session_state.current_view = "password_reset"
             st.rerun()
         

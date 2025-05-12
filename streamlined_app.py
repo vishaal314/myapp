@@ -625,16 +625,15 @@ def render_login_form():
     col1, col2 = st.columns([1, 1])
     with col1:
         remember = st.checkbox("Remember me", value=True, key="remember_me_checkbox")
-    with col2:
-        # Link to password reset page
-        forgot_password = st.markdown('<div style="text-align: right;"><a href="#forgot_password" style="color: #4f46e5; font-size: 14px; text-decoration: none;">Forgot password?</a></div>', unsafe_allow_html=True)
-        
-    # Check if the "Forgot password?" link was clicked (via URL hash check)
-    if "forgot_password" in st.query_params:
+    
+    # Login button
+    login_button = st.button("Sign In", key="login_button", use_container_width=True)
+    
+    # Forgot password button
+    forgot_password = st.button("Forgot Password?", key="forgot_password_login", type="secondary")
+    if forgot_password:
         st.session_state.current_view = "password_reset"
         st.rerun()
-    
-    login_button = st.button("Sign In", key="login_button", use_container_width=True)
     
     # Add a "Sign Up" button 
     st.markdown("<div style='text-align: center; margin-top: 20px;'>Don't have an account?</div>", unsafe_allow_html=True)
