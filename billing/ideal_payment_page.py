@@ -26,6 +26,37 @@ def render_ideal_payment_page(username: str, user_data: Dict[str, Any]):
         username: Username of the logged-in user
         user_data: User data dictionary
     """
+    # Check if we're in bank auth mode and handle it first
+    if 'in_bank_auth_mode' in st.session_state and st.session_state.in_bank_auth_mode:
+        # Import bank auth simulator
+        from billing.bank_auth_simulator import render_bank_auth_simulator
+        
+        # Render the bank auth simulator
+        payment_id = st.session_state.get('bank_auth_payment_id', '')
+        return_url = st.session_state.get('bank_auth_return_url', 'https://dataguardianpro.com/payment/complete')
+        
+        if payment_id:
+            # Add a title with back button
+            col1, col2 = st.columns([5, 1])
+            with col1:
+                st.title("Bank Authentication")
+            with col2:
+                if st.button("❌ Close", key="close_bank_auth"):
+                    st.session_state.in_bank_auth_mode = False
+                    st.rerun()
+            
+            # Render the simulator
+            render_bank_auth_simulator(payment_id, return_url)
+            
+            # Add a way to exit bank auth mode
+            if st.button("Return to Payment Page", key="exit_bank_auth"):
+                st.session_state.in_bank_auth_mode = False
+                st.rerun()
+                
+            # Don't render the rest of the page
+            return
+    
+    # Regular payment page
     st.title("iDEAL Payment Test")
     
     # Custom CSS
@@ -309,7 +340,15 @@ def render_ideal_payment_page(username: str, user_data: Dict[str, Any]):
             status_class = "pending"
         elif status == "requires_action" and redirect_url:
             st.warning("Your bank requires authentication to complete this payment.")
-            st.markdown(f"[Click here to authenticate with your bank]({redirect_url})")
+            
+            # Add a button to start bank auth simulator instead of external link
+            if st.button("Click here to authenticate with your bank", type="primary", key="start_bank_auth"):
+                # Set session state for bank auth mode
+                st.session_state.in_bank_auth_mode = True
+                st.session_state.bank_auth_payment_id = payment_id
+                st.session_state.bank_auth_return_url = redirect_url
+                st.rerun()
+                
             status_class = "pending"
         else:
             st.info(f"Payment Status: {status}")
