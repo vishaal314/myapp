@@ -687,6 +687,9 @@ def render_login_form():
                 st.session_state.email = user_data.get("email", "")
                 st.session_state.permissions = user_data.get("permissions", [])
                 
+                # Store the complete user data in session state
+                st.session_state.user_data = user_data
+                
                 # Add subscription data to session state
                 st.session_state.subscription_tier = user_data.get("subscription_tier", "basic")
                 st.session_state.subscription_active = user_data.get("subscription_active", True)
@@ -2028,6 +2031,17 @@ def main():
             # Billing Tab
             with tabs[4]:
                 st.header("Billing & Subscription")
+                # Make sure user_data exists in session state
+                if "user_data" not in st.session_state:
+                    # Create default user data if it doesn't exist
+                    st.session_state.user_data = {
+                        "username": st.session_state.username,
+                        "email": st.session_state.get("email", ""),
+                        "role": st.session_state.get("role", "user"),
+                        "subscription_tier": st.session_state.get("subscription_tier", "basic"),
+                        "subscription_active": st.session_state.get("subscription_active", False),
+                        "stripe_customer_id": st.session_state.get("stripe_customer_id", "")
+                    }
                 # Use our comprehensive billing page for the logged-in user
                 render_billing_page(st.session_state.username, st.session_state.user_data)
                 
