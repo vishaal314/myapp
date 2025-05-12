@@ -27,6 +27,7 @@ from billing.stripe_integration import (
     delete_payment_method,
     get_subscription_details
 )
+from billing.subscription_tab import render_subscription_tab
 
 def load_stripe_keys():
     """Load Stripe API keys from environment variables"""
