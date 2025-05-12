@@ -292,13 +292,17 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
             st.info("You don't have any payment methods added yet.")
         else:
             # Display payment methods
-            for pm in payment_methods:
+            for idx, pm in enumerate(payment_methods):
                 is_default = pm.get("is_default", False)
                 card_brand = pm.get("card_brand", "Card")
                 last4 = pm.get("last4", "****")
                 exp_month = pm.get("exp_month", "12")
                 exp_year = pm.get("exp_year", "2025")
                 pm_id = pm.get("id", "")
+                
+                # Create unique keys for buttons with index to avoid duplicates
+                default_key = f"default_{idx}_{pm_id[-8:]}"
+                remove_key = f"remove_{idx}_{pm_id[-8:]}"
                 
                 col1, col2 = st.columns([3, 1])
                 
@@ -313,7 +317,7 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
                 
                 with col2:
                     if not is_default:
-                        if st.button("Set Default", key=f"default_{pm_id}"):
+                        if st.button("Set Default", key=default_key):
                             # Set this payment method as default
                             stripe_customer_id = user_data.get("stripe_customer_id", "")
                             if stripe_customer_id:
@@ -324,7 +328,7 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
                             st.success("Default payment method updated!")
                             st.rerun()
                     
-                    if st.button("Remove", key=f"remove_{pm_id}"):
+                    if st.button("Remove", key=remove_key):
                         # Delete payment method
                         stripe_customer_id = user_data.get("stripe_customer_id", "")
                         if stripe_customer_id:

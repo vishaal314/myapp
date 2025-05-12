@@ -53,13 +53,27 @@ def _add_payment_method_to_storage(customer_id: str, payment_method: Dict[str, A
         except Exception as e:
             print(f"Error loading payment methods: {e}")
     
+    # Check if payment method with same ID already exists
+    exists = False
+    pm_id = payment_method.get("id", "")
+    
+    for i, pm in enumerate(payment_methods):
+        if pm.get("id") == pm_id:
+            # Update existing payment method
+            payment_methods[i] = payment_method
+            exists = True
+            print(f"Updating existing payment method {pm_id}")
+            break
+    
     # Set new payment method as default if specified
     if payment_method.get("is_default", False):
         for pm in payment_methods:
             pm["is_default"] = False
     
-    # Add the new payment method
-    payment_methods.append(payment_method)
+    # Add the new payment method if it doesn't exist
+    if not exists:
+        payment_methods.append(payment_method)
+        print(f"Adding new payment method {pm_id}")
     
     # Save updated payment methods
     try:
@@ -112,9 +126,13 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
         if not card_number.isdigit() or len(card_number) < 13 or len(card_number) > 19:
             raise ValueError("Invalid card number")
         
+        # Create unique id with timestamp to prevent duplicates
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_id = f"pm_card_{hashlib.md5((card_number + timestamp + cardholder_name).encode()).hexdigest()[:16]}"
+        
         # Create new payment method object
         payment_method = {
-            "id": f"pm_{hashlib.md5(card_number.encode()).hexdigest()[:16]}",
+            "id": unique_id,
             "type": "card",
             "card_brand": _get_card_brand(card_number),
             "last4": card_number[-4:],
@@ -134,9 +152,13 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
         bank = kwargs.get("bank", "ing")
         account_name = kwargs.get("account_name", "Test User")
         
+        # Create unique id with timestamp to prevent duplicates
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_id = f"pm_ideal_{hashlib.md5((bank + timestamp + account_name).encode()).hexdigest()[:16]}"
+        
         # Create new payment method object
         payment_method = {
-            "id": f"pm_ideal_{hashlib.md5(bank.encode()).hexdigest()[:16]}",
+            "id": unique_id,
             "type": "ideal",
             "card_brand": f"iDEAL ({bank})",
             "last4": "Bank", 
@@ -206,8 +228,12 @@ def list_payment_methods(customer_id: Optional[str]) -> List[Dict[str, Any]]:
         card_types = ["Visa", "Mastercard", "American Express"]
         card_brand = card_types[i % len(card_types)]
         
+        # Create unique ID with index and timestamp
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_id = f"pm_mock_{i}_{hashlib.md5((customer_id + str(i) + timestamp).encode()).hexdigest()[:12]}"
+        
         payment_methods.append({
-            "id": f"pm_{hashlib.md5(f'{customer_id}_{i}'.encode()).hexdigest()[:16]}",
+            "id": unique_id,
             "type": "card",
             "card_brand": card_brand,
             "last4": f"{1000 + i}",
