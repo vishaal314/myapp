@@ -45,6 +45,23 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
     """
     st.title("Billing Management")
     
+    # Create tabs for different billing functions
+    tab1, tab2, tab3 = st.tabs(["Payment Methods", "Subscription", "iDEAL Test"])
+    
+    with tab1:
+        render_payment_methods_tab(username, user_data)
+    
+    with tab2:
+        render_subscription_tab(username, user_data)
+        
+    with tab3:
+        # Import here to avoid circular imports
+        from billing.ideal_payment_page import render_ideal_payment_page
+        render_ideal_payment_page(username, user_data)
+        
+def render_payment_methods_tab(username: str, user_data: Dict[str, Any]):
+    """Render the payment methods management tab"""
+    
     # Load Stripe keys
     stripe_publishable_key, stripe_secret_key = load_stripe_keys()
     
