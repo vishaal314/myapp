@@ -363,6 +363,29 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
                             # In a real app, we would use Stripe Elements or Stripe.js for secure card collection
                             # This is a mock implementation for the demo
                             
+                            # Show debugging information
+                            st.info(f"Adding card for {card_holder}")
+                            st.info(f"Customer ID: {user_data.get('stripe_customer_id', 'None')}")
+                            
+                            # Check if customer ID exists
+                            if not user_data.get("stripe_customer_id"):
+                                st.error("No Stripe customer ID found. Creating a new one...")
+                                from billing.stripe_integration import create_stripe_customer
+                                # Create a new customer ID
+                                customer_id = create_stripe_customer({"name": username, "email": user_data.get("email", "")})
+                                
+                                # Update the user data in session state
+                                user_data["stripe_customer_id"] = customer_id
+                                st.session_state.user_data["stripe_customer_id"] = customer_id
+                                
+                                # Update the user record
+                                users = load_users()
+                                if username in users:
+                                    users[username]["stripe_customer_id"] = customer_id
+                                    save_users(users)
+                                    
+                                st.info(f"Created new customer ID: {customer_id}")
+                            
                             # Basic validation
                             card_number = card_number.replace(" ", "").strip()
                             if not card_number.isdigit() or len(card_number) < 13 or len(card_number) > 19:
@@ -385,16 +408,27 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
                                     cardholder_name=card_holder
                                 )
                                 
+                                # Show success message with payment method details
+                                st.success(f"Card created successfully: {new_payment_method.get('id', 'Unknown ID')}")
+                                
                                 # Update user record
                                 users = load_users()
                                 if username in users:
                                     users[username]["has_payment_method"] = True
                                     save_users(users)
+                                    st.info("User record updated with card payment method")
                                 
                                 st.success("Card added successfully!")
+                                
+                                # Add a delay before rerunning to allow the message to be displayed
+                                import time
+                                with st.spinner("Updating your payment methods..."):
+                                    time.sleep(1)
                                 st.rerun()
                         except Exception as e:
                             st.error(f"Error adding card: {str(e)}")
+                            import traceback
+                            st.code(traceback.format_exc(), language="python")
         
         # iDEAL Form
         elif payment_type == "iDEAL (Netherlands)":
@@ -428,6 +462,29 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
                             # In a real app, we would redirect to the iDEAL payment flow
                             # This is a mock implementation for the demo
                             
+                            # Show debugging information
+                            st.info(f"Adding iDEAL payment method for {account_name} with bank {selected_bank}")
+                            st.info(f"Customer ID: {user_data.get('stripe_customer_id', 'None')}")
+                            
+                            # Check if customer ID exists
+                            if not user_data.get("stripe_customer_id"):
+                                st.error("No Stripe customer ID found. Creating a new one...")
+                                from billing.stripe_integration import create_stripe_customer
+                                # Create a new customer ID
+                                customer_id = create_stripe_customer({"name": username, "email": user_data.get("email", "")})
+                                
+                                # Update the user data in session state
+                                user_data["stripe_customer_id"] = customer_id
+                                st.session_state.user_data["stripe_customer_id"] = customer_id
+                                
+                                # Update the user record
+                                users = load_users()
+                                if username in users:
+                                    users[username]["stripe_customer_id"] = customer_id
+                                    save_users(users)
+                                    
+                                st.info(f"Created new customer ID: {customer_id}")
+                            
                             # Create mock payment method
                             new_payment_method = create_payment_method(
                                 customer_id=user_data.get("stripe_customer_id", ""),
@@ -436,16 +493,27 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
                                 account_name=account_name
                             )
                             
+                            # Show success message with payment method details
+                            st.success(f"iDEAL payment method created successfully: {new_payment_method.get('id', 'Unknown ID')}")
+                            
                             # Update user record
                             users = load_users()
                             if username in users:
                                 users[username]["has_payment_method"] = True
                                 save_users(users)
+                                st.info("User record updated with payment method")
                             
                             st.success(f"iDEAL payment method added for {selected_bank} successfully!")
+                            
+                            # Add a delay before rerunning to allow the message to be displayed
+                            import time
+                            with st.spinner("Updating your payment methods..."):
+                                time.sleep(1)
                             st.rerun()
                         except Exception as e:
                             st.error(f"Error setting up iDEAL: {str(e)}")
+                            import traceback
+                            st.code(traceback.format_exc(), language="python")
         
         st.markdown('</div>', unsafe_allow_html=True)
     

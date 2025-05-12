@@ -52,7 +52,9 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
         Payment method details
     """
     # In a real app, we would call the Stripe API
-    # For this demo, we'll create a mock payment method
+    # For this demo, we'll create a mock payment method and store it
+    import os
+    import json
     
     payment_type = kwargs.get("payment_type", "card")
     
@@ -67,8 +69,8 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
         if not card_number.isdigit() or len(card_number) < 13 or len(card_number) > 19:
             raise ValueError("Invalid card number")
         
-        # Mock response
-        return {
+        # Create new payment method object
+        payment_method = {
             "id": f"pm_{hashlib.md5(card_number.encode()).hexdigest()[:16]}",
             "type": "card",
             "card_brand": _get_card_brand(card_number),
@@ -78,14 +80,19 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
             "cardholder_name": cardholder_name,
             "is_default": True  # Set as default if it's the first one
         }
+        
+        # Add the payment method to the customer's saved payment methods
+        _add_payment_method_to_storage(customer_id, payment_method)
+        
+        return payment_method
     
     elif payment_type == "ideal":
         # Create a mock iDEAL payment method
         bank = kwargs.get("bank", "ing")
         account_name = kwargs.get("account_name", "Test User")
         
-        # Mock response
-        return {
+        # Create new payment method object
+        payment_method = {
             "id": f"pm_ideal_{hashlib.md5(bank.encode()).hexdigest()[:16]}",
             "type": "ideal",
             "card_brand": f"iDEAL ({bank})",
@@ -95,6 +102,11 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
             "cardholder_name": account_name,
             "is_default": True  # Set as default if it's the first one
         }
+        
+        # Add the payment method to the customer's saved payment methods
+        _add_payment_method_to_storage(customer_id, payment_method)
+        
+        return payment_method
     
     else:
         raise ValueError(f"Unsupported payment type: {payment_type}")

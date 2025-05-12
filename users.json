@@ -9,7 +9,8 @@
     "stripe_customer_id": "cus_vishaal314",
     "subscription_id": "sub_vishaal314",
     "user_id": "usr_vishaal314",
-    "subscription_renewal_date": "2025-06-01"
+    "subscription_renewal_date": "2025-06-01",
+    "has_payment_method": true
   },
   "admin": {
     "username": "admin",
