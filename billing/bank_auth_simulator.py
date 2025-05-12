@@ -204,14 +204,22 @@ def render_bank_auth_simulator(payment_intent_id: str, return_url: str = "https:
                 st.success("Your payment has been authorized successfully. You will now be redirected back to the merchant.")
                 
                 # Auto-redirect after a delay
-                st.markdown("""
-                <meta http-equiv="refresh" content="3;URL='/?payment_success=true'" />
+                redirect_url = f"/?payment_intent={payment_intent_id}&payment_success=true"
+                st.markdown(f"""
+                <meta http-equiv="refresh" content="3;URL='{redirect_url}'" />
                 """, unsafe_allow_html=True)
                 
+                # Create return URL with payment success parameter
+                return_url = f"/?payment_intent={payment_intent_id}&payment_success=true"
+                
                 if st.button("Return to Merchant Now", type="primary"):
+                    # Reset state
                     st.session_state.bank_auth_step = "init"
-                    st.session_state.payment_flow_step = "payment_status"
-                    st.rerun()
+                    st.session_state.in_bank_auth_mode = False
+                    
+                    # Redirect to payment return handler
+                    st.markdown(f'<meta http-equiv="refresh" content="0;URL=\'{return_url}\'" />', unsafe_allow_html=True)
+                    st.stop()
                     
             else:
                 # Update payment status to failed
@@ -249,15 +257,23 @@ def render_bank_auth_simulator(payment_intent_id: str, return_url: str = "https:
         
         st.warning("You have canceled the payment or the authentication failed.")
         
+        # Create return URL with payment canceled parameter
+        return_url = f"/?payment_intent={payment_intent_id}&payment_canceled=true"
+        
         # Show redirect button
         if st.button("Return to Merchant", type="primary"):
+            # Reset state
             st.session_state.bank_auth_step = "init"
-            st.session_state.payment_flow_step = "select_bank"
-            st.rerun()
+            st.session_state.in_bank_auth_mode = False
+            
+            # Redirect to payment return handler
+            st.markdown(f'<meta http-equiv="refresh" content="0;URL=\'{return_url}\'" />', unsafe_allow_html=True)
+            st.stop()
             
         # Auto-redirect after a delay
-        st.markdown("""
-        <meta http-equiv="refresh" content="5;URL='/?payment_canceled=true'" />
+        redirect_url = f"/?payment_intent={payment_intent_id}&payment_canceled=true"
+        st.markdown(f"""
+        <meta http-equiv="refresh" content="5;URL='{redirect_url}'" />
         """, unsafe_allow_html=True)
         
     # Bank footer

@@ -2042,8 +2042,19 @@ def main():
                         "subscription_active": st.session_state.get("subscription_active", False),
                         "stripe_customer_id": st.session_state.get("stripe_customer_id", "")
                     }
-                # Use our comprehensive billing page for the logged-in user
-                render_billing_page(st.session_state.username, st.session_state.user_data)
+                # Check if we have return parameters from bank payment
+                query_params = st.experimental_get_query_params()
+                has_payment_return = any(param in query_params for param in [
+                    "payment_intent", "payment_success", "payment_canceled"
+                ])
+                
+                if has_payment_return:
+                    # Import and use the payment return handler
+                    from billing.payment_return_handler import render_payment_return_page
+                    render_payment_return_page()
+                else:
+                    # Use our comprehensive billing page for the logged-in user
+                    render_billing_page(st.session_state.username, st.session_state.user_data)
                 
             # Admin Tab
             with tabs[5]:
