@@ -105,10 +105,25 @@ def _update_mock_payment_status(intent_id: str, new_status: str):
         print(f"Error updating mock payment intent status: {e}")
 
 # Initialize Stripe with the API key
-def init_stripe():
-    """Initialize Stripe with the API key from environment variables"""
-    api_key = os.environ.get("STRIPE_SECRET_KEY")
-    api_version = "2022-11-15"  # Use a stable API version
+def init_stripe(live_mode=False):
+    """
+    Initialize Stripe with the API key from environment variables
+    
+    Args:
+        live_mode: If True, use live mode for real transactions
+    """
+    if live_mode:
+        # Use production API key for live transactions
+        api_key = os.environ.get("STRIPE_SECRET_KEY")
+        if not api_key or api_key.startswith("sk_test_"):
+            print("Error: Live mode requested but production STRIPE_SECRET_KEY not found")
+            print("For real bank transactions, you need a live API key (not starting with sk_test_)")
+            return False
+    else:
+        # Use test API key for testing
+        api_key = os.environ.get("STRIPE_SECRET_KEY")
+    
+    api_version = "2023-10-16"  # Use latest stable API version for iDEAL
     
     if not api_key:
         print("Warning: STRIPE_SECRET_KEY not found in environment variables")
@@ -125,14 +140,20 @@ def init_stripe():
         
         # Test the API key with a simple call
         try:
-            stripe.Account.retrieve()
-            print("Stripe API successfully initialized")
+            account = stripe.Account.retrieve()
+            if live_mode and not account.charges_enabled:
+                print("Warning: Your Stripe account is not fully activated for processing live payments")
+                print("Please complete your Stripe account setup to process real transactions")
+            
+            mode_type = "LIVE" if live_mode else "TEST"
+            print(f"Stripe API successfully initialized in {mode_type} mode")
             return True
         except Exception as account_error:
             error_message = str(account_error)
             if "No such account" in error_message:
                 # This is actually a successful connection, just not finding the account (expected)
-                print("Stripe API successfully initialized")
+                mode_type = "LIVE" if live_mode else "TEST"
+                print(f"Stripe API successfully initialized in {mode_type} mode")
                 return True
             else:
                 raise account_error
