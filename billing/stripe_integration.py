@@ -182,6 +182,31 @@ def create_payment_method(customer_id: str, **kwargs) -> Dict[str, Any]:
     else:
         raise ValueError(f"Unsupported payment type: {payment_type}")
 
+def deduplicate_payment_methods(payment_methods: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Remove duplicate payment methods based on ID or similar characteristics
+    
+    Args:
+        payment_methods: List of payment method dictionaries
+        
+    Returns:
+        Deduplicated list
+    """
+    # Use a dictionary to deduplicate by ID
+    deduplicated = {}
+    for pm in payment_methods:
+        pm_id = pm.get("id", "")
+        # If this ID already exists in our deduplicated dictionary
+        if pm_id in deduplicated:
+            # Keep the version marked as default if applicable
+            if pm.get("is_default", False):
+                deduplicated[pm_id] = pm
+        else:
+            deduplicated[pm_id] = pm
+    
+    # Convert back to list
+    return list(deduplicated.values())
+
 def list_payment_methods(customer_id: Optional[str]) -> List[Dict[str, Any]]:
     """
     List all payment methods for a customer
@@ -211,6 +236,17 @@ def list_payment_methods(customer_id: Optional[str]) -> List[Dict[str, Any]]:
         try:
             with open(storage_path, 'r') as f:
                 saved_methods = json.load(f)
+                
+                # Check for and remove any duplicate payment methods
+                deduplicated_methods = deduplicate_payment_methods(saved_methods)
+                
+                # If we removed duplicates, save the cleaned data back
+                if len(deduplicated_methods) < len(saved_methods):
+                    print(f"Removed {len(saved_methods) - len(deduplicated_methods)} duplicate payment methods")
+                    with open(storage_path, 'w') as f:
+                        json.dump(deduplicated_methods, f)
+                    saved_methods = deduplicated_methods
+                
                 if saved_methods:
                     print(f"Loaded {len(saved_methods)} payment methods for customer {customer_id}")
                     return saved_methods
