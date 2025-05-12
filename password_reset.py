@@ -112,26 +112,28 @@ def show_request_reset_form():
                         # Send email
                         email_sent, email_message = send_password_reset_email(email, reset_url)
                         
+                        # Print reset link to logs for debugging
+                        print(f"Password reset link for {email}: {reset_url}")
+                        
                         if email_sent:
                             # Store email in a different session state key
                             st.session_state.pwd_reset_email = email
-                            st.success("Password reset link has been sent to your email address. Please check your inbox.")
-                            
-                            # Display the link for demo purposes only with a direct button
-                            st.info("Since this is a demo, you can use the reset link below:", icon="ℹ️")
-                            
                             # Store token for direct use
                             st.session_state.reset_direct_token = token
-                            
-                            # Add a direct button to reset with this token
-                            if st.button("Click to Reset Password Now", key="direct_reset_btn", type="primary"):
-                                st.session_state.reset_token = token
-                                st.session_state.reset_step = 2
-                                st.rerun()
+                            st.success("Password reset link has been sent to your email address. Please check your inbox.")
                         else:
                             st.error(f"Failed to send email: {email_message}")
                     else:
                         st.error(message)
+    
+    # Display direct reset button if token is available (outside the form)
+    if st.session_state.get("reset_direct_token"):
+        st.info("Since this is a demo, you can use the direct reset button below:", icon="ℹ️")
+        if st.button("Click to Reset Password Now", key="direct_reset_btn", type="primary"):
+            token = st.session_state.reset_direct_token
+            st.session_state.reset_token = token
+            st.session_state.reset_step = 2
+            st.rerun()
     
     # Back to login link
     st.markdown('<a href="/" class="back-link">Back to Login</a>', unsafe_allow_html=True)
