@@ -203,23 +203,21 @@ def render_bank_auth_simulator(payment_intent_id: str, return_url: str = "https:
                 # Show success message and redirect button
                 st.success("Your payment has been authorized successfully. You will now be redirected back to the merchant.")
                 
-                # Auto-redirect after a delay
-                redirect_url = f"/?payment_intent={payment_intent_id}&payment_success=true"
-                st.markdown(f"""
-                <meta http-equiv="refresh" content="3;URL='{redirect_url}'" />
-                """, unsafe_allow_html=True)
+                # Create success message
+                st.success("Your payment has been authorized successfully. You will be redirected back to the merchant.")
                 
-                # Create return URL with payment success parameter
-                return_url = f"/?payment_intent={payment_intent_id}&payment_success=true"
-                
+                # Return button
                 if st.button("Return to Merchant Now", type="primary"):
                     # Reset state
                     st.session_state.bank_auth_step = "init"
                     st.session_state.in_bank_auth_mode = False
                     
-                    # Redirect to payment return handler
-                    st.markdown(f'<meta http-equiv="refresh" content="0;URL=\'{return_url}\'" />', unsafe_allow_html=True)
-                    st.stop()
+                    # Set query parameters for return handler
+                    st.query_params["payment_intent"] = payment_intent_id
+                    st.query_params["payment_success"] = "true"
+                    
+                    # Rerun to apply the parameters and trigger the return handler
+                    st.rerun()
                     
             else:
                 # Update payment status to failed

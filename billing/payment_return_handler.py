@@ -24,11 +24,11 @@ def parse_return_parameters() -> Dict[str, str]:
     
     # Extract common payment parameters
     params = {
-        "payment_intent": query_params.get("payment_intent", [""])[0],
-        "payment_intent_client_secret": query_params.get("payment_intent_client_secret", [""])[0],
-        "redirect_status": query_params.get("redirect_status", [""])[0],
-        "payment_success": query_params.get("payment_success", [""])[0],
-        "payment_canceled": query_params.get("payment_canceled", [""])[0],
+        "payment_intent": query_params.get("payment_intent", ""),
+        "payment_intent_client_secret": query_params.get("payment_intent_client_secret", ""),
+        "redirect_status": query_params.get("redirect_status", ""),
+        "payment_success": query_params.get("payment_success", ""),
+        "payment_canceled": query_params.get("payment_canceled", ""),
     }
     
     return params
