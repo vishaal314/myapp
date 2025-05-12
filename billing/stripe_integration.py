@@ -20,12 +20,45 @@ from typing import Dict, Any, List, Optional
 # Initialize Stripe with the API key
 def init_stripe():
     """Initialize Stripe with the API key from environment variables"""
-    # Get API key from environment, or use a mock key for testing
-    stripe_secret_key = os.environ.get("STRIPE_SECRET_KEY", "sk_test_mock")
+    api_key = os.environ.get("STRIPE_SECRET_KEY")
+    api_version = "2022-11-15"  # Use a stable API version
     
-    # In a real app, we would use the actual Stripe API
-    # For this demo, we'll mock the API calls
-    return stripe_secret_key
+    if not api_key:
+        print("Warning: STRIPE_SECRET_KEY not found in environment variables")
+        print("Using mock implementation for development/testing")
+        return False
+    
+    try:
+        # Configure Stripe with API key and version
+        stripe.api_key = api_key
+        stripe.api_version = api_version
+        
+        # Set max_network_retries to handle transient network failures
+        stripe.max_network_retries = 3
+        
+        # Test the API key with a simple call
+        try:
+            stripe.Account.retrieve()
+            print("Stripe API successfully initialized")
+            return True
+        except Exception as account_error:
+            error_message = str(account_error)
+            if "No such account" in error_message:
+                # This is actually a successful connection, just not finding the account (expected)
+                print("Stripe API successfully initialized")
+                return True
+            else:
+                raise account_error
+        
+    except Exception as e:
+        error_message = str(e)
+        if "Invalid API Key" in error_message:
+            print(f"Error: Invalid Stripe API key. Please check your STRIPE_SECRET_KEY.")
+        else:
+            print(f"Error initializing Stripe: {error_message}")
+        
+        print("Stripe API initialization failed, using mock implementation")
+        return False
 
 def _add_payment_method_to_storage(customer_id: str, payment_method: Dict[str, Any]) -> None:
     """
@@ -112,17 +145,22 @@ def create_stripe_customer(customer_data: Dict[str, Any]) -> str:
         
         # Create customer in Stripe
         try:
+            # Make sure name is a string
+            customer_name = str(name) if name is not None else ""
+            
             stripe_customer = stripe.Customer.create(
                 email=email,
-                name=name,
+                name=customer_name,
                 metadata=customer_data.get("metadata", {})
             )
             
             print(f"Successfully created Stripe customer: {stripe_customer.id}")
             return stripe_customer.id
             
-        except stripe.error.StripeError as e:
-            print(f"Stripe API error: {str(e)}")
+        except Exception as e:
+            # Handle both Stripe errors and other exceptions
+            error_type = "Stripe API error" if "stripe" in str(type(e)).lower() else "Error creating customer"
+            print(f"{error_type}: {str(e)}")
             print("Falling back to mock customer ID for development/testing")
             
             # Fallback for development/testing
@@ -577,6 +615,162 @@ def delete_payment_method(customer_id: str, payment_method_id: str) -> bool:
     except Exception as e:
         print(f"Error saving payment methods: {e}")
         return False
+
+def process_ideal_payment(customer_id: str, amount: int, currency: str = "eur", 
+                    payment_method_id: Optional[str] = None, 
+                    return_url: str = "https://dataguardianpro.com/payment/complete", 
+                    **kwargs) -> Dict[str, Any]:
+    """
+    Process a payment using iDEAL
+    
+    This function creates a payment intent, attaches the payment method,
+    and returns the client secret and redirect URL for the bank authorization.
+    
+    Args:
+        customer_id: Stripe customer ID
+        amount: Amount in cents to charge
+        currency: Currency code (default: eur)
+        payment_method_id: Existing payment method ID (optional)
+        return_url: URL to redirect after bank authorization
+        **kwargs: Additional payment data (metadata, description, etc.)
+        
+    Returns:
+        Dictionary with payment details including:
+        - client_secret: The PaymentIntent client secret
+        - redirect_url: URL to redirect user to bank
+        - payment_intent_id: The ID of the payment intent
+        - status: Status of the payment
+    """
+    try:
+        # Initialize Stripe
+        init_stripe()
+        
+        print(f"Creating payment intent for {customer_id} with amount {amount} {currency}")
+        
+        # Prepare parameters for payment intent
+        intent_params = {
+            "amount": amount,
+            "currency": currency,
+            "customer": customer_id,
+            "payment_method_types": ["ideal"],
+            "description": kwargs.get("description", "DataGuardian Pro payment"),
+            "metadata": kwargs.get("metadata", {}),
+            "return_url": return_url
+        }
+        
+        # Add optional parameters only if they're provided
+        if payment_method_id:
+            intent_params["payment_method"] = payment_method_id
+            
+        receipt_email = kwargs.get("receipt_email")
+        if receipt_email:
+            intent_params["receipt_email"] = receipt_email
+            
+        # Create the payment intent
+        intent = stripe.PaymentIntent.create(**intent_params)
+        
+        # If we have a payment method, confirm it immediately
+        if payment_method_id:
+            print(f"Confirming payment intent {intent.id} with payment method {payment_method_id}")
+            confirmed_intent = stripe.PaymentIntent.confirm(
+                intent.id,
+                payment_method=payment_method_id,
+                return_url=return_url
+            )
+            
+            # Return the redirect URL for bank authorization
+            next_action = getattr(confirmed_intent, 'next_action', None)
+            redirect_url = None
+            
+            if next_action and hasattr(next_action, 'redirect_to_url'):
+                redirect = getattr(next_action, 'redirect_to_url', None)
+                if redirect and hasattr(redirect, 'url'):
+                    redirect_url = redirect.url
+            
+            return {
+                "payment_intent_id": confirmed_intent.id,
+                "client_secret": confirmed_intent.client_secret,
+                "redirect_url": redirect_url,
+                "status": confirmed_intent.status,
+                "requires_action": confirmed_intent.status == "requires_action"
+            }
+        
+        # Otherwise just return the intent details
+        return {
+            "payment_intent_id": intent.id,
+            "client_secret": intent.client_secret,
+            "status": intent.status,
+            "requires_payment_method": True
+        }
+        
+    except Exception as e:
+        error_type = "Stripe API error" if "stripe" in str(type(e)).lower() else "Payment processing error"
+        print(f"{error_type}: {str(e)}")
+        
+        # Return error response
+        return {
+            "error": str(e),
+            "status": "failed",
+            "payment_intent_id": None,
+            "client_secret": None
+        }
+
+def check_payment_status(payment_intent_id: str) -> Dict[str, Any]:
+    """
+    Check the status of a payment intent
+    
+    Args:
+        payment_intent_id: The Stripe PaymentIntent ID
+        
+    Returns:
+        Dictionary with payment status details
+    """
+    try:
+        # Initialize Stripe
+        init_stripe()
+        
+        print(f"Checking status of payment intent {payment_intent_id}")
+        
+        # Retrieve the payment intent
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        
+        # Format the response
+        response = {
+            "payment_intent_id": intent.id,
+            "status": intent.status,
+            "amount": intent.amount,
+            "currency": intent.currency,
+            "customer_id": intent.customer,
+            "payment_method": intent.payment_method,
+            "created": datetime.fromtimestamp(intent.created).strftime("%d/%m/%Y %H:%M"),
+            "is_success": intent.status in ["succeeded", "processing"],
+            "requires_action": intent.status == "requires_action",
+            "is_canceled": intent.status == "canceled"
+        }
+        
+        # If there's a next action (like redirect to bank), include it
+        if intent.status == "requires_action" and hasattr(intent, 'next_action'):
+            next_action = intent.next_action
+            if hasattr(next_action, 'redirect_to_url'):
+                redirect = getattr(next_action, 'redirect_to_url', None)
+                if redirect and hasattr(redirect, 'url'):
+                    response["redirect_url"] = redirect.url
+        
+        return response
+        
+    except Exception as e:
+        error_type = "Stripe API error" if "stripe" in str(type(e)).lower() else "Payment status check error"
+        print(f"{error_type}: {str(e)}")
+        
+        # Return error response
+        return {
+            "error": str(e),
+            "status": "unknown",
+            "payment_intent_id": payment_intent_id,
+            "is_success": False,
+            "requires_action": False,
+            "is_canceled": False
+        }
 
 def get_subscription_details(customer_id: Optional[str]) -> Optional[Dict[str, Any]]:
     """
