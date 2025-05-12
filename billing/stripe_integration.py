@@ -727,7 +727,8 @@ def delete_payment_method(customer_id: str, payment_method_id: str) -> bool:
 
 def process_ideal_payment(customer_id: str, amount: int, currency: str = "eur", 
                     payment_method_id: Optional[str] = None, 
-                    return_url: str = "https://dataguardianpro.com/payment/complete", 
+                    return_url: str = "https://dataguardianpro.com/payment/complete",
+                    live_mode: bool = False,
                     **kwargs) -> Dict[str, Any]:
     """
     Process a payment using iDEAL
@@ -741,6 +742,7 @@ def process_ideal_payment(customer_id: str, amount: int, currency: str = "eur",
         currency: Currency code (default: eur)
         payment_method_id: Existing payment method ID (optional)
         return_url: URL to redirect after bank authorization
+        live_mode: If True, use live mode for real bank transactions
         **kwargs: Additional payment data (metadata, description, etc.)
         
     Returns:
@@ -751,8 +753,8 @@ def process_ideal_payment(customer_id: str, amount: int, currency: str = "eur",
         - status: Status of the payment
     """
     try:
-        # Initialize Stripe
-        init_stripe()
+        # Initialize Stripe in the correct mode
+        init_stripe(live_mode=live_mode)
         
         print(f"Creating payment intent for {customer_id} with amount {amount} {currency}")
         

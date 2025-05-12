@@ -145,6 +145,36 @@ def render_ideal_payment_page(username: str, user_data: Dict[str, Any]):
     if st.session_state.payment_flow_step == "select_bank":
         st.header("Step 1: Select Your Bank")
         
+        # Live mode toggle
+        live_mode_col1, live_mode_col2 = st.columns([3, 1])
+        with live_mode_col1:
+            st.session_state.use_live_mode = st.toggle(
+                "Enable real bank transactions (Live Mode)", 
+                value=st.session_state.get("use_live_mode", False),
+                help="When enabled, your payment will be processed through the actual banking system."
+            )
+            
+        with live_mode_col2:
+            if st.session_state.use_live_mode:
+                st.info("LIVE MODE")
+                st.warning("""
+                ⚠️ **Important**: Real money will be charged to your bank account when using Live Mode.
+                
+                This will process an actual payment through the banking system using the Stripe iDEAL API.
+                """)
+            else:
+                st.warning("TEST MODE")
+                st.info("""
+                ℹ️ In test mode, no real money is charged and you'll be redirected to our test bank simulator.
+                
+                To test with real banks, enable Live Mode above.
+                """)
+        
+        # If live mode changes, reinitialize Stripe
+        if "previous_live_mode" not in st.session_state or st.session_state.previous_live_mode != st.session_state.use_live_mode:
+            st.session_state.previous_live_mode = st.session_state.use_live_mode
+            st.session_state.stripe_initialized = init_stripe(live_mode=st.session_state.use_live_mode)
+            
         # Available iDEAL banks
         banks = [
             {"id": "abn_amro", "name": "ABN AMRO"},
@@ -280,17 +310,26 @@ def render_ideal_payment_page(username: str, user_data: Dict[str, Any]):
                     
                     # Process the payment
                     return_url = "https://dataguardianpro.com/payment/complete"  # In real app, use dynamic URL
+                    
+                    # Get current live mode status
+                    is_live_mode = st.session_state.get("use_live_mode", False)
+                    
+                    # Dynamic description based on mode
+                    payment_description = f"DataGuardian Pro {'LIVE' if is_live_mode else 'test'} payment via {bank_name}"
+                    
                     payment_intent = process_ideal_payment(
                         customer_id=customer_id,
                         amount=payment_amount,
                         payment_method_id=payment_method.get("id") if payment_method else None,
                         return_url=return_url,
                         receipt_email=receipt_email,
-                        description=f"DataGuardian Pro test payment via {bank_name}",
+                        description=payment_description,
+                        live_mode=is_live_mode,
                         metadata={
                             "username": username,
                             "bank": selected_bank,
-                            "test_payment": "true"
+                            "test_payment": str(not is_live_mode).lower(),
+                            "live_mode": str(is_live_mode).lower()
                         }
                     )
                     
