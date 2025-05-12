@@ -200,9 +200,6 @@ def render_bank_auth_simulator(payment_intent_id: str, return_url: str = "https:
                 
                 st.balloons()
                 
-                # Show success message and redirect button
-                st.success("Your payment has been authorized successfully. You will now be redirected back to the merchant.")
-                
                 # Create success message
                 st.success("Your payment has been authorized successfully. You will be redirected back to the merchant.")
                 
@@ -255,24 +252,21 @@ def render_bank_auth_simulator(payment_intent_id: str, return_url: str = "https:
         
         st.warning("You have canceled the payment or the authentication failed.")
         
-        # Create return URL with payment canceled parameter
-        return_url = f"/?payment_intent={payment_intent_id}&payment_canceled=true"
-        
         # Show redirect button
         if st.button("Return to Merchant", type="primary"):
             # Reset state
             st.session_state.bank_auth_step = "init"
             st.session_state.in_bank_auth_mode = False
             
-            # Redirect to payment return handler
-            st.markdown(f'<meta http-equiv="refresh" content="0;URL=\'{return_url}\'" />', unsafe_allow_html=True)
-            st.stop()
+            # Set query parameters for return handler
+            st.query_params["payment_intent"] = payment_intent_id
+            st.query_params["payment_canceled"] = "true"
             
-        # Auto-redirect after a delay
-        redirect_url = f"/?payment_intent={payment_intent_id}&payment_canceled=true"
-        st.markdown(f"""
-        <meta http-equiv="refresh" content="5;URL='{redirect_url}'" />
-        """, unsafe_allow_html=True)
+            # Rerun to apply the parameters and trigger the return handler
+            st.rerun()
+            
+        # Add a message about auto-return
+        st.info("You will be automatically redirected in 5 seconds...")
         
     # Bank footer
     st.markdown("""
