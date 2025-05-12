@@ -29,9 +29,8 @@ def run_password_reset_flow():
         st.session_state.reset_step = 1  # 1=Request, 2=Verify, 3=Reset
     
     # Check for token in URL query parameters
-    query_params = st.experimental_get_query_params()
-    if "token" in query_params and st.session_state.reset_step == 1:
-        token = query_params["token"][0]
+    if "token" in st.query_params and st.session_state.reset_step == 1:
+        token = st.query_params["token"]
         st.session_state.reset_token = token
         st.session_state.reset_step = 2
     
@@ -258,7 +257,7 @@ def show_reset_confirmation():
             del st.session_state.reset_username
         
         # Redirect to login
-        st.experimental_set_query_params()
+        st.query_params.clear()
         st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)

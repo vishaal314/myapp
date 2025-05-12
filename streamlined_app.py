@@ -630,7 +630,7 @@ def render_login_form():
         forgot_password = st.markdown('<div style="text-align: right;"><a href="#forgot_password" style="color: #4f46e5; font-size: 14px; text-decoration: none;">Forgot password?</a></div>', unsafe_allow_html=True)
         
     # Check if the "Forgot password?" link was clicked (via URL hash check)
-    if "forgot_password" in st.experimental_get_query_params().get("", []) or "forgot_password" in st.experimental_get_query_params().get("#", []):
+    if "forgot_password" in st.query_params:
         st.session_state.current_view = "password_reset"
         st.rerun()
     
