@@ -28,6 +28,7 @@ from access_control import (
 # Import admin panel and user profile
 from admin_panel import render_admin_panel
 from user_profile import render_user_profile_page
+from billing.billing_page import render_billing_page
 
 # =============================================================================
 # CONFIGURATION
@@ -2001,7 +2002,7 @@ def main():
             render_payment_method_selection()
         else:
             # Create tabs for main dashboard content
-            tabs = st.tabs(["Dashboard", "Scan", "Reports", "Profile", "Admin"])
+            tabs = st.tabs(["Dashboard", "Scan", "Reports", "Profile", "Billing", "Admin"])
             
             # Dashboard Tab
             with tabs[0]:
@@ -2023,9 +2024,15 @@ def main():
             with tabs[3]:
                 st.header("User Profile")
                 render_user_profile_page()
+            
+            # Billing Tab
+            with tabs[4]:
+                st.header("Billing & Subscription")
+                # Use our comprehensive billing page for the logged-in user
+                render_billing_page(st.session_state.username, st.session_state.user_data)
                 
             # Admin Tab
-            with tabs[4]:
+            with tabs[5]:
                 st.header("Administration")
                 # Use our RBAC-protected admin section
                 render_admin_section()
