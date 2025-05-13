@@ -29,6 +29,9 @@ from services.ai_model_scanner import AIModelScanner
 from services.report_generator import auto_generate_pdf_report
 # Import our enhanced report generator specifically for AI Model scans
 from services.ai_model_report_generator import create_ai_model_scan_report
+# Import EU AI Act analyzer and report generator
+from services.eu_ai_act_analyzer import analyze_ai_model
+from services.eu_ai_act_report_generator import create_eu_ai_act_report
 
 class EnhancedAIModelScanner(AIModelScanner):
     """
