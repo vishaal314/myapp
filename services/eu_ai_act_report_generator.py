@@ -102,30 +102,26 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
             author="DataGuardian Pro"
         )
         
-        # Define modern styles for a clean, visually appealing report
-        # Get base styles and use them directly (don't redefine)
+        # Get base stylesheet with standard styles
         styles = getSampleStyleSheet()
         
-        # Define modern colors
-        MODERN_COLORS = {
-            "primary": "#1E40AF",     # Deep blue
-            "secondary": "#3B82F6",   # Bright blue
-            "text": "#1F2937",        # Dark gray
-            "light_text": "#6B7280",  # Medium gray
-            "critical": "#DC2626",    # Red
-            "high": "#F59E0B",        # Amber
-            "medium": "#10B981",      # Green
-            "low": "#0EA5E9",         # Light blue
-            "info": "#6366F1",        # Indigo
-            "background": "#F9FAFB",  # Light gray
-            "border": "#E5E7EB",      # Border gray
-            "highlight": "#EFF6FF"    # Light blue highlight
-        }
+        # Create a function to safely add styles
+        def add_style_safely(name, style_def):
+            try:
+                # Check if style already exists
+                existing_style = styles.get(name, None)
+                if existing_style is None:
+                    # Add new style
+                    styles.add(style_def)
+                # If style exists, we'll use the existing one
+            except Exception as style_error:
+                logger.warning(f"Error adding style {name}: {str(style_error)}")
+        
         
         # Create modern styles for the report
         try:
             # Main heading style
-            styles.add(ParagraphStyle(
+            add_style_safely('CustomHeading1', ParagraphStyle(
                 name='CustomHeading1',
                 fontName='Helvetica-Bold',
                 fontSize=20,
@@ -137,7 +133,7 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
             ))
             
             # Subheading style
-            styles.add(ParagraphStyle(
+            add_style_safely('CustomHeading2', ParagraphStyle(
                 name='CustomHeading2',
                 fontName='Helvetica-Bold',
                 fontSize=16,
@@ -149,7 +145,7 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
             ))
             
             # Section heading
-            styles.add(ParagraphStyle(
+            add_style_safely('SectionHeading', ParagraphStyle(
                 name='SectionHeading',
                 fontName='Helvetica-Bold',
                 fontSize=14,
@@ -161,7 +157,7 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
             ))
             
             # Standard text
-            styles.add(ParagraphStyle(
+            add_style_safely('Normal', ParagraphStyle(
                 name='Normal',
                 fontName='Helvetica',
                 fontSize=11,
@@ -172,7 +168,7 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
             ))
             
             # Bold text
-            styles.add(ParagraphStyle(
+            add_style_safely('Bold', ParagraphStyle(
                 name='Bold',
                 fontName='Helvetica-Bold',
                 fontSize=11,
@@ -183,7 +179,7 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
             ))
             
             # Status styles
-            styles.add(ParagraphStyle(
+            add_style_safely('Critical', ParagraphStyle(
                 name='Critical',
                 fontName='Helvetica-Bold',
                 fontSize=11,
@@ -191,7 +187,7 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
                 textColor=HexColor(MODERN_COLORS["critical"])
             ))
             
-            styles.add(ParagraphStyle(
+            add_style_safely('Warning', ParagraphStyle(
                 name='Warning',
                 fontName='Helvetica-Bold',
                 fontSize=11,
@@ -199,7 +195,7 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
                 textColor=HexColor(MODERN_COLORS["high"])
             ))
             
-            styles.add(ParagraphStyle(
+            add_style_safely('Info', ParagraphStyle(
                 name='Info',
                 fontName='Helvetica',
                 fontSize=11,
