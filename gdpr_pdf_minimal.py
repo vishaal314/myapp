@@ -7,8 +7,8 @@ import streamlit as st
 def main():
     st.title("Minimal GDPR PDF Generator")
     
-    # Fixed, pre-generated PDF content (minimal valid PDF)
-    pdf_data = """%PDF-1.4
+    # Ultra simple PDF content
+    pdf_content = b"""%PDF-1.4
 1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
 3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>>>>>/Contents 4 0 R>>endobj
@@ -35,20 +35,16 @@ startxref
 368
 %%EOF"""
     
-    if st.button("Get PDF Report", type="primary"):
-        # Convert string to bytes for download
-        pdf_bytes = pdf_data.encode('latin1')
-        
-        # Display download button
-        st.download_button(
-            label="Download Report",
-            data=pdf_bytes,
-            file_name="basic_gdpr_report.pdf",
-            mime="application/pdf"
-        )
-        
-        # Show success
-        st.success("PDF report generated successfully!")
+    # Direct download button
+    st.download_button(
+        "Download GDPR Report",
+        data=pdf_content,
+        file_name="gdpr_report.pdf",
+        mime="application/pdf",
+        type="primary"
+    )
+    
+    st.write("Click the button above to download a minimal GDPR report.")
 
 if __name__ == "__main__":
     main()
