@@ -85,68 +85,126 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
             author="DataGuardian Pro"
         )
         
-        # Define styles
+        # Define modern styles for a clean, visually appealing report
+        # Get base styles
+        baseStyles = getSampleStyleSheet()
+        
+        # Create a fresh StyleSheet for modern design
         styles = getSampleStyleSheet()
         
-        # Create our custom styles without using direct attribute assignment
+        # Define modern colors
+        MODERN_COLORS = {
+            "primary": "#1E40AF",     # Deep blue
+            "secondary": "#3B82F6",   # Bright blue
+            "text": "#1F2937",        # Dark gray
+            "light_text": "#6B7280",  # Medium gray
+            "critical": "#DC2626",    # Red
+            "high": "#F59E0B",        # Amber
+            "medium": "#10B981",      # Green
+            "low": "#0EA5E9",         # Light blue
+            "info": "#6366F1",        # Indigo
+            "background": "#F9FAFB",  # Light gray
+            "border": "#E5E7EB",      # Border gray
+            "highlight": "#EFF6FF"    # Light blue highlight
+        }
+        
+        # Create modern styles for the report
         try:
-            # Add custom heading styles using the proper constructor parameters
-            if 'CustomHeading1' not in styles:
-                styles.add(ParagraphStyle(
-                    name='CustomHeading1',
-                    parent=styles['Heading1'],
-                    fontName=styles['Heading1'].fontName,
-                    fontSize=18,
-                    leading=22,
-                    textColor=toColor(BRAND_COLORS["primary"]),
-                    spaceAfter=12
-                ))
+            # Main heading style
+            styles.add(ParagraphStyle(
+                name='CustomHeading1',
+                fontName='Helvetica-Bold',
+                fontSize=20,
+                leading=24,
+                textColor=HexColor(MODERN_COLORS["primary"]),
+                spaceBefore=16,
+                spaceAfter=12,
+                alignment=0  # Left aligned
+            ))
             
-            if 'CustomHeading2' not in styles:
-                styles.add(ParagraphStyle(
-                    name='CustomHeading2',
-                    parent=styles['Heading2'],
-                    fontName=styles['Heading2'].fontName,
-                    fontSize=14,
-                    leading=18,
-                    textColor=toColor(BRAND_COLORS["primary"]),
-                    spaceAfter=8
-                ))
+            # Subheading style
+            styles.add(ParagraphStyle(
+                name='CustomHeading2',
+                fontName='Helvetica-Bold',
+                fontSize=16,
+                leading=20,
+                textColor=HexColor(MODERN_COLORS["secondary"]),
+                spaceBefore=14,
+                spaceAfter=10,
+                alignment=0  # Left aligned
+            ))
+            
+            # Section heading
+            styles.add(ParagraphStyle(
+                name='SectionHeading',
+                fontName='Helvetica-Bold',
+                fontSize=14,
+                leading=18,
+                textColor=HexColor(MODERN_COLORS["text"]),
+                spaceBefore=12,
+                spaceAfter=8,
+                alignment=0  # Left aligned
+            ))
+            
+            # Standard text
+            styles.add(ParagraphStyle(
+                name='Normal',
+                fontName='Helvetica',
+                fontSize=11,
+                leading=15,
+                textColor=HexColor(MODERN_COLORS["text"]),
+                spaceBefore=6,
+                spaceAfter=6
+            ))
+            
+            # Bold text
+            styles.add(ParagraphStyle(
+                name='Bold',
+                fontName='Helvetica-Bold',
+                fontSize=11,
+                leading=15,
+                textColor=HexColor(MODERN_COLORS["text"]),
+                spaceBefore=6,
+                spaceAfter=6
+            ))
+            
+            # Status styles
+            styles.add(ParagraphStyle(
+                name='Critical',
+                fontName='Helvetica-Bold',
+                fontSize=11,
+                leading=15,
+                textColor=HexColor(MODERN_COLORS["critical"])
+            ))
+            
+            styles.add(ParagraphStyle(
+                name='Warning',
+                fontName='Helvetica-Bold',
+                fontSize=11,
+                leading=15,
+                textColor=HexColor(MODERN_COLORS["high"])
+            ))
+            
+            styles.add(ParagraphStyle(
+                name='Info',
+                fontName='Helvetica',
+                fontSize=11,
+                leading=15,
+                textColor=HexColor(MODERN_COLORS["info"])
+            ))
+            
+            # Caption style for images and charts
+            styles.add(ParagraphStyle(
+                name='Caption',
+                fontName='Helvetica-Oblique',
+                fontSize=10,
+                leading=14,
+                textColor=HexColor(MODERN_COLORS["light_text"]),
+                alignment=1  # Center aligned
+            ))
+            
         except Exception as style_error:
-            logger.warning(f"Error adding custom styles: {str(style_error)}")
-        styles.add(ParagraphStyle(
-            name='Normal',
-            parent=styles['Normal'],
-            fontSize=10,
-            leading=14,
-            textColor=toColor(BRAND_COLORS["text"])
-        ))
-        styles.add(ParagraphStyle(
-            name='Bold',
-            parent=styles['Normal'],
-            fontSize=10,
-            leading=14,
-            fontName='Helvetica-Bold',
-            textColor=toColor(BRAND_COLORS["text"])
-        ))
-        styles.add(ParagraphStyle(
-            name='Critical',
-            parent=styles['Normal'],
-            fontSize=11,
-            fontName='Helvetica-Bold',
-            textColor=toColor(BRAND_COLORS["critical"])
-        ))
-        styles.add(ParagraphStyle(
-            name='Warning',
-            parent=styles['Normal'],
-            fontName='Helvetica-Bold',
-            textColor=toColor(BRAND_COLORS["high"])
-        ))
-        styles.add(ParagraphStyle(
-            name='Info',
-            parent=styles['Normal'],
-            textColor=toColor(BRAND_COLORS["info"])
-        ))
+            logger.warning(f"Error adding modern styles: {str(style_error)}")
         
         # Create story (content)
         story = []
@@ -209,34 +267,92 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
         return b''
 
 def _add_report_header(story, styles, analysis_results):
-    """Add report header with logo and title"""
-    # Title block
+    """Add modern report header with logo and title"""
+    # Create a logo (simple graphical element since we're not using images)
+    logo_width = 60
+    logo_height = 60
+    
+    # Create a simple geometric logo with DataGuardian Pro shield design
+    logo = Drawing(logo_width, logo_height)
+    
+    # Shield outline
+    shield = Rect(5, 5, 50, 50, fillColor=HexColor(MODERN_COLORS["primary"]), 
+                 strokeColor=HexColor(MODERN_COLORS["secondary"]), strokeWidth=1)
+    logo.add(shield)
+    
+    # Shield inner design
+    inner_shield = Rect(10, 10, 40, 40, fillColor=HexColor(MODERN_COLORS["secondary"]), 
+                       strokeColor=None)
+    logo.add(inner_shield)
+    
+    # Shield icon elements (lock symbol)
+    lock_body = Rect(22, 20, 16, 15, fillColor=HexColor(MODERN_COLORS["background"]), 
+                    strokeColor=HexColor(MODERN_COLORS["primary"]), strokeWidth=1)
+    logo.add(lock_body)
+    
+    lock_loop = Circle(30, 40, 5, fillColor=HexColor(MODERN_COLORS["background"]), 
+                     strokeColor=HexColor(MODERN_COLORS["primary"]), strokeWidth=1)
+    logo.add(lock_loop)
+    
+    # Add some text elements to the logo
+    # logo.add(String(15, 25, "DP", fontName="Helvetica-Bold", fontSize=10, 
+    #                fillColor=HexColor(MODERN_COLORS["primary"])))
+    
+    # Title block with modern styling
     title = f"EU AI Act 2025 Compliance Assessment"
     subtitle = f"Model: {analysis_results.get('model_name', 'AI Model')}"
     date_str = datetime.now().strftime("%d %B %Y")
+    scan_id = analysis_results.get('analysis_id', 'N/A')
     
-    # Create a table for the header
+    # Create a modern header container
+    header_background = Rect(0, 0, doc_width(100), 90, 
+                           fillColor=HexColor(MODERN_COLORS["background"]), 
+                           strokeColor=None)
+    header_drawing = Drawing(doc_width(100), 90)
+    header_drawing.add(header_background)
+    
+    # Add a colored stripe at the bottom
+    accent_stripe = Rect(0, 0, doc_width(100), 5, 
+                       fillColor=HexColor(MODERN_COLORS["secondary"]), 
+                       strokeColor=None)
+    header_drawing.add(accent_stripe)
+    
+    # Create a table for the header with logo
     data = [
-        [Paragraph(f'<font size="16"><b>{title}</b></font>', styles['Normal']), 
-         Paragraph(f'<font size="10">DataGuardian Pro</font>', styles['Normal'])],
-        [Paragraph(f'<font size="12">{subtitle}</font>', styles['Normal']), 
-         Paragraph(f'<font size="10">Report Date: {date_str}</font>', styles['Normal'])]
+        [logo, 
+         Paragraph(f'<font name="Helvetica-Bold" size="20" color="{MODERN_COLORS["primary"]}">{title}</font>', styles['Normal']), 
+         Paragraph(f'<font size="9" color="{MODERN_COLORS["light_text"]}">DataGuardian Pro</font>', styles['Normal'])],
+        [None, 
+         Paragraph(f'<font size="14" color="{MODERN_COLORS["secondary"]}">{subtitle}</font>', styles['Normal']), 
+         Paragraph(f'<font size="9" color="{MODERN_COLORS["light_text"]}">Report Date: {date_str}<br/>ID: {scan_id}</font>', styles['Normal'])]
     ]
     
-    header_table = Table(data, colWidths=[doc_width(70), doc_width(30)])
+    header_table = Table(data, colWidths=[logo_width + 20, doc_width(55), doc_width(25)])
     header_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('LINEBELOW', (0, -1), (-1, -1), 1, toColor(BRAND_COLORS["primary"])),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('SPAN', (0, 0), (0, 1)),  # Make logo cell span both rows
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ('TOPPADDING', (0, 0), (-1, -1), 15),
+        ('BACKGROUND', (0, 0), (-1, -1), HexColor(MODERN_COLORS["background"])),
     ]))
     
+    # Add the header with background to the story
+    story.append(header_drawing)
     story.append(header_table)
+    
+    # Add a description/introduction paragraph
+    intro_text = f"""This report presents the assessment of compliance with the European Union's AI Act 2025 requirements
+for the AI system named '{analysis_results.get('model_name', 'AI Model')}'. The assessment evaluates the system against 
+relevant compliance criteria based on its risk category and intended use."""
+    
+    story.append(Paragraph(intro_text, styles['Normal']))
     story.append(Spacer(1, 20))
 
 def _add_executive_summary(story, styles, analysis_results):
-    """Add executive summary section"""
+    """Add executive summary section with visualizations"""
     # Heading
     story.append(Paragraph("Executive Summary", styles['CustomHeading1']))
     
@@ -260,31 +376,51 @@ def _add_executive_summary(story, styles, analysis_results):
         "Partially Compliant" if compliance_score < 80 else "Compliant"
     )
     
-    # Create compliance status color
-    compliance_color = BRAND_COLORS["critical"] if prohibited_count > 0 else (
-        BRAND_COLORS["high"] if compliance_score < 50 else 
-        BRAND_COLORS["medium"] if compliance_score < 80 else 
-        BRAND_COLORS["low"]
+    # Create compliance status color for visual elements
+    compliance_color_code = MODERN_COLORS["critical"] if prohibited_count > 0 else (
+        MODERN_COLORS["high"] if compliance_score < 50 else 
+        MODERN_COLORS["medium"] if compliance_score < 80 else 
+        MODERN_COLORS["low"]
     )
     
-    # Summary text
-    summary_paragraphs = [
-        Paragraph(f"This report presents the assessment of compliance with EU AI Act 2025 requirements for the AI system '{analysis_results.get('model_name', 'AI Model')}'.", styles['Normal']),
-        Spacer(1, 10),
-        Paragraph(f"<b>Risk Category:</b> {risk_category_name}", styles['Bold']),
-        Paragraph(f"<b>Compliance Score:</b> {compliance_score}%", styles['Bold']),
-        Paragraph(f"<b>Compliance Status:</b> <font color='{compliance_color}'>{compliance_status}</font>", styles['Bold']),
-        Spacer(1, 10)
+    # Create executive summary layout with two columns
+    summary_table_data = [
+        [
+            # Left column: Summary text
+            [
+                Paragraph(f"This assessment evaluated compliance with EU AI Act 2025 requirements for the AI system '{analysis_results.get('model_name', 'AI Model')}'.", styles['Normal']),
+                Spacer(1, 10),
+                Paragraph(f"<b>Risk Category:</b> {risk_category_name}", styles['Bold']),
+                Paragraph(f"<b>Compliance Score:</b> {compliance_score}%", styles['Bold']),
+                Paragraph(f"<b>Compliance Status:</b> <font color='{compliance_color_code}'>{compliance_status}</font>", styles['Bold']),
+            ],
+            
+            # Right column: Compliance donut chart
+            _create_compliance_donut_chart(compliance_score, compliance_color_code)
+        ]
     ]
     
-    # Add key findings
-    prohibited_text = f"{prohibited_count} prohibited practices identified" if prohibited_count > 0 else "No prohibited practices identified"
-    summary_paragraphs.append(Paragraph("<b>Key Findings:</b>", styles['Bold']))
+    # Create two-column layout
+    summary_table = Table(summary_table_data, colWidths=[doc_width(60), doc_width(40)])
+    summary_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('BACKGROUND', (0, 0), (-1, -1), HexColor(MODERN_COLORS["background"])),
+        ('ROUNDEDCORNERS', [5, 5, 5, 5]),
+    ]))
+    
+    story.append(summary_table)
+    story.append(Spacer(1, 15))
+    
+    # Create key findings section with box
+    findings_elements = []
+    
+    # Add key findings header
+    findings_elements.append(Paragraph("<b>Key Findings</b>", styles['SectionHeading']))
     
     # Create a list of findings based on risk category
-    findings_list = [
-        f"{prohibited_text}."
-    ]
+    prohibited_text = f"{prohibited_count} prohibited practices identified" if prohibited_count > 0 else "No prohibited practices identified"
+    
+    findings_list = [prohibited_text]
     
     # Add risk-specific findings
     if risk_category in ["high_risk", "prohibited"]:
@@ -301,20 +437,117 @@ def _add_executive_summary(story, styles, analysis_results):
         
         findings_list.append(f"{compliant_count} of {total_count} General Purpose AI requirements fulfilled.")
     
-    # Add findings list
+    # Add findings list with modern bullet points
     for finding in findings_list:
-        summary_paragraphs.append(Paragraph(f"• {finding}", styles['Normal']))
+        findings_elements.append(Paragraph(f"• {finding}", styles['Normal']))
     
-    # Add all paragraphs to story
-    for p in summary_paragraphs:
-        story.append(p)
+    # Add key areas that need attention (if any)
+    if compliance_score < 100:
+        findings_elements.append(Spacer(1, 10))
+        findings_elements.append(Paragraph("<b>Areas Needing Attention:</b>", styles['Bold']))
+        
+        # Extract areas with low compliance from findings
+        all_findings = []
+        if risk_category in ["high_risk", "prohibited"]:
+            all_findings.extend(analysis_results.get("mandatory_requirements_findings", []))
+        if risk_category == "general_purpose":
+            all_findings.extend(analysis_results.get("gpai_requirements_findings", []))
+        
+        # Find non-compliant items
+        non_compliant = [f for f in all_findings if not f.get("compliant", False)][:3]  # Show top 3
+        
+        if non_compliant:
+            for item in non_compliant:
+                findings_elements.append(
+                    Paragraph(f"• <font color='{MODERN_COLORS['high']}'>{item.get('name', 'Requirement')}</font>", 
+                             styles['Normal'])
+                )
+        else:
+            findings_elements.append(
+                Paragraph("• Minor improvements needed to achieve full compliance", styles['Normal'])
+            )
+    
+    # Create a findings box with background
+    findings_table = Table([[findings_elements]], colWidths=[doc_width(100)])
+    findings_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), HexColor(MODERN_COLORS["highlight"])),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('GRID', (0, 0), (-1, -1), 0.5, HexColor(MODERN_COLORS["border"])),
+        ('ROUNDEDCORNERS', [5, 5, 5, 5]),
+        ('LEFTPADDING', (0, 0), (-1, -1), 20),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 20),
+        ('TOPPADDING', (0, 0), (-1, -1), 15),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+    ]))
+    
+    story.append(findings_table)
     
     # Add a horizontal line
+    story.append(Spacer(1, 20))
     story.append(HorizontalLine())
     story.append(Spacer(1, 10))
 
+
+def _create_compliance_donut_chart(compliance_score, color_code):
+    """Create a donut chart to visualize compliance score"""
+    # Chart dimensions
+    width = 200
+    height = 200
+    
+    # Create drawing
+    drawing = Drawing(width, height)
+    
+    # Create donut chart
+    donut = Pie()
+    donut.x = width/2
+    donut.y = height/2
+    donut.width = 150
+    donut.height = 150
+    donut.data = [compliance_score, 100-compliance_score]
+    donut.labels = None
+    
+    # Determine colors based on compliance score
+    if compliance_score >= 80:
+        fill_color = HexColor(MODERN_COLORS["medium"])  # Green for good
+    elif compliance_score >= 50:
+        fill_color = HexColor(MODERN_COLORS["high"])  # Amber for medium
+    else:
+        fill_color = HexColor(MODERN_COLORS["critical"])  # Red for poor
+    
+    donut.slices[0].fillColor = fill_color
+    donut.slices[1].fillColor = HexColor("#E5E7EB")  # Light gray for remaining
+    
+    # Style settings
+    donut.slices.strokeWidth = 0
+    donut.simpleLabels = 0
+    donut.slices[1].popout = 0
+    donut.slices[0].popout = 0
+    
+    # Create inner circle for donut effect
+    inner_circle = Circle(width/2, height/2, 50, fillColor=HexColor('white'), strokeColor=None)
+    
+    # Add components to drawing
+    drawing.add(donut)
+    drawing.add(inner_circle)
+    
+    # Add compliance score text in the center
+    score_text = String(width/2, height/2-10, f"{compliance_score}%", 
+                      fontName="Helvetica-Bold", fontSize=22, 
+                      fillColor=HexColor(MODERN_COLORS["text"]), 
+                      textAnchor="middle")
+    drawing.add(score_text)
+    
+    # Add "Compliance" label
+    label_text = String(width/2, height/2+15, "Compliance", 
+                      fontName="Helvetica", fontSize=12, 
+                      fillColor=HexColor(MODERN_COLORS["light_text"]), 
+                      textAnchor="middle")
+    drawing.add(label_text)
+    
+    return drawing
+
 def _add_risk_categorization(story, styles, analysis_results):
-    """Add risk categorization section"""
+    """Add risk categorization section with visual elements"""
     # Heading
     story.append(Paragraph("Risk Categorization", styles['CustomHeading1']))
     
@@ -322,84 +555,234 @@ def _add_risk_categorization(story, styles, analysis_results):
     risk_category = analysis_results.get("risk_category", "minimal_risk")
     risk_details = analysis_results.get("risk_category_details", {})
     
-    # Create risk category display name and description
+    # Calculate risk level for visualization (1-5)
+    risk_level_mapping = {
+        "minimal_risk": 1,
+        "limited_risk": 2,
+        "general_purpose": 3,
+        "high_risk": 4,
+        "prohibited": 5
+    }
+    risk_level = risk_level_mapping.get(risk_category, 0)
+    
+    # Create risk category display name and description with modern styling
     risk_category_info = {
         "prohibited": {
             "name": "Prohibited AI Practice",
             "description": "AI systems that are explicitly prohibited under the EU AI Act",
-            "color": BRAND_COLORS["critical"]
+            "color": MODERN_COLORS["critical"],
+            "icon": "⚠️"
         },
         "high_risk": {
             "name": "High-Risk AI System",
             "description": "AI systems with significant potential impact on health, safety, or fundamental rights",
-            "color": BRAND_COLORS["high"]
+            "color": MODERN_COLORS["high"],
+            "icon": "⚠️"
         },
         "general_purpose": {
             "name": "General Purpose AI System",
             "description": "AI systems with general capabilities that can serve various functions",
-            "color": BRAND_COLORS["medium"]
+            "color": MODERN_COLORS["secondary"],
+            "icon": "🔍"
         },
         "limited_risk": {
             "name": "Limited Risk AI System",
             "description": "AI systems with transparency obligations but less stringent requirements",
-            "color": BRAND_COLORS["low"]
+            "color": MODERN_COLORS["low"],
+            "icon": "ℹ️"
         },
         "minimal_risk": {
             "name": "Minimal Risk AI System",
             "description": "AI systems that pose minimal risk to rights or safety",
-            "color": BRAND_COLORS["info"]
+            "color": MODERN_COLORS["medium"],
+            "icon": "✓"
         }
     }.get(risk_category, {
         "name": "Unclassified",
         "description": "Risk level could not be determined",
-        "color": BRAND_COLORS["info"]
+        "color": MODERN_COLORS["light_text"],
+        "icon": "❓"
     })
     
-    # Risk category text
-    risk_category_paragraphs = [
-        Paragraph(f"<font color='{risk_category_info['color']}'><b>Risk Category: {risk_category_info['name']}</b></font>", styles['Bold']),
-        Paragraph(f"{risk_category_info['description']}", styles['Normal']),
-        Spacer(1, 10)
+    # Create a risk visualization
+    risk_visualization = _create_risk_meter(risk_level)
+    
+    # Create a two-column layout for risk info
+    risk_info_elements = [
+        [
+            # Left column: Risk category information
+            [
+                Paragraph(f"<font color='{risk_category_info['color']}' size='14'><b>{risk_category_info['icon']} {risk_category_info['name']}</b></font>", styles['Bold']),
+                Spacer(1, 5),
+                Paragraph(f"{risk_category_info['description']}", styles['Normal']),
+                Spacer(1, 10),
+                
+                # Add category-specific implications
+                Paragraph("<b>Implications:</b>", styles['SectionHeading']),
+                Paragraph({
+                    "prohibited": "Systems in this category are prohibited and cannot be deployed in the EU under any circumstances.",
+                    "high_risk": "Systems in this category must comply with all mandatory requirements before deployment in the EU.",
+                    "general_purpose": "Systems in this category are subject to specific transparency and evaluation requirements.",
+                    "limited_risk": "Systems in this category must meet transparency obligations under the EU AI Act.",
+                    "minimal_risk": "Systems in this category have minimal compliance requirements under the EU AI Act."
+                }.get(risk_category, "Implications could not be determined."), styles['Normal']),
+            ],
+            
+            # Right column: Risk visualization
+            risk_visualization
+        ]
     ]
     
-    # Add confidence and factors
-    confidence = risk_details.get("confidence", 0.5)
-    risk_factors = risk_details.get("risk_factors", [])
+    # Create the two-column layout
+    risk_info_table = Table(risk_info_elements, colWidths=[doc_width(60), doc_width(40)])
+    risk_info_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
     
-    risk_category_paragraphs.extend([
-        Paragraph(f"<b>Confidence:</b> {confidence:.0%}", styles['Normal']),
-        Spacer(1, 5),
-        Paragraph("<b>Risk Factors:</b>", styles['Normal'])
-    ])
+    story.append(risk_info_table)
+    story.append(Spacer(1, 15))
     
-    # Add risk factors as bullets
-    for factor in risk_factors:
-        risk_category_paragraphs.append(Paragraph(f"• {factor}", styles['Normal']))
-    
-    # Add a note about risk category implications
-    risk_category_paragraphs.extend([
-        Spacer(1, 10),
-        Paragraph("<b>Implications:</b>", styles['Bold'])
-    ])
-    
-    # Add category-specific implications
-    implications = {
-        "prohibited": "Systems in this category are prohibited and cannot be deployed in the EU under any circumstances.",
-        "high_risk": "Systems in this category must comply with all mandatory requirements before deployment in the EU.",
-        "general_purpose": "Systems in this category are subject to specific transparency and evaluation requirements.",
-        "limited_risk": "Systems in this category must meet transparency obligations under the EU AI Act.",
-        "minimal_risk": "Systems in this category have minimal compliance requirements under the EU AI Act."
-    }.get(risk_category, "Implications could not be determined.")
-    
-    risk_category_paragraphs.append(Paragraph(implications, styles['Normal']))
-    
-    # Add all paragraphs to story
-    for p in risk_category_paragraphs:
-        story.append(p)
+    # Create risk factors section with clean modern styling
+    if "risk_factors" in risk_details and risk_details["risk_factors"]:
+        # Create elements for the risk factors box
+        risk_factor_elements = []
+        
+        # Add header
+        risk_factor_elements.append(Paragraph("<b>Risk Factors</b>", styles['SectionHeading']))
+        risk_factor_elements.append(Spacer(1, 5))
+        
+        # Add confidence level if available
+        confidence = risk_details.get("confidence", 0.5)
+        risk_factor_elements.append(
+            Paragraph(f"<b>Assessment Confidence:</b> {confidence:.0%}", styles['Bold'])
+        )
+        risk_factor_elements.append(Spacer(1, 10))
+        
+        # Add risk factors with icons for better visual appearance
+        factor_icons = ["🔍", "⚙️", "📊", "🔐", "⚖️"]  # Different icons for variety
+        risk_factors = risk_details.get("risk_factors", [])
+        
+        for i, factor in enumerate(risk_factors):
+            # Use a different icon for each factor (cycling if more factors than icons)
+            icon = factor_icons[i % len(factor_icons)]
+            risk_factor_elements.append(Paragraph(f"{icon} {factor}", styles['Normal']))
+            # Add small space between items
+            if i < len(risk_factors) - 1:
+                risk_factor_elements.append(Spacer(1, 5))
+                
+        # Create a visual box with a background color
+        risk_factors_table = Table([[risk_factor_elements]], colWidths=[doc_width(100)])
+        risk_factors_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), HexColor(MODERN_COLORS["highlight"])),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor(MODERN_COLORS["border"])),
+            ('ROUNDEDCORNERS', [5, 5, 5, 5]),
+            ('LEFTPADDING', (0, 0), (-1, -1), 20),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 20),
+            ('TOPPADDING', (0, 0), (-1, -1), 15),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ]))
+        
+        story.append(risk_factors_table)
     
     # Add a horizontal line
+    story.append(Spacer(1, 20))
     story.append(HorizontalLine())
     story.append(Spacer(1, 10))
+
+
+def _create_risk_meter(risk_level):
+    """Create a visual risk meter to show the AI system's risk level"""
+    # Chart dimensions
+    width = 180
+    height = 180
+    
+    # Create drawing
+    drawing = Drawing(width, height)
+    
+    # Background for risk meter (light gray circle)
+    background = Circle(width/2, height/2, 70, 
+                      fillColor=HexColor("#F3F4F6"), 
+                      strokeColor=HexColor("#E5E7EB"), 
+                      strokeWidth=1)
+    drawing.add(background)
+    
+    # Risk level labels and colors
+    risk_labels = ["Minimal", "Limited", "General\nPurpose", "High", "Prohibited"]
+    risk_colors = [
+        HexColor(MODERN_COLORS["medium"]),    # Green - minimal
+        HexColor(MODERN_COLORS["low"]),       # Blue - limited
+        HexColor(MODERN_COLORS["secondary"]), # Blue - general purpose
+        HexColor(MODERN_COLORS["high"]),      # Amber - high
+        HexColor(MODERN_COLORS["critical"])   # Red - prohibited
+    ]
+    
+    # Calculate angle for risk level (0 = minimal, 270 = prohibited)
+    start_angle = 135
+    end_angle = 405
+    angle_per_level = (end_angle - start_angle) / 5
+    
+    # Create risk level wedges
+    for i in range(5):
+        level_start_angle = start_angle + (i * angle_per_level)
+        level_end_angle = level_start_angle + angle_per_level
+        
+        # Create wedge for this risk level
+        wedge = Wedge(width/2, height/2, 70,
+                     startAngle=level_start_angle, 
+                     endAngle=level_end_angle,
+                     fillColor=risk_colors[i],
+                     strokeColor=None)
+        drawing.add(wedge)
+        
+        # Add label for this risk level
+        label_angle = level_start_angle + (angle_per_level / 2)
+        label_rad = math.radians(label_angle)
+        label_x = width/2 + (math.cos(label_rad) * 85)
+        label_y = height/2 + (math.sin(label_rad) * 85)
+        
+        label = String(label_x, label_y, risk_labels[i], 
+                     fontName="Helvetica", fontSize=8, 
+                     fillColor=HexColor(MODERN_COLORS["text"]),
+                     textAnchor="middle")
+        drawing.add(label)
+    
+    # Create inner white circle for gauge
+    inner_circle = Circle(width/2, height/2, 50, 
+                        fillColor=HexColor('white'), 
+                        strokeColor=None)
+    drawing.add(inner_circle)
+    
+    # Add needle to show current risk level
+    if risk_level > 0:
+        needle_angle = start_angle + ((risk_level - 0.5) * angle_per_level)
+        needle_rad = math.radians(needle_angle)
+        needle_x = width/2 + (math.cos(needle_rad) * 60)
+        needle_y = height/2 + (math.sin(needle_rad) * 60)
+        
+        # Draw needle
+        needle = Line(width/2, height/2, needle_x, needle_y,
+                    strokeColor=HexColor(MODERN_COLORS["text"]),
+                    strokeWidth=2)
+        drawing.add(needle)
+        
+        # Add center cap
+        center_cap = Circle(width/2, height/2, 5, 
+                          fillColor=HexColor(MODERN_COLORS["text"]), 
+                          strokeColor=None)
+        drawing.add(center_cap)
+    
+    # Add text in center
+    category_text = ["", "Minimal Risk", "Limited Risk", "General Purpose", "High Risk", "Prohibited"][min(risk_level, 5)]
+    center_text = String(width/2, height/2 - 15, category_text, 
+                       fontName="Helvetica-Bold", fontSize=10, 
+                       fillColor=HexColor(MODERN_COLORS["text"]),
+                       textAnchor="middle")
+    drawing.add(center_text)
+    
+    return drawing
 
 def _add_prohibited_practices(story, styles, analysis_results):
     """Add prohibited practices section"""
