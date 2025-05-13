@@ -621,6 +621,7 @@ def _evaluate_gpai_requirements(model_details: Dict[str, Any]) -> List[Dict[str,
     # Check each GPAI requirement
     for req_id, requirement in GPAI_REQUIREMENTS.items():
         requirement_name = requirement["name"]
+        requirement_description = requirement["description"]
         requirement_findings = []
         
         # Check for evidence of each aspect of the requirement
@@ -635,22 +636,93 @@ def _evaluate_gpai_requirements(model_details: Dict[str, Any]) -> List[Dict[str,
             }
             
             # Look for evidence in model details
-            # This would be much more sophisticated in a real implementation
-            if req_id == "model_evaluation" and any(check.lower() in str(key).lower() for key in evaluation_info):
-                check_result["compliant"] = True
-                check_result["evidence"] = f"Found evidence of {check.lower()} in model evaluation documentation"
+            # Mock evaluation based on model details - in a real system, this would be more sophisticated
+            if req_id == "model_evaluation":
+                # Check if evaluation info contains keywords related to this check
+                evaluation_keys = " ".join(str(key).lower() for key in evaluation_info.keys())
+                if any(keyword in check.lower() for keyword in ["risk", "evaluation", "assessment"]):
+                    has_risk_assessment = "risk" in evaluation_keys or "assessment" in evaluation_keys
+                    check_result["compliant"] = has_risk_assessment
+                    if has_risk_assessment:
+                        check_result["evidence"] = f"Found evidence of {check.lower()} in model evaluation documentation"
+                elif "test" in check.lower():
+                    has_testing = "test" in evaluation_keys or "safety" in evaluation_keys
+                    check_result["compliant"] = has_testing
+                    if has_testing:
+                        check_result["evidence"] = f"Found safety and performance testing documentation"
+                else:
+                    # Random check for demo purposes
+                    check_result["compliant"] = len(evaluation_info) > 0
+                    if check_result["compliant"]:
+                        check_result["evidence"] = f"Found general evaluation documentation that may support {check.lower()}"
+                    
+            elif req_id == "documentation":
+                # Check if documentation contains relevant information
+                doc_keys = " ".join(str(key).lower() for key in documentation.keys())
+                if "architecture" in check.lower() and "model_card" in documentation:
+                    check_result["compliant"] = True
+                    check_result["evidence"] = "Model architecture description found in model card"
+                elif "training" in check.lower() and "data_sheets" in documentation:
+                    check_result["compliant"] = True
+                    check_result["evidence"] = "Training methodology documentation found in data sheets"
+                elif any(keyword in check.lower() for keyword in ["resource", "computational"]):
+                    check_result["compliant"] = "technical_docs" in documentation
+                    if check_result["compliant"]:
+                        check_result["evidence"] = "Computational resource documentation found in technical docs"
+                else:
+                    # Default check for any documentation
+                    check_result["compliant"] = len(documentation) > 0
+                    if check_result["compliant"]:
+                        check_result["evidence"] = f"Found documentation that may cover {check.lower()}"
             
-            elif req_id == "documentation" and any(check.lower() in str(key).lower() for key in documentation):
-                check_result["compliant"] = True
-                check_result["evidence"] = f"Found evidence of {check.lower()} in technical documentation"
+            elif req_id == "copyright_compliance":
+                # Check for copyright-related information
+                training_data_str = str(training_info).lower()
+                if "copyright" in check.lower():
+                    has_copyright = "copyright" in training_data_str or "license" in training_data_str
+                    check_result["compliant"] = has_copyright
+                    if has_copyright:
+                        check_result["evidence"] = "Copyright documentation found in training information"
+                elif "source" in check.lower():
+                    has_sources = "data" in training_data_str and "source" in training_data_str
+                    check_result["compliant"] = has_sources
+                    if has_sources:
+                        check_result["evidence"] = "Training data source documentation found"
+                else:
+                    # Default check for any training info
+                    check_result["compliant"] = len(training_info) > 0
+                    if check_result["compliant"]:
+                        check_result["evidence"] = f"Found training documentation that may address {check.lower()}"
             
-            elif req_id == "copyright_compliance" and "copyright" in str(training_info).lower():
-                check_result["compliant"] = True
-                check_result["evidence"] = f"Found evidence of {check.lower()} in training documentation"
+            elif req_id == "information_disclosure":
+                # Check for information disclosure documentation
+                doc_str = str(documentation).lower()
+                if "data" in check.lower() or "training" in check.lower():
+                    has_data_info = "data" in doc_str and "training" in doc_str
+                    check_result["compliant"] = has_data_info
+                    if has_data_info:
+                        check_result["evidence"] = "Training data overview found in documentation"
+                elif "limitation" in check.lower():
+                    has_limitations = "limitation" in doc_str or "constraint" in doc_str
+                    check_result["compliant"] = has_limitations
+                    if has_limitations:
+                        check_result["evidence"] = "Usage limitations documentation found"
+                else:
+                    # Default check for disclosure info
+                    check_result["compliant"] = "disclosure" in doc_str or "transparency" in doc_str
+                    if check_result["compliant"]:
+                        check_result["evidence"] = f"Found disclosure documentation related to {check.lower()}"
             
-            elif req_id == "information_disclosure" and "disclosure" in str(documentation).lower():
-                check_result["compliant"] = True
-                check_result["evidence"] = f"Found evidence of {check.lower()} in information disclosure documentation"
+            # Add detailed recommendation if not compliant
+            if not check_result["compliant"]:
+                if req_id == "model_evaluation":
+                    check_result["recommendation"] = f"Implement {check} with documented evidence of system behavior assessments and risk mitigation strategies"
+                elif req_id == "documentation":
+                    check_result["recommendation"] = f"Create detailed {check.lower()} within your technical documentation that meets EU AI Act transparency requirements"
+                elif req_id == "copyright_compliance":
+                    check_result["recommendation"] = f"Document {check.lower()} to demonstrate lawful acquisition and use of training data"
+                elif req_id == "information_disclosure":
+                    check_result["recommendation"] = f"Publish {check.lower()} to ensure transparency about model capabilities and limitations"
             
             requirement_findings.append(check_result)
         
@@ -662,7 +734,7 @@ def _evaluate_gpai_requirements(model_details: Dict[str, Any]) -> List[Dict[str,
         findings.append({
             "id": req_id,
             "name": requirement_name,
-            "description": requirement["description"],
+            "description": requirement_description,
             "compliance_percentage": compliance_percentage,
             "compliant": compliance_percentage >= 0.8,  # 80% threshold for overall compliance
             "checks": requirement_findings,

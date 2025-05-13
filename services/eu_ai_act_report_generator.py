@@ -103,11 +103,7 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
         )
         
         # Define modern styles for a clean, visually appealing report
-        # Get base styles
-        baseStyles = getSampleStyleSheet()
-        
-        # Use base styles but don't create a fresh StyleSheet
-        # This avoids style redefinition errors
+        # Get base styles and use them directly (don't redefine)
         styles = getSampleStyleSheet()
         
         # Define modern colors
