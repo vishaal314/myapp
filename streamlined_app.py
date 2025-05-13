@@ -1863,6 +1863,9 @@ def render_scan_form():
                 st.json(results)
         elif selected_scan == "GDPR Code Scanner":
             try:
+                # Display debugging info
+                st.write("Attempting to generate GDPR report...")
+                
                 # Import and use our GDPR Code Scanner report generator
                 from services.gdpr_report_generator import generate_gdpr_report_streamlit
                 
@@ -1873,10 +1876,19 @@ def render_scan_form():
                 st.markdown("---")
                 
                 # Show the GDPR report generator
+                st.write("Calling report generator function...")
                 generate_gdpr_report_streamlit(results)
+                st.write("Report generator function completed")
                 
+            except ImportError as e:
+                st.error(f"Import Error: {str(e)}")
+                st.error(f"Could not import the GDPR report generator module. Check if the services directory exists and contains gdpr_report_generator.py.")
+                st.json(results)
             except Exception as e:
                 st.error(f"Error displaying GDPR Code Scanner results: {str(e)}")
+                st.error(f"Error type: {type(e).__name__}")
+                import traceback
+                st.error(f"Traceback: {traceback.format_exc()}")
                 st.json(results)
         else:
             st.json(results)

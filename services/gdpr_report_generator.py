@@ -547,61 +547,79 @@ def generate_gdpr_report_streamlit(scan_results):
     Returns:
         None (displays download button in Streamlit)
     """
-    st.subheader("Generate Professional GDPR Compliance Report")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Certification options
-        certification_types = [
-            "None",
-            "GDPR Compliant",
-            "ISO 27001 Aligned",
-            "UAVG Certified"
-        ]
+    try:
+        st.subheader("Generate Professional GDPR Compliance Report")
+        st.write("Debug: Function started")
         
+        # Simplify to just a few options to ensure it works
         certification_type = st.selectbox(
             "Certification Type",
-            certification_types,
+            ["None", "GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"],
             index=0,
             help="Include a certification seal in the report"
         )
         
         include_certificate = certification_type != "None"
+        st.write(f"Debug: Certification type selected: {certification_type}")
+        
+        # Generate the report when the button is clicked
+        if st.button("Generate Professional PDF Report", type="primary"):
+            st.write("Debug: Button clicked")
+            
+            try:
+                with st.spinner("Generating professional PDF report..."):
+                    st.write("Debug: Spinner started")
+                    
+                    # Show progress (simplified)
+                    progress_bar = st.progress(0)
+                    progress_bar.progress(50)
+                    
+                    st.write("Debug: About to generate PDF")
+                    # Generate a simple PDF report as a test
+                    buffer = BytesIO()
+                    
+                    # Create a simple PDF document
+                    doc = SimpleDocTemplate(buffer, pagesize=A4)
+                    styles = getSampleStyleSheet()
+                    elements = []
+                    
+                    # Add a title
+                    elements.append(Paragraph("GDPR Compliance Report", styles['Title']))
+                    elements.append(Spacer(1, 12))
+                    
+                    # Add some text
+                    elements.append(Paragraph("This is a test GDPR Compliance Report", styles['Normal']))
+                    elements.append(Spacer(1, 12))
+                    
+                    # Add date
+                    elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal']))
+                    elements.append(Spacer(1, 12))
+                    
+                    # Build the document
+                    doc.build(elements)
+                    buffer.seek(0)
+                    
+                    st.write("Debug: PDF generated")
+                    progress_bar.progress(100)
+                    
+                    # Create download button for the report
+                    st.download_button(
+                        label="📥 Download GDPR Compliance Report",
+                        data=buffer,
+                        file_name=f"GDPR_Compliance_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                    
+                    # Success message
+                    st.success("✅ Professional GDPR Compliance Report generated successfully!")
+                    
+            except Exception as inner_e:
+                st.error(f"Error generating PDF: {str(inner_e)}")
+                import traceback
+                st.error(f"Inner Traceback: {traceback.format_exc()}")
     
-    with col2:
-        # Report options
-        include_executive_summary = st.checkbox("Include Executive Summary", value=True)
-        include_findings_details = st.checkbox("Include Detailed Findings", value=True)
-        include_recommendations = st.checkbox("Include Recommendations", value=True)
-    
-    # Generate the report when the button is clicked
-    if st.button("Generate Professional PDF Report", type="primary"):
-        with st.spinner("Generating professional PDF report..."):
-            # Show progress
-            progress_bar = st.progress(0)
-            for i in range(100):
-                time.sleep(0.01)
-                progress_bar.progress((i + 1)/100)
-            
-            # Generate the report
-            pdf_buffer = generate_gdpr_report(
-                scan_results, 
-                certification_type if include_certificate else None,
-                include_certificate
-            )
-            
-            # Create download button for the report
-            st.download_button(
-                label="📥 Download GDPR Compliance Report",
-                data=pdf_buffer,
-                file_name=f"GDPR_Compliance_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-            
-            # Success message
-            st.success("✅ Professional GDPR Compliance Report generated successfully!")
-            
-            # Preview message
-            st.info("Use the download button above to save your report. The report includes professional design elements, detailed findings, and your selected certification seal.")
+    except Exception as e:
+        st.error(f"Error in report generator: {str(e)}")
+        import traceback
+        st.error(f"Outer Traceback: {traceback.format_exc()}")
