@@ -525,7 +525,7 @@ def _add_mandatory_requirements(story, styles, analysis_results):
     story.append(HorizontalLine())
     story.append(Spacer(1, 10))
 
-def _add_gpai_requirements(story: List[Any], styles: Dict[str, Any], analysis_results: Dict[str, Any]):
+def _add_gpai_requirements(story, styles, analysis_results):
     """Add GPAI requirements section"""
     # Heading
     story.append(Paragraph("General Purpose AI Requirements", styles['Heading1']))
@@ -614,7 +614,7 @@ def _add_gpai_requirements(story: List[Any], styles: Dict[str, Any], analysis_re
     story.append(HorizontalLine())
     story.append(Spacer(1, 10))
 
-def _add_recommendations(story: List[Any], styles: Dict[str, Any], analysis_results: Dict[str, Any]):
+def _add_recommendations(story, styles, analysis_results):
     """Add recommendations and action plan section"""
     # Heading
     story.append(Paragraph("Recommendations & Action Plan", styles['Heading1']))
@@ -668,7 +668,7 @@ def _add_recommendations(story: List[Any], styles: Dict[str, Any], analysis_resu
     story.append(HorizontalLine())
     story.append(Spacer(1, 10))
 
-def _add_compliance_checklist(story: List[Any], styles: Dict[str, Any], analysis_results: Dict[str, Any]):
+def _add_compliance_checklist(story, styles, analysis_results):
     """Add compliance checklist section"""
     # Heading
     story.append(Paragraph("EU AI Act Compliance Checklist", styles['Heading1']))

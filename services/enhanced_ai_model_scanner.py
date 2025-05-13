@@ -132,7 +132,8 @@ class EnhancedAIModelScanner(AIModelScanner):
             model_details: Dict[str, Any],
             leakage_types: Optional[List[str]] = None,
             context: Optional[List[str]] = None,
-            sample_inputs: Optional[List[str]] = None) -> Dict[str, Any]:
+            sample_inputs: Optional[List[str]] = None,
+            perform_eu_ai_act_analysis: bool = True) -> Dict[str, Any]:
         """
         Scan AI model for privacy and ethical concerns
         
@@ -142,6 +143,7 @@ class EnhancedAIModelScanner(AIModelScanner):
             leakage_types: Types of leakage to check for
             context: Context for the scan
             sample_inputs: Sample inputs for testing
+            perform_eu_ai_act_analysis: Whether to perform EU AI Act 2025 compliance analysis
             
         Returns:
             Dictionary with scan results
@@ -305,6 +307,90 @@ class EnhancedAIModelScanner(AIModelScanner):
                     },
                     "total_findings": len(scan_result["findings"])
                 })
+            
+            # Perform EU AI Act compliance analysis if requested
+            if perform_eu_ai_act_analysis:
+                self.logger.info("Starting EU AI Act 2025 compliance analysis")
+                
+                # Prepare model details for EU AI Act analysis
+                eu_model_details = {
+                    "model_name": model_details.get("model_name", scan_result.get("scan_id", "Unknown Model")),
+                    "model_type": model_type,
+                    "purpose": model_details.get("purpose", ""),
+                    "capabilities": model_details.get("capabilities", []),
+                    "deployment_context": model_details.get("deployment_context", ""),
+                    "intended_users": model_details.get("intended_users", []),
+                    "is_foundation_model": model_details.get("is_foundation_model", False),
+                    "is_generative_ai": model_details.get("is_generative_ai", False),
+                    
+                    # Documentation details for compliance assessment
+                    "documentation": {
+                        "model_card": model_details.get("model_card", {}),
+                        "data_sheets": model_details.get("data_sheets", {}),
+                        "technical_docs": model_details.get("technical_docs", {})
+                    },
+                    
+                    # Training information
+                    "training": {
+                        "training_data": model_details.get("training_data", {}),
+                        "training_process": model_details.get("training_process", {}),
+                        "evaluation_metrics": model_details.get("evaluation_metrics", {})
+                    },
+                    
+                    # Evaluation information
+                    "evaluation": {
+                        "fairness_metrics": fairness_metrics or [],
+                        "explainability_checks": explainability_checks or [],
+                        "risk_assessment": model_details.get("risk_assessment", {})
+                    },
+                    
+                    # Human oversight
+                    "human_oversight": model_details.get("human_oversight", {}),
+                    
+                    # Testing info
+                    "testing": {
+                        "accuracy_results": model_details.get("accuracy_results", {}),
+                        "robustness_tests": model_details.get("robustness_tests", {}),
+                        "security_tests": model_details.get("security_tests", {})
+                    },
+                    
+                    # Data governance
+                    "data_governance": model_details.get("data_governance", {})
+                }
+                
+                try:
+                    # Perform EU AI Act analysis
+                    eu_ai_analysis = analyze_ai_model(eu_model_details)
+                    
+                    # Add EU AI Act compliance information to scan result
+                    scan_result["eu_ai_act_compliance"] = {
+                        "analysis_id": eu_ai_analysis.get("analysis_id", ""),
+                        "risk_category": eu_ai_analysis.get("risk_category", "unclassified"),
+                        "compliance_score": eu_ai_analysis.get("compliance_score", 0),
+                        "compliance_findings": eu_ai_analysis.get("compliance_findings", []),
+                        "recommendations": eu_ai_analysis.get("recommendations", [])
+                    }
+                    
+                    # Generate EU AI Act compliance report
+                    eu_ai_report_bytes = create_eu_ai_act_report(eu_ai_analysis)
+                    
+                    if eu_ai_report_bytes and len(eu_ai_report_bytes) > 0:
+                        self.logger.info("Successfully generated EU AI Act compliance report")
+                        
+                        # Save the report to a file
+                        os.makedirs("reports", exist_ok=True)
+                        eu_report_filename = f"eu_ai_act_report_{eu_ai_analysis.get('analysis_id', '')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                        eu_report_path = os.path.join("reports", eu_report_filename)
+                        
+                        with open(eu_report_path, "wb") as f:
+                            f.write(eu_ai_report_bytes)
+                            
+                        scan_result["eu_ai_act_report_path"] = eu_report_path
+                        self.logger.info(f"Generated EU AI Act PDF report at: {eu_report_path}")
+                    
+                except Exception as e:
+                    self.logger.error(f"Error in EU AI Act compliance analysis: {str(e)}")
+                    scan_result["eu_ai_act_compliance_error"] = str(e)
 
             # Generate PDF report using our enhanced AI model report generator
             try:
