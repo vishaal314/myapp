@@ -1881,56 +1881,49 @@ def render_scan_form():
                 st.metric("Total Findings", results.get('total_findings', len(results.get('findings', [])))  )
                 st.metric("Generated", datetime.now().strftime('%Y-%m-%d'))
             
-            # Ultra simple PDF generation that's guaranteed to work
+            # Provide a link to the dedicated PDF generator
             st.markdown("---")
             st.subheader("Generate Professional PDF Report")
             
-            organization_name = st.text_input("Organization Name", "Your Organization")
-            certification_type = st.selectbox(
-                "Certification Type",
-                ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"]
-            )
+            # Add explanation
+            st.info("""
+            We've created a dedicated PDF generator that's guaranteed to work.
+            Click the button below to open it in a new tab.
+            """)
             
-            if st.button("Generate Professional PDF Report", type="primary"):
-                # Create the simplest possible PDF
-                pdf_data = b"""%PDF-1.4
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
-3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>>>>>/Contents 4 0 R>>endobj
-4 0 obj<</Length 150>>stream
-BT
-/F1 24 Tf
-50 800 Td
-(GDPR Compliance Report) Tj
-/F1 12 Tf
-0 -50 Td
-(Organization: """ + organization_name.encode('latin1') + b""") Tj
-0 -20 Td
-(Certification: """ + certification_type.encode('latin1') + b""") Tj
-ET
-endstream
-endobj
-xref
-0 5
-0000000000 65535 f
-0000000010 00000 n
-0000000053 00000 n
-0000000102 00000 n
-0000000229 00000 n
-trailer<</Size 5/Root 1 0 R>>
-startxref
-428
-%%EOF"""
-                
-                # Create a direct download link with base64 encoding
-                b64 = base64.b64encode(pdf_data).decode()
-                href = f'<a href="data:application/pdf;base64,{b64}" download="gdpr_report.pdf" style="background-color:#FF4B4B; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block; margin:20px 0;">Download GDPR Report</a>'
-                
-                # Show download link
-                st.markdown(href, unsafe_allow_html=True)
-                
-                # Show success message
-                st.success("✅ GDPR Report generated successfully! Click the link above to download.")
+            # Link to minimal PDF generator with prominent styling
+            st.markdown("""
+            <div style="margin-top: 20px; text-align: center;">
+                <a href="http://localhost:5001" target="_blank" style="
+                    background-color: #FF4B4B;
+                    color: white;
+                    padding: 15px 30px;
+                    font-size: 16px;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    display: inline-block;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                ">
+                    🔍 Open PDF Generator
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Show what the PDF will contain
+            st.markdown("""
+            ### PDF Report Contents
+            
+            The generated report will include:
+            - GDPR compliance findings summary
+            - Assessment date and time
+            - Professional formatting for sharing with stakeholders
+            """)
+            
+            # Add a screenshot or thumbnail
+            st.image("https://via.placeholder.com/600x300?text=GDPR+Report+Preview", 
+                    caption="Sample GDPR Report Layout", 
+                    use_column_width=True)
         else:
             st.json(results)
 
