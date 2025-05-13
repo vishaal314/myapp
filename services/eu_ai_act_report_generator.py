@@ -14,6 +14,7 @@ import io
 import os
 import uuid
 import logging
+import math
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple, Union
 
@@ -33,7 +34,7 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, 
     PageBreak, Flowable, KeepTogether, Preformatted
 )
-from reportlab.graphics.shapes import Drawing, Circle, Rect, Line, String, Wedge
+from reportlab.graphics.shapes import Drawing, Circle, Rect, Line, String, Wedge, Polygon
 from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
 from reportlab.graphics.charts.piecharts import Pie
 from reportlab.graphics import renderPDF
@@ -55,6 +56,22 @@ BRAND_COLORS = {
     "text": "#212121",        # Near black for text
     "background": "#FFFFFF",  # White background
     "lightgray": "#EEEEEE"    # Light gray for alternating rows
+}
+
+# Modern color palette for enhanced reports
+MODERN_COLORS = {
+    "primary": "#1E40AF",     # Deep blue
+    "secondary": "#3B82F6",   # Bright blue
+    "text": "#1F2937",        # Dark gray
+    "light_text": "#6B7280",  # Medium gray
+    "critical": "#DC2626",    # Red
+    "high": "#F59E0B",        # Amber
+    "medium": "#10B981",      # Green
+    "low": "#0EA5E9",         # Light blue
+    "info": "#6366F1",        # Indigo
+    "background": "#F9FAFB",  # Light gray
+    "border": "#E5E7EB",      # Border gray
+    "highlight": "#EFF6FF"    # Light blue highlight
 }
 
 def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
@@ -305,14 +322,15 @@ def _add_report_header(story, styles, analysis_results):
     scan_id = analysis_results.get('analysis_id', 'N/A')
     
     # Create a modern header container
-    header_background = Rect(0, 0, doc_width(100), 90, 
+    header_width = int(doc_width(100))
+    header_background = Rect(0, 0, header_width, 90, 
                            fillColor=HexColor(MODERN_COLORS["background"]), 
                            strokeColor=None)
-    header_drawing = Drawing(doc_width(100), 90)
+    header_drawing = Drawing(header_width, 90)
     header_drawing.add(header_background)
     
     # Add a colored stripe at the bottom
-    accent_stripe = Rect(0, 0, doc_width(100), 5, 
+    accent_stripe = Rect(0, 0, header_width, 5, 
                        fillColor=HexColor(MODERN_COLORS["secondary"]), 
                        strokeColor=None)
     header_drawing.add(accent_stripe)
@@ -497,10 +515,10 @@ def _create_compliance_donut_chart(compliance_score, color_code):
     # Create drawing
     drawing = Drawing(width, height)
     
-    # Create donut chart
+    # Create donut chart - using integers for x,y as required
     donut = Pie()
-    donut.x = width/2
-    donut.y = height/2
+    donut.x = int(width/2)
+    donut.y = int(height/2)
     donut.width = 150
     donut.height = 150
     donut.data = [compliance_score, 100-compliance_score]
@@ -729,10 +747,10 @@ def _create_risk_meter(risk_level):
         level_start_angle = start_angle + (i * angle_per_level)
         level_end_angle = level_start_angle + angle_per_level
         
-        # Create wedge for this risk level
+        # Create wedge for this risk level (with degrees for angles)
         wedge = Wedge(width/2, height/2, 70,
-                     startAngle=level_start_angle, 
-                     endAngle=level_end_angle,
+                     startAngleDegrees=level_start_angle, 
+                     endAngleDegrees=level_end_angle,
                      fillColor=risk_colors[i],
                      strokeColor=None)
         drawing.add(wedge)
