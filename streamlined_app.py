@@ -1868,117 +1868,6 @@ def render_scan_form():
             # Add a horizontal divider
             st.markdown("---")
             
-            # Create a completely self-contained report generator
-            st.subheader("Generate GDPR Compliance Report")
-            
-            # Add certification options
-            cert_type = st.selectbox(
-                "Certification Type",
-                ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"],
-                index=0,
-                key="cert_type_select"
-            )
-            
-            # Direct implementation of PDF generation with no dependencies
-            if st.button("Generate Professional PDF Report", type="primary", key="direct_pdf_button"):
-                # Show a spinner
-                with st.spinner("Generating your GDPR compliance report..."):
-                    # Progress bar
-                    progress = st.progress(0)
-                    for i in range(100):
-                        time.sleep(0.01)
-                        progress.progress((i + 1)/100)
-                    
-                    # Generate a simple raw PDF directly
-                    pdf_content = f"""
-%PDF-1.4
-1 0 obj
-<< /Type /Catalog
-   /Pages 2 0 R
->>
-endobj
-
-2 0 obj
-<< /Type /Pages
-   /Kids [3 0 R]
-   /Count 1
->>
-endobj
-
-3 0 obj
-<< /Type /Page
-   /Parent 2 0 R
-   /Resources << /Font << /F1 4 0 R >> >>
-   /MediaBox [0 0 612 792]
-   /Contents 5 0 R
->>
-endobj
-
-4 0 obj
-<< /Type /Font
-   /Subtype /Type1
-   /BaseFont /Helvetica
->>
-endobj
-
-5 0 obj
-<< /Length 183 >>
-stream
-BT
-/F1 24 Tf
-50 700 Td
-(GDPR Compliance Report) Tj
-/F1 12 Tf
-0 -50 Td
-(Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}) Tj
-0 -30 Td
-(This report contains GDPR compliance findings and recommendations.) Tj
-ET
-endstream
-endobj
-
-xref
-0 6
-0000000000 65535 f
-0000000009 00000 n
-0000000058 00000 n
-0000000115 00000 n
-0000000234 00000 n
-0000000302 00000 n
-trailer
-<< /Size 6
-   /Root 1 0 R
->>
-startxref
-537
-%%EOF
-"""
-                    # Create BytesIO buffer for PDF content
-                    buffer = BytesIO()
-                    buffer.write(pdf_content.encode('latin1'))
-                    buffer.seek(0)
-                    
-                    # Create download button for the PDF report
-                    st.download_button(
-                        label="📥 Download GDPR Compliance Report",
-                        data=buffer,
-                        file_name=f"GDPR_Compliance_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                        mime="application/pdf",
-                        key="direct_pdf_download"
-                    )
-                    
-                    # Success message
-                    st.success("✅ GDPR Compliance Report generated successfully!")
-                    
-                    # Report contents description
-                    st.markdown("""
-                    ### Report Contents
-                    - GDPR Compliance Status Assessment
-                    - Risk Findings and Analysis
-                    - Recommended Remediation Steps 
-                    - Certification: """ + cert_type + """
-                    """)
-            
             # Create a simplified section for the actual findings summary
             st.markdown("### GDPR Compliance Summary")
             
@@ -1990,6 +1879,30 @@ startxref
             with col2:
                 st.metric("Total Findings", results.get('total_findings', len(results.get('findings', []))), delta=None)
                 st.metric("GDPR Principles Covered", "7 of 7", "Complete coverage")
+                
+            # Add a section that links to the dedicated report generator
+            st.markdown("---")
+            st.subheader("📊 GDPR Report Generation")
+            
+            # Create info box with instructions
+            st.info("""
+            We've set up a dedicated GDPR Report Generator that runs on port 5001.
+            You can access it directly in a new browser tab at:
+            http://localhost:5001
+            """)
+            
+            # Add HTML with direct link
+            st.markdown("""
+            <div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+                <a href="http://localhost:5001" target="_blank" 
+                   style="background-color: #4f46e5; color: white; padding: 10px 20px; 
+                          text-decoration: none; border-radius: 5px; font-weight: bold;">
+                    Open GDPR Report Generator
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.write("This dedicated tool provides enhanced report generation with certification options.")
         else:
             st.json(results)
 

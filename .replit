@@ -20,6 +20,10 @@ author = "agent"
 task = "workflow.run"
 args = "Streamlined App"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "GDPR Report Generator"
+
 [[workflows.workflow]]
 name = "Streamlined App"
 author = "agent"
@@ -29,6 +33,18 @@ task = "shell.exec"
 args = "streamlit run streamlined_app.py --server.port 5000 --server.headless true"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "GDPR Report Generator"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run minimal_gdpr_report.py --server.port 5001 --server.headless true"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000
