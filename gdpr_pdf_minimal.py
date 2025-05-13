@@ -36,10 +36,13 @@ startxref
 %%EOF"""
     
     if st.button("Get PDF Report", type="primary"):
+        # Convert string to bytes for download
+        pdf_bytes = pdf_data.encode('latin1')
+        
         # Display download button
         st.download_button(
             label="Download Report",
-            data=pdf_data,
+            data=pdf_bytes,
             file_name="basic_gdpr_report.pdf",
             mime="application/pdf"
         )
