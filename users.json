@@ -4,13 +4,15 @@
     "password_hash": "e518949b3addce63ef37fb3c209904d439751a3bdbef4c573ece3055d7431011",
     "role": "admin",
     "email": "vishaal314@gmail.com",
-    "subscription_tier": "gold",
+    "subscription_tier": "basic",
     "subscription_active": true,
     "stripe_customer_id": "cus_vishaal314",
     "subscription_id": "sub_vishaal314",
     "user_id": "usr_vishaal314",
-    "subscription_renewal_date": "2025-06-01",
-    "has_payment_method": true
+    "subscription_renewal_date": "2025-06-12",
+    "has_payment_method": true,
+    "free_trial": false,
+    "free_trial_end": null
   },
   "admin": {
     "username": "admin",

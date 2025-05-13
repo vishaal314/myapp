@@ -177,7 +177,7 @@ def render_subscription_tab(username: str, user_data: Dict[str, Any]):
                         st.success(f"Successfully switched to {plan['name']} plan!")
                         st.rerun()
                 else:
-                    st.info("Current Plan", icon="✓")
+                    st.info("Current Plan", icon="✅")
     
     # Cancellation Section
     if subscription_active and not free_trial:
