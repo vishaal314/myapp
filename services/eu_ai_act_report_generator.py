@@ -803,20 +803,44 @@ def _create_risk_meter(risk_level):
     return drawing
 
 def _add_prohibited_practices(story, styles, analysis_results):
-    """Add prohibited practices section"""
+    """Add prohibited practices section with modern styling"""
     # Heading
-    story.append(Paragraph("Prohibited Practices Assessment", styles['Heading1']))
+    story.append(Paragraph("Prohibited Practices Assessment", styles['CustomHeading1']))
     
     # Get prohibited findings
     prohibited_findings = analysis_results.get("prohibited_practice_findings", [])
     
     if prohibited_findings:
-        # Warning text
-        story.append(Paragraph("<b>WARNING: Potential prohibited practices detected!</b>", styles['Critical']))
-        story.append(Paragraph("The following practices are prohibited under Article 5 of the EU AI Act:", styles['Normal']))
-        story.append(Spacer(1, 10))
+        # Create a warning banner with eye-catching design
+        warning_elements = []
+        warning_elements.append(
+            Paragraph(
+                f"""<font color='{MODERN_COLORS["critical"]}' size='14'>⚠️ WARNING: Potential prohibited practices detected!</font>""", 
+                styles['Bold']
+            )
+        )
+        warning_elements.append(Paragraph(
+            "The following practices are prohibited under Article 5 of the EU AI Act and must be addressed before deployment:",
+            styles['Normal']
+        ))
         
-        # Add each prohibited practice finding
+        # Create a warning box with red styling
+        warning_table = Table([[warning_elements]], colWidths=[doc_width(100)])
+        warning_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), HexColor("#FFEBEE")),  # Light red background
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor(MODERN_COLORS["critical"])),
+            ('ROUNDEDCORNERS', [5, 5, 5, 5]),
+            ('LEFTPADDING', (0, 0), (-1, -1), 20),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 20),
+            ('TOPPADDING', (0, 0), (-1, -1), 15),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ]))
+        
+        story.append(warning_table)
+        story.append(Spacer(1, 15))
+        
+        # Add each prohibited practice finding in a modern card layout
         for i, finding in enumerate(prohibited_findings):
             practice_name = finding.get("name", "Unknown prohibited practice")
             description = finding.get("description", "No description available")
@@ -824,116 +848,306 @@ def _add_prohibited_practices(story, styles, analysis_results):
             matched_patterns = finding.get("matched_patterns", [])
             remediation = finding.get("remediation", "No remediation advice available")
             
-            # Add practice details
-            story.append(Paragraph(f"<b>{i+1}. {practice_name}</b>", styles['Warning']))
-            story.append(Paragraph(f"<b>Description:</b> {description}", styles['Normal']))
-            story.append(Paragraph(f"<b>Confidence:</b> {confidence:.0%}", styles['Normal']))
+            # Create card elements for this finding
+            finding_elements = []
+            
+            # Create card header with practice name
+            finding_elements.append(
+                Paragraph(
+                    f"""<font color='{MODERN_COLORS["critical"]}' size='13'><b>{i+1}. {practice_name}</b></font>""", 
+                    styles['SectionHeading']
+                )
+            )
+            finding_elements.append(Spacer(1, 5))
+            
+            # Add description and confidence
+            finding_elements.append(Paragraph(f"<b>Description:</b> {description}", styles['Normal']))
+            finding_elements.append(Paragraph(f"<b>Confidence:</b> {confidence:.0%}", styles['Normal']))
+            finding_elements.append(Spacer(1, 5))
             
             # Add matched patterns if any
             if matched_patterns:
-                story.append(Paragraph("<b>Detected indicators:</b>", styles['Normal']))
+                finding_elements.append(Paragraph("<b>Detected indicators:</b>", styles['Bold']))
                 for pattern in matched_patterns:
-                    story.append(Paragraph(f"• {pattern}", styles['Normal']))
+                    finding_elements.append(Paragraph(f"• {pattern}", styles['Normal']))
+                finding_elements.append(Spacer(1, 5))
             
-            # Add remediation advice
-            story.append(Paragraph("<b>Remediation:</b>", styles['Normal']))
-            story.append(Paragraph(remediation, styles['Normal']))
+            # Add remediation advice in a highlighted box
+            remediation_elements = []
+            remediation_elements.append(Paragraph("<b>Remediation Actions:</b>", styles['Bold']))
+            remediation_elements.append(Paragraph(remediation, styles['Normal']))
             
-            story.append(Spacer(1, 10))
+            remediation_table = Table([[remediation_elements]], colWidths=[doc_width(95)])
+            remediation_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), HexColor(MODERN_COLORS["highlight"])),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                ('TOPPADDING', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ]))
+            
+            finding_elements.append(remediation_table)
+            
+            # Create a card-like container for this finding
+            finding_card = Table([[finding_elements]], colWidths=[doc_width(100)])
+            finding_card.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('GRID', (0, 0), (-1, -1), 0.5, HexColor(MODERN_COLORS["border"])),
+                ('ROUNDEDCORNERS', [5, 5, 5, 5]),
+                ('LEFTPADDING', (0, 0), (-1, -1), 15),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+                ('TOPPADDING', (0, 0), (-1, -1), 15),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+            ]))
+            
+            story.append(finding_card)
+            story.append(Spacer(1, 15))
     else:
-        # No prohibited practices found
-        story.append(Paragraph("No prohibited practices were identified in this assessment.", styles['Info']))
+        # No prohibited practices found - create a positive confirmation box
+        compliance_elements = []
+        compliance_elements.append(
+            Paragraph(
+                f"""<font color='{MODERN_COLORS["medium"]}' size='12'>✓ No prohibited practices were identified</font>""", 
+                styles['Bold']
+            )
+        )
+        compliance_elements.append(Paragraph(
+            "The assessment did not detect any practices prohibited under Article 5 of the EU AI Act.",
+            styles['Normal']
+        ))
+        
+        compliance_table = Table([[compliance_elements]], colWidths=[doc_width(100)])
+        compliance_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), "#EDFAF1"),  # Light green background
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor(MODERN_COLORS["medium"])),
+            ('ROUNDEDCORNERS', [5, 5, 5, 5]),
+            ('LEFTPADDING', (0, 0), (-1, -1), 20),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 20),
+            ('TOPPADDING', (0, 0), (-1, -1), 15),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ]))
+        
+        story.append(compliance_table)
     
     # Add a horizontal line
+    story.append(Spacer(1, 20))
     story.append(HorizontalLine())
     story.append(Spacer(1, 10))
 
 def _add_mandatory_requirements(story, styles, analysis_results):
-    """Add mandatory requirements for high-risk systems section"""
+    """Add mandatory requirements for high-risk systems section with modern styling"""
     # Heading
     story.append(Paragraph("Mandatory Requirements Assessment", styles['CustomHeading1']))
-    story.append(Paragraph("High-risk AI systems must comply with the following mandatory requirements:", styles['Normal']))
-    story.append(Spacer(1, 10))
+    
+    # Introduction text in a styled container
+    intro_elements = []
+    intro_elements.append(Paragraph(
+        "High-risk AI systems must comply with the following mandatory requirements under the EU AI Act:",
+        styles['Normal']
+    ))
+    
+    intro_table = Table([[intro_elements]], colWidths=[doc_width(100)])
+    intro_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), HexColor(MODERN_COLORS["highlight"])),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 15),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    
+    story.append(intro_table)
+    story.append(Spacer(1, 15))
     
     # Get mandatory requirements findings
     mandatory_findings = analysis_results.get("mandatory_requirements_findings", [])
     
     if mandatory_findings:
-        # Create a table for requirements
-        table_data = [["Requirement", "Status", "Compliance"]]
+        # Calculate overall compliance percentage
+        compliant_count = sum(1 for req in mandatory_findings if req.get("compliant", False))
+        total_count = len(mandatory_findings)
+        overall_compliance = (compliant_count / total_count) if total_count > 0 else 0
+        
+        # Create modern table for requirements
+        table_data = [[
+            Paragraph("<b>Requirement</b>", styles['Bold']), 
+            Paragraph("<b>Status</b>", styles['Bold']), 
+            Paragraph("<b>Compliance</b>", styles['Bold'])
+        ]]
         
         for finding in mandatory_findings:
             requirement_name = finding.get("name", "Unknown")
             is_compliant = finding.get("compliant", False)
             compliance_pct = finding.get("compliance_percentage", 0)
             
-            # Status text and color
-            status_text = "Compliant" if is_compliant else "Not Compliant"
-            status_color = BRAND_COLORS["low"] if is_compliant else BRAND_COLORS["high"]
+            # Status text and color with appropriate icon
+            if is_compliant:
+                status_text = f"✓ Compliant"
+                status_color = MODERN_COLORS["medium"]  # Green
+            else:
+                status_text = f"⚠ Non-Compliant"
+                status_color = MODERN_COLORS["high"]  # Amber
             
             # Add row to table
             table_data.append([
-                requirement_name,
+                Paragraph(requirement_name, styles['Normal']),
                 Paragraph(f'<font color="{status_color}">{status_text}</font>', styles['Normal']),
-                f"{compliance_pct:.0%}"
+                Paragraph(f"{compliance_pct:.0%}", styles['Bold'])
             ])
         
         # Create the table
         col_widths = [doc_width(50), doc_width(30), doc_width(20)]
         requirements_table = Table(table_data, colWidths=col_widths)
         
-        # Style the table
+        # Style the table with modern aesthetics
         table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), toColor(BRAND_COLORS["primary"])),
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor(MODERN_COLORS["primary"])),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 7),
-            ('TOPPADDING', (0, 0), (-1, 0), 7),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('TOPPADDING', (0, 0), (-1, 0), 8),
             ('ALIGN', (1, 1), (1, -1), 'CENTER'),
             ('ALIGN', (2, 1), (2, -1), 'CENTER'),
-            ('GRID', (0, 0), (-1, -1), 0.5, toColor(BRAND_COLORS["lightgray"])),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor(MODERN_COLORS["border"])),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
         ])
         
-        # Add alternating row colors
+        # Add alternating row colors for better readability
         for i in range(1, len(table_data)):
             if i % 2 == 0:
-                table_style.add('BACKGROUND', (0, i), (-1, i), toColor(BRAND_COLORS["lightgray"]))
+                table_style.add('BACKGROUND', (0, i), (-1, i), HexColor(MODERN_COLORS["background"]))
         
         requirements_table.setStyle(table_style)
+        
+        # Add a summary box before the table
+        summary_elements = []
+        
+        # Determine overall compliance status
+        if overall_compliance >= 0.9:
+            compliance_status = "Strong Compliance"
+            compliance_color = MODERN_COLORS["medium"]
+            compliance_icon = "✓"
+        elif overall_compliance >= 0.7:
+            compliance_status = "Moderate Compliance"
+            compliance_color = MODERN_COLORS["low"]
+            compliance_icon = "ℹ"
+        else:
+            compliance_status = "Needs Improvement"
+            compliance_color = MODERN_COLORS["high"]
+            compliance_icon = "⚠"
+        
+        summary_elements.append(Paragraph(
+            f"""<font color='{compliance_color}'><b>{compliance_icon} {compliance_status}: {compliant_count} of {total_count} requirements met</b></font>""",
+            styles['Bold']
+        ))
+        
+        summary_table = Table([[summary_elements]], colWidths=[doc_width(100)])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), HexColor(MODERN_COLORS["highlight"])),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor(MODERN_COLORS["border"])),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ]))
+        
+        story.append(summary_table)
+        story.append(Spacer(1, 10))
         story.append(requirements_table)
         story.append(Spacer(1, 15))
         
-        # Add details for non-compliant requirements
+        # Add details for non-compliant requirements in a styled box
         non_compliant = [r for r in mandatory_findings if not r.get("compliant", False)]
         if non_compliant:
-            story.append(Paragraph("Detailed Non-Compliance Issues:", styles['Heading2']))
+            # Create the heading for non-compliance issues
+            story.append(Paragraph("Non-Compliance Issues to Address", styles['CustomHeading2']))
+            story.append(Spacer(1, 5))
             
+            # Create a box for each non-compliant requirement
             for finding in non_compliant:
                 requirement_name = finding.get("name", "Unknown")
                 description = finding.get("description", "")
                 checks = finding.get("checks", [])
                 
-                story.append(Paragraph(f"<b>{requirement_name}</b>", styles['Bold']))
-                story.append(Paragraph(description, styles['Normal']))
+                # Create elements for this requirement
+                requirement_elements = []
+                
+                # Add requirement name with warning icon
+                requirement_elements.append(
+                    Paragraph(
+                        f"""<font color='{MODERN_COLORS["high"]}'>⚠ {requirement_name}</font>""", 
+                        styles['SectionHeading']
+                    )
+                )
+                
+                # Add requirement description
+                requirement_elements.append(Paragraph(description, styles['Normal']))
+                requirement_elements.append(Spacer(1, 5))
                 
                 # Add non-compliant checks
                 non_compliant_checks = [c for c in checks if not c.get("compliant", False)]
                 if non_compliant_checks:
-                    story.append(Paragraph("<b>Missing components:</b>", styles['Normal']))
+                    requirement_elements.append(Paragraph("<b>Issues to address:</b>", styles['Bold']))
+                    
                     for check in non_compliant_checks:
                         check_name = check.get("name", "Unknown check")
                         recommendation = check.get("recommendation", "No recommendation available")
-                        story.append(Paragraph(f"• <b>{check_name}:</b> {recommendation}", styles['Normal']))
+                        requirement_elements.append(
+                            Paragraph(f"• <b>{check_name}:</b> {recommendation}", styles['Normal'])
+                        )
                 
+                # Create a box for this requirement
+                requirement_box = Table([[requirement_elements]], colWidths=[doc_width(100)])
+                requirement_box.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), "#FFF8E1"),  # Light amber background
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor(MODERN_COLORS["high"])),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 15),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+                    ('TOPPADDING', (0, 0), (-1, -1), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                ]))
+                
+                story.append(requirement_box)
                 story.append(Spacer(1, 10))
     else:
-        # No findings available
-        story.append(Paragraph("No mandatory requirements assessment available.", styles['Info']))
+        # No findings available - show a note in a styled box
+        no_findings_elements = []
+        no_findings_elements.append(
+            Paragraph(
+                """<font color='#6B7280'>ℹ️ No mandatory requirements assessment available.</font>""", 
+                styles['Info']
+            )
+        )
+        no_findings_elements.append(
+            Paragraph(
+                "This section is applicable only to AI systems classified as high-risk under the EU AI Act.",
+                styles['Normal']
+            )
+        )
+        
+        no_findings_table = Table([[no_findings_elements]], colWidths=[doc_width(100)])
+        no_findings_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), HexColor(MODERN_COLORS["background"])),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor(MODERN_COLORS["border"])),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ]))
+        
+        story.append(no_findings_table)
     
     # Add a horizontal line
+    story.append(Spacer(1, 20))
     story.append(HorizontalLine())
     story.append(Spacer(1, 10))
 
