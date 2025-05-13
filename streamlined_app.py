@@ -919,7 +919,7 @@ def render_scan_form():
     st.subheader("Configure Scan")
     
     scan_types = [
-        "Code Scanner", 
+        "GDPR Code Scanner", 
         "Blob Scanner", 
         "Image Scanner", 
         "Database Scanner", 
