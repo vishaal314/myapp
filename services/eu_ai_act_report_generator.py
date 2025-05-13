@@ -88,29 +88,30 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
         # Define styles
         styles = getSampleStyleSheet()
         
-        # Create our custom styles
+        # Create our custom styles without using direct attribute assignment
         try:
-            # Create a CustomHeading1 style
-            custom_heading1 = ParagraphStyle('CustomHeading1')
-            custom_heading1.fontSize = 18
-            custom_heading1.leading = 22
-            custom_heading1.textColor = toColor(BRAND_COLORS["primary"])
-            custom_heading1.spaceAfter = 12
-            custom_heading1.fontName = styles['Heading1'].fontName
-            
-            # Create a CustomHeading2 style
-            custom_heading2 = ParagraphStyle('CustomHeading2')
-            custom_heading2.fontSize = 14
-            custom_heading2.leading = 18
-            custom_heading2.textColor = toColor(BRAND_COLORS["primary"])
-            custom_heading2.spaceAfter = 8
-            custom_heading2.fontName = styles['Heading2'].fontName
-            
-            # Add the styles if they don't exist
+            # Add custom heading styles using the proper constructor parameters
             if 'CustomHeading1' not in styles:
-                styles.add(custom_heading1)
+                styles.add(ParagraphStyle(
+                    name='CustomHeading1',
+                    parent=styles['Heading1'],
+                    fontName=styles['Heading1'].fontName,
+                    fontSize=18,
+                    leading=22,
+                    textColor=toColor(BRAND_COLORS["primary"]),
+                    spaceAfter=12
+                ))
+            
             if 'CustomHeading2' not in styles:
-                styles.add(custom_heading2)
+                styles.add(ParagraphStyle(
+                    name='CustomHeading2',
+                    parent=styles['Heading2'],
+                    fontName=styles['Heading2'].fontName,
+                    fontSize=14,
+                    leading=18,
+                    textColor=toColor(BRAND_COLORS["primary"]),
+                    spaceAfter=8
+                ))
         except Exception as style_error:
             logger.warning(f"Error adding custom styles: {str(style_error)}")
         styles.add(ParagraphStyle(
@@ -627,7 +628,7 @@ def _add_gpai_requirements(story, styles, analysis_results):
 def _add_recommendations(story, styles, analysis_results):
     """Add recommendations and action plan section"""
     # Heading
-    story.append(Paragraph("Recommendations & Action Plan", styles['Heading1']))
+    story.append(Paragraph("Recommendations & Action Plan", styles['CustomHeading1']))
     
     # Get recommendations
     recommendations = analysis_results.get("recommendations", [])
@@ -681,7 +682,7 @@ def _add_recommendations(story, styles, analysis_results):
 def _add_compliance_checklist(story, styles, analysis_results):
     """Add compliance checklist section"""
     # Heading
-    story.append(Paragraph("EU AI Act Compliance Checklist", styles['Heading1']))
+    story.append(Paragraph("EU AI Act Compliance Checklist", styles['CustomHeading1']))
     
     # Get risk category and findings
     risk_category = analysis_results.get("risk_category", "minimal_risk")
