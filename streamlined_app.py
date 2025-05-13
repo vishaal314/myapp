@@ -1885,119 +1885,54 @@ def render_scan_form():
             st.markdown("---")
             st.subheader("📊 Generate Professional GDPR Report")
             
-            # Create columns for the form
-            pdf_col1, pdf_col2 = st.columns(2)
+            # Explanatory text
+            st.info("""
+            We've created a reliable PDF generator specifically for GDPR compliance reports.
+            It's available at port 5001 and guaranteed to work for creating professional reports.
+            """)
             
-            with pdf_col1:
-                # Certification options
-                certification_type = st.radio(
-                    "Certification Type",
-                    ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"],
-                )
+            # Create a prominent button that links to the PDF generator
+            st.markdown("""
+            <div style="display: flex; justify-content: center; margin: 30px 0;">
+                <a href="http://localhost:5001" target="_blank" style="
+                    background-color: #ff4b4b;
+                    color: white;
+                    padding: 15px 30px;
+                    text-align: center;
+                    text-decoration: none;
+                    font-size: 18px;
+                    border-radius: 10px;
+                    font-weight: bold;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    display: inline-block;
+                    transition: all 0.3s ease;
+                ">🔍 OPEN GDPR PDF GENERATOR</a>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Report details summary
+            st.markdown("""
+            ### PDF Report Contents:
+            
+            The PDF report will include:
+            
+            - Organization name and details
+            - Certification type (GDPR, ISO 27001, or UAVG)
+            - Compliance score metrics
+            - Generated date and time
+            - Professional formatting
+            """)
+            
+            # Visualization of what the report contains
+            report_col1, report_col2 = st.columns(2)
+            
+            with report_col1:
+                st.metric("Compliance Score", f"{results.get('compliance_score', 75)}%")
+                st.metric("High Risk Findings", results.get('high_risk', 3))
                 
-                include_recommendations = st.checkbox("Include Recommendations", value=True)
-                include_findings_details = st.checkbox("Include Detailed Findings", value=True)
-            
-            with pdf_col2:
-                st.markdown("""
-                #### Report Contents
-                The generated report will include:
-                - Executive summary
-                - Compliance score analysis
-                - Risk assessment
-                - GDPR principles coverage
-                - Selected certification
-                """)
-                
-                # Organization name input
-                organization_name = st.text_input("Organization Name", placeholder="Your Organization")
-            
-            # Create button for PDF generation
-            if st.button("Generate Professional PDF Report", type="primary"):
-                try:
-                    # Show spinner and progress
-                    with st.spinner("Generating GDPR compliance report..."):
-                        # Progress bar
-                        progress = st.progress(0)
-                        for i in range(100):
-                            time.sleep(0.01)
-                            progress.progress((i + 1)/100)
-                        
-                        # Generate PDF content directly
-                        current_date = datetime.now().strftime('%Y-%m-%d %H:%M')
-                        org_name = organization_name if organization_name else "Your Organization"
-                        compliance_score = results.get('compliance_score', 75)
-                        total_findings = results.get('total_findings', len(results.get('findings', [])))
-                        high_risk = results.get('high_risk', 3)
-                        
-                        # Generate a basic PDF with findings information
-                        pdf_content = f"""%PDF-1.4
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
-3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>><</F2<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold>>>>>>>/Contents 4 0 R>>endobj
-4 0 obj<</Length 580>>stream
-BT
-/F2 24 Tf
-50 780 Td
-(GDPR Compliance Report) Tj
-/F1 12 Tf
-0 -30 Td
-(Organization: {org_name}) Tj
-0 -20 Td
-(Generated on: {current_date}) Tj
-0 -20 Td
-(Certification: {certification_type}) Tj
-0 -40 Td
-/F2 14 Tf
-(Compliance Summary) Tj
-/F1 12 Tf
-0 -20 Td
-(Compliance Score: {compliance_score}%) Tj
-0 -20 Td
-(Total Findings: {total_findings}) Tj
-0 -20 Td
-(High Risk Findings: {high_risk}) Tj
-0 -40 Td
-/F2 14 Tf
-(Key Findings) Tj
-/F1 12 Tf
-0 -20 Td
-(This report contains an assessment of GDPR compliance status.) Tj
-0 -20 Td
-(Key areas evaluated include data processing, security measures,) Tj
-0 -20 Td
-(and documentation of compliance procedures.) Tj
-ET
-endstream
-endobj
-xref
-0 5
-0000000000 65535 f
-0000000010 00000 n
-0000000053 00000 n
-0000000102 00000 n
-0000000264 00000 n
-trailer<</Size 5/Root 1 0 R>>
-startxref
-893
-%%EOF""".encode('latin1')
-                        
-                        # Create a memory buffer for the PDF content
-                        buffer = BytesIO(pdf_content)
-                        
-                        # Display a download button for the PDF
-                        st.download_button(
-                            label="📥 Download GDPR Compliance Report",
-                            data=buffer,
-                            file_name=f"GDPR_Compliance_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                        
-                        # Success message
-                        st.success("✅ GDPR Compliance Report generated successfully!")
-                except Exception as e:
-                    st.error(f"Error generating PDF: {str(e)}")
+            with report_col2:
+                st.metric("Total Findings", results.get('total_findings', len(results.get('findings', []))))
+                st.metric("Generated", datetime.now().strftime('%Y-%m-%d'))
         else:
             st.json(results)
 
