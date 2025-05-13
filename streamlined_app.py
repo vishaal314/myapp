@@ -1188,7 +1188,6 @@ def render_scan_form():
         with st.spinner("Running scan..."):
             progress_bar = st.progress(0)
             for i in range(1, 101):
-                time.sleep(0.02)  # Simulate scan process
                 progress_bar.progress(i/100)
             
             # Generate results based on scan type
@@ -1911,10 +1910,8 @@ def render_scan_form():
             if submit_button:
                 # Show a spinner while generating
                 with st.spinner("Generating your professional GDPR report..."):
-                    import time
                     progress = st.progress(0)
                     for i in range(100):
-                        time.sleep(0.01)
                         progress.progress((i + 1)/100)
                     
                     try:
@@ -2013,7 +2010,7 @@ def render_reports_section():
         
         if st.button("Generate Report", key="generate_report_button"):
             with st.spinner("Generating report..."):
-                time.sleep(1.5)  # Simulate report generation
+                # Wait for report generation (removed time.sleep)
                 
                 # Get selected scan results
                 selected_index = scan_options.index(selected_report)
