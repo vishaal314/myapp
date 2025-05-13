@@ -1798,37 +1798,58 @@ def render_scan_form():
                 else:
                     st.info("No findings were identified in this scan.")
 
+                # Create a container for report downloads
+                report_col1, report_col2 = st.columns(2)
+                
                 # Display PDF report download if available
-                if "report_path" in results and results["report_path"]:
-                    try:
-                        with open(results["report_path"], "rb") as f:
-                            report_data = f.read()
-                            
-                        st.download_button(
-                            label="Download AI Model Scan Report",
-                            data=report_data,
-                            file_name=f"ai_model_scan_{results.get('scan_id', 'report')}.pdf",
-                            mime="application/pdf",
-                            key="download_ai_model_report"
-                        )
-                    except Exception as e:
-                        st.warning(f"Error loading AI Model scan report: {str(e)}")
+                with report_col1:
+                    if "report_path" in results and results["report_path"]:
+                        try:
+                            report_path = results["report_path"]
+                            # Check if file exists before attempting to read it
+                            if os.path.exists(report_path):
+                                with open(report_path, "rb") as f:
+                                    report_data = f.read()
+                                
+                                if len(report_data) > 0:
+                                    st.download_button(
+                                        label="📄 Download AI Model Scan Report",
+                                        data=report_data,
+                                        file_name=f"ai_model_scan_{results.get('scan_id', 'report')}.pdf",
+                                        mime="application/pdf",
+                                        key="download_ai_model_report"
+                                    )
+                                else:
+                                    st.warning("AI Model report file exists but is empty.")
+                            else:
+                                st.warning(f"AI Model report file not found: {report_path}")
+                        except Exception as e:
+                            st.warning(f"Error loading AI Model scan report: {str(e)}")
                 
                 # Display EU AI Act report download if available
-                if "eu_ai_act_report_path" in results and results["eu_ai_act_report_path"]:
-                    try:
-                        with open(results["eu_ai_act_report_path"], "rb") as f:
-                            eu_report_data = f.read()
-                            
-                        st.download_button(
-                            label="Download EU AI Act Compliance Report",
-                            data=eu_report_data,
-                            file_name=f"eu_ai_act_report_{results.get('scan_id', 'report')}.pdf",
-                            mime="application/pdf",
-                            key="download_eu_ai_act_report"
-                        )
-                    except Exception as e:
-                        st.warning(f"Error loading EU AI Act report: {str(e)}")
+                with report_col2:
+                    if "eu_ai_act_report_path" in results and results["eu_ai_act_report_path"]:
+                        try:
+                            eu_report_path = results["eu_ai_act_report_path"]
+                            # Check if file exists before attempting to read it
+                            if os.path.exists(eu_report_path):
+                                with open(eu_report_path, "rb") as f:
+                                    eu_report_data = f.read()
+                                
+                                if len(eu_report_data) > 0:
+                                    st.download_button(
+                                        label="📄 Download EU AI Act Compliance Report",
+                                        data=eu_report_data,
+                                        file_name=f"eu_ai_act_report_{results.get('scan_id', 'report')}.pdf",
+                                        mime="application/pdf",
+                                        key="download_eu_ai_act_report"
+                                    )
+                                else:
+                                    st.warning("EU AI Act report file exists but is empty.")
+                            else:
+                                st.warning(f"EU AI Act report file not found: {eu_report_path}")
+                        except Exception as e:
+                            st.warning(f"Error loading EU AI Act report: {str(e)}")
                         
             except Exception as e:
                 st.error(f"Error displaying AI Model scan results: {str(e)}")

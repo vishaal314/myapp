@@ -87,22 +87,31 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
         
         # Define styles
         styles = getSampleStyleSheet()
-        styles.add(ParagraphStyle(
-            name='Heading1',
-            parent=styles['Heading1'],
-            fontSize=18,
-            leading=22,
-            textColor=toColor(BRAND_COLORS["primary"]),
-            spaceAfter=12
-        ))
-        styles.add(ParagraphStyle(
-            name='Heading2',
-            parent=styles['Heading2'],
-            fontSize=14,
-            leading=18,
-            textColor=toColor(BRAND_COLORS["primary"]),
-            spaceAfter=8
-        ))
+        
+        # Check if styles already exist before adding them
+        custom_styles = {
+            'CustomHeading1': ParagraphStyle(
+                name='CustomHeading1',
+                parent=styles['Heading1'],
+                fontSize=18,
+                leading=22,
+                textColor=toColor(BRAND_COLORS["primary"]),
+                spaceAfter=12
+            ),
+            'CustomHeading2': ParagraphStyle(
+                name='CustomHeading2',
+                parent=styles['Heading2'],
+                fontSize=14,
+                leading=18,
+                textColor=toColor(BRAND_COLORS["primary"]),
+                spaceAfter=8
+            )
+        }
+        
+        # Add custom styles if they don't already exist
+        for style_name, style in custom_styles.items():
+            if style_name not in styles:
+                styles.add(style)
         styles.add(ParagraphStyle(
             name='Normal',
             parent=styles['Normal'],
