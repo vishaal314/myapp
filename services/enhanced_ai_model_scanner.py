@@ -372,21 +372,25 @@ class EnhancedAIModelScanner(AIModelScanner):
                     }
                     
                     # Generate EU AI Act compliance report
-                    eu_ai_report_bytes = create_eu_ai_act_report(eu_ai_analysis)
-                    
-                    if eu_ai_report_bytes and len(eu_ai_report_bytes) > 0:
-                        self.logger.info("Successfully generated EU AI Act compliance report")
+                    try:
+                        eu_ai_report_bytes = create_eu_ai_act_report(eu_ai_analysis)
                         
-                        # Save the report to a file
-                        os.makedirs("reports", exist_ok=True)
-                        eu_report_filename = f"eu_ai_act_report_{eu_ai_analysis.get('analysis_id', '')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                        eu_report_path = os.path.join("reports", eu_report_filename)
-                        
-                        with open(eu_report_path, "wb") as f:
-                            f.write(eu_ai_report_bytes)
+                        if eu_ai_report_bytes and len(eu_ai_report_bytes) > 0:
+                            self.logger.info("Successfully generated EU AI Act compliance report")
                             
-                        scan_result["eu_ai_act_report_path"] = eu_report_path
-                        self.logger.info(f"Generated EU AI Act PDF report at: {eu_report_path}")
+                            # Save the report to a file
+                            os.makedirs("reports", exist_ok=True)
+                            eu_report_filename = f"eu_ai_act_report_{eu_ai_analysis.get('analysis_id', '')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                            eu_report_path = os.path.join("reports", eu_report_filename)
+                            
+                            with open(eu_report_path, "wb") as f:
+                                f.write(eu_ai_report_bytes)
+                                
+                            scan_result["eu_ai_act_report_path"] = eu_report_path
+                            self.logger.info(f"Generated EU AI Act PDF report at: {eu_report_path}")
+                    except Exception as report_error:
+                        self.logger.error(f"Error generating EU AI Act report: {str(report_error)}")
+                        # Don't let report generation failure stop the analysis
                     
                 except Exception as e:
                     self.logger.error(f"Error in EU AI Act compliance analysis: {str(e)}")

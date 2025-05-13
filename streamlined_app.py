@@ -1691,6 +1691,12 @@ def render_scan_form():
                     # Add EU AI Act Compliance tab content
                     if "eu_ai_act_compliance" in results:
                         with tabs[6]:  # EU AI Act 2025 tab
+                            # Check if there was an error with EU AI Act analysis
+                            if "eu_ai_act_compliance_error" in results:
+                                st.error(f"Error during EU AI Act analysis: {results.get('eu_ai_act_compliance_error')}")
+                                st.info("The main AI model scan completed successfully, but there was an error with the EU AI Act compliance analysis.")
+                                st.markdown("---")
+                            
                             eu_ai_act = results.get("eu_ai_act_compliance", {})
                             
                             # Display EU AI Act compliance overview
@@ -1745,16 +1751,19 @@ def render_scan_form():
                                         st.markdown(f"**Status:** {finding.get('compliance_status', 'Unknown')}")
                                         
                                         # Show finding details if available
-                                        if "details" in finding and finding["details"]:
-                                            st.markdown("**Details:**")
+                                        if "details" in finding:
                                             details = finding["details"]
-                                            for key, value in details.items():
-                                                if isinstance(value, list):
-                                                    st.markdown(f"**{key.capitalize()}:**")
-                                                    for item in value:
-                                                        st.markdown(f"- {item}")
-                                                else:
-                                                    st.markdown(f"**{key.capitalize()}:** {value}")
+                                            if isinstance(details, dict):
+                                                st.markdown("**Details:**")
+                                                for key, value in details.items():
+                                                    if isinstance(value, list):
+                                                        st.markdown(f"**{key.capitalize()}:**")
+                                                        for item in value:
+                                                            st.markdown(f"- {item}")
+                                                    else:
+                                                        st.markdown(f"**{key.capitalize()}:** {value}")
+                                            elif isinstance(details, str):
+                                                st.markdown(f"**Details:** {details}")
                             else:
                                 st.info("No EU AI Act compliance findings available")
                             
@@ -1764,15 +1773,26 @@ def render_scan_form():
                             recommendations = eu_ai_act.get("recommendations", [])
                             if recommendations:
                                 for i, recommendation in enumerate(recommendations):
-                                    with st.expander(f"Recommendation {i+1}"):
-                                        st.markdown(f"**Recommendation:** {recommendation.get('text', 'No recommendation text')}")
-                                        st.markdown(f"**Priority:** {recommendation.get('priority', 'Medium')}")
-                                        
-                                        # Show action items if available
-                                        if "action_items" in recommendation and recommendation["action_items"]:
-                                            st.markdown("**Action Items:**")
-                                            for item in recommendation["action_items"]:
-                                                st.markdown(f"- {item}")
+                                    try:
+                                        # Handle both string and dictionary recommendations
+                                        if isinstance(recommendation, dict):
+                                            with st.expander(f"Recommendation {i+1}"):
+                                                st.markdown(f"**Recommendation:** {recommendation.get('text', 'No recommendation text')}")
+                                                st.markdown(f"**Priority:** {recommendation.get('priority', 'Medium')}")
+                                                
+                                                # Show action items if available
+                                                if "action_items" in recommendation and recommendation["action_items"]:
+                                                    st.markdown("**Action Items:**")
+                                                    if isinstance(recommendation["action_items"], list):
+                                                        for item in recommendation["action_items"]:
+                                                            st.markdown(f"- {item}")
+                                                    elif isinstance(recommendation["action_items"], str):
+                                                        st.markdown(f"- {recommendation['action_items']}")
+                                        elif isinstance(recommendation, str):
+                                            with st.expander(f"Recommendation {i+1}"):
+                                                st.markdown(f"**Recommendation:** {recommendation}")
+                                    except Exception as rec_error:
+                                        st.warning(f"Error displaying recommendation: {str(rec_error)}")
                             else:
                                 st.info("No recommendations available")
                 else:
