@@ -1065,6 +1065,51 @@ def render_scan_form():
                     "",
                     key="sample_inputs"
                 )
+                
+                # Add EU AI Act 2025 compliance analysis option
+                st.markdown("---")
+                st.markdown("### EU AI Act 2025 Compliance")
+                
+                perform_eu_ai_act = st.checkbox(
+                    "Perform EU AI Act 2025 Compliance Analysis",
+                    value=True,
+                    key="perform_eu_ai_act",
+                    help="Analyze the AI model against the EU AI Act 2025 requirements and generate a detailed compliance report"
+                )
+                
+                if perform_eu_ai_act:
+                    # Additional inputs for EU AI Act analysis
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.selectbox(
+                            "Model Purpose",
+                            ["General Purpose", "Healthcare", "Finance", "Education", "Employment", "Law Enforcement", "Critical Infrastructure"],
+                            key="model_purpose",
+                            help="Select the intended purpose of the model to determine applicable requirements"
+                        )
+                        
+                        st.checkbox(
+                            "Is Foundation Model",
+                            value=False,
+                            key="is_foundation_model",
+                            help="Check if this is a foundation or general-purpose AI model with broad capabilities"
+                        )
+                    
+                    with col2:
+                        st.selectbox(
+                            "Deployment Context",
+                            ["Commercial", "Enterprise", "Public Sector", "Healthcare", "Education", "Research"],
+                            key="deployment_context",
+                            help="Environment where the model will be deployed"
+                        )
+                        
+                        st.checkbox(
+                            "Is Generative AI",
+                            value=False,
+                            key="is_generative_ai",
+                            help="Check if this model has generative capabilities (text, image, audio, etc.)"
+                        )
         
         elif selected_scan == "Sustainability Scanner":
             # Provider selection
@@ -1263,14 +1308,32 @@ def render_scan_form():
                     sample_inputs_text = st.session_state.get("sample_inputs", "")
                     sample_inputs = [line.strip() for line in sample_inputs_text.split("\n") if line.strip()]
                     
+                    # Get EU AI Act analysis option
+                    perform_eu_ai_act = st.session_state.get("perform_eu_ai_act", True)
+                    
+                    # If EU AI Act analysis is enabled, add additional model details
+                    if perform_eu_ai_act:
+                        # Add EU AI Act specific model details
+                        model_purpose = st.session_state.get("model_purpose", "General Purpose")
+                        deployment_context = st.session_state.get("deployment_context", "Commercial")
+                        is_foundation_model = st.session_state.get("is_foundation_model", False)
+                        is_generative_ai = st.session_state.get("is_generative_ai", False)
+                        
+                        model_details.update({
+                            "purpose": model_purpose,
+                            "deployment_context": deployment_context,
+                            "is_foundation_model": is_foundation_model,
+                            "is_generative_ai": is_generative_ai
+                        })
+                    
                     # Perform the enhanced AI model scan
-                    # Call scan_model with only the parameters supported by the parent class
                     results = scanner.scan_model(
                         model_source=model_source,
                         model_details=model_details,
                         leakage_types=leakage_types,
                         context=context,
-                        sample_inputs=sample_inputs
+                        sample_inputs=sample_inputs,
+                        perform_eu_ai_act_analysis=perform_eu_ai_act
                     )
                 
                 except Exception as e:
