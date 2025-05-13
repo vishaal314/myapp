@@ -88,30 +88,31 @@ def create_eu_ai_act_report(analysis_results: Dict[str, Any]) -> bytes:
         # Define styles
         styles = getSampleStyleSheet()
         
-        # Check if styles already exist before adding them
-        custom_styles = {
-            'CustomHeading1': ParagraphStyle(
-                name='CustomHeading1',
-                parent=styles['Heading1'],
-                fontSize=18,
-                leading=22,
-                textColor=toColor(BRAND_COLORS["primary"]),
-                spaceAfter=12
-            ),
-            'CustomHeading2': ParagraphStyle(
-                name='CustomHeading2',
-                parent=styles['Heading2'],
-                fontSize=14,
-                leading=18,
-                textColor=toColor(BRAND_COLORS["primary"]),
-                spaceAfter=8
-            )
-        }
-        
-        # Add custom styles if they don't already exist
-        for style_name, style in custom_styles.items():
-            if style_name not in styles:
-                styles.add(style)
+        # Create our custom styles
+        try:
+            # Create a CustomHeading1 style
+            custom_heading1 = ParagraphStyle('CustomHeading1')
+            custom_heading1.fontSize = 18
+            custom_heading1.leading = 22
+            custom_heading1.textColor = toColor(BRAND_COLORS["primary"])
+            custom_heading1.spaceAfter = 12
+            custom_heading1.fontName = styles['Heading1'].fontName
+            
+            # Create a CustomHeading2 style
+            custom_heading2 = ParagraphStyle('CustomHeading2')
+            custom_heading2.fontSize = 14
+            custom_heading2.leading = 18
+            custom_heading2.textColor = toColor(BRAND_COLORS["primary"])
+            custom_heading2.spaceAfter = 8
+            custom_heading2.fontName = styles['Heading2'].fontName
+            
+            # Add the styles if they don't exist
+            if 'CustomHeading1' not in styles:
+                styles.add(custom_heading1)
+            if 'CustomHeading2' not in styles:
+                styles.add(custom_heading2)
+        except Exception as style_error:
+            logger.warning(f"Error adding custom styles: {str(style_error)}")
         styles.add(ParagraphStyle(
             name='Normal',
             parent=styles['Normal'],
@@ -236,7 +237,7 @@ def _add_report_header(story, styles, analysis_results):
 def _add_executive_summary(story, styles, analysis_results):
     """Add executive summary section"""
     # Heading
-    story.append(Paragraph("Executive Summary", styles['Heading1']))
+    story.append(Paragraph("Executive Summary", styles['CustomHeading1']))
     
     # Extract key information
     risk_category = analysis_results.get("risk_category", "minimal_risk")
@@ -314,7 +315,7 @@ def _add_executive_summary(story, styles, analysis_results):
 def _add_risk_categorization(story, styles, analysis_results):
     """Add risk categorization section"""
     # Heading
-    story.append(Paragraph("Risk Categorization", styles['Heading1']))
+    story.append(Paragraph("Risk Categorization", styles['CustomHeading1']))
     
     # Extract risk details
     risk_category = analysis_results.get("risk_category", "minimal_risk")
@@ -448,7 +449,7 @@ def _add_prohibited_practices(story, styles, analysis_results):
 def _add_mandatory_requirements(story, styles, analysis_results):
     """Add mandatory requirements for high-risk systems section"""
     # Heading
-    story.append(Paragraph("Mandatory Requirements Assessment", styles['Heading1']))
+    story.append(Paragraph("Mandatory Requirements Assessment", styles['CustomHeading1']))
     story.append(Paragraph("High-risk AI systems must comply with the following mandatory requirements:", styles['Normal']))
     story.append(Spacer(1, 10))
     
@@ -537,7 +538,7 @@ def _add_mandatory_requirements(story, styles, analysis_results):
 def _add_gpai_requirements(story, styles, analysis_results):
     """Add GPAI requirements section"""
     # Heading
-    story.append(Paragraph("General Purpose AI Requirements", styles['Heading1']))
+    story.append(Paragraph("General Purpose AI Requirements", styles['CustomHeading1']))
     story.append(Paragraph("Foundation models and general purpose AI systems must comply with the following requirements:", styles['Normal']))
     story.append(Spacer(1, 10))
     
