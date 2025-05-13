@@ -1861,6 +1861,23 @@ def render_scan_form():
             except Exception as e:
                 st.error(f"Error displaying sustainability results: {str(e)}")
                 st.json(results)
+        elif selected_scan == "GDPR Code Scanner":
+            try:
+                # Import and use our GDPR Code Scanner report generator
+                from services.gdpr_report_generator import generate_gdpr_report_streamlit
+                
+                # Display results in JSON format
+                st.json(results)
+                
+                # Add a horizontal divider
+                st.markdown("---")
+                
+                # Show the GDPR report generator
+                generate_gdpr_report_streamlit(results)
+                
+            except Exception as e:
+                st.error(f"Error displaying GDPR Code Scanner results: {str(e)}")
+                st.json(results)
         else:
             st.json(results)
 
