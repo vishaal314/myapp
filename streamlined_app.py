@@ -1326,15 +1326,54 @@ def render_scan_form():
                             "is_generative_ai": is_generative_ai
                         })
                     
-                    # Perform the enhanced AI model scan
-                    results = scanner.scan_model(
-                        model_source=model_source,
-                        model_details=model_details,
-                        leakage_types=leakage_types,
-                        context=context,
-                        sample_inputs=sample_inputs,
-                        perform_eu_ai_act_analysis=perform_eu_ai_act
-                    )
+                    try:
+                        # Try to perform the enhanced AI model scan with EU AI Act analysis
+                        if perform_eu_ai_act:
+                            # Check if eu_ai_act modules are available
+                            try:
+                                # Import required modules
+                                from services.eu_ai_act_analyzer import analyze_ai_model
+                                from services.eu_ai_act_report_generator import create_eu_ai_act_report
+                                
+                                # Perform the scan with EU AI Act analysis
+                                results = scanner.scan_model(
+                                    model_source=model_source,
+                                    model_details=model_details,
+                                    leakage_types=leakage_types,
+                                    context=context,
+                                    sample_inputs=sample_inputs,
+                                    perform_eu_ai_act_analysis=True
+                                )
+                            except ImportError:
+                                st.warning("EU AI Act modules are not available. Running scan without EU AI Act analysis.")
+                                results = scanner.scan_model(
+                                    model_source=model_source,
+                                    model_details=model_details,
+                                    leakage_types=leakage_types,
+                                    context=context,
+                                    sample_inputs=sample_inputs,
+                                    perform_eu_ai_act_analysis=False
+                                )
+                        else:
+                            # Perform the scan without EU AI Act analysis
+                            results = scanner.scan_model(
+                                model_source=model_source,
+                                model_details=model_details,
+                                leakage_types=leakage_types,
+                                context=context,
+                                sample_inputs=sample_inputs,
+                                perform_eu_ai_act_analysis=False
+                            )
+                    except Exception as scan_error:
+                        # Fallback to basic scan if enhanced scan fails
+                        st.warning(f"Enhanced AI model scan failed: {str(scan_error)}. Falling back to basic scan.")
+                        results = scanner.scan_model(
+                            model_source=model_source,
+                            model_details=model_details,
+                            leakage_types=leakage_types,
+                            context=context,
+                            sample_inputs=sample_inputs
+                        )
                 
                 except Exception as e:
                     st.error(f"Error running AI Model scan: {str(e)}")
@@ -1505,6 +1544,11 @@ def render_scan_form():
                 if findings:
                     # Create tabs for different categories
                     tab_names = ["All Findings", "PII Detection", "Model Bias", "Explainability", "Architecture", "Compliance"]
+                    
+                    # Add EU AI Act tab if EU AI Act compliance analysis was performed
+                    if "eu_ai_act_compliance" in results:
+                        tab_names.append("EU AI Act 2025")
+                        
                     tabs = st.tabs(tab_names)
                     
                     with tabs[0]:  # All Findings
@@ -1643,6 +1687,94 @@ def render_scan_form():
                                                 st.markdown(f"**{key.capitalize()}:** {value}")
                         else:
                             st.info("No compliance findings")
+                    
+                    # Add EU AI Act Compliance tab content
+                    if "eu_ai_act_compliance" in results:
+                        with tabs[6]:  # EU AI Act 2025 tab
+                            eu_ai_act = results.get("eu_ai_act_compliance", {})
+                            
+                            # Display EU AI Act compliance overview
+                            st.markdown("### EU AI Act 2025 Compliance Overview")
+                            
+                            # Display risk category with appropriate styling
+                            risk_category = eu_ai_act.get("risk_category", "unclassified")
+                            
+                            if risk_category == "prohibited":
+                                category_color = "#dc2626"  # Red
+                                category_text = "Prohibited AI Practice"
+                            elif risk_category == "high_risk":
+                                category_color = "#f97316"  # Orange
+                                category_text = "High-Risk AI System"
+                            elif risk_category == "limited_risk":
+                                category_color = "#eab308"  # Yellow
+                                category_text = "Limited Risk AI System" 
+                            elif risk_category == "minimal_risk":
+                                category_color = "#10b981"  # Green
+                                category_text = "Minimal Risk AI System"
+                            elif risk_category == "general_purpose":
+                                category_color = "#3b82f6"  # Blue
+                                category_text = "General Purpose AI System"
+                            else:
+                                category_color = "#6b7280"  # Gray
+                                category_text = "Unclassified AI System"
+                            
+                            st.markdown(f"**Risk Category:** <span style='color:{category_color};font-weight:bold'>{category_text}</span>", unsafe_allow_html=True)
+                            
+                            # Display compliance score with color coding
+                            compliance_score = eu_ai_act.get("compliance_score", 0)
+                            if compliance_score >= 80:
+                                score_color = "#10b981"  # Green
+                                score_text = "High"
+                            elif compliance_score >= 60:
+                                score_color = "#eab308"  # Yellow
+                                score_text = "Medium"
+                            else:
+                                score_color = "#f97316"  # Orange
+                                score_text = "Low"
+                                
+                            st.markdown(f"**Compliance Score:** <span style='color:{score_color};font-weight:bold'>{score_text} ({compliance_score}/100)</span>", unsafe_allow_html=True)
+                            
+                            # Display EU AI Act compliance findings
+                            st.markdown("### EU AI Act Compliance Findings")
+                            
+                            compliance_findings = eu_ai_act.get("compliance_findings", [])
+                            if compliance_findings:
+                                for finding in compliance_findings:
+                                    with st.expander(f"{finding.get('type', 'Requirement')} ({finding.get('compliance_status', 'Unknown')})"):
+                                        st.markdown(f"**Description:** {finding.get('description', 'No description')}")
+                                        st.markdown(f"**Status:** {finding.get('compliance_status', 'Unknown')}")
+                                        
+                                        # Show finding details if available
+                                        if "details" in finding and finding["details"]:
+                                            st.markdown("**Details:**")
+                                            details = finding["details"]
+                                            for key, value in details.items():
+                                                if isinstance(value, list):
+                                                    st.markdown(f"**{key.capitalize()}:**")
+                                                    for item in value:
+                                                        st.markdown(f"- {item}")
+                                                else:
+                                                    st.markdown(f"**{key.capitalize()}:** {value}")
+                            else:
+                                st.info("No EU AI Act compliance findings available")
+                            
+                            # Display EU AI Act recommendations
+                            st.markdown("### EU AI Act Recommendations")
+                            
+                            recommendations = eu_ai_act.get("recommendations", [])
+                            if recommendations:
+                                for i, recommendation in enumerate(recommendations):
+                                    with st.expander(f"Recommendation {i+1}"):
+                                        st.markdown(f"**Recommendation:** {recommendation.get('text', 'No recommendation text')}")
+                                        st.markdown(f"**Priority:** {recommendation.get('priority', 'Medium')}")
+                                        
+                                        # Show action items if available
+                                        if "action_items" in recommendation and recommendation["action_items"]:
+                                            st.markdown("**Action Items:**")
+                                            for item in recommendation["action_items"]:
+                                                st.markdown(f"- {item}")
+                            else:
+                                st.info("No recommendations available")
                 else:
                     st.info("No findings were identified in this scan.")
 
@@ -1653,14 +1785,30 @@ def render_scan_form():
                             report_data = f.read()
                             
                         st.download_button(
-                            label="Download PDF Report",
+                            label="Download AI Model Scan Report",
                             data=report_data,
                             file_name=f"ai_model_scan_{results.get('scan_id', 'report')}.pdf",
                             mime="application/pdf",
                             key="download_ai_model_report"
                         )
                     except Exception as e:
-                        st.warning(f"Error loading PDF report: {str(e)}")
+                        st.warning(f"Error loading AI Model scan report: {str(e)}")
+                
+                # Display EU AI Act report download if available
+                if "eu_ai_act_report_path" in results and results["eu_ai_act_report_path"]:
+                    try:
+                        with open(results["eu_ai_act_report_path"], "rb") as f:
+                            eu_report_data = f.read()
+                            
+                        st.download_button(
+                            label="Download EU AI Act Compliance Report",
+                            data=eu_report_data,
+                            file_name=f"eu_ai_act_report_{results.get('scan_id', 'report')}.pdf",
+                            mime="application/pdf",
+                            key="download_eu_ai_act_report"
+                        )
+                    except Exception as e:
+                        st.warning(f"Error loading EU AI Act report: {str(e)}")
                         
             except Exception as e:
                 st.error(f"Error displaying AI Model scan results: {str(e)}")
