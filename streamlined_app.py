@@ -1881,27 +1881,89 @@ def render_scan_form():
                 st.metric("Total Findings", results.get('total_findings', len(results.get('findings', [])))  )
                 st.metric("Generated", datetime.now().strftime('%Y-%m-%d'))
             
-            # DIRECT PDF GENERATION - SIMPLEST POSSIBLE APPROACH
+            # MODERN PDF GENERATION
             st.markdown("---")
             st.subheader("Generate Professional PDF Report")
             
             # Add explanation
-            st.markdown("Click the button below to generate a simple GDPR report PDF:")
+            st.info("Generate a professional GDPR compliance report with modern styling.")
             
-            # Ultra simple PDF
-            simple_pdf = """
-%PDF-1.4
+            # Create form for PDF customization
+            with st.form(key="pdf_form"):
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    organization_name = st.text_input("Organization Name", "Your Organization")
+                    certification_type = st.selectbox(
+                        "Certification Type",
+                        ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"]
+                    )
+                
+                with col2:
+                    compliance_score = results.get('compliance_score', 75)
+                    st.metric("Compliance Score", f"{compliance_score}%")
+                    high_risk = results.get('high_risk', 3)
+                    total_findings = results.get('total_findings', len(results.get('findings', [])))
+                
+                # Submit button
+                submit_button = st.form_submit_button(label="Generate Professional PDF", type="primary")
+            
+            if submit_button:
+                # Show a spinner while generating
+                with st.spinner("Generating your professional GDPR report..."):
+                    import time
+                    progress = st.progress(0)
+                    for i in range(100):
+                        time.sleep(0.01)
+                        progress.progress((i + 1)/100)
+                    
+                    try:
+                        # Import the modern PDF generator
+                        from simple_modern_pdf import create_modern_pdf
+                        
+                        # Generate the PDF
+                        pdf_data = create_modern_pdf(
+                            organization_name=organization_name,
+                            compliance_score=compliance_score,
+                            certification_type=certification_type,
+                            high_risk=high_risk,
+                            total_findings=total_findings
+                        )
+                        
+                        # Display download button for the generated PDF
+                        st.download_button(
+                            label="📥 Download Professional GDPR Report",
+                            data=pdf_data,
+                            file_name=f"GDPR_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                            mime="application/pdf",
+                            help="Click to download your professionally styled GDPR report",
+                            use_container_width=True
+                        )
+                        
+                        # Success message
+                        st.success("✅ Professional GDPR Report generated successfully!")
+                        
+                    except ImportError:
+                        # Fallback to simple PDF if the module isn't available
+                        st.error("Could not import the modern PDF generator. Using simple PDF instead.")
+                        
+                        # Create a very basic PDF
+                        simple_pdf = f"""%PDF-1.4
 1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
 3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>>>>>/Contents 4 0 R>>endobj
-4 0 obj<</Length 90>>stream
+4 0 obj<</Length 200>>stream
 BT
 /F1 24 Tf
 50 800 Td
 (GDPR Compliance Report) Tj
 /F1 12 Tf
 0 -50 Td
-(Basic GDPR compliance report) Tj
+(Organization: {organization_name}) Tj
+0 -20 Td
+(Generated: {datetime.now().strftime('%Y-%m-%d')}) Tj
+0 -20 Td
+(Compliance Score: {compliance_score}%) Tj
 ET
 endstream
 endobj
@@ -1914,19 +1976,21 @@ xref
 0000000229 00000 n
 trailer<</Size 5/Root 1 0 R>>
 startxref
-368
-%%EOF
-            """.strip().encode('latin1')
-            
-            # Direct download button - No frills, just works
-            st.download_button(
-                label="📥 Download GDPR Report PDF",
-                data=simple_pdf,
-                file_name="gdpr_report.pdf",
-                mime="application/pdf", 
-                help="Click to download a simple GDPR report PDF",
-                type="primary"
-            )
+478
+%%EOF""".encode('latin1')
+                        
+                        # Display fallback download button
+                        st.download_button(
+                            label="📥 Download GDPR Report (Simple Version)",
+                            data=simple_pdf,
+                            file_name=f"GDPR_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    
+                    except Exception as e:
+                        st.error(f"Error generating PDF: {str(e)}")
+                        st.code(str(e))
         else:
             st.json(results)
 
