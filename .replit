@@ -30,7 +30,7 @@ args = "Standalone GDPR PDF"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Professional GDPR PDF"
+args = "Ultra Simple GDPR PDF"
 
 [[workflows.workflow]]
 name = "Streamlined App"
@@ -60,12 +60,12 @@ args = "streamlit run standalone_gdpr_pdf.py --server.port 5002 --server.headles
 waitForPort = 5002
 
 [[workflows.workflow]]
-name = "Professional GDPR PDF"
+name = "Ultra Simple GDPR PDF"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run simple_gdpr_pdf.py --server.port 5003 --server.headless true"
+args = "streamlit run ultra_simple_gdpr_pdf.py --server.port 5003 --server.headless true"
 waitForPort = 5003
 
 [[ports]]
