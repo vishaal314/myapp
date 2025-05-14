@@ -1887,85 +1887,35 @@ def render_scan_form():
             # Add explanation
             st.info("Generate a professional GDPR compliance report with modern styling.")
             
-            # PROFESSIONAL PDF GENERATION
-            st.subheader("Generate Professional GDPR Report")
+            # SIMPLE PDF GENERATION (similar to other scanners)
+            st.subheader("Download GDPR Report")
             
-            # Form for PDF customization
-            col1, col2 = st.columns(2)
+            # Simple form for basic customization
+            organization_name = st.text_input("Organization Name", "Your Organization")
+            certification_type = st.selectbox(
+                "Certification Type",
+                ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"]
+            )
             
-            with col1:
-                organization_name = st.text_input("Organization Name", "Your Organization")
-                certification_type = st.selectbox(
-                    "Certification Type",
-                    ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"]
-                )
-            
-            with col2:
-                compliance_score = results.get('compliance_score', 75)
-                st.metric("Compliance Score", f"{compliance_score}%")
-                high_risk = results.get('high_risk', 3)
-                total_findings = results.get('total_findings', len(results.get('findings', [])))
-            
-            # Generate PDF button
-            if st.button("Generate Professional PDF", type="primary"):
-                try:
-                    # Show a spinner while generating
-                    with st.spinner("Generating your professional GDPR report..."):
-                        # Import our modern PDF generator
-                        from simple_modern_pdf import create_gdpr_pdf
-                        
-                        # Generate the PDF
-                        pdf_data = create_gdpr_pdf(
-                            organization_name=organization_name,
-                            certification_type=certification_type,
-                            compliance_score=compliance_score,
-                            high_risk=high_risk,
-                            total_findings=total_findings
-                        )
-                        
-                        # Success message
-                        st.success("✓ Your professional GDPR report is ready!")
-                        
-                        # Display download button
-                        st.download_button(
-                            label="Download Professional GDPR Report",
-                            data=pdf_data,
-                            file_name=f"GDPR_Report_{organization_name.replace(' ', '_')}.pdf",
-                            mime="application/pdf",
-                            key="modern_pdf_download",
-                            use_container_width=True
-                        )
-                        
-                        # Preview
-                        st.subheader("What's included in your report:")
-                        st.info(f"""
-                        Your professional GDPR compliance report includes:
-                        
-                        - **Organization**: {organization_name}
-                        - **Certification**: {certification_type}
-                        - **Compliance Score**: {compliance_score}%
-                        - **All 7 GDPR principles** with detailed assessment
-                        - **Risk analysis** for each compliance area
-                        - **Verification details** with unique certificate ID
-                        - **Professional blue styling** with modern design
-                        """)
-                
-                except Exception as e:
-                    st.error(f"Error generating PDF: {str(e)}")
-                    
-                    # Fallback to simple PDF
-                    simple_pdf = b"""%PDF-1.4
+            # Direct download button with pre-generated PDF
+            if st.button("Download GDPR Report", type="primary"):
+                # Create a simple PDF document
+                pdf_content = f"""%PDF-1.4
 1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
 3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>>>>>/Contents 4 0 R>>endobj
-4 0 obj<</Length 90>>stream
+4 0 obj<</Length 150>>stream
 BT
 /F1 24 Tf
 50 800 Td
 (GDPR Compliance Report) Tj
-/F1 12 Tf
+/F1 14 Tf
 0 -50 Td
-(Basic GDPR compliance report) Tj
+(Organization: {organization_name}) Tj
+0 -20 Td
+(Certification: {certification_type}) Tj
+0 -20 Td
+(Generated: {datetime.now().strftime('%Y-%m-%d')}) Tj
 ET
 endstream
 endobj
@@ -1978,17 +1928,30 @@ xref
 0000000229 00000 n
 trailer<</Size 5/Root 1 0 R>>
 startxref
-368
-%%EOF"""
-                    
-                    # Show fallback download button
-                    st.warning("Using fallback simple PDF instead")
-                    st.download_button(
-                        label="Download Simple GDPR Report (Fallback)",
-                        data=simple_pdf,
-                        file_name="Simple_GDPR_Report.pdf",
-                        mime="application/pdf"
-                    )
+428
+%%EOF""".encode('latin1')
+                
+                # Success message
+                st.success("Your GDPR report is ready!")
+                
+                # Display the download button
+                st.download_button(
+                    label="Download GDPR Report",
+                    data=pdf_content,
+                    file_name=f"GDPR_Report_{organization_name.replace(' ', '_')}.pdf",
+                    mime="application/pdf",
+                    key="simple_pdf_download",
+                    use_container_width=True
+                )
+                
+                # Show what's in the report
+                st.info(f"""
+                Your GDPR report includes:
+                
+                - Organization: {organization_name}
+                - Certification: {certification_type}
+                - Generation Date: {datetime.now().strftime('%Y-%m-%d')}
+                """)
         else:
             st.json(results)
 
