@@ -1,101 +1,76 @@
 """
-Simple GDPR PDF Generator
-
-This is a completely standalone, simplified PDF generator for GDPR reports.
+Simple GDPR PDF Generator with Modern Styling
 """
 
 import streamlit as st
-import time
-from datetime import datetime
-from io import BytesIO
+from simple_modern_pdf import create_gdpr_pdf
 
 def main():
-    st.set_page_config(page_title="GDPR PDF Generator", page_icon="🛡️")
+    st.set_page_config(page_title="Professional GDPR PDF Generator", 
+                     page_icon="🔒",
+                     layout="centered")
     
-    st.title("GDPR PDF Generator")
-    st.markdown("Generate a simple GDPR compliance report PDF")
+    st.title("Professional GDPR PDF Generator")
+    st.markdown("### Generate a professionally styled GDPR compliance report")
     
-    # Create a simple form
-    with st.form(key="pdf_form"):
-        # Form inputs
-        organization = st.text_input("Organization Name", value="Your Organization")
-        
-        certification = st.selectbox(
-            "Certification Type",
+    # Form inputs
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        organization_name = st.text_input("Organization Name", "Acme Corporation")
+        certification_type = st.selectbox(
+            "Certification Type", 
             ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"]
         )
-        
-        compliance_score = st.slider("Compliance Score (%)", 0, 100, 75)
-        
-        # Submit button
-        submit_button = st.form_submit_button(label="Generate PDF", type="primary")
-        
-    # Outside the form to avoid form validation issues
-    if submit_button:
-        # Show a spinner during generation
-        with st.spinner("Generating your PDF..."):
-            # Fake progress bar
-            progress = st.progress(0)
-            for i in range(100):
-                time.sleep(0.01)
-                progress.progress((i + 1)/100)
-            
-            # Create a very simple PDF
-            pdf_content = f"""%PDF-1.4
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
-3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>>>>>/Contents 4 0 R>>endobj
-4 0 obj<</Length 300>>stream
-BT
-/F1 24 Tf
-50 800 Td
-(GDPR Compliance Report) Tj
-/F1 12 Tf
-0 -50 Td
-(Organization: {organization}) Tj
-0 -20 Td
-(Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}) Tj
-0 -20 Td
-(Certification: {certification}) Tj
-0 -20 Td
-(Compliance Score: {compliance_score}%) Tj
-ET
-endstream
-endobj
-xref
-0 5
-0000000000 65535 f
-0000000010 00000 n
-0000000053 00000 n
-0000000102 00000 n
-0000000229 00000 n
-trailer<</Size 5/Root 1 0 R>>
-startxref
-578
-%%EOF""".encode('latin1')
-            
-            # Create a BytesIO object from the PDF content
-            pdf_buffer = BytesIO(pdf_content)
-            
-            # Display download button
-            st.download_button(
-                label="Download GDPR Report PDF",
-                data=pdf_buffer,
-                file_name=f"GDPR_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                mime="application/pdf"
+    
+    with col2:
+        compliance_score = st.slider("Compliance Score (%)", 0, 100, 80)
+        high_risk = st.number_input("High Risk Findings", 0, 20, 2)
+        total_findings = st.number_input("Total Findings", 0, 50, 8)
+    
+    # Generate button
+    if st.button("Generate Professional PDF", type="primary"):
+        with st.spinner("Generating your professional GDPR report..."):
+            # Generate PDF
+            pdf_data = create_gdpr_pdf(
+                organization_name=organization_name,
+                certification_type=certification_type,
+                compliance_score=compliance_score,
+                high_risk=high_risk,
+                total_findings=total_findings
             )
             
             # Success message
-            st.success("PDF generated successfully!")
+            st.success("✓ Your professional GDPR report is ready!")
             
-            # Show some info about the generated PDF
-            st.info(f"""
-            Report generated with:
-            - Organization: {organization}
-            - Certification: {certification}
-            - Compliance Score: {compliance_score}%
-            - Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-            """)
+            # Download button
+            st.download_button(
+                label="Download Professional GDPR Report",
+                data=pdf_data,
+                file_name=f"GDPR_Report_{organization_name.replace(' ', '_')}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
+            
+            # Preview
+            with st.expander("What's included in your report"):
+                st.markdown(f"""
+                ### Report Details
+                
+                - **Organization**: {organization_name}
+                - **Certification**: {certification_type}
+                - **Compliance Score**: {compliance_score}%
+                - **All 7 GDPR principles** with detailed assessment
+                - **Risk analysis** for each compliance area
+                - **Verification details** with unique certificate ID
+                - **Professional blue styling** with modern design
+                """)
+                
+                st.info("The PDF contains a professional assessment of GDPR compliance with all seven core principles evaluated in detail.")
+    
+    # Footer
+    st.markdown("---")
+    st.caption("DataGuardian Pro - Advanced Enterprise Privacy Compliance Platform")
 
 if __name__ == "__main__":
     main()
