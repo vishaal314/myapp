@@ -32,6 +32,10 @@ args = "Direct GDPR PDF"
 task = "workflow.run"
 args = "Ultra Simple GDPR PDF"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Simple GDPR PDF"
+
 [[workflows.workflow]]
 name = "Streamlined App"
 author = "agent"
@@ -68,6 +72,15 @@ task = "shell.exec"
 args = "streamlit run ultra_simple_gdpr_pdf.py --server.port 5003 --server.headless true"
 waitForPort = 5003
 
+[[workflows.workflow]]
+name = "Simple GDPR PDF"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run gdpr_pdf_simple.py --server.port 5004 --server.headless true"
+waitForPort = 5004
+
 [[ports]]
 localPort = 5000
 externalPort = 80
@@ -83,6 +96,10 @@ externalPort = 3001
 [[ports]]
 localPort = 5003
 externalPort = 3002
+
+[[ports]]
+localPort = 5004
+externalPort = 4200
 
 [[ports]]
 localPort = 5005
