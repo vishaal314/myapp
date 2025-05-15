@@ -402,8 +402,9 @@ def generate_gdpr_report(scan_results: Dict[str, Any], organization_name: str = 
         # Create detailed criteria sections based on principles
         for principle, total, passed, failed, score in principles_categories:
             # Format the principle name and description
+            principle_description = ""
             if principle == "Lawfulness, Fairness and Transparency":
-                description = "Protection of personal data through lawful processing, fairness and transparency"
+                principle_description = "Protection of personal data through lawful processing, fairness and transparency"
                 subcriteria = [
                     ("Lawful Basis", f"{1 if score > 60 else 0}/1", f"{100 if score > 60 else 0}%"),
                     ("Transparency", f"{1 if score > 65 else 0}/1", f"{100 if score > 65 else 0}%"),
@@ -411,28 +412,28 @@ def generate_gdpr_report(scan_results: Dict[str, Any], organization_name: str = 
                     ("Privacy Notices", f"{1 if score > 75 else 0}/1", f"{100 if score > 75 else 0}%")
                 ]
             elif principle == "Purpose Limitation":
-                description = "Personal data collected for specified, explicit and legitimate purposes"
+                principle_description = "Personal data collected for specified, explicit and legitimate purposes"
                 subcriteria = [
                     ("Explicit Purposes", f"{1 if score > 60 else 0}/1", f"{100 if score > 60 else 0}%"),
                     ("Purpose Documentation", f"{1 if score > 65 else 0}/1", f"{100 if score > 65 else 0}%"),
                     ("Compatible Processing", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%")
                 ]
             elif principle == "Data Minimization":
-                description = "Personal data adequate, relevant and limited to what is necessary"
+                principle_description = "Personal data adequate, relevant and limited to what is necessary"
                 subcriteria = [
                     ("Necessity Assessment", f"{1 if score > 60 else 0}/1", f"{100 if score > 60 else 0}%"),
                     ("Collection Limitation", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
                     ("Minimization By Design", f"{1 if score > 80 else 0}/1", f"{100 if score > 80 else 0}%")
                 ]
             elif principle == "Accuracy":
-                description = "Personal data accurate and, where necessary, kept up to date"
+                principle_description = "Personal data accurate and, where necessary, kept up to date"
                 subcriteria = [
                     ("Accuracy Verification", f"{1 if score > 65 else 0}/1", f"{100 if score > 65 else 0}%"),
                     ("Rectification Process", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
                     ("Data Quality Controls", f"{1 if score > 80 else 0}/1", f"{100 if score > 80 else 0}%")
                 ]
             elif principle == "Storage Limitation":
-                description = "Personal data kept for no longer than necessary for the purposes"
+                principle_description = "Personal data kept for no longer than necessary for the purposes"
                 subcriteria = [
                     ("Retention Periods", f"{1 if score > 60 else 0}/1", f"{100 if score > 60 else 0}%"),
                     ("Deletion Processes", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
@@ -462,7 +463,7 @@ def generate_gdpr_report(scan_results: Dict[str, Any], organization_name: str = 
             
             # Add principle section title and description
             story.append(Paragraph(f"{principle} ({score}%)", subheading_style))
-            story.append(Paragraph(description, normal_style))
+            story.append(Paragraph(principle_description, normal_style))
             
             # Create subcriteria table
             subcriteria_data = [["Principle", "Checks", "Score"]]

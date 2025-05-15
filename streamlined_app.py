@@ -1956,12 +1956,20 @@ def render_scan_form():
                         # Import the report generator
                         from services.gdpr_report_generator import generate_and_save_gdpr_report
                         
-                        # Generate the report
-                        success, report_path, pdf_bytes = generate_and_save_gdpr_report(
-                            scan_results=results,
-                            organization_name=organization_name,
-                            certification_type=certification_type
-                        )
+                        # Generate the report with detailed error handling
+                        try:
+                            success, report_path, pdf_bytes = generate_and_save_gdpr_report(
+                                scan_results=results,
+                                organization_name=organization_name,
+                                certification_type=certification_type
+                            )
+                        except Exception as e:
+                            st.error(f"Detailed error in report generation: {str(e)}")
+                            import traceback
+                            st.code(traceback.format_exc())
+                            success = False
+                            report_path = None
+                            pdf_bytes = None
                         
                         if success and report_path and pdf_bytes:
                             # Update results with report path
