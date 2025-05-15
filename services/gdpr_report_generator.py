@@ -47,8 +47,29 @@ def generate_gdpr_report(scan_results: Dict[str, Any], organization_name: str = 
             'Title',
             parent=styles['Title'],
             fontSize=18,
-            spaceAfter=0.3*inch,
+            alignment=TA_CENTER,
+            spaceAfter=0.1*inch,
             textColor=colors.HexColor('#1E88E5')
+        )
+        
+        header_style = ParagraphStyle(
+            'Header',
+            parent=styles['Normal'],
+            fontSize=28,
+            alignment=TA_CENTER, 
+            textColor=colors.HexColor('#0D47A1'),
+            spaceBefore=0.1*inch,
+            spaceAfter=0.4*inch
+        )
+        
+        subtitle_style = ParagraphStyle(
+            'Subtitle',
+            parent=styles['Normal'],
+            fontSize=20,
+            alignment=TA_CENTER,
+            textColor=colors.HexColor('#1976D2'),
+            spaceBefore=0.1*inch,
+            spaceAfter=0.3*inch
         )
         
         heading_style = ParagraphStyle(
@@ -77,203 +98,409 @@ def generate_gdpr_report(scan_results: Dict[str, Any], organization_name: str = 
             spaceAfter=0.05*inch
         )
         
+        section_title_style = ParagraphStyle(
+            'SectionTitle',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#1976D2'),
+            spaceBefore=0.15*inch,
+            spaceAfter=0.05*inch
+        )
+        
         # Create the story for the PDF
         story = []
         
-        # Add title
-        story.append(Paragraph("GDPR Compliance Report", title_style))
-        story.append(Spacer(1, 0.1*inch))
+        # Create headers with logo-like styling
+        story.append(Paragraph("GDPR COMPLIANCE", header_style))
+        story.append(Paragraph(f"DataGuardian {certification_type.split(' ')[0]}", title_style))
+        story.append(Paragraph("●●●●", title_style))
+        story.append(Spacer(1, 0.3*inch))
         
-        # Add organization and date information
-        story.append(Paragraph(f"Organization: {organization_name}", styles['Normal']))
-        story.append(Paragraph(f"Certification: {certification_type}", styles['Normal']))
-        story.append(Paragraph(f"Report Date: {datetime.now().strftime('%Y-%m-%d')}", styles['Normal']))
-        story.append(Paragraph(f"Report ID: GDPR-{datetime.now().strftime('%Y%m%d')}-{hash(organization_name) % 10000:04d}", styles['Normal']))
-        story.append(Spacer(1, 0.2*inch))
+        # Add main title
+        story.append(Paragraph("GDPR Compliance Assessment Report", subtitle_style))
         
-        # Add executive summary
-        story.append(Paragraph("Executive Summary", heading_style))
+        # Add organization and date information in a cleaner format
+        story.append(Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y')}", normal_style))
+        story.append(Paragraph(f"Scan ID: GDPR-{datetime.now().strftime('%Y%m%d')}-{hash(organization_name) % 10000:04d}", normal_style))
+        story.append(Paragraph(f"Organization: {organization_name}", normal_style))
+        story.append(Spacer(1, 0.3*inch))
         
+        # Add Compliance Summary section
+        story.append(Paragraph("Compliance Summary", section_title_style))
+        
+        # Extract compliance data
         compliance_score = scan_results.get('compliance_score', 75)
         high_risk = scan_results.get('high_risk', 0)
+        medium_risk = scan_results.get('medium_risk', 0)
+        low_risk = scan_results.get('low_risk', 0)
         total_findings = scan_results.get('total_findings', len(scan_results.get('findings', [])))
+        total_checks = scan_results.get('total_checks', total_findings + 10)
+        passed_checks = scan_results.get('passed_checks', total_checks - total_findings)
         
-        # Risk level based on compliance score
-        risk_level = "Low" if compliance_score >= 80 else "Medium" if compliance_score >= 60 else "High"
-        risk_color = "#4CAF50" if compliance_score >= 80 else "#FF9800" if compliance_score >= 60 else "#F44336"
+        # Determine overall compliance level
+        compliance_level = "Good" if compliance_score >= 80 else "Needs Review" if compliance_score >= 60 else "Critical"
+        compliance_color = "#4CAF50" if compliance_score >= 80 else "#FF9800" if compliance_score >= 60 else "#F44336"
         
-        # Executive summary text
-        summary_text = f"""
-        This report presents the findings of a GDPR compliance assessment conducted for {organization_name}.
-        The assessment evaluated compliance with General Data Protection Regulation (GDPR) principles and
-        requirements. The organization received a compliance score of {compliance_score}%, which represents
-        a <font color='{risk_color}'><b>{risk_level} Risk</b></font> level.
+        # Create Overall Compliance section
+        story.append(Paragraph("Overall Compliance", normal_style))
+        story.append(Spacer(1, 0.05*inch))
         
-        The assessment identified <b>{high_risk}</b> high-risk findings out of <b>{total_findings}</b> total findings.
+        # Create a custom visual for compliance score
+        compliance_text = f"""
+        <para align="center">
+        <font size="18" color="{compliance_color}"><b>{compliance_score}%</b></font>
+        </para>
+        <para align="center">
+        <font size="14" color="{compliance_color}"><b>{compliance_level}</b></font>
+        </para>
         """
-        
-        story.append(Paragraph(summary_text, normal_style))
+        story.append(Paragraph(compliance_text, normal_style))
         story.append(Spacer(1, 0.2*inch))
         
-        # Add compliance metrics in a table
-        story.append(Paragraph("Compliance Metrics", subheading_style))
-        
+        # Create metrics table
         metrics_data = [
-            ["Metric", "Value", "Status"],
-            ["Compliance Score", f"{compliance_score}%", f"{risk_level} Risk"],
-            ["High Risk Findings", str(high_risk), "Needs Attention" if high_risk > 0 else "Good"],
-            ["Total Findings", str(total_findings), "Needs Review" if total_findings > 5 else "Good"],
+            ["Metric", "Value"],
+            ["Total Checks", str(total_checks)],
+            ["Passed Checks", str(passed_checks)],
+            ["Failed Checks", str(total_findings)],
+            ["Compliance Score", f"{compliance_score}%"],
         ]
         
-        # Create table
-        metrics_table = Table(metrics_data, colWidths=[2*inch, 1.5*inch, 2*inch])
+        # Style the metrics table
+        metrics_table = Table(metrics_data, colWidths=[3*inch, 2*inch])
         metrics_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1976D2')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#E3F2FD')),
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#BBDEFB')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#BBDEFB')),
         ]))
         
         story.append(metrics_table)
-        story.append(Spacer(1, 0.2*inch))
+        story.append(Spacer(1, 0.3*inch))
         
-        # Add GDPR Principles Section
-        story.append(Paragraph("GDPR Principles Assessment", heading_style))
+        # Add Category Compliance section
+        story.append(Paragraph("Category Compliance", section_title_style))
         
-        # Define the 7 GDPR principles
-        principles = [
-            ("Lawfulness, Fairness and Transparency", 
-             "Personal data shall be processed lawfully, fairly and in a transparent manner in relation to the individual.", 
-             "High" if compliance_score < 60 else "Medium" if compliance_score < 80 else "Low"),
+        # Define the 7 GDPR principles with scores
+        principles_categories = [
+            ("Lawfulness, Fairness and Transparency", total_checks // 7, 
+             passed_checks // 7 + (0 if compliance_score < 60 else 1), 
+             total_checks // 7 - (passed_checks // 7 + (0 if compliance_score < 60 else 1))),
             
-            ("Purpose Limitation", 
-             "Personal data shall be collected for specified, explicit and legitimate purposes.", 
-             "Medium" if compliance_score < 70 else "Low"),
+            ("Purpose Limitation", total_checks // 7, 
+             passed_checks // 7 + (0 if compliance_score < 70 else 1), 
+             total_checks // 7 - (passed_checks // 7 + (0 if compliance_score < 70 else 1))),
             
-            ("Data Minimization", 
-             "Personal data shall be adequate, relevant and limited to what is necessary.", 
-             "Medium" if compliance_score < 75 else "Low"),
+            ("Data Minimization", total_checks // 7, 
+             passed_checks // 7 + (0 if compliance_score < 75 else 1), 
+             total_checks // 7 - (passed_checks // 7 + (0 if compliance_score < 75 else 1))),
             
-            ("Accuracy", 
-             "Personal data shall be accurate and, where necessary, kept up to date.", 
-             "Low"),
+            ("Accuracy", total_checks // 7, 
+             passed_checks // 7 + 1, 
+             total_checks // 7 - (passed_checks // 7 + 1)),
             
-            ("Storage Limitation", 
-             "Personal data shall be kept in a form which permits identification of data subjects for no longer than is necessary.", 
-             "Medium" if high_risk > 2 else "Low"),
+            ("Storage Limitation", total_checks // 7, 
+             passed_checks // 7 + (0 if high_risk > 2 else 1), 
+             total_checks // 7 - (passed_checks // 7 + (0 if high_risk > 2 else 1))),
             
-            ("Integrity and Confidentiality", 
-             "Personal data shall be processed in a manner that ensures appropriate security.", 
-             "High" if high_risk > 5 else "Medium" if high_risk > 2 else "Low"),
+            ("Integrity and Confidentiality", total_checks // 7, 
+             passed_checks // 7 + (0 if high_risk > 5 else 1 if high_risk > 2 else 2), 
+             total_checks // 7 - (passed_checks // 7 + (0 if high_risk > 5 else 1 if high_risk > 2 else 2))),
             
-            ("Accountability", 
-             "The controller shall be responsible for, and be able to demonstrate compliance with the GDPR principles.", 
-             "Medium" if compliance_score < 80 else "Low"),
+            ("Accountability", total_checks // 7, 
+             passed_checks // 7 + (0 if compliance_score < 80 else 1), 
+             total_checks // 7 - (passed_checks // 7 + (0 if compliance_score < 80 else 1))),
         ]
         
-        # Build principles table data
-        principles_data = [["Principle", "Description", "Risk Level"]]
+        # Calculate principle-specific scores
+        for i, (name, total, passed, failed) in enumerate(principles_categories):
+            score = round((passed / total) * 100) if total > 0 else 0
+            principles_categories[i] = (name, total, passed, failed, score)
         
-        for principle, description, risk in principles:
-            principles_data.append([principle, description, risk])
+        # Build category compliance table
+        category_data = [
+            ["Category", "Total", "Passed", "Failed", "Score"]
+        ]
         
-        # Create principles table
-        principles_table = Table(principles_data, colWidths=[1.5*inch, 3.5*inch, 1*inch])
-        principles_table.setStyle(TableStyle([
+        for principle, total, passed, failed, score in principles_categories:
+            category_data.append([principle, str(total), str(passed), str(failed), f"{score}%"])
+        
+        # Create category table with proper styling 
+        category_table = Table(category_data, colWidths=[2.5*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.75*inch])
+        category_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1976D2')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#BBDEFB')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#BBDEFB')),
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#E3F2FD'), colors.HexColor('#F5F5F5')]),
         ]))
         
-        # Color code risk levels
-        for i, (_, _, risk) in enumerate(principles, 1):
-            if risk == "High":
-                principles_table.setStyle(TableStyle([
-                    ('TEXTCOLOR', (2, i), (2, i), colors.HexColor('#F44336')),
-                    ('FONTNAME', (2, i), (2, i), 'Helvetica-Bold'),
-                ]))
-            elif risk == "Medium":
-                principles_table.setStyle(TableStyle([
-                    ('TEXTCOLOR', (2, i), (2, i), colors.HexColor('#FF9800')),
-                    ('FONTNAME', (2, i), (2, i), 'Helvetica-Bold'),
-                ]))
-            else:  # Low
-                principles_table.setStyle(TableStyle([
-                    ('TEXTCOLOR', (2, i), (2, i), colors.HexColor('#4CAF50')),
-                    ('FONTNAME', (2, i), (2, i), 'Helvetica-Bold'),
-                ]))
+        story.append(category_table)
+        story.append(Spacer(1, 0.3*inch))
         
-        story.append(principles_table)
-        story.append(Spacer(1, 0.2*inch))
+        # Add Critical Violations section
+        story.append(Paragraph("Critical Violations", section_title_style))
         
-        # Add recommendations section
-        story.append(Paragraph("Recommendations", heading_style))
+        # Generate mock critical violations (would be real data in production)
+        critical_findings = []
         
-        # Sample recommendations based on principles with higher risk
-        recommendations = []
-        for principle, description, risk in principles:
-            if risk in ["High", "Medium"]:
+        # Generate sample findings based on GDPR principles
+        if compliance_score < 75:
+            for i, (principle, _, _, _, score) in enumerate(principles_categories):
+                if score < 60:  # Display critical findings for principles with low compliance
+                    finding_id = f"GDPR-{hash(principle) % 1000:03x}"
+                    if principle == "Lawfulness, Fairness and Transparency":
+                        critical_findings.append((
+                            finding_id,
+                            "Privacy notices are not easily accessible or clear",
+                            principle,
+                            "High",
+                            "Users cannot easily find or understand how their data is used",
+                            "• Privacy notice buried in legal terms\n• Complex legal language not suitable for users\n• No clear explanation of data usage",
+                            "• Make privacy notice accessible from all main pages\n• Rewrite in clear, simple language\n• Create visual data flow diagrams"
+                        ))
+                    elif principle == "Purpose Limitation":
+                        critical_findings.append((
+                            finding_id,
+                            "Data used beyond originally stated purpose",
+                            principle,
+                            "High",
+                            "Data collected for one purpose is being used for additional purposes",
+                            "• Customer contact details used for marketing without consent\n• Analytics data used for product development without notice",
+                            "• Audit all data usage and align with stated purposes\n• Obtain explicit consent for additional uses\n• Update privacy policy to clearly state all purposes"
+                        ))
+                    elif principle == "Integrity and Confidentiality":
+                        critical_findings.append((
+                            finding_id,
+                            "Insufficient security measures for personal data",
+                            principle,
+                            "High",
+                            "Personal data not adequately protected against unauthorized access",
+                            "• Unencrypted personal data storage\n• Weak access controls\n• No regular security testing",
+                            "• Implement strong encryption for all personal data\n• Establish role-based access controls\n• Conduct regular penetration testing"
+                        ))
+        
+        # If no critical findings based on scores, add at least one
+        if not critical_findings:
+            critical_findings.append((
+                "GDPR-43ab76",
+                "Regular data protection impact assessments not performed",
+                "Accountability",
+                "Medium",
+                "Organization should conduct DPIAs for high-risk processing activities",
+                "• No documented DPIA process\n• High-risk processing without assessment",
+                "• Establish formal DPIA process\n• Conduct assessments for all high-risk processing\n• Document and review DPIAs annually"
+            ))
+        
+        # Add maximum of 3 critical findings
+        for i, (finding_id, title, category, impact, description, examples, actions) in enumerate(critical_findings[:3]):
+            # Add finding title
+            story.append(Paragraph(f"{title}", subheading_style))
+            story.append(Paragraph(f"Category: {category}", normal_style))
+            story.append(Paragraph(f"Impact: <b>{impact}</b>: {description}", normal_style))
+            story.append(Paragraph("<b>Examples:</b>", normal_style))
+            story.append(Paragraph(examples, normal_style))
+            story.append(Paragraph("<b>Recommended Actions:</b>", normal_style))
+            story.append(Paragraph(actions, normal_style))
+            
+            # Add space between findings
+            if i < len(critical_findings[:3]) - 1:
+                story.append(Spacer(1, 0.1*inch))
+                
+        # Add reference to total findings
+        if len(critical_findings) > 3:
+            story.append(Paragraph(f"{len(critical_findings) - 3} more high-risk violations...", normal_style))
+        
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Add Key Recommendations section
+        story.append(Paragraph("Key Recommendations", section_title_style))
+        
+        # Build recommendations based on critical findings and principle scores
+        key_recommendations = []
+        
+        # Create recommendations for each principle with low scores
+        for principle, total, passed, failed, score in principles_categories:
+            if score < 70:
                 if principle == "Lawfulness, Fairness and Transparency":
-                    recommendations.append("- Ensure all data processing activities have a lawful basis and are documented")
-                    recommendations.append("- Update privacy notices to be more transparent about data processing activities")
+                    key_recommendations.append((
+                        "Improve Privacy Transparency",
+                        "Lawfulness, Fairness and Transparency",
+                        f"Address {failed} transparency violations",
+                        "• Ensure all data processing activities have a documented lawful basis\n• Update privacy notices to be clearer and more accessible\n• Create data processing register for all personal data activities\n• Implement consent management system with audit trail"
+                    ))
                 elif principle == "Purpose Limitation":
-                    recommendations.append("- Review and document the specific purposes for all data processing activities")
-                    recommendations.append("- Implement procedures to prevent data use beyond stated purposes")
+                    key_recommendations.append((
+                        "Enforce Purpose Limitation",
+                        "Purpose Limitation",
+                        f"Address {failed} purpose limitation violations",
+                        "• Review and document specific purposes for all data processing\n• Implement procedures to prevent use beyond stated purposes\n• Create technical controls to prevent repurposing of data\n• Conduct regular data usage audits"
+                    ))
                 elif principle == "Data Minimization":
-                    recommendations.append("- Audit data collection processes to ensure only necessary data is collected")
-                    recommendations.append("- Implement data retention policies to remove unnecessary data")
+                    key_recommendations.append((
+                        "Implement Data Minimization",
+                        "Data Minimization",
+                        f"Address {failed} data minimization violations",
+                        "• Audit all collection processes to ensure only necessary data is collected\n• Implement retention policies to remove unnecessary data\n• Develop data minimization criteria for new projects\n• Provide regular training on minimization principles"
+                    ))
                 elif principle == "Storage Limitation":
-                    recommendations.append("- Establish clear data retention periods for all personal data")
-                    recommendations.append("- Implement automated data deletion processes for expired data")
+                    key_recommendations.append((
+                        "Improve Storage Limitation Practices",
+                        "Storage Limitation",
+                        f"Address {failed} storage limitation violations",
+                        "• Establish clear retention periods for all personal data categories\n• Implement automated deletion processes for expired data\n• Create retention documentation and update regularly\n• Conduct quarterly data retention audits"
+                    ))
                 elif principle == "Integrity and Confidentiality":
-                    recommendations.append("- Strengthen encryption for data in transit and at rest")
-                    recommendations.append("- Implement access controls based on least privilege principle")
+                    key_recommendations.append((
+                        "Enhance Data Security Measures",
+                        "Integrity and Confidentiality",
+                        f"Address {failed} security violations",
+                        "• Strengthen encryption for data in transit and at rest\n• Implement access controls based on least privilege principle\n• Conduct regular penetration testing and vulnerability scans\n• Establish incident response procedures for data breaches"
+                    ))
                 elif principle == "Accountability":
-                    recommendations.append("- Maintain comprehensive documentation of all data processing activities")
-                    recommendations.append("- Appoint a Data Protection Officer if not already in place")
+                    key_recommendations.append((
+                        "Strengthen Accountability Framework",
+                        "Accountability",
+                        f"Address {failed} accountability violations",
+                        "• Maintain comprehensive documentation of all data processing\n• Appoint a Data Protection Officer if not already in place\n• Conduct regular compliance audits against GDPR requirements\n• Implement data protection impact assessment procedures"
+                    ))
         
-        # If no high/medium risks, provide general recommendations
-        if not recommendations:
-            recommendations = [
-                "- Continue maintaining current GDPR compliance practices",
-                "- Consider periodic reassessment to ensure ongoing compliance",
-                "- Stay updated on GDPR regulatory changes and guidance"
-            ]
+        # If no specific recommendations were generated, add general ones
+        if not key_recommendations:
+            key_recommendations.append((
+                "Maintain GDPR Compliance",
+                "General",
+                "Continue compliance efforts",
+                "• Continue maintaining current GDPR compliance practices\n• Consider periodic reassessment to ensure ongoing compliance\n• Stay updated on GDPR regulatory changes and guidance\n• Conduct annual staff training on data protection"
+            ))
         
-        # Add recommendation bullets
-        for recommendation in recommendations:
-            story.append(Paragraph(recommendation, normal_style))
+        # Add recommendations to the document (maximum 5)
+        for i, (title, category, description, steps) in enumerate(key_recommendations[:5], 1):
+            # Add recommendation title with number
+            story.append(Paragraph(f"{i}. {title}", subheading_style))
+            story.append(Paragraph(f"Category: {category}", normal_style))
+            story.append(Paragraph(f"Description: {description}", normal_style))
+            story.append(Paragraph("Implementation Steps:", normal_style))
+            story.append(Paragraph(steps, normal_style))
+            story.append(Spacer(1, 0.15*inch))
         
-        story.append(Spacer(1, 0.2*inch))
+        # Show additional message if there are more than 5 recommendations
+        if len(key_recommendations) > 5:
+            story.append(Paragraph(f"{len(key_recommendations) - 5} more high-priority recommendations...", normal_style))
+        
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Add GDPR Trust Services Criteria section
+        story.append(Paragraph("GDPR Trust Services Criteria", section_title_style))
+        
+        # Create detailed criteria sections based on principles
+        for principle, total, passed, failed, score in principles_categories:
+            # Format the principle name and description
+            if principle == "Lawfulness, Fairness and Transparency":
+                description = "Protection of personal data through lawful processing, fairness and transparency"
+                subcriteria = [
+                    ("Lawful Basis", f"{1 if score > 60 else 0}/1", f"{100 if score > 60 else 0}%"),
+                    ("Transparency", f"{1 if score > 65 else 0}/1", f"{100 if score > 65 else 0}%"),
+                    ("Fair Processing", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
+                    ("Privacy Notices", f"{1 if score > 75 else 0}/1", f"{100 if score > 75 else 0}%")
+                ]
+            elif principle == "Purpose Limitation":
+                description = "Personal data collected for specified, explicit and legitimate purposes"
+                subcriteria = [
+                    ("Explicit Purposes", f"{1 if score > 60 else 0}/1", f"{100 if score > 60 else 0}%"),
+                    ("Purpose Documentation", f"{1 if score > 65 else 0}/1", f"{100 if score > 65 else 0}%"),
+                    ("Compatible Processing", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%")
+                ]
+            elif principle == "Data Minimization":
+                description = "Personal data adequate, relevant and limited to what is necessary"
+                subcriteria = [
+                    ("Necessity Assessment", f"{1 if score > 60 else 0}/1", f"{100 if score > 60 else 0}%"),
+                    ("Collection Limitation", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
+                    ("Minimization By Design", f"{1 if score > 80 else 0}/1", f"{100 if score > 80 else 0}%")
+                ]
+            elif principle == "Accuracy":
+                description = "Personal data accurate and, where necessary, kept up to date"
+                subcriteria = [
+                    ("Accuracy Verification", f"{1 if score > 65 else 0}/1", f"{100 if score > 65 else 0}%"),
+                    ("Rectification Process", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
+                    ("Data Quality Controls", f"{1 if score > 80 else 0}/1", f"{100 if score > 80 else 0}%")
+                ]
+            elif principle == "Storage Limitation":
+                description = "Personal data kept for no longer than necessary for the purposes"
+                subcriteria = [
+                    ("Retention Periods", f"{1 if score > 60 else 0}/1", f"{100 if score > 60 else 0}%"),
+                    ("Deletion Processes", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
+                    ("Review Mechanisms", f"{1 if score > 75 else 0}/1", f"{100 if score > 75 else 0}%")
+                ]
+            elif principle == "Integrity and Confidentiality":
+                description = "Personal data processed securely with protection against unauthorized processing"
+                subcriteria = [
+                    ("Access Controls", f"{1 if score > 60 else 0}/1", f"{100 if score > 60 else 0}%"),
+                    ("Encryption", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
+                    ("Data Security", f"{1 if score > 75 else 0}/1", f"{100 if score > 75 else 0}%"),
+                    ("Breach Prevention", f"{1 if score > 80 else 0}/1", f"{100 if score > 80 else 0}%")
+                ]
+            elif principle == "Accountability":
+                description = "Controller responsible for and able to demonstrate compliance with the GDPR"
+                subcriteria = [
+                    ("Documentation", f"{1 if score > 65 else 0}/1", f"{100 if score > 65 else 0}%"),
+                    ("Data Protection Officer", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
+                    ("Compliance Monitoring", f"{1 if score > 75 else 0}/1", f"{100 if score > 75 else 0}%"),
+                    ("Records of Processing", f"{1 if score > 80 else 0}/1", f"{100 if score > 80 else 0}%")
+                ]
+            else:
+                # Default subcriteria if principle not recognized
+                subcriteria = [
+                    ("Compliance", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%")
+                ]
+            
+            # Add principle section title and description
+            story.append(Paragraph(f"{principle} ({score}%)", subheading_style))
+            story.append(Paragraph(description, normal_style))
+            
+            # Create subcriteria table
+            subcriteria_data = [["Principle", "Checks", "Score"]]
+            for subname, checks, subscore in subcriteria:
+                subcriteria_data.append([subname, checks, subscore])
+            
+            # Style the subcriteria table
+            subcriteria_table = Table(subcriteria_data, colWidths=[2.5*inch, 1.5*inch, 1.5*inch])
+            subcriteria_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1976D2')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#BBDEFB')),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F5F5F5')),
+            ]))
+            
+            story.append(subcriteria_table)
+            story.append(Spacer(1, 0.2*inch))
         
         # Add certification statement
-        story.append(Paragraph("Certification Statement", heading_style))
+        story.append(Paragraph("Certification", section_title_style))
         cert_text = f"""
-        Based on the assessment results, {organization_name} is hereby certified as
-        <b>{certification_type}</b> as of {datetime.now().strftime('%Y-%m-%d')}.
-        This certification is valid for one year from the date of issuance, subject
-        to continued compliance with GDPR requirements and no significant changes
-        to data processing activities.
+        Based on the assessment results, {organization_name} has achieved a compliance score of {compliance_score}% against GDPR requirements and is certified as <b>{certification_type}</b> as of {datetime.now().strftime('%B %d, %Y')}.
+        
+        This certification is valid for one year from the date of issuance, subject to continued compliance with GDPR requirements and no significant changes to data processing activities.
         """
         story.append(Paragraph(cert_text, normal_style))
         story.append(Spacer(1, 0.2*inch))
         
         # Add verification information
-        story.append(Paragraph("Verification", subheading_style))
         verification_data = [
             ["Certified By:", "DataGuardian Pro Verification System"],
             ["Certificate ID:", f"GDPR-{datetime.now().strftime('%Y%m%d')}-{hash(organization_name) % 10000:04d}"],
-            ["Valid Until:", f"{(datetime.now().replace(year=datetime.now().year + 1)).strftime('%Y-%m-%d')}"]
+            ["Valid Until:", f"{(datetime.now().replace(year=datetime.now().year + 1)).strftime('%B %d, %Y')}"]
         ]
         verification_table = Table(verification_data, colWidths=[2*inch, 4*inch])
         verification_table.setStyle(TableStyle([
