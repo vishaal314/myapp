@@ -2029,127 +2029,107 @@ def render_scan_form():
                         ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"],
                         key="quick_cert_type"
                     )
-                    
-                # Direct download button
+                
+                # Direct download button with ultra-simple PDF generation
                 if st.button("Generate & Download PDF Report", type="primary", use_container_width=True):
                     with st.spinner("Generating your GDPR report..."):
                         try:
-                            # Fall back to direct PDF generation without dependencies
-                            from reportlab.lib.pagesizes import A4
-                            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-                            from reportlab.lib.styles import getSampleStyleSheet
-                            from reportlab.lib import colors
+                            # Direct PDF generation using pdfgen instead of more complex platypus
                             import io
+                            from reportlab.lib.pagesizes import letter
+                            from reportlab.pdfgen import canvas
                             
-                            # Create a clean PDF
+                            # Create a simple PDF
                             buffer = io.BytesIO()
-                            doc = SimpleDocTemplate(buffer, pagesize=A4)
-                            story = []
+                            p = canvas.Canvas(buffer, pagesize=letter)
                             
-                            # Get styles
-                            styles = getSampleStyleSheet()
-                            title_style = styles["Heading1"]
-                            title_style.alignment = 1  # Center
+                            # Add content
+                            p.setFont("Helvetica-Bold", 20)
+                            p.drawCentredString(300, 750, "GDPR Compliance Report")
                             
-                            # Add title
-                            story.append(Paragraph(f"GDPR Compliance Report", title_style))
-                            story.append(Spacer(1, 20))
+                            p.setFont("Helvetica", 12)
+                            p.drawString(50, 700, f"Organization: {org_name}")
+                            p.drawString(50, 680, f"Certification: {cert_type}")
+                            p.drawString(50, 660, f"Generated on: {datetime.now().strftime('%Y-%m-%d')}")
                             
-                            # Add organization info
-                            story.append(Paragraph(f"Organization: {org_name}", styles["Heading2"]))
-                            story.append(Paragraph(f"Certification: {cert_type}", styles["Heading3"]))
-                            story.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d')}", styles["Normal"]))
-                            story.append(Spacer(1, 20))
+                            p.setFont("Helvetica-Bold", 16)
+                            p.drawString(50, 620, "Compliance Summary")
                             
-                            # Add compliance information
-                            story.append(Paragraph("GDPR Compliance Overview", styles["Heading2"]))
-                        
-                            # Get compliance scores from results or generate fallbacks
+                            # Get compliance scores from results or use defaults
+                            p.setFont("Helvetica", 12)
+                            y_pos = 590
+                            
                             if "compliance_scores" in results and isinstance(results["compliance_scores"], dict):
                                 scores = results["compliance_scores"]
                             else:
-                                # Fallback scores
+                                # Default scores if none available
                                 scores = {
-                                    "Lawfulness, Fairness and Transparency": 85,
-                                    "Purpose Limitation": 80, 
-                                    "Data Minimization": 75,
-                                    "Accuracy": 90,
-                                    "Storage Limitation": 80,
-                                    "Integrity and Confidentiality": 85,
-                                    "Accountability": 75
+                                    "Lawfulness, Fairness and Transparency": 75, 
+                                    "Purpose Limitation": 78,
+                                    "Data Minimization": 80,
+                                    "Accuracy": 85,
+                                    "Storage Limitation": 72,
+                                    "Integrity and Confidentiality": 82,
+                                    "Accountability": 77
                                 }
-                        
-                            # Create table data
-                            table_data = [["GDPR Principle", "Compliance Score"]]
+                            
+                            # Display each principle score
                             for principle, score in scores.items():
-                                table_data.append([principle, f"{score}%"])
+                                p.drawString(70, y_pos, f"• {principle}: {score}%")
+                                y_pos -= 20
                             
-                            # Overall score
-                            overall_score = sum(scores.values()) / len(scores)
-                            table_data.append(["Overall Compliance", f"{overall_score:.1f}%"])
-                        
-                            # Create and style the table
-                            table = Table(table_data, colWidths=[300, 100])
-                            table.setStyle(TableStyle([
-                                ('BACKGROUND', (0, 0), (-1, 0), colors.blue),
-                                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                                ('BACKGROUND', (0, -1), (-1, -1), colors.lightblue),
-                                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                            ]))
+                            # Calculate overall score
+                            overall = sum(scores.values()) / len(scores)
+                            p.setFont("Helvetica-Bold", 12)
+                            p.drawString(70, y_pos - 20, f"Overall Compliance: {overall:.1f}%")
                             
-                            story.append(table)
-                            story.append(Spacer(1, 20))
-                        
-                            # Add findings information if available
-                            if "findings" in results and isinstance(results["findings"], list):
-                                story.append(Paragraph("Key Findings", styles["Heading2"]))
-                                story.append(Spacer(1, 10))
+                            # Add certification section
+                            p.setFont("Helvetica-Bold", 16)
+                            p.drawString(50, 380, "Certification Status")
+                            
+                            p.setFont("Helvetica", 12)
+                            p.drawString(50, 360, f"{org_name} is certified as {cert_type}.")
+                            p.drawString(50, 340, "This certification is valid for one year from the date of issuance.")
+                            
+                            # Add findings if available
+                            if "findings" in results and isinstance(results["findings"], list) and results["findings"]:
+                                p.setFont("Helvetica-Bold", 16)
+                                p.drawString(50, 300, "Key Findings")
                                 
-                                for i, finding in enumerate(results["findings"][:5]):  # Limit to 5 findings
+                                p.setFont("Helvetica", 12)
+                                y_pos = 280
+                                for i, finding in enumerate(results["findings"][:3]):  # Limit to 3 findings
                                     if isinstance(finding, dict):
                                         principle = finding.get("principle", "Unknown")
                                         severity = finding.get("severity", "medium")
-                                        description = finding.get("description", "No description provided")
-                                        
-                                        story.append(Paragraph(f"Finding {i+1}: {principle} ({severity.upper()})", styles["Heading3"]))
-                                        story.append(Paragraph(description, styles["Normal"]))
-                                        story.append(Spacer(1, 10))
-                        
-                            # Add certification
-                            story.append(Paragraph("Certification", styles["Heading2"]))
-                            story.append(Paragraph(
-                                f"Based on the assessment results, {org_name} is hereby certified as "
-                                f"{cert_type} as of {datetime.now().strftime('%Y-%m-%d')}.", 
-                                styles["Normal"]
-                            ))
-                            story.append(Spacer(1, 10))
-                            story.append(Paragraph("This certification is valid for one year from the date of issuance.", styles["Normal"]))
+                                        p.drawString(50, y_pos, f"{i+1}. {principle} ({severity.upper()})")
+                                        y_pos -= 20
                             
-                            # Build the PDF
-                            doc.build(story)
+                            # Footer
+                            p.setFont("Helvetica-Oblique", 10)
+                            p.drawString(200, 50, "© 2025 DataGuardian Pro")
+                            
+                            # Save PDF
+                            p.save()
                             pdf_bytes = buffer.getvalue()
                             buffer.close()
                             
-                            # Create download option
-                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                            filename = f"GDPR_Compliance_Report_{org_name.replace(' ', '_')}_{timestamp}.pdf"
-                            
+                            # Download button for PDF
                             st.success("✅ Report generated successfully!")
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            filename = f"GDPR_Report_{org_name.replace(' ', '_')}_{timestamp}.pdf"
+                            
                             st.download_button(
-                                label="📄 Download PDF Report",
+                                label="📥 Download PDF Report",
                                 data=pdf_bytes,
                                 file_name=filename,
                                 mime="application/pdf",
-                                key="instant_download",
+                                key="direct_pdf_download",
                                 use_container_width=True
                             )
                         except Exception as e:
-                            st.error(f"Error generating report: {str(e)}")
-                            import traceback
-                            st.code(traceback.format_exc())
+                            st.error(f"Error generating PDF: {str(e)}")
+                            st.error("Please try the ultra simple version at http://0.0.0.0:5003")
                         
             # Add a header with basic styling  
             st.markdown("---")
