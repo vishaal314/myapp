@@ -66,6 +66,10 @@ def main():
     # Handle report generation
     if submit_button or download_button:
         with st.spinner("Generating professional GDPR report..."):
+            # Check which button was clicked
+            button_clicked = "Generate" if submit_button else "Download"
+            st.info(f"Processing {button_clicked} request...")
+            
             # Generate random data for the report
             compliance_score = random.randint(60, 95)
             high_risk = random.randint(0, 5)
