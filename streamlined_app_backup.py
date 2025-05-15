@@ -1865,25 +1865,18 @@ def render_scan_form():
             # Display the scan results
             st.json(results)
             
-            # Add links to our dedicated report generators
-            st.markdown("## 📥 GDPR Report Options")
-            st.info("For reliable PDF report generation, please use one of our dedicated report generators below.")
+            # Add an immediate download section at the top
+            st.markdown("## 📥 Download GDPR Compliance Report")
             
-            # Create columns for the buttons
-            report_btn1, report_btn2, report_btn3 = st.columns(3)
+            # Create download options with tabs
+            report_tabs = st.tabs(["HTML Report", "PDF Report"])
             
-            # Add buttons to launch dedicated report generators
-            with report_btn1:
-                if st.button("Ultra Simple PDF Generator", key="ultra_simple"):
-                    st.markdown("[Open Ultra Simple PDF Generator](http://0.0.0.0:5003)", unsafe_allow_html=True)
-                    
-            with report_btn2:
-                if st.button("Reliable PDF Generator", key="reliable"):
-                    st.markdown("[Open Reliable PDF Generator](http://0.0.0.0:5005)", unsafe_allow_html=True)
-                    
-            with report_btn3:
-                if st.button("Direct PDF Generator", key="direct"):
-                    st.markdown("[Open Direct PDF Generator](http://0.0.0.0:5002)", unsafe_allow_html=True)
+            # HTML Report Tab
+            with report_tabs[0]:
+                # Simple HTML report (no inputs needed)
+                if st.button("Download HTML Report", type="primary", use_container_width=True):
+                    # Generate HTML report
+                    html_content = f"""
                     <!DOCTYPE html>
                     <html>
                     <head>
