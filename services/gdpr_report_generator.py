@@ -440,7 +440,7 @@ def generate_gdpr_report(scan_results: Dict[str, Any], organization_name: str = 
                     ("Review Mechanisms", f"{1 if score > 75 else 0}/1", f"{100 if score > 75 else 0}%")
                 ]
             elif principle == "Integrity and Confidentiality":
-                description = "Personal data processed securely with protection against unauthorized processing"
+                principle_description = "Personal data processed securely with protection against unauthorized processing"
                 subcriteria = [
                     ("Access Controls", f"{1 if score > 60 else 0}/1", f"{100 if score > 60 else 0}%"),
                     ("Encryption", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
@@ -448,7 +448,7 @@ def generate_gdpr_report(scan_results: Dict[str, Any], organization_name: str = 
                     ("Breach Prevention", f"{1 if score > 80 else 0}/1", f"{100 if score > 80 else 0}%")
                 ]
             elif principle == "Accountability":
-                description = "Controller responsible for and able to demonstrate compliance with the GDPR"
+                principle_description = "Controller responsible for and able to demonstrate compliance with the GDPR"
                 subcriteria = [
                     ("Documentation", f"{1 if score > 65 else 0}/1", f"{100 if score > 65 else 0}%"),
                     ("Data Protection Officer", f"{1 if score > 70 else 0}/1", f"{100 if score > 70 else 0}%"),
