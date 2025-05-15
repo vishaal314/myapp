@@ -2169,8 +2169,73 @@ startxref
         else:
             st.json(results)
 
+def direct_gdpr_pdf_download():
+    """Direct GDPR PDF generator with no dependencies"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib import colors
+    import io
+    
+    # Create basic PDF
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    story = []
+    
+    # Get styles
+    styles = getSampleStyleSheet()
+    title_style = styles["Heading1"]
+    title_style.alignment = 1  # Center
+    
+    # Get parameters
+    organization_name = "Your Organization"
+    certification_type = "GDPR Compliant"
+    
+    # Add title
+    story.append(Paragraph(f"GDPR Compliance Report", title_style))
+    story.append(Spacer(1, 20))
+    
+    # Add organization info
+    story.append(Paragraph(f"Organization: {organization_name}", styles["Heading2"]))
+    story.append(Paragraph(f"Certification: {certification_type}", styles["Heading3"]))
+    story.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d')}", styles["Normal"]))
+    
+    # Build the PDF
+    doc.build(story)
+    return buffer.getvalue()
+
 def render_reports_section():
     """Render reports section"""
+    # Add direct GDPR PDF download at the top
+    st.markdown("### Quick GDPR Report Download")
+    
+    # Simple download button
+    if st.button("Download GDPR PDF Report", type="primary"):
+        with st.spinner("Creating PDF..."):
+            try:
+                # Generate PDF
+                pdf_bytes = direct_gdpr_pdf_download()
+                
+                # Create filename
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"GDPR_Report_{timestamp}.pdf"
+                
+                # Show success
+                st.success("✅ PDF report created!")
+                
+                # Download button
+                st.download_button(
+                    label="📥 Download PDF Now",
+                    data=pdf_bytes,
+                    file_name=filename,
+                    mime="application/pdf",
+                    use_container_width=True,
+                    key="direct_pdf_now"
+                )
+            except Exception as e:
+                st.error(f"Error creating PDF: {str(e)}")
+                
+    st.markdown("---")
     st.subheader("Compliance Reports")
     
     if not st.session_state.scan_history:
