@@ -14,10 +14,19 @@ import io
 
 # Import the report generator if available
 try:
+    # Try importing from services first
     from services.gdpr_report_generator import generate_gdpr_report
     HAVE_GENERATOR = True
 except ImportError:
-    HAVE_GENERATOR = False
+    try:
+        # Try importing from standalone module
+        from gdpr_report_generator_standalone import generate_gdpr_report
+        HAVE_GENERATOR = True
+    except ImportError:
+        HAVE_GENERATOR = False
+        # Define a fallback generator function to avoid undefined errors
+        def generate_gdpr_report(scan_results, organization_name, certification_type):
+            return create_simple_pdf(organization_name, certification_type)
 
 def create_simple_pdf(organization_name, certification_type):
     """Create a simple fallback PDF if the main generator fails"""
