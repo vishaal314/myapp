@@ -33,12 +33,24 @@ def main():
                 ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified", "Dutch GDPR (UAVG) Verified"]
             )
             
-            # Form submission button
-            submit_button = st.form_submit_button(
-                label="Generate Professional Report",
-                type="primary",
-                use_container_width=True
-            )
+            # Create two columns for buttons
+            form_col1, form_col2 = st.columns(2)
+            
+            with form_col1:
+                # Generate button
+                submit_button = st.form_submit_button(
+                    label="Generate Report",
+                    type="primary",
+                    use_container_width=True
+                )
+            
+            with form_col2:
+                # Download button
+                download_button = st.form_submit_button(
+                    label="Download Report",
+                    type="secondary",
+                    use_container_width=True
+                )
     
     with col2:
         st.markdown("#### Report Features")
@@ -52,7 +64,7 @@ def main():
         """)
     
     # Handle report generation
-    if submit_button:
+    if submit_button or download_button:
         with st.spinner("Generating professional GDPR report..."):
             # Generate random data for the report
             compliance_score = random.randint(60, 95)

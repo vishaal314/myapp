@@ -1927,12 +1927,24 @@ def render_scan_form():
                         ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"]
                     )
                     
-                    # Form submit button
-                    submit_button = st.form_submit_button(
-                        label="Generate Professional Report",
-                        type="primary",
-                        use_container_width=True
-                    )
+                    # Create two columns for buttons
+                    form_col1, form_col2 = st.columns(2)
+                    
+                    with form_col1:
+                        # Form submit button to generate
+                        submit_button = st.form_submit_button(
+                            label="Generate Report",
+                            type="primary",
+                            use_container_width=True
+                        )
+                    
+                    with form_col2:
+                        # Direct download button
+                        download_button = st.form_submit_button(
+                            label="Download Report",
+                            type="secondary",
+                            use_container_width=True
+                        )
             
             with report_col2:
                 # Show report preview or stats
@@ -1950,56 +1962,89 @@ def render_scan_form():
                 """)
             
             # Handle report generation after form submission
-            if submit_button:
+            if submit_button or download_button:
                 with st.spinner("Generating professional GDPR report..."):
                     try:
                         # Import the report generator
-                        from services.gdpr_report_generator import generate_and_save_gdpr_report
+                        from services.gdpr_report_generator import generate_and_save_gdpr_report, generate_gdpr_report
                         
-                        # Generate the report with detailed error handling
-                        try:
-                            success, report_path, pdf_bytes = generate_and_save_gdpr_report(
-                                scan_results=results,
-                                organization_name=organization_name,
-                                certification_type=certification_type
-                            )
-                        except Exception as e:
-                            st.error(f"Detailed error in report generation: {str(e)}")
-                            import traceback
-                            st.code(traceback.format_exc())
-                            success = False
-                            report_path = None
-                            pdf_bytes = None
+                        # If download button was clicked, generate and immediately download
+                        if download_button:
+                            try:
+                                # Generate the PDF directly
+                                pdf_bytes = generate_gdpr_report(
+                                    scan_results=results,
+                                    organization_name=organization_name,
+                                    certification_type=certification_type
+                                )
+                                
+                                if pdf_bytes:
+                                    # Generate timestamp for filename
+                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                    file_name = f"gdpr_compliance_report_{organization_name.replace(' ', '_')}_{timestamp}.pdf"
+                                    
+                                    # Immediately trigger download
+                                    st.success("✅ GDPR report ready for download!")
+                                    st.download_button(
+                                        label="📥 Download GDPR Report",
+                                        data=pdf_bytes,
+                                        file_name=file_name,
+                                        mime="application/pdf",
+                                        key="direct_pdf_download",
+                                        use_container_width=True
+                                    )
+                                else:
+                                    st.error("Failed to generate the report.")
+                            except Exception as e:
+                                st.error(f"Error generating direct download: {str(e)}")
+                                import traceback
+                                st.code(traceback.format_exc())
                         
-                        if success and report_path and pdf_bytes:
-                            # Update results with report path
-                            results["gdpr_report_path"] = report_path
+                        # Generate and save if the submit button was clicked
+                        if submit_button:
+                            try:
+                                success, report_path, pdf_bytes = generate_and_save_gdpr_report(
+                                    scan_results=results,
+                                    organization_name=organization_name,
+                                    certification_type=certification_type
+                                )
+                            except Exception as e:
+                                st.error(f"Detailed error in report generation: {str(e)}")
+                                import traceback
+                                st.code(traceback.format_exc())
+                                success = False
+                                report_path = None
+                                pdf_bytes = None
                             
-                            # Show success message
-                            st.success("✅ Professional GDPR report generated successfully!")
-                            
-                            # Provide download button
-                            file_name = os.path.basename(report_path)
-                            st.download_button(
-                                label="📥 Download Professional GDPR Report",
-                                data=pdf_bytes,
-                                file_name=file_name,
-                                mime="application/pdf",
-                                key="download_new_gdpr_report",
-                                use_container_width=True
-                            )
-                            
-                            # Show report details
-                            st.info(f"""
-                            Report has been saved to: {report_path}
-                            Organizations can use this report to demonstrate GDPR compliance efforts.
-                            """)
-                        else:
-                            # Show error and fallback to a simple PDF
-                            st.warning("Failed to generate professional report. Using simple version instead.")
-                            
-                            # Create a simple PDF document as fallback
-                            pdf_content = f"""%PDF-1.4
+                            if success and report_path and pdf_bytes:
+                                # Update results with report path
+                                results["gdpr_report_path"] = report_path
+                                
+                                # Show success message
+                                st.success("✅ Professional GDPR report generated successfully!")
+                                
+                                # Provide download button
+                                file_name = os.path.basename(report_path)
+                                st.download_button(
+                                    label="📥 Download Professional GDPR Report",
+                                    data=pdf_bytes,
+                                    file_name=file_name,
+                                    mime="application/pdf",
+                                    key="download_new_gdpr_report",
+                                    use_container_width=True
+                                )
+                                
+                                # Show report details
+                                st.info(f"""
+                                Report has been saved to: {report_path}
+                                Organizations can use this report to demonstrate GDPR compliance efforts.
+                                """)
+                            else:
+                                # Show error and fallback to a simple PDF
+                                st.warning("Failed to generate professional report. Using simple version instead.")
+                                
+                                # Create a simple PDF document as fallback
+                                pdf_content = f"""%PDF-1.4
 1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
 3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>>>>>/Contents 4 0 R>>endobj
@@ -2029,16 +2074,16 @@ trailer<</Size 5/Root 1 0 R>>
 startxref
 428
 %%EOF""".encode('latin1')
-                            
-                            # Display the fallback download button
-                            st.download_button(
-                                label="Download Simple GDPR Report (Fallback)",
-                                data=pdf_content,
-                                file_name=f"GDPR_Report_Simple_{organization_name.replace(' ', '_')}.pdf",
-                                mime="application/pdf",
-                                key="fallback_pdf_download",
-                                use_container_width=True
-                            )
+                                
+                                # Display the fallback download button
+                                st.download_button(
+                                    label="Download Simple GDPR Report (Fallback)",
+                                    data=pdf_content,
+                                    file_name=f"GDPR_Report_Simple_{organization_name.replace(' ', '_')}.pdf",
+                                    mime="application/pdf",
+                                    key="fallback_pdf_download",
+                                    use_container_width=True
+                                )
                     except Exception as e:
                         st.error(f"Error generating report: {str(e)}")
                         
