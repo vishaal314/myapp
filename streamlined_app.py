@@ -1865,7 +1865,53 @@ def render_scan_form():
             # Display the scan results
             st.json(results)
             
-            # Add a header with basic styling
+            # Add an immediate download section at the top
+            st.markdown("## 📥 Download GDPR Compliance Report")
+            
+            # Create simple form for direct download
+            quick_col1, quick_col2 = st.columns(2)
+            with quick_col1:
+                org_name = st.text_input("Organization Name", "Your Organization", key="quick_org_name")
+            with quick_col2:
+                cert_type = st.selectbox(
+                    "Certification Type", 
+                    ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"],
+                    key="quick_cert_type"
+                )
+                
+            # Direct download button
+            if st.button("Generate & Download GDPR Report", type="primary", use_container_width=True):
+                with st.spinner("Generating your professional GDPR report..."):
+                    try:
+                        # Import the generator
+                        from services.gdpr_report_generator import generate_gdpr_report
+                        
+                        # Generate report directly
+                        pdf_bytes = generate_gdpr_report(
+                            scan_results=results,
+                            organization_name=org_name,
+                            certification_type=cert_type
+                        )
+                        
+                        # Create download option
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        filename = f"GDPR_Compliance_Report_{org_name.replace(' ', '_')}_{timestamp}.pdf"
+                        
+                        st.success("✅ Report generated successfully!")
+                        st.download_button(
+                            label="📄 Download PDF Report",
+                            data=pdf_bytes,
+                            file_name=filename,
+                            mime="application/pdf",
+                            key="instant_download",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.error(f"Error generating report: {str(e)}")
+                        import traceback
+                        st.code(traceback.format_exc())
+                        
+            # Add a header with basic styling  
             st.markdown("---")
             st.markdown("## 📋 GDPR Report Generation")
             
