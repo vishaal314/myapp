@@ -1884,23 +1884,114 @@ def render_scan_form():
             st.markdown("---")
             st.subheader("Generate Professional PDF Report")
             
-            # Add explanation
-            st.info("Generate a professional GDPR compliance report with modern styling.")
+            # PROFESSIONAL GDPR REPORT GENERATION
+            st.info("Generate a comprehensive GDPR compliance report with professional styling and detailed analysis.")
             
-            # SIMPLE PDF GENERATION (similar to other scanners)
-            st.subheader("Download GDPR Report")
+            # Create columns for better layout
+            report_col1, report_col2 = st.columns([2, 1])
             
-            # Simple form for basic customization
-            organization_name = st.text_input("Organization Name", "Your Organization")
-            certification_type = st.selectbox(
-                "Certification Type",
-                ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"]
-            )
+            with report_col1:
+                # Show report form
+                st.subheader("Generate GDPR Report")
+                
+                # Check if report has already been generated
+                if "gdpr_report_path" in results and results["gdpr_report_path"] and os.path.exists(results["gdpr_report_path"]):
+                    # Report already exists, show information and download
+                    st.success("A GDPR compliance report is already available.")
+                    
+                    # Get report info
+                    report_path = results["gdpr_report_path"]
+                    file_name = os.path.basename(report_path)
+                    file_size = os.path.getsize(report_path) / 1024  # KB
+                    
+                    st.info(f"Report: {file_name} ({file_size:.1f} KB)")
+                    
+                    # Provide download button for existing report
+                    with open(report_path, "rb") as f:
+                        report_data = f.read()
+                    
+                    st.download_button(
+                        label="📄 Download Existing GDPR Report",
+                        data=report_data,
+                        file_name=file_name,
+                        mime="application/pdf",
+                        key="download_existing_gdpr_report",
+                        use_container_width=True
+                    )
+                
+                # Always provide the form to generate a new report
+                with st.form(key="gdpr_report_form"):
+                    organization_name = st.text_input("Organization Name", "Your Organization")
+                    certification_type = st.selectbox(
+                        "Certification Type",
+                        ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"]
+                    )
+                    
+                    # Form submit button
+                    submit_button = st.form_submit_button(
+                        label="Generate Professional Report",
+                        type="primary",
+                        use_container_width=True
+                    )
             
-            # Direct download button with pre-generated PDF
-            if st.button("Download GDPR Report", type="primary"):
-                # Create a simple PDF document
-                pdf_content = f"""%PDF-1.4
+            with report_col2:
+                # Show report preview or stats
+                st.subheader("Report Contents")
+                st.write("Your professional report includes:")
+                
+                st.markdown("""
+                - ✅ Executive Summary
+                - ✅ Compliance Metrics
+                - ✅ All 7 GDPR Principles Assessment
+                - ✅ Risk Analysis for Each Principle
+                - ✅ Detailed Recommendations
+                - ✅ Professional Certification
+                - ✅ Modern Blue Styling
+                """)
+            
+            # Handle report generation after form submission
+            if submit_button:
+                with st.spinner("Generating professional GDPR report..."):
+                    try:
+                        # Import the report generator
+                        from services.gdpr_report_generator import generate_and_save_gdpr_report
+                        
+                        # Generate the report
+                        success, report_path, pdf_bytes = generate_and_save_gdpr_report(
+                            scan_results=results,
+                            organization_name=organization_name,
+                            certification_type=certification_type
+                        )
+                        
+                        if success and report_path and pdf_bytes:
+                            # Update results with report path
+                            results["gdpr_report_path"] = report_path
+                            
+                            # Show success message
+                            st.success("✅ Professional GDPR report generated successfully!")
+                            
+                            # Provide download button
+                            file_name = os.path.basename(report_path)
+                            st.download_button(
+                                label="📥 Download Professional GDPR Report",
+                                data=pdf_bytes,
+                                file_name=file_name,
+                                mime="application/pdf",
+                                key="download_new_gdpr_report",
+                                use_container_width=True
+                            )
+                            
+                            # Show report details
+                            st.info(f"""
+                            Report has been saved to: {report_path}
+                            Organizations can use this report to demonstrate GDPR compliance efforts.
+                            """)
+                        else:
+                            # Show error and fallback to a simple PDF
+                            st.warning("Failed to generate professional report. Using simple version instead.")
+                            
+                            # Create a simple PDF document as fallback
+                            pdf_content = f"""%PDF-1.4
 1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
 3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>>>>>/Contents 4 0 R>>endobj
@@ -1930,28 +2021,21 @@ trailer<</Size 5/Root 1 0 R>>
 startxref
 428
 %%EOF""".encode('latin1')
-                
-                # Success message
-                st.success("Your GDPR report is ready!")
-                
-                # Display the download button
-                st.download_button(
-                    label="Download GDPR Report",
-                    data=pdf_content,
-                    file_name=f"GDPR_Report_{organization_name.replace(' ', '_')}.pdf",
-                    mime="application/pdf",
-                    key="simple_pdf_download",
-                    use_container_width=True
-                )
-                
-                # Show what's in the report
-                st.info(f"""
-                Your GDPR report includes:
-                
-                - Organization: {organization_name}
-                - Certification: {certification_type}
-                - Generation Date: {datetime.now().strftime('%Y-%m-%d')}
-                """)
+                            
+                            # Display the fallback download button
+                            st.download_button(
+                                label="Download Simple GDPR Report (Fallback)",
+                                data=pdf_content,
+                                file_name=f"GDPR_Report_Simple_{organization_name.replace(' ', '_')}.pdf",
+                                mime="application/pdf",
+                                key="fallback_pdf_download",
+                                use_container_width=True
+                            )
+                    except Exception as e:
+                        st.error(f"Error generating report: {str(e)}")
+                        
+                        # Provide a link to the minimal GDPR PDF generator as a backup
+                        st.info("You can also use our [Minimal GDPR PDF Generator](http://0.0.0.0:5001) for a simpler report.")
         else:
             st.json(results)
 

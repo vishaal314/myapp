@@ -1,8 +1,8 @@
 """
-GDPR PDF Report Generator
+Standalone GDPR PDF Report Generator
 
-This module provides a comprehensive GDPR PDF report generator that produces
-professional reports based on GDPR Code Scanner findings.
+This is a copy of the services/gdpr_report_generator.py file that can
+be used by the minimal GDPR PDF generator when run as a standalone app.
 """
 
 import os
@@ -12,7 +12,6 @@ from datetime import datetime
 import io
 from typing import Dict, List, Any, Tuple, Optional, Union
 
-import streamlit as st
 from io import BytesIO
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -304,7 +303,7 @@ def generate_gdpr_report(scan_results: Dict[str, Any], organization_name: str = 
         return pdf_data
     
     except Exception as e:
-        st.error(f"Error generating GDPR report: {str(e)}")
+        print(f"Error generating GDPR report: {str(e)}")
         # Return a simple fallback PDF
         return create_fallback_pdf(organization_name, certification_type)
 
@@ -342,35 +341,3 @@ startxref
 %%EOF""".encode('latin1')
     
     return pdf_content
-
-def generate_and_save_gdpr_report(scan_results, organization_name, certification_type):
-    """
-    Generate a GDPR report and save it to the filesystem.
-    
-    Returns a tuple of (success, report_path, pdf_bytes)
-    """
-    try:
-        # Generate the PDF
-        pdf_bytes = generate_gdpr_report(
-            scan_results=scan_results,
-            organization_name=organization_name,
-            certification_type=certification_type
-        )
-        
-        # Create reports directory if it doesn't exist
-        os.makedirs("reports", exist_ok=True)
-        
-        # Generate file name
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        file_name = f"gdpr_compliance_report_{organization_name.replace(' ', '_')}_{timestamp}.pdf"
-        report_path = os.path.join("reports", file_name)
-        
-        # Save to file
-        with open(report_path, "wb") as f:
-            f.write(pdf_bytes)
-        
-        return True, report_path, pdf_bytes
-    
-    except Exception as e:
-        st.error(f"Error saving GDPR report: {str(e)}")
-        return False, None, None
