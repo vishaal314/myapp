@@ -1,3 +1,0 @@
-Scan type: AI Model
-Region: Netherlands
-Timestamp: 2025-04-22T21:17:41.764056

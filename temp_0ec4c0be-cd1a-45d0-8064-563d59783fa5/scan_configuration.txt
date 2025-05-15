@@ -1,3 +1,0 @@
-Scan type: Data Protection Impact Assessment
-Region: Netherlands
-Timestamp: 2025-05-05T19:11:57.344542
