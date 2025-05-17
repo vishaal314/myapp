@@ -1962,42 +1962,22 @@ def render_scan_form():
             
             st.session_state.last_scan_results = structured_results
             
-            # Add links to our dedicated report generators
-            st.markdown("## 📥 GDPR Report Options")
-            st.info("For reliable PDF report generation, please use one of our dedicated report generators below.")
+            # Clean interface with direct links to specialized tools
+            st.markdown("## 📥 GDPR Code Scanner")
             
-            # Add button for the Clean GDPR Scanner
-            if st.button("🛡️ Clean GDPR Code Scanner", key="open_gdpr_code_scanner", use_container_width=True):
-                import webbrowser
-                webbrowser.open_new_tab("http://localhost:5010")
-                st.success("Opening Clean GDPR Scanner in a new tab. If it doesn't open, please navigate to http://localhost:5010")
+            if st.button("🛡️ Open GDPR Code Scanner", key="open_gdpr_code_scanner", use_container_width=True):
+                st.markdown("[Open GDPR Code Scanner](http://0.0.0.0:5010)", unsafe_allow_html=True)
+                
+            # Add PDF report generators as direct links
+            col1, col2 = st.columns(2)
             
-            # Create columns for the buttons
-            report_btn1, report_btn2, report_btn3 = st.columns(3)
-            
-            # Add buttons to launch dedicated report generators
-            with report_btn1:
-                if st.button("Ultra Simple PDF Generator", key="ultra_simple"):
-                    st.markdown("[Open Ultra Simple PDF Generator](http://0.0.0.0:5003)", unsafe_allow_html=True)
-                    
-            with report_btn2:
-                if st.button("Reliable PDF Generator", key="reliable"):
+            with col1:
+                if st.button("📄 Generate PDF Report", key="reliable_pdf", use_container_width=True):
                     st.markdown("[Open Reliable PDF Generator](http://0.0.0.0:5005)", unsafe_allow_html=True)
                     
-            with report_btn3:
-                if st.button("Direct PDF Generator", key="direct"):
-                    st.markdown("[Open Direct PDF Generator](http://0.0.0.0:5002)", unsafe_allow_html=True)
-            
-            # Add a note about the dedicated report generators
-            st.info("💡 For the most reliable PDF report generation, we recommend using one of the dedicated generators above.")
-            st.markdown("These specialized generators provide enhanced reliability and additional customization options.")
-            
-            # Add a section for Data Protection Impact Assessment
-            st.markdown("## 📊 Data Protection Impact Assessment")
-            st.info("Evaluate your privacy risks with our Data Protection Impact Assessment tool.")
-            
-            if st.button("Open DPIA Assessment Tool", key="open_dpia"):
-                st.markdown("[Open DPIA Assessment Tool](http://0.0.0.0:5007)", unsafe_allow_html=True)
+            with col2:
+                if st.button("📊 Run DPIA Assessment", key="open_dpia", use_container_width=True):
+                    st.markdown("[Open DPIA Assessment Tool](http://0.0.0.0:5007)", unsafe_allow_html=True)
             
             # Add a header with basic styling  
             st.markdown("---")
