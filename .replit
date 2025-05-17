@@ -54,11 +54,11 @@ args = "Simple DPIA"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "GDPR Code Scanner"
+args = "Clean GDPR Scanner"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Clean GDPR Scanner"
+args = "Streamlined GDPR Scanner"
 
 [[workflows.workflow]]
 name = "Streamlined App"
@@ -142,22 +142,22 @@ args = "streamlit run simple_dpia.py --server.port 5007 --server.headless true"
 waitForPort = 5007
 
 [[workflows.workflow]]
-name = "GDPR Code Scanner"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "streamlit run gdpr_code_scanner_page.py --server.port 5010 --server.headless true"
-waitForPort = 5010
-
-[[workflows.workflow]]
 name = "Clean GDPR Scanner"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run clean_gdpr_scanner.py --server.port 5010 --server.headless true"
-waitForPort = 5010
+args = "streamlit run clean_gdpr_code_scanner.py --server.port 5012 --server.headless true"
+waitForPort = 5012
+
+[[workflows.workflow]]
+name = "Streamlined GDPR Scanner"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run streamlined_gdpr_scanner.py --server.port 5011 --server.headless true"
+waitForPort = 5011
 
 [[ports]]
 localPort = 5000
@@ -194,3 +194,11 @@ externalPort = 5173
 [[ports]]
 localPort = 5010
 externalPort = 6000
+
+[[ports]]
+localPort = 5011
+externalPort = 8000
+
+[[ports]]
+localPort = 5012
+externalPort = 6800
