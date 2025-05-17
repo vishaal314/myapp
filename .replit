@@ -56,6 +56,10 @@ args = "Simple DPIA"
 task = "workflow.run"
 args = "GDPR Code Scanner"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Clean GDPR Scanner"
+
 [[workflows.workflow]]
 name = "Streamlined App"
 author = "agent"
@@ -144,6 +148,15 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "streamlit run gdpr_code_scanner_page.py --server.port 5010 --server.headless true"
+waitForPort = 5010
+
+[[workflows.workflow]]
+name = "Clean GDPR Scanner"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run clean_gdpr_scanner.py --server.port 5010 --server.headless true"
 waitForPort = 5010
 
 [[ports]]
