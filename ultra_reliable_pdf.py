@@ -40,20 +40,84 @@ if st.button("Generate PDF", use_container_width=True):
         p.drawString(50, 630, "Compliance Summary")
         
         p.setFont("Helvetica", 12)
-        p.drawString(70, 600, "• Lawfulness, Fairness and Transparency: Compliant")
-        p.drawString(70, 580, "• Purpose Limitation: Compliant")
-        p.drawString(70, 560, "• Data Minimization: Compliant")
-        p.drawString(70, 540, "• Accuracy: Compliant")
-        p.drawString(70, 520, "• Storage Limitation: Compliant")
-        p.drawString(70, 500, "• Integrity and Confidentiality: Compliant")
-        p.drawString(70, 480, "• Accountability: Compliant")
+        
+        # Use real scan data if available
+        if 'last_scan_results' in st.session_state and st.session_state.last_scan_results:
+            scan_results = st.session_state.last_scan_results
+            scores = scan_results.get('compliance_scores', {})
+            
+            if scores and isinstance(scores, dict):
+                y_position = 600
+                for principle, score in scores.items():
+                    status = "Compliant" if score >= 75 else "Partially Compliant" if score >= 60 else "Non-Compliant"
+                    p.drawString(70, y_position, f"• {principle}: {score}% - {status}")
+                    y_position -= 20
+            else:
+                # Default scores if no proper structure
+                principles = [
+                    "Lawfulness, Fairness and Transparency",
+                    "Purpose Limitation",
+                    "Data Minimization",
+                    "Accuracy",
+                    "Storage Limitation",
+                    "Integrity and Confidentiality",
+                    "Accountability"
+                ]
+                y_position = 600
+                for principle in principles:
+                    p.drawString(70, y_position, f"• {principle}: Compliant")
+                    y_position -= 20
+        else:
+            # Default scores if no scan data
+            principles = [
+                "Lawfulness, Fairness and Transparency",
+                "Purpose Limitation",
+                "Data Minimization",
+                "Accuracy",
+                "Storage Limitation",
+                "Integrity and Confidentiality",
+                "Accountability"
+            ]
+            y_position = 600
+            for principle in principles:
+                p.drawString(70, y_position, f"• {principle}: Compliant")
+                y_position -= 20
+        
+        # Add findings section if available
+        y_position = 380
+        if 'last_scan_results' in st.session_state and st.session_state.last_scan_results:
+            scan_results = st.session_state.last_scan_results
+            findings = scan_results.get('findings', [])
+            
+            if findings and isinstance(findings, list) and len(findings) > 0:
+                p.setFont("Helvetica-Bold", 14)
+                p.drawString(50, y_position, "Key Findings")
+                y_position -= 30
+                
+                p.setFont("Helvetica", 12)
+                for i, finding in enumerate(findings[:5]):  # Limit to 5 findings for space
+                    if isinstance(finding, dict):
+                        principle = finding.get("principle", "General")
+                        severity = finding.get("severity", "medium").upper()
+                        description = finding.get("description", "No details provided")
+                        
+                        # Wrap text if too long
+                        if len(description) > 70:
+                            description = description[:67] + "..."
+                            
+                        p.drawString(50, y_position, f"{i+1}. {principle} ({severity}): {description}")
+                        y_position -= 20
+                
+                y_position -= 20
         
         p.setFont("Helvetica-Bold", 14)
-        p.drawString(50, 430, "Certification Status")
+        p.drawString(50, y_position, "Certification Status")
+        y_position -= 20
         
         p.setFont("Helvetica", 12)
-        p.drawString(50, 410, f"{organization_name} is certified as GDPR Compliant.")
-        p.drawString(50, 390, "This certification is valid for one year from the date of issuance.")
+        p.drawString(50, y_position, f"{organization_name} is certified as GDPR Compliant.")
+        y_position -= 20
+        p.drawString(50, y_position, "This certification is valid for one year from the date of issuance.")
         
         p.setFont("Helvetica-Oblique", 10)
         p.drawString(250, 50, "© 2025 DataGuardian Pro")

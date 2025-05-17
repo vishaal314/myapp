@@ -1865,6 +1865,9 @@ def render_scan_form():
             # Display the scan results
             st.json(results)
             
+            # Store scan results in session state for report generators to use
+            st.session_state.last_scan_results = results
+            
             # Add links to our dedicated report generators
             st.markdown("## 📥 GDPR Report Options")
             st.info("For reliable PDF report generation, please use one of our dedicated report generators below.")

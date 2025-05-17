@@ -55,16 +55,35 @@ if submit:
             story.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d')}", styles["Normal"]))
             story.append(Spacer(1, 20))
             
-            # Generate some scores
-            scores = {
-                "Lawfulness, Fairness and Transparency": random.randint(70, 95),
-                "Purpose Limitation": random.randint(70, 95),
-                "Data Minimization": random.randint(70, 95),
-                "Accuracy": random.randint(70, 95),
-                "Storage Limitation": random.randint(70, 95),
-                "Integrity and Confidentiality": random.randint(70, 95),
-                "Accountability": random.randint(70, 95)
-            }
+            # Get real scan data if available or use defaults
+            if 'last_scan_results' in st.session_state and st.session_state.last_scan_results:
+                scan_results = st.session_state.last_scan_results
+                scores = scan_results.get('compliance_scores', {})
+                
+                # If the format is not as expected, use a default structure
+                if not scores or not isinstance(scores, dict):
+                    st.warning("Using default compliance scores as scan results were not properly structured.")
+                    scores = {
+                        "Lawfulness, Fairness and Transparency": 78,
+                        "Purpose Limitation": 82,
+                        "Data Minimization": 85,
+                        "Accuracy": 79,
+                        "Storage Limitation": 75,
+                        "Integrity and Confidentiality": 88,
+                        "Accountability": 80
+                    }
+            else:
+                # If no scan results, use default scores
+                st.info("No recent scan data available. Using sample data for report generation.")
+                scores = {
+                    "Lawfulness, Fairness and Transparency": 78,
+                    "Purpose Limitation": 82,
+                    "Data Minimization": 85,
+                    "Accuracy": 79,
+                    "Storage Limitation": 75,
+                    "Integrity and Confidentiality": 88, 
+                    "Accountability": 80
+                }
             
             # Create table data
             table_data = [["GDPR Principle", "Compliance Score"]]
@@ -89,6 +108,27 @@ if submit:
             
             story.append(table)
             story.append(Spacer(1, 20))
+            
+            # Add findings section if available
+            if 'last_scan_results' in st.session_state and st.session_state.last_scan_results:
+                scan_results = st.session_state.last_scan_results
+                findings = scan_results.get('findings', [])
+                
+                if findings and isinstance(findings, list) and len(findings) > 0:
+                    story.append(Paragraph("Key Findings", styles["Heading2"]))
+                    
+                    # Create a list of findings
+                    for i, finding in enumerate(findings):
+                        if isinstance(finding, dict):
+                            principle = finding.get("principle", "General")
+                            severity = finding.get("severity", "medium").upper()
+                            description = finding.get("description", "No details provided")
+                            
+                            finding_text = f"{i+1}. {principle} ({severity}): {description}"
+                            story.append(Paragraph(finding_text, styles["Normal"]))
+                            story.append(Spacer(1, 5))
+            
+            story.append(Spacer(1, 10))
             
             # Add certification
             story.append(Paragraph("Certification", styles["Heading2"]))
