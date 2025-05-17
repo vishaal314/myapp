@@ -1,0 +1,62 @@
++-------------------------+        +----------------------+
+|     User / API Call     |        |  Admin Dashboard UI  |
+| (Manual, CI/CD, Webhook)|        | (Streamlit / PowerBI)|
++-----------+-------------+        +----------+-----------+
+            |                                |
+            v                                v
+    +-----------------+             +-----------------------+
+    |   DSR Orchestrator|<--------->| Results Aggregator DB |
+    | (Azure Function)  |           |  (Cosmos / PostgreSQL)|
+    +-----------------+             +-----------------------+
+            ^
+            |
++-----------+------------+-----------------------------+-------------+
+|           |            |           |         |       |             |
+v           v            v           v         v       v             v
+Code     File/Blob     Image      DB        API     Manual
+Scanner  Scanner       Scanner    Scanner   Scanner Upload Tool      PDF Reports 
+(Python  (Python w/    (Python   (ADF +    (Python  (Streamlit)      HTML Reports 
++ TruffleHog)OCR, Presidio) + CV) Python)  + FastAPI)
+
+🧱 Tech Stack Per Component
+Component	Language/Stack	Notes
+GDPR Code Scanner	Python + TruffleHog, Semgrep	Scans GitHub/ADO for secrets
+Blob/File Scanner	Python + Presidio, OCR, Form Recognizer	Trigger via Blob Event Grid
+Image Scanner	Python + Azure Cognitive Services	OCR + Face API
+Database Scanner	Azure Data Factory + Python Function + Presidio	Structured data scan
+API Scanner	Python + OpenAPI Parser, Regex/NLP	Swagger or traffic analysis
+DSR Orchestrator	Python (Azure Function or FastAPI)	Aggregates responses
+Results Aggregator	Python + CosmosDB or PostgreSQL	Stores normalized output
+Dashboard UI	Streamlit (for dev), Power BI (for prod)	For browsing results
+Common Libraries	requests, azure-storage-blob, presidio-analyzer, face-api, pandas, sqlalchemy	Shared libs
+
+
+📂 Python Folder/Repo Structure Example
+pgsql
+CopyEdit
+gdpr-scan-engine/
+├── services/
+│   ├── code-scanner/
+│   │   ├── app.py
+│   │   ├── scanner.py
+│   │   └── Dockerfile
+│   ├── blob-scanner/
+│   ├── image-scanner/
+│   ├── db-scanner/
+│   ├── api-scanner/
+│   ├── dsr-orchestrator/
+│   └── results-aggregator/
+├── dashboard/
+│   └── streamlit_app.py
+├── shared/
+│   ├── utils/
+│   │   ├── azure.py
+│   │   └── logging.py
+│   ├── schemas/
+│   │   └── result_schema.json
+├── scripts/
+│   ├── deploy_all.sh
+│   └── seed_data.py
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
