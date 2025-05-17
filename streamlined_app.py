@@ -1966,9 +1966,11 @@ def render_scan_form():
             st.markdown("## 📥 GDPR Report Options")
             st.info("For reliable PDF report generation, please use one of our dedicated report generators below.")
             
-            # Add button for the new GDPR Code Scanner
-            if st.button("🛡️ Advanced GDPR Code Scanner", key="open_gdpr_code_scanner", use_container_width=True):
-                st.switch_page("gdpr_code_scanner_page.py")
+            # Add button for the Clean GDPR Scanner
+            if st.button("🛡️ Clean GDPR Code Scanner", key="open_gdpr_code_scanner", use_container_width=True):
+                import webbrowser
+                webbrowser.open_new_tab("http://localhost:5010")
+                st.success("Opening Clean GDPR Scanner in a new tab. If it doesn't open, please navigate to http://localhost:5010")
             
             # Create columns for the buttons
             report_btn1, report_btn2, report_btn3 = st.columns(3)
