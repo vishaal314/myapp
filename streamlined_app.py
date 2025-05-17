@@ -1966,6 +1966,10 @@ def render_scan_form():
             st.markdown("## 📥 GDPR Report Options")
             st.info("For reliable PDF report generation, please use one of our dedicated report generators below.")
             
+            # Add button for the new GDPR Code Scanner
+            if st.button("🛡️ Advanced GDPR Code Scanner", key="open_gdpr_code_scanner", use_container_width=True):
+                st.switch_page("gdpr_code_scanner_page.py")
+            
             # Create columns for the buttons
             report_btn1, report_btn2, report_btn3 = st.columns(3)
             
