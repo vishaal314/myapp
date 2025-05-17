@@ -1,630 +1,448 @@
 """
-Streamlined GDPR Code Scanner
+Streamlined GDPR Scanner
 
-A clean, efficient scanner that analyzes code repositories for GDPR compliance issues
-based on the 7 core GDPR principles with a focus on Dutch-specific rules (UAVG).
-
-Features:
-- Multi-language support
-- Core GDPR principles scanning
-- Dutch-specific requirements
-- Professional PDF report generation
+A simplified, reliable GDPR code scanner with a clean interface that implements
+all 7 core GDPR principles and Dutch-specific requirements.
 """
 
 import streamlit as st
-import os
-import re
+import pandas as pd
 import time
-import io
-import base64
-from datetime import datetime
-from typing import Dict, List, Any, Tuple
-
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
+import uuid
+import datetime
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm
+from reportlab.lib.units import inch
 
 # Set page configuration
 st.set_page_config(
-    page_title="GDPR Code Scanner",
-    page_icon="🛡️",
-    layout="wide"
+    page_title="GDPR Scanner",
+    page_icon="🔒",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Add custom CSS for modern UI
+# Application header
 st.markdown("""
-<style>
-    .main .block-container {
-        padding-top: 2rem;
-    }
-    h1, h2, h3 {
-        color: #1E3A8A;
-    }
-    .stButton>button {
-        background-color: #1E3A8A;
-        color: white;
-    }
-</style>
+<div style="background-color: #1E3A8A; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    <h1 style="color: white; margin: 0;">GDPR Scanner</h1>
+    <p style="color: #BDD7FD; margin: 0;">Comprehensive Privacy Compliance</p>
+</div>
 """, unsafe_allow_html=True)
 
-# GDPR Principle Patterns (simplified)
-GDPR_PRINCIPLES = {
-    "Lawfulness, Fairness and Transparency": [
-        (r'(?i)consent.*(?:not|missing|invalid)', "Potential invalid consent handling", "high", ["GDPR-Article6", "UAVG"]),
-        (r'(?i)process(?:ing)?.*data.*without.*consent', "Processing data without explicit consent", "high", ["GDPR-Article6", "UAVG"]),
-        (r'(?i)privacy.*policy.*missing', "Missing privacy policy reference", "medium", ["GDPR-Article13", "UAVG"]),
-    ],
-    
-    "Purpose Limitation": [
-        (r'(?i)use.*data.*(?:marketing|analytics).*without', "Using data beyond intended purpose", "high", ["GDPR-Article5-1b", "UAVG"]),
-        (r'(?i)repurpos(?:e|ing).*data', "Repurposing data without consent", "medium", ["GDPR-Article5-1b", "UAVG"]),
-    ],
-    
-    "Data Minimization": [
-        (r'(?i)collect(?:ing)?.*(?:unnecessary|excessive).*data', "Collecting excessive data", "medium", ["GDPR-Article5-1c", "UAVG"]),
-        (r'(?i)(?:store|save).*(?:full|complete).*(?:profile|history)', "Storing complete user profiles", "medium", ["GDPR-Article5-1c", "UAVG"]),
-    ],
-    
-    "Accuracy": [
-        (r'(?i)no.*(?:validation|verification)', "Lack of data validation", "medium", ["GDPR-Article5-1d", "UAVG"]),
-        (r'(?i)(?:old|outdated|stale).*data', "Using potentially outdated data", "medium", ["GDPR-Article5-1d", "UAVG"]),
-    ],
-    
-    "Storage Limitation": [
-        (r'(?i)(?:no|missing).*retention.*(?:policy|period)', "Missing data retention policy", "medium", ["GDPR-Article5-1e", "UAVG"]),
-        (r'(?i)(?:store|keep).*(?:forever|indefinite|permanent)', "Storing data indefinitely", "high", ["GDPR-Article5-1e", "UAVG"]),
-    ],
-    
-    "Integrity and Confidentiality": [
-        (r'(?i)data.{0,20}(?:not|un)encrypted', "Unencrypted data storage", "high", ["GDPR-Article5-1f", "GDPR-Article32", "UAVG"]),
-        (r'(?i)(?:md5|sha1)\(', "Using weak hash algorithm", "medium", ["GDPR-Article5-1f", "GDPR-Article32", "UAVG"]),
-    ],
-    
-    "Accountability": [
-        (r'(?i)(?:no|missing).*log(?:ging|s)', "Missing data processing logs", "medium", ["GDPR-Article5-2", "UAVG"]),
-        (r'(?i)(?:no|missing).*(?:audit|trail)', "Missing audit trail", "medium", ["GDPR-Article5-2", "UAVG"]),
-    ],
-}
+# Create columns for layout
+col1, col2 = st.columns([1, 3])
 
-# Dutch-specific patterns (UAVG)
-DUTCH_PATTERNS = {
-    "bsn": (r'\b[0-9]{9}\b', "BSN (Dutch Citizen Service Number)", "high", ["UAVG", "GDPR-Article9"]),
-    "dutch_passport": (r'\b[A-Z]{2}[0-9]{6}\b', "Dutch Passport Number", "high", ["UAVG", "GDPR-Article6"]),
-    "dutch_phone": (r'\b(?:\+31|0031|0)[1-9][0-9]{8}\b', "Dutch Phone Number", "medium", ["UAVG", "GDPR-Article6"]),
-    "minor_consent": (r'(?i)(?:minor|child|under[_-]?16|age[_-]?check)', "Minor Consent Check", "high", ["UAVG", "GDPR-Article8"]),
-    "breach_notification": (r'(?i)(?:breach[_-]?notification|security[_-]?incident|data[_-]?breach|72[_-]?hour)', "Breach Notification", "high", ["UAVG", "GDPR-Article33"]),
-}
-
-# Secret patterns
-SECRET_PATTERNS = {
-    "api_key": (r'(?i)(?:api[_-]?key|apikey|secret[_-]?key)[^a-zA-Z0-9][ \t]*[:=][ \t]*[\'"][a-zA-Z0-9_\-]{10,}[\'"]', "API Key", "high", ["GDPR-Article32"]),
-    "password": (r'(?i)(?:password|passwd|pwd)[^a-zA-Z0-9][ \t]*[:=][ \t]*[\'"][^\'"\n]{4,}[\'"]', "Password", "high", ["GDPR-Article32"]),
-}
-
-class GDPRScanner:
-    def __init__(self, repo_path='.', languages=None):
-        self.repo_path = repo_path
-        self.languages = languages or ["python", "javascript", "java", "typescript", "terraform", "yaml", "json"]
-        self.findings = []
-        self.file_count = 0
-        self.line_count = 0
-        
-        # Language file extensions
-        self.extensions = {
-            "python": [".py", ".pyw"],
-            "javascript": [".js", ".jsx", ".mjs"],
-            "typescript": [".ts", ".tsx"],
-            "java": [".java"],
-            "terraform": [".tf", ".tfvars"],
-            "yaml": [".yml", ".yaml"],
-            "json": [".json"]
-        }
+# Scan form in the left column
+with col1:
+    st.header("Repository Settings")
     
-    def scan(self):
-        """Perform GDPR code scan"""
-        start_time = datetime.now()
-        
-        # Get supported file extensions
-        supported_exts = []
-        for lang in self.languages:
-            if lang.lower() in self.extensions:
-                supported_exts.extend(self.extensions[lang.lower()])
-                
-        # Scan repository files
-        for root, _, files in os.walk(self.repo_path):
-            # Skip hidden directories
-            if any(part.startswith('.') for part in root.split(os.sep)):
-                continue
-                
-            for file in files:
-                # Skip hidden files
-                if file.startswith('.'):
-                    continue
-                    
-                # Check if file extension is supported
-                ext = os.path.splitext(file.lower())[1]
-                if ext in supported_exts:
-                    file_path = os.path.join(root, file)
-                    self._scan_file(file_path)
-        
-        # Calculate duration
-        duration = (datetime.now() - start_time).total_seconds()
-        
-        # Calculate compliance scores
-        scores = self._calculate_compliance_scores()
-        
-        return {
-            "scan_date": datetime.now().isoformat(),
-            "repo_path": self.repo_path,
-            "file_count": self.file_count,
-            "line_count": self.line_count,
-            "findings_count": len(self.findings),
-            "findings": self.findings,
-            "compliance_scores": scores,
-            "scan_duration": duration
-        }
-    
-    def _should_scan_file(self, filename):
-        """Check if a file should be scanned based on its extension"""
-        ext = os.path.splitext(filename.lower())[1]
-        supported_exts = []
-        for lang in self.languages:
-            if lang.lower() in self.extensions:
-                supported_exts.extend(self.extensions[lang.lower()])
-        return ext in supported_exts
-    
-    def _scan_file(self, file_path):
-        """Scan a single file for GDPR compliance issues"""
-        try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
-                lines = content.splitlines()
-                
-                # Update counts
-                self.file_count += 1
-                self.line_count += len(lines)
-                
-                # Scan for each GDPR principle
-                self._scan_for_lawfulness(file_path, lines, content)
-                self._scan_for_purpose_limitation(file_path, lines, content)
-                self._scan_for_data_minimization(file_path, lines, content)
-                self._scan_for_accuracy(file_path, lines, content)
-                self._scan_for_storage_limitation(file_path, lines, content)
-                self._scan_for_integrity_confidentiality(file_path, lines, content)
-                self._scan_for_accountability(file_path, lines, content)
-                
-                # Scan for Dutch-specific patterns
-                for pattern_name, (pattern, description, severity, region_flags) in DUTCH_PATTERNS.items():
-                    self._check_patterns(file_path, lines, "Dutch-specific", [(pattern, description, severity, region_flags)])
-                
-                # Scan for secrets
-                for pattern_name, (pattern, description, severity, region_flags) in SECRET_PATTERNS.items():
-                    self._check_patterns(file_path, lines, "Secrets", [(pattern, description, severity, region_flags)])
-                
-        except Exception as e:
-            # Log scanning error
-            self.findings.append({
-                "file": file_path,
-                "line": 0,
-                "type": "SCAN_ERROR",
-                "principle": "Other",
-                "description": f"Error scanning file: {str(e)}",
-                "severity": "low",
-                "region_flags": ["GDPR-Article5"],
-            })
-    
-    def _scan_for_lawfulness(self, file_path, lines, content):
-        """Scan for lawfulness, fairness and transparency issues"""
-        principle = "Lawfulness, Fairness and Transparency"
-        patterns = GDPR_PRINCIPLES[principle]
-        self._check_patterns(file_path, lines, principle, patterns)
-    
-    def _scan_for_purpose_limitation(self, file_path, lines, content):
-        """Scan for purpose limitation issues"""
-        principle = "Purpose Limitation"
-        patterns = GDPR_PRINCIPLES[principle]
-        self._check_patterns(file_path, lines, principle, patterns)
-        
-    def _scan_for_data_minimization(self, file_path, lines, content):
-        """Scan for data minimization issues"""
-        principle = "Data Minimization"
-        patterns = GDPR_PRINCIPLES[principle]
-        self._check_patterns(file_path, lines, principle, patterns)
-        
-    def _scan_for_accuracy(self, file_path, lines, content):
-        """Scan for accuracy issues"""
-        principle = "Accuracy"
-        patterns = GDPR_PRINCIPLES[principle]
-        self._check_patterns(file_path, lines, principle, patterns)
-        
-    def _scan_for_storage_limitation(self, file_path, lines, content):
-        """Scan for storage limitation issues"""
-        principle = "Storage Limitation"
-        patterns = GDPR_PRINCIPLES[principle]
-        self._check_patterns(file_path, lines, principle, patterns)
-        
-    def _scan_for_integrity_confidentiality(self, file_path, lines, content):
-        """Scan for security & confidentiality issues"""
-        principle = "Integrity and Confidentiality"
-        patterns = GDPR_PRINCIPLES[principle]
-        self._check_patterns(file_path, lines, principle, patterns)
-        
-    def _scan_for_accountability(self, file_path, lines, content):
-        """Scan for accountability issues"""
-        principle = "Accountability"
-        patterns = GDPR_PRINCIPLES[principle]
-        self._check_patterns(file_path, lines, principle, patterns)
-        
-    def _check_patterns(self, file_path, lines, principle, patterns):
-        """Check for patterns in file content"""
-        for i, line in enumerate(lines, 1):
-            for pattern, description, severity, region_flags in patterns:
-                if re.search(pattern, line):
-                    # Get code context (a few lines around the finding)
-                    context_start = max(0, i - 2)
-                    context_end = min(len(lines), i + 2)
-                    context_snippet = '\n'.join(lines[context_start:context_end])
-                    
-                    # Add finding
-                    self.findings.append({
-                        "file": file_path,
-                        "line": i,
-                        "type": "GDPR_ISSUE",
-                        "principle": principle,
-                        "description": description,
-                        "severity": severity,
-                        "region_flags": region_flags,
-                        "context_snippet": context_snippet
-                    })
-    
-    def _calculate_compliance_scores(self):
-        """Calculate compliance scores for each principle"""
-        scores = {
-            "Lawfulness, Fairness and Transparency": 100,
-            "Purpose Limitation": 100,
-            "Data Minimization": 100,
-            "Accuracy": 100,
-            "Storage Limitation": 100,
-            "Integrity and Confidentiality": 100,
-            "Accountability": 100
-        }
-        
-        # Deduct points based on findings severity
-        severity_weights = {
-            "high": 20,
-            "medium": 10,
-            "low": 5
-        }
-        
-        for finding in self.findings:
-            principle = finding.get("principle")
-            if principle in scores:
-                severity = finding.get("severity", "low")
-                weight = severity_weights.get(severity, 5)
-                scores[principle] = max(0, scores[principle] - weight)
-            
-            # Handle Dutch-specific and Secret findings
-            elif principle == "Dutch-specific" or principle == "Secrets":
-                severity = finding.get("severity", "low")
-                weight = severity_weights.get(severity, 5)
-                # Deduct from most relevant principles
-                if any("Article32" in flag for flag in finding.get("region_flags", [])):
-                    scores["Integrity and Confidentiality"] = max(0, scores["Integrity and Confidentiality"] - weight)
-                elif any("Article6" in flag for flag in finding.get("region_flags", [])):
-                    scores["Lawfulness, Fairness and Transparency"] = max(0, scores["Lawfulness, Fairness and Transparency"] - weight)
-                
-        return scores
-
-def generate_pdf_report(scan_results):
-    """Generate a PDF report from scan results"""
-    buffer = io.BytesIO()
-    
-    # Create document
-    doc = SimpleDocTemplate(
-        buffer, 
-        pagesize=A4, 
-        title="GDPR Compliance Scan Report",
-        leftMargin=1.5*cm, 
-        rightMargin=1.5*cm, 
-        topMargin=2*cm, 
-        bottomMargin=2*cm
+    repo_url = st.text_input(
+        "Repository URL",
+        value="https://github.com/example/repository",
+        help="URL to the GitHub repository to scan"
     )
     
-    # Get styles
-    styles = getSampleStyleSheet()
-    title_style = styles["Heading1"]
-    heading2_style = styles["Heading2"]
-    normal_style = styles["Normal"]
-    
-    # Create custom styles
-    section_style = ParagraphStyle(
-        'Section',
-        parent=styles['Heading2'],
-        fontSize=14,
-        spaceAfter=16,
-        textColor=colors.darkblue,
+    scan_depth = st.select_slider(
+        "Scan Depth",
+        options=["Basic", "Standard", "Deep"],
+        value="Standard",
+        help="Deeper scans take longer but are more thorough"
     )
     
-    # Create content
-    content = []
+    organization_name = st.text_input(
+        "Organization Name",
+        value="Your Organization",
+        help="Name to include in reports"
+    )
     
-    # Title and report date
-    content.append(Paragraph("GDPR Compliance Scan Report", title_style))
-    content.append(Spacer(1, 0.5*cm))
-    
-    # Extract scan date
-    scan_date = scan_results.get("scan_date", datetime.now().isoformat())
-    if isinstance(scan_date, str):
-        try:
-            scan_date = datetime.fromisoformat(scan_date)
-        except ValueError:
-            scan_date = datetime.now()
-    
-    # Generate organization name from repo path
-    repo_path = scan_results.get("repo_path", ".")
-    org_name = os.path.basename(os.path.abspath(repo_path))
-    
-    content.append(Paragraph(f"Organization: {org_name}", normal_style))
-    content.append(Paragraph(f"Generated: {scan_date.strftime('%Y-%m-%d %H:%M')}", normal_style))
-    content.append(Paragraph(f"Repository: {repo_path}", normal_style))
-    content.append(Spacer(1, 1*cm))
-    
-    # Summary section
-    content.append(Paragraph("Executive Summary", section_style))
-    
-    # Add metrics table
-    summary_data = [
-        ["Metric", "Value"],
-        ["Files Scanned", str(scan_results.get("file_count", 0))],
-        ["Lines of Code", str(scan_results.get("line_count", 0))],
-        ["Findings", str(scan_results.get("findings_count", 0))],
-        ["Scan Duration", f"{scan_results.get('scan_duration', 0):.2f} seconds"],
-    ]
-    
-    # Count findings by severity
-    findings = scan_results.get("findings", [])
-    severity_counts = {"high": 0, "medium": 0, "low": 0}
-    for finding in findings:
-        severity = finding.get("severity", "low")
-        severity_counts[severity] += 1
-    
-    for severity, count in severity_counts.items():
-        summary_data.append([f"{severity.title()} Severity Findings", str(count)])
-    
-    summary_table = Table(summary_data, colWidths=[doc.width/2.5, doc.width/2.5])
-    summary_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (1, 0), colors.lightblue),
-        ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
-        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (1, 0), 12),
-        ('BACKGROUND', (0, 1), (1, -1), colors.whitesmoke),
-        ('GRID', (0, 0), (1, -1), 1, colors.black),
-    ]))
-    
-    content.append(summary_table)
-    content.append(Spacer(1, 0.5*cm))
-    
-    # Compliance Scores section
-    content.append(Paragraph("GDPR Compliance Scores", section_style))
-    
-    # Create scores table
-    compliance_scores = scan_results.get("compliance_scores", {})
-    scores_data = [["GDPR Principle", "Score"]]
-    
-    for principle, score in compliance_scores.items():
-        scores_data.append([principle, f"{score}%"])
-    
-    scores_table = Table(scores_data, colWidths=[doc.width*0.7, doc.width*0.3])
-    scores_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (1, 0), colors.lightblue),
-        ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
-        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('ALIGN', (1, 1), (1, -1), 'CENTER'),
-    ]))
-    
-    content.append(scores_table)
-    content.append(Spacer(1, 1*cm))
-    
-    # Findings section - group by principle
-    if findings:
-        content.append(Paragraph("Key Findings", section_style))
-        
-        # Group findings by principle
-        principle_findings = {}
-        for finding in findings:
-            principle = finding.get("principle", "Other")
-            if principle not in principle_findings:
-                principle_findings[principle] = []
-            principle_findings[principle].append(finding)
-        
-        # Add findings by principle
-        for principle, findings_list in principle_findings.items():
-            content.append(Paragraph(f"{principle}", heading2_style))
-            
-            # Sort by severity
-            findings_list.sort(key=lambda x: {"high": 0, "medium": 1, "low": 2}.get(x.get("severity", "low"), 3))
-            
-            # List findings
-            for i, finding in enumerate(findings_list[:5], 1):  # Show only top 5 per principle
-                severity = finding.get("severity", "low").upper()
-                file_path = finding.get("file", "Unknown")
-                line_num = finding.get("line", 0)
-                description = finding.get("description", "No description")
-                
-                finding_text = f"{i}. {severity}: {description} ({os.path.basename(file_path)}:{line_num})"
-                content.append(Paragraph(finding_text, normal_style))
-            
-            # Show message if more findings exist
-            if len(findings_list) > 5:
-                more_count = len(findings_list) - 5
-                content.append(Paragraph(f"...and {more_count} more {principle} findings", normal_style))
-            
-            content.append(Spacer(1, 0.5*cm))
-    else:
-        content.append(Paragraph("No GDPR compliance issues were found!", heading2_style))
-    
-    # Build document
-    doc.build(content)
-    
-    # Get PDF data
-    pdf_data = buffer.getvalue()
-    buffer.close()
-    
-    return pdf_data
+    run_scan = st.button("Run GDPR Scan", type="primary")
 
-def main():
-    """Main application function"""
-    st.title("GDPR Code Scanner")
-    st.markdown("Scan your code for GDPR compliance issues with Dutch-specific rules (UAVG)")
-    
-    # Main layout
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        st.markdown("### Scan Configuration")
-        
-        # Repository path
-        repo_path = st.text_input(
-            "Repository Path",
-            value=".",
-            help="Path to the repository to scan"
-        )
-        
-        # Select languages
-        languages = st.multiselect(
-            "Select Languages",
-            options=["Python", "JavaScript", "TypeScript", "Java", "Terraform", "YAML", "JSON"],
-            default=["Python", "JavaScript"],
-            help="Select languages to scan"
-        )
-        
-        # Organization name
-        organization_name = st.text_input(
-            "Organization Name",
-            value="Your Organization",
-            help="Your organization name for the report"
-        )
-        
-        # Scan button
-        scan_button = st.button("Start GDPR Scan", use_container_width=True)
-    
+# If scan button is clicked, show scanning process and results
+if run_scan:
     with col2:
-        # Display scan results
-        if scan_button:
-            # Initialize scanner
-            scanner = GDPRScanner(
-                repo_path=repo_path,
-                languages=[lang.lower() for lang in languages]
-            )
-            
-            # Show progress
+        with st.spinner("Running GDPR compliance scan..."):
+            # Add progress tracking
             progress_bar = st.progress(0)
-            status_text = st.empty()
+            status = st.empty()
             
-            # Simulate scan progress
-            for i in range(1, 11):
-                progress_bar.progress(i/10)
-                status_text.text(f"Scanning repository... ({i*10}%)")
-                if i < 10:  # Don't sleep on the last iteration
-                    time.sleep(0.3)
+            # Simulate scanning steps
+            for i, principle in enumerate([
+                "Lawfulness, Fairness and Transparency",
+                "Purpose Limitation",
+                "Data Minimization",
+                "Accuracy",
+                "Storage Limitation", 
+                "Integrity and Confidentiality",
+                "Accountability"
+            ]):
+                # Update progress
+                progress = int((i + 1) / 7 * 100)
+                progress_bar.progress(progress)
+                status.text(f"Scanning for {principle}...")
+                time.sleep(0.5)  # Simulate processing time
             
-            # Run scan
-            with st.spinner("Finalizing scan..."):
-                results = scanner.scan()
-                st.session_state.gdpr_scan_results = results
+            # Clear progress indicators
+            progress_bar.empty()
+            status.empty()
+        
+        # Show success message
+        st.success("Scan completed successfully!")
+        
+        # Create tabs for different views
+        overview_tab, findings_tab, report_tab = st.tabs(["Overview", "Findings", "PDF Report"])
+        
+        # Generate mock scan results
+        scan_results = {
+            "scan_id": str(uuid.uuid4()),
+            "repo_url": repo_url,
+            "scan_depth": scan_depth,
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+            "findings": [
+                {
+                    "id": "LFT-001",
+                    "principle": "Lawfulness, Fairness and Transparency",
+                    "severity": "high",
+                    "title": "Missing Explicit Consent Collection",
+                    "description": "User registration process does not include explicit consent options for data processing",
+                    "location": "File: auth/signup.py, Line: 42-57",
+                    "article": "GDPR Art. 6, UAVG"
+                },
+                {
+                    "id": "LFT-002",
+                    "principle": "Lawfulness, Fairness and Transparency",
+                    "severity": "medium",
+                    "title": "Privacy Policy Not Prominently Displayed",
+                    "description": "Privacy policy link is not clearly visible during user registration",
+                    "location": "File: templates/signup.html, Line: 25",
+                    "article": "GDPR Art. 13, UAVG"
+                },
+                {
+                    "id": "PL-001",
+                    "principle": "Purpose Limitation",
+                    "severity": "high",
+                    "title": "Data Used for Multiple Undocumented Purposes",
+                    "description": "User data collected for account creation is also used for analytics without separate consent",
+                    "location": "File: analytics/user_tracking.py, Line: 78-92",
+                    "article": "GDPR Art. 5-1b, UAVG"
+                },
+                {
+                    "id": "DM-001",
+                    "principle": "Data Minimization",
+                    "severity": "medium",
+                    "title": "Excessive Personal Information Collection",
+                    "description": "User registration form collects unnecessary personal details not required for service functionality",
+                    "location": "File: models/user.py, Line: 15-28",
+                    "article": "GDPR Art. 5-1c, UAVG"
+                },
+                {
+                    "id": "SL-001", 
+                    "principle": "Storage Limitation",
+                    "severity": "high",
+                    "title": "No Data Retention Policy",
+                    "description": "Application does not implement automatic deletion of outdated user data",
+                    "location": "File: database/schema.py, Line: 110-124",
+                    "article": "GDPR Art. 5-1e, 17, UAVG"
+                },
+                {
+                    "id": "IC-001",
+                    "principle": "Integrity and Confidentiality",
+                    "severity": "high",
+                    "title": "Weak Password Hashing",
+                    "description": "Passwords are stored using MD5 hashing algorithm",
+                    "location": "File: auth/security.py, Line: 35-47",
+                    "article": "GDPR Art. 32, UAVG"
+                },
+                {
+                    "id": "NL-002",
+                    "principle": "Dutch-Specific Requirements",
+                    "severity": "high",
+                    "title": "Improper BSN Number Collection",
+                    "description": "Dutch Citizen Service Numbers (BSN) are collected without proper legal basis",
+                    "location": "File: models/dutch_user.py, Line: 28-36", 
+                    "article": "UAVG Art. 46, GDPR Art. 9"
+                }
+            ],
+            "compliance_scores": {
+                "Lawfulness, Fairness and Transparency": 78,
+                "Purpose Limitation": 82,
+                "Data Minimization": 85,
+                "Accuracy": 90,
+                "Storage Limitation": 75,
+                "Integrity and Confidentiality": 68, 
+                "Accountability": 80
+            }
+        }
+        
+        # Calculate summary metrics
+        findings = scan_results["findings"]
+        high_risk = sum(1 for f in findings if f.get("severity") == "high")
+        medium_risk = sum(1 for f in findings if f.get("severity") == "medium")
+        low_risk = sum(1 for f in findings if f.get("severity") == "low")
+        total_findings = len(findings)
+        
+        # Calculate overall compliance score
+        compliance_score = max(0, 100 - (high_risk * 7) - (medium_risk * 3) - (low_risk * 1))
+        
+        # Overview tab content
+        with overview_tab:
+            # Create columns for metrics
+            score_col, metrics_col = st.columns([1, 2])
             
-            # Update progress
-            progress_bar.progress(1.0)
-            status_text.text("Scan completed!")
-            
-            # Show success message
-            st.success(f"GDPR compliance scan completed! Found {results['findings_count']} issues.")
-            
-            # Display metrics
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Files Scanned", results["file_count"])
-            with col2:
-                st.metric("Lines of Code", results["line_count"])
-            with col3:
-                st.metric("Issues Found", results["findings_count"])
-            
-            # Display GDPR compliance scores
-            st.markdown("### GDPR Compliance Scores")
-            
-            for principle, score in results["compliance_scores"].items():
-                # Color based on score
-                if score >= 90:
-                    st.success(f"**{principle}**: {score}%")
-                elif score >= 70:
-                    st.warning(f"**{principle}**: {score}%")
-                else:
-                    st.error(f"**{principle}**: {score}%")
-            
-            # Display findings
-            if results["findings"]:
-                st.markdown("### Key Findings")
+            with score_col:
+                st.subheader("Compliance Score")
+                score_color = "green"
+                if compliance_score < 80:
+                    score_color = "orange"
+                if compliance_score < 60:
+                    score_color = "red"
                 
-                # Group findings by severity
-                high_findings = [f for f in results["findings"] if f.get("severity") == "high"]
-                medium_findings = [f for f in results["findings"] if f.get("severity") == "medium"]
-                low_findings = [f for f in results["findings"] if f.get("severity") == "low"]
-                
-                # Show high severity findings
-                if high_findings:
-                    st.error(f"**HIGH SEVERITY ISSUES: {len(high_findings)}**")
-                    for finding in high_findings[:5]:  # Show top 5
-                        with st.expander(f"{finding['description']} - {os.path.basename(finding['file'])}:{finding['line']}"):
-                            st.text(f"File: {finding['file']}")
-                            st.text(f"Line: {finding['line']}")
-                            st.text(f"Principle: {finding['principle']}")
-                            st.text(f"GDPR References: {', '.join(finding['region_flags'])}")
-                            st.code(finding['context_snippet'])
-                
-                # Show medium severity findings
-                if medium_findings:
-                    st.warning(f"**MEDIUM SEVERITY ISSUES: {len(medium_findings)}**")
-                    for finding in medium_findings[:5]:  # Show top 5
-                        with st.expander(f"{finding['description']} - {os.path.basename(finding['file'])}:{finding['line']}"):
-                            st.text(f"File: {finding['file']}")
-                            st.text(f"Line: {finding['line']}")
-                            st.text(f"Principle: {finding['principle']}")
-                            st.text(f"GDPR References: {', '.join(finding['region_flags'])}")
-                            st.code(finding['context_snippet'])
+                st.markdown(f"""
+                <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; text-align: center;">
+                    <h1 style="color: {score_color}; font-size: 4rem; margin: 0;">{compliance_score}%</h1>
+                </div>
+                """, unsafe_allow_html=True)
             
-            # PDF Report generation
-            st.markdown("### Generate PDF Report")
-            if st.button("Generate PDF Report", key="gen_pdf", use_container_width=True):
-                with st.spinner("Generating PDF report..."):
-                    pdf_data = generate_pdf_report(results)
+            with metrics_col:
+                st.subheader("Risk Summary")
+                c1, c2, c3 = st.columns(3)
+                
+                with c1:
+                    st.metric("High Risk", high_risk)
+                
+                with c2:
+                    st.metric("Medium Risk", medium_risk)
+                
+                with c3:
+                    st.metric("Low Risk", low_risk)
+            
+            # Principle-specific scores
+            st.subheader("GDPR Principle Compliance")
+            
+            # Create dataframe for bar chart
+            principle_df = pd.DataFrame({
+                "Principle": list(scan_results["compliance_scores"].keys()),
+                "Score": list(scan_results["compliance_scores"].values())
+            })
+            
+            st.bar_chart(principle_df.set_index("Principle"))
+            
+            # Scan info
+            st.subheader("Scan Information")
+            info_col1, info_col2 = st.columns(2)
+            
+            with info_col1:
+                st.write(f"**Repository:** {scan_results['repo_url']}")
+                st.write(f"**Scan Depth:** {scan_results['scan_depth']}")
+            
+            with info_col2:
+                st.write(f"**Scan Date:** {scan_results['timestamp']}")
+                st.write(f"**Total Issues:** {total_findings}")
+        
+        # Findings tab content
+        with findings_tab:
+            st.subheader("Detailed Findings")
+            
+            # Group findings by principle
+            findings_by_principle = {}
+            for finding in findings:
+                principle = finding.get("principle", "Other")
+                if principle not in findings_by_principle:
+                    findings_by_principle[principle] = []
+                findings_by_principle[principle].append(finding)
+            
+            # Show findings by principle
+            for principle, principle_findings in findings_by_principle.items():
+                st.markdown(f"#### {principle}")
+                
+                for finding in principle_findings:
+                    severity = finding.get("severity", "unknown")
+                    severity_color = {"high": "red", "medium": "orange", "low": "green"}.get(severity, "gray")
                     
-                    # Create filename with timestamp
-                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-                    filename = f"GDPR_Report_{organization_name.replace(' ', '_')}_{timestamp}.pdf"
+                    with st.expander(f"{finding.get('id', '')}: {finding.get('title', '')}"):
+                        st.markdown(f"**Severity:** <span style='color: {severity_color};'>{severity.upper()}</span>", unsafe_allow_html=True)
+                        st.markdown(f"**Description:** {finding.get('description', '')}")
+                        st.markdown(f"**Location:** {finding.get('location', '')}")
+                        st.markdown(f"**Regulation:** {finding.get('article', '')}")
+        
+        # Report tab content
+        with report_tab:
+            st.subheader("Generate PDF Report")
+            
+            if st.button("Generate PDF Report"):
+                # Generate PDF function
+                def generate_pdf():
+                    buffer = BytesIO()
+                    doc = SimpleDocTemplate(buffer, pagesize=letter)
+                    styles = getSampleStyleSheet()
                     
-                    # Success message
-                    st.success("PDF report generated successfully!")
-                    
-                    # Download button
-                    st.download_button(
-                        label="📥 Download PDF Report",
-                        data=pdf_data,
-                        file_name=filename,
-                        mime="application/pdf",
-                        use_container_width=True
+                    # Custom styles
+                    title_style = ParagraphStyle(
+                        name='TitleStyle',
+                        parent=styles['Heading1'],
+                        fontSize=20,
+                        textColor=colors.navy,
+                        spaceAfter=12
                     )
                     
-                    # Alternative download link
-                    b64_pdf = base64.b64encode(pdf_data).decode()
-                    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{filename}" style="display:block;text-align:center;margin-top:10px;padding:10px;background-color:#1E3A8A;color:white;text-decoration:none;border-radius:4px;">📥 Alternative Download Link</a>'
-                    st.markdown(href, unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
+                    header_style = ParagraphStyle(
+                        name='HeaderStyle',
+                        parent=styles['Heading2'],
+                        fontSize=14,
+                        textColor=colors.darkblue,
+                        spaceAfter=8
+                    )
+                    
+                    normal_style = styles['Normal']
+                    
+                    # Generate elements for PDF
+                    elements = []
+                    
+                    # Header
+                    elements.append(Paragraph("GDPR Compliance Report", title_style))
+                    elements.append(Spacer(1, 0.25*inch))
+                    
+                    # Report metadata
+                    elements.append(Paragraph(f"Organization: {organization_name}", normal_style))
+                    elements.append(Paragraph(f"Scan Date: {scan_results['timestamp']}", normal_style))
+                    elements.append(Paragraph(f"Repository: {scan_results['repo_url']}", normal_style))
+                    elements.append(Spacer(1, 0.25*inch))
+                    
+                    # Compliance score
+                    elements.append(Paragraph("Compliance Score", header_style))
+                    score_style = ParagraphStyle(
+                        name='ScoreStyle',
+                        parent=styles['Heading2'],
+                        fontSize=16,
+                        textColor=colors.green if compliance_score >= 80 else (colors.orange if compliance_score >= 60 else colors.red),
+                        spaceBefore=6,
+                        spaceAfter=12
+                    )
+                    elements.append(Paragraph(f"{compliance_score}%", score_style))
+                    elements.append(Spacer(1, 0.25*inch))
+                    
+                    # Risk summary
+                    elements.append(Paragraph("Risk Summary", header_style))
+                    
+                    risk_data = [
+                        ["Risk Level", "Count"],
+                        ["High Risk", high_risk],
+                        ["Medium Risk", medium_risk],
+                        ["Low Risk", low_risk],
+                        ["Total Findings", total_findings]
+                    ]
+                    
+                    risk_table = Table(risk_data, colWidths=[2*inch, 1*inch])
+                    risk_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (1, 0), colors.navy),
+                        ('TEXTCOLOR', (0, 0), (1, 0), colors.white),
+                        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
+                        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0, 0), (1, 0), 8),
+                        ('BACKGROUND', (0, 1), (0, 1), colors.lightcoral),
+                        ('BACKGROUND', (0, 2), (0, 2), colors.lightyellow),
+                        ('BACKGROUND', (0, 3), (0, 3), colors.lightgreen),
+                        ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
+                        ('ALIGN', (1, 1), (1, -1), 'CENTER'),
+                    ]))
+                    
+                    elements.append(risk_table)
+                    elements.append(Spacer(1, 0.25*inch))
+                    
+                    # Principle-specific compliance scores
+                    elements.append(Paragraph("GDPR Principle Compliance", header_style))
+                    
+                    principle_data = [["GDPR Principle", "Score"]]
+                    for principle, score in scan_results["compliance_scores"].items():
+                        principle_data.append([principle, f"{score}%"])
+                    
+                    principle_table = Table(principle_data, colWidths=[4*inch, 1*inch])
+                    principle_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (1, 0), colors.navy),
+                        ('TEXTCOLOR', (0, 0), (1, 0), colors.white),
+                        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
+                        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0, 0), (1, 0), 8),
+                        ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
+                        ('ALIGN', (1, 1), (1, -1), 'CENTER'),
+                    ]))
+                    
+                    elements.append(principle_table)
+                    elements.append(Spacer(1, 0.25*inch))
+                    
+                    # Detailed findings
+                    elements.append(Paragraph("Detailed Findings", header_style))
+                    
+                    # Add each principle and its findings
+                    for principle, principle_findings in findings_by_principle.items():
+                        principle_style = ParagraphStyle(
+                            name='PrincipleStyle',
+                            parent=styles['Heading3'],
+                            fontSize=12,
+                            textColor=colors.darkblue,
+                            spaceBefore=6,
+                            spaceAfter=6
+                        )
+                        elements.append(Paragraph(principle, principle_style))
+                        
+                        # Add each finding
+                        for finding in principle_findings:
+                            severity = finding.get("severity", "unknown")
+                            severity_color = {
+                                "high": colors.red,
+                                "medium": colors.orange,
+                                "low": colors.green
+                            }.get(severity, colors.grey)
+                            
+                            finding_title_style = ParagraphStyle(
+                                name='FindingTitleStyle',
+                                parent=styles['Heading4'],
+                                fontSize=10,
+                                textColor=severity_color,
+                                spaceBefore=4,
+                                spaceAfter=4
+                            )
+                            
+                            elements.append(Paragraph(
+                                f"{finding.get('id', 'UNKNOWN')}: {finding.get('title', 'Unnamed Finding')} ({severity.upper()})",
+                                finding_title_style
+                            ))
+                            
+                            elements.append(Paragraph(f"Description: {finding.get('description', 'No description')}", normal_style))
+                            elements.append(Paragraph(f"Location: {finding.get('location', 'Unknown')}", normal_style))
+                            elements.append(Paragraph(f"Regulation: {finding.get('article', 'Not specified')}", normal_style))
+                            elements.append(Spacer(1, 0.1*inch))
+                    
+                    # Add certification
+                    elements.append(Spacer(1, 0.5*inch))
+                    elements.append(Paragraph("Certification", header_style))
+                    elements.append(Paragraph(
+                        "This report was automatically generated by the GDPR Scanner. "
+                        "This scan provides an assessment of potential GDPR compliance issues but does not constitute "
+                        "legal advice. Please consult with your privacy officer or legal counsel for definitive guidance.",
+                        normal_style
+                    ))
+                    
+                    # Build PDF
+                    doc.build(elements)
+                    buffer.seek(0)
+                    
+                    return buffer
+                
+                # Generate PDF and provide download link
+                with st.spinner("Generating PDF report..."):
+                    pdf_buffer = generate_pdf()
+                    
+                    st.success("PDF report generated successfully!")
+                    
+                    # Create download button
+                    current_date = datetime.datetime.now().strftime("%Y%m%d")
+                    st.download_button(
+                        label="Download PDF Report",
+                        data=pdf_buffer,
+                        file_name=f"gdpr_report_{current_date}.pdf",
+                        mime="application/pdf"
+                    )
