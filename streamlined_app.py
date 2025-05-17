@@ -8,7 +8,7 @@ import io
 from io import BytesIO  # Import BytesIO for PDF generation
 import random
 import uuid
-from datetime import datetime
+import datetime
 import base64
 
 # Import enhanced AI model scanner
@@ -1956,7 +1956,7 @@ def render_scan_form():
                 },
                 "findings": findings,
                 "organization_name": "DataGuardian Pro Client",
-                "scan_date": datetime.datetime.now().strftime("%Y-%m-%d"),
+                "scan_date": datetime.now().strftime("%Y-%m-%d"),
                 "raw_results": results
             }
             
