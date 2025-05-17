@@ -1898,66 +1898,72 @@ def render_scan_form():
             
             # Add a header with basic styling  
             st.markdown("---")
-            
-            # Add compliance resources section
-            st.markdown("## 📚 GDPR Compliance Resources")
-            
-            with st.expander("View Helpful Resources"):
-                st.markdown("""
-                ### Useful GDPR Resources:
-                
-                * [Official EU GDPR Portal](https://gdpr.eu/)
-                * [Information Commissioner's Office Guide](https://ico.org.uk/for-organisations/guide-to-data-protection/guide-to-the-general-data-protection-regulation-gdpr/)
-                * [GDPR Checklist](https://gdpr.eu/checklist/)
-                * [Data Protection Impact Assessment Guidelines](https://ec.europa.eu/newsroom/article29/items/611236)
-                * [EU Data Protection Board Guidelines](https://edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en)
-                """)
-            
-            # Add tips section
-            st.markdown("## 💡 GDPR Compliance Tips")
-            
-            with st.expander("View Compliance Tips"):
-                st.markdown("""
-                ### Top GDPR Compliance Tips:
-                
-                1. **Document Everything**: Keep detailed records of all data processing activities
-                2. **Implement Privacy by Design**: Build privacy into your systems from the start
-                3. **Regular Assessments**: Conduct DPIAs for high-risk processing activities
-                4. **Staff Training**: Ensure all team members understand data protection principles
-                5. **Data Minimization**: Only collect and store the data you truly need
-                """)
-            
-            # Add a reference to online GDPR compliance checkers
-            st.markdown("## 🔍 Online GDPR Compliance Checkers")
-            st.info("These online tools can help you evaluate your GDPR compliance status:")
-            
-            external_tools = {
-                "GDPR.eu Checklist": "https://gdpr.eu/checklist/",
-                "ICO Assessment Tool": "https://ico.org.uk/for-organisations/sme-web-hub/",
-                "EU DPIA Guidelines": "https://edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-data-protection-impact-assessment-dpia_en"
-            }
-            
-            for tool_name, tool_url in external_tools.items():
-                st.markdown(f"* [{tool_name}]({tool_url})")
-                
-            # Add some final notes about proper GDPR implementation
-            if "findings" in results and isinstance(results["findings"], list) and results["findings"]:
-                st.subheader("Key Findings from Your Scan")
-                
-                for finding in results["findings"]:
-                    if isinstance(finding, dict):
-                        severity = finding.get("severity", "medium")
-                        description = finding.get("description", "No description provided")
+                                    "Purpose Limitation": 78,
+                                    "Data Minimization": 80,
+                                    "Accuracy": 85,
+                                    "Storage Limitation": 72,
+                                    "Integrity and Confidentiality": 82,
+                                    "Accountability": 77
+                                }
+                            
+                            # Display each principle score
+                            for principle, score in scores.items():
+                                p.drawString(70, y_pos, f"• {principle}: {score}%")
+                                y_pos -= 20
+                            
+                            # Calculate overall score
+                            overall = sum(scores.values()) / len(scores)
+                            p.setFont("Helvetica-Bold", 12)
+                            p.drawString(70, y_pos - 20, f"Overall Compliance: {overall:.1f}%")
+                            
+                            # Add certification section
+                            p.setFont("Helvetica-Bold", 16)
+                            p.drawString(50, 380, "Certification Status")
+                            
+                            p.setFont("Helvetica", 12)
+                            p.drawString(50, 360, f"{org_name} is certified as {cert_type}.")
+                            p.drawString(50, 340, "This certification is valid for one year from the date of issuance.")
+                            
+                            # Add findings if available
+                            if "findings" in results and isinstance(results["findings"], list) and results["findings"]:
+                                p.setFont("Helvetica-Bold", 16)
+                                p.drawString(50, 300, "Key Findings")
+                                
+                                p.setFont("Helvetica", 12)
+                                y_pos = 280
+                                for i, finding in enumerate(results["findings"][:3]):  # Limit to 3 findings
+                                    if isinstance(finding, dict):
+                                        principle = finding.get("principle", "Unknown")
+                                        severity = finding.get("severity", "medium")
+                                        p.drawString(50, y_pos, f"{i+1}. {principle} ({severity.upper()})")
+                                        y_pos -= 20
+                            
+                            # Footer
+                            p.setFont("Helvetica-Oblique", 10)
+                            p.drawString(200, 50, "© 2025 DataGuardian Pro")
+                            
+                            # Save PDF
+                            p.save()
+                            pdf_bytes = buffer.getvalue()
+                            buffer.close()
+                            
+                            # Download button for PDF
+                            st.success("✅ Report generated successfully!")
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            filename = f"GDPR_Report_{org_name.replace(' ', '_')}_{timestamp}.pdf"
+                            
+                            st.download_button(
+                                label="📥 Download PDF Report",
+                                data=pdf_bytes,
+                                file_name=filename,
+                                mime="application/pdf",
+                                key="direct_pdf_download",
+                                use_container_width=True
+                            )
+                        except Exception as e:
+                            st.error(f"Error generating PDF: {str(e)}")
+                            st.error("Please try the ultra simple version at http://0.0.0.0:5003")
                         
-                        severity_emoji = "🔴" if severity == "high" else "🟠" if severity == "medium" else "🟢"
-                        st.markdown(f"{severity_emoji} **{severity.upper()}**: {description}")
-            else:
-                st.info("No specific findings were detected in this scan. This is a good sign, but we still recommend reviewing your data protection practices regularly.")
-                
-            # Add a footer section
-            st.markdown("---")
-            st.markdown("### About DataGuardian Pro")
-            st.markdown("DataGuardian Pro is your comprehensive privacy compliance solution, helping you protect personal data and meet regulatory requirements.")
             # Add a header with basic styling  
             st.markdown("---")
             st.markdown("## 📋 GDPR Report Generation")

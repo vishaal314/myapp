@@ -48,6 +48,10 @@ args = "Reliable GDPR PDF"
 task = "workflow.run"
 args = "Ultra Reliable PDF"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Simple DPIA"
+
 [[workflows.workflow]]
 name = "Streamlined App"
 author = "agent"
@@ -120,6 +124,15 @@ task = "shell.exec"
 args = "streamlit run ultra_reliable_pdf.py --server.port 5006 --server.headless true"
 waitForPort = 5006
 
+[[workflows.workflow]]
+name = "Simple DPIA"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run simple_dpia.py --server.port 5007 --server.headless true"
+waitForPort = 5007
+
 [[ports]]
 localPort = 5000
 externalPort = 80
@@ -147,3 +160,7 @@ externalPort = 3003
 [[ports]]
 localPort = 5006
 externalPort = 5000
+
+[[ports]]
+localPort = 5007
+externalPort = 5173
