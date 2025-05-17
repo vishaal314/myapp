@@ -82,7 +82,7 @@ args = "Minimal Working Scanner"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Fixed GDPR Scanner"
+args = "Main App"
 
 [[workflows.workflow]]
 name = "Minimal GDPR PDF"
@@ -229,12 +229,12 @@ args = "streamlit run minimal_scanner.py --server.port 5050 --server.headless tr
 waitForPort = 5050
 
 [[workflows.workflow]]
-name = "Fixed GDPR Scanner"
+name = "Main App"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run fixed_gdpr_scanner.py --server.port 5000 --server.headless true"
+args = "streamlit run app.py --server.port 5000 --server.headless true"
 waitForPort = 5000
 
 [[ports]]
