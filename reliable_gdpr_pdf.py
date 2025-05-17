@@ -109,14 +109,14 @@ if submit:
             story.append(table)
             story.append(Spacer(1, 20))
             
-            # Add findings section if available
+            # Add findings section - always display with actual findings or a message
+            story.append(Paragraph("Key Findings from Your Scan", styles["Heading2"]))
+            
             if 'last_scan_results' in st.session_state and st.session_state.last_scan_results:
                 scan_results = st.session_state.last_scan_results
                 findings = scan_results.get('findings', [])
                 
                 if findings and isinstance(findings, list) and len(findings) > 0:
-                    story.append(Paragraph("Key Findings", styles["Heading2"]))
-                    
                     # Create a list of findings
                     for i, finding in enumerate(findings):
                         if isinstance(finding, dict):
@@ -124,9 +124,21 @@ if submit:
                             severity = finding.get("severity", "medium").upper()
                             description = finding.get("description", "No details provided")
                             
-                            finding_text = f"{i+1}. {principle} ({severity}): {description}"
+                            # Create severity icon
+                            if severity.upper() == "HIGH":
+                                severity_indicator = "🔴 HIGH"
+                            elif severity.upper() == "MEDIUM":
+                                severity_indicator = "🟠 MEDIUM"
+                            else:
+                                severity_indicator = "🟢 LOW"
+                            
+                            finding_text = f"{i+1}. {severity_indicator}: {principle} - {description}"
                             story.append(Paragraph(finding_text, styles["Normal"]))
                             story.append(Spacer(1, 5))
+                else:
+                    story.append(Paragraph("No significant compliance issues were found during this scan.", styles["Normal"]))
+            else:
+                story.append(Paragraph("No scan data available. Please run a scan to get actual findings.", styles["Normal"]))
             
             story.append(Spacer(1, 10))
             
@@ -148,7 +160,7 @@ if submit:
             # Success message
             st.success("✅ PDF report generated successfully!")
             
-            # Create download button
+            # Create download button with unique key
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f"GDPR_Report_{organization_name.replace(' ', '_')}_{timestamp}.pdf"
             
@@ -157,9 +169,15 @@ if submit:
                 data=pdf_bytes,
                 file_name=filename,
                 mime="application/pdf",
-                key="reliable_pdf_download",
+                key=f"reliable_pdf_download_{timestamp}",
                 use_container_width=True
             )
+            
+            # Alternative download method for better reliability
+            import base64
+            b64_pdf = base64.b64encode(pdf_bytes).decode()
+            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{filename}" style="display:block;text-align:center;margin-top:10px;padding:10px;background-color:#4f46e5;color:white;text-decoration:none;border-radius:4px;">📥 Alternative Download Link</a>'
+            st.markdown(href, unsafe_allow_html=True)
             
         except Exception as e:
             st.error(f"Error generating PDF: {str(e)}")

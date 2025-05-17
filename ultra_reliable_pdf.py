@@ -130,14 +130,25 @@ if st.button("Generate PDF", use_container_width=True):
         # Success message
         st.success("✅ PDF generated successfully!")
         
-        # Download button
+        # Create unique filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"GDPR_Compliance_{organization_name.replace(' ', '_')}_{timestamp}.pdf"
+        
+        # Download button with unique key
         st.download_button(
-            label="Download PDF",
+            label="📥 Download PDF Report",
             data=pdf_bytes,
-            file_name=f"GDPR_Compliance_{organization_name.replace(' ', '_')}.pdf",
+            file_name=filename,
             mime="application/pdf",
+            key=f"ultra_pdf_download_{timestamp}",
             use_container_width=True
         )
+        
+        # Alternative download method for better reliability
+        import base64
+        b64_pdf = base64.b64encode(pdf_bytes).decode()
+        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{filename}" style="display:block;text-align:center;margin-top:10px;padding:10px;background-color:#4f46e5;color:white;text-decoration:none;border-radius:4px;">📥 Alternative Download Link</a>'
+        st.markdown(href, unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Error generating PDF: {str(e)}")
         st.code(f"Error details: {type(e).__name__}")
