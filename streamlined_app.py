@@ -499,7 +499,7 @@ def generate_mock_scan_results(scan_type):
     """Generate mock scan results based on scan type"""
     results = {
         "scan_type": scan_type,
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.datetime.now().isoformat(),
         "scan_id": str(uuid.uuid4()),
         "findings": [],
         "total_findings": random.randint(5, 20),
@@ -532,7 +532,7 @@ def generate_mock_soc2_results(repo_url, branch=None):
         "scan_type": "SOC2 Compliance",
         "repo_url": repo_url,
         "branch": branch or "main",
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.datetime.now().isoformat(),
         "scan_id": str(uuid.uuid4()),
         "compliance_score": random.randint(60, 95),
         "controls": {}
@@ -904,7 +904,7 @@ def render_scan_history():
         # Create a dataframe with safe access to dictionary keys using .get() method
         scan_df = pd.DataFrame([
             {
-                "Date": datetime.fromisoformat(scan.get("timestamp", datetime.now().isoformat())).strftime("%Y-%m-%d %H:%M"),
+                "Date": datetime.datetime.fromisoformat(scan.get("timestamp", datetime.datetime.now().isoformat())).strftime("%Y-%m-%d %H:%M"),
                 "Type": scan.get("scan_type", "Unknown"),
                 "Findings": scan.get("total_findings", scan.get("findings_count", 0)),
                 "High Risk": scan.get("high_risk", 0),
@@ -1246,7 +1246,7 @@ def render_scan_form():
                     results = {
                         "scan_type": "Website Scanner",
                         "scan_id": str(uuid.uuid4()),
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.datetime.now().isoformat(),
                         "website_url": website_url,
                         "error": f"Scan failed: {str(e)}",
                         "compliance_score": 0
@@ -1380,7 +1380,7 @@ def render_scan_form():
                     results = {
                         "scan_id": f"ERROR-{str(uuid.uuid4())[:8]}",
                         "scan_type": "AI Model",
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.datetime.now().isoformat(),
                         "error": str(e),
                         "findings": [{
                             "id": f"ERROR-{str(uuid.uuid4())[:8]}",
@@ -1468,7 +1468,7 @@ def render_scan_form():
                 with col1:
                     st.markdown(f"**Scan ID:** {results.get('scan_id', 'Unknown')}")
                     st.markdown(f"**Model Type:** {results.get('model_type', 'Unknown')}")
-                    st.markdown(f"**Scan Date:** {datetime.fromisoformat(results.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}")
+                    st.markdown(f"**Scan Date:** {datetime.datetime.fromisoformat(results.get('timestamp', datetime.datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}")
                 
                 with col2:
                     # Show the risk score with proper formatting
@@ -1956,7 +1956,7 @@ def render_scan_form():
                 },
                 "findings": findings,
                 "organization_name": "DataGuardian Pro Client",
-                "scan_date": datetime.now().strftime("%Y-%m-%d"),
+                "scan_date": datetime.datetime.now().strftime("%Y-%m-%d"),
                 "raw_results": results
             }
             
@@ -2068,7 +2068,7 @@ def render_scan_form():
                                     
                                     # Create filename with timestamp
                                     import datetime
-                                    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                                    timestamp = datetime.datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                                     filename = f"GDPR_Report_{organization_name.replace(' ', '_')}_{timestamp}.pdf"
                                     
                                     # Download button
@@ -2219,7 +2219,7 @@ def render_scan_form():
                 st.metric("High Risk Findings", results.get('high_risk', 3))
             with col2:
                 st.metric("Total Findings", results.get('total_findings', len(results.get('findings', [])))  )
-                st.metric("Generated", datetime.now().strftime('%Y-%m-%d'))
+                st.metric("Generated", datetime.datetime.now().strftime('%Y-%m-%d'))
             
             # MODERN PDF GENERATION
             st.markdown("---")
@@ -2318,7 +2318,7 @@ def render_scan_form():
                                     import random
                                     mock_results = {
                                         "gdpr_scan_completed": True,
-                                        "scan_date": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                        "scan_date": datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                                         "findings": [
                                             {
                                                 "principle": "Data Minimization", 
@@ -2352,7 +2352,7 @@ def render_scan_form():
                                 
                                 if pdf_bytes:
                                     # Generate timestamp for filename
-                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
                                     file_name = f"gdpr_compliance_report_{organization_name.replace(' ', '_')}_{timestamp}.pdf"
                                     
                                     # Immediately trigger download
@@ -2431,7 +2431,7 @@ BT
 0 -20 Td
 (Certification: {certification_type}) Tj
 0 -20 Td
-(Generated: {datetime.now().strftime('%Y-%m-%d')}) Tj
+(Generated: {datetime.datetime.now().strftime('%Y-%m-%d')}) Tj
 ET
 endstream
 endobj
@@ -2493,7 +2493,7 @@ def direct_gdpr_pdf_download():
     # Add organization info
     story.append(Paragraph(f"Organization: {organization_name}", styles["Heading2"]))
     story.append(Paragraph(f"Certification: {certification_type}", styles["Heading3"]))
-    story.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d')}", styles["Normal"]))
+    story.append(Paragraph(f"Generated: {datetime.datetime.now().strftime('%Y-%m-%d')}", styles["Normal"]))
     
     # Build the PDF
     doc.build(story)
@@ -2512,7 +2512,7 @@ def render_reports_section():
                 pdf_bytes = direct_gdpr_pdf_download()
                 
                 # Create filename
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"GDPR_Report_{timestamp}.pdf"
                 
                 # Show success
@@ -2538,7 +2538,7 @@ def render_reports_section():
     else:
         # Create scan options list with safe dictionary access
         scan_options = [
-            f"{scan.get('scan_type', 'Scan')} - {datetime.fromisoformat(scan.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}" 
+            f"{scan.get('scan_type', 'Scan')} - {datetime.datetime.fromisoformat(scan.get('timestamp', datetime.datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}" 
             for scan in st.session_state.scan_history
         ]
         selected_report = st.selectbox("Select Scan for Report", scan_options, key="report_select")
@@ -2559,7 +2559,7 @@ def render_reports_section():
                 # Display report content using .get() for safe access
                 st.markdown(f"""
                 ## {scan_data.get('scan_type', 'Compliance')} Compliance Report
-                **Generated:** {datetime.fromisoformat(scan_data.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}
+                **Generated:** {datetime.datetime.fromisoformat(scan_data.get('timestamp', datetime.datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}
                 
                 ### Summary
                 - **Total Findings:** {scan_data.get('total_findings', scan_data.get('findings_count', 0))}
@@ -2683,7 +2683,7 @@ def render_reports_section():
                         story.append(Spacer(1, 0.25*inch))
                         
                         # Add date and scan info
-                        story.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+                        story.append(Paragraph(f"Generated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
                         story.append(Paragraph(f"Scan ID: {scan_data.get('scan_id', 'N/A')}", styles['Normal']))
                         story.append(Spacer(1, 0.25*inch))
                         
@@ -2807,7 +2807,7 @@ def render_reports_section():
                         ({scan_data.get('scan_type', 'Compliance')} Report) Tj
                         /F1 12 Tf
                         0 -40 Td
-                        (Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}) Tj
+                        (Generated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}) Tj
                         ET
                         endstream
                         endobj
