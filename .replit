@@ -147,7 +147,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run clean_gdpr_code_scanner.py --server.port 5012 --server.headless true"
+args = "streamlit run clean_gdpr_code_scanner_page.py --server.port 5012 --server.headless true"
 waitForPort = 5012
 
 [[workflows.workflow]]
