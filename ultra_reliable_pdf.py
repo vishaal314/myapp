@@ -85,13 +85,15 @@ if st.button("Generate PDF", use_container_width=True):
         
         # Add findings section if available
         y_position = 380
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(50, y_position, "Key Findings from Your Scan")
+        y_position -= 30
+        
         if 'last_scan_results' in st.session_state and st.session_state.last_scan_results:
             scan_results = st.session_state.last_scan_results
             findings = scan_results.get('findings', [])
             
             if findings and isinstance(findings, list) and len(findings) > 0:
-                p.setFont("Helvetica-Bold", 14)
-                p.drawString(50, y_position, "Key Findings")
                 y_position -= 30
                 
                 p.setFont("Helvetica", 12)
@@ -100,12 +102,28 @@ if st.button("Generate PDF", use_container_width=True):
                         principle = finding.get("principle", "General")
                         severity = finding.get("severity", "medium").upper()
                         description = finding.get("description", "No details provided")
+                        location = finding.get("location", "")
                         
                         # Wrap text if too long
-                        if len(description) > 70:
-                            description = description[:67] + "..."
-                            
-                        p.drawString(50, y_position, f"{i+1}. {principle} ({severity}): {description}")
+                        if len(description) > 65:
+                            description = description[:62] + "..."
+                        
+                        # Create severity indicator
+                        if severity.upper() == "HIGH":
+                            severity_text = "HIGH"
+                        elif severity.upper() == "MEDIUM":
+                            severity_text = "MEDIUM" 
+                        else:
+                            severity_text = "LOW"
+                        
+                        # Include file location if available
+                        if location:
+                            finding_text = f"{i+1}. {principle} ({severity_text}): {description}"
+                            p.drawString(50, y_position, finding_text)
+                            y_position -= 15
+                            p.drawString(70, y_position, f"Found in: {location}")
+                        else:
+                            p.drawString(50, y_position, f"{i+1}. {principle} ({severity_text}): {description}")
                         y_position -= 20
                 
                 y_position -= 20

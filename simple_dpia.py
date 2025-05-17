@@ -373,8 +373,13 @@ def run_simple_dpia():
                         key=key,
                         label_visibility="collapsed"
                     )
-                    value = options.index(selected)
-                    st.session_state.ultra_simple_dpia_answers[category][q_idx] = value
+                    # Handle the case where selected might be None
+                    if selected is not None:
+                        value = options.index(selected)
+                        st.session_state.ultra_simple_dpia_answers[category][q_idx] = value
+                    else:
+                        value = 0  # Default to first option if none selected
+                        st.session_state.ultra_simple_dpia_answers[category][q_idx] = value
                     category_answers.append(value)
                     st.markdown("---")
                 answers[category] = category_answers

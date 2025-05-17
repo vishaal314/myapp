@@ -123,6 +123,7 @@ if submit:
                             principle = finding.get("principle", "General")
                             severity = finding.get("severity", "medium").upper()
                             description = finding.get("description", "No details provided")
+                            location = finding.get("location", "")
                             
                             # Create severity icon
                             if severity.upper() == "HIGH":
@@ -132,7 +133,11 @@ if submit:
                             else:
                                 severity_indicator = "🟢 LOW"
                             
-                            finding_text = f"{i+1}. {severity_indicator}: {principle} - {description}"
+                            # Include file location if available
+                            if location:
+                                finding_text = f"{i+1}. {severity_indicator}: {principle} - {description} (in {location})"
+                            else:
+                                finding_text = f"{i+1}. {severity_indicator}: {principle} - {description}"
                             story.append(Paragraph(finding_text, styles["Normal"]))
                             story.append(Spacer(1, 5))
                 else:
