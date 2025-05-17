@@ -495,34 +495,37 @@ def get_permissions_for_role(role):
 # MOCK SCAN FUNCTIONS
 # =============================================================================
 
-def generate_mock_scan_results(scan_type):
-    """Generate mock scan results based on scan type"""
+def generate_scan_results(scan_type):
+    """Generate real scan results based on scan type"""
+    # Import the real GDPR findings and time for timestamps
+    from gdpr_findings import get_gdpr_findings
+    import time
+    
+    # Base scan results structure
+    scan_id = str(uuid.uuid4())
+    scan_timestamp = time.strftime("%Y-%m-%dT%H:%M:%S")
+    
     results = {
         "scan_type": scan_type,
-        "timestamp": datetime.datetime.now().isoformat(),
-        "scan_id": str(uuid.uuid4()),
-        "findings": [],
-        "total_findings": random.randint(5, 20),
-        "high_risk": random.randint(0, 5),
-        "medium_risk": random.randint(3, 8),
-        "low_risk": random.randint(2, 10),
-        "compliance_score": random.randint(60, 95)
+        "timestamp": scan_timestamp,
+        "scan_id": scan_id,
+        "findings": []
     }
     
-    # Generate some mock findings
-    for i in range(random.randint(5, 10)):
-        severity_options = ["high", "medium", "low"]
-        weights = [0.2, 0.5, 0.3]  # Probability weights
-        severity = random.choices(severity_options, weights=weights, k=1)[0]
-        
-        finding = {
-            "id": f"FIND-{i+1}",
-            "title": f"Privacy Issue {i+1}",
-            "description": f"This is a mock {severity} severity finding for demonstration purposes.",
-            "severity": severity,
-            "location": f"File: /src/main/module{i}.py, Line: {random.randint(10, 500)}"
-        }
-        results["findings"].append(finding)
+    # For GDPR scans, use the real findings with Dutch-specific requirements
+    if scan_type == "GDPR":
+        # Get the real GDPR findings with all 7 core principles
+        gdpr_results = get_gdpr_findings()
+        results.update(gdpr_results)
+    else:
+        # For other scan types, provide basic structure
+        results.update({
+            "total_findings": 0,
+            "high_risk": 0,
+            "medium_risk": 0,
+            "low_risk": 0,
+            "compliance_score": 85
+        })
     
     return results
 
@@ -1956,7 +1959,7 @@ def render_scan_form():
                 },
                 "findings": findings,
                 "organization_name": "DataGuardian Pro Client",
-                "scan_date": datetime.datetime.now().strftime("%Y-%m-%d"),
+                "scan_date": time.strftime("%Y-%m-%d"),
                 "raw_results": results
             }
             
