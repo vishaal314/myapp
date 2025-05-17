@@ -1,0 +1,47 @@
+{
+  "repository": "https://github.com/vishaal314/devopssession",
+  "branch": "main",
+  "scan_id": "scan-IWqIBxBc",
+  "secrets_detected": 2,
+  "pii_detected": 3,
+  "files_scanned": 127,
+  "findings": [
+    {
+      "file": "config/database.yml",
+      "line": 15,
+      "type": "SECRET_KEY",
+      "severity": "HIGH",
+      "description": "Database password found in configuration file"
+    },
+    {
+      "file": "src/user_service.py",
+      "line": 48,
+      "type": "API_KEY",
+      "severity": "MEDIUM",
+      "description": "Hardcoded API key"
+    },
+    {
+      "file": "data/test_data.json",
+      "line": 22,
+      "type": "EMAIL_ADDRESS",
+      "severity": "MEDIUM",
+      "description": "Email address in test data"
+    },
+    {
+      "file": "src/utils/customer_helper.js",
+      "line": 87,
+      "type": "PHONE_NUMBER",
+      "severity": "MEDIUM",
+      "description": "Phone number format in utility function"
+    },
+    {
+      "file": "docs/examples/user_example.md",
+      "line": 12,
+      "type": "PERSON_NAME",
+      "severity": "LOW",
+      "description": "Person name in documentation example"
+    }
+  ],
+  "risk_score": 0.72,
+  "processing_time_ms": 5840
+}

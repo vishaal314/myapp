@@ -1,0 +1,3 @@
+Scan type: scan.sustainability
+Region: Netherlands
+Timestamp: 2025-04-26T11:13:41.545602

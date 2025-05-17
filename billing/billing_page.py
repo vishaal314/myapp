@@ -27,7 +27,6 @@ from billing.stripe_integration import (
     delete_payment_method,
     get_subscription_details
 )
-from billing.subscription_tab import render_subscription_tab
 
 def load_stripe_keys():
     """Load Stripe API keys from environment variables"""
@@ -45,23 +44,6 @@ def render_billing_page(username: str, user_data: Dict[str, Any]):
         user_data: User data dictionary
     """
     st.title("Billing Management")
-    
-    # Create tabs for different billing functions
-    tab1, tab2, tab3 = st.tabs(["Payment Methods", "Subscription", "iDEAL Test"])
-    
-    with tab1:
-        render_payment_methods_tab(username, user_data)
-    
-    with tab2:
-        render_subscription_tab(username, user_data)
-        
-    with tab3:
-        # Import here to avoid circular imports
-        from billing.ideal_payment_page import render_ideal_payment_page
-        render_ideal_payment_page(username, user_data)
-        
-def render_payment_methods_tab(username: str, user_data: Dict[str, Any]):
-    """Render the payment methods management tab"""
     
     # Load Stripe keys
     stripe_publishable_key, stripe_secret_key = load_stripe_keys()
@@ -113,48 +95,27 @@ def render_payment_methods_tab(username: str, user_data: Dict[str, Any]):
         padding: 15px;
         margin-bottom: 15px;
         position: relative;
-        background-color: #f9f9f9;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        transition: all 0.2s ease;
-    }
-    
-    .payment-method-card:hover {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        background-color: #f5f5f5;
     }
     
     .default-badge {
         position: absolute;
         top: 10px;
         right: 10px;
-        background: #4CAF50;
-        color: white;
+        background: #ebf4ff;
+        color: #4c51bf;
         font-size: 0.7rem;
-        padding: 3px 8px;
+        padding: 2px 6px;
         border-radius: 4px;
-        font-weight: 500;
     }
     
     .card-brand {
         font-weight: 600;
         margin-bottom: 5px;
-        color: #2c3e50;
-        font-size: 1rem;
     }
     
     .card-details {
         color: #4a5568;
         font-size: 0.9rem;
-        margin-bottom: 8px;
-    }
-    
-    .card-additional {
-        color: #888;
-        font-size: 0.8rem;
-        font-style: italic;
-        border-top: 1px dotted #ddd;
-        padding-top: 5px;
-        margin-top: 5px;
     }
     
     .add-payment-button {
@@ -331,56 +292,28 @@ def render_payment_methods_tab(username: str, user_data: Dict[str, Any]):
             st.info("You don't have any payment methods added yet.")
         else:
             # Display payment methods
-            for idx, pm in enumerate(payment_methods):
+            for pm in payment_methods:
                 is_default = pm.get("is_default", False)
                 card_brand = pm.get("card_brand", "Card")
                 last4 = pm.get("last4", "****")
                 exp_month = pm.get("exp_month", "12")
                 exp_year = pm.get("exp_year", "2025")
                 pm_id = pm.get("id", "")
-                pm_type = pm.get("type", "card")
-                created_date = pm.get("created_at", "")
-                cardholder_name = pm.get("cardholder_name", "")
-                
-                # Create unique keys for buttons with index to avoid duplicates
-                default_key = f"default_{idx}_{pm_id[-8:]}"
-                remove_key = f"remove_{idx}_{pm_id[-8:]}"
                 
                 col1, col2 = st.columns([3, 1])
                 
                 with col1:
-                    # Add more details to distinguish between similar payment methods
-                    if pm_type == "ideal":
-                        additional_info = f"Account: {cardholder_name}"
-                        if created_date:
-                            additional_info += f" | Added: {created_date}"
-                        else:
-                            # Extract date from ID if possible
-                            if "_20" in pm_id:
-                                date_str = pm_id.split("_")[2] if len(pm_id.split("_")) > 2 else ""
-                                if date_str:
-                                    try:
-                                        # Format as date if it looks like a date
-                                        if len(date_str) >= 8:
-                                            formatted_date = f"{date_str[6:8]}/{date_str[4:6]}/{date_str[0:4]}"
-                                            additional_info += f" | Added: {formatted_date}"
-                                    except:
-                                        pass
-                    else:
-                        additional_info = f"Cardholder: {cardholder_name}"
-                        
                     st.markdown(f"""
                     <div class="payment-method-card">
                         {f'<div class="default-badge">Default</div>' if is_default else ''}
                         <div class="card-brand">{card_brand}</div>
                         <div class="card-details">•••• •••• •••• {last4} | Expires {exp_month}/{exp_year}</div>
-                        <div class="card-additional">{additional_info}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with col2:
                     if not is_default:
-                        if st.button("Set Default", key=default_key):
+                        if st.button("Set Default", key=f"default_{pm_id}"):
                             # Set this payment method as default
                             stripe_customer_id = user_data.get("stripe_customer_id", "")
                             if stripe_customer_id:
@@ -391,7 +324,7 @@ def render_payment_methods_tab(username: str, user_data: Dict[str, Any]):
                             st.success("Default payment method updated!")
                             st.rerun()
                     
-                    if st.button("Remove", key=remove_key):
+                    if st.button("Remove", key=f"remove_{pm_id}"):
                         # Delete payment method
                         stripe_customer_id = user_data.get("stripe_customer_id", "")
                         if stripe_customer_id:
@@ -430,29 +363,6 @@ def render_payment_methods_tab(username: str, user_data: Dict[str, Any]):
                             # In a real app, we would use Stripe Elements or Stripe.js for secure card collection
                             # This is a mock implementation for the demo
                             
-                            # Show debugging information
-                            st.info(f"Adding card for {card_holder}")
-                            st.info(f"Customer ID: {user_data.get('stripe_customer_id', 'None')}")
-                            
-                            # Check if customer ID exists
-                            if not user_data.get("stripe_customer_id"):
-                                st.error("No Stripe customer ID found. Creating a new one...")
-                                from billing.stripe_integration import create_stripe_customer
-                                # Create a new customer ID
-                                customer_id = create_stripe_customer({"name": username, "email": user_data.get("email", "")})
-                                
-                                # Update the user data in session state
-                                user_data["stripe_customer_id"] = customer_id
-                                st.session_state.user_data["stripe_customer_id"] = customer_id
-                                
-                                # Update the user record
-                                users = load_users()
-                                if username in users:
-                                    users[username]["stripe_customer_id"] = customer_id
-                                    save_users(users)
-                                    
-                                st.info(f"Created new customer ID: {customer_id}")
-                            
                             # Basic validation
                             card_number = card_number.replace(" ", "").strip()
                             if not card_number.isdigit() or len(card_number) < 13 or len(card_number) > 19:
@@ -475,27 +385,16 @@ def render_payment_methods_tab(username: str, user_data: Dict[str, Any]):
                                     cardholder_name=card_holder
                                 )
                                 
-                                # Show success message with payment method details
-                                st.success(f"Card created successfully: {new_payment_method.get('id', 'Unknown ID')}")
-                                
                                 # Update user record
                                 users = load_users()
                                 if username in users:
                                     users[username]["has_payment_method"] = True
                                     save_users(users)
-                                    st.info("User record updated with card payment method")
                                 
                                 st.success("Card added successfully!")
-                                
-                                # Add a delay before rerunning to allow the message to be displayed
-                                import time
-                                with st.spinner("Updating your payment methods..."):
-                                    time.sleep(1)
                                 st.rerun()
                         except Exception as e:
                             st.error(f"Error adding card: {str(e)}")
-                            import traceback
-                            st.code(traceback.format_exc(), language="python")
         
         # iDEAL Form
         elif payment_type == "iDEAL (Netherlands)":
@@ -529,29 +428,6 @@ def render_payment_methods_tab(username: str, user_data: Dict[str, Any]):
                             # In a real app, we would redirect to the iDEAL payment flow
                             # This is a mock implementation for the demo
                             
-                            # Show debugging information
-                            st.info(f"Adding iDEAL payment method for {account_name} with bank {selected_bank}")
-                            st.info(f"Customer ID: {user_data.get('stripe_customer_id', 'None')}")
-                            
-                            # Check if customer ID exists
-                            if not user_data.get("stripe_customer_id"):
-                                st.error("No Stripe customer ID found. Creating a new one...")
-                                from billing.stripe_integration import create_stripe_customer
-                                # Create a new customer ID
-                                customer_id = create_stripe_customer({"name": username, "email": user_data.get("email", "")})
-                                
-                                # Update the user data in session state
-                                user_data["stripe_customer_id"] = customer_id
-                                st.session_state.user_data["stripe_customer_id"] = customer_id
-                                
-                                # Update the user record
-                                users = load_users()
-                                if username in users:
-                                    users[username]["stripe_customer_id"] = customer_id
-                                    save_users(users)
-                                    
-                                st.info(f"Created new customer ID: {customer_id}")
-                            
                             # Create mock payment method
                             new_payment_method = create_payment_method(
                                 customer_id=user_data.get("stripe_customer_id", ""),
@@ -560,27 +436,16 @@ def render_payment_methods_tab(username: str, user_data: Dict[str, Any]):
                                 account_name=account_name
                             )
                             
-                            # Show success message with payment method details
-                            st.success(f"iDEAL payment method created successfully: {new_payment_method.get('id', 'Unknown ID')}")
-                            
                             # Update user record
                             users = load_users()
                             if username in users:
                                 users[username]["has_payment_method"] = True
                                 save_users(users)
-                                st.info("User record updated with payment method")
                             
                             st.success(f"iDEAL payment method added for {selected_bank} successfully!")
-                            
-                            # Add a delay before rerunning to allow the message to be displayed
-                            import time
-                            with st.spinner("Updating your payment methods..."):
-                                time.sleep(1)
                             st.rerun()
                         except Exception as e:
                             st.error(f"Error setting up iDEAL: {str(e)}")
-                            import traceback
-                            st.code(traceback.format_exc(), language="python")
         
         st.markdown('</div>', unsafe_allow_html=True)
     

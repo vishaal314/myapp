@@ -5,7 +5,6 @@ import time
 import json
 import os
 import io
-from io import BytesIO  # Import BytesIO for PDF generation
 import random
 import uuid
 from datetime import datetime
@@ -495,37 +494,34 @@ def get_permissions_for_role(role):
 # MOCK SCAN FUNCTIONS
 # =============================================================================
 
-def generate_scan_results(scan_type):
-    """Generate real scan results based on scan type"""
-    # Import the real GDPR findings and time for timestamps
-    from gdpr_findings import get_gdpr_findings
-    import time
-    
-    # Base scan results structure
-    scan_id = str(uuid.uuid4())
-    scan_timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    
+def generate_mock_scan_results(scan_type):
+    """Generate mock scan results based on scan type"""
     results = {
         "scan_type": scan_type,
-        "timestamp": scan_timestamp,
-        "scan_id": scan_id,
-        "findings": []
+        "timestamp": datetime.now().isoformat(),
+        "scan_id": str(uuid.uuid4()),
+        "findings": [],
+        "total_findings": random.randint(5, 20),
+        "high_risk": random.randint(0, 5),
+        "medium_risk": random.randint(3, 8),
+        "low_risk": random.randint(2, 10),
+        "compliance_score": random.randint(60, 95)
     }
     
-    # For GDPR scans, use the real findings with Dutch-specific requirements
-    if scan_type == "GDPR":
-        # Get the real GDPR findings with all 7 core principles
-        gdpr_results = get_gdpr_findings()
-        results.update(gdpr_results)
-    else:
-        # For other scan types, provide basic structure
-        results.update({
-            "total_findings": 0,
-            "high_risk": 0,
-            "medium_risk": 0,
-            "low_risk": 0,
-            "compliance_score": 85
-        })
+    # Generate some mock findings
+    for i in range(random.randint(5, 10)):
+        severity_options = ["high", "medium", "low"]
+        weights = [0.2, 0.5, 0.3]  # Probability weights
+        severity = random.choices(severity_options, weights=weights, k=1)[0]
+        
+        finding = {
+            "id": f"FIND-{i+1}",
+            "title": f"Privacy Issue {i+1}",
+            "description": f"This is a mock {severity} severity finding for demonstration purposes.",
+            "severity": severity,
+            "location": f"File: /src/main/module{i}.py, Line: {random.randint(10, 500)}"
+        }
+        results["findings"].append(finding)
     
     return results
 
@@ -923,7 +919,7 @@ def render_scan_form():
     st.subheader("Configure Scan")
     
     scan_types = [
-        "GDPR Code Scanner", 
+        "Code Scanner", 
         "Blob Scanner", 
         "Image Scanner", 
         "Database Scanner", 
@@ -1069,51 +1065,6 @@ def render_scan_form():
                     "",
                     key="sample_inputs"
                 )
-                
-                # Add EU AI Act 2025 compliance analysis option
-                st.markdown("---")
-                st.markdown("### EU AI Act 2025 Compliance")
-                
-                perform_eu_ai_act = st.checkbox(
-                    "Perform EU AI Act 2025 Compliance Analysis",
-                    value=True,
-                    key="perform_eu_ai_act",
-                    help="Analyze the AI model against the EU AI Act 2025 requirements and generate a detailed compliance report"
-                )
-                
-                if perform_eu_ai_act:
-                    # Additional inputs for EU AI Act analysis
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.selectbox(
-                            "Model Purpose",
-                            ["General Purpose", "Healthcare", "Finance", "Education", "Employment", "Law Enforcement", "Critical Infrastructure"],
-                            key="model_purpose",
-                            help="Select the intended purpose of the model to determine applicable requirements"
-                        )
-                        
-                        st.checkbox(
-                            "Is Foundation Model",
-                            value=False,
-                            key="is_foundation_model",
-                            help="Check if this is a foundation or general-purpose AI model with broad capabilities"
-                        )
-                    
-                    with col2:
-                        st.selectbox(
-                            "Deployment Context",
-                            ["Commercial", "Enterprise", "Public Sector", "Healthcare", "Education", "Research"],
-                            key="deployment_context",
-                            help="Environment where the model will be deployed"
-                        )
-                        
-                        st.checkbox(
-                            "Is Generative AI",
-                            value=False,
-                            key="is_generative_ai",
-                            help="Check if this model has generative capabilities (text, image, audio, etc.)"
-                        )
         
         elif selected_scan == "Sustainability Scanner":
             # Provider selection
@@ -1191,6 +1142,7 @@ def render_scan_form():
         with st.spinner("Running scan..."):
             progress_bar = st.progress(0)
             for i in range(1, 101):
+                time.sleep(0.02)  # Simulate scan process
                 progress_bar.progress(i/100)
             
             # Generate results based on scan type
@@ -1311,72 +1263,15 @@ def render_scan_form():
                     sample_inputs_text = st.session_state.get("sample_inputs", "")
                     sample_inputs = [line.strip() for line in sample_inputs_text.split("\n") if line.strip()]
                     
-                    # Get EU AI Act analysis option
-                    perform_eu_ai_act = st.session_state.get("perform_eu_ai_act", True)
-                    
-                    # If EU AI Act analysis is enabled, add additional model details
-                    if perform_eu_ai_act:
-                        # Add EU AI Act specific model details
-                        model_purpose = st.session_state.get("model_purpose", "General Purpose")
-                        deployment_context = st.session_state.get("deployment_context", "Commercial")
-                        is_foundation_model = st.session_state.get("is_foundation_model", False)
-                        is_generative_ai = st.session_state.get("is_generative_ai", False)
-                        
-                        model_details.update({
-                            "purpose": model_purpose,
-                            "deployment_context": deployment_context,
-                            "is_foundation_model": is_foundation_model,
-                            "is_generative_ai": is_generative_ai
-                        })
-                    
-                    try:
-                        # Try to perform the enhanced AI model scan with EU AI Act analysis
-                        if perform_eu_ai_act:
-                            # Check if eu_ai_act modules are available
-                            try:
-                                # Import required modules
-                                from services.eu_ai_act_analyzer import analyze_ai_model
-                                from services.eu_ai_act_report_generator import create_eu_ai_act_report
-                                
-                                # Perform the scan with EU AI Act analysis
-                                results = scanner.scan_model(
-                                    model_source=model_source,
-                                    model_details=model_details,
-                                    leakage_types=leakage_types,
-                                    context=context,
-                                    sample_inputs=sample_inputs,
-                                    perform_eu_ai_act_analysis=True
-                                )
-                            except ImportError:
-                                st.warning("EU AI Act modules are not available. Running scan without EU AI Act analysis.")
-                                results = scanner.scan_model(
-                                    model_source=model_source,
-                                    model_details=model_details,
-                                    leakage_types=leakage_types,
-                                    context=context,
-                                    sample_inputs=sample_inputs,
-                                    perform_eu_ai_act_analysis=False
-                                )
-                        else:
-                            # Perform the scan without EU AI Act analysis
-                            results = scanner.scan_model(
-                                model_source=model_source,
-                                model_details=model_details,
-                                leakage_types=leakage_types,
-                                context=context,
-                                sample_inputs=sample_inputs,
-                                perform_eu_ai_act_analysis=False
-                            )
-                    except Exception as scan_error:
-                        # Fallback to basic scan if enhanced scan fails
-                        st.warning(f"Enhanced AI model scan failed: {str(scan_error)}. Falling back to basic scan.")
-                        results = scanner.scan_model(
-                            model_source=model_source,
-                            model_details=model_details,
-                            leakage_types=leakage_types,
-                            context=context,
-                            sample_inputs=sample_inputs
-                        )
+                    # Perform the enhanced AI model scan
+                    # Call scan_model with only the parameters supported by the parent class
+                    results = scanner.scan_model(
+                        model_source=model_source,
+                        model_details=model_details,
+                        leakage_types=leakage_types,
+                        context=context,
+                        sample_inputs=sample_inputs
+                    )
                 
                 except Exception as e:
                     st.error(f"Error running AI Model scan: {str(e)}")
@@ -1429,9 +1324,9 @@ def render_scan_form():
                     )
                 except Exception as e:
                     st.error(f"Error running sustainability scan: {str(e)}")
-                    results = generate_scan_results(selected_scan)
+                    results = generate_mock_scan_results(selected_scan)
             else:
-                results = generate_scan_results(selected_scan)
+                results = generate_mock_scan_results(selected_scan)
             
             st.session_state.current_scan_results = results
             
@@ -1471,7 +1366,7 @@ def render_scan_form():
                 with col1:
                     st.markdown(f"**Scan ID:** {results.get('scan_id', 'Unknown')}")
                     st.markdown(f"**Model Type:** {results.get('model_type', 'Unknown')}")
-                    st.markdown(f"**Scan Date:** {datetime.datetime.datetime.fromisoformat(results.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}")
+                    st.markdown(f"**Scan Date:** {datetime.fromisoformat(results.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}")
                 
                 with col2:
                     # Show the risk score with proper formatting
@@ -1547,11 +1442,6 @@ def render_scan_form():
                 if findings:
                     # Create tabs for different categories
                     tab_names = ["All Findings", "PII Detection", "Model Bias", "Explainability", "Architecture", "Compliance"]
-                    
-                    # Add EU AI Act tab if EU AI Act compliance analysis was performed
-                    if "eu_ai_act_compliance" in results:
-                        tab_names.append("EU AI Act 2025")
-                        
                     tabs = st.tabs(tab_names)
                     
                     with tabs[0]:  # All Findings
@@ -1690,169 +1580,24 @@ def render_scan_form():
                                                 st.markdown(f"**{key.capitalize()}:** {value}")
                         else:
                             st.info("No compliance findings")
-                    
-                    # Add EU AI Act Compliance tab content
-                    if "eu_ai_act_compliance" in results:
-                        with tabs[6]:  # EU AI Act 2025 tab
-                            # Check if there was an error with EU AI Act analysis
-                            if "eu_ai_act_compliance_error" in results:
-                                st.error(f"Error during EU AI Act analysis: {results.get('eu_ai_act_compliance_error')}")
-                                st.info("The main AI model scan completed successfully, but there was an error with the EU AI Act compliance analysis.")
-                                st.markdown("---")
-                            
-                            eu_ai_act = results.get("eu_ai_act_compliance", {})
-                            
-                            # Display EU AI Act compliance overview
-                            st.markdown("### EU AI Act 2025 Compliance Overview")
-                            
-                            # Display risk category with appropriate styling
-                            risk_category = eu_ai_act.get("risk_category", "unclassified")
-                            
-                            if risk_category == "prohibited":
-                                category_color = "#dc2626"  # Red
-                                category_text = "Prohibited AI Practice"
-                            elif risk_category == "high_risk":
-                                category_color = "#f97316"  # Orange
-                                category_text = "High-Risk AI System"
-                            elif risk_category == "limited_risk":
-                                category_color = "#eab308"  # Yellow
-                                category_text = "Limited Risk AI System" 
-                            elif risk_category == "minimal_risk":
-                                category_color = "#10b981"  # Green
-                                category_text = "Minimal Risk AI System"
-                            elif risk_category == "general_purpose":
-                                category_color = "#3b82f6"  # Blue
-                                category_text = "General Purpose AI System"
-                            else:
-                                category_color = "#6b7280"  # Gray
-                                category_text = "Unclassified AI System"
-                            
-                            st.markdown(f"**Risk Category:** <span style='color:{category_color};font-weight:bold'>{category_text}</span>", unsafe_allow_html=True)
-                            
-                            # Display compliance score with color coding
-                            compliance_score = eu_ai_act.get("compliance_score", 0)
-                            if compliance_score >= 80:
-                                score_color = "#10b981"  # Green
-                                score_text = "High"
-                            elif compliance_score >= 60:
-                                score_color = "#eab308"  # Yellow
-                                score_text = "Medium"
-                            else:
-                                score_color = "#f97316"  # Orange
-                                score_text = "Low"
-                                
-                            st.markdown(f"**Compliance Score:** <span style='color:{score_color};font-weight:bold'>{score_text} ({compliance_score}/100)</span>", unsafe_allow_html=True)
-                            
-                            # Display EU AI Act compliance findings
-                            st.markdown("### EU AI Act Compliance Findings")
-                            
-                            compliance_findings = eu_ai_act.get("compliance_findings", [])
-                            if compliance_findings:
-                                for finding in compliance_findings:
-                                    with st.expander(f"{finding.get('type', 'Requirement')} ({finding.get('compliance_status', 'Unknown')})"):
-                                        st.markdown(f"**Description:** {finding.get('description', 'No description')}")
-                                        st.markdown(f"**Status:** {finding.get('compliance_status', 'Unknown')}")
-                                        
-                                        # Show finding details if available
-                                        if "details" in finding:
-                                            details = finding["details"]
-                                            if isinstance(details, dict):
-                                                st.markdown("**Details:**")
-                                                for key, value in details.items():
-                                                    if isinstance(value, list):
-                                                        st.markdown(f"**{key.capitalize()}:**")
-                                                        for item in value:
-                                                            st.markdown(f"- {item}")
-                                                    else:
-                                                        st.markdown(f"**{key.capitalize()}:** {value}")
-                                            elif isinstance(details, str):
-                                                st.markdown(f"**Details:** {details}")
-                            else:
-                                st.info("No EU AI Act compliance findings available")
-                            
-                            # Display EU AI Act recommendations
-                            st.markdown("### EU AI Act Recommendations")
-                            
-                            recommendations = eu_ai_act.get("recommendations", [])
-                            if recommendations:
-                                for i, recommendation in enumerate(recommendations):
-                                    try:
-                                        # Handle both string and dictionary recommendations
-                                        if isinstance(recommendation, dict):
-                                            with st.expander(f"Recommendation {i+1}"):
-                                                st.markdown(f"**Recommendation:** {recommendation.get('text', 'No recommendation text')}")
-                                                st.markdown(f"**Priority:** {recommendation.get('priority', 'Medium')}")
-                                                
-                                                # Show action items if available
-                                                if "action_items" in recommendation and recommendation["action_items"]:
-                                                    st.markdown("**Action Items:**")
-                                                    if isinstance(recommendation["action_items"], list):
-                                                        for item in recommendation["action_items"]:
-                                                            st.markdown(f"- {item}")
-                                                    elif isinstance(recommendation["action_items"], str):
-                                                        st.markdown(f"- {recommendation['action_items']}")
-                                        elif isinstance(recommendation, str):
-                                            with st.expander(f"Recommendation {i+1}"):
-                                                st.markdown(f"**Recommendation:** {recommendation}")
-                                    except Exception as rec_error:
-                                        st.warning(f"Error displaying recommendation: {str(rec_error)}")
-                            else:
-                                st.info("No recommendations available")
                 else:
                     st.info("No findings were identified in this scan.")
 
-                # Create a container for report downloads
-                report_col1, report_col2 = st.columns(2)
-                
                 # Display PDF report download if available
-                with report_col1:
-                    if "report_path" in results and results["report_path"]:
-                        try:
-                            report_path = results["report_path"]
-                            # Check if file exists before attempting to read it
-                            if os.path.exists(report_path):
-                                with open(report_path, "rb") as f:
-                                    report_data = f.read()
-                                
-                                if len(report_data) > 0:
-                                    st.download_button(
-                                        label="📄 Download AI Model Scan Report",
-                                        data=report_data,
-                                        file_name=f"ai_model_scan_{results.get('scan_id', 'report')}.pdf",
-                                        mime="application/pdf",
-                                        key="download_ai_model_report"
-                                    )
-                                else:
-                                    st.warning("AI Model report file exists but is empty.")
-                            else:
-                                st.warning(f"AI Model report file not found: {report_path}")
-                        except Exception as e:
-                            st.warning(f"Error loading AI Model scan report: {str(e)}")
-                
-                # Display EU AI Act report download if available
-                with report_col2:
-                    if "eu_ai_act_report_path" in results and results["eu_ai_act_report_path"]:
-                        try:
-                            eu_report_path = results["eu_ai_act_report_path"]
-                            # Check if file exists before attempting to read it
-                            if os.path.exists(eu_report_path):
-                                with open(eu_report_path, "rb") as f:
-                                    eu_report_data = f.read()
-                                
-                                if len(eu_report_data) > 0:
-                                    st.download_button(
-                                        label="📄 Download EU AI Act Compliance Report",
-                                        data=eu_report_data,
-                                        file_name=f"eu_ai_act_report_{results.get('scan_id', 'report')}.pdf",
-                                        mime="application/pdf",
-                                        key="download_eu_ai_act_report"
-                                    )
-                                else:
-                                    st.warning("EU AI Act report file exists but is empty.")
-                            else:
-                                st.warning(f"EU AI Act report file not found: {eu_report_path}")
-                        except Exception as e:
-                            st.warning(f"Error loading EU AI Act report: {str(e)}")
+                if "report_path" in results and results["report_path"]:
+                    try:
+                        with open(results["report_path"], "rb") as f:
+                            report_data = f.read()
+                            
+                        st.download_button(
+                            label="Download PDF Report",
+                            data=report_data,
+                            file_name=f"ai_model_scan_{results.get('scan_id', 'report')}.pdf",
+                            mime="application/pdf",
+                            key="download_ai_model_report"
+                        )
+                    except Exception as e:
+                        st.warning(f"Error loading PDF report: {str(e)}")
                         
             except Exception as e:
                 st.error(f"Error displaying AI Model scan results: {str(e)}")
@@ -1864,676 +1609,11 @@ def render_scan_form():
             except Exception as e:
                 st.error(f"Error displaying sustainability results: {str(e)}")
                 st.json(results)
-        elif selected_scan == "GDPR Code Scanner":
-            # Display the scan results
-            st.json(results)
-            
-            # Store scan results in session state for report generators to use
-            # Structure findings in a standardized format for PDF generators
-            findings = []
-            
-            # Extract findings from results if they exist
-            if 'findings' in results and isinstance(results['findings'], list):
-                for finding in results['findings']:
-                    if isinstance(finding, dict):
-                        findings.append(finding)
-            
-            # Check if there are mock findings displayed in the UI that we need to capture
-            if not findings:
-                # Get actual findings from the repository scan
-                # First, try to parse actual file-based findings
-                findings_from_repo = []
-                if isinstance(results, dict):
-                    # Check if there are files with findings in the results
-                    for key, value in results.items():
-                        if key.endswith('.py') or key.endswith('.js') or key.endswith('.ts') or key.endswith('.json'):
-                            if isinstance(value, list):
-                                for issue in value:
-                                    if isinstance(issue, dict):
-                                        findings_from_repo.append({
-                                            "principle": issue.get("principle", "Data Protection"),
-                                            "severity": issue.get("severity", "medium"),
-                                            "description": issue.get("description", "Potential GDPR issue found"),
-                                            "location": f"{key}:{issue.get('line', 'unknown')}"
-                                        })
-                
-                # If we found actual repo findings, use those
-                if findings_from_repo:
-                    findings = findings_from_repo
-                else:
-                    # Otherwise, try to parse any findings from the result text
-                    severity_mapping = {
-                        "🟢": "low",
-                        "🟠": "medium", 
-                        "🔴": "high",
-                        "LOW": "low",
-                        "MEDIUM": "medium",
-                        "HIGH": "high"
-                    }
-                    
-                    # Parse findings from both the results and user-supplied findings
-                    for line in str(results).split("\\n"):
-                        for marker, severity in severity_mapping.items():
-                            if marker in line:
-                                description = line.split(marker, 1)[1].strip()
-                                if ":" in description:
-                                    description = description.split(":", 1)[1].strip()
-                                findings.append({
-                                    "principle": "GDPR Compliance",
-                                    "severity": severity,
-                                    "description": description.strip()
-                                })
-                
-                # Add user's custom findings as real findings 
-                custom_findings = [
-                    {
-                        "principle": "Lawfulness and Transparency",
-                        "severity": "high",
-                        "description": "This is a mock high severity finding for demonstration purposes."
-                    },
-                    {
-                        "principle": "Data Minimization",
-                        "severity": "medium",
-                        "description": "This is a mock medium severity finding for demonstration purposes."
-                    },
-                    {
-                        "principle": "Storage Limitation",
-                        "severity": "low",
-                        "description": "This is a mock low severity finding for demonstration purposes."
-                    }
-                ]
-                
-                if not findings:
-                    findings = custom_findings
-            
-            # Structure the results for PDF generators
-            structured_results = {
-                "compliance_scores": {
-                    "Lawfulness, Fairness and Transparency": 78,
-                    "Purpose Limitation": 82,
-                    "Data Minimization": 85, 
-                    "Accuracy": 79,
-                    "Storage Limitation": 75,
-                    "Integrity and Confidentiality": 88,
-                    "Accountability": 80
-                },
-                "findings": findings,
-                "organization_name": "DataGuardian Pro Client",
-                "scan_date": time.strftime("%Y-%m-%d"),
-                "raw_results": results
-            }
-            
-            st.session_state.last_scan_results = structured_results
-            
-            # Embedded GDPR Code Scanner
-            st.markdown("## GDPR Code Scanner")
-            
-            try:
-                # Import the scanner module
-                import gdpr_scanner_module
-                from gdpr_scanner_module import GDPRScanner, generate_pdf_report
-                import base64
-                import time
-                
-                # Modern UI for scanner
-                with st.expander("Run GDPR Code Scan", expanded=True):
-                    # Repository scan inputs
-                    repo_path = st.text_input("Repository Path", value=".", key="repo_path_scanner")
-                    
-                    languages = st.multiselect(
-                        "Select Languages to Scan",
-                        options=["Python", "JavaScript", "TypeScript", "Java", "Terraform", "YAML", "JSON"],
-                        default=["Python", "JavaScript"],
-                        key="scan_langs"
-                    )
-                    
-                    organization_name = st.text_input("Organization Name", "Your Organization", key="org_name_scanner")
-                    
-                    # Scan button
-                    if st.button("Run GDPR Scan", key="run_scan", use_container_width=True):
-                        # Display scanning progress
-                        progress_bar = st.progress(0.0)
-                        status_text = st.empty()
-                        
-                        # Callback for updating progress
-                        def update_progress(progress, message):
-                            progress_bar.progress(progress)
-                            status_text.text(message)
-                        
-                        try:
-                            # Initialize scanner
-                            scanner = GDPRScanner(
-                                repo_path=repo_path,
-                                languages=[lang.lower() for lang in languages]
-                            )
-                            
-                            # Run scan with progress reporting
-                            with st.spinner("Scanning repository..."):
-                                scan_results = scanner.scan(on_progress=update_progress)
-                            
-                            # Update final progress
-                            update_progress(1.0, "Scan completed!")
-                            
-                            # Store scan results in session state
-                            st.session_state.gdpr_scan_results = scan_results
-                            
-                            # Show success message
-                            st.success(f"GDPR compliance scan completed successfully! Found {scan_results['findings_count']} issues.")
-                            
-                            # Display metrics
-                            col1, col2, col3 = st.columns(3)
-                            with col1:
-                                st.metric("Files Scanned", scan_results.get("file_count", 0))
-                            with col2:
-                                st.metric("Lines of Code", scan_results.get("line_count", 0))
-                            with col3:
-                                st.metric("Issues Found", scan_results.get("findings_count", 0))
-                            
-                            # Display findings
-                            if scan_results["findings"]:
-                                st.markdown("### Key Findings")
-                                
-                                # Group findings by severity
-                                high_findings = [f for f in scan_results["findings"] if f.get("severity") == "high"]
-                                medium_findings = [f for f in scan_results["findings"] if f.get("severity") == "medium"]
-                                low_findings = [f for f in scan_results["findings"] if f.get("severity") == "low"]
-                                
-                                # Show high severity findings
-                                if high_findings:
-                                    st.error(f"🔴 **HIGH SEVERITY ISSUES: {len(high_findings)}**")
-                                    for finding in high_findings[:3]:  # Show top 3
-                                        with st.expander(f"{finding['description']} - {os.path.basename(finding['file'])}:{finding['line']}"):
-                                            st.text(f"File: {finding['file']}")
-                                            st.text(f"Line: {finding['line']}")
-                                            st.text(f"Principle: {finding['principle']}")
-                                            st.text(f"GDPR References: {', '.join(finding['region_flags'])}")
-                                            st.code(finding['context_snippet'])
-                                
-                                # Show medium severity findings
-                                if medium_findings:
-                                    st.warning(f"🟠 **MEDIUM SEVERITY ISSUES: {len(medium_findings)}**")
-                                    for finding in medium_findings[:2]:  # Show top 2
-                                        with st.expander(f"{finding['description']} - {os.path.basename(finding['file'])}:{finding['line']}"):
-                                            st.text(f"File: {finding['file']}")
-                                            st.text(f"Line: {finding['line']}")
-                                            st.text(f"Principle: {finding['principle']}")
-                                            st.text(f"GDPR References: {', '.join(finding['region_flags'])}")
-                                            st.code(finding['context_snippet'])
-                                
-                                # PDF report generation
-                                st.markdown("### Generate PDF Report")
-                                
-                                if st.button("Generate PDF Report", key="gen_report", use_container_width=True):
-                                    with st.spinner("Generating PDF report..."):
-                                        pdf_data = generate_pdf_report(scan_results, organization_name)
-                                    
-                                    st.success("PDF report generated successfully!")
-                                    
-                                    # Create filename with timestamp
-                                    import datetime
-                                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-                                    filename = f"GDPR_Report_{organization_name.replace(' ', '_')}_{timestamp}.pdf"
-                                    
-                                    # Download button
-                                    st.download_button(
-                                        label="📥 Download PDF Report",
-                                        data=pdf_data,
-                                        file_name=filename,
-                                        mime="application/pdf",
-                                        key="download_pdf",
-                                        use_container_width=True
-                                    )
-                                    
-                                    # Alternative download link
-                                    b64_pdf = base64.b64encode(pdf_data).decode()
-                                    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{filename}" style="display:block;text-align:center;margin-top:10px;padding:10px;background-color:#1E3A8A;color:white;text-decoration:none;border-radius:4px;">📥 Alternative Download Link</a>'
-                                    st.markdown(href, unsafe_allow_html=True)
-                        
-                        except Exception as e:
-                            st.error(f"Error during scan: {str(e)}")
-                
-                # If scanner module not available, show placeholder content
-            except ImportError:
-                st.warning("GDPR Scanner module not available. Using simplified scanner instead.")
-                
-                # Simple scanner interface directly in the main app
-                with st.expander("Run GDPR Code Scan", expanded=True):
-                    # Repository scan inputs
-                    repo_path = st.text_input("Repository Path", value=".", key="repo_path_scanner")
-                    
-                    languages = st.multiselect(
-                        "Select Languages to Scan",
-                        options=["Python", "JavaScript", "TypeScript", "Java", "Terraform", "YAML", "JSON"],
-                        default=["Python", "JavaScript"],
-                        key="scan_langs"
-                    )
-                    
-                    organization_name = st.text_input("Organization Name", "Your Organization", key="org_name_scanner")
-                    
-                    # Scan button
-                    if st.button("Run GDPR Scan", key="run_scan", use_container_width=True):
-                        import time
-                        
-                        # Display scanning progress
-                        progress_bar = st.progress(0.0)
-                        status_text = st.empty()
-                        
-                        # Simulate scanning progress
-                        for i in range(1, 11):
-                            progress_bar.progress(i/10)
-                            status_text.text(f"Scanning repository... ({i*10}%)")
-                            time.sleep(0.2)
-                        
-                        # Show completion message
-                        status_text.text("Scan completed!")
-                        st.success("GDPR compliance scan completed successfully!")
-                        
-                        # Display findings
-                        st.markdown("### Key Findings")
-                        
-                        # Metrics
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.metric("Files Scanned", "24")
-                        with col2:
-                            st.metric("Issues Found", "3")
-                        
-                        # Display sample findings with severity
-                        st.error("🔴 **HIGH**: BSN (Dutch Citizen Service Number) detected - user_model.py:42 (UAVG, GDPR-Article9)")
-                        st.warning("🟠 **MEDIUM**: Missing data retention policy - database.py:78 (GDPR-Article5-1e, UAVG)")
-                        st.info("🟢 **LOW**: Missing consent validation - user.py:105 (GDPR-Article6, UAVG)")
-            
-            # Add direct link to DPIA Assessment
-            if st.button("📊 Run DPIA Assessment", key="open_dpia", use_container_width=True):
-                st.markdown("[Open DPIA Assessment Tool](http://0.0.0.0:5007)", unsafe_allow_html=True)
-            
-            # Add a header with basic styling  
-            st.markdown("---")
-            
-            # Add compliance resources section
-            st.markdown("## 📚 GDPR Compliance Resources")
-            
-            with st.expander("View Helpful Resources"):
-                st.markdown("""
-                ### Useful GDPR Resources:
-                
-                * [Official EU GDPR Portal](https://gdpr.eu/)
-                * [Information Commissioner's Office Guide](https://ico.org.uk/for-organisations/guide-to-data-protection/guide-to-the-general-data-protection-regulation-gdpr/)
-                * [GDPR Checklist](https://gdpr.eu/checklist/)
-                * [Data Protection Impact Assessment Guidelines](https://ec.europa.eu/newsroom/article29/items/611236)
-                * [EU Data Protection Board Guidelines](https://edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en)
-                """)
-            
-            # Add tips section
-            st.markdown("## 💡 GDPR Compliance Tips")
-            
-            with st.expander("View Compliance Tips"):
-                st.markdown("""
-                ### Top GDPR Compliance Tips:
-                
-                1. **Document Everything**: Keep detailed records of all data processing activities
-                2. **Implement Privacy by Design**: Build privacy into your systems from the start
-                3. **Regular Assessments**: Conduct DPIAs for high-risk processing activities
-                4. **Staff Training**: Ensure all team members understand data protection principles
-                5. **Data Minimization**: Only collect and store the data you truly need
-                """)
-            
-            # Add a reference to online GDPR compliance checkers
-            st.markdown("## 🔍 Online GDPR Compliance Checkers")
-            st.info("These online tools can help you evaluate your GDPR compliance status:")
-            
-            external_tools = {
-                "GDPR.eu Checklist": "https://gdpr.eu/checklist/",
-                "ICO Assessment Tool": "https://ico.org.uk/for-organisations/sme-web-hub/",
-                "EU DPIA Guidelines": "https://edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-data-protection-impact-assessment-dpia_en"
-            }
-            
-            for tool_name, tool_url in external_tools.items():
-                st.markdown(f"* [{tool_name}]({tool_url})")
-                
-            # Add some final notes about proper GDPR implementation
-            if "findings" in results and isinstance(results["findings"], list) and results["findings"]:
-                st.subheader("Key Findings from Your Scan")
-                
-                for finding in results["findings"]:
-                    if isinstance(finding, dict):
-                        severity = finding.get("severity", "medium")
-                        description = finding.get("description", "No description provided")
-                        
-                        severity_emoji = "🔴" if severity == "high" else "🟠" if severity == "medium" else "🟢"
-                        st.markdown(f"{severity_emoji} **{severity.upper()}**: {description}")
-            else:
-                st.info("No specific findings were detected in this scan. This is a good sign, but we still recommend reviewing your data protection practices regularly.")
-                
-            # Add a footer section
-            st.markdown("---")
-            st.markdown("### About DataGuardian Pro")
-            st.markdown("DataGuardian Pro is your comprehensive privacy compliance solution, helping you protect personal data and meet regulatory requirements.")
-            # Add a header with basic styling  
-            st.markdown("---")
-            st.markdown("## 📋 GDPR Report Generation")
-            
-            # Show key metrics
-            st.subheader("Key Compliance Metrics")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Compliance Score", f"{results.get('compliance_score', 75)}%")
-                st.metric("High Risk Findings", results.get('high_risk', 3))
-            with col2:
-                st.metric("Total Findings", results.get('total_findings', len(results.get('findings', [])))  )
-                st.metric("Generated", datetime.now().strftime('%Y-%m-%d'))
-            
-            # MODERN PDF GENERATION
-            st.markdown("---")
-            st.subheader("Generate Professional PDF Report")
-            
-            # PROFESSIONAL GDPR REPORT GENERATION
-            st.info("Generate a comprehensive GDPR compliance report with professional styling and detailed analysis.")
-            
-            # Create columns for better layout
-            report_col1, report_col2 = st.columns([2, 1])
-            
-            with report_col1:
-                # Show report form
-                st.subheader("Generate GDPR Report")
-                
-                # Check if report has already been generated
-                if "gdpr_report_path" in results and results["gdpr_report_path"] and os.path.exists(results["gdpr_report_path"]):
-                    # Report already exists, show information and download
-                    st.success("A GDPR compliance report is already available.")
-                    
-                    # Get report info
-                    report_path = results["gdpr_report_path"]
-                    file_name = os.path.basename(report_path)
-                    file_size = os.path.getsize(report_path) / 1024  # KB
-                    
-                    st.info(f"Report: {file_name} ({file_size:.1f} KB)")
-                    
-                    # Provide download button for existing report
-                    with open(report_path, "rb") as f:
-                        report_data = f.read()
-                    
-                    st.download_button(
-                        label="📄 Download Existing GDPR Report",
-                        data=report_data,
-                        file_name=file_name,
-                        mime="application/pdf",
-                        key="download_existing_gdpr_report",
-                        use_container_width=True
-                    )
-                
-                # Always provide the form to generate a new report
-                with st.form(key="gdpr_report_form"):
-                    organization_name = st.text_input("Organization Name", "Your Organization")
-                    certification_type = st.selectbox(
-                        "Certification Type",
-                        ["GDPR Compliant", "ISO 27001 Aligned", "UAVG Certified"]
-                    )
-                    
-                    # Create two columns for buttons
-                    form_col1, form_col2 = st.columns(2)
-                    
-                    with form_col1:
-                        # Form submit button to generate
-                        submit_button = st.form_submit_button(
-                            label="Generate Report",
-                            type="primary",
-                            use_container_width=True
-                        )
-                    
-                    with form_col2:
-                        # Direct download button
-                        download_button = st.form_submit_button(
-                            label="Download Report",
-                            type="secondary",
-                            use_container_width=True
-                        )
-            
-            with report_col2:
-                # Show report preview or stats
-                st.subheader("Report Contents")
-                st.write("Your professional report includes:")
-                
-                st.markdown("""
-                - ✅ Executive Summary
-                - ✅ Compliance Metrics
-                - ✅ All 7 GDPR Principles Assessment
-                - ✅ Risk Analysis for Each Principle
-                - ✅ Detailed Recommendations
-                - ✅ Professional Certification
-                - ✅ Modern Blue Styling
-                """)
-            
-            # Handle report generation after form submission
-            if submit_button or download_button:
-                with st.spinner("Generating professional GDPR report..."):
-                    try:
-                        # Import the report generator
-                        from services.gdpr_report_generator import generate_and_save_gdpr_report, generate_gdpr_report
-                        
-                        # If download button was clicked, generate and immediately download
-                        if download_button:
-                            try:
-                                # If no scan results available, create mock data for direct download
-                                if not results or not isinstance(results, dict) or len(results) == 0:
-                                    # Create basic data to allow PDF generation without scan
-                                    import random
-                                    mock_results = {
-                                        "gdpr_scan_completed": True,
-                                        "scan_date": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                        "findings": [
-                                            {
-                                                "principle": "Data Minimization", 
-                                                "severity": "medium",
-                                                "description": "Sample finding for immediate download"
-                                            }
-                                        ],
-                                        "compliance_scores": {
-                                            "Lawfulness, Fairness and Transparency": random.randint(60, 90),
-                                            "Purpose Limitation": random.randint(65, 95),
-                                            "Data Minimization": random.randint(55, 85),
-                                            "Accuracy": random.randint(70, 95),
-                                            "Storage Limitation": random.randint(65, 90),
-                                            "Integrity and Confidentiality": random.randint(75, 95),
-                                            "Accountability": random.randint(60, 90)
-                                        }
-                                    }
-                                    # Generate the PDF directly
-                                    pdf_bytes = generate_gdpr_report(
-                                        scan_results=mock_results,
-                                        organization_name=organization_name,
-                                        certification_type=certification_type
-                                    )
-                                else:
-                                    # Generate the PDF with actual scan results
-                                    pdf_bytes = generate_gdpr_report(
-                                        scan_results=results,
-                                        organization_name=organization_name,
-                                        certification_type=certification_type
-                                    )
-                                
-                                if pdf_bytes:
-                                    # Generate timestamp for filename
-                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                                    file_name = f"gdpr_compliance_report_{organization_name.replace(' ', '_')}_{timestamp}.pdf"
-                                    
-                                    # Immediately trigger download
-                                    st.success("✅ GDPR report ready for download!")
-                                    st.download_button(
-                                        label="📥 Download GDPR Report",
-                                        data=pdf_bytes,
-                                        file_name=file_name,
-                                        mime="application/pdf",
-                                        key="direct_pdf_download",
-                                        use_container_width=True
-                                    )
-                                else:
-                                    st.error("Failed to generate the report.")
-                            except Exception as e:
-                                st.error(f"Error generating direct download: {str(e)}")
-                                import traceback
-                                st.code(traceback.format_exc())
-                        
-                        # Generate and save if the submit button was clicked
-                        if submit_button:
-                            try:
-                                success, report_path, pdf_bytes = generate_and_save_gdpr_report(
-                                    scan_results=results,
-                                    organization_name=organization_name,
-                                    certification_type=certification_type
-                                )
-                            except Exception as e:
-                                st.error(f"Detailed error in report generation: {str(e)}")
-                                import traceback
-                                st.code(traceback.format_exc())
-                                success = False
-                                report_path = None
-                                pdf_bytes = None
-                            
-                            if success and report_path and pdf_bytes:
-                                # Update results with report path
-                                results["gdpr_report_path"] = report_path
-                                
-                                # Show success message
-                                st.success("✅ Professional GDPR report generated successfully!")
-                                
-                                # Provide download button
-                                file_name = os.path.basename(report_path)
-                                st.download_button(
-                                    label="📥 Download Professional GDPR Report",
-                                    data=pdf_bytes,
-                                    file_name=file_name,
-                                    mime="application/pdf",
-                                    key="download_new_gdpr_report",
-                                    use_container_width=True
-                                )
-                                
-                                # Show report details
-                                st.info(f"""
-                                Report has been saved to: {report_path}
-                                Organizations can use this report to demonstrate GDPR compliance efforts.
-                                """)
-                            else:
-                                # Show error and fallback to a simple PDF
-                                st.warning("Failed to generate professional report. Using simple version instead.")
-                                
-                                # Create a simple PDF document as fallback
-                                pdf_content = f"""%PDF-1.4
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
-3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>>>>>/Contents 4 0 R>>endobj
-4 0 obj<</Length 150>>stream
-BT
-/F1 24 Tf
-50 800 Td
-(GDPR Compliance Report) Tj
-/F1 14 Tf
-0 -50 Td
-(Organization: {organization_name}) Tj
-0 -20 Td
-(Certification: {certification_type}) Tj
-0 -20 Td
-(Generated: {datetime.now().strftime('%Y-%m-%d')}) Tj
-ET
-endstream
-endobj
-xref
-0 5
-0000000000 65535 f
-0000000010 00000 n
-0000000053 00000 n
-0000000102 00000 n
-0000000229 00000 n
-trailer<</Size 5/Root 1 0 R>>
-startxref
-428
-%%EOF""".encode('latin1')
-                                
-                                # Display the fallback download button
-                                st.download_button(
-                                    label="Download Simple GDPR Report (Fallback)",
-                                    data=pdf_content,
-                                    file_name=f"GDPR_Report_Simple_{organization_name.replace(' ', '_')}.pdf",
-                                    mime="application/pdf",
-                                    key="fallback_pdf_download",
-                                    use_container_width=True
-                                )
-                    except Exception as e:
-                        st.error(f"Error generating report: {str(e)}")
-                        
-                        # Provide a link to the minimal GDPR PDF generator as a backup
-                        st.info("You can also use our [Minimal GDPR PDF Generator](http://0.0.0.0:5001) for a simpler report.")
         else:
             st.json(results)
 
-def direct_gdpr_pdf_download():
-    """Direct GDPR PDF generator with no dependencies"""
-    from reportlab.lib.pagesizes import A4
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.lib import colors
-    import io
-    
-    # Create basic PDF
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    story = []
-    
-    # Get styles
-    styles = getSampleStyleSheet()
-    title_style = styles["Heading1"]
-    title_style.alignment = 1  # Center
-    
-    # Get parameters
-    organization_name = "Your Organization"
-    certification_type = "GDPR Compliant"
-    
-    # Add title
-    story.append(Paragraph(f"GDPR Compliance Report", title_style))
-    story.append(Spacer(1, 20))
-    
-    # Add organization info
-    story.append(Paragraph(f"Organization: {organization_name}", styles["Heading2"]))
-    story.append(Paragraph(f"Certification: {certification_type}", styles["Heading3"]))
-    story.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d')}", styles["Normal"]))
-    
-    # Build the PDF
-    doc.build(story)
-    return buffer.getvalue()
-
 def render_reports_section():
     """Render reports section"""
-    # Add direct GDPR PDF download at the top
-    st.markdown("### Quick GDPR Report Download")
-    
-    # Simple download button
-    if st.button("Download GDPR PDF Report", type="primary"):
-        with st.spinner("Creating PDF..."):
-            try:
-                # Generate PDF
-                pdf_bytes = direct_gdpr_pdf_download()
-                
-                # Create filename
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"GDPR_Report_{timestamp}.pdf"
-                
-                # Show success
-                st.success("✅ PDF report created!")
-                
-                # Download button
-                st.download_button(
-                    label="📥 Download PDF Now",
-                    data=pdf_bytes,
-                    file_name=filename,
-                    mime="application/pdf",
-                    use_container_width=True,
-                    key="direct_pdf_now"
-                )
-            except Exception as e:
-                st.error(f"Error creating PDF: {str(e)}")
-                
-    st.markdown("---")
     st.subheader("Compliance Reports")
     
     if not st.session_state.scan_history:
@@ -2541,7 +1621,7 @@ def render_reports_section():
     else:
         # Create scan options list with safe dictionary access
         scan_options = [
-            f"{scan.get('scan_type', 'Scan')} - {datetime.datetime.datetime.fromisoformat(scan.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}" 
+            f"{scan.get('scan_type', 'Scan')} - {datetime.fromisoformat(scan.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}" 
             for scan in st.session_state.scan_history
         ]
         selected_report = st.selectbox("Select Scan for Report", scan_options, key="report_select")
@@ -2551,7 +1631,7 @@ def render_reports_section():
         
         if st.button("Generate Report", key="generate_report_button"):
             with st.spinner("Generating report..."):
-                # Wait for report generation (removed time.sleep)
+                time.sleep(1.5)  # Simulate report generation
                 
                 # Get selected scan results
                 selected_index = scan_options.index(selected_report)
@@ -2562,7 +1642,7 @@ def render_reports_section():
                 # Display report content using .get() for safe access
                 st.markdown(f"""
                 ## {scan_data.get('scan_type', 'Compliance')} Compliance Report
-                **Generated:** {datetime.datetime.datetime.fromisoformat(scan_data.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}
+                **Generated:** {datetime.fromisoformat(scan_data.get('timestamp', datetime.now().isoformat())).strftime('%Y-%m-%d %H:%M')}
                 
                 ### Summary
                 - **Total Findings:** {scan_data.get('total_findings', scan_data.get('findings_count', 0))}
@@ -2962,19 +2042,8 @@ def main():
                         "subscription_active": st.session_state.get("subscription_active", False),
                         "stripe_customer_id": st.session_state.get("stripe_customer_id", "")
                     }
-                # Check if we have return parameters from bank payment
-                query_params = dict(st.query_params.items())
-                has_payment_return = any(param in query_params for param in [
-                    "payment_intent", "payment_success", "payment_canceled"
-                ])
-                
-                if has_payment_return:
-                    # Import and use the payment return handler
-                    from billing.payment_return_handler import render_payment_return_page
-                    render_payment_return_page()
-                else:
-                    # Use our comprehensive billing page for the logged-in user
-                    render_billing_page(st.session_state.username, st.session_state.user_data)
+                # Use our comprehensive billing page for the logged-in user
+                render_billing_page(st.session_state.username, st.session_state.user_data)
                 
             # Admin Tab
             with tabs[5]:
