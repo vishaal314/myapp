@@ -18,10 +18,6 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Streamlined App"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "Minimal GDPR PDF"
 
 [[workflows.workflow.tasks]]
@@ -80,14 +76,13 @@ args = "Ultra Minimal GDPR Scanner"
 task = "workflow.run"
 args = "Basic GDPR Scanner"
 
-[[workflows.workflow]]
-name = "Streamlined App"
-author = "agent"
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Minimal Working Scanner"
 
 [[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "streamlit run streamlined_app.py --server.port 5000 --server.headless true"
-waitForPort = 5000
+task = "workflow.run"
+args = "Main GDPR Scanner"
 
 [[workflows.workflow]]
 name = "Minimal GDPR PDF"
@@ -223,6 +218,24 @@ author = "agent"
 task = "shell.exec"
 args = "streamlit run basic_gdpr_scanner.py --server.port 5025 --server.headless true"
 waitForPort = 5025
+
+[[workflows.workflow]]
+name = "Minimal Working Scanner"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run minimal_scanner.py --server.port 5050 --server.headless true"
+waitForPort = 5050
+
+[[workflows.workflow]]
+name = "Main GDPR Scanner"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run minimal_scanner.py --server.port 5000 --server.headless true"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
