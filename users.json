@@ -19,8 +19,9 @@
   },
   "vishaal": {
     "username": "vishaal",
-    "password_hash": "531ffc17cd645ccb7578ea6d18ce459dab088ad66125bff36c90033715f8cf64",
+    "password_hash": "71649114e552b7e97347a143d2db077702daab3636542ba2807aae3a098a3831",
     "role": "analyst",
-    "email": "vishaal314@gmail.com"
+    "email": "vishaal314@gmail.com",
+    "password_reset_at": "2025-05-18T10:24:22.016591"
   }
 }
