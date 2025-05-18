@@ -101,37 +101,11 @@ ROLE_PERMISSIONS = {
             'api:access', 'api:manage_keys'
         ]
     },
-    'security_engineer': {
-        'description': 'Security engineering and scanning capabilities',
+    'analyst': {
+        'description': 'Can create and analyze scans, generate reports',
         'permissions': [
             # Scan permissions
-            'scan:create', 'scan:view', 'scan:export', 'scan:premium', 'scan:configure', 
-            'scan:website', 'scan:code', 'scan:document', 'scan:database', 'scan:api',
-            
-            # Limited user management
-            'user:view',
-            
-            # Report permissions
-            'report:create', 'report:view', 'report:export',
-            
-            # Limited system access
-            'system:logs',
-            
-            # Audit permissions
-            'audit:view',
-            
-            # View permissions
-            'dashboard:view', 'history:view',
-            
-            # API permissions
-            'api:access'
-        ]
-    },
-    'auditor': {
-        'description': 'Compliance auditing and reporting capabilities',
-        'permissions': [
-            # Scan permissions
-            'scan:create', 'scan:view', 'scan:export', 'scan:configure',
+            'scan:create', 'scan:view', 'scan:export', 'scan:premium', 'scan:configure',
             'scan:website', 'scan:code', 'scan:document', 'scan:database', 'scan:api',
             
             # Report permissions
@@ -253,9 +227,9 @@ DEFAULT_USERS = [
     {
         "username": "analyst",
         "password_hash": hashlib.sha256("analyst123".encode()).hexdigest(),
-        "role": "auditor",
+        "role": "analyst",
         "email": "analyst@example.com",
-        "permissions": ROLE_PERMISSIONS["auditor"]["permissions"],
+        "permissions": ROLE_PERMISSIONS["analyst"]["permissions"],
         "created_at": datetime.now().isoformat()
     },
     {

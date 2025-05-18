@@ -6,8 +6,6 @@ It provides a unified interface to scan repositories and display results with pr
 """
 
 import streamlit as st
-import os
-import traceback
 from typing import Dict, Any, Optional
 from services.soc2_scanner import scan_github_repo_for_soc2, scan_azure_repo_for_soc2
 from services.soc2_display import display_soc2_findings
@@ -131,88 +129,18 @@ def display_soc2_scan_results(scan_results: Dict[str, Any]):
     # Use the enhanced display function
     display_soc2_findings(scan_results)
     
-    # PDF Download button section
+    # PDF Download button
     st.markdown("### Download Report")
-    
-    # Create a container for the download options
-    report_container = st.container()
-    
-    # Check if there's an auto-generated report path in the scan results
-    report_file_path = scan_results.get('report_file_path')
-    
-    # Add Direct Download button if a report was auto-generated
-    if report_file_path and os.path.exists(report_file_path):
-        with report_container:
-            st.success("A report is already available for download")
-            
-            # Create two columns for better layout
-            col1, col2 = st.columns([3, 2])
-            
-            with col1:
-                # Get file size for display
-                file_size_bytes = os.path.getsize(report_file_path)
-                size_in_mb = round(file_size_bytes / (1024 * 1024), 2)
-                
-                # Show file info
-                file_name = os.path.basename(report_file_path)
-                st.info(f"Report file: {file_name} ({size_in_mb} MB)")
-            
-            with col2:
-                # Read the file for download
-                with open(report_file_path, "rb") as f:
-                    report_bytes = f.read()
-                
-                # Add direct download button
-                st.download_button(
-                    label="📥 Download SOC2 Report PDF",
-                    data=report_bytes,
-                    file_name=file_name,
-                    mime="application/pdf",
-                    key="direct_soc2_download",
-                    use_container_width=True
-                )
-    
-    # Add the "Generate New Report" button
-    if st.button("Generate New Report", type="primary", key="enhanced_generate_pdf_btn"):
+    if st.button("Generate PDF Report", type="primary"):
         with st.spinner("Generating PDF report..."):
-            try:
-                # Generate PDF report
-                pdf_bytes = generate_report(scan_results)
-                
-                # Generate filename
-                pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                
-                # Ensure reports directory exists
-                os.makedirs("reports", exist_ok=True)
-                
-                # Save the report to file
-                report_path = os.path.join("reports", pdf_filename)
-                with open(report_path, "wb") as f:
-                    f.write(pdf_bytes)
-                
-                # Update scan_results with the report path
-                scan_results['report_file_path'] = report_path
-                
-                # Use Streamlit's native download button
-                st.success("Report generated successfully! Click below to download.")
-                
-                # Display file size information
-                size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
-                st.info(f"Report size: {size_in_mb} MB")
-                
-                # Show download button
-                st.download_button(
-                    label="📥 Download New SOC2 Report PDF",
-                    data=pdf_bytes,
-                    file_name=pdf_filename,
-                    mime="application/pdf",
-                    use_container_width=True,
-                    key="enhanced_pdf_download"
-                )
-            except Exception as e:
-                import traceback
-                st.error(f"Error generating report: {str(e)}")
-                st.code(traceback.format_exc())
+            # Generate PDF report
+            pdf_bytes = generate_report(scan_results)
+            
+            # Provide download link
+            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+            pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
+            st.markdown(href, unsafe_allow_html=True)
 
 def add_nav_soc2_results():
     """

@@ -12,11 +12,6 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Set
 from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
-from utils.gdpr_compliance import (
-    PII_PATTERNS, DSAR_PATTERNS, CONSENT_PATTERNS, SECURITY_PATTERNS, GDPR_PRINCIPLE_PATTERNS,
-    NL_UAVG_PATTERNS, GDPR_ARTICLES, map_finding_to_gdpr_articles, generate_remediation_suggestion,
-    calculate_gdpr_risk_score, calculate_compliance_score, get_remediation_priority
-)
 
 class CodeScanner:
     """
@@ -48,10 +43,6 @@ class CodeScanner:
         self.scan_checkpoint_data = {}
         self.is_running = False
         self.progress_callback = None
-        
-        # Scan metrics for reporting
-        self.total_lines_scanned = 0
-        self.principles_checked = set()  # Track unique GDPR principles checked
         # Support for multiple languages
         self.extensions = extensions or [
             # Core programming languages
@@ -342,9 +333,9 @@ class CodeScanner:
         
     def scan_directory(self, directory_path: str, progress_callback=None, 
                       ignore_patterns=None, max_file_size_mb=50, 
-                      continue_from_checkpoint=False, max_files=1000) -> Dict[str, Any]:
+                      continue_from_checkpoint=False) -> Dict[str, Any]:
         """
-        Scan a directory of files with timeout protection, checkpoints, and improved performance.
+        Scan a directory of files with timeout protection and checkpoints.
         
         Args:
             directory_path: Path to the directory to scan
@@ -352,7 +343,6 @@ class CodeScanner:
             ignore_patterns: List of glob patterns to ignore
             max_file_size_mb: Max file size to scan in MB
             continue_from_checkpoint: Whether to continue from last checkpoint if available
-            max_files: Maximum number of files to scan (for performance)
             
         Returns:
             Dictionary containing scan results
@@ -364,9 +354,6 @@ class CodeScanner:
         self.start_time = datetime.now()
         self.is_running = True
         scan_id = hashlib.md5(f"{directory_path}:{self.start_time.isoformat()}".encode()).hexdigest()[:10]
-        
-        # PERFORMANCE OPTIMIZATION 1: Set a shorter maximum timeout (15 min instead of 1 hour)
-        self.max_timeout = min(self.max_timeout, 900)  # 15 minutes
         
         # Prepare checkpoint file path
         checkpoint_path = f"scan_checkpoint_{scan_id}.json"
@@ -395,8 +382,7 @@ class CodeScanner:
                 'directory': directory_path,
                 'completed_files': [],
                 'findings': [],
-                'stats': {'files_scanned': 0, 'files_skipped': 0, 'total_findings': 0},
-                'file_types': {}  # Add tracking for file extensions
+                'stats': {'files_scanned': 0, 'files_skipped': 0, 'total_findings': 0}
             }
         
         # Compile ignore patterns
@@ -412,21 +398,8 @@ class CodeScanner:
                     # File pattern
                     ignore_regexes.append(re.compile(f".*{regex_pattern}$"))
         
-        # PERFORMANCE OPTIMIZATION 2: Prioritize most important file types for scanning
-        priority_extensions = [
-            '.py', '.js', '.ts', '.java', '.cs', '.go', 
-            '.tf', '.json', '.yml', '.yaml'
-        ]
-        
-        # Walk directory and get all files with prioritization
+        # Walk directory and get all files
         all_files = []
-        priority_files = []
-        regular_files = []
-        
-        # PERFORMANCE OPTIMIZATION 3: Set a limit on the number of files to scan
-        file_count = 0
-        max_file_count = max_files  # Limit to 1000 files by default
-        
         for root, _, files in os.walk(directory_path):
             for file in files:
                 file_path = os.path.join(root, file)
@@ -457,50 +430,16 @@ class CodeScanner:
                     self.scan_checkpoint_data['stats']['files_skipped'] += 1
                     continue
                 
-                # PERFORMANCE OPTIMIZATION: Prioritize important file types
-                _, ext = os.path.splitext(file)
-                # Track file extension in the count
-                ext_lower = ext.lower()
-                if ext_lower in self.scan_checkpoint_data['file_types']:
-                    self.scan_checkpoint_data['file_types'][ext_lower] += 1
-                else:
-                    self.scan_checkpoint_data['file_types'][ext_lower] = 1
-                    
-                if ext_lower in priority_extensions:
-                    priority_files.append(file_path)
-                else:
-                    regular_files.append(file_path)
-                
-                file_count += 1
-                # Check if we've reached the file limit
-                if file_count >= max_file_count:
-                    break
-            
-            # If we've reached the file limit, break out of the directory walk
-            if file_count >= max_file_count:
-                break
-                
-        # Combine priority files and regular files (priority first)
-        all_files = priority_files + regular_files
-        # Trim to max file count if needed
-        all_files = all_files[:max_file_count]
-        
-        # PERFORMANCE OPTIMIZATION 4: Use a smaller batch size for better progress updates
-        batch_size = 20  # Smaller batches for more frequent updates
-        
-        # PERFORMANCE OPTIMIZATION 5: Log how many files will be processed
-        total_files = len(all_files)
-        print(f"Processing {total_files} files ({len(priority_files)} priority files)")
-        
-        if self.progress_callback:
-            self.progress_callback(0, total_files, "Starting scan...")
+                all_files.append(file_path)
         
         # Set up multiprocessing pool for parallel scanning
-        num_workers = max(1, min(4, multiprocessing.cpu_count() - 1))  # Use no more than 4 workers
+        num_workers = max(1, multiprocessing.cpu_count() - 1)  # Leave one CPU free
         
         # Use threading for I/O bound tasks
         with multiprocessing.Pool(processes=num_workers) as pool:
             # Process files in batches to allow checkpointing
+            batch_size = 50  # Adjust this based on avg. file size and memory constraints
+            
             for i in range(0, len(all_files), batch_size):
                 batch = all_files[i:i+batch_size]
                 
@@ -520,11 +459,9 @@ class CodeScanner:
                         file_name = os.path.basename(file_path)
                         self.progress_callback(progress, total, file_name)
                     
-                    # PERFORMANCE OPTIMIZATION 6: Reduced timeout per file from 60 seconds to 20 seconds
                     # Scan file with timeout protection
                     try:
-                        # Use a shorter timeout for each file - optimized for faster scanning
-                        result = self._scan_file_with_timeout(file_path, timeout=20)
+                        result = self._scan_file_with_timeout(file_path)
                         results.append(result)
                         
                         # Mark as completed
@@ -534,22 +471,13 @@ class CodeScanner:
                         # Update stats
                         self.scan_checkpoint_data['stats']['files_scanned'] += 1
                         if result.get('pii_count', 0) > 0:
-                            # Store only files with findings to reduce memory usage
                             self.scan_checkpoint_data['findings'].append(result)
                             self.scan_checkpoint_data['stats']['total_findings'] += result.get('pii_count', 0)
-                    except TimeoutError as te:
-                        # For timeout errors, log but continue with other files
-                        print(f"Timeout scanning {file_path}: {str(te)}")
-                        self.scan_checkpoint_data['stats']['files_skipped'] += 1
                     except Exception as e:
-                        # For other errors, log and continue
                         print(f"Error scanning {file_path}: {str(e)}")
-                        self.scan_checkpoint_data['stats']['files_skipped'] += 1
                 
-                # PERFORMANCE OPTIMIZATION 7: Save checkpoint less frequently
-                # Save checkpoint every 5 minutes instead of after each batch
-                checkpoint_interval_seconds = 300  # 5 minutes
-                if (datetime.now() - self.start_time).total_seconds() % checkpoint_interval_seconds < batch_size * 2:
+                # Save checkpoint after each batch
+                if (datetime.now() - self.start_time).total_seconds() % self.checkpoint_interval < batch_size:
                     try:
                         with open(checkpoint_path, 'w') as f:
                             json.dump(self.scan_checkpoint_data, f)
@@ -573,10 +501,7 @@ class CodeScanner:
             'total_findings': self.scan_checkpoint_data['stats']['total_findings'],
             'findings': self.scan_checkpoint_data['findings'],
             'status': 'completed' if len(all_files) == len(self.scan_checkpoint_data['completed_files']) else 'partial',
-            'completion_percentage': int(100 * len(self.scan_checkpoint_data['completed_files']) / max(1, len(all_files))),
-            'lines_scanned': self.total_lines_scanned,
-            'principles_checked': list(self.principles_checked),
-            'file_types': self.scan_checkpoint_data['file_types']  # Add the file types to result
+            'completion_percentage': int(100 * len(self.scan_checkpoint_data['completed_files']) / max(1, len(all_files)))
         }
         
         # Clean up checkpoint file if scan completed successfully
@@ -604,65 +529,6 @@ class CodeScanner:
             elapsed_time = (datetime.now() - self.start_time).total_seconds()
             if elapsed_time >= self.max_timeout:
                 raise TimeoutError(f"Overall scan timeout reached after {elapsed_time:.1f} seconds")
-        
-        # PERFORMANCE OPTIMIZATION 1: Skip binary files and large files
-        try:
-            # Check file extension first for quick filtering
-            _, ext = os.path.splitext(file_path)
-            
-            # Skip common binary file extensions
-            binary_extensions = [
-                '.exe', '.dll', '.so', '.dylib', '.bin', '.o', '.obj',
-                '.class', '.pyc', '.pyo', '.jpg', '.jpeg', '.png', '.gif',
-                '.bmp', '.ico', '.svg', '.mp3', '.mp4', '.avi', '.mov',
-                '.pdf', '.zip', '.tar', '.gz', '.rar', '.7z', '.jar',
-                '.war', '.db', '.sqlite', '.sqlite3', '.mdb', '.accdb'
-            ]
-            
-            if ext.lower() in binary_extensions:
-                return {
-                    "status": "skipped",
-                    "reason": f"Binary file extension: {ext}",
-                    "file_name": os.path.basename(file_path),
-                    "pii_found": [],
-                    "pii_count": 0
-                }
-                
-            # Check file size - hard limit at 1MB for better performance
-            file_size = os.path.getsize(file_path)
-            max_size_bytes = 1 * 1024 * 1024  # 1MB limit for any individual file
-            if file_size > max_size_bytes:
-                return {
-                    "status": "skipped",
-                    "reason": f"File too large ({file_size / (1024*1024):.1f} MB)",
-                    "file_name": os.path.basename(file_path),
-                    "pii_found": [],
-                    "pii_count": 0
-                }
-                
-            # For non-text extensions, check content to determine if it's binary
-            if ext.lower() not in self.extensions:
-                with open(file_path, 'rb') as f:
-                    chunk = f.read(1024)
-                    # Simple heuristic: if the chunk contains more than 10% non-ASCII characters or NUL bytes, it's likely binary
-                    binary_chars = sum(1 for b in chunk if b > 127 or b == 0)
-                    if binary_chars > len(chunk) * 0.1:
-                        return {
-                            "status": "skipped",
-                            "reason": "Binary file content detected",
-                            "file_name": os.path.basename(file_path),
-                            "pii_found": [],
-                            "pii_count": 0
-                        }
-        except Exception as e:
-            # If we can't read the file or analyze it, skip it
-            return {
-                "status": "error",
-                "error": f"Failed to check file type: {str(e)}",
-                "file_name": os.path.basename(file_path),
-                "pii_found": [],
-                "pii_count": 0
-            }
         
         # Create a event for timeout notification
         event = threading.Event()
@@ -692,9 +558,7 @@ class CodeScanner:
             return {
                 "status": "timeout",
                 "file_name": os.path.basename(file_path),
-                "error": f"Scan timed out after {timeout} seconds",
-                "pii_found": [],
-                "pii_count": 0
+                "error": f"Scan timed out after {timeout} seconds"
             }
         
         return result
@@ -733,10 +597,6 @@ class CodeScanner:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
                 
-            # Count lines of code for reporting
-            lines_count = content.count('\n') + 1
-            self.total_lines_scanned += lines_count
-                
             # First, extract code and comments separately
             code_content = content
             comments = []
@@ -767,14 +627,6 @@ class CodeScanner:
             
             # Combine results
             all_pii = pii_in_code + pii_in_comments
-            
-            # Enhance all findings with GDPR-specific data
-            enhanced_findings = []
-            for finding in all_pii:
-                enhanced_finding = self._enhance_finding_with_gdpr_data(finding)
-                enhanced_findings.append(enhanced_finding)
-            
-            all_pii = enhanced_findings
             
             # Scan for secrets using regex patterns
             for secret_type, pattern in self.secret_patterns.items():
@@ -821,17 +673,12 @@ class CodeScanner:
                         if file_metadata.get('git'):
                             finding['git_metadata'] = json.dumps(file_metadata['git'])
                         
-                        # Enhance finding with GDPR data
-                        enhanced_finding = self._enhance_finding_with_gdpr_data(finding)
-                        all_pii.append(enhanced_finding)
+                        all_pii.append(finding)
             
             # Use entropy analysis for additional secret detection
             if self.use_entropy:
                 entropy_findings = self._detect_high_entropy_strings(content, file_path)
-                # Enhance entropy findings with GDPR data
-                for finding in entropy_findings:
-                    enhanced_finding = self._enhance_finding_with_gdpr_data(finding)
-                    all_pii.append(enhanced_finding)
+                all_pii.extend(entropy_findings)
             
             # Create results with detailed metadata
             result = {
@@ -864,24 +711,6 @@ class CodeScanner:
             
             result['risk_summary'] = risk_levels
             result['pii_types_summary'] = pii_types
-            
-            # Calculate GDPR compliance metrics
-            gdpr_risk_score, risk_breakdown = calculate_gdpr_risk_score(all_pii)
-            gdpr_compliance_score = calculate_compliance_score(gdpr_risk_score)
-            
-            # Add GDPR compliance data to the result
-            result['gdpr_compliance'] = {
-                'compliance_score': gdpr_compliance_score,
-                'risk_score': gdpr_risk_score,
-                'risk_breakdown': risk_breakdown,
-                'compliance_status': 'Compliant' if gdpr_compliance_score >= 80 else 'Needs Improvement',
-                'legal_basis_count': sum(1 for item in all_pii if 'article_mappings' in item),
-                'remediation_priorities': {
-                    'high': sum(1 for item in all_pii if item.get('remediation_priority') == 'high'),
-                    'medium': sum(1 for item in all_pii if item.get('remediation_priority') == 'medium'),
-                    'low': sum(1 for item in all_pii if item.get('remediation_priority') == 'low')
-                }
-            }
             
             # Add CI/CD compatibility fields
             result['ci_cd'] = {
@@ -1144,7 +973,7 @@ class CodeScanner:
     
     def _scan_content(self, content: str, content_type: str, file_path: str) -> List[Dict[str, Any]]:
         """
-        Scan content (code or comments) for PII, GDPR compliance issues, and security vulnerabilities.
+        Scan content (code or comments) for PII and security vulnerabilities.
         
         Args:
             content: The text content to scan
@@ -1152,55 +981,12 @@ class CodeScanner:
             file_path: Original file path for reference
             
         Returns:
-            List of PII, GDPR compliance, and vulnerability findings
+            List of PII and vulnerability findings
         """
-        all_findings = []
+        pii_found = []
         
         # Split into lines for better location reporting
         lines = content.split('\n')
-        
-        # Run standard PII detection
-        pii_findings = self._detect_pii(content, content_type, lines, file_path)
-        all_findings.extend(pii_findings)
-        
-        # Add GDPR-specific scanning for code content
-        if content_type == "code":
-            # Scan for DSAR (Data Subject Access Request) patterns
-            dsar_findings = self._scan_for_dsar_patterns(content, lines, file_path)
-            all_findings.extend(dsar_findings)
-            
-            # Scan for consent verification markers
-            consent_findings = self._scan_for_consent_patterns(content, lines, file_path)
-            all_findings.extend(consent_findings)
-            
-            # Scan for security measures related to GDPR Art. 32
-            security_findings = self._scan_for_security_patterns(content, lines, file_path)
-            all_findings.extend(security_findings)
-            
-            # Scan for GDPR principle-specific patterns
-            principle_findings = self._scan_for_gdpr_principles(content, lines, file_path)
-            all_findings.extend(principle_findings)
-            
-            # Scan for Netherlands-specific UAVG patterns (for Dutch region)
-            nl_uavg_findings = self._scan_for_nl_uavg_patterns(content, lines, file_path)
-            all_findings.extend(nl_uavg_findings)
-        
-        return all_findings
-        
-    def _detect_pii(self, content: str, content_type: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
-        """
-        Detect PII in content using both standard PII detection and enhanced GDPR-specific patterns.
-        
-        Args:
-            content: The text content to scan
-            content_type: Either "code" or "comment"
-            lines: Content split into lines
-            file_path: Original file path for reference
-            
-        Returns:
-            List of PII findings
-        """
-        pii_found = []
         
         # Define vulnerability patterns for specific repository types
         vulnerability_patterns = {
@@ -1358,408 +1144,6 @@ class CodeScanner:
                             pii_found.append(finding)
         
         return pii_found
-    
-    def _scan_for_dsar_patterns(self, content: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
-        """
-        Scan for Data Subject Access Request (DSAR) patterns in the code.
-        
-        Args:
-            content: The text content to scan
-            lines: Content split into lines
-            file_path: Original file path for reference
-            
-        Returns:
-            List of DSAR-related findings
-        """
-        dsar_findings = []
-        
-        # Scan each line for DSAR patterns
-        for i, line in enumerate(lines):
-            line_num = i + 1
-            
-            # Check against each DSAR pattern
-            for pattern_key, pattern_info in DSAR_PATTERNS.items():
-                match = re.search(pattern_info['pattern'], line)
-                if match:
-                    # Map to GDPR articles
-                    gdpr_articles = pattern_info.get('gdpr_articles', [])
-                    
-                    # Create finding
-                    finding = {
-                        'type': 'dsar',
-                        'pattern_key': pattern_key,
-                        'value': line.strip(),
-                        'location': f'Line {line_num} (code)',
-                        'risk_level': pattern_info.get('risk_level', 'medium'),
-                        'description': pattern_info.get('description', 'DSAR Implementation'),
-                        'gdpr_articles': gdpr_articles,
-                        'reason': pattern_info.get('remediation', 'Implement proper DSAR handling'),
-                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
-                    }
-                    
-                    # Generate legal basis mapping
-                    article_mappings = map_finding_to_gdpr_articles('dsar', finding)
-                    if article_mappings:
-                        finding['article_mappings'] = article_mappings
-                    
-                    dsar_findings.append(finding)
-        
-        return dsar_findings
-    
-    def _scan_for_consent_patterns(self, content: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
-        """
-        Scan for consent verification patterns in the code.
-        
-        Args:
-            content: The text content to scan
-            lines: Content split into lines
-            file_path: Original file path for reference
-            
-        Returns:
-            List of consent-related findings
-        """
-        consent_findings = []
-        
-        # Scan each line for consent patterns
-        for i, line in enumerate(lines):
-            line_num = i + 1
-            
-            # Check against each consent pattern
-            for pattern_key, pattern_info in CONSENT_PATTERNS.items():
-                match = re.search(pattern_info['pattern'], line)
-                if match:
-                    # Map to GDPR articles
-                    gdpr_articles = pattern_info.get('gdpr_articles', [])
-                    
-                    # Create finding
-                    finding = {
-                        'type': 'consent',
-                        'pattern_key': pattern_key,
-                        'value': line.strip(),
-                        'location': f'Line {line_num} (code)',
-                        'risk_level': pattern_info.get('risk_level', 'medium'),
-                        'description': pattern_info.get('description', 'Consent Implementation'),
-                        'gdpr_articles': gdpr_articles,
-                        'reason': pattern_info.get('remediation', 'Implement proper consent mechanisms'),
-                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
-                    }
-                    
-                    # Generate legal basis mapping
-                    article_mappings = map_finding_to_gdpr_articles('consent', finding)
-                    if article_mappings:
-                        finding['article_mappings'] = article_mappings
-                    
-                    consent_findings.append(finding)
-        
-        return consent_findings
-    
-    def _scan_for_security_patterns(self, content: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
-        """
-        Scan for security implementation patterns related to GDPR Article 32.
-        
-        Args:
-            content: The text content to scan
-            lines: Content split into lines
-            file_path: Original file path for reference
-            
-        Returns:
-            List of security-related findings
-        """
-        security_findings = []
-        
-        # Scan each line for security patterns
-        for i, line in enumerate(lines):
-            line_num = i + 1
-            
-            # Check against each security pattern
-            for pattern_key, pattern_info in SECURITY_PATTERNS.items():
-                match = re.search(pattern_info['pattern'], line)
-                if match:
-                    # Map to GDPR articles
-                    gdpr_articles = pattern_info.get('gdpr_articles', [])
-                    
-                    # Create finding
-                    finding = {
-                        'type': 'security',
-                        'pattern_key': pattern_key,
-                        'value': line.strip(),
-                        'location': f'Line {line_num} (code)',
-                        'risk_level': pattern_info.get('risk_level', 'medium'),
-                        'description': pattern_info.get('description', 'Security Implementation'),
-                        'gdpr_articles': gdpr_articles,
-                        'reason': pattern_info.get('remediation', 'Implement proper security measures'),
-                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
-                    }
-                    
-                    # Generate legal basis mapping
-                    article_mappings = map_finding_to_gdpr_articles('security', finding)
-                    if article_mappings:
-                        finding['article_mappings'] = article_mappings
-                    
-                    security_findings.append(finding)
-        
-        return security_findings
-        
-    def _scan_for_gdpr_principles(self, content: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
-        """
-        Scan for patterns related to the 7 GDPR principles:
-        1. Lawfulness, Fairness, Transparency
-        2. Purpose Limitation
-        3. Data Minimization
-        4. Accuracy
-        5. Storage Limitation
-        6. Integrity & Confidentiality
-        7. Accountability
-        
-        Args:
-            content: The text content to scan
-            lines: Content split into lines
-            file_path: Original file path for reference
-            
-        Returns:
-            List of GDPR principle-related findings
-        """
-        principle_findings = []
-        
-        # Keep track of principles we've checked for reporting
-        for pattern_key, pattern_info in GDPR_PRINCIPLE_PATTERNS.items():
-            gdpr_principle = pattern_info.get('gdpr_principle', 'unknown')
-            if gdpr_principle and gdpr_principle not in self.principles_checked:
-                self.principles_checked.add(gdpr_principle)
-        
-        # Scan each line for GDPR principle patterns
-        for i, line in enumerate(lines):
-            line_num = i + 1
-            
-            # Check against each GDPR principle pattern
-            for pattern_key, pattern_info in GDPR_PRINCIPLE_PATTERNS.items():
-                match = re.search(pattern_info['pattern'], line)
-                if match:
-                    # Get GDPR principle category
-                    gdpr_principle = pattern_info.get('gdpr_principle', 'unknown')
-                    
-                    # Map to GDPR articles
-                    gdpr_articles = pattern_info.get('gdpr_articles', [])
-                    
-                    # Create finding
-                    finding = {
-                        'type': 'principle',
-                        'pattern_key': pattern_key,
-                        'value': line.strip(),
-                        'location': f'Line {line_num} (code)',
-                        'risk_level': pattern_info.get('risk_level', 'medium'),
-                        'description': pattern_info.get('description', f'GDPR Principle: {gdpr_principle.replace("_", " ").title()}'),
-                        'gdpr_articles': gdpr_articles,
-                        'gdpr_principle': gdpr_principle,
-                        'reason': pattern_info.get('remediation', 'Ensure GDPR principles are properly implemented'),
-                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
-                    }
-                    
-                    # Generate article mappings
-                    article_mappings = map_finding_to_gdpr_articles('principle', finding)
-                    if article_mappings:
-                        finding['article_mappings'] = article_mappings
-                    
-                    principle_findings.append(finding)
-        
-        # Also scan for multi-line principle patterns (for more complex implementations)
-        # Process in chunks of 5 lines for efficiency
-        for i in range(0, len(lines), 5):
-            chunk = "\n".join(lines[i:i+5])
-            chunk_start_line = i + 1
-            chunk_end_line = min(i + 5, len(lines))
-            
-            for pattern_key, pattern_info in GDPR_PRINCIPLE_PATTERNS.items():
-                match = re.search(pattern_info['pattern'], chunk, re.DOTALL | re.IGNORECASE)
-                if match:
-                    # Get GDPR principle category
-                    gdpr_principle = pattern_info.get('gdpr_principle', 'unknown')
-                    
-                    # Map to GDPR articles
-                    gdpr_articles = pattern_info.get('gdpr_articles', [])
-                    
-                    # Create finding
-                    finding = {
-                        'type': 'principle',
-                        'pattern_key': pattern_key,
-                        'value': match.group(0).strip(),
-                        'location': f'Lines {chunk_start_line}-{chunk_end_line} (code)',
-                        'risk_level': pattern_info.get('risk_level', 'medium'),
-                        'description': pattern_info.get('description', f'GDPR Principle: {gdpr_principle.replace("_", " ").title()}'),
-                        'gdpr_articles': gdpr_articles,
-                        'gdpr_principle': gdpr_principle,
-                        'reason': pattern_info.get('remediation', 'Ensure GDPR principles are properly implemented'),
-                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
-                    }
-                    
-                    # Generate article mappings
-                    article_mappings = map_finding_to_gdpr_articles('principle', finding)
-                    if article_mappings:
-                        finding['article_mappings'] = article_mappings
-                    
-                    principle_findings.append(finding)
-        
-        return principle_findings
-        
-    def _scan_for_nl_uavg_patterns(self, content: str, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
-        """
-        Scan for Netherlands-specific UAVG patterns:
-        1. Dutch retention period requirements
-        2. BSN (citizen service number) processing rules
-        3. Data breach notification requirements 
-        4. Data sharing regulations
-        5. Dutch DPA (Autoriteit Persoonsgegevens) requirements
-        
-        Args:
-            content: The text content to scan
-            lines: Content split into lines
-            file_path: Original file path for reference
-            
-        Returns:
-            List of Dutch UAVG-related findings
-        """
-        # Only perform these scans for Dutch region
-        if self.region.lower() != "netherlands":
-            return []
-            
-        nl_findings = []
-        
-        # Scan each line for Netherlands-specific patterns
-        for i, line in enumerate(lines):
-            line_num = i + 1
-            
-            # Check against each NL-specific pattern
-            for pattern_key, pattern_info in NL_UAVG_PATTERNS.items():
-                match = re.search(pattern_info['pattern'], line)
-                if match:
-                    # Get GDPR principle category (if applicable)
-                    gdpr_principle = pattern_info.get('gdpr_principle', 'unknown')
-                    
-                    # Map to GDPR and UAVG articles
-                    gdpr_articles = pattern_info.get('gdpr_articles', [])
-                    uavg_articles = pattern_info.get('uavg_articles', [])
-                    
-                    # Create finding
-                    finding = {
-                        'type': 'nl_uavg',
-                        'pattern_key': pattern_key,
-                        'value': line.strip(),
-                        'location': f'Line {line_num} (code)',
-                        'risk_level': pattern_info.get('risk_level', 'medium'),
-                        'description': pattern_info.get('description', f'Dutch UAVG Requirement: {pattern_key.replace("nl_", "").replace("_", " ").title()}'),
-                        'gdpr_articles': gdpr_articles,
-                        'uavg_articles': uavg_articles,
-                        'gdpr_principle': gdpr_principle,
-                        'country_specific': 'Netherlands',
-                        'reason': pattern_info.get('remediation', 'Ensure Dutch UAVG compliance'),
-                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
-                    }
-                    
-                    # Generate article mappings (if applicable)
-                    article_mappings = map_finding_to_gdpr_articles('principle', finding)
-                    if article_mappings:
-                        finding['article_mappings'] = article_mappings
-                    
-                    nl_findings.append(finding)
-        
-        # Also scan for multi-line NL-specific patterns
-        # Process in chunks of 5 lines for efficiency
-        for i in range(0, len(lines), 5):
-            chunk = "\n".join(lines[i:i+5])
-            chunk_start_line = i + 1
-            chunk_end_line = min(i + 5, len(lines))
-            
-            for pattern_key, pattern_info in NL_UAVG_PATTERNS.items():
-                match = re.search(pattern_info['pattern'], chunk, re.DOTALL | re.IGNORECASE)
-                if match:
-                    # Get GDPR principle category (if applicable)
-                    gdpr_principle = pattern_info.get('gdpr_principle', 'unknown')
-                    
-                    # Map to GDPR and UAVG articles
-                    gdpr_articles = pattern_info.get('gdpr_articles', [])
-                    uavg_articles = pattern_info.get('uavg_articles', [])
-                    
-                    # Create finding
-                    finding = {
-                        'type': 'nl_uavg',
-                        'pattern_key': pattern_key,
-                        'value': match.group(0).strip(),
-                        'location': f'Lines {chunk_start_line}-{chunk_end_line} (code)',
-                        'risk_level': pattern_info.get('risk_level', 'medium'),
-                        'description': pattern_info.get('description', f'Dutch UAVG Requirement: {pattern_key.replace("nl_", "").replace("_", " ").title()}'),
-                        'gdpr_articles': gdpr_articles,
-                        'uavg_articles': uavg_articles,
-                        'gdpr_principle': gdpr_principle,
-                        'country_specific': 'Netherlands',
-                        'reason': pattern_info.get('remediation', 'Ensure Dutch UAVG compliance'),
-                        'remediation_priority': 'high' if pattern_info.get('risk_level') == 'high' else 'medium'
-                    }
-                    
-                    # Generate article mappings (if applicable)
-                    article_mappings = map_finding_to_gdpr_articles('principle', finding)
-                    if article_mappings:
-                        finding['article_mappings'] = article_mappings
-                    
-                    nl_findings.append(finding)
-        
-        return nl_findings
-    
-    def _enhance_finding_with_gdpr_data(self, finding: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Enhance a finding with GDPR-specific data.
-        
-        Args:
-            finding: The original finding
-            
-        Returns:
-            Enhanced finding with GDPR compliance information
-        """
-        # Set default finding type
-        finding_type = 'pii'
-        
-        # Determine finding type based on content
-        if 'type' in finding:
-            if finding['type'] in ['dsar', 'consent', 'security', 'principle', 'nl_uavg']:
-                finding_type = finding['type']
-            elif finding['type'].startswith('Vulnerability:'):
-                finding_type = 'security'
-        
-        # Generate remediation suggestion
-        if 'remediation' not in finding:
-            finding['remediation'] = generate_remediation_suggestion(finding)
-        
-        # Add GDPR article mappings if not already present
-        if 'article_mappings' not in finding and 'pattern_key' in finding:
-            article_mappings = map_finding_to_gdpr_articles(finding_type, finding)
-            if article_mappings:
-                finding['article_mappings'] = article_mappings
-        
-        # Set remediation priority if not present
-        if 'remediation_priority' not in finding:
-            finding['remediation_priority'] = get_remediation_priority(finding)
-        
-        # Add GDPR principle category if applicable
-        if finding_type == 'principle' and 'gdpr_principle' not in finding and 'pattern_key' in finding:
-            # Try to get the principle from GDPR_PRINCIPLE_PATTERNS
-            for pattern_key, pattern_info in GDPR_PRINCIPLE_PATTERNS.items():
-                if pattern_key == finding['pattern_key']:
-                    finding['gdpr_principle'] = pattern_info.get('gdpr_principle', 'unknown')
-                    break
-        
-        # Add NL-specific UAVG data if applicable
-        if finding_type == 'nl_uavg' and 'pattern_key' in finding:
-            # Try to get the data from NL_UAVG_PATTERNS
-            for pattern_key, pattern_info in NL_UAVG_PATTERNS.items():
-                if pattern_key == finding['pattern_key']:
-                    # Add specific UAVG article references if not already present
-                    if 'uavg_articles' not in finding and 'uavg_articles' in pattern_info:
-                        finding['uavg_articles'] = pattern_info.get('uavg_articles', [])
-                    
-                    # Mark as country-specific
-                    finding['country_specific'] = 'Netherlands'
-                    break
-        
-        return finding
     
     def _get_reason(self, pii_type: str, risk_level: str) -> str:
         """

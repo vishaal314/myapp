@@ -620,7 +620,7 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
         "scan_type": "soc2",
         "timestamp": datetime.now().isoformat(),
         "repo_url": repo_url,
-        "branch": branch or "unknown",  # Will be updated after successful clone
+        "branch": branch or "main",
         "findings": [],
         "summary": {
             "security": {"high": 0, "medium": 0, "low": 0},
@@ -643,62 +643,31 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
     clone_successful = False
     
     try:
-        # Prepare clone command with authentication if needed
+        # Prepare clone command
         if token:
             # Use token for authentication
             auth_repo_url = repo_url.replace("https://", f"https://{token}@")
         else:
             auth_repo_url = repo_url
             
-        # Try cloning with specified branch if provided
+        # Add branch parameter if provided
+        branch_param = []
         if branch:
-            logger.info(f"Cloning repository {repo_url} with branch {branch}...")
             branch_param = ["-b", branch]
-            process = subprocess.run(
-                ["git", "clone", "--depth", "1"] + branch_param + [auth_repo_url, temp_dir],
-                capture_output=True,
-                text=True
-            )
             
-            if process.returncode == 0:
-                # Branch-specific clone succeeded
-                clone_successful = True
-                results["branch"] = branch
-            else:
-                # Clean up for the next attempt
-                shutil.rmtree(temp_dir)
-                os.makedirs(temp_dir, exist_ok=True)
-                logger.warning(f"Failed to clone branch '{branch}', will try default branch")
+        # Clone repository
+        logger.info(f"Cloning repository {repo_url}...")
+        process = subprocess.run(
+            ["git", "clone", "--depth", "1"] + branch_param + [auth_repo_url, temp_dir],
+            capture_output=True,
+            text=True
+        )
         
-        # If branch wasn't specified or branch-specific clone failed, clone without specifying branch
-        if not clone_successful:
-            logger.info(f"Cloning repository {repo_url} (default branch)...")
-            process = subprocess.run(
-                ["git", "clone", "--depth", "1", auth_repo_url, temp_dir],
-                capture_output=True,
-                text=True
-            )
-            
-            if process.returncode != 0:
-                error_msg = process.stderr.strip()
-                logger.error(f"Failed to clone repo: {error_msg}")
-                results["error"] = f"Failed to clone repository: {error_msg}"
-                return results
-            
-            # Determine which branch was cloned
-            branch_process = subprocess.run(
-                ["git", "-C", temp_dir, "rev-parse", "--abbrev-ref", "HEAD"],
-                capture_output=True,
-                text=True
-            )
-            
-            if branch_process.returncode == 0:
-                default_branch = branch_process.stdout.strip()
-                results["branch"] = default_branch
-                logger.info(f"Successfully cloned default branch: {default_branch}")
-            else:
-                # If we can't determine the branch name, use a placeholder
-                results["branch"] = "default"
+        if process.returncode != 0:
+            error_msg = process.stderr.strip()
+            logger.error(f"Failed to clone repo: {error_msg}")
+            results["error"] = f"Failed to clone repository: {error_msg}"
+            return results
             
         clone_successful = True
         
@@ -762,23 +731,15 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
         # Base score is 100, deduct points based on findings
         base_score = 100
         if total_findings > 0:
-            # Calculate score using a more severe penalty formula
-            # Each high risk issue now significantly impacts the score
-            total_issues = high_risk * 3 + medium_risk * 2 + low_risk
-            penalty_per_point = min(3, max(1, total_issues / 10))  # Dynamic penalty based on total issues
-            
-            # Additional penalty for having many high-risk issues (matching Azure method)
-            if high_risk > 10:
-                high_risk_penalty = min(60, high_risk)  # Cap at 60 points
-            else:
-                high_risk_penalty = high_risk * 2
-                
-            # Calculate final score with hard penalties for high risk issues
-            compliance_score = max(0, base_score - int(total_issues * penalty_per_point) - high_risk_penalty)
+            # Calculate weighted impact of findings
+            weighted_impact = (high_risk * 10 + medium_risk * 5 + low_risk * 2) / (results["iac_files_found"] or 1)
+            # Cap the impact to ensure score doesn't go below 0
+            weighted_impact = min(95, weighted_impact)
+            compliance_score = base_score - weighted_impact
         else:
             compliance_score = base_score
             
-        results["compliance_score"] = max(1, int(compliance_score))
+        results["compliance_score"] = max(5, int(compliance_score))
         
         # Update scan status
         results["scan_status"] = "completed"
@@ -821,7 +782,7 @@ def scan_azure_repo_for_soc2(repo_url: str, project: str, branch: Optional[str] 
         "timestamp": datetime.now().isoformat(),
         "repo_url": repo_url,
         "project": project,
-        "branch": branch or "unknown",  # Will be updated after successful clone
+        "branch": branch or "main",
         "findings": [],
         "summary": {
             "security": {"high": 0, "medium": 0, "low": 0},
@@ -859,68 +820,18 @@ def scan_azure_repo_for_soc2(repo_url: str, project: str, branch: Optional[str] 
         else:
             clone_url = repo_url
         
-        # Try to clone with specified branch first if provided
-        if branch:
-            logger.info(f"Cloning Azure repository: {repo_url} (branch: {branch})")
-            
-            # Prepare git command with branch
-            git_cmd = ["git", "clone", clone_url, temp_dir, "--branch", branch, "--single-branch", "--depth", "1"]
-            
-            try:
-                # Execute clone
-                process = subprocess.run(git_cmd, capture_output=True, text=True)
-                
-                if process.returncode == 0:
-                    clone_successful = True
-                    results["branch"] = branch
-                else:
-                    # Clean up for the next attempt
-                    shutil.rmtree(temp_dir)
-                    os.makedirs(temp_dir, exist_ok=True)
-                    logger.warning(f"Failed to clone branch '{branch}', will try default branch")
-            except Exception as e:
-                logger.warning(f"Error cloning branch '{branch}': {str(e)}")
-                # Clean up for the next attempt
-                if os.path.exists(temp_dir):
-                    shutil.rmtree(temp_dir)
-                    os.makedirs(temp_dir, exist_ok=True)
+        # Clone repository
+        logger.info(f"Cloning Azure repository: {repo_url} (branch: {branch})")
         
-        # If branch wasn't specified or branch-specific clone failed, try without branch
-        if not clone_successful:
-            logger.info(f"Cloning Azure repository: {repo_url} (default branch)")
-            
-            # Prepare git command without branch
-            git_cmd = ["git", "clone", clone_url, temp_dir, "--depth", "1"]
-            
-            try:
-                process = subprocess.run(git_cmd, capture_output=True, text=True)
-                
-                if process.returncode != 0:
-                    error_msg = process.stderr.strip()
-                    logger.error(f"Failed to clone repo: {error_msg}")
-                    results["error"] = f"Failed to clone repository: {error_msg}"
-                    return results
-                
-                # Determine which branch was cloned
-                branch_process = subprocess.run(
-                    ["git", "-C", temp_dir, "rev-parse", "--abbrev-ref", "HEAD"],
-                    capture_output=True,
-                    text=True
-                )
-                
-                if branch_process.returncode == 0:
-                    default_branch = branch_process.stdout.strip()
-                    results["branch"] = default_branch
-                    logger.info(f"Successfully cloned default branch: {default_branch}")
-                else:
-                    # If we can't determine the branch name, use a placeholder
-                    results["branch"] = "default"
-                
-                clone_successful = True
-            except Exception as e:
-                logger.error(f"Error cloning repository: {str(e)}")
-                results["error"] = f"Error cloning repository: {str(e)}"
-                return results
+        # Prepare git command
+        git_cmd = ["git", "clone", clone_url, temp_dir]
+        if branch:
+            git_cmd.extend(["--branch", branch])
+        git_cmd.extend(["--single-branch", "--depth", "1"])
+        
+        # Execute clone
+        subprocess.run(git_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        clone_successful = True
         
         # Once cloned, process it the same way as GitHub repositories
         # Count total files

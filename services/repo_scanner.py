@@ -17,7 +17,6 @@ from datetime import datetime
 import uuid
 
 from services.code_scanner import CodeScanner
-from services.consent_analyzer import apply_consent_analyzer, check_consent_patterns
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -66,52 +65,6 @@ class RepoScanner:
             except Exception as e:
                 logger.error(f"Error cleaning up temporary directory {temp_dir}: {str(e)}")
     
-    def clean_github_url(self, repo_url: str) -> str:
-        """
-        Clean GitHub URLs to ensure they're in the correct format for cloning.
-        
-        This function removes common patterns that cause clone errors such as:
-        - /blob/master/ or /blob/main/ paths
-        - /tree/master/ or /tree/main/ paths
-        - Any file or directory paths after the repository name
-        
-        Args:
-            repo_url: Original GitHub repository URL
-            
-        Returns:
-            Cleaned repository URL suitable for git clone
-        """
-        # Only process GitHub URLs
-        if 'github.com' not in repo_url:
-            return repo_url
-            
-        logger.info(f"Cleaning GitHub URL: {repo_url}")
-        
-        # Handle /blob/ paths which are very common mistakes
-        blob_pattern = r'(https?://(?:www\.)?github\.com/[^/]+/[^/]+)/blob/[^/]+/.*'
-        blob_match = re.match(blob_pattern, repo_url)
-        if blob_match:
-            cleaned_url = blob_match.group(1)
-            logger.info(f"Removed /blob/ path, cleaned URL: {cleaned_url}")
-            return cleaned_url
-            
-        # Handle /tree/ paths which are also common
-        tree_pattern = r'(https?://(?:www\.)?github\.com/[^/]+/[^/]+)/tree/[^/]+/.*'
-        tree_match = re.match(tree_pattern, repo_url)
-        if tree_match:
-            cleaned_url = tree_match.group(1)
-            logger.info(f"Removed /tree/ path, cleaned URL: {cleaned_url}")
-            return cleaned_url
-        
-        # If the URL has more than 4 path segments (https://github.com/org/repo/extra/paths), truncate it
-        path_segments = repo_url.split('/')
-        if len(path_segments) > 5:  # 5 segments: ['https:', '', 'github.com', 'org', 'repo']
-            cleaned_url = '/'.join(path_segments[:5])
-            logger.info(f"Truncated extra path segments, cleaned URL: {cleaned_url}")
-            return cleaned_url
-            
-        return repo_url
-
     def is_valid_repo_url(self, repo_url: str) -> bool:
         """
         Check if a repository URL is valid.
@@ -181,7 +134,7 @@ class RepoScanner:
     def clone_repository(self, repo_url: str, branch: Optional[str] = None, 
                          auth_token: Optional[str] = None) -> Dict[str, Any]:
         """
-        Clone a Git repository to a temporary directory with optimized performance.
+        Clone a Git repository to a temporary directory.
         
         Args:
             repo_url: URL of the Git repository
@@ -192,13 +145,6 @@ class RepoScanner:
             Dictionary with cloning results and local path
         """
         start_time = time.time()
-        
-        # Clean the GitHub URL if it includes paths like /blob/master/ or /tree/master/
-        original_url = repo_url
-        if 'github.com' in repo_url:
-            repo_url = self.clean_github_url(repo_url)
-            if repo_url != original_url:
-                logger.info(f"URL was cleaned for cloning: {original_url} -> {repo_url}")
         
         if not self.is_valid_repo_url(repo_url):
             return {
@@ -220,22 +166,9 @@ class RepoScanner:
         success = False
         error_msg = ""
         
-        # PERFORMANCE OPTIMIZATION 1: Reduce clone depth and use sparse checkout
-        # PERFORMANCE OPTIMIZATION 2: Reduce timeout from 10 minutes to 2 minutes
-        # PERFORMANCE OPTIMIZATION 3: Add --filter=blob:none to avoid retrieving large blobs
-        timeout_seconds = 120  # 2 min timeout instead of 10
-        
         if branch:
             # First attempt with specified branch
-            # Performance-optimized clone command with sparse checkout
-            cmd = [
-                'git', 'clone',
-                '--branch', branch,
-                '--depth', '1',  # Get only most recent commit
-                '--filter=blob:none',  # Don't download file contents initially
-                '--no-checkout',  # Don't check out files initially (for faster clone)
-                clone_url, temp_dir
-            ]
+            cmd = ['git', 'clone', '--branch', branch, '--depth', '1', clone_url, temp_dir]
             
             try:
                 # Execute git clone command
@@ -246,7 +179,7 @@ class RepoScanner:
                     cmd, 
                     capture_output=True, 
                     text=True,
-                    timeout=timeout_seconds
+                    timeout=600  # 10 min timeout
                 )
                 
                 if result.returncode == 0:
@@ -268,14 +201,7 @@ class RepoScanner:
         
         # If branch-specific clone failed or no branch was specified, try without branch specifier
         if not success:
-            # Performance-optimized clone command with sparse checkout
-            cmd = [
-                'git', 'clone',
-                '--depth', '1',  # Get only most recent commit
-                '--filter=blob:none',  # Don't download file contents initially
-                '--no-checkout',  # Don't check out files initially (for faster clone)
-                clone_url, temp_dir
-            ]
+            cmd = ['git', 'clone', '--depth', '1', clone_url, temp_dir]
             
             try:
                 # Execute git clone command
@@ -286,7 +212,7 @@ class RepoScanner:
                     cmd, 
                     capture_output=True, 
                     text=True,
-                    timeout=timeout_seconds
+                    timeout=600  # 10 min timeout
                 )
                 
                 if result.returncode != 0:
@@ -309,7 +235,7 @@ class RepoScanner:
                 logger.error("Git clone operation timed out")
                 return {
                     'status': 'error',
-                    'message': f'Git clone operation timed out after {timeout_seconds} seconds',
+                    'message': 'Git clone operation timed out after 10 minutes',
                     'repo_path': None,
                     'time_ms': int((time.time() - start_time) * 1000)
                 }
@@ -318,69 +244,6 @@ class RepoScanner:
                 return {
                     'status': 'error',
                     'message': f'Error cloning repository: {str(e)}',
-                    'repo_path': None,
-                    'time_ms': int((time.time() - start_time) * 1000)
-                }
-        
-        # PERFORMANCE OPTIMIZATION 4: Use sparse checkout to only get important files
-        # Now setup sparse checkout for only important file types
-        try:
-            # Initialize sparse checkout
-            subprocess.run(
-                ['git', 'sparse-checkout', 'init', '--cone'],
-                cwd=temp_dir,
-                capture_output=True,
-                timeout=30
-            )
-            
-            # Set sparse checkout patterns to only check out important files
-            # Create patterns file for important file types to check out
-            patterns = [
-                '*.py', '*.js', '*.ts', '*.java', '*.cs', '*.go', '*.rs', '*.rb',
-                '*.php', '*.jsx', '*.tsx', '*.yml', '*.yaml', '*.json', '*.xml',
-                '*.tf', '*.tfvars', '*.html', '*.htm', '*.css', '*.sql', '*.sh',
-                '*.ps1', '*.env', '*.properties', '*.conf', '*.ini'
-            ]
-            
-            # Write patterns to file
-            patterns_file = os.path.join(temp_dir, 'sparse-checkout-patterns.txt')
-            with open(patterns_file, 'w') as f:
-                for pattern in patterns:
-                    f.write(f"{pattern}\n")
-            
-            # Set sparse checkout patterns
-            subprocess.run(
-                ['git', 'sparse-checkout', 'set', '--stdin'],
-                input='\n'.join(patterns),
-                text=True,
-                cwd=temp_dir,
-                capture_output=True,
-                timeout=30
-            )
-            
-            # Checkout the files
-            subprocess.run(
-                ['git', 'checkout'],
-                cwd=temp_dir,
-                capture_output=True,
-                timeout=30
-            )
-            
-        except Exception as e:
-            logger.warning(f"Failed to set up sparse checkout: {str(e)}. Falling back to regular checkout.")
-            # If sparse checkout fails, fall back to regular checkout of the HEAD commit
-            try:
-                subprocess.run(
-                    ['git', 'checkout', 'HEAD'],
-                    cwd=temp_dir,
-                    capture_output=True,
-                    timeout=30
-                )
-            except Exception as checkout_error:
-                logger.error(f"Error checking out repository: {str(checkout_error)}")
-                return {
-                    'status': 'error',
-                    'message': f'Error checking out repository: {str(checkout_error)}',
                     'repo_path': None,
                     'time_ms': int((time.time() - start_time) * 1000)
                 }
@@ -404,8 +267,7 @@ class RepoScanner:
                 ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
                 cwd=temp_dir,
                 capture_output=True,
-                text=True,
-                timeout=10  # Short timeout for this simple command
+                text=True
             )
             if result.returncode == 0:
                 actual_branch = result.stdout.strip()
@@ -503,27 +365,10 @@ class RepoScanner:
         """
         start_time = time.time()
         
-        # Clean GitHub URLs if they contain /blob/master/ or similar patterns
-        original_url = repo_url
-        if 'github.com' in repo_url:
-            repo_url = self.clean_github_url(repo_url)
-            if repo_url != original_url:
-                logger.info(f"URL was cleaned for scanning: {original_url} -> {repo_url}")
-        
-        # Performance improvement logging
-        logger.info(f"Starting optimized repository scan for {repo_url}")
-        
-        if progress_callback:
-            progress_callback(0, 100, f"Cloning repository: {repo_url}")
-        
         # First, clone the repository
         clone_result = self.clone_repository(repo_url, branch, auth_token)
         
         if clone_result['status'] != 'success':
-            logger.warning(f"Failed to clone repository: {clone_result['message']}")
-            if progress_callback:
-                progress_callback(100, 100, f"Error: {clone_result['message']}")
-                
             return {
                 'scan_type': 'repository',
                 'status': 'error',
@@ -537,128 +382,48 @@ class RepoScanner:
         
         repo_path = clone_result['repo_path']
         
-        # Log cloning performance
-        clone_time = time.time() - start_time
-        logger.info(f"Repository cloned in {clone_time:.2f} seconds")
-        
-        if progress_callback:
-            progress_callback(10, 100, f"Repository cloned successfully. Starting scan...")
-        
         # Now scan the repository using the code scanner
         try:
-            # Configure improved ignore patterns specific to repositories
+            # Configure ignore patterns specific to repositories
             ignore_patterns = [
-                # Git and version control
-                "**/.git/**",           # Git internals
-                "**/.svn/**",           # SVN internals
-                "**/.hg/**",            # Mercurial internals
-                "**/.bzr/**",           # Bazaar internals
-                
-                # Dependencies and packages
-                "**/node_modules/**",   # Node.js dependencies
-                "**/bower_components/**", # Bower components
-                "**/jspm_packages/**",  # JSPM packages
-                "**/vendor/**",         # Vendor packages (PHP, Ruby)
-                "**/packages/**",       # Generic packages directory
-                "**/Pods/**",           # CocoaPods
-                "**/dist/**",           # Distribution artifacts
-                "**/build/**",          # Build artifacts
-                
-                # Python specific
-                "**/__pycache__/**",    # Python cache
-                "**/venv/**",           # Python virtual environment
-                "**/env/**",            # Python virtual environment
-                "**/*.pyc",             # Python compiled files
-                "**/*.pyo",             # Python optimized files
-                
-                # Java specific
-                "**/target/**",         # Maven build directory
-                "**/bin/**",            # Binary directory
-                "**/build/**",          # Gradle build directory
-                "**/*.class",           # Java compiled files
-                
-                # JavaScript and web specific
-                "**/*.min.js",          # Minified JavaScript
-                "**/*.min.css",         # Minified CSS
-                "**/bundle.js",         # Bundled JavaScript
-                "**/coverage/**",       # Code coverage reports
-                
-                # IDE and system files
-                "**/.idea/**",          # IntelliJ IDEA
-                "**/.vscode/**",        # VS Code
-                "**/.DS_Store",         # macOS metadata
-                "**/Thumbs.db",         # Windows metadata
-                
-                # Common binary file extensions
-                "**/*.jpg", "**/*.jpeg", "**/*.png", "**/*.gif", "**/*.bmp", "**/*.ico",
-                "**/*.pdf", "**/*.zip", "**/*.tar", "**/*.gz", "**/*.rar", "**/*.7z",
-                "**/*.exe", "**/*.dll", "**/*.so", "**/*.dylib", "**/*.jar", "**/*.war",
-                "**/*.ear", "**/*.db", "**/*.sqlite", "**/*.sqlite3"
+                "**/.git/**",        # Git internals
+                "**/node_modules/**", # Node.js dependencies
+                "**/__pycache__/**",  # Python cache
+                "**/venv/**",         # Python virtual environment
+                "**/env/**",          # Python virtual environment
+                "**/build/**",        # Build artifacts
+                "**/dist/**",         # Distribution artifacts
+                "**/*.min.js",        # Minified JavaScript
+                "**/*.pyc",           # Python compiled files
+                "**/*.pyo",           # Python optimized files
+                "**/*.class",         # Java compiled files
+                "**/.DS_Store",       # macOS metadata
+                "**/Thumbs.db"        # Windows metadata
             ]
             
             # Pass the progress callback to the code scanner
             if progress_callback:
-                # Create a wrapper function to offset the progress (10-90% range)
-                def adjusted_progress_callback(current, total, current_file):
-                    adjusted_progress = 10 + int((current / total) * 80)
-                    progress_callback(adjusted_progress, 100, f"Scanning file {current}/{total}: {current_file}")
-                    
-                self.code_scanner.set_progress_callback(adjusted_progress_callback)
+                self.code_scanner.set_progress_callback(progress_callback)
             
-            # Measure scan time separately
-            scan_start_time = time.time()
-            
-            # Scan the directory with optimized performance settings
+            # Scan the directory
             scan_results = self.code_scanner.scan_directory(
                 directory_path=repo_path,
                 ignore_patterns=ignore_patterns,
-                max_file_size_mb=20,     # Limit max file size to 20MB
-                continue_from_checkpoint=True,
-                max_files=2000           # Allow up to 2000 files to ensure more complete repository scans
+                max_file_size_mb=50,  # Limit file size to 50MB
+                continue_from_checkpoint=True
             )
             
-            # Log scan performance
-            scan_time = time.time() - scan_start_time
-            total_time = time.time() - start_time
-            
-            logger.info(f"Repository scanning completed in {scan_time:.2f} seconds")
-            logger.info(f"Total process time: {total_time:.2f} seconds")
-            logger.info(f"Files scanned: {scan_results.get('files_scanned', 0)}")
-            logger.info(f"Files skipped: {scan_results.get('files_skipped', 0)}")
-            logger.info(f"Findings: {scan_results.get('total_findings', 0)}")
-            
-            if progress_callback:
-                progress_callback(90, 100, "Finalizing results...")
-            
             # Add repository metadata
-            scan_results['scan_type'] = 'repository'
             scan_results['repo_url'] = repo_url
             scan_results['branch'] = branch or 'default'
             scan_results['repository_metadata'] = clone_result.get('metadata', {})
             scan_results['scan_time'] = datetime.now().isoformat()
             scan_results['process_time_seconds'] = time.time() - start_time
-            scan_results['clone_time_seconds'] = clone_time
-            scan_results['scan_time_seconds'] = scan_time
-            # File types are already in the scan_results from code_scanner.scan_directory
-            
-            # Apply consent analyzer to enhance findings with remediation suggestions
-            if progress_callback:
-                progress_callback(95, 100, "Analyzing consent and legal basis issues...")
-            
-            scan_results['repo_path'] = repo_path  # Add repo path for context in consent analyzer
-            scan_results = apply_consent_analyzer(scan_results)
-            
-            if progress_callback:
-                progress_callback(100, 100, "Scan completed successfully")
             
             return scan_results
             
         except Exception as e:
             logger.error(f"Error scanning repository: {str(e)}")
-            
-            if progress_callback:
-                progress_callback(100, 100, f"Error: {str(e)}")
-                
             return {
                 'scan_type': 'repository',
                 'status': 'error',

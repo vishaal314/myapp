@@ -84,28 +84,16 @@ class ComplianceScoreManager:
         }
         
         if not recent_scans:
-            # If no scans, return default sample score for better UI experience
-            # This allows the dashboard to show a representative display
-            sample_components = {
-                "code": 75,
-                "blob": 82,
-                "dpia": 68,
-                "image": 90,
-                "website": 78,
-                "database": 72,
-                "api": 65,
-                "cloud": 85,
-                "ai_model": 70
-            }
+            # If no scans, return default score
             return {
                 "timestamp": datetime.now().isoformat(),
-                "overall_score": 76,  # Sample overall score
-                "components": sample_components,
+                "overall_score": 0,
+                "components": component_scores,
                 "factors": {
-                    "pii_detection": 75,
-                    "risk_assessment": 70,
-                    "documentation": 65,
-                    "data_minimization": 80
+                    "pii_detection": 0,
+                    "risk_assessment": 0,
+                    "documentation": 0,
+                    "data_minimization": 0
                 }
             }
         
@@ -169,8 +157,7 @@ class ComplianceScoreManager:
         # Only include components that have scores
         valid_components = {k: v for k, v in component_scores.items() if v is not None}
         if not valid_components:
-            # Use default score if no components have valid scores
-            overall_score = 76
+            overall_score = 0
         else:
             # Normalize weights for available components
             total_weight = sum(weights[k] for k in valid_components.keys())
@@ -197,8 +184,7 @@ class ComplianceScoreManager:
     def _calculate_pii_detection_score(self, scans: List[Dict[str, Any]]) -> int:
         """Calculate PII detection factor score."""
         if not scans:
-            # Return sample score for better UI display when no real data exists
-            return 75
+            return 0
             
         # Based on coverage of different PII types
         pii_types_found = set()
@@ -219,8 +205,7 @@ class ComplianceScoreManager:
     def _calculate_risk_assessment_score(self, scans: List[Dict[str, Any]]) -> int:
         """Calculate risk assessment factor score."""
         if not scans:
-            # Return sample score for better UI display when no real data exists
-            return 70
+            return 0
             
         # Based on percentage of scans with risk assessment
         scans_with_risk = sum(1 for scan in scans if 'risk_assessment' in scan)
@@ -229,8 +214,7 @@ class ComplianceScoreManager:
     def _calculate_documentation_score(self, scans: List[Dict[str, Any]]) -> int:
         """Calculate documentation factor score."""
         if not scans:
-            # Return sample score for better UI display when no real data exists
-            return 65
+            return 0
             
         # Based on documentation completeness
         doc_scores = []
@@ -245,8 +229,7 @@ class ComplianceScoreManager:
     def _calculate_data_minimization_score(self, scans: List[Dict[str, Any]]) -> int:
         """Calculate data minimization factor score."""
         if not scans:
-            # Return sample score for better UI display when no real data exists
-            return 80
+            return 0
             
         # Based on data minimization indicators
         minimization_scores = []

@@ -182,203 +182,70 @@ def run_soc2_display_standalone():
         
         with col1:
             # PDF Download button
-            if st.button("Generate PDF Report", type="primary", key="soc2_pdf_report_btn"):
+            if st.button("Generate PDF Report", type="primary"):
                 from services.report_generator import generate_report
                 import base64
                 from datetime import datetime
-                import traceback
                 
-                try:
-                    with st.spinner("Generating PDF report..."):
-                        # Optimize data for performance by removing duplicate entries
-                        optimized_scan_results = {k: v for k, v in scan_results.items()}
-                        
-                        # For findings with large datasets, limit to the most critical items first
-                        if 'findings' in optimized_scan_results and len(optimized_scan_results['findings']) > 100:
-                            # Sort by risk level and limit to top 100 findings
-                            risk_priority = {"high": 0, "medium": 1, "low": 2}
-                            sorted_findings = sorted(
-                                optimized_scan_results['findings'],
-                                key=lambda x: risk_priority.get(x.get('risk_level', '').lower(), 999)
-                            )
-                            optimized_scan_results['findings'] = sorted_findings[:100]
-                            optimized_scan_results['limited_report'] = True  # Flag to show it's limited
-                        
-                        # Generate PDF report with optimized data
-                        pdf_bytes = generate_report(optimized_scan_results)
-                        
-                        if pdf_bytes:
-                            # Provide download link
-                            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-                            pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                            
-                            # Save report to file system for backup access
-                            import os
-                            reports_dir = os.path.join(os.getcwd(), "reports")
-                            if not os.path.exists(reports_dir):
-                                os.makedirs(reports_dir)
-                            
-                            file_path = os.path.join(reports_dir, pdf_filename)
-                            with open(file_path, 'wb') as f:
-                                f.write(pdf_bytes)
-                            
-                            # Display a more prominent download link with styling
-                            st.success("PDF report generated successfully!")
-                            
-                            # Add report size information
-                            size_in_mb = round(len(pdf_bytes) / (1024 * 1024), 2)
-                            st.info(f"Report size: {size_in_mb} MB | Saved to: reports/{pdf_filename}")
-                            
-                            # Use native Streamlit download button (more reliable than HTML link)
-                            st.download_button(
-                                label="📥 Download Report PDF",
-                                data=pdf_bytes,
-                                file_name=pdf_filename,
-                                mime="application/pdf",
-                                use_container_width=True,
-                                key="soc2_pdf_download"
-                            )
-                            
-                            st.markdown(f"""
-                            <div style="padding: 15px; background-color: #f0f2f6; border-radius: 8px; margin: 15px 0px;">
-                                <p style="font-size: 0.9em; color: #555;">
-                                    The report is also saved to the server at <code>{file_path}</code> for future reference.
-                                </p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # If report was limited, let the user know
-                            if optimized_scan_results.get('limited_report'):
-                                st.warning("⚠️ This report was limited to the top 100 findings for performance reasons. The full dataset is available in the detailed view.")
-                        else:
-                            st.error("Failed to generate PDF bytes. Check logs for details.")
-                except Exception as e:
-                    st.error(f"Error generating PDF report: {str(e)}")
-                    st.code(traceback.format_exc())
+                with st.spinner("Generating PDF report..."):
+                    # Generate PDF report
+                    pdf_bytes = generate_report(scan_results)
+                    
+                    # Provide download link
+                    b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+                    pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
+                    st.markdown(href, unsafe_allow_html=True)
         
         with col2:
             # HTML Download button
-            if st.button("Generate HTML Report", type="primary", key="soc2_html_report_btn"):
+            if st.button("Generate HTML Report", type="primary"):
                 from services.html_report_generator import get_html_report_as_base64
                 import base64
                 from datetime import datetime
-                import traceback
-                import os
                 
-                try:
-                    with st.spinner("Generating HTML report..."):
-                        # Generate optimized dataset for HTML report 
-                        # Limit findings to a reasonable number for better performance
-                        optimized_findings = scan_results.get('findings', [])
-                        limited_report = False
-                        
-                        if len(optimized_findings) > 100:
-                            # Sort by risk level and limit to top 100 findings
-                            risk_priority = {"high": 0, "medium": 1, "low": 2}
-                            optimized_findings = sorted(
-                                optimized_findings,
-                                key=lambda x: risk_priority.get(x.get('risk_level', '').lower(), 999)
-                            )[:100]
-                            limited_report = True
-                        
-                        # First adapt scan_results to the HTML report format with optimized data
-                        html_compatible_results = {
-                            'scan_id': scan_results.get('scan_id', f"soc2_{datetime.now().strftime('%Y%m%d_%H%M%S')}"),
-                            'scan_type': 'SOC2',
-                            'timestamp': datetime.now().isoformat(),
-                            'region': scan_results.get('region', 'Global'),
-                            'url': scan_results.get('repo_url', 'Not available'),
-                            'branch': scan_results.get('branch', 'main'),
-                            'findings': optimized_findings,
-                            'total_pii_found': len(scan_results.get('findings', [])),
-                            'high_risk_count': scan_results.get('high_risk_count', 0),
-                            'medium_risk_count': scan_results.get('medium_risk_count', 0),
-                            'low_risk_count': scan_results.get('low_risk_count', 0),
-                            'pii_types': {'SOC2 Findings': len(scan_results.get('findings', []))},
-                            'compliance_score': scan_results.get('compliance_score', 0),
-                            'limited_report': limited_report,
-                            'recommendations': [
-                                {
-                                    'title': 'Address High Risk SOC2 Findings',
-                                    'priority': 'High',
-                                    'description': 'Focus on high-risk SOC2 issues to improve your compliance posture.',
-                                    'steps': ['Review all high-risk findings', 'Prioritize based on TSC criteria impact', 'Develop remediation plans']
-                                },
-                                {
-                                    'title': 'Improve SOC2 Documentation',
-                                    'priority': 'Medium',
-                                    'description': 'Ensure all SOC2 control procedures are properly documented.',
-                                    'steps': ['Update control documentation', 'Cross-reference with TSC criteria', 'Review with compliance team']
-                                }
-                            ]
-                        }
-                        
-                        # Get base64 encoded HTML
-                        html_base64 = get_html_report_as_base64(html_compatible_results)
-                        
-                        if html_base64:
-                            # Provide download link
-                            html_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-                            
-                            # Save report to file system for backup access
-                            reports_dir = os.path.join(os.getcwd(), "reports")
-                            if not os.path.exists(reports_dir):
-                                os.makedirs(reports_dir)
-                            
-                            # Decode base64 and save to file
-                            html_bytes = base64.b64decode(html_base64)
-                            file_path = os.path.join(reports_dir, html_filename)
-                            with open(file_path, 'wb') as f:
-                                f.write(html_bytes)
-                            
-                            # Display success messages and file info
-                            st.success("HTML report generated successfully!")
-                            
-                            # Add report size information
-                            size_in_mb = round(len(html_bytes) / (1024 * 1024), 2)
-                            st.info(f"Report size: {size_in_mb} MB | Saved to: reports/{html_filename}")
-                            
-                            # Use native Streamlit download button
-                            st.download_button(
-                                label="📥 Download HTML Report",
-                                data=html_bytes,
-                                file_name=html_filename,
-                                mime="text/html",
-                                use_container_width=True,
-                                key="soc2_html_download"
-                            )
-                            
-                            st.markdown(f"""
-                            <div style="padding: 15px; background-color: #f0f2f6; border-radius: 8px; margin: 15px 0px;">
-                                <p style="font-size: 0.9em; color: #555;">
-                                    The report is also saved to the server at <code>{file_path}</code> for future reference.
-                                </p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # Add option to view report in new tab (need to keep this HTML-based since Streamlit doesn't have a native "open in new tab" button)
-                            st.markdown(f"""
-                            <div style="padding: 10px; background-color: #eef2f7; border-radius: 8px; margin: 10px 0px; text-align: center;">
-                                <a href="data:text/html;base64,{html_base64}" 
-                                   target="_blank"
-                                   style="background-color: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px;">
-                                   <span style="margin-right: 5px;">🔍</span> View Report in New Tab
-                                </a>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # If report was limited, let the user know
-                            if limited_report:
-                                st.warning("⚠️ This HTML report was limited to the top 100 findings for performance reasons. The full dataset is available in the detailed view.")
-                        else:
-                            st.error("Failed to generate HTML report. The encoder returned empty data.")
-                except Exception as e:
-                    st.error(f"Error generating HTML report: {str(e)}")
-                    st.code(traceback.format_exc())
+                with st.spinner("Generating HTML report..."):
+                    # Generate HTML report
+                    # First adapt scan_results to the HTML report format
+                    html_compatible_results = {
+                        'scan_id': scan_results.get('scan_id', f"soc2_{datetime.now().strftime('%Y%m%d_%H%M%S')}"),
+                        'scan_type': 'SOC2',
+                        'timestamp': datetime.now().isoformat(),
+                        'region': scan_results.get('region', 'Global'),
+                        'url': scan_results.get('repo_url', 'Not available'),
+                        'findings': scan_results.get('findings', []),
+                        'total_pii_found': len(scan_results.get('findings', [])),
+                        'high_risk_count': scan_results.get('high_risk_count', 0),
+                        'medium_risk_count': scan_results.get('medium_risk_count', 0),
+                        'low_risk_count': scan_results.get('low_risk_count', 0),
+                        'pii_types': {'SOC2 Findings': len(scan_results.get('findings', []))},
+                        'recommendations': [
+                            {
+                                'title': 'Address High Risk SOC2 Findings',
+                                'priority': 'High',
+                                'description': 'Focus on high-risk SOC2 issues to improve your compliance posture.',
+                                'steps': ['Review all high-risk findings', 'Prioritize based on TSC criteria impact', 'Develop remediation plans']
+                            },
+                            {
+                                'title': 'Improve SOC2 Documentation',
+                                'priority': 'Medium',
+                                'description': 'Ensure all SOC2 control procedures are properly documented.',
+                                'steps': ['Update control documentation', 'Cross-reference with TSC criteria', 'Review with compliance team']
+                            }
+                        ]
+                    }
+                    
+                    # Get base64 encoded HTML
+                    html_base64 = get_html_report_as_base64(html_compatible_results)
+                    
+                    # Provide download link
+                    html_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+                    href = f'<a href="data:text/html;base64,{html_base64}" download="{html_filename}">Download SOC2 Compliance Report HTML</a>'
+                    st.markdown(href, unsafe_allow_html=True)
     
     with report_tabs[1]:
         # Full Report viewing option
-        if st.button("Show Detailed Report", key="show_detailed_soc2_report_btn"):
+        if st.button("Show Detailed Report"):
             with st.spinner("Generating detailed report view..."):
                 st.markdown("## Detailed SOC2 Compliance Report")
                 

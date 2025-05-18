@@ -4,15 +4,7 @@ import streamlit as st
 from typing import Dict, Any, Optional
 
 # Initialize Stripe with secret key from environment
-stripe_secret_key = os.getenv('STRIPE_SECRET_KEY')
-stripe_publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY')
-
-if not stripe_secret_key:
-    # For development purposes, provide a fallback warning
-    st.warning("STRIPE_SECRET_KEY environment variable not set. Stripe integration will not work properly.")
-    stripe.api_key = "sk_test_placeholder"
-else:
-    stripe.api_key = stripe_secret_key
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 # Pricing for each scan type (in cents)
 SCAN_PRICES = {
@@ -178,7 +170,7 @@ def display_payment_button(scan_type: str, user_email: str, metadata: Dict[str, 
             st.session_state.checkout_session_id = checkout_session["id"]
             
             # Display checkout link
-            st.markdown(f"[Click here to complete your payment]({checkout_session['url']})")
+            st.markdown(f"[Click here to complete your payment](${checkout_session['url']})")
             
             # Also provide a direct JavaScript redirect option
             js_redirect = f"""
