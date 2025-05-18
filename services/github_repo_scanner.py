@@ -13,6 +13,7 @@ from typing import Dict, Any, Optional, Callable
 from datetime import datetime
 
 from services.simple_repo_scanner import SimpleRepoScanner
+from services.enhanced_repo_scanner import EnhancedRepoScanner
 from services.code_scanner import CodeScanner
 
 # Configure logging
@@ -91,9 +92,32 @@ def scan_github_repo_for_code(repo_url: str, branch: Optional[str] = None, token
         Dictionary with scan results
     """
     try:
-        # Initialize code scanner and repo scanner
+        # Initialize code scanner
         code_scanner = CodeScanner(region='Netherlands')  # Default to Netherlands for GDPR compliance
-        repo_scanner = SimpleRepoScanner(code_scanner)
+        
+        # Determine if this is potentially a large repository by URL pattern
+        # For known large repositories like Spring Boot or other major frameworks, 
+        # use our enhanced scanner that handles large repos better
+        large_repo_patterns = [
+            'spring-projects/spring-boot',
+            'spring-projects/spring-framework',
+            'angular/angular',
+            'facebook/react',
+            'tensorflow/tensorflow',
+            'torvalds/linux',
+            'kubernetes/kubernetes',
+            'microsoft/vscode',
+            'django/django'
+        ]
+        
+        is_large_repo = any(pattern in repo_url for pattern in large_repo_patterns)
+        
+        # Use the appropriate scanner based on repository size
+        if is_large_repo:
+            logger.info(f"Using enhanced scanner for large repository: {repo_url}")
+            repo_scanner = EnhancedRepoScanner(code_scanner)
+        else:
+            repo_scanner = SimpleRepoScanner(code_scanner)
         
         # Perform the scan with progress reporting
         logger.info(f"Starting code scan of GitHub repository: {repo_url}")
