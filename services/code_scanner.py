@@ -432,40 +432,58 @@ class CodeScanner:
                 
                 all_files.append(file_path)
         
-        # Set up multiprocessing pool for parallel scanning
-        num_workers = max(1, multiprocessing.cpu_count() - 1)  # Leave one CPU free
+        # Set up multiprocessing pool for parallel scanning - use more workers for performance
+        num_workers = max(2, multiprocessing.cpu_count())  # Use all available CPUs for faster scanning
         
-        # Use threading for I/O bound tasks
-        with multiprocessing.Pool(processes=num_workers) as pool:
-            # Process files in batches to allow checkpointing
-            batch_size = 50  # Adjust this based on avg. file size and memory constraints
+        # Use better batch size for faster scanning
+        batch_size = 100  # Increased batch size for better performance
+        
+        # Skip certain file types and patterns that are unlikely to contain PII
+        skip_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.woff', '.ttf', '.eot', '.mp3', '.mp4', '.avi', '.pdf']
+        skip_patterns = ['node_modules', 'vendor', 'dist', 'build', '.git', '.idea', '.vscode', '__pycache__', 'venv', 'env', 'lib', 'bin']
+        
+        # Filter out unlikely files before scanning
+        filtered_files = []
+        for file_path in all_files:
+            # Skip files with extensions unlikely to contain PII
+            if any(file_path.endswith(ext) for ext in skip_extensions):
+                self.scan_checkpoint_data['stats']['files_skipped'] += 1
+                continue
             
-            for i in range(0, len(all_files), batch_size):
-                batch = all_files[i:i+batch_size]
+            # Skip common directories unlikely to contain PII
+            if any(pattern in file_path for pattern in skip_patterns):
+                self.scan_checkpoint_data['stats']['files_skipped'] += 1
+                continue
                 
+            filtered_files.append(file_path)
+        
+        # Use multiprocessing for faster scanning
+        with multiprocessing.Pool(processes=num_workers) as pool:
+            # Map function for scanning files in parallel
+            scan_tasks = [(i, file_path) for i, file_path in enumerate(filtered_files)]
+            
+            # Process files in parallel batches
+            for batch_start in range(0, len(filtered_files), batch_size):
                 # Check if timeout reached
                 elapsed_time = (datetime.now() - self.start_time).total_seconds()
                 if elapsed_time >= self.max_timeout:
                     print(f"Scan timeout reached after {elapsed_time:.1f} seconds. Saving checkpoint.")
                     break
                 
-                # Process batch of files
-                results = []
-                for j, file_path in enumerate(batch):
-                    # Report progress
-                    if self.progress_callback:
-                        progress = i + j
-                        total = len(all_files)
-                        file_name = os.path.basename(file_path)
-                        self.progress_callback(progress, total, file_name)
-                    
-                    # Scan file with timeout protection
-                    try:
-                        result = self._scan_file_with_timeout(file_path)
-                        results.append(result)
-                        
+                # Get current batch
+                batch_end = min(batch_start + batch_size, len(filtered_files))
+                current_batch = scan_tasks[batch_start:batch_end]
+                
+                # Submit work to process pool for parallel processing
+                batch_results = pool.map_async(self._scan_file_wrapper, 
+                                              [(file_path, directory_path, self.progress_callback, i, len(filtered_files)) 
+                                               for i, file_path in current_batch])
+                
+                # Process results as they complete
+                for result in batch_results.get():
+                    if result and 'file_path' in result:
                         # Mark as completed
-                        rel_path = os.path.relpath(file_path, directory_path)
+                        rel_path = os.path.relpath(result['file_path'], directory_path)
                         self.scan_checkpoint_data['completed_files'].append(rel_path)
                         
                         # Update stats
@@ -473,8 +491,6 @@ class CodeScanner:
                         if result.get('pii_count', 0) > 0:
                             self.scan_checkpoint_data['findings'].append(result)
                             self.scan_checkpoint_data['stats']['total_findings'] += result.get('pii_count', 0)
-                    except Exception as e:
-                        print(f"Error scanning {file_path}: {str(e)}")
                 
                 # Save checkpoint after each batch
                 if (datetime.now() - self.start_time).total_seconds() % self.checkpoint_interval < batch_size:
@@ -513,13 +529,37 @@ class CodeScanner:
         
         return result
     
-    def _scan_file_with_timeout(self, file_path: str, timeout=60) -> Dict[str, Any]:
+    def _scan_file_wrapper(self, args):
+        """
+        Wrapper function for parallel file scanning.
+        
+        Args:
+            args: Tuple of (file_path, directory_path, progress_callback, index, total)
+            
+        Returns:
+            Scan results for the file
+        """
+        file_path, directory_path, progress_callback, index, total = args
+        
+        # Report progress if callback exists
+        if progress_callback:
+            file_name = os.path.basename(file_path)
+            progress_callback(index, total, file_name)
+            
+        try:
+            # Scan the file with timeout protection
+            return self._scan_file_with_timeout(file_path)
+        except Exception as e:
+            print(f"Error scanning {file_path}: {str(e)}")
+            return None
+    
+    def _scan_file_with_timeout(self, file_path: str, timeout=30) -> Dict[str, Any]:
         """
         Scan a file with a timeout to prevent hanging.
         
         Args:
             file_path: Path to the file to scan
-            timeout: Timeout in seconds
+            timeout: Timeout in seconds (reduced from 60 to 30 for faster scans)
             
         Returns:
             Scan result dictionary
@@ -532,7 +572,7 @@ class CodeScanner:
         
         # Create a event for timeout notification
         event = threading.Event()
-        result = {"status": "timeout", "file_name": os.path.basename(file_path)}
+        result = {"status": "timeout", "file_name": os.path.basename(file_path), "file_path": file_path}
         
         def scan_target():
             nonlocal result
