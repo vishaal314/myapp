@@ -512,7 +512,7 @@ class RepoScanner:
         
         repo_path = clone_result['repo_path']
         
-        # Now scan the repository using the code scanner
+        # Now scan the repository using a more robust method that avoids pickling errors
         try:
             # Configure ignore patterns specific to repositories
             ignore_patterns = [
@@ -528,20 +528,124 @@ class RepoScanner:
                 "**/*.pyo",           # Python optimized files
                 "**/*.class",         # Java compiled files
                 "**/.DS_Store",       # macOS metadata
-                "**/Thumbs.db"        # Windows metadata
+                "**/Thumbs.db",       # Windows metadata
+                "**/*.jpg",           # Images
+                "**/*.jpeg",          # Images
+                "**/*.png",           # Images
+                "**/*.gif",           # Images
+                "**/*.ico",           # Icons
+                "**/*.svg",           # SVGs
+                "**/*.eot",           # Fonts
+                "**/*.ttf",           # Fonts
+                "**/*.woff",          # Fonts
+                "**/*.woff2",         # Fonts
+                "**/*.lock",          # Lock files
+                "**/*.gz",            # Compressed files
+                "**/*.zip",           # Compressed files
+                "**/*.map"            # Source map files
             ]
             
-            # Pass the progress callback to the code scanner
-            if progress_callback:
-                self.code_scanner.set_progress_callback(progress_callback)
+            # Use a simpler approach to scan the repository by directly processing files
+            # Initialize scan results
+            scan_results = {
+                'scan_type': 'repository',
+                'status': 'completed',
+                'findings': [],
+                'total_files': 0,
+                'processed_files': 0,
+                'skipped_files': 0,
+                'high_risk_count': 0,
+                'medium_risk_count': 0,
+                'low_risk_count': 0
+            }
             
-            # Scan the directory
-            scan_results = self.code_scanner.scan_directory(
-                directory_path=repo_path,
-                ignore_patterns=ignore_patterns,
-                max_file_size_mb=50,  # Limit file size to 50MB
-                continue_from_checkpoint=True
-            )
+            # Collect files to be scanned
+            all_files = []
+            for root, dirs, files in os.walk(repo_path):
+                # Skip directories matching ignore patterns
+                dirs_to_remove = []
+                for i, dir_name in enumerate(dirs):
+                    full_dir_path = os.path.join(root, dir_name)
+                    rel_dir_path = os.path.relpath(full_dir_path, repo_path)
+                    
+                    # Check if directory should be ignored
+                    for pattern in ignore_patterns:
+                        if fnmatch.fnmatch(rel_dir_path, pattern.replace("**/", "")):
+                            dirs_to_remove.append(i)
+                            break
+                
+                # Remove directories from bottom to top to preserve indices
+                for i in sorted(dirs_to_remove, reverse=True):
+                    dirs.pop(i)
+                
+                # Add files that don't match ignore patterns
+                for file_name in files:
+                    full_path = os.path.join(root, file_name)
+                    rel_path = os.path.relpath(full_path, repo_path)
+                    
+                    # Skip files matching ignore patterns
+                    should_skip = False
+                    for pattern in ignore_patterns:
+                        if fnmatch.fnmatch(rel_path, pattern.replace("**/", "")):
+                            should_skip = True
+                            break
+                    
+                    if should_skip:
+                        scan_results['skipped_files'] += 1
+                        continue
+                    
+                    # Skip files larger than 50MB
+                    try:
+                        if os.path.getsize(full_path) > 50 * 1024 * 1024:
+                            scan_results['skipped_files'] += 1
+                            continue
+                    except:
+                        scan_results['skipped_files'] += 1
+                        continue
+                    
+                    all_files.append(full_path)
+            
+            # Update total files count
+            scan_results['total_files'] = len(all_files)
+            
+            # Process files sequentially to avoid multiprocessing issues
+            for i, file_path in enumerate(all_files):
+                # Update progress if callback is provided
+                if progress_callback:
+                    rel_path = os.path.relpath(file_path, repo_path)
+                    progress_callback(i + 1, len(all_files), rel_path)
+                
+                try:
+                    # Process each file individually using the code scanner's file scanning method
+                    file_findings = self.code_scanner.scan_single_file(file_path)
+                    
+                    # Skip if no findings
+                    if not file_findings or not file_findings.get('findings'):
+                        scan_results['processed_files'] += 1
+                        continue
+                    
+                    # Add relevant file paths to findings
+                    rel_path = os.path.relpath(file_path, repo_path)
+                    file_findings['file_path'] = rel_path
+                    
+                    # Count risk levels
+                    for finding in file_findings.get('findings', []):
+                        if finding.get('risk_level') == 'high':
+                            scan_results['high_risk_count'] += 1
+                        elif finding.get('risk_level') == 'medium':
+                            scan_results['medium_risk_count'] += 1
+                        elif finding.get('risk_level') == 'low':
+                            scan_results['low_risk_count'] += 1
+                    
+                    # Add file findings to overall results
+                    scan_results['findings'].append(file_findings)
+                    
+                    # Increment processed files count
+                    scan_results['processed_files'] += 1
+                    
+                except Exception as e:
+                    logger.warning(f"Error scanning file {file_path}: {str(e)}")
+                    scan_results['skipped_files'] += 1
             
             # Add repository metadata
             scan_results['repo_url'] = repo_url
