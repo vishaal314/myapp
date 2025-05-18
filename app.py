@@ -2927,15 +2927,8 @@ else:
                             status_text.text(f"Starting repository scan of: {repo_url} (branch: {branch_name})")
                             progress_bar.progress(0.1)
                             
-                            # Make sure we're using a proper CodeScanner instance for the RepoScanner
-                            from services.code_scanner import CodeScanner
-                            
-                            # Create a dedicated CodeScanner for the repository scanning
-                            # This ensures we're not passing a dict or invalid scanner object
-                            code_scanner_instance = CodeScanner(region=region)
-                            
-                            # Initialize the RepoScanner with a proper CodeScanner instance
-                            repo_scanner = RepoScanner(code_scanner=code_scanner_instance)
+                            # Use our more reliable GitHub repository scanner
+                            from services.github_repo_scanner import scan_github_repo_for_code
                             
                             # Define a custom progress callback for repository scanning
                             def repo_progress_callback(current, total, current_file):
@@ -2943,11 +2936,11 @@ else:
                                 progress_bar.progress(min(progress, 0.9))
                                 status_text.text(f"Scanning repository file {current}/{total}: {current_file}")
                             
-                            # Scan the repository
-                            result = repo_scanner.scan_repository(
+                            # Scan the repository with our improved scanner
+                            result = scan_github_repo_for_code(
                                 repo_url=repo_url,
                                 branch=branch_name,
-                                auth_token=auth_token,
+                                token=auth_token,
                                 progress_callback=repo_progress_callback
                             )
                             
