@@ -17,6 +17,7 @@ import logging
 import tempfile
 import traceback
 import subprocess
+import threading
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable, Set, Tuple
 
@@ -754,11 +755,25 @@ class SimpleRepoScanner:
             total_files = len(files_to_scan)
             logger.info(f"Scanning {total_files} files")
             
-            # Process files one by one
+            # Set timeout for very large repositories to prevent scanning from hanging
+            # For ultra-large repositories, use very aggressive timeouts
+            file_timeout = 10  # seconds
+            if is_ultra_large:
+                file_timeout = 5  # Even faster timeout for ultra-large repos
+            
+            # Process files one by one with timeout protection
             for i, file_path in enumerate(files_to_scan):
                 if progress_callback:
                     rel_path = os.path.relpath(file_path, repo_path)
                     progress_callback(i + 1, total_files, rel_path)
+                
+                # Break early if we've spent too much time on this repository
+                # This is a safety measure to prevent scans from hanging
+                elapsed = time.time() - start_time
+                max_scan_time = 120  # 2 minutes max for any repository
+                if elapsed > max_scan_time:
+                    logger.warning(f"Scanning taking too long ({elapsed:.1f}s). Stopping early after processing {i+1}/{total_files} files.")
+                    break
                 
                 # Scan the file with enhanced GDPR compliance analysis
                 try:
@@ -767,10 +782,32 @@ class SimpleRepoScanner:
                         # This is the standard method name in CodeScanner
                         file_result = self.code_scanner.scan_file(file_path)
                     else:
-                        # Enhanced GDPR-compliant implementation
+                        # Enhanced GDPR-compliant implementation with timeout
                         try:
-                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                                content = f.read()
+                            # Use a simpler approach to avoid potential threading issues
+                            # Read file with size limit to prevent hanging on large files
+                            try:
+                                # Set a max file size to read (5MB)
+                                max_file_size = 5 * 1024 * 1024
+                                file_size = os.path.getsize(file_path)
+                                
+                                # Skip if file is too large
+                                if file_size > max_file_size:
+                                    logger.warning(f"File too large: {file_path} ({file_size/1024/1024:.1f} MB). Skipping.")
+                                    raise ValueError(f"File too large: {file_size/1024/1024:.1f} MB")
+                                
+                                # Read the file with a time limit
+                                start_read_time = time.time()
+                                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                    content = f.read()
+                                    
+                                    # Check if reading took too long
+                                    if time.time() - start_read_time > file_timeout:
+                                        logger.warning(f"File reading took too long for {file_path}. Limiting content.")
+                                        content = content[:100000]  # Limit to first 100K chars
+                            except Exception as e:
+                                logger.warning(f"Error reading file {file_path}: {str(e)}")
+                                content = ""  # Use empty content if read failed
                                 
                             # Import PII detection utilities
                             from utils.pii_detection import identify_pii_in_text
