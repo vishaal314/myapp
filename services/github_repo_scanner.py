@@ -129,14 +129,51 @@ def scan_github_repo_for_code(repo_url: str, branch: Optional[str] = None, token
         scan_result['scan_type'] = 'code'
         if 'timestamp' not in scan_result:
             scan_result['timestamp'] = datetime.now().isoformat()
-            
-        # Format the findings for better display
+        
+        # Extract and format findings for better display
         formatted_findings = []
         total_pii = 0
+        high_risk_count = 0
+        medium_risk_count = 0
+        low_risk_count = 0
+        files_scanned = scan_result.get('summary', {}).get('scanned_files', 0)
+        files_skipped = scan_result.get('summary', {}).get('skipped_files', 0)
         
+        # Process direct findings (from EnhancedRepoScanner)
         for finding in scan_result.get('findings', []):
-            # Extract PII findings from file results
-            if 'findings' in finding:
+            # Check if this is a direct finding (from EnhancedRepoScanner) or a file result
+            if isinstance(finding, dict) and 'type' in finding and 'risk_level' in finding:
+                # This is a direct finding
+                risk_level = finding.get('risk_level', 'medium')
+                if not risk_level:
+                    risk_level = 'medium'
+                
+                file_path = finding.get('file_path', 'Unknown')
+                
+                formatted_finding = {
+                    'type': finding.get('type', 'Unknown'),
+                    'value': finding.get('value', ''),
+                    'location': file_path,
+                    'line': finding.get('line_number', 0),
+                    'risk_level': risk_level,
+                    'gdpr_principle': finding.get('gdpr_principle', 'data_minimization'),
+                    'gdpr_article': 'Art. 5(1)' if finding.get('gdpr_principle') else 'Art. 4(1)',
+                    'context': finding.get('code_context', ''),
+                    'description': finding.get('description', f"Found {finding.get('type', 'PII')} in {file_path}")
+                }
+                formatted_findings.append(formatted_finding)
+                total_pii += 1
+                
+                # Count by risk level
+                if risk_level == 'high':
+                    high_risk_count += 1
+                elif risk_level == 'medium':
+                    medium_risk_count += 1
+                elif risk_level == 'low':
+                    low_risk_count += 1
+            
+            # Process file results with nested findings
+            elif 'findings' in finding:
                 for pii_finding in finding.get('findings', []):
                     file_path = finding.get('file_path', 'Unknown file')
                     
@@ -151,16 +188,32 @@ def scan_github_repo_for_code(repo_url: str, branch: Optional[str] = None, token
                         'location': file_path,
                         'line': pii_finding.get('line', 0),
                         'risk_level': risk_level,
-                        'gdpr_article': pii_finding.get('gdpr_article', 'Art. 4(1)'),
+                        'gdpr_principle': pii_finding.get('gdpr_principle', 'data_minimization'),
+                        'gdpr_article': 'Art. 5(1)' if pii_finding.get('gdpr_principle') else 'Art. 4(1)',
                         'context': pii_finding.get('context', ''),
-                        'description': f"Found {pii_finding.get('type', 'PII')} in {file_path}"
+                        'description': pii_finding.get('description', f"Found {pii_finding.get('type', 'PII')} in {file_path}")
                     }
                     formatted_findings.append(formatted_finding)
                     total_pii += 1
+                    
+                    # Count by risk level
+                    if risk_level == 'high':
+                        high_risk_count += 1
+                    elif risk_level == 'medium':
+                        medium_risk_count += 1
+                    elif risk_level == 'low':
+                        low_risk_count += 1
         
         # Update scan result with formatted findings
         scan_result['formatted_findings'] = formatted_findings
         scan_result['total_pii_found'] = total_pii
+        scan_result['files_scanned'] = files_scanned
+        scan_result['files_skipped'] = files_skipped
+        
+        # Use detailed counts from our analysis
+        scan_result['high_risk_count'] = high_risk_count
+        scan_result['medium_risk_count'] = medium_risk_count
+        scan_result['low_risk_count'] = low_risk_count
         
         # Make sure we have accurate counts for summary
         if 'high_risk_count' not in scan_result or scan_result['high_risk_count'] == 0:
