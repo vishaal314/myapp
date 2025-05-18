@@ -461,9 +461,10 @@ class SimpleRepoScanner:
                 
                 # Scan the file
                 try:
-                    # Use scan_file if available, otherwise fall back to a simple implementation
-                    if hasattr(self.code_scanner, 'scan_single_file'):
-                        file_result = self.code_scanner.scan_single_file(file_path)
+                    # Use the CodeScanner's scan_file method
+                    if hasattr(self.code_scanner, 'scan_file'):
+                        # This is the standard method name in CodeScanner
+                        file_result = self.code_scanner.scan_file(file_path)
                     else:
                         # Simple fallback implementation
                         try:
