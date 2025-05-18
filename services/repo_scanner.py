@@ -166,8 +166,8 @@ class RepoScanner:
         success = False
         error_msg = ""
         
-        # Use a more efficient clone method - shallow clone, filter by tree, faster checkout
-        clone_cmd = ['git', 'clone', '--depth', '1', '--filter=blob:none']
+        # Even more aggressive optimization for very large repositories
+        clone_cmd = ['git', 'clone', '--depth', '1', '--filter=blob:none', '--single-branch', '--no-tags']
         
         # Add branch specification if provided
         if branch:
@@ -260,8 +260,136 @@ class RepoScanner:
                 'time_ms': int((time.time() - start_time) * 1000)
             }
             
-        # Get repository metadata
-        repo_info = self._get_repo_metadata(temp_dir)
+        # Check repository size and limit scanning for very large repositories
+        repo_size_bytes = self._get_repo_size(temp_dir)
+        repo_size_mb = repo_size_bytes / (1024 * 1024)
+        
+        # Flag very large repositories (over 500MB)
+        is_large_repo = repo_size_mb > 500
+        
+        if is_large_repo:
+            logger.warning(f"Very large repository detected: {repo_size_mb:.2f} MB. Enabling optimized scanning.")
+            
+            # For very large repos, we'll limit scanning to specific directories
+            # Create a .scanignore file to help the scanner skip irrelevant paths
+            try:
+                with open(os.path.join(temp_dir, '.scanignore'), 'w') as f:
+                    # Common directories to ignore in large repos
+                    f.write("\n".join([
+                        "node_modules/",
+                        ".git/",
+                        "dist/",
+                        "build/",
+                        "out/",
+                        "vendor/",
+                        "*.min.js",
+                        "*.min.css",
+                        "*.svg",
+                        "*.png",
+                        "*.jpg",
+                        "*.jpeg",
+                        "*.gif",
+                        "*.ico",
+                        "*.woff",
+                        "*.ttf",
+                        "*.eot",
+                        "*.mp3",
+                        "*.mp4",
+                        "*.avi",
+                        "*.pdf",
+                        "*.zip",
+                        "*.tar",
+                        "*.gz",
+                        "*.jar",
+                        "*.war",
+                        "*.class",
+                        "*.o",
+                        "*.so",
+                        "*.dll",
+                        "*.exe",
+                        "*.bin",
+                        "__pycache__/",
+                        ".vscode/",
+                        ".idea/",
+                        # Large repos specific patterns
+                        "tests/fixtures/",
+                        "test/fixtures/",
+                        "spec/fixtures/",
+                        "fixtures/",
+                        "examples/",
+                        "samples/",
+                        "docs/",
+                        "documentation/",
+                        "locales/",
+                        "i18n/",
+                        "translations/"
+                    ]))
+            except Exception as e:
+                logger.warning(f"Failed to create .scanignore file: {str(e)}")
+                
+        return {
+            'status': 'success',
+            'message': 'Repository cloned successfully',
+            'repo_path': temp_dir,
+            'time_ms': int((time.time() - start_time) * 1000),
+            'is_large_repo': is_large_repo,
+            'repo_size_mb': repo_size_mb
+        }
+    
+    def _get_repo_size(self, repo_path: str) -> int:
+        """
+        Get the size of a repository directory in bytes.
+        
+        Args:
+            repo_path: Path to the repository
+            
+        Returns:
+            Total size in bytes
+        """
+        total_size = 0
+        
+        try:
+            # We'll use du command for efficiency on large repos
+            try:
+                result = subprocess.run(
+                    ['du', '-sb', repo_path], 
+                    capture_output=True, 
+                    text=True,
+                    timeout=30
+                )
+                
+                if result.returncode == 0:
+                    # Parse the output - first part is the size in bytes
+                    parts = result.stdout.strip().split()
+                    if parts and parts[0].isdigit():
+                        return int(parts[0])
+            except:
+                # Fall back to manual calculation if du command fails
+                pass
+                
+            # Manual calculation (slower but more portable)
+            for dirpath, dirnames, filenames in os.walk(repo_path):
+                # Skip .git directory to speed up calculation
+                if '.git' in dirnames:
+                    dirnames.remove('.git')
+                    
+                # Add the size of all files in this directory
+                for filename in filenames:
+                    file_path = os.path.join(dirpath, filename)
+                    try:
+                        total_size += os.path.getsize(file_path)
+                    except:
+                        # Skip files that can't be accessed
+                        pass
+        except Exception as e:
+            logger.warning(f"Error calculating repository size: {str(e)}")
+            # Return a default size (100MB) if calculation fails
+            return 100 * 1024 * 1024
+            
+        return total_size
+            
+    # Get repository metadata
+    def _get_repo_metadata(self, repo_path: str) -> Dict[str, Any]:
         
         # Get the actual branch name that was cloned
         try:
