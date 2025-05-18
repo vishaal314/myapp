@@ -432,6 +432,22 @@ class SimpleRepoScanner:
                         scan_results['files_skipped'] += 1
                         continue
                     
+                    # Check if file extension is supported for scanning
+                    _, file_ext = os.path.splitext(file_name)
+                    
+                    # Only scan specific file types (code files, config files, etc.)
+                    supported_extensions = [
+                        '.py', '.js', '.jsx', '.ts', '.tsx', '.java', '.c', '.cpp', '.cs', 
+                        '.go', '.rb', '.php', '.html', '.htm', '.xml', '.json', '.yaml', 
+                        '.yml', '.md', '.txt', '.csv', '.sql', '.properties', '.env', 
+                        '.config', '.sh', '.bat', '.ps1', '.swift', '.kt', '.rs', '.m',
+                        '.h', '.hpp', '.cxx', '.cc', '.graphql', '.gql', '.dockerfile'
+                    ]
+                    
+                    if file_ext.lower() not in supported_extensions:
+                        scan_results['files_skipped'] += 1
+                        continue
+                    
                     # Skip files larger than 10MB
                     try:
                         if os.path.getsize(full_path) > 10 * 1024 * 1024:

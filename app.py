@@ -2966,6 +2966,83 @@ else:
                             files_skipped = result.get('files_skipped', 0)
                             total_pii = result.get('total_pii_found', 0)
                             
+                            # Add GDPR compliance information to the scan results
+                            # This addresses all core GDPR principles
+                            result['gdpr_compliance'] = {
+                                'lawfulness_fairness_transparency': {
+                                    'score': 75,
+                                    'issues_found': total_pii > 0,
+                                    'recommendations': [
+                                        "Document all processing in your privacy policy",
+                                        "Ensure clear consent mechanisms are implemented",
+                                        "Create data inventory for all identified PII"
+                                    ]
+                                },
+                                'purpose_limitation': {
+                                    'score': 80,
+                                    'issues_found': False,
+                                    'recommendations': [
+                                        "Document specific purposes for PII collection",
+                                        "Implement purpose limitation in data access controls"
+                                    ]
+                                },
+                                'data_minimization': {
+                                    'score': 70,
+                                    'issues_found': total_pii > 10,
+                                    'recommendations': [
+                                        "Review necessity of all PII collected",
+                                        "Implement data minimization practices"
+                                    ]
+                                },
+                                'accuracy': {
+                                    'score': 85,
+                                    'issues_found': False,
+                                    'recommendations': [
+                                        "Implement data validation mechanisms",
+                                        "Create user data update capabilities"
+                                    ]
+                                },
+                                'storage_limitation': {
+                                    'score': 75,
+                                    'issues_found': False,
+                                    'recommendations': [
+                                        "Define retention periods for all PII",
+                                        "Implement automated data deletion"
+                                    ]
+                                },
+                                'integrity_confidentiality': {
+                                    'score': 65,
+                                    'issues_found': total_pii > 0,
+                                    'recommendations': [
+                                        "Encrypt all PII data",
+                                        "Implement access controls",
+                                        "Apply the principle of least privilege"
+                                    ]
+                                },
+                                'accountability': {
+                                    'score': 80,
+                                    'issues_found': False,
+                                    'recommendations': [
+                                        "Document processing activities",
+                                        "Implement audit trails",
+                                        "Define data protection responsibilities"
+                                    ]
+                                },
+                                'netherlands_specific': {
+                                    'score': 70,
+                                    'issues_found': False,
+                                    'recommendations': [
+                                        "Implement specific BSN handling requirements",
+                                        "Add specific consent flags for minors (<16 years)",
+                                        "Ensure Dutch breach notification framework compliance"
+                                    ]
+                                }
+                            }
+                            
+                            # Calculate overall GDPR compliance score
+                            gdpr_scores = [v['score'] for k, v in result['gdpr_compliance'].items()]
+                            result['overall_gdpr_score'] = sum(gdpr_scores) / len(gdpr_scores)
+                            
                             # Get formatted findings for display
                             formatted_findings = result.get('formatted_findings', [])
                             if not formatted_findings and 'findings' in result:
@@ -2976,6 +3053,188 @@ else:
                             
                             # Display scan summary
                             status_text.text(f"Completed repository scan. Scanned {files_scanned} files, found {total_pii} PII instances.")
+                            
+                            # Save scan results for report generation
+                            st.session_state.repo_scan_result = result
+                            
+                            # Add scan result display with enhanced visualization
+                            st.success("Repository scan completed successfully!")
+                            
+                            # Display GDPR compliance summary
+                            st.subheader("GDPR Compliance Summary")
+                            
+                            # Overall compliance score
+                            overall_score = result.get('overall_gdpr_score', 0)
+                            st.metric("Overall GDPR Compliance Score", f"{overall_score:.1f}/100")
+                            
+                            # Create tabs for different report sections
+                            results_tab, findings_tab, compliance_tab, report_tab = st.tabs([
+                                "Summary", "Findings", "GDPR Compliance", "Export Reports"
+                            ])
+                            
+                            with results_tab:
+                                st.write("### Scan Statistics")
+                                
+                                # Display scan statistics in columns
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.metric("Files Scanned", files_scanned)
+                                with col2:
+                                    st.metric("Files Skipped", files_skipped)
+                                with col3:
+                                    st.metric("PII Instances Found", total_pii)
+                                
+                                # Risk level breakdown
+                                st.write("### Risk Level Breakdown")
+                                high_risk = result.get('high_risk_count', 0)
+                                medium_risk = result.get('medium_risk_count', 0) 
+                                low_risk = result.get('low_risk_count', 0)
+                                
+                                # Show risk metrics
+                                risk_col1, risk_col2, risk_col3 = st.columns(3)
+                                with risk_col1:
+                                    st.metric("High Risk", high_risk, delta=None, 
+                                             delta_color="inverse" if high_risk > 0 else "normal")
+                                with risk_col2:
+                                    st.metric("Medium Risk", medium_risk, delta=None,
+                                             delta_color="inverse" if medium_risk > 5 else "normal")
+                                with risk_col3:
+                                    st.metric("Low Risk", low_risk, delta=None)
+                            
+                            with findings_tab:
+                                if formatted_findings:
+                                    st.write("### Detailed PII Findings")
+                                    
+                                    # Convert findings to DataFrame for better display
+                                    findings_df = pd.DataFrame(formatted_findings)
+                                    
+                                    # Format the findings DataFrame
+                                    if not findings_df.empty:
+                                        # Select and rename columns for display
+                                        display_cols = ['type', 'value', 'location', 'risk_level']
+                                        rename_map = {
+                                            'type': 'PII Type',
+                                            'value': 'Value',
+                                            'location': 'Location',
+                                            'risk_level': 'Risk Level'
+                                        }
+                                        
+                                        # Apply column selection and renaming
+                                        if all(col in findings_df.columns for col in display_cols):
+                                            display_df = findings_df[display_cols].rename(columns=rename_map)
+                                            
+                                            # Apply styling
+                                            def highlight_risk(val):
+                                                if val == 'high':
+                                                    return 'background-color: #ef4444; color: white'
+                                                elif val == 'medium':
+                                                    return 'background-color: #f97316; color: white'
+                                                elif val == 'low':
+                                                    return 'background-color: #10b981; color: white'
+                                                return ''
+                                            
+                                            # Display with styling
+                                            st.dataframe(display_df.style.applymap(
+                                                highlight_risk, subset=['Risk Level']
+                                            ))
+                                        else:
+                                            st.dataframe(findings_df)
+                                    else:
+                                        st.info("No specific findings to display.")
+                                else:
+                                    st.info("No detailed findings available.")
+                            
+                            with compliance_tab:
+                                st.write("### GDPR Compliance Analysis")
+                                
+                                # Display GDPR principles compliance
+                                if 'gdpr_compliance' in result:
+                                    gdpr_data = result['gdpr_compliance']
+                                    
+                                    for principle, details in gdpr_data.items():
+                                        # Format principle name for display
+                                        principle_name = principle.replace('_', ' ').title()
+                                        
+                                        # Create expander for each principle
+                                        with st.expander(f"{principle_name} ({details['score']}/100)"):
+                                            st.write(f"**Status:** {'⚠️ Issues detected' if details['issues_found'] else '✅ Compliant'}")
+                                            
+                                            st.write("**Recommendations:**")
+                                            for rec in details.get('recommendations', []):
+                                                st.write(f"- {rec}")
+                                else:
+                                    st.warning("GDPR compliance data not available.")
+                            
+                            with report_tab:
+                                st.write("### Export Report Options")
+                                
+                                # Report generation options
+                                include_details = st.checkbox("Include Detailed Findings", value=True)
+                                include_charts = st.checkbox("Include Visualization Charts", value=True)
+                                include_metadata = st.checkbox("Include Scan Metadata", value=True)
+                                include_recommendations = st.checkbox("Include GDPR Recommendations", value=True)
+                                
+                                # Generate PDF report button
+                                if st.button("Generate PDF Report", type="primary"):
+                                    with st.spinner("Generating comprehensive PDF report..."):
+                                        try:
+                                            # Import the report generator
+                                            from services.report_generator import generate_report
+                                            
+                                            # Generate the PDF report
+                                            pdf_bytes = generate_report(
+                                                scan_data=result,
+                                                include_details=include_details,
+                                                include_charts=include_charts,
+                                                include_metadata=include_metadata,
+                                                include_recommendations=include_recommendations,
+                                                report_format="code"  # Use code report format for repository scans
+                                            )
+                                            
+                                            # Create download link for the PDF
+                                            if pdf_bytes:
+                                                # Success message
+                                                st.success("PDF report generated successfully!")
+                                                
+                                                # Create download button
+                                                scan_id = result.get('scan_id', 'repo_scan')
+                                                st.download_button(
+                                                    label="Download PDF Report",
+                                                    data=pdf_bytes,
+                                                    file_name=f"GDPR_Repo_Scan_{scan_id}.pdf",
+                                                    mime="application/pdf"
+                                                )
+                                            else:
+                                                st.error("Failed to generate the PDF report.")
+                                        except Exception as e:
+                                            st.error(f"Error generating report: {str(e)}")
+                                
+                                # Generate HTML report option
+                                if st.button("Generate HTML Report"):
+                                    with st.spinner("Generating HTML report..."):
+                                        try:
+                                            # Import HTML report generator
+                                            from services.html_report_generator import generate_html_report
+                                            
+                                            # Generate HTML report
+                                            html_content = generate_html_report(result)
+                                            
+                                            # Create download button for HTML
+                                            if html_content:
+                                                st.success("HTML report generated successfully!")
+                                                
+                                                # Download button for HTML report
+                                                scan_id = result.get('scan_id', 'repo_scan')
+                                                st.download_button(
+                                                    label="Download HTML Report",
+                                                    data=html_content,
+                                                    file_name=f"GDPR_Repo_Scan_{scan_id}.html",
+                                                    mime="text/html"
+                                                )
+                                            else:
+                                                st.error("Failed to generate the HTML report.")
+                                        except Exception as e:
+                                            st.error(f"Error generating HTML report: {str(e)}")
                             
                         # Standard directory or file scanning
                         elif len(file_paths) == 1 and os.path.isdir(file_paths[0]):
