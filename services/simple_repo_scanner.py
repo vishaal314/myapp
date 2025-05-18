@@ -473,7 +473,7 @@ class SimpleRepoScanner:
                                 
                             # Check for PII in the content
                             from utils.pii_detection import identify_pii_in_text
-                            pii_findings = identify_pii_in_text(content, detailed=True, region='Netherlands')
+                            pii_findings = identify_pii_in_text(content, region='Netherlands')
                             
                             findings = []
                             for finding in pii_findings:
@@ -496,27 +496,28 @@ class SimpleRepoScanner:
                                 'pii_count': 0
                             }
                     
-                    # Skip if no findings
-                    if not file_result or not file_result.get('findings'):
-                        scan_results['files_scanned'] += 1
-                        continue
+                    # Always count files scanned even if no findings
+                    scan_results['files_scanned'] += 1
                     
                     # Add file findings to results
                     rel_path = os.path.relpath(file_path, repo_path)
                     file_result['file_path'] = rel_path
                     
-                    # Count risk levels
-                    for finding in file_result.get('findings', []):
-                        if finding.get('risk_level') == 'high':
-                            scan_results['high_risk_count'] += 1
-                        elif finding.get('risk_level') == 'medium':
-                            scan_results['medium_risk_count'] += 1
-                        elif finding.get('risk_level') == 'low':
-                            scan_results['low_risk_count'] += 1
-                    
-                    scan_results['total_pii_found'] += len(file_result.get('findings', []))
-                    scan_results['findings'].append(file_result)
-                    scan_results['files_scanned'] += 1
+                    # Process findings if they exist
+                    findings = file_result.get('findings', [])
+                    if findings:
+                        # Count risk levels
+                        for finding in findings:
+                            risk_level = finding.get('risk_level', 'medium').lower()
+                            if risk_level == 'high':
+                                scan_results['high_risk_count'] += 1
+                            elif risk_level == 'medium':
+                                scan_results['medium_risk_count'] += 1
+                            elif risk_level == 'low':
+                                scan_results['low_risk_count'] += 1
+                        
+                        scan_results['total_pii_found'] += len(findings)
+                        scan_results['findings'].append(file_result)
                     
                 except Exception as e:
                     logger.warning(f"Error scanning file {file_path}: {str(e)}")

@@ -113,14 +113,21 @@ def scan_github_repo_for_code(repo_url: str, branch: Optional[str] = None, token
             if 'findings' in finding:
                 for pii_finding in finding.get('findings', []):
                     file_path = finding.get('file_path', 'Unknown file')
+                    
+                    # Extract risk level and set default if needed
+                    risk_level = pii_finding.get('risk_level', 'medium')
+                    if not risk_level:
+                        risk_level = 'medium'
+                    
                     formatted_finding = {
                         'type': pii_finding.get('type', 'Unknown'),
                         'value': pii_finding.get('value', ''),
                         'location': file_path,
                         'line': pii_finding.get('line', 0),
-                        'risk_level': pii_finding.get('risk_level', 'medium'),
-                        'gdpr_article': pii_finding.get('gdpr_article', 'N/A'),
-                        'context': pii_finding.get('context', '')
+                        'risk_level': risk_level,
+                        'gdpr_article': pii_finding.get('gdpr_article', 'Art. 4(1)'),
+                        'context': pii_finding.get('context', ''),
+                        'description': f"Found {pii_finding.get('type', 'PII')} in {file_path}"
                     }
                     formatted_findings.append(formatted_finding)
                     total_pii += 1
@@ -128,6 +135,22 @@ def scan_github_repo_for_code(repo_url: str, branch: Optional[str] = None, token
         # Update scan result with formatted findings
         scan_result['formatted_findings'] = formatted_findings
         scan_result['total_pii_found'] = total_pii
+        
+        # Make sure we have accurate counts for summary
+        if 'high_risk_count' not in scan_result or scan_result['high_risk_count'] == 0:
+            # Count high risk findings
+            high_risk = sum(1 for f in formatted_findings if f.get('risk_level') == 'high')
+            scan_result['high_risk_count'] = high_risk
+            
+        if 'medium_risk_count' not in scan_result or scan_result['medium_risk_count'] == 0:
+            # Count medium risk findings
+            medium_risk = sum(1 for f in formatted_findings if f.get('risk_level') == 'medium')
+            scan_result['medium_risk_count'] = medium_risk
+            
+        if 'low_risk_count' not in scan_result or scan_result['low_risk_count'] == 0:
+            # Count low risk findings
+            low_risk = sum(1 for f in formatted_findings if f.get('risk_level') == 'low')
+            scan_result['low_risk_count'] = low_risk
         
         return scan_result
         

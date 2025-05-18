@@ -2949,20 +2949,33 @@ else:
                                 st.error(f"Repository scan failed: {result.get('message', 'Unknown error')}")
                                 st.stop()
                             
+                            # Process scan results
                             # Check and display branch information
-                            if 'repository_metadata' in result and 'active_branch' in result['repository_metadata']:
-                                actual_branch = result['repository_metadata']['active_branch']
+                            if 'repository' in result and 'metadata' in result['repository']:
+                                repo_metadata = result['repository']['metadata']
+                                actual_branch = repo_metadata.get('branch', 'default')
                                 # If the actual branch is different from the requested branch, inform the user
                                 if branch_name and actual_branch != branch_name:
-                                    st.info(f"Note: Branch '{branch_name}' was not found. The repository was scanned using the default branch '{actual_branch}' instead.")
-                            
-                            # Store findings from repository scan
-                            scan_results = result.get('findings', [])
+                                    st.info(f"Note: Branch '{branch_name}' was not found. The repository was scanned using the branch '{actual_branch}' instead.")
                             
                             # Show completion status
                             progress_bar.progress(1.0)
-                            file_count = len(scan_results)
-                            status_text.text(f"Completed repository scan. Scanned {file_count} files.")
+                            
+                            # Get file counts and findings
+                            files_scanned = result.get('files_scanned', 0)
+                            files_skipped = result.get('files_skipped', 0)
+                            total_pii = result.get('total_pii_found', 0)
+                            
+                            # Get formatted findings for display
+                            formatted_findings = result.get('formatted_findings', [])
+                            if not formatted_findings and 'findings' in result:
+                                # Fallback to regular findings if available
+                                scan_results = result.get('findings', [])
+                            else:
+                                scan_results = formatted_findings
+                            
+                            # Display scan summary
+                            status_text.text(f"Completed repository scan. Scanned {files_scanned} files, found {total_pii} PII instances.")
                             
                         # Standard directory or file scanning
                         elif len(file_paths) == 1 and os.path.isdir(file_paths[0]):
