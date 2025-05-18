@@ -723,11 +723,32 @@ class SimpleRepoScanner:
                     
                     files_to_scan.append(full_path)
             
-            # Limit files for very large repositories
-            max_files = 1000
-            if is_large_repo and len(files_to_scan) > max_files:
+            # Limit files for very large repositories and optimize performance
+            # For ultra-large repositories, use much stricter limits and faster scanning
+            is_ultra_large = len(files_to_scan) > 5000
+            
+            if is_ultra_large:
+                # For ultra-large repos, just scan 100 representative files
+                max_files = 100
+                logger.warning(f"Ultra-large repository detected with {len(files_to_scan)} files. Using optimized scanning with only {max_files} representative files.")
+                
+                # Sample files across the repository instead of just taking the first ones
+                # This ensures we get a representative sample from different parts of the codebase
+                if len(files_to_scan) > max_files:
+                    step = len(files_to_scan) // max_files
+                    files_to_scan = [files_to_scan[i] for i in range(0, len(files_to_scan), step)][:max_files]
+                    
+            elif is_large_repo and len(files_to_scan) > 1000:
+                # For large repos, limit to 1000 files
+                max_files = 1000
                 logger.warning(f"Large repository detected. Limiting scan to {max_files} files out of {len(files_to_scan)}")
-                files_to_scan = files_to_scan[:max_files]
+                
+                # Take a broader sample across the codebase
+                step = len(files_to_scan) // max_files
+                if step > 1:
+                    files_to_scan = [files_to_scan[i] for i in range(0, len(files_to_scan), step)][:max_files]
+                else:
+                    files_to_scan = files_to_scan[:max_files]
             
             # Scan files in sequence
             total_files = len(files_to_scan)
