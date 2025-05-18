@@ -1040,18 +1040,66 @@ else:
     if 'premium_member' not in st.session_state:
         st.session_state.premium_member = False
         
-    membership_status = _("sidebar.premium_member") if st.session_state.premium_member else _("sidebar.free_trial")
-    membership_expiry = _("sidebar.unlimited") if st.session_state.premium_member else f"{free_trial_days_left} {_('sidebar.days_left')}"
+    # Initialize membership details if they don't exist
+    if 'membership_details' not in st.session_state and st.session_state.premium_member:
+        # Default membership details for existing premium members
+        st.session_state.membership_details = {
+            "plan": "Premium",
+            "started_at": datetime.now().isoformat(),
+            "expires_at": (datetime.now() + timedelta(days=365)).isoformat(),
+            "status": "active"
+        }
     
-    # Display membership info
-    st.sidebar.markdown(f"""
-    <div style="padding: 10px; background-color: {'#e6f7e6' if st.session_state.premium_member else '#f7f7e6'}; border-radius: 5px; margin-bottom: 15px;">
-        <h4 style="margin: 0; color: {'#2e7d32' if st.session_state.premium_member else '#7d6c2e'};">{membership_status}</h4>
-        <p><strong>{_("sidebar.status")}:</strong> {_("sidebar.active") if st.session_state.premium_member or free_trial_active else _("sidebar.expired")}</p>
-        <p><strong>{_("sidebar.expires")}:</strong> {membership_expiry}</p>
-        <p><strong>{_("sidebar.scans_used")}:</strong> {st.session_state.free_trial_scans_used}/5 ({_("sidebar.free_trial")})</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Get membership status and display info
+    if st.session_state.premium_member and 'membership_details' in st.session_state:
+        # Enhanced premium display with plan details
+        membership_details = st.session_state.membership_details
+        plan_name = membership_details.get("plan", "Premium")
+        
+        # Format expiry date
+        expiry_date_str = _("sidebar.unlimited")
+        days_remaining = 0
+        if "expires_at" in membership_details:
+            try:
+                expiry_date = datetime.fromisoformat(membership_details["expires_at"])
+                expiry_date_str = expiry_date.strftime("%Y-%m-%d")
+                days_remaining = max(0, (expiry_date - datetime.now()).days)
+            except:
+                pass
+                
+        # Determine status color based on days remaining
+        status_color = "#2e7d32"  # Green by default
+        if days_remaining < 14:
+            status_color = "#c2a800"  # Amber/yellow
+        if days_remaining < 7:
+            status_color = "#c27400"  # Orange
+        if days_remaining < 3:
+            status_color = "#c23b00"  # Red
+                
+        # Display premium membership info
+        st.sidebar.markdown(f"""
+        <div style="padding: 10px; background-color: #e6f7e6; border-radius: 5px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: {status_color};">{plan_name} {_("sidebar.premium_member")}</h4>
+            <p><strong>{_("sidebar.status")}:</strong> {_("sidebar.active")}</p>
+            <p><strong>{_("sidebar.expires")}:</strong> {expiry_date_str}</p>
+            <p><strong>{_("sidebar.days_remaining")}:</strong> {days_remaining}</p>
+            <p><strong>{_("sidebar.features")}:</strong> {_("sidebar.all_scanners_access")}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # Free trial display
+        membership_status = _("sidebar.free_trial")
+        membership_expiry = f"{free_trial_days_left} {_('sidebar.days_left')}"
+        
+        # Display free trial info
+        st.sidebar.markdown(f"""
+        <div style="padding: 10px; background-color: #f7f7e6; border-radius: 5px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #7d6c2e;">{membership_status}</h4>
+            <p><strong>{_("sidebar.status")}:</strong> {_("sidebar.active") if free_trial_active else _("sidebar.expired")}</p>
+            <p><strong>{_("sidebar.expires")}:</strong> {membership_expiry}</p>
+            <p><strong>{_("sidebar.scans_used")}:</strong> {st.session_state.free_trial_scans_used}/5 ({_("sidebar.free_trial")})</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Membership purchase options
     if not st.session_state.premium_member:
