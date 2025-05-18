@@ -321,6 +321,61 @@ def validate_email(email: str) -> bool:
     """
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return bool(re.match(email_pattern, email))
+    
+def get_user_by_email(email: str) -> Optional[Tuple[str, Dict[str, Any]]]:
+    """
+    Find a user by email address.
+    
+    Args:
+        email: The email to search for
+        
+    Returns:
+        Tuple of (username, user_data) if found, None otherwise
+    """
+    if not validate_email(email):
+        return None
+        
+    users = _load_users()
+    
+    for username, user_data in users.items():
+        if user_data.get("email") == email:
+            return (username, user_data)
+    
+    return None
+    
+def reset_password(email: str, new_password: str) -> Tuple[bool, str]:
+    """
+    Reset a user's password using their email address.
+    
+    Args:
+        email: The email address of the user
+        new_password: The new password to set
+        
+    Returns:
+        Tuple of (success, message)
+    """
+    # Validate email
+    if not validate_email(email):
+        return False, "Invalid email format"
+        
+    # Find user by email
+    user_info = get_user_by_email(email)
+    if not user_info:
+        return False, "No account found with this email address"
+        
+    username, _ = user_info
+    
+    # Validate password
+    if not new_password or len(new_password) < 6:
+        return False, "New password must be at least 6 characters"
+    
+    # Update user password
+    users = _load_users()
+    users[username]["password_hash"] = hashlib.sha256(new_password.encode()).hexdigest()
+    users[username]["password_reset_at"] = datetime.now().isoformat()
+    
+    _save_users(users)
+    return True, "Password reset successfully"
 
 def authenticate(username_or_email: str, password: str) -> Optional[Dict[str, Any]]:
     """

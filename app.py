@@ -355,7 +355,13 @@ with st.sidebar:
             with cols[0]:
                 remember = st.checkbox(_("login.remember_me"), key="remember_login")
             with cols[1]:
-                st.markdown(f"<p style='text-align: right; font-size: 0.8em;'><a href='#'>{_('login.forgot_password')}</a></p>", unsafe_allow_html=True)
+                # Initialize state for forgot password flow if not present
+                if 'forgot_password_active' not in st.session_state:
+                    st.session_state.forgot_password_active = False
+                    
+                # Forgot password button
+                if st.button(_('login.forgot_password'), key="forgot_password_btn"):
+                    st.session_state.forgot_password_active = True
                 
             # Blue gradient login button
             st.markdown("""
@@ -368,7 +374,61 @@ with st.sidebar:
             </style>
             """, unsafe_allow_html=True)
             
-            login_button = st.button(_("login.button"), use_container_width=True, key="sidebar_login", type="primary")
+            # Show forgot password form if active
+            if st.session_state.forgot_password_active:
+                st.markdown("### " + _("login.reset_password_title", "Reset Your Password"))
+                
+                # Email input
+                reset_email = st.text_input(_("login.email", "Email Address"), key="reset_email")
+                
+                # New password inputs
+                new_password = st.text_input(_("login.new_password", "New Password"), type="password", key="new_password")
+                confirm_password = st.text_input(_("login.confirm_password", "Confirm New Password"), type="password", key="confirm_password")
+                
+                reset_col1, reset_col2 = st.columns([1,1])
+                
+                with reset_col1:
+                    # Reset password button
+                    if st.button(_("login.reset_button", "Reset Password"), type="primary", key="reset_button"):
+                        # Validate inputs
+                        if not reset_email:
+                            st.error(_("login.error.email_required", "Please enter your email address"))
+                        elif not new_password:
+                            st.error(_("login.error.password_required", "Please enter a new password"))
+                        elif new_password != confirm_password:
+                            st.error(_("login.error.password_mismatch", "Passwords do not match"))
+                        else:
+                            # Import reset_password function from auth module
+                            from services.auth import reset_password, validate_email
+                            
+                            # Validate email format
+                            if not validate_email(reset_email):
+                                st.error(_("login.error.invalid_email", "Please enter a valid email address"))
+                            else:
+                                # Process password reset
+                                success, message = reset_password(reset_email, new_password)
+                                
+                                if success:
+                                    st.success(_("login.password_reset_success", "Password has been reset successfully. You can now log in with your new password."))
+                                    # Deactivate forgot password mode
+                                    st.session_state.forgot_password_active = False
+                                else:
+                                    st.error(_(f"login.error.reset_failed", f"Password reset failed: {message}"))
+                
+                with reset_col2:
+                    # Cancel button
+                    if st.button(_("login.cancel", "Cancel"), key="cancel_reset"):
+                        st.session_state.forgot_password_active = False
+                        st.rerun()
+                
+                # Add separator between reset form and login button
+                st.markdown("<hr>", unsafe_allow_html=True)
+            
+            # Only show login button if not in password reset mode
+            if not st.session_state.forgot_password_active:
+                login_button = st.button(_("login.button"), use_container_width=True, key="sidebar_login", type="primary")
+            else:
+                login_button = False
             
             if login_button:
                 if not username_or_email or not password:
@@ -2363,7 +2423,8 @@ else:
             # Prominent "Start Scan" button with free trial info
             scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
             with scan_btn_col1:
-                start_scan = st.button("Start SOC2 Compliance Scan", use_container_width=True, type="primary", key="main_soc2_scan_button")
+                # Removed duplicate SOC2 scan button to avoid confusion with tab-specific buttons
+                pass
             with scan_btn_col2:
                 if 'free_trial_active' in locals() and free_trial_active:
                     st.success(f"Free Trial: {free_trial_days_left} days left")
