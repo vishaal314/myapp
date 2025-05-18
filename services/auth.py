@@ -647,6 +647,19 @@ def has_permission(permission: str) -> bool:
     """
     import streamlit as st
     
+    # Premium membership override - premium members get access to all scanning features
+    if 'premium_member' in st.session_state and st.session_state.premium_member:
+        # Define which premium features are always accessible for premium members
+        premium_features = [
+            'scan:premium', 'scan:export', 'scan:configure',
+            'scan:website', 'scan:code', 'scan:document', 'scan:database', 'scan:api',
+            'report:export', 'report:create'
+        ]
+        
+        # If the requested permission is a premium feature, grant access
+        if permission in premium_features:
+            return True
+            
     # Admin bypass - admins have all permissions
     if st.session_state.get("role") == "admin":
         return True

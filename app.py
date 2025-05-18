@@ -1150,6 +1150,34 @@ else:
                     st.session_state.premium_member = True
                     st.session_state.show_membership_payment = False
                     
+                    # Store the membership details based on selected plan
+                    membership_plan = "Monthly"
+                    membership_duration = 30  # days
+                    
+                    if _("sidebar.plan_quarterly") == membership_option:
+                        membership_plan = "Quarterly"
+                        membership_duration = 90  # days
+                    elif _("sidebar.plan_annual") == membership_option:
+                        membership_plan = "Annual"
+                        membership_duration = 365  # days
+                    
+                    # Calculate expiry date
+                    from datetime import datetime, timedelta
+                    membership_start = datetime.now()
+                    membership_expiry = membership_start + timedelta(days=membership_duration)
+                    
+                    # Store membership information in session state
+                    st.session_state.membership_details = {
+                        "plan": membership_plan,
+                        "started_at": membership_start.isoformat(),
+                        "expires_at": membership_expiry.isoformat(),
+                        "status": "active"
+                    }
+                    
+                    # Show a success message after completed purchase
+                    st.sidebar.success(f"Membership upgraded successfully! You now have premium access to all scanners and features.")
+                    st.sidebar.info(f"Your {membership_plan} subscription is active until {membership_expiry.strftime('%Y-%m-%d')}")
+                    
                     # Get price from the selected plan
                     amount = ""
                     if _("sidebar.plan_monthly") == membership_option:
