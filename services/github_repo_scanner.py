@@ -80,7 +80,7 @@ def scan_github_repo_for_code(repo_url: str, branch: Optional[str] = None, token
                              progress_callback: Optional[Callable] = None) -> Dict[str, Any]:
     """
     Scan a GitHub repository specifically for code-related PII and sensitive information.
-    This is a specialized version for the Code Scanner section.
+    This is a specialized version for the Code Scanner section with enhanced large repo support.
     
     Args:
         repo_url: The GitHub repository URL
@@ -89,7 +89,7 @@ def scan_github_repo_for_code(repo_url: str, branch: Optional[str] = None, token
         progress_callback: Optional callback function for progress reporting
         
     Returns:
-        Dictionary with scan results
+        Dictionary with scan results that includes GDPR findings
     """
     try:
         # Initialize code scanner
@@ -121,7 +121,9 @@ def scan_github_repo_for_code(repo_url: str, branch: Optional[str] = None, token
         
         # Perform the scan with progress reporting
         logger.info(f"Starting code scan of GitHub repository: {repo_url}")
-        scan_result = repo_scanner.scan_repository(repo_url, branch, token, progress_callback)
+        # Make sure branch is never None to avoid type errors
+        safe_branch = branch if branch else "main"
+        scan_result = repo_scanner.scan_repository(repo_url, safe_branch, token, progress_callback)
         
         # Ensure we have standard output format
         scan_result['scan_type'] = 'code'

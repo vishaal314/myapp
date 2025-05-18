@@ -50,6 +50,7 @@ class EnhancedRepoScanner:
         self.batch_size = 100  # Files per batch for parallel processing
 
     def scan_repository(self, repo_url: str, branch: str = "main", 
+                      token: Optional[str] = None,
                       progress_callback: Optional[Callable] = None) -> Dict[str, Any]:
         """
         Scan a GitHub repository for GDPR compliance issues.
@@ -88,7 +89,7 @@ class EnhancedRepoScanner:
         try:
             # Clone the repository
             logger.info(f"Cloning repository: {repo_url}")
-            repo_path = self._clone_repository(repo_url, branch)
+            repo_path = self._clone_repository(repo_url, branch, token)
             
             # Get basic repository metadata
             logger.info("Getting repository metadata")
@@ -210,13 +211,14 @@ class EnhancedRepoScanner:
             
         return result
 
-    def _clone_repository(self, repo_url: str, branch: str = "main") -> str:
+    def _clone_repository(self, repo_url: str, branch: str = "main", token: Optional[str] = None) -> str:
         """
         Clone a GitHub repository to a temporary directory.
         
         Args:
             repo_url: GitHub repository URL
             branch: Branch to clone
+            token: GitHub access token for private repositories
             
         Returns:
             Path to the cloned repository
@@ -224,13 +226,22 @@ class EnhancedRepoScanner:
         # Create a temporary directory for the repository
         repo_dir = tempfile.mkdtemp(prefix="repo_scan_")
         
+        # If token is provided, include it in the URL
+        clone_url = repo_url
+        if token and "https://" in repo_url:
+            # Insert the token into the HTTPS URL
+            clone_url = repo_url.replace("https://", f"https://{token}@")
+            logger.info(f"Using authenticated URL for repository access")
+        
+        # Import subprocess here to avoid unbound errors
+        import subprocess
+        
         # Use shallow clone for better performance
         logger.info(f"Fast cloning repository from {repo_url} (branch: {branch})")
         try:
             # Use git command directly for better performance with depth=1
-            import subprocess
             subprocess.run(
-                ["git", "clone", "--depth", "1", "--branch", branch, repo_url, repo_dir],
+                ["git", "clone", "--depth", "1", "--branch", branch, clone_url, repo_dir],
                 check=True,
                 capture_output=True
             )
@@ -242,7 +253,7 @@ class EnhancedRepoScanner:
                 shutil.rmtree(repo_dir)
                 repo_dir = tempfile.mkdtemp(prefix="repo_scan_")
                 subprocess.run(
-                    ["git", "clone", "--depth", "1", repo_url, repo_dir],
+                    ["git", "clone", "--depth", "1", clone_url, repo_dir],
                     check=True,
                     capture_output=True
                 )
