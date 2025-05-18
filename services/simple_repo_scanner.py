@@ -133,6 +133,186 @@ class SimpleRepoScanner:
         
         return impacts.get(risk_level.lower(), 5)
         
+    def _calculate_compliance_score(self, scan_results: Dict[str, Any]) -> int:
+        """
+        Calculate the GDPR compliance score based on scan findings.
+        
+        Args:
+            scan_results: Dictionary containing scan results
+            
+        Returns:
+            Compliance score (0-100)
+        """
+        # Get base metrics
+        total_files = scan_results.get('files_scanned', 0)
+        total_pii = scan_results.get('total_pii_found', 0)
+        high_risk = scan_results.get('high_risk_count', 0)
+        medium_risk = scan_results.get('medium_risk_count', 0)
+        low_risk = scan_results.get('low_risk_count', 0)
+        
+        # If no files were scanned, return 0
+        if total_files == 0:
+            return 0
+            
+        # Calculate base score (higher is better)
+        # Base score starts at 100 and is reduced by weighted findings
+        base_score = 100
+        
+        # Impact of high risk findings
+        if total_pii > 0:
+            # Calculate risk weights
+            high_impact = min(50, (high_risk / total_files) * 100)
+            medium_impact = min(30, (medium_risk / total_files) * 100 * 0.6)
+            low_impact = min(10, (low_risk / total_files) * 100 * 0.3)
+            
+            # Reduce base score based on weighted risks
+            base_score -= (high_impact + medium_impact + low_impact)
+        
+        # Ensure score is between 0 and 100
+        final_score = max(0, min(100, int(base_score)))
+        
+        return final_score
+        
+    def _evaluate_gdpr_principles(self, scan_results: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Evaluate compliance with each GDPR principle based on scan findings.
+        
+        Args:
+            scan_results: Dictionary containing scan results
+            
+        Returns:
+            Dictionary with scores for each GDPR principle
+        """
+        # Initialize principle scores
+        principles = {
+            'lawfulness': 100,
+            'purpose_limitation': 100,
+            'data_minimization': 100,
+            'accuracy': 100, 
+            'storage_limitation': 100,
+            'integrity_confidentiality': 100,
+            'accountability': 100
+        }
+        
+        # Check all findings and their impacts on principles
+        findings = []
+        for file_result in scan_results.get('findings', []):
+            file_findings = file_result.get('findings', [])
+            findings.extend(file_findings)
+        
+        for finding in findings:
+            # Get the principle affected by this finding
+            principle = finding.get('gdpr_principle', 'data_minimization')
+            
+            # If principle not in our tracking, skip
+            if principle not in principles:
+                continue
+                
+            # Reduce score based on risk level
+            risk_level = finding.get('risk_level', 'medium').lower()
+            score_impact = self._get_score_impact(risk_level)
+            
+            # Reduce the principle score
+            principles[principle] = max(0, principles[principle] - score_impact)
+        
+        # Calculate details for the report
+        principle_details = {}
+        
+        for principle, score in principles.items():
+            # Convert to integer
+            principles[principle] = int(score)
+            
+            # Determine risk level based on score
+            if score >= 90:
+                risk_level = 'low'
+            elif score >= 65:
+                risk_level = 'medium'
+            else:
+                risk_level = 'high'
+                
+            # Add descriptive information
+            principle_details[principle] = {
+                'score': score,
+                'risk_level': risk_level,
+                'description': self._get_principle_description(principle),
+                'recommendation': self._get_principle_recommendation(principle, risk_level)
+            }
+            
+        return principle_details
+        
+    def _get_principle_description(self, principle: str) -> str:
+        """
+        Get a description for a GDPR principle.
+        
+        Args:
+            principle: GDPR principle name
+            
+        Returns:
+            Description string
+        """
+        descriptions = {
+            'lawfulness': 'Processing must be lawful, fair, and transparent to the data subject.',
+            'purpose_limitation': 'Personal data can only be collected for specified, explicit, and legitimate purposes.',
+            'data_minimization': 'Personal data must be adequate, relevant, and limited to what is necessary.',
+            'accuracy': 'Personal data must be accurate and kept up to date.',
+            'storage_limitation': 'Personal data must be kept in a form which permits identification for no longer than necessary.',
+            'integrity_confidentiality': 'Personal data must be processed in a manner ensuring appropriate security.',
+            'accountability': 'The controller is responsible for demonstrating compliance with GDPR principles.'
+        }
+        
+        return descriptions.get(principle, 'GDPR compliance principle')
+        
+    def _get_principle_recommendation(self, principle: str, risk_level: str) -> str:
+        """
+        Get a recommendation for improving compliance with a GDPR principle.
+        
+        Args:
+            principle: GDPR principle name
+            risk_level: Risk level (high, medium, low)
+            
+        Returns:
+            Recommendation string
+        """
+        # General recommendations
+        general_recommendations = {
+            'lawfulness': 'Ensure all data processing has a valid legal basis (consent, contract, etc.) and is transparent.',
+            'purpose_limitation': 'Clearly define and document the purpose of all data processing activities.',
+            'data_minimization': 'Review data collection practices to ensure only necessary data is collected and processed.',
+            'accuracy': 'Implement data validation processes and regular data quality checks.',
+            'storage_limitation': 'Define and enforce retention periods for all categories of personal data.',
+            'integrity_confidentiality': 'Enhance security measures including encryption, access controls, and regular security testing.',
+            'accountability': 'Document all data processing activities and be prepared to demonstrate compliance.'
+        }
+        
+        # High risk recommendations (more specific and urgent)
+        if risk_level == 'high':
+            high_risk_recommendations = {
+                'lawfulness': 'URGENT: Review all data processing activities for legal basis. Implement explicit consent mechanisms where required. Create privacy notices for all data collection points.',
+                'purpose_limitation': 'URGENT: Conduct a data mapping exercise to document all purposes of processing. Establish controls to prevent data use beyond stated purposes.',
+                'data_minimization': 'URGENT: Perform a data audit to identify and remove excessive data collection. Implement technical controls to limit data collection to necessary fields only.',
+                'accuracy': 'URGENT: Implement automated data validation mechanisms. Create processes for data subjects to review and correct their data.',
+                'storage_limitation': 'URGENT: Implement automated data deletion processes once retention periods expire. Document justifications for all data retention periods.',
+                'integrity_confidentiality': 'URGENT: Conduct a security audit and penetration testing. Implement encryption for data at rest and in transit. Review access control policies.',
+                'accountability': 'URGENT: Appoint a Data Protection Officer if required. Implement a comprehensive GDPR compliance program with regular audits.'
+            }
+            return high_risk_recommendations.get(principle, general_recommendations.get(principle, ''))
+        
+        # Medium risk recommendations
+        elif risk_level == 'medium':
+            medium_risk_recommendations = {
+                'lawfulness': 'Review the legal basis for processing personal data and ensure appropriate documentation is in place.',
+                'purpose_limitation': 'Document the specific purposes for which data is collected and ensure data is not used for incompatible purposes.',
+                'data_minimization': 'Review data collection practices to identify and eliminate unnecessary data fields.',
+                'accuracy': 'Implement regular data quality checks and a process for data subjects to update their information.',
+                'storage_limitation': 'Define clear retention periods for different data categories and implement a review process.',
+                'integrity_confidentiality': 'Review security measures and access controls. Consider implementing additional encryption where appropriate.',
+                'accountability': 'Maintain records of processing activities and conduct regular compliance reviews.'
+            }
+            return medium_risk_recommendations.get(principle, general_recommendations.get(principle, ''))
+            
+        # Low risk (general recommendations)
+        return general_recommendations.get(principle, 'Review and improve compliance with GDPR principles.')
+        
     def is_valid_repo_url(self, repo_url: str) -> bool:
         """
         Check if a URL is a valid Git repository URL.
@@ -773,6 +953,12 @@ class SimpleRepoScanner:
                 except Exception as e:
                     logger.warning(f"Error scanning file {file_path}: {str(e)}")
                     scan_results['files_skipped'] += 1
+            
+            # Calculate GDPR compliance score
+            scan_results['compliance_score'] = self._calculate_compliance_score(scan_results)
+            
+            # Add GDPR principles compliance metrics
+            scan_results['gdpr_principles_compliance'] = self._evaluate_gdpr_principles(scan_results)
             
             # Mark scan as completed
             scan_results['status'] = 'completed'
