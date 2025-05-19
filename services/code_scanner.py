@@ -333,9 +333,11 @@ class CodeScanner:
         
     def scan_directory(self, directory_path: str, progress_callback=None, 
                       ignore_patterns=None, max_file_size_mb=50, 
-                      continue_from_checkpoint=False) -> Dict[str, Any]:
+                      continue_from_checkpoint=False, 
+                      smart_sampling=True, 
+                      max_files_to_scan=1000) -> Dict[str, Any]:
         """
-        Scan a directory of files with timeout protection and checkpoints.
+        Scan a directory of files with timeout protection, checkpoints and smart sampling.
         
         Args:
             directory_path: Path to the directory to scan
@@ -343,6 +345,8 @@ class CodeScanner:
             ignore_patterns: List of glob patterns to ignore
             max_file_size_mb: Max file size to scan in MB
             continue_from_checkpoint: Whether to continue from last checkpoint if available
+            smart_sampling: Whether to use smart sampling for large repositories
+            max_files_to_scan: Maximum number of files to scan in a large repository
             
         Returns:
             Dictionary containing scan results
@@ -400,13 +404,42 @@ class CodeScanner:
         
         # Walk directory and get all files
         all_files = []
-        for root, _, files in os.walk(directory_path):
+        total_file_count = 0
+        
+        # Skip certain file types and patterns that are unlikely to contain PII
+        skip_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.woff', '.ttf', '.eot', '.mp3', '.mp4', '.avi', '.pdf', 
+                          '.zip', '.tar', '.gz', '.lock', '.pyc', '.mo', '.class', '.jar', '.bin', '.exe', '.dll', '.so', '.o']
+        skip_dirs = ['node_modules', 'vendor', 'dist', 'build', '.git', '.idea', '.vscode', '__pycache__', 'venv', 
+                     'env', 'lib', 'bin', 'obj', 'assets', 'images', 'fonts', 'locales', 'i18n', 'docs']
+        
+        # Priority extensions - scan these first and thoroughly (more likely to contain important data)
+        priority_extensions = ['.py', '.js', '.ts', '.java', '.cs', '.php', '.rb', '.go', '.sql', '.env', '.json', '.yaml', '.yml', '.xml', '.csv', '.md']
+        
+        for root, dirs, files in os.walk(directory_path):
+            # Skip entire directories that match skip patterns
+            dirs_to_remove = []
+            for d in dirs:
+                if d in skip_dirs or any(pattern in os.path.join(root, d) for pattern in skip_dirs):
+                    dirs_to_remove.append(d)
+                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
+            
+            # Remove directories from the walk
+            for d in dirs_to_remove:
+                dirs.remove(d)
+            
             for file in files:
+                total_file_count += 1
                 file_path = os.path.join(root, file)
                 rel_path = os.path.relpath(file_path, directory_path)
                 
                 # Skip already processed files
                 if rel_path in self.scan_checkpoint_data['completed_files']:
+                    continue
+                
+                # Check extensions to skip
+                _, ext = os.path.splitext(file.lower())
+                if ext in skip_extensions:
+                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
                     continue
                 
                 # Check if should ignore
@@ -430,7 +463,8 @@ class CodeScanner:
                     self.scan_checkpoint_data['stats']['files_skipped'] += 1
                     continue
                 
-                all_files.append(file_path)
+                # Add to scan list
+                all_files.append((file_path, ext in priority_extensions))
         
         # Set up multiprocessing pool for parallel scanning - use more workers for performance
         num_workers = max(2, multiprocessing.cpu_count())  # Use all available CPUs for faster scanning

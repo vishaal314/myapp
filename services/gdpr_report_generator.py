@@ -42,22 +42,24 @@ class GDPRReportGenerator:
     
     def _initialize_custom_styles(self):
         """Initialize custom paragraph styles for the report."""
-        # Add custom styles
-        self.styles.add(ParagraphStyle(
-            name='Title',
-            parent=self.styles['Heading1'],
-            fontSize=18,
-            spaceAfter=12,
-            textColor=colors.darkblue
-        ))
+        # Add custom styles - using unique names to prevent conflicts
+        if 'CustomTitle' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='CustomTitle',
+                parent=self.styles['Heading1'],
+                fontSize=18,
+                spaceAfter=12,
+                textColor=colors.darkblue
+            ))
         
-        self.styles.add(ParagraphStyle(
-            name='Subtitle',
-            parent=self.styles['Heading2'],
-            fontSize=16,
-            spaceAfter=10,
-            textColor=colors.darkblue
-        ))
+        if 'CustomSubtitle' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='CustomSubtitle',
+                parent=self.styles['Heading2'],
+                fontSize=16,
+                spaceAfter=10,
+                textColor=colors.darkblue
+            ))
         
         self.styles.add(ParagraphStyle(
             name='SectionTitle',
@@ -152,12 +154,12 @@ class GDPRReportGenerator:
     def _add_title_section(self, content: List, scan_result: Dict[str, Any]):
         """Add the title section to the report."""
         # Title
-        content.append(Paragraph("GDPR Compliance Scan Report", self.styles['Title']))
+        content.append(Paragraph("GDPR Compliance Scan Report", self.styles['CustomTitle']))
         content.append(Spacer(1, 0.25 * inch))
         
         # Subtitle with repository info
         repo_url = scan_result.get('repository_url', scan_result.get('repo_url', 'Unknown Repository'))
-        content.append(Paragraph(f"Repository: {repo_url}", self.styles['Subtitle']))
+        content.append(Paragraph(f"Repository: {repo_url}", self.styles['CustomSubtitle']))
         content.append(Spacer(1, 0.1 * inch))
         
         # Metadata
