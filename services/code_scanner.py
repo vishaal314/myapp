@@ -472,24 +472,51 @@ class CodeScanner:
         # Use better batch size for faster scanning
         batch_size = 100  # Increased batch size for better performance
         
-        # Skip certain file types and patterns that are unlikely to contain PII
-        skip_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.woff', '.ttf', '.eot', '.mp3', '.mp4', '.avi', '.pdf']
-        skip_patterns = ['node_modules', 'vendor', 'dist', 'build', '.git', '.idea', '.vscode', '__pycache__', 'venv', 'env', 'lib', 'bin']
-        
-        # Filter out unlikely files before scanning
-        filtered_files = []
-        for file_path in all_files:
-            # Skip files with extensions unlikely to contain PII
-            if any(file_path.endswith(ext) for ext in skip_extensions):
-                self.scan_checkpoint_data['stats']['files_skipped'] += 1
-                continue
+        # Implement smart sampling for very large repositories
+        if smart_sampling and len(all_files) > max_files_to_scan:
+            print(f"Repository is very large ({len(all_files)} files). Using smart sampling to scan ~{max_files_to_scan} files.")
             
-            # Skip common directories unlikely to contain PII
-            if any(pattern in file_path for pattern in skip_patterns):
-                self.scan_checkpoint_data['stats']['files_skipped'] += 1
-                continue
-                
-            filtered_files.append(file_path)
+            # First, sort files by priority flag (True/False)
+            all_files.sort(key=lambda x: not x[1])  # Priority files first (True comes before False)
+            
+            # Calculate how many files to keep from each priority group
+            priority_files = [f for f in all_files if f[1]]
+            non_priority_files = [f for f in all_files if not f[1]]
+            
+            # Always keep all priority files up to a reasonable limit
+            priority_limit = min(len(priority_files), int(max_files_to_scan * 0.7))
+            non_priority_limit = max_files_to_scan - priority_limit
+            
+            # Sample files intelligently
+            sampled_files = []
+            
+            # Take all or sample priority files
+            if len(priority_files) <= priority_limit:
+                sampled_files.extend(priority_files)
+            else:
+                # Systematic sampling to get representative subset
+                step = len(priority_files) / priority_limit
+                indices = [int(i * step) for i in range(priority_limit)]
+                sampled_files.extend([priority_files[i] for i in indices])
+            
+            # Sample non-priority files if needed
+            if non_priority_limit > 0 and non_priority_files:
+                step = len(non_priority_files) / non_priority_limit
+                indices = [int(i * step) for i in range(non_priority_limit)]
+                sampled_files.extend([non_priority_files[i] for i in indices])
+            
+            # Update skip count
+            self.scan_checkpoint_data['stats']['files_skipped'] += len(all_files) - len(sampled_files)
+            
+            # Just keep the file paths
+            filtered_files = [f[0] for f in sampled_files]
+            print(f"Smart sampling selected {len(filtered_files)} files out of {len(all_files)} total files.")
+        else:
+            # Just keep the file paths for all files
+            filtered_files = [f[0] for f in all_files]
+            
+        # Total file stats for logging
+        print(f"Total files found: {total_file_count}, files to scan: {len(filtered_files)}, files skipped: {self.scan_checkpoint_data['stats']['files_skipped']}")
         
         # Use multiprocessing for faster scanning
         with multiprocessing.Pool(processes=num_workers) as pool:
