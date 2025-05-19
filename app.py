@@ -3285,25 +3285,78 @@ else:
                                     if st.button("Generate PDF Report", use_container_width=True):
                                         with st.spinner("Generating PDF report..."):
                                             try:
-                                                # Generate PDF report with proper params
-                                                pdf_bytes = generate_pdf_report(
-                                                    scan_data=result,
-                                                    include_details=True,
-                                                    include_recommendations=True
-                                                )
+                                                # Create buffer to store PDF
+                                                from io import BytesIO
+                                                from reportlab.lib.pagesizes import letter
+                                                from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+                                                from reportlab.lib.styles import getSampleStyleSheet
                                                 
-                                                if pdf_bytes:
-                                                    st.success("PDF report generated successfully!")
-                                                    # Download button for PDF
-                                                    scan_id = result.get('scan_id', 'repo_scan')
-                                                    st.download_button(
-                                                        label="Download PDF Report",
-                                                        data=pdf_bytes,
-                                                        file_name=f"GDPR_Repo_Scan_{scan_id}.pdf",
-                                                        mime="application/pdf"
-                                                    )
-                                                else:
-                                                    st.error("Failed to generate the PDF report.")
+                                                # Create PDF buffer
+                                                buffer = BytesIO()
+                                                doc = SimpleDocTemplate(buffer, pagesize=letter)
+                                                styles = getSampleStyleSheet()
+                                                
+                                                # Create elements list
+                                                elements = []
+                                                
+                                                # Add title and content
+                                                elements.append(Paragraph("GDPR Compliance Report", styles["Heading1"]))
+                                                elements.append(Spacer(1, 12))
+                                                
+                                                # Add timestamp
+                                                import datetime
+                                                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                                elements.append(Paragraph(f"Generated: {current_time}", styles["Normal"]))
+                                                elements.append(Spacer(1, 12))
+                                                
+                                                # Add scan details
+                                                scan_id = result.get('scan_id', 'Unknown')
+                                                elements.append(Paragraph(f"Scan ID: {scan_id}", styles["Normal"]))
+                                                elements.append(Spacer(1, 12))
+                                                
+                                                # Add summary section
+                                                elements.append(Paragraph("Scan Summary", styles["Heading2"]))
+                                                elements.append(Spacer(1, 6))
+                                                
+                                                # Add risk counts
+                                                high_risk = result.get('high_risk_count', 0)
+                                                medium_risk = result.get('medium_risk_count', 0)
+                                                low_risk = result.get('low_risk_count', 0)
+                                                
+                                                elements.append(Paragraph(f"High Risk Items: {high_risk}", styles["Normal"]))
+                                                elements.append(Paragraph(f"Medium Risk Items: {medium_risk}", styles["Normal"]))
+                                                elements.append(Paragraph(f"Low Risk Items: {low_risk}", styles["Normal"]))
+                                                elements.append(Spacer(1, 12))
+                                                
+                                                # Add findings
+                                                elements.append(Paragraph("Detailed Findings", styles["Heading2"]))
+                                                elements.append(Spacer(1, 6))
+                                                
+                                                for finding in result.get('findings', []):
+                                                    # Extract data
+                                                    description = finding.get('description', 'No description')
+                                                    path = finding.get('file_path', 'Unknown path')
+                                                    risk = finding.get('risk_level', 'Unknown')
+                                                    
+                                                    # Add to PDF
+                                                    elements.append(Paragraph(f"Finding: {description}", styles["Heading3"]))
+                                                    elements.append(Paragraph(f"Path: {path}", styles["Normal"]))
+                                                    elements.append(Paragraph(f"Risk Level: {risk}", styles["Normal"]))
+                                                    elements.append(Spacer(1, 12))
+                                                
+                                                # Build PDF
+                                                doc.build(elements)
+                                                pdf_bytes = buffer.getvalue()
+                                                
+                                                # Provide download button
+                                                st.success("PDF report generated successfully!")
+                                                # Download button for PDF
+                                                st.download_button(
+                                                    label="Download PDF Report",
+                                                    data=pdf_bytes,
+                                                    file_name=f"GDPR_Repo_Scan_{scan_id}.pdf",
+                                                    mime="application/pdf"
+                                                )
                                             except Exception as e:
                                                 st.error(f"Error generating PDF report: {str(e)}")
                                 
@@ -3312,23 +3365,82 @@ else:
                                     if st.button("Generate HTML Report", use_container_width=True):
                                         with st.spinner("Generating HTML report..."):
                                             try:
-                                                # Generate HTML report
-                                                html_content = generate_html_report(result)
+                                                # Create simple HTML report directly
+                                                scan_id = result.get('scan_id', 'repo_scan')
+                                                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                                
+                                                # Begin HTML content
+                                                html_content = f"""
+                                                <!DOCTYPE html>
+                                                <html>
+                                                <head>
+                                                    <title>GDPR Compliance Report - {scan_id}</title>
+                                                    <style>
+                                                        body {{ font-family: Arial, sans-serif; margin: 40px; }}
+                                                        h1 {{ color: #2c3e50; }}
+                                                        h2 {{ color: #3498db; margin-top: 30px; }}
+                                                        .high-risk {{ color: #e74c3c; }}
+                                                        .medium-risk {{ color: #f39c12; }}
+                                                        .low-risk {{ color: #27ae60; }}
+                                                        .finding {{ margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }}
+                                                        .metadata {{ color: #7f8c8d; font-size: 0.9em; }}
+                                                    </style>
+                                                </head>
+                                                <body>
+                                                    <h1>GDPR Compliance Report</h1>
+                                                    <p class="metadata">Generated: {timestamp}</p>
+                                                    <p class="metadata">Scan ID: {scan_id}</p>
+                                                    
+                                                    <h2>Scan Summary</h2>
+                                                """
+                                                
+                                                # Add risk counts
+                                                high_risk = result.get('high_risk_count', 0)
+                                                medium_risk = result.get('medium_risk_count', 0)
+                                                low_risk = result.get('low_risk_count', 0)
+                                                
+                                                html_content += f"""
+                                                    <p><strong>High Risk Items:</strong> {high_risk}</p>
+                                                    <p><strong>Medium Risk Items:</strong> {medium_risk}</p>
+                                                    <p><strong>Low Risk Items:</strong> {low_risk}</p>
+                                                    
+                                                    <h2>Detailed Findings</h2>
+                                                """
+                                                
+                                                # Add findings
+                                                for finding in result.get('findings', []):
+                                                    description = finding.get('description', 'No description')
+                                                    path = finding.get('file_path', 'Unknown path')
+                                                    risk = finding.get('risk_level', 'Unknown').lower()
+                                                    
+                                                    risk_class = "medium-risk"
+                                                    if risk == "high":
+                                                        risk_class = "high-risk"
+                                                    elif risk == "low":
+                                                        risk_class = "low-risk"
+                                                    
+                                                    html_content += f"""
+                                                    <div class="finding">
+                                                        <h3>{description}</h3>
+                                                        <p><strong>Path:</strong> {path}</p>
+                                                        <p><strong>Risk Level:</strong> <span class="{risk_class}">{risk.upper()}</span></p>
+                                                    </div>
+                                                    """
+                                                
+                                                # Close HTML document
+                                                html_content += """
+                                                </body>
+                                                </html>
+                                                """
                                                 
                                                 # Create download button for HTML
-                                                if html_content:
-                                                    st.success("HTML report generated successfully!")
-                                                    
-                                                    # Download button for HTML report
-                                                    scan_id = result.get('scan_id', 'repo_scan')
-                                                    st.download_button(
-                                                        label="Download HTML Report",
-                                                        data=html_content,
-                                                        file_name=f"GDPR_Repo_Scan_{scan_id}.html",
-                                                        mime="text/html"
-                                                    )
-                                                else:
-                                                    st.error("Failed to generate the HTML report.")
+                                                st.success("HTML report generated successfully!")
+                                                st.download_button(
+                                                    label="Download HTML Report",
+                                                    data=html_content,
+                                                    file_name=f"GDPR_Repo_Scan_{scan_id}.html",
+                                                    mime="text/html"
+                                                )
                                             except Exception as e:
                                                 st.error(f"Error generating HTML report: {str(e)}")
                             
@@ -3357,13 +3469,15 @@ else:
                             from services.code_scanner import CodeScanner
                             directory_scanner = CodeScanner(region=region)
                             
-                            # Run the resilient scan with checkpointing
+                            # Run the resilient scan with checkpointing and smart sampling for large repos
                             result = directory_scanner.scan_directory(
                                 directory_path=directory_path,
                                 progress_callback=update_progress,
                                 ignore_patterns=ignore_patterns,
                                 max_file_size_mb=50,
-                                continue_from_checkpoint=True
+                                continue_from_checkpoint=True,
+                                smart_sampling=True,
+                                max_files_to_scan=2000  # Increased limit for more thorough scanning
                             )
                             
                             # Store directory scan result
