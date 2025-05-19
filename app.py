@@ -3287,62 +3287,243 @@ else:
                                             try:
                                                 # Create buffer to store PDF
                                                 from io import BytesIO
-                                                from reportlab.lib.pagesizes import letter
-                                                from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-                                                from reportlab.lib.styles import getSampleStyleSheet
+                                                from reportlab.lib.pagesizes import letter, A4
+                                                from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                                                from reportlab.lib.colors import HexColor
+                                                from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+                                                from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+                                                from reportlab.lib.units import inch, cm
+                                                import datetime
                                                 
-                                                # Create PDF buffer
+                                                # Create a modern-styled PDF
                                                 buffer = BytesIO()
-                                                doc = SimpleDocTemplate(buffer, pagesize=letter)
+                                                doc = SimpleDocTemplate(buffer, pagesize=A4, 
+                                                                      leftMargin=1.25*cm, rightMargin=1.25*cm,
+                                                                      topMargin=2*cm, bottomMargin=2*cm)
+                                                
+                                                # Create custom styles for modern design
                                                 styles = getSampleStyleSheet()
+                                                
+                                                # Add custom styles
+                                                styles.add(ParagraphStyle(
+                                                    name='ModernTitle',
+                                                    parent=styles['Heading1'],
+                                                    fontName='Helvetica-Bold',
+                                                    fontSize=20,
+                                                    leading=24,
+                                                    textColor=HexColor('#2c3e50'),
+                                                    alignment=TA_CENTER,
+                                                    spaceAfter=20
+                                                ))
+                                                
+                                                styles.add(ParagraphStyle(
+                                                    name='ModernSubtitle',
+                                                    parent=styles['Heading2'],
+                                                    fontName='Helvetica-Bold',
+                                                    fontSize=16,
+                                                    leading=20,
+                                                    textColor=HexColor('#3498db'),
+                                                    spaceAfter=12
+                                                ))
+                                                
+                                                styles.add(ParagraphStyle(
+                                                    name='ModernHeading',
+                                                    parent=styles['Heading3'],
+                                                    fontName='Helvetica-Bold',
+                                                    fontSize=12,
+                                                    leading=16,
+                                                    textColor=HexColor('#2c3e50'),
+                                                    spaceAfter=8
+                                                ))
+                                                
+                                                styles.add(ParagraphStyle(
+                                                    name='ModernText',
+                                                    parent=styles['Normal'],
+                                                    fontName='Helvetica',
+                                                    fontSize=10,
+                                                    leading=14,
+                                                    textColor=HexColor('#34495e')
+                                                ))
+                                                
+                                                styles.add(ParagraphStyle(
+                                                    name='MetadataText',
+                                                    parent=styles['Normal'],
+                                                    fontName='Helvetica',
+                                                    fontSize=9,
+                                                    leading=12,
+                                                    textColor=HexColor('#7f8c8d')
+                                                ))
+                                                
+                                                styles.add(ParagraphStyle(
+                                                    name='HighRiskText',
+                                                    parent=styles['Normal'],
+                                                    fontName='Helvetica-Bold',
+                                                    fontSize=10,
+                                                    leading=14,
+                                                    textColor=HexColor('#e74c3c')
+                                                ))
+                                                
+                                                styles.add(ParagraphStyle(
+                                                    name='MediumRiskText',
+                                                    parent=styles['Normal'],
+                                                    fontName='Helvetica-Bold',
+                                                    fontSize=10,
+                                                    leading=14,
+                                                    textColor=HexColor('#f39c12')
+                                                ))
+                                                
+                                                styles.add(ParagraphStyle(
+                                                    name='LowRiskText',
+                                                    parent=styles['Normal'],
+                                                    fontName='Helvetica-Bold',
+                                                    fontSize=10,
+                                                    leading=14,
+                                                    textColor=HexColor('#27ae60')
+                                                ))
                                                 
                                                 # Create elements list
                                                 elements = []
                                                 
-                                                # Add title and content
-                                                elements.append(Paragraph("GDPR Compliance Report", styles["Heading1"]))
-                                                elements.append(Spacer(1, 12))
+                                                # Add logo and title
+                                                repo_name = result.get('repository_url', result.get('repo_url', 'Unknown Repository'))
+                                                elements.append(Paragraph("DataGuardian Pro", styles["ModernTitle"]))
+                                                elements.append(Paragraph("GDPR Compliance Report", styles["ModernSubtitle"]))
+                                                elements.append(Spacer(1, 24))
                                                 
-                                                # Add timestamp
-                                                import datetime
+                                                # Create metadata table with modern styling
                                                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                                elements.append(Paragraph(f"Generated: {current_time}", styles["Normal"]))
-                                                elements.append(Spacer(1, 12))
-                                                
-                                                # Add scan details
                                                 scan_id = result.get('scan_id', 'Unknown')
-                                                elements.append(Paragraph(f"Scan ID: {scan_id}", styles["Normal"]))
+                                                
+                                                metadata = [
+                                                    ["Repository:", repo_name],
+                                                    ["Scan ID:", scan_id],
+                                                    ["Generated:", current_time],
+                                                ]
+                                                
+                                                # Create a styled metadata table
+                                                meta_table = Table(metadata, colWidths=[2*cm, 14*cm])
+                                                meta_table.setStyle(TableStyle([
+                                                    ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+                                                    ('FONT', (1, 0), (1, -1), 'Helvetica'),
+                                                    ('TEXTCOLOR', (0, 0), (0, -1), HexColor('#2c3e50')),
+                                                    ('TEXTCOLOR', (1, 0), (1, -1), HexColor('#7f8c8d')),
+                                                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                                                ]))
+                                                elements.append(meta_table)
+                                                elements.append(Spacer(1, 24))
+                                                
+                                                # Add summary section with modern design
+                                                elements.append(Paragraph("Scan Summary", styles["ModernSubtitle"]))
                                                 elements.append(Spacer(1, 12))
                                                 
-                                                # Add summary section
-                                                elements.append(Paragraph("Scan Summary", styles["Heading2"]))
-                                                elements.append(Spacer(1, 6))
-                                                
-                                                # Add risk counts
+                                                # Add risk counts with modern design
                                                 high_risk = result.get('high_risk_count', 0)
                                                 medium_risk = result.get('medium_risk_count', 0)
                                                 low_risk = result.get('low_risk_count', 0)
                                                 
-                                                elements.append(Paragraph(f"High Risk Items: {high_risk}", styles["Normal"]))
-                                                elements.append(Paragraph(f"Medium Risk Items: {medium_risk}", styles["Normal"]))
-                                                elements.append(Paragraph(f"Low Risk Items: {low_risk}", styles["Normal"]))
+                                                # Calculate compliance score
+                                                max_score = max(100, high_risk * 5 + medium_risk * 3 + low_risk)
+                                                compliance_score = max(0, 100 - (high_risk * 5 + medium_risk * 3 + low_risk))
+                                                compliance_percentage = min(100, int(compliance_score))
+                                                
+                                                # Create risk summary table
+                                                risk_data = [
+                                                    ["Risk Level", "Count"],
+                                                    ["High Risk Items:", str(high_risk)],
+                                                    ["Medium Risk Items:", str(medium_risk)],
+                                                    ["Low Risk Items:", str(low_risk)],
+                                                    ["Compliance Score:", f"{compliance_percentage}%"]
+                                                ]
+                                                
+                                                risk_table = Table(risk_data, colWidths=[4*cm, 12*cm])
+                                                risk_table.setStyle(TableStyle([
+                                                    ('FONT', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                                    ('FONT', (0, 1), (0, -1), 'Helvetica'),
+                                                    ('FONT', (1, 1), (1, 1), 'Helvetica-Bold'),  # High risk
+                                                    ('FONT', (1, 2), (1, 2), 'Helvetica-Bold'),  # Medium risk
+                                                    ('FONT', (1, 3), (1, 3), 'Helvetica-Bold'),  # Low risk
+                                                    ('FONT', (1, 4), (1, 4), 'Helvetica-Bold'),  # Score
+                                                    ('TEXTCOLOR', (0, 0), (-1, 0), HexColor('#ffffff')),
+                                                    ('TEXTCOLOR', (1, 1), (1, 1), HexColor('#e74c3c')),  # High risk
+                                                    ('TEXTCOLOR', (1, 2), (1, 2), HexColor('#f39c12')),  # Medium risk
+                                                    ('TEXTCOLOR', (1, 3), (1, 3), HexColor('#27ae60')),  # Low risk
+                                                    ('TEXTCOLOR', (1, 4), (1, 4), HexColor('#2980b9')),  # Score
+                                                    ('BACKGROUND', (0, 0), (-1, 0), HexColor('#34495e')),
+                                                    ('BACKGROUND', (0, 1), (-1, -1), HexColor('#f8f9fa')),
+                                                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#ecf0f1')),
+                                                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                                                    ('TOPPADDING', (0, 0), (-1, -1), 6),
+                                                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                                                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                                                ]))
+                                                elements.append(risk_table)
+                                                elements.append(Spacer(1, 24))
+                                                
+                                                # Add findings with modern styling
+                                                elements.append(Paragraph("Detailed Findings", styles["ModernSubtitle"]))
                                                 elements.append(Spacer(1, 12))
                                                 
-                                                # Add findings
-                                                elements.append(Paragraph("Detailed Findings", styles["Heading2"]))
-                                                elements.append(Spacer(1, 6))
-                                                
-                                                for finding in result.get('findings', []):
-                                                    # Extract data
-                                                    description = finding.get('description', 'No description')
-                                                    path = finding.get('file_path', 'Unknown path')
-                                                    risk = finding.get('risk_level', 'Unknown')
+                                                # Group findings by risk level
+                                                findings = result.get('findings', [])
+                                                if findings:
+                                                    # First process high risk findings
+                                                    high_risk_findings = [f for f in findings if f.get('risk_level', '').lower() == 'high']
+                                                    if high_risk_findings:
+                                                        elements.append(Paragraph("High Risk Findings", styles["HighRiskText"]))
+                                                        elements.append(Spacer(1, 6))
+                                                        
+                                                        for idx, finding in enumerate(high_risk_findings):
+                                                            description = finding.get('description', 'No description')
+                                                            path = finding.get('file_path', 'Unknown path')
+                                                            
+                                                            elements.append(Paragraph(f"{idx+1}. {description}", styles["ModernHeading"]))
+                                                            elements.append(Paragraph(f"<b>Location:</b> {path}", styles["ModernText"]))
+                                                            
+                                                            # Add recommendation if available
+                                                            if 'recommendation' in finding:
+                                                                elements.append(Paragraph(f"<b>Recommendation:</b> {finding['recommendation']}", styles["ModernText"]))
+                                                            
+                                                            elements.append(Spacer(1, 12))
                                                     
-                                                    # Add to PDF
-                                                    elements.append(Paragraph(f"Finding: {description}", styles["Heading3"]))
-                                                    elements.append(Paragraph(f"Path: {path}", styles["Normal"]))
-                                                    elements.append(Paragraph(f"Risk Level: {risk}", styles["Normal"]))
-                                                    elements.append(Spacer(1, 12))
+                                                    # Next process medium risk findings
+                                                    medium_risk_findings = [f for f in findings if f.get('risk_level', '').lower() == 'medium']
+                                                    if medium_risk_findings:
+                                                        elements.append(Paragraph("Medium Risk Findings", styles["MediumRiskText"]))
+                                                        elements.append(Spacer(1, 6))
+                                                        
+                                                        for idx, finding in enumerate(medium_risk_findings):
+                                                            description = finding.get('description', 'No description')
+                                                            path = finding.get('file_path', 'Unknown path')
+                                                            
+                                                            elements.append(Paragraph(f"{idx+1}. {description}", styles["ModernHeading"]))
+                                                            elements.append(Paragraph(f"<b>Location:</b> {path}", styles["ModernText"]))
+                                                            
+                                                            # Add recommendation if available
+                                                            if 'recommendation' in finding:
+                                                                elements.append(Paragraph(f"<b>Recommendation:</b> {finding['recommendation']}", styles["ModernText"]))
+                                                            
+                                                            elements.append(Spacer(1, 12))
+                                                    
+                                                    # Finally process low risk findings
+                                                    low_risk_findings = [f for f in findings if f.get('risk_level', '').lower() == 'low']
+                                                    if low_risk_findings:
+                                                        elements.append(Paragraph("Low Risk Findings", styles["LowRiskText"]))
+                                                        elements.append(Spacer(1, 6))
+                                                        
+                                                        for idx, finding in enumerate(low_risk_findings):
+                                                            description = finding.get('description', 'No description')
+                                                            path = finding.get('file_path', 'Unknown path')
+                                                            
+                                                            elements.append(Paragraph(f"{idx+1}. {description}", styles["ModernHeading"]))
+                                                            elements.append(Paragraph(f"<b>Location:</b> {path}", styles["ModernText"]))
+                                                            
+                                                            # Add recommendation if available
+                                                            if 'recommendation' in finding:
+                                                                elements.append(Paragraph(f"<b>Recommendation:</b> {finding['recommendation']}", styles["ModernText"]))
+                                                            
+                                                            elements.append(Spacer(1, 12))
+                                                else:
+                                                    elements.append(Paragraph("No specific findings detected.", styles["ModernText"]))
                                                 
                                                 # Build PDF
                                                 doc.build(elements)
