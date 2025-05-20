@@ -328,20 +328,38 @@ class GDPRReportGenerator:
         high_risk = summary.get('high_risk_count', scan_result.get('high_risk_count', 0))
         medium_risk = summary.get('medium_risk_count', scan_result.get('medium_risk_count', 0))
         low_risk = summary.get('low_risk_count', scan_result.get('low_risk_count', 0))
-        overall_score = summary.get('overall_compliance_score', 100 - (high_risk * 15 + medium_risk * 7 + low_risk * 3))
+        # Calculate the score with a minimum floor of 0 to prevent negative scores
+        calculated_score = 100 - (high_risk * 15 + medium_risk * 7 + low_risk * 3)
+        overall_score = summary.get('overall_compliance_score', max(0, calculated_score))
         
-        # Create summary text with enhanced formatting
+        # Create summary text with simpler formatting to avoid PDF generation errors
         summary_text = f"""
-        <para>This report presents the results of a GDPR compliance scan conducted on the repository.
-        The scan analyzed <b>{files_scanned}</b> files out of a total of <b>{files_scanned + files_skipped}</b> files in the repository.</para>
+        This report presents the results of a GDPR compliance scan conducted on the repository.
+        The scan analyzed {files_scanned} files out of a total of {files_scanned + files_skipped} files in the repository.
         
-        <para>The scan identified <b>{pii_instances}</b> instances of potential personal data or compliance issues:</para>
-        <bullet>&bull;</bullet><para leftIndent=20><font color="#dc2626"><b>{high_risk}</b></font> high-risk findings</para>
-        <bullet>&bull;</bullet><para leftIndent=20><font color="#ea580c"><b>{medium_risk}</b></font> medium-risk findings</para>
-        <bullet>&bull;</bullet><para leftIndent=20><font color="#15803d"><b>{low_risk}</b></font> low-risk findings</para>
+        The scan identified {pii_instances} instances of potential personal data or compliance issues:
         """
         
         content.append(Paragraph(summary_text, self.styles['EnhancedNormal']))
+        
+        # Add findings as separate paragraphs with proper styling to avoid formatting errors
+        high_risk_text = Paragraph(f"• <font color='#dc2626'><b>{high_risk}</b></font> high-risk findings", 
+                                  ParagraphStyle(name='HighRiskItem', 
+                                                parent=self.styles['EnhancedNormal'],
+                                                leftIndent=20))
+        content.append(high_risk_text)
+        
+        medium_risk_text = Paragraph(f"• <font color='#ea580c'><b>{medium_risk}</b></font> medium-risk findings", 
+                                    ParagraphStyle(name='MediumRiskItem', 
+                                                  parent=self.styles['EnhancedNormal'],
+                                                  leftIndent=20))
+        content.append(medium_risk_text)
+        
+        low_risk_text = Paragraph(f"• <font color='#15803d'><b>{low_risk}</b></font> low-risk findings", 
+                                 ParagraphStyle(name='LowRiskItem', 
+                                               parent=self.styles['EnhancedNormal'],
+                                               leftIndent=20))
+        content.append(low_risk_text)
         content.append(Spacer(1, 0.25 * inch))
         
         # Add compliance score with modern styling
