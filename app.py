@@ -3240,8 +3240,8 @@ else:
                             with report_tab:
                                 st.write("### Export Report Options")
                                 
-                                # Import the report display functionality
-                                from services.download_reports import display_report_options, generate_html_report
+                                # Import the report display functionality with fixed compliance score handling
+                                from services.download_reports_fixed import display_report_options, generate_html_report
                                 from services.report_generator import generate_report as generate_pdf_report
                                 
                                 # Use the comprehensive report display module
@@ -3575,6 +3575,10 @@ else:
                                                 high_risk = result.get('high_risk_count', 0)
                                                 medium_risk = result.get('medium_risk_count', 0)
                                                 low_risk = result.get('low_risk_count', 0)
+                                                
+                                                # Calculate compliance score with proper bounds (always between 0-100)
+                                                raw_score = 100 - (high_risk * 15 + medium_risk * 7 + low_risk * 3)
+                                                compliance_score = max(0, min(100, raw_score))  # Ensure score is between 0-100
                                                 
                                                 html_content += f"""
                                                     <p><strong>High Risk Items:</strong> {high_risk}</p>
