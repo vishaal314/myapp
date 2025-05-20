@@ -239,38 +239,12 @@ with st.sidebar:
     title = get_text("app.title", "DataGuardian Pro")
     subtitle = get_text("app.subtitle", "Enterprise Privacy Compliance Platform")
     
-    # Check if our modern SVG logo exists and use it in the header
-    svg_logo_path = os.path.join("static", "dataguardian_logo.svg")
-    simple_logo_path = os.path.join("static", "dataguardian_logo_simple.svg")
-    
-    # Attempt to load SVG logo
-    logo_html = ""
-    if os.path.exists(svg_logo_path):
-        with open(svg_logo_path, 'r') as f:
-            svg_content = f.read()
-            # Resize SVG to fit in header
-            svg_content = svg_content.replace('width="512"', 'width="80"')
-            svg_content = svg_content.replace('height="512"', 'height="80"')
-            logo_html = f'<div style="float:left; margin-right:20px;">{svg_content}</div>'
-    elif os.path.exists(simple_logo_path):
-        with open(simple_logo_path, 'r') as f:
-            svg_content = f.read()
-            # Resize SVG to fit in header
-            svg_content = svg_content.replace('width="512"', 'width="80"')
-            svg_content = svg_content.replace('height="512"', 'height="80"')
-            logo_html = f'<div style="float:left; margin-right:20px;">{svg_content}</div>'
-    
-    # Create the modern header with logo
     st.markdown(f"""
-    <div style="background-image: linear-gradient(120deg, #1e40af, #2563eb); 
-               padding: 20px; border-radius: 15px; margin-bottom: 20px;
-               box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
-        {logo_html}
-        <div style="margin-left: {10 if logo_html else 0}px;">
-            <h2 style="color: white; margin: 0; font-weight: bold;">{title}</h2>
-            <p style="color: #e2e8f0; margin: 5px 0 0 0; font-size: 0.9em;">{subtitle}</p>
-        </div>
-        <div style="clear: both;"></div>
+    <div style="background-image: linear-gradient(120deg, #6200EA, #3700B3); 
+               padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center;
+               box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <h2 style="color: white; margin: 0; font-weight: bold;">{title}</h2>
+        <p style="color: #E9DAFF; margin: 5px 0 0 0; font-size: 0.9em;">{subtitle}</p>
     </div>
     """, unsafe_allow_html=True)
     
