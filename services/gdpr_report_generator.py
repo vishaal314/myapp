@@ -152,17 +152,89 @@ class GDPRReportGenerator:
             return False, error_msg
     
     def _add_title_section(self, content: List, scan_result: Dict[str, Any]):
-        """Add the title section to the report."""
-        # Title
-        content.append(Paragraph("GDPR Compliance Scan Report", self.styles['CustomTitle']))
-        content.append(Spacer(1, 0.25 * inch))
+        """Add the title section to the report with modern design and logo."""
+        # Create a modern header with logo
+        # Create a header table with logo and title
+        logo_path = os.path.join(os.path.dirname(__file__), "..", "static", "generated-icon.png")
+        if not os.path.exists(logo_path):
+            # If icon doesn't exist, create header without logo
+            header_data = [[
+                Paragraph("DataGuardian Pro", ParagraphStyle(
+                    name='CompanyName',
+                    parent=self.styles['CustomTitle'],
+                    fontSize=22,
+                    textColor=colors.HexColor('#1e40af')
+                ))
+            ]]
+        else:
+            # Logo exists, create header with logo
+            header_data = [[
+                Image(logo_path, width=1.2*inch, height=1.2*inch),
+                Paragraph("DataGuardian Pro", ParagraphStyle(
+                    name='CompanyName',
+                    parent=self.styles['CustomTitle'],
+                    fontSize=22,
+                    textColor=colors.HexColor('#1e40af')
+                ))
+            ]]
         
-        # Subtitle with repository info
+        header_table = Table(header_data, colWidths=[1.5*inch, 4*inch])
+        header_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+            ('LEFTPADDING', (0, 0), (0, 0), 0),
+            ('RIGHTPADDING', (0, 0), (0, 0), 10),
+        ]))
+        
+        content.append(header_table)
+        content.append(Spacer(1, 0.3 * inch))
+
+        # Title with colored background
+        title = Paragraph(
+            "GDPR Compliance Certification Report", 
+            ParagraphStyle(
+                name='ReportTitle',
+                parent=self.styles['CustomTitle'],
+                fontSize=18,
+                textColor=colors.white,
+                alignment=1  # Center alignment
+            )
+        )
+        
+        title_table = Table([[title]], colWidths=[6.5 * inch])
+        title_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#1e40af')),  # Dark blue background
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('ROUNDEDCORNERS', [5, 5, 5, 5]),
+        ]))
+        
+        content.append(title_table)
+        content.append(Spacer(1, 0.3 * inch))
+        
+        # Repository info
         repo_url = scan_result.get('repository_url', scan_result.get('repo_url', 'Unknown Repository'))
-        content.append(Paragraph(f"Repository: {repo_url}", self.styles['CustomSubtitle']))
-        content.append(Spacer(1, 0.1 * inch))
+        repo_name = repo_url.split('/')[-1] if '/' in repo_url else repo_url
         
-        # Metadata
+        repo_info = Paragraph(
+            f"Repository: <b>{repo_name}</b>", 
+            ParagraphStyle(
+                name='RepoInfo',
+                parent=self.styles['CustomSubtitle'],
+                fontSize=14,
+                textColor=colors.HexColor('#4a5568')
+            )
+        )
+        content.append(repo_info)
+        content.append(Spacer(1, 0.2 * inch))
+        content.append(Paragraph(f"Full Path: {repo_url}", self.styles['Normal']))
+        content.append(Spacer(1, 0.3 * inch))
+        
+        # Metadata with improved styling
         scan_timestamp = scan_result.get('scan_timestamp', scan_result.get('timestamp', datetime.now().isoformat()))
         if isinstance(scan_timestamp, str):
             try:
@@ -184,8 +256,13 @@ class GDPRReportGenerator:
         metadata_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('GRID', (0, 0), (-1, -1), 0.25, colors.white),
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f3f4f6')),  # Light gray background
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ]))
         
         content.append(metadata_table)
@@ -291,13 +368,21 @@ class GDPRReportGenerator:
             
             findings_data = [["Type", "Location", "Description"]]
             for finding in high_risk_findings:
+                # Ensure location string is not too long - truncate if needed
+                location = finding.get('location', 'Unknown')
+                if len(location) > 30:
+                    location_parts = location.split('/')
+                    if len(location_parts) > 2:
+                        location = f".../{location_parts[-2]}/{location_parts[-1]}"
+                
                 findings_data.append([
                     finding.get('type', 'Unknown'),
-                    f"{finding.get('location', 'Unknown')} (Line {finding.get('line', 0)})",
+                    f"{location} (Line {finding.get('line', 0)})",
                     finding.get('description', 'No description')
                 ])
             
-            findings_table = Table(findings_data, colWidths=[1.5 * inch, 2 * inch, 3 * inch])
+            # More space for text to avoid overlapping
+            findings_table = Table(findings_data, colWidths=[1.2 * inch, 2.3 * inch, 3 * inch])
             findings_table.setStyle(TableStyle([
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
@@ -305,6 +390,10 @@ class GDPRReportGenerator:
                 ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('WORDWRAP', (0, 0), (-1, -1), True),
+                ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
             ]))
             
             content.append(findings_table)
@@ -317,13 +406,21 @@ class GDPRReportGenerator:
             
             findings_data = [["Type", "Location", "Description"]]
             for finding in medium_risk_findings:
+                # Ensure location string is not too long - truncate if needed
+                location = finding.get('location', 'Unknown')
+                if len(location) > 30:
+                    location_parts = location.split('/')
+                    if len(location_parts) > 2:
+                        location = f".../{location_parts[-2]}/{location_parts[-1]}"
+                
                 findings_data.append([
                     finding.get('type', 'Unknown'),
-                    f"{finding.get('location', 'Unknown')} (Line {finding.get('line', 0)})",
+                    f"{location} (Line {finding.get('line', 0)})",
                     finding.get('description', 'No description')
                 ])
             
-            findings_table = Table(findings_data, colWidths=[1.5 * inch, 2 * inch, 3 * inch])
+            # More space for text to avoid overlapping
+            findings_table = Table(findings_data, colWidths=[1.2 * inch, 2.3 * inch, 3 * inch])
             findings_table.setStyle(TableStyle([
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
@@ -331,6 +428,10 @@ class GDPRReportGenerator:
                 ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('WORDWRAP', (0, 0), (-1, -1), True),
+                ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
             ]))
             
             content.append(findings_table)
@@ -346,13 +447,21 @@ class GDPRReportGenerator:
             
             findings_data = [["Type", "Location", "Description"]]
             for finding in limited_low_risk:
+                # Ensure location string is not too long - truncate if needed
+                location = finding.get('location', 'Unknown')
+                if len(location) > 30:
+                    location_parts = location.split('/')
+                    if len(location_parts) > 2:
+                        location = f".../{location_parts[-2]}/{location_parts[-1]}"
+                
                 findings_data.append([
                     finding.get('type', 'Unknown'),
-                    f"{finding.get('location', 'Unknown')} (Line {finding.get('line', 0)})",
+                    f"{location} (Line {finding.get('line', 0)})",
                     finding.get('description', 'No description')
                 ])
             
-            findings_table = Table(findings_data, colWidths=[1.5 * inch, 2 * inch, 3 * inch])
+            # More space for text to avoid overlapping
+            findings_table = Table(findings_data, colWidths=[1.2 * inch, 2.3 * inch, 3 * inch])
             findings_table.setStyle(TableStyle([
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
@@ -360,6 +469,10 @@ class GDPRReportGenerator:
                 ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('WORDWRAP', (0, 0), (-1, -1), True),
+                ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
             ]))
             
             content.append(findings_table)
