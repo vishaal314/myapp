@@ -21,6 +21,7 @@ import threading
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable, Set, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from services._create_sample_findings import create_sample_findings
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -522,7 +523,7 @@ class EnhancedRepoScanner:
             else:
                 # Create standard findings when no issues are detected
                 logger.info("No findings detected, adding sample findings for demonstration")
-                sample_findings = self._create_sample_findings(files_to_scan, repo_path)
+                sample_findings = create_sample_findings(files_to_scan, repo_path)
                 if sample_findings:
                     file_results.append(sample_findings)
                 
