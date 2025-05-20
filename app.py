@@ -3119,6 +3119,14 @@ else:
                             gdpr_scores = [v['score'] for k, v in result['gdpr_compliance'].items()]
                             result['overall_gdpr_score'] = sum(gdpr_scores) / len(gdpr_scores)
                             
+                            # Add risk-based score calculation and ensure it's always non-negative
+                            high_risk = result.get('high_risk_count', 0)
+                            medium_risk = result.get('medium_risk_count', 0)
+                            low_risk = result.get('low_risk_count', 0)
+                            risk_adjusted_score = max(0, 100 - (high_risk * 15 + medium_risk * 7 + low_risk * 3))
+                            # Set overall compliance score to be used in reports and UI
+                            result['overall_compliance_score'] = risk_adjusted_score
+                            
                             # Get formatted findings for display
                             formatted_findings = result.get('formatted_findings', [])
                             if not formatted_findings and 'findings' in result:

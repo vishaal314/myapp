@@ -264,8 +264,18 @@ class GDPRReportGenerator:
         content.append(Spacer(1, 0.3 * inch))
         
         # Repository info
-        repo_url = scan_result.get('repository_url', scan_result.get('repo_url', 'Unknown Repository'))
+        repo_url = scan_result.get('repository_url', scan_result.get('repo_url', ''))
+        # Additional fallback options for repository URL
+        if not repo_url:
+            repo_url = scan_result.get('repository', {}).get('url', '')
+        if not repo_url:
+            repo_url = scan_result.get('url', 'Unknown Repository')
+        
+        # Extract repository name from URL
         repo_name = repo_url.split('/')[-1] if '/' in repo_url else repo_url
+        if not repo_name or repo_name == 'Unknown Repository':
+            # Try to get project name if repository name is not available
+            repo_name = scan_result.get('project', 'Repository')
         
         repo_info = Paragraph(
             f"Repository: <b>{repo_name}</b>", 
