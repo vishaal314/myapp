@@ -12,6 +12,13 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Set
 from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
+# Import Netherlands-specific detection module
+try:
+    from utils.netherlands_gdpr import detect_nl_violations
+except ImportError:
+    # Fallback if module not available
+    def detect_nl_violations(content):
+        return []
 
 class CodeScanner:
     """
