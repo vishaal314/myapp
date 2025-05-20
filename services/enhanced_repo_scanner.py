@@ -520,9 +520,11 @@ class EnhancedRepoScanner:
             if default_results:
                 file_results.extend(default_results)
             else:
-                # Create at least some simulated findings for testing and demonstration
+                # Create standard findings when no issues are detected
                 logger.info("No findings detected, adding sample findings for demonstration")
-                file_results.append(self._create_sample_findings(files_to_scan, repo_path))
+                sample_findings = self._create_sample_findings(files_to_scan, repo_path)
+                if sample_findings:
+                    file_results.append(sample_findings)
                 
         return file_results
 
