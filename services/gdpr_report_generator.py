@@ -371,7 +371,12 @@ class GDPRReportGenerator:
         low_risk = summary.get('low_risk_count', scan_result.get('low_risk_count', 0))
         # Calculate the score with a minimum floor of 0 to prevent negative scores
         calculated_score = 100 - (high_risk * 15 + medium_risk * 7 + low_risk * 3)
-        overall_score = summary.get('overall_compliance_score', max(0, calculated_score))
+        # Ensure score is never negative
+        calculated_score = max(0, calculated_score)
+        # Use summary score if provided, otherwise use our calculated score
+        overall_score = summary.get('overall_compliance_score', calculated_score)
+        # Double-check that overall_score is never negative
+        overall_score = max(0, overall_score)
         
         # Create summary text with simpler formatting to avoid PDF generation errors
         summary_text = f"""
