@@ -136,6 +136,16 @@ class GDPRReportGenerator:
             borderRadius=4,
             textColor=colors.HexColor('#4b5563')  # Medium gray text
         ))
+        
+        # NormalBold style for section subtitles
+        self.styles.add(ParagraphStyle(
+            name='NormalBold',
+            parent=self.styles['Normal'],
+            fontSize=11,
+            leading=14,
+            fontName='Helvetica-Bold',
+            textColor=colors.HexColor('#1f2937')  # Dark gray text
+        ))
     
     def generate_pdf_report(self, scan_result: Dict[str, Any]) -> Tuple[bool, str]:
         """
@@ -263,19 +273,40 @@ class GDPRReportGenerator:
         content.append(title_table)
         content.append(Spacer(1, 0.3 * inch))
         
-        # Repository info
+        # Repository info - Improved detection logic
         repo_url = scan_result.get('repository_url', scan_result.get('repo_url', ''))
         # Additional fallback options for repository URL
         if not repo_url:
             repo_url = scan_result.get('repository', {}).get('url', '')
         if not repo_url:
-            repo_url = scan_result.get('url', 'Unknown Repository')
-        
-        # Extract repository name from URL
-        repo_name = repo_url.split('/')[-1] if '/' in repo_url else repo_url
+            repo_url = scan_result.get('url', '')
+        if not repo_url:
+            repo_url = scan_result.get('source', {}).get('url', 'Unknown Repository')
+            
+        # Extract repository name with enhanced fallback options
+        if repo_url and repo_url != 'Unknown Repository' and '/' in repo_url:
+            repo_name = repo_url.split('/')[-1]
+            # Remove .git extension if present
+            if repo_name.endswith('.git'):
+                repo_name = repo_name[:-4]
+        else:
+            repo_name = repo_url
+            
+        # Multiple fallback options for repository name
         if not repo_name or repo_name == 'Unknown Repository':
-            # Try to get project name if repository name is not available
-            repo_name = scan_result.get('project', 'Repository')
+            repo_name = scan_result.get('project', '')
+        if not repo_name:
+            repo_name = scan_result.get('repository_name', '')
+        if not repo_name:
+            repo_name = scan_result.get('repository', {}).get('name', '')
+        if not repo_name:
+            repo_name = scan_result.get('name', '')
+        if not repo_name:
+            repo_name = scan_result.get('scan_id', 'Repository')
+            
+        # Final check to ensure we have a valid name
+        if not repo_name or repo_name == 'Unknown Repository':
+            repo_name = "GDPR Compliance Report"
         
         repo_info = Paragraph(
             f"Repository: <b>{repo_name}</b>", 
