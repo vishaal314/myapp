@@ -55,10 +55,19 @@ def scan_github_repository(repo_url: str, branch: Optional[str] = None, token: O
     try:
         # Initialize code scanner and repo scanner
         code_scanner = CodeScanner(region='Netherlands')  # Default to Netherlands for GDPR compliance
-        repo_scanner = SimpleRepoScanner(code_scanner)
+        
+        # Determine if we should use the enhanced scanner for large repositories
+        use_enhanced_scanner = True
+        
+        if use_enhanced_scanner:
+            # Use the enhanced scanner for better efficiency with large repositories
+            logger.info(f"Using enhanced scanner for large repository: {repo_url}")
+            repo_scanner = EnhancedRepoScanner(code_scanner)
+        else: 
+            repo_scanner = SimpleRepoScanner(code_scanner)
         
         # Perform the scan
-        logger.info(f"Starting scan of GitHub repository: {repo_url}")
+        logger.info(f"Starting code scan of GitHub repository: {repo_url}")
         scan_result = repo_scanner.scan_repository(repo_url, branch, token)
         
         # Update scan results
