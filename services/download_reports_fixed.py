@@ -681,49 +681,136 @@ def display_report_options(scan_result: Dict[str, Any]):
                 with metrics_col4:
                     st.metric("Low Risk", low_risk, delta=None, delta_color="inverse")
                 
-                # Display findings in an expander
+                # Display findings in a structured format
                 with st.expander("View Detailed Findings", expanded=False):
+                    import pandas as pd
+                    
                     findings = scan_result.get('formatted_findings', scan_result.get('findings', []))
                     if findings:
-                        st.markdown("#### High Risk Findings")
-                        high_risk_findings = [f for f in findings if isinstance(f, dict) and f.get('risk_level') == 'high']
-                        if high_risk_findings:
-                            for finding in high_risk_findings:
-                                st.markdown(f"**{finding.get('type', 'Unknown')}**: {finding.get('description', 'No description')}")
-                                st.markdown(f"*Location: {finding.get('location', 'Unknown')}*")
-                                st.markdown("---")
-                        else:
-                            st.info("No high risk findings detected.")
+                        # Prepare data for tabular display
+                        findings_data = []
+                        for finding in findings:
+                            if isinstance(finding, dict):
+                                findings_data.append({
+                                    "Risk Level": finding.get('risk_level', 'Unknown'),
+                                    "Type": finding.get('type', 'Unknown'),
+                                    "Location": finding.get('location', 'Unknown'),
+                                    "Description": finding.get('description', 'No description'),
+                                    "Article": finding.get('article', 'Unspecified')
+                                })
                         
-                        st.markdown("#### Medium Risk Findings")
-                        medium_risk_findings = [f for f in findings if isinstance(f, dict) and f.get('risk_level') == 'medium']
-                        if medium_risk_findings:
-                            for finding in medium_risk_findings[:3]:  # Show only first 3
-                                st.markdown(f"**{finding.get('type', 'Unknown')}**: {finding.get('description', 'No description')}")
-                                st.markdown(f"*Location: {finding.get('location', 'Unknown')}*")
-                                st.markdown("---")
+                        if findings_data:
+                            # Create a DataFrame for better display
+                            df = pd.DataFrame(findings_data)
                             
-                            if len(medium_risk_findings) > 3:
-                                st.info(f"... and {len(medium_risk_findings) - 3} more medium risk findings.")
+                            # Add CSS for better styling
+                            st.markdown("""
+                            <style>
+                            .risk-high {
+                                background-color: #FFCCCB !important;
+                                color: #700000 !important;
+                                font-weight: bold !important;
+                            }
+                            .risk-medium {
+                                background-color: #FFE4B5 !important;
+                                color: #704000 !important;
+                                font-weight: bold !important;
+                            }
+                            .risk-low {
+                                background-color: #E0FFFF !important;
+                                color: #003060 !important;
+                                font-weight: bold !important;
+                            }
+                            </style>
+                            """, unsafe_allow_html=True)
+                            
+                            # High risk findings section
+                            st.markdown("#### High Risk Findings")
+                            high_risk_df = df[df["Risk Level"] == "high"]
+                            if not high_risk_df.empty:
+                                st.dataframe(high_risk_df, use_container_width=True)
+                            else:
+                                st.info("✓ No high risk findings detected.")
+                            
+                            # Medium risk findings section
+                            st.markdown("#### Medium Risk Findings")
+                            medium_risk_df = df[df["Risk Level"] == "medium"]
+                            if not medium_risk_df.empty:
+                                st.dataframe(medium_risk_df, use_container_width=True)
+                            else:
+                                st.info("✓ No medium risk findings detected.")
+                            
+                            # Low risk findings section
+                            st.markdown("#### Low Risk Findings")
+                            low_risk_df = df[df["Risk Level"] == "low"]
+                            if not low_risk_df.empty:
+                                st.dataframe(low_risk_df, use_container_width=True)
+                            else:
+                                st.info("✓ No low risk findings detected.")
                         else:
-                            st.info("No medium risk findings detected.")
+                            st.info("No findings data could be extracted from the scan results.")
                     else:
                         st.info("No findings available to display.")
                 
-                # Add Netherlands GDPR section if applicable
+                # Add Netherlands GDPR section if applicable with improved styling
                 nl_specific = scan_result.get('nl_findings', [])
                 if nl_specific:
                     with st.expander("Netherlands GDPR (UAVG) Analysis", expanded=False):
-                        st.markdown("#### Netherlands-Specific Findings")
-                        for finding in nl_specific:
-                            st.markdown(f"**{finding.get('type', 'Unknown')}**: {finding.get('description', 'No description')}")
-                            st.markdown(f"*UAVG Article: {finding.get('article', 'Unspecified')}*")
-                            st.markdown("---")
+                        st.markdown("""
+                        <style>
+                        .nl-header {
+                            color: #1E40AF;
+                            border-bottom: 2px solid #93C5FD;
+                            padding-bottom: 8px;
+                            margin-bottom: 16px;
+                        }
+                        .uavg-article {
+                            color: #1E40AF;
+                            font-style: italic;
+                            margin-top: 4px;
+                        }
+                        .nl-recommendation {
+                            padding: 8px;
+                            background-color: #F0F9FF;
+                            border-left: 4px solid #3B82F6;
+                            margin: 8px 0;
+                        }
+                        </style>
+                        """, unsafe_allow_html=True)
                         
+                        st.markdown("<h4 class='nl-header'>Netherlands-Specific Findings</h4>", unsafe_allow_html=True)
+                        
+                        # Create a DataFrame for Netherlands findings
+                        nl_findings_data = []
+                        for finding in nl_specific:
+                            nl_findings_data.append({
+                                "Type": finding.get('type', 'Unknown'),
+                                "Description": finding.get('description', 'No description'),
+                                "UAVG Article": finding.get('article', 'Unspecified'),
+                                "Risk Level": finding.get('risk_level', 'medium')
+                            })
+                        
+                        if nl_findings_data:
+                            nl_df = pd.DataFrame(nl_findings_data)
+                            st.dataframe(nl_df, use_container_width=True)
+                        
+                        # Display Netherlands recommendations in a nicer format
                         if 'netherlands_recommendations' in scan_result:
-                            st.markdown("#### Netherlands GDPR Recommendations")
+                            st.markdown("<h4 class='nl-header'>Netherlands GDPR Recommendations</h4>", unsafe_allow_html=True)
                             for rec in scan_result['netherlands_recommendations']:
-                                st.markdown(f"• {rec}")
+                                st.markdown(f"<div class='nl-recommendation'>• {rec}</div>", unsafe_allow_html=True)
+                            
+                        # Add Netherlands GDPR reference information
+                        st.markdown("<h4 class='nl-header'>Netherlands GDPR Requirements Reference</h4>", unsafe_allow_html=True)
+                        
+                        nl_reference_data = [
+                            {"Requirement": "BSN Processing", "Description": "Dutch Citizen Service Number (BSN) may only be processed when explicitly authorized by law.", "Legal Basis": "UAVG Article 46"},
+                            {"Requirement": "Medical Data", "Description": "Medical data requires explicit consent and additional safeguards.", "Legal Basis": "UAVG Article 30"},
+                            {"Requirement": "Minor Consent", "Description": "Processing personal data of children under 16 requires parental consent.", "Legal Basis": "UAVG Article 5"}
+                        ]
+                        
+                        nl_ref_df = pd.DataFrame(nl_reference_data)
+                        st.dataframe(nl_ref_df, use_container_width=True)
             
             except Exception as e:
                 st.error(f"Error displaying report in browser: {str(e)}")
