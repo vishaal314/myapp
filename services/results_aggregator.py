@@ -409,9 +409,9 @@ class ResultsAggregator:
             print(f"Error retrieving user scans from file: {str(e)}")
             return []
 
-    def log_user_action(self, username: str, action: str, details: Dict[str, Any] = None) -> None:
+    def log_audit_event(self, username: str, action: str, details: Dict[str, Any] = None) -> None:
         """
-        Log a user action for audit purposes.
+        Log an audit event for tracking user actions and system activities.
         
         Args:
             username: Username performing the action
@@ -449,9 +449,21 @@ class ResultsAggregator:
             cursor.close()
             conn.close()
         except Exception as e:
-            print(f"Error logging user action: {str(e)}")
+            print(f"Error logging audit event: {str(e)}")
             self.use_file_storage = True
             self._log_user_action_file(log_id, username, action, details)
+    
+    # For backward compatibility
+    def log_user_action(self, username: str, action: str, details: Dict[str, Any] = None) -> None:
+        """
+        Legacy method for logging user actions, redirects to log_audit_event.
+        
+        Args:
+            username: Username performing the action
+            action: Type of action (e.g., 'login', 'scan', 'report_download')
+            details: Dictionary of additional details
+        """
+        return self.log_audit_event(username, action, details)
     
     def _log_user_action_file(self, log_id: str, username: str, action: str, details: Dict[str, Any] = None) -> None:
         """Log user action to file system."""
