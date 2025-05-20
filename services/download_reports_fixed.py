@@ -568,28 +568,75 @@ def display_report_options(scan_result: Dict[str, Any]):
     Args:
         scan_result: The scan result to generate reports for
     """
+    st.markdown("""
+    <style>
+    .download-button {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #e0e0e0;
+        background-color: #f8f9fa;
+        transition: all 0.3s;
+    }
+    .download-button:hover {
+        background-color: #eef2f7;
+        border-color: #c0c0c0;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("Download PDF Report"):
-            with st.spinner("Generating PDF report..."):
-                link_html = get_report_download_link(scan_result, format_type="pdf")
-                st.markdown(link_html, unsafe_allow_html=True)
+        if st.button("Download PDF Report", key="pdf_download", use_container_width=True):
+            try:
+                with st.spinner("Generating PDF report..."):
+                    link_html = get_report_download_link(scan_result, format_type="pdf")
+                    st.markdown(f"""
+                    <div class="download-button">
+                        {link_html}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.success("PDF report generated successfully!")
+            except Exception as e:
+                st.error(f"Error generating PDF report: {str(e)}")
+                st.info("Please try again or use the HTML report option instead.")
     
     with col2:
-        if st.button("Download HTML Report"):
-            with st.spinner("Generating HTML report..."):
-                link_html = get_report_download_link(scan_result, format_type="html")
-                st.markdown(link_html, unsafe_allow_html=True)
+        if st.button("Download HTML Report", key="html_download", use_container_width=True):
+            try:
+                with st.spinner("Generating HTML report..."):
+                    link_html = get_report_download_link(scan_result, format_type="html")
+                    st.markdown(f"""
+                    <div class="download-button">
+                        {link_html}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.success("HTML report generated successfully!")
+            except Exception as e:
+                st.error(f"Error generating HTML report: {str(e)}")
+                st.info("Please try again or use the PDF report option instead.")
     
-    # View in browser option
-    if st.button("View Report in Browser"):
+    # View in browser option with better styling and full-width button
+    st.markdown("<hr/>", unsafe_allow_html=True)
+    
+    if st.button("View Report in Browser", key="browser_view", use_container_width=True):
         with st.spinner("Preparing report for viewing..."):
             try:
                 # Extract key information for report header
                 scan_id = scan_result.get('scan_id', 'Unknown ID')
                 timestamp = scan_result.get('timestamp', scan_result.get('scan_timestamp', 'Unknown'))
                 region = scan_result.get('region', 'Global')
+                scan_type = scan_result.get('scan_type', 'Unknown Scan')
+                
+                # Display scan metadata in info box
+                st.info(f"""
+                **Scan Details**
+                - **ID:** {scan_id}
+                - **Type:** {scan_type}
+                - **Region:** {region}
+                - **Date:** {timestamp}
+                """)
                 
                 # Extract metrics
                 summary = scan_result.get('summary', {})
