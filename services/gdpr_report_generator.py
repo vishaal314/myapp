@@ -210,11 +210,48 @@ class GDPRReportGenerator:
     
     def _add_title_section(self, content: List, scan_result: Dict[str, Any]):
         """Add the title section to the report with modern design and logo."""
-        # Create a modern header with logo
-        # Create a header table with logo and title
-        logo_path = os.path.join(os.path.dirname(__file__), "..", "static", "generated-icon.png")
+        # Look for our modern SVG logos first, then fall back to the original logo
+        svg_logo_path = os.path.join(os.path.dirname(__file__), "..", "static", "dataguardian_logo.svg")
+        simple_logo_path = os.path.join(os.path.dirname(__file__), "..", "static", "dataguardian_logo_simple.svg")
+        original_logo_path = os.path.join(os.path.dirname(__file__), "..", "static", "generated-icon.png")
+        
+        # Check for SVG logos first (convert to PNG if needed)
+        if os.path.exists(svg_logo_path):
+            logo_path = svg_logo_path
+            # For PDF generation, we need to convert SVG to a format reportlab can use
+            # Since reportlab doesn't handle SVG directly
+            try:
+                from reportlab.graphics import renderPM
+                from svglib.svglib import svg2rlg
+                
+                temp_png_path = os.path.join(os.path.dirname(__file__), "..", "static", "temp_logo.png")
+                drawing = svg2rlg(logo_path)
+                renderPM.drawToFile(drawing, temp_png_path, fmt="PNG")
+                logo_path = temp_png_path
+            except Exception as e:
+                # If SVG conversion fails, use original logo
+                logo_path = original_logo_path
+                print(f"SVG conversion error: {e}")
+        elif os.path.exists(simple_logo_path):
+            logo_path = simple_logo_path
+            # Try to convert the simple logo instead
+            try:
+                from reportlab.graphics import renderPM
+                from svglib.svglib import svg2rlg
+                
+                temp_png_path = os.path.join(os.path.dirname(__file__), "..", "static", "temp_logo.png")
+                drawing = svg2rlg(logo_path)
+                renderPM.drawToFile(drawing, temp_png_path, fmt="PNG")
+                logo_path = temp_png_path
+            except Exception as e:
+                # If SVG conversion fails, use original logo
+                logo_path = original_logo_path
+                print(f"SVG conversion error: {e}")
+        else:
+            logo_path = original_logo_path
+            
+        # If no logo is found, create header without logo
         if not os.path.exists(logo_path):
-            # If icon doesn't exist, create header without logo
             header_data = [[
                 Paragraph("DataGuardian Pro", ParagraphStyle(
                     name='CompanyName',
@@ -226,11 +263,11 @@ class GDPRReportGenerator:
         else:
             # Logo exists, create header with logo
             header_data = [[
-                Image(logo_path, width=1.2*inch, height=1.2*inch),
+                Image(logo_path, width=1.4*inch, height=1.4*inch),
                 Paragraph("DataGuardian Pro", ParagraphStyle(
                     name='CompanyName',
                     parent=self.styles['CustomTitle'],
-                    fontSize=22,
+                    fontSize=22, 
                     textColor=colors.HexColor('#1e40af')
                 ))
             ]]
