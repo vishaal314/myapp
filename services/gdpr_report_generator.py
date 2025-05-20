@@ -42,52 +42,99 @@ class GDPRReportGenerator:
     
     def _initialize_custom_styles(self):
         """Initialize custom paragraph styles for the report."""
-        # Add custom styles - using unique names to prevent conflicts
-        if 'CustomTitle' not in self.styles:
-            self.styles.add(ParagraphStyle(
-                name='CustomTitle',
-                parent=self.styles['Heading1'],
-                fontSize=18,
-                spaceAfter=12,
-                textColor=colors.darkblue
-            ))
+        # Add custom styles with modern typography and colors
+        # Main title style
+        self.styles.add(ParagraphStyle(
+            name='CustomTitle',
+            parent=self.styles['Heading1'],
+            fontSize=20,
+            spaceAfter=12,
+            textColor=colors.HexColor('#1e3a8a'),  # Deep blue
+            leading=24,
+            fontName='Helvetica-Bold'
+        ))
         
-        if 'CustomSubtitle' not in self.styles:
-            self.styles.add(ParagraphStyle(
-                name='CustomSubtitle',
-                parent=self.styles['Heading2'],
-                fontSize=16,
-                spaceAfter=10,
-                textColor=colors.darkblue
-            ))
+        # Subtitle style
+        self.styles.add(ParagraphStyle(
+            name='CustomSubtitle',
+            parent=self.styles['Heading2'],
+            fontSize=16,
+            spaceAfter=10,
+            textColor=colors.HexColor('#2563eb'),  # Bright blue
+            leading=20,
+            fontName='Helvetica-Bold'
+        ))
         
+        # Section title style
         self.styles.add(ParagraphStyle(
             name='SectionTitle',
             parent=self.styles['Heading3'],
             fontSize=14,
             spaceAfter=8,
-            textColor=colors.darkblue
+            textColor=colors.HexColor('#1e40af'),  # Medium blue
+            leading=18,
+            fontName='Helvetica-Bold',
+            borderWidth=0,
+            borderColor=colors.HexColor('#e5e7eb'),
+            borderPadding=6,
+            borderRadius=4
         ))
         
+        # Risk level styles
         self.styles.add(ParagraphStyle(
             name='HighRisk',
             parent=self.styles['Normal'],
-            fontSize=11,
-            textColor=colors.red
+            fontSize=12,
+            textColor=colors.HexColor('#dc2626'),  # Bright red
+            leading=16,
+            fontName='Helvetica-Bold'
         ))
         
         self.styles.add(ParagraphStyle(
             name='MediumRisk',
             parent=self.styles['Normal'],
-            fontSize=11,
-            textColor=colors.orange
+            fontSize=12,
+            textColor=colors.HexColor('#ea580c'),  # Bright orange
+            leading=16,
+            fontName='Helvetica-Bold'
         ))
         
         self.styles.add(ParagraphStyle(
             name='LowRisk',
             parent=self.styles['Normal'],
-            fontSize=11,
-            textColor=colors.green
+            fontSize=12,
+            textColor=colors.HexColor('#15803d'),  # Deep green
+            leading=16,
+            fontName='Helvetica-Bold'
+        ))
+        
+        # Enhanced normal text style
+        self.styles.add(ParagraphStyle(
+            name='EnhancedNormal',
+            parent=self.styles['Normal'],
+            fontSize=10,
+            leading=14,
+            spaceBefore=6,
+            spaceAfter=6,
+            textColor=colors.HexColor('#374151')  # Dark gray
+        ))
+        
+        # Callout style for important information
+        self.styles.add(ParagraphStyle(
+            name='Callout',
+            parent=self.styles['Normal'],
+            fontSize=10,
+            leading=14,
+            leftIndent=20,
+            rightIndent=20,
+            spaceBefore=10,
+            spaceAfter=10,
+            backColor=colors.HexColor('#f3f4f6'),  # Light gray background
+            borderColor=colors.HexColor('#d1d5db'),  # Border color
+            borderWidth=1,
+            borderPadding=8,
+            borderRadius=4,
+            textColor=colors.HexColor('#4b5563')  # Medium gray text
         ))
     
     def generate_pdf_report(self, scan_result: Dict[str, Any]) -> Tuple[bool, str]:
@@ -271,7 +318,7 @@ class GDPRReportGenerator:
     def _add_summary_section(self, content: List, scan_result: Dict[str, Any]):
         """Add the summary section to the report."""
         content.append(Paragraph("Executive Summary", self.styles['SectionTitle']))
-        content.append(Spacer(1, 0.1 * inch))
+        content.append(Spacer(1, 0.2 * inch))
         
         # Extract summary data
         summary = scan_result.get('summary', {})
@@ -283,46 +330,131 @@ class GDPRReportGenerator:
         low_risk = summary.get('low_risk_count', scan_result.get('low_risk_count', 0))
         overall_score = summary.get('overall_compliance_score', 100 - (high_risk * 15 + medium_risk * 7 + low_risk * 3))
         
-        # Create summary text
+        # Create summary text with enhanced formatting
         summary_text = f"""
-        This report presents the results of a GDPR compliance scan conducted on the repository.
-        The scan analyzed {files_scanned} files out of a total of {files_scanned + files_skipped} files in the repository.
+        <para>This report presents the results of a GDPR compliance scan conducted on the repository.
+        The scan analyzed <b>{files_scanned}</b> files out of a total of <b>{files_scanned + files_skipped}</b> files in the repository.</para>
         
-        The scan identified {pii_instances} instances of potential personal data or compliance issues:
-        - {high_risk} high-risk findings
-        - {medium_risk} medium-risk findings
-        - {low_risk} low-risk findings
-        
-        Overall compliance score: {int(overall_score)}/100
+        <para>The scan identified <b>{pii_instances}</b> instances of potential personal data or compliance issues:</para>
+        <bullet>&bull;</bullet><para leftIndent=20><font color="#dc2626"><b>{high_risk}</b></font> high-risk findings</para>
+        <bullet>&bull;</bullet><para leftIndent=20><font color="#ea580c"><b>{medium_risk}</b></font> medium-risk findings</para>
+        <bullet>&bull;</bullet><para leftIndent=20><font color="#15803d"><b>{low_risk}</b></font> low-risk findings</para>
         """
         
-        content.append(Paragraph(summary_text, self.styles['Normal']))
+        content.append(Paragraph(summary_text, self.styles['EnhancedNormal']))
         content.append(Spacer(1, 0.25 * inch))
         
-        # Add compliance score table with color coding
-        score_color = colors.green
-        if overall_score < 70:
-            score_color = colors.orange
-        if overall_score < 50:
-            score_color = colors.red
+        # Add compliance score with modern styling
+        score_color = colors.HexColor('#15803d')  # Green
+        score_bg_color = colors.HexColor('#dcfce7')  # Light green
+        score_label = "Excellent"
+        
+        if overall_score < 80:
+            score_color = colors.HexColor('#ca8a04')  # Yellow
+            score_bg_color = colors.HexColor('#fef9c3')  # Light yellow
+            score_label = "Good"
             
+        if overall_score < 65:
+            score_color = colors.HexColor('#ea580c')  # Orange
+            score_bg_color = colors.HexColor('#ffedd5')  # Light orange
+            score_label = "Needs Improvement"
+            
+        if overall_score < 50:
+            score_color = colors.HexColor('#dc2626')  # Red
+            score_bg_color = colors.HexColor('#fee2e2')  # Light red
+            score_label = "Requires Immediate Action"
+            
+        # Create a visually appealing score display
         score_data = [
-            ["Overall Compliance Score", f"{int(overall_score)}/100"]
+            ["GDPR Compliance Score", ""]
         ]
         
-        score_table = Table(score_data, colWidths=[3 * inch, 2 * inch])
-        score_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (1, 0), (1, 0), 14),
-            ('TEXTCOLOR', (1, 0), (1, 0), score_color),
-            ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        # Create a nested table for the score to get a circular appearance
+        score_circle_data = [[f"{int(overall_score)}"]]
+        score_circle = Table(score_circle_data, colWidths=[1.2 * inch])
+        score_circle.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), score_bg_color),
+            ('TEXTCOLOR', (0, 0), (-1, -1), score_color),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 28),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
-            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('ROUNDEDCORNERS', [10, 10, 10, 10]),
         ]))
         
-        content.append(score_table)
+        # Create the score label
+        score_label_data = [[score_label]]
+        score_label_table = Table(score_label_data, colWidths=[1.5 * inch])
+        score_label_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.white),
+            ('TEXTCOLOR', (0, 0), (-1, -1), score_color),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        # Main score container
+        score_container_data = [
+            ["Overall GDPR Compliance Score"],
+            [score_circle],
+            [f"out of 100"],
+            [score_label_table]
+        ]
+        
+        score_container = Table(score_container_data, colWidths=[2 * inch])
+        score_container.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.white),
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.HexColor('#1e40af')),  # Blue title
+            ('TEXTCOLOR', (0, 2), (0, 2), colors.HexColor('#6b7280')),  # Gray "out of 100"
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 2), (0, 2), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (0, 0), 12),
+            ('FONTSIZE', (0, 2), (0, 2), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (0, 0), 10),
+            ('TOPPADDING', (0, 2), (0, 2), 6),
+            ('BOTTOMPADDING', (0, 2), (0, 2), 12),
+        ]))
+        
+        # Create a summary stats table
+        stats_data = [
+            [f"Files Scanned", f"PII Instances", f"High Risk Findings"],
+            [f"{files_scanned}", f"{pii_instances}", f"{high_risk}"]
+        ]
+        
+        stats_table = Table(stats_data, colWidths=[1.5 * inch, 1.5 * inch, 1.5 * inch])
+        stats_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f3f4f6')),  # Light gray header
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#4b5563')),  # Gray header text
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 1), (-1, 1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('FONTSIZE', (0, 1), (-1, 1), 12),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb')),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('TOPPADDING', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, 1), 8),
+            ('TOPPADDING', (0, 1), (-1, 1), 8),
+        ]))
+        
+        # Combine score and stats into a single layout
+        combined_data = [[score_container, stats_table]]
+        combined_table = Table(combined_data, colWidths=[2.5 * inch, 4.5 * inch])
+        combined_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+            ('LEFTPADDING', (0, 0), (0, 0), 0),
+            ('RIGHTPADDING', (0, 0), (0, 0), 10),
+            ('LEFTPADDING', (1, 0), (1, 0), 10),
+            ('RIGHTPADDING', (1, 0), (1, 0), 0),
+        ]))
+        
+        content.append(combined_table)
         content.append(Spacer(1, 0.5 * inch))
     
     def _add_findings_section(self, content: List, scan_result: Dict[str, Any]):
