@@ -105,20 +105,8 @@ from utils.animated_language_switcher import animated_language_switcher, get_wel
 initialize()
 
 # Debug translations function for specific keys
-def display_soc2_scan_results(scan_results):
-    """
-    Use the enhanced SOC2 display function to show scan results.
-    This function uses the enhanced scanner module to display SOC2 findings with
-    proper TSC criteria mapping.
-    
-    Args:
-        scan_results: Dictionary containing SOC2 scan results
-    """
-    # Import is already at the top of file: 
-    # from services.enhanced_soc2_scanner import display_soc2_scan_results
-    # We'll call our enhanced implementation directly
-    from services.enhanced_soc2_scanner import display_soc2_scan_results as enhanced_display
-    enhanced_display(scan_results)
+# We have imported display_soc2_scan_results at the top of the file
+# No need to redefine it here, which could cause conflicts
 
 def debug_translations():
     """Print debug information about critical translation keys."""
