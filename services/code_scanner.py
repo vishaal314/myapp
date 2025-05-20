@@ -788,6 +788,24 @@ class CodeScanner:
                 entropy_findings = self._detect_high_entropy_strings(content, file_path)
                 all_pii.extend(entropy_findings)
             
+            # Add Netherlands-specific GDPR detection if region is Netherlands
+            if self.region == "Netherlands":
+                try:
+                    # Run Netherlands-specific detection without disrupting existing flow
+                    nl_findings = detect_nl_violations(content)
+                    
+                    # Add file metadata to findings
+                    for finding in nl_findings:
+                        finding['location'] = f'File: {os.path.basename(file_path)}'
+                        if 'description' not in finding:
+                            finding['description'] = f"Netherlands GDPR compliance issue: {finding.get('type')}"
+                    
+                    # Add to existing findings
+                    all_pii.extend(nl_findings)
+                except Exception as e:
+                    # Log but don't disrupt existing scanner
+                    print(f"Netherlands detection warning: {str(e)}")
+            
             # Create results with detailed metadata
             result = {
                 'file_name': os.path.basename(file_path),

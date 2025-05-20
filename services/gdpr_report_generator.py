@@ -794,41 +794,117 @@ class GDPRReportGenerator:
         # Check for Netherlands-specific issues
         netherlands_issues = False
         findings = scan_result.get('formatted_findings', scan_result.get('findings', []))
+        nl_findings = []
         
+        # Extract Netherlands-specific findings
         for finding in findings:
             if isinstance(finding, dict):
-                if finding.get('type') in ['BSN', 'MEDICAL_DATA', 'MINOR_CONSENT']:
+                if finding.get('type') in ['BSN', 'MEDICAL_DATA', 'MINOR_CONSENT'] or finding.get('gdpr_principle') == 'netherlands_specific':
                     netherlands_issues = True
-                    break
+                    nl_findings.append(finding)
         
         # Check summary for netherlands_specific_issues flag
         summary = scan_result.get('summary', {})
         if 'netherlands_specific_issues' in summary and summary['netherlands_specific_issues']:
             netherlands_issues = True
         
+        # Check netherlands_compliance section if available
+        nl_compliance = scan_result.get('netherlands_compliance', {})
+        if nl_compliance.get('issues_found', False):
+            netherlands_issues = True
+            if 'findings' in nl_compliance and nl_compliance['findings']:
+                nl_findings.extend(nl_compliance['findings'])
+        
         if netherlands_issues:
             content.append(Paragraph("⚠️ This repository may contain data that requires special handling under Dutch GDPR implementation (UAVG).", self.styles['HighRisk']))
             content.append(Spacer(1, 0.1 * inch))
+            
+            # Check if we have detailed findings to display
+            if nl_findings:
+                content.append(Paragraph("Netherlands-Specific Compliance Issues", self.styles['NormalBold']))
+                content.append(Spacer(1, 0.1 * inch))
+                
+                # Create table with NL-specific findings
+                findings_data = [["Type", "Description", "Risk Level"]]
+                for finding in nl_findings:
+                    description = finding.get('description', finding.get('value', 'No description'))
+                    # Limit description length
+                    if len(description) > 80:
+                        description = description[:77] + "..."
+                        
+                    findings_data.append([
+                        finding.get('type', 'Unknown'),
+                        description,
+                        finding.get('risk_level', 'Medium')
+                    ])
+                
+                nl_findings_table = Table(findings_data, colWidths=[1.2 * inch, 4.1 * inch, 1.2 * inch])
+                nl_findings_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f3f4f6')),
+                    ('TEXTCOLOR', (0, 1), (0, -1), colors.HexColor('#1e40af')),
+                    ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('WORDWRAP', (0, 0), (-1, -1), True),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ]))
+                
+                content.append(nl_findings_table)
+                content.append(Spacer(1, 0.2 * inch))
+                
+                # Add Netherlands-specific recommendations if available
+                recommendations = []
+                if nl_compliance.get('recommendations'):
+                    recommendations = nl_compliance['recommendations']
+                else:
+                    # Generate recommendations based on finding types
+                    if any(f.get('type') == 'BSN' for f in nl_findings):
+                        recommendations.append("Verify all BSN usage is explicitly authorized by law (UAVG Article 46)")
+                    
+                    if any(f.get('type') == 'MINOR_CONSENT' for f in nl_findings):
+                        recommendations.append("Implement proper age verification for users under 16 years (UAVG Article 5)")
+                    
+                    if any(f.get('type') == 'MEDICAL_DATA' for f in nl_findings):
+                        recommendations.append("Ensure medical data has additional safeguards per UAVG Article 30")
+                
+                if recommendations:
+                    content.append(Paragraph("Netherlands GDPR Recommendations", self.styles['NormalBold']))
+                    content.append(Spacer(1, 0.1 * inch))
+                    
+                    for recommendation in recommendations:
+                        content.append(Paragraph(f"• {recommendation}", self.styles['Normal']))
+                    
+                    content.append(Spacer(1, 0.2 * inch))
         else:
             content.append(Paragraph("✓ No Netherlands-specific GDPR compliance issues detected.", self.styles['LowRisk']))
             content.append(Spacer(1, 0.1 * inch))
         
-        # Add Netherlands-specific requirements table
+        # Add Netherlands-specific requirements table (always show this for reference)
+        content.append(Paragraph("Dutch GDPR (UAVG) Requirements", self.styles['NormalBold']))
+        content.append(Spacer(1, 0.1 * inch))
+        
         nl_requirements = [
-            ["Requirement", "Description", "Relevant When"],
-            ["BSN Processing", "The Dutch Citizen Service Number (BSN) may only be processed when explicitly authorized by law.", "Processing government or healthcare data"],
-            ["Medical Data", "Medical data requires explicit consent and additional safeguards under UAVG Article 30.", "Processing health-related information"],
-            ["Minors Consent", "Consent for data processing for children under 16 must be given by parents/guardians.", "Services targeting minors"],
-            ["Data Breach", "The Dutch DPA (AP) requires notification within 72 hours for significant breaches.", "Any data breach involving personal data"]
+            ["Requirement", "Description", "Legal Basis"],
+            ["BSN Processing", "Dutch Citizen Service Number (BSN) may only be processed when explicitly authorized by law.", "UAVG Article 46"],
+            ["Medical Data", "Medical data requires explicit consent and additional safeguards.", "UAVG Article 30"],
+            ["Minors Consent", "Parental consent required for children under 16 years (higher than some EU countries).", "UAVG Article 5"],
+            ["Data Breach", "The Dutch DPA (AP) requires notification within 72 hours for significant breaches.", "GDPR Article 33"]
         ]
         
-        nl_table = Table(nl_requirements, colWidths=[1.2 * inch, 3 * inch, 2.3 * inch])
+        nl_table = Table(nl_requirements, colWidths=[1.2 * inch, 3.8 * inch, 1.5 * inch])
         nl_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f3f4f6')),
             ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('WORDWRAP', (0, 0), (-1, -1), True),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
         ]))
         
         content.append(nl_table)
