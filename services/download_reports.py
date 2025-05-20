@@ -161,6 +161,35 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
                     font-size: 12px;
                     color: #718096;
                 }
+                /* Enhanced styling for Netherlands GDPR section */
+                .netherlands-section {
+                    border-left: 4px solid #1e40af;
+                    padding-left: 15px;
+                    margin: 20px 0;
+                }
+                .nl-findings-table th {
+                    background-color: #e6f0ff;
+                }
+                .netherlands-title {
+                    color: #1e40af;
+                    font-weight: bold;
+                    border-bottom: 1px solid #cbd5e0;
+                    padding-bottom: 5px;
+                }
+                .netherlands-subtitle {
+                    color: #2c5282;
+                    margin-top: 15px;
+                    margin-bottom: 10px;
+                    font-size: 16px;
+                    font-weight: bold;
+                }
+                .nl-recommendations {
+                    background-color: #f0f9ff;
+                    border: 1px solid #bfdbfe;
+                    border-radius: 5px;
+                    padding: 10px 15px;
+                    margin: 15px 0;
+                }
             </style>
         </head>
         <body>
@@ -406,59 +435,138 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
         
         # Add Netherlands-specific compliance section
         html += """
-                <h2>Dutch GDPR (UAVG) Specific Compliance</h2>
+                <div class="netherlands-section">
+                <h2 class="netherlands-title">Dutch GDPR (UAVG) Specific Compliance</h2>
         """
         
         # Check for Netherlands-specific issues
         netherlands_issues = False
+        nl_findings = []
+        
+        # Extract Netherlands-specific findings
         for finding in findings:
             if isinstance(finding, dict):
-                if finding.get('type') in ['BSN', 'MEDICAL_DATA', 'MINOR_CONSENT']:
+                if finding.get('type') in ['BSN', 'MEDICAL_DATA', 'MINOR_CONSENT'] or finding.get('gdpr_principle') == 'netherlands_specific':
                     netherlands_issues = True
-                    break
+                    nl_findings.append(finding)
         
         # Check summary for netherlands_specific_issues flag
         if 'netherlands_specific_issues' in summary and summary['netherlands_specific_issues']:
             netherlands_issues = True
         
+        # Check netherlands_compliance section if available
+        nl_compliance = scan_result.get('netherlands_compliance', {})
+        if nl_compliance.get('issues_found', False):
+            netherlands_issues = True
+            if 'findings' in nl_compliance and nl_compliance['findings']:
+                nl_findings.extend(nl_compliance['findings'])
+        
         if netherlands_issues:
             html += """
                 <p class="high-risk">⚠️ This repository may contain data that requires special handling under Dutch GDPR implementation (UAVG).</p>
             """
+            
+            # Show detailed findings if available
+            if nl_findings:
+                html += """
+                    <h3 class="netherlands-subtitle">Netherlands-Specific Compliance Issues</h3>
+                    <table class="nl-findings-table">
+                        <tr>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Risk Level</th>
+                        </tr>
+                """
+                
+                # Add each finding to the table
+                for finding in nl_findings:
+                    description = finding.get('description', finding.get('value', 'No description'))
+                    # Limit description length
+                    if len(description) > 80:
+                        description = description[:77] + "..."
+                    
+                    risk_level = finding.get('risk_level', 'Medium')
+                    risk_class = "high-risk" if risk_level.lower() == "high" else ("medium-risk" if risk_level.lower() == "medium" else "low-risk")
+                    
+                    html += f"""
+                        <tr>
+                            <td>{finding.get('type', 'Unknown')}</td>
+                            <td>{description}</td>
+                            <td class="{risk_class}">{risk_level}</td>
+                        </tr>
+                    """
+                
+                html += """
+                    </table>
+                """
+                
+                # Add Netherlands-specific recommendations if available
+                recommendations = []
+                if nl_compliance.get('recommendations'):
+                    recommendations = nl_compliance['recommendations']
+                else:
+                    # Generate recommendations based on finding types
+                    if any(f.get('type') == 'BSN' for f in nl_findings):
+                        recommendations.append("Verify all BSN usage is explicitly authorized by law (UAVG Article 46)")
+                    
+                    if any(f.get('type') == 'MINOR_CONSENT' for f in nl_findings):
+                        recommendations.append("Implement proper age verification for users under 16 years (UAVG Article 5)")
+                    
+                    if any(f.get('type') == 'MEDICAL_DATA' for f in nl_findings):
+                        recommendations.append("Ensure medical data has additional safeguards per UAVG Article 30")
+                
+                if recommendations:
+                    html += """
+                        <h3 class="netherlands-subtitle">Netherlands GDPR Recommendations</h3>
+                        <div class="nl-recommendations">
+                        <ul>
+                    """
+                    
+                    for recommendation in recommendations:
+                        html += f"""
+                            <li>{recommendation}</li>
+                        """
+                    
+                    html += """
+                        </ul>
+                        </div>
+                    """
         else:
             html += """
                 <p class="low-risk">✓ No Netherlands-specific GDPR compliance issues detected.</p>
             """
         
-        # Add Netherlands-specific requirements table
+        # Add Netherlands-specific requirements table (always show this for reference)
         html += """
+                <h3 class="netherlands-subtitle">Dutch GDPR (UAVG) Requirements</h3>
                 <table>
                     <tr>
                         <th>Requirement</th>
                         <th>Description</th>
-                        <th>Relevant When</th>
+                        <th>Legal Basis</th>
                     </tr>
                     <tr>
                         <td>BSN Processing</td>
-                        <td>The Dutch Citizen Service Number (BSN) may only be processed when explicitly authorized by law.</td>
-                        <td>Processing government or healthcare data</td>
+                        <td>Dutch Citizen Service Number (BSN) may only be processed when explicitly authorized by law.</td>
+                        <td>UAVG Article 46</td>
                     </tr>
                     <tr>
                         <td>Medical Data</td>
-                        <td>Medical data requires explicit consent and additional safeguards under UAVG Article 30.</td>
-                        <td>Processing health-related information</td>
+                        <td>Medical data requires explicit consent and additional safeguards.</td>
+                        <td>UAVG Article 30</td>
                     </tr>
                     <tr>
                         <td>Minors Consent</td>
-                        <td>Consent for data processing for children under 16 must be given by parents/guardians.</td>
-                        <td>Services targeting minors</td>
+                        <td>Parental consent required for children under 16 years (higher than some EU countries).</td>
+                        <td>UAVG Article 5</td>
                     </tr>
                     <tr>
                         <td>Data Breach</td>
                         <td>The Dutch DPA (AP) requires notification within 72 hours for significant breaches.</td>
-                        <td>Any data breach involving personal data</td>
+                        <td>GDPR Article 33</td>
                     </tr>
                 </table>
+                </div>
         """
         
         # Add footer
