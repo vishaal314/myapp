@@ -9,6 +9,7 @@ import io
 import base64
 import logging
 from typing import Dict, Any, Optional, Tuple
+from datetime import datetime
 
 import streamlit as st
 from services.gdpr_report_generator import generate_gdpr_report
@@ -16,7 +17,7 @@ from services.gdpr_report_generator import generate_gdpr_report
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def get_report_download_link(scan_result: Dict[str, Any], format_type: str = "pdf") -> str:
+def get_report_download_link(scan_result: Dict[str, Any], format_type: str = "pdf") -> Tuple[bool, str]:
     """
     Generate a download link for a scan report.
     
@@ -25,7 +26,7 @@ def get_report_download_link(scan_result: Dict[str, Any], format_type: str = "pd
         format_type: The format of the report ('pdf' or 'html')
         
     Returns:
-        Download link as a string
+        Tuple of (success, download_link)
     """
     try:
         if format_type == "pdf":
@@ -38,35 +39,41 @@ def get_report_download_link(scan_result: Dict[str, Any], format_type: str = "pd
                 
                 # Generate a filename
                 scan_id = scan_result.get('scan_id', 'scan')
-                filename = f"gdpr_compliance_report_{scan_id}.pdf"
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"gdpr_compliance_report_{scan_id}_{timestamp}.pdf"
                 
-                # Create download link
-                href = f'<a href="data:application/pdf;base64,{b64_content}" download="{filename}">Download GDPR Compliance Report (PDF)</a>'
-                return href
+                # Create download link - adding target="_blank" to open in new tab
+                href = f'<a href="data:application/pdf;base64,{b64_content}" download="{filename}" target="_blank">Download GDPR Compliance Report (PDF)</a>'
+                return True, href
             else:
-                return "Error generating PDF report"
+                return False, "Error generating PDF report: No report content returned"
                 
         elif format_type == "html":
             # Generate HTML report - simplified version
             html_report = generate_html_report(scan_result)
             
-            # Encode the HTML content
-            b64_content = base64.b64encode(html_report.encode()).decode()
-            
-            # Generate a filename
-            scan_id = scan_result.get('scan_id', 'scan')
-            filename = f"gdpr_compliance_report_{scan_id}.html"
-            
-            # Create download link
-            href = f'<a href="data:text/html;base64,{b64_content}" download="{filename}">Download GDPR Compliance Report (HTML)</a>'
-            return href
+            if html_report:
+                # Encode the HTML content
+                b64_content = base64.b64encode(html_report.encode()).decode()
+                
+                # Generate a filename
+                scan_id = scan_result.get('scan_id', 'scan')
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"gdpr_compliance_report_{scan_id}_{timestamp}.html"
+                
+                # Create download link - adding target="_blank" to open in new tab
+                href = f'<a href="data:text/html;base64,{b64_content}" download="{filename}" target="_blank">Download GDPR Compliance Report (HTML)</a>'
+                return True, href
+            else:
+                return False, "Error generating HTML report: No content generated"
             
         else:
-            return "Unsupported format type"
+            return False, "Unsupported format type"
     
     except Exception as e:
-        logger.error(f"Error generating download link: {str(e)}")
-        return f"Error generating report: {str(e)}"
+        error_msg = f"Error generating report: {str(e)}"
+        logger.error(error_msg)
+        return False, error_msg
 
 def generate_html_report(scan_result: Dict[str, Any]) -> str:
     """
@@ -585,36 +592,80 @@ def display_report_options(scan_result: Dict[str, Any]):
     </style>
     """, unsafe_allow_html=True)
     
+    # Add a container for download links to persist across reruns
+    download_container = st.container()
+    
+    # Use session state to track if reports have been generated
+    if 'pdf_report_link' not in st.session_state:
+        st.session_state.pdf_report_link = None
+    if 'html_report_link' not in st.session_state:
+        st.session_state.html_report_link = None
+    
+    # Display any previously generated reports
+    with download_container:
+        if st.session_state.pdf_report_link:
+            st.markdown(f"""
+            <div class="download-button">
+                {st.session_state.pdf_report_link}
+            </div>
+            """, unsafe_allow_html=True)
+        
+        if st.session_state.html_report_link:
+            st.markdown(f"""
+            <div class="download-button">
+                {st.session_state.html_report_link}
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # Create column layout for download buttons
     col1, col2 = st.columns(2)
     
+    # PDF Report Button
     with col1:
-        if st.button("Download PDF Report", key="pdf_download", use_container_width=True):
+        if st.button("Generate PDF Report", key="pdf_download", use_container_width=True):
             try:
-                with st.spinner("Generating PDF report..."):
-                    link_html = get_report_download_link(scan_result, format_type="pdf")
-                    st.markdown(f"""
-                    <div class="download-button">
-                        {link_html}
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.success("PDF report generated successfully!")
+                with st.spinner("Generating PDF report... Please wait, this may take a moment."):
+                    success, link_html = get_report_download_link(scan_result, format_type="pdf")
+                    if success:
+                        # Store in session state to persist across reruns
+                        st.session_state.pdf_report_link = link_html
+                        
+                        # Display success and link
+                        st.success("✅ PDF report generated successfully! Click the link below to download.")
+                        st.markdown(f"""
+                        <div class="download-button">
+                            {link_html}
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.error(f"⚠️ {link_html}")
+                        st.info("Please try again or use the HTML report option instead.")
             except Exception as e:
-                st.error(f"Error generating PDF report: {str(e)}")
+                st.error(f"⚠️ Error generating PDF report: {str(e)}")
                 st.info("Please try again or use the HTML report option instead.")
     
+    # HTML Report Button
     with col2:
-        if st.button("Download HTML Report", key="html_download", use_container_width=True):
+        if st.button("Generate HTML Report", key="html_download", use_container_width=True):
             try:
-                with st.spinner("Generating HTML report..."):
-                    link_html = get_report_download_link(scan_result, format_type="html")
-                    st.markdown(f"""
-                    <div class="download-button">
-                        {link_html}
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.success("HTML report generated successfully!")
+                with st.spinner("Generating HTML report... Please wait, this may take a moment."):
+                    success, link_html = get_report_download_link(scan_result, format_type="html")
+                    if success:
+                        # Store in session state to persist across reruns
+                        st.session_state.html_report_link = link_html
+                        
+                        # Display success and link
+                        st.success("✅ HTML report generated successfully! Click the link below to download.")
+                        st.markdown(f"""
+                        <div class="download-button">
+                            {link_html}
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.error(f"⚠️ {link_html}")
+                        st.info("Please try again or use the PDF report option instead.")
             except Exception as e:
-                st.error(f"Error generating HTML report: {str(e)}")
+                st.error(f"⚠️ Error generating HTML report: {str(e)}")
                 st.info("Please try again or use the PDF report option instead.")
     
     # View in browser option with better styling and full-width button
