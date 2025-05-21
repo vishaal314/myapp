@@ -3249,11 +3249,10 @@ else:
                             with report_tab:
                                 st.write("### Export Report Options")
                                 
-                                # Import the report display functionality with fixed compliance score handling
-                                from services.download_reports_fixed import display_report_options, generate_html_report
-                                from services.report_generator import generate_report as generate_pdf_report
+                                # Import our improved report download functionality
+                                from services.improved_report_download import display_report_options
                                 
-                                # Use the comprehensive report display module
+                                # Use the enhanced report display module with better download functionality
                                 display_report_options(result)
                                 
                                 # Ensure we have all necessary data for report generation
