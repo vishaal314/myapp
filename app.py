@@ -3990,8 +3990,9 @@ else:
                         </style>
                         """, unsafe_allow_html=True)
                         
-                        # Run our enhanced DPIA form
-                        run_enhanced_dpia()
+                        # Run our new GDPR 7-step DPIA workflow
+                        from gdpr_7step_dpia import run_gdpr_7step_dpia
+                        run_gdpr_7step_dpia()
                         
                         # Stop normal flow to proceed with only the DPIA form
                         scan_running = False
