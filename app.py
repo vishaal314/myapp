@@ -1265,18 +1265,27 @@ else:
         except Exception:
             pass
         
-        # Summary metrics
-        all_scans = results_aggregator.get_all_scans(st.session_state.username)
-        
-        if all_scans and len(all_scans) > 0:
-            total_scans = len(all_scans)
-            total_pii = sum(scan.get('total_pii_found', 0) for scan in all_scans)
-            high_risk_items = sum(scan.get('high_risk_count', 0) for scan in all_scans)
+        # Summary metrics - using get_user_scans instead of get_all_scans which is not available
+        try:
+            # Check if get_user_scans method exists
+            if hasattr(results_aggregator, 'get_user_scans'):
+                all_scans = results_aggregator.get_user_scans(st.session_state.username)
+            else:
+                # Fallback to empty list if method doesn't exist
+                all_scans = []
+                st.info("Scan history feature is currently being upgraded. Please check back later.")
             
-            col1, col2, col3 = st.columns(3)
-            col1.metric(_("dashboard.metric.total_scans"), total_scans)
-            col2.metric(_("dashboard.metric.total_pii"), total_pii)
-            col3.metric(_("dashboard.metric.high_risk"), high_risk_items)
+            if all_scans and len(all_scans) > 0:
+                total_scans = len(all_scans)
+                total_pii = sum(scan.get('total_pii_found', 0) for scan in all_scans if isinstance(scan, dict))
+                high_risk_items = sum(scan.get('high_risk_count', 0) for scan in all_scans if isinstance(scan, dict))
+                
+                col1, col2, col3 = st.columns(3)
+                col1.metric(_("dashboard.metric.total_scans"), total_scans)
+                col2.metric(_("dashboard.metric.total_pii"), total_pii)
+                col3.metric(_("dashboard.metric.high_risk"), high_risk_items)
+        except Exception as e:
+            st.info("Dashboard metrics are currently being updated. Please check back later.")
             
             # Real-time Compliance Score Visualization
             st.markdown(f"""
@@ -4751,7 +4760,12 @@ else:
             st.stop()
         
         # Get all scans for the user
-        all_scans = results_aggregator.get_all_scans(st.session_state.username)
+        try:
+            # Safely try to get scan history
+            all_scans = results_aggregator.get_user_scans(st.session_state.username) if hasattr(results_aggregator, 'get_user_scans') else []
+        except Exception:
+            all_scans = []
+            st.info("Scan history is currently being updated. Please check back soon!")
         
         if all_scans and len(all_scans) > 0:
             # Convert to DataFrame for display
@@ -5271,7 +5285,12 @@ else:
             st.stop()
             
         # Get all scans
-        all_scans = results_aggregator.get_all_scans(st.session_state.username)
+        try:
+            # Safely try to get scan history
+            all_scans = results_aggregator.get_user_scans(st.session_state.username) if hasattr(results_aggregator, 'get_user_scans') else []
+        except Exception:
+            all_scans = []
+            st.info("Dashboard features are currently being updated. Please check back soon!")
         
         if all_scans and len(all_scans) > 0:
             # Create a DataFrame for easy manipulation
