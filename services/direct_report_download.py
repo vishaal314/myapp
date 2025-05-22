@@ -14,7 +14,7 @@ from datetime import datetime
 import tempfile
 
 import streamlit as st
-from services.gdpr_report_generator import generate_gdpr_report
+from services.enhanced_pdf_report import generate_enhanced_gdpr_report
 from services.report_generator import generate_report
 
 # Configure logging
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def generate_pdf_report(scan_result: Dict[str, Any]) -> bytes:
     """
-    Generate a PDF report from scan results.
+    Generate a PDF report from scan results with modern design.
     
     Args:
         scan_result: The scan result to generate a report for
@@ -31,21 +31,27 @@ def generate_pdf_report(scan_result: Dict[str, Any]) -> bytes:
         PDF content as bytes
     """
     try:
-        # Generate PDF report using the appropriate generator based on scan type
-        if scan_result.get('scan_type') == 'DPIA':
-            # Use GDPR report generator for DPIA reports
-            success, report_path, report_content = generate_gdpr_report(scan_result)
-            if success and report_content:
-                return report_content
-            else:
-                raise Exception("Failed to generate GDPR report content")
+        # Generate PDF report using the enhanced generator for all report types
+        success, report_path, report_content = generate_enhanced_gdpr_report(scan_result)
+        if success and report_content:
+            return report_content
         else:
-            # Use standard report generator for other scan types
-            report_content = generate_report(scan_result)
-            if report_content:
-                return report_content
+            # Fall back to standard generators if enhanced version fails
+            if scan_result.get('scan_type') == 'DPIA':
+                # Use GDPR report generator for DPIA reports (legacy)
+                from services.gdpr_report_generator import generate_gdpr_report
+                success, report_path, report_content = generate_gdpr_report(scan_result)
+                if success and report_content:
+                    return report_content
+                else:
+                    raise Exception("Failed to generate GDPR report content")
             else:
-                raise Exception("Failed to generate report content")
+                # Use standard report generator for other scan types (legacy)
+                report_content = generate_report(scan_result)
+                if report_content:
+                    return report_content
+                else:
+                    raise Exception("Failed to generate report content")
     except Exception as e:
         logger.exception(f"Error generating PDF report: {str(e)}")
         raise
