@@ -1210,28 +1210,9 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     elements.append(Paragraph(risk_text, normal_style))
     elements.append(Spacer(1, 12))
     
-    # Add sustainability compliance section - translated
-    if current_lang == 'nl':
-        sustainability_title = _('report.sustainability_compliance', 'Gegevens Duurzaamheid Naleving')
-    else:
-        sustainability_title = _('report.sustainability_compliance', 'Data Sustainability Compliance')
-    elements.append(Paragraph(sustainability_title, subheading_style))
-    elements.append(Spacer(1, 6))
+    # Sustainability compliance section removed as requested
     
-    # Add description of what sustainability means in this context - translated
-    if current_lang == 'nl':
-        sustainability_desc = """
-        Gegevensduurzaamheid meet hoe efficiënt uw organisatie persoonlijke gegevens beheert in overeenstemming met de AVG-principes 
-        van gegevensminimalisatie, bewaartermijnen en doelbinding. Een hogere score duidt op betere 
-        langetermijnpraktijken voor gegevensbeheer.
-        """
-    else:
-        sustainability_desc = """
-        Data sustainability measures how efficiently your organization manages personal data in compliance with GDPR principles of 
-        data minimization, storage limitation, and purpose limitation. A higher score indicates better long-term data governance practices.
-        """
-    elements.append(Paragraph(sustainability_desc, normal_style))
-    elements.append(Spacer(1, 6))
+    # Sustainability description section removed as requested
     
     # Sustainability meter removed as requested
     
@@ -1951,16 +1932,9 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     from reportlab.lib import colors
     from reportlab.lib.colors import HexColor
     
-    # Add a page break before sustainability content
-    elements.append(PageBreak())
+    # Sustainability page break removed as requested
     
-    # Add sustainability section title
-    if current_lang == 'nl':
-        sustainability_title = "Duurzaamheidsanalyse"
-    else:
-        sustainability_title = "Sustainability Analysis"
-    elements.append(Paragraph(sustainability_title, heading_style))
-    elements.append(Spacer(1, 0.25*inch))
+    # Sustainability analysis section removed as requested
     
     # Extract scan type and key metrics
     scan_type = scan_data.get('scan_type', 'Unknown')
