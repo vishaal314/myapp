@@ -965,17 +965,34 @@ class CertifiedPDFReportGenerator:
             }
         ]
         
-        # Add any specific recommendations from the scan result
+        # Add any specific recommendations from the scan result, excluding sustainability recommendations
         if 'recommendations' in scan_result and scan_result['recommendations']:
             for rec in scan_result['recommendations']:
+                # Skip any sustainability-related recommendations
                 if isinstance(rec, dict):
+                    area = rec.get('area', '').lower()
+                    recommendation_text = rec.get('recommendation', '').lower()
+                    
+                    # Skip if this is a sustainability recommendation
+                    if ('sustainability' in area or 
+                        'carbon' in area or 
+                        'eco-friendly' in area or
+                        'green' in area or
+                        'sustainability' in recommendation_text or
+                        'carbon footprint' in recommendation_text):
+                        continue
+                    
                     recommendations.append(rec)
                 elif isinstance(rec, str):
-                    recommendations.append({
-                        'area': 'Custom Recommendation',
-                        'recommendation': rec,
-                        'priority': 'Medium'
-                    })
+                    # Skip if this is a sustainability recommendation
+                    if ('sustainability' not in rec.lower() and 
+                        'carbon' not in rec.lower() and
+                        'eco-friendly' not in rec.lower()):
+                        recommendations.append({
+                            'area': 'Custom Recommendation',
+                            'recommendation': rec,
+                            'priority': 'Medium'
+                        })
         
         # Create recommendations table
         rec_data = [[
@@ -1094,7 +1111,7 @@ class CertifiedPDFReportGenerator:
             # Build all report elements
             elements = []
             
-            # Add report sections
+            # Add report sections without sustainability content
             elements.extend(self._create_certificate_header(scan_result))
             elements.extend(self._create_metadata_section(scan_result))
             elements.extend(self._create_executive_summary(scan_result))
