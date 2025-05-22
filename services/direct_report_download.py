@@ -31,14 +31,67 @@ def generate_pdf_report(scan_result: Dict[str, Any]) -> bytes:
         PDF content as bytes
     """
     try:
-        # Use the professional certification-style PDF report generator
+        # Special handling for code scanner reports
+        scan_type = scan_result.get('scan_type', '').lower()
+        
+        # Normalize the scan type for consistent checking
+        is_code_scan = any(code_type in scan_type for code_type in ['code', 'repository', 'github', 'gitlab'])
+        
+        # Ensure all code-related scans use the certified report
+        if is_code_scan:
+            logger.info("Generating certified PDF report for code scan")
+            # Process code scan findings for better report presentation
+            if 'findings' in scan_result:
+                # Convert code findings to the format expected by certified report
+                processed_findings = []
+                for finding in scan_result['findings']:
+                    # Handle different code scan finding formats
+                    if isinstance(finding, dict) and 'findings' in finding:
+                        # Handle the nested format common in repo scanners
+                        file_path = finding.get('file_path', '')
+                        for nested_finding in finding['findings']:
+                            severity = nested_finding.get('risk_level', 'Medium')
+                            if isinstance(severity, str) and severity.lower() in ['high', 'medium', 'low']:
+                                severity = severity.capitalize()
+                            else:
+                                severity = 'Medium'  # Default if not specified
+                                
+                            processed_findings.append({
+                                'severity': severity,
+                                'category': nested_finding.get('type', 'Code Issue'),
+                                'description': nested_finding.get('description', nested_finding.get('value', '')),
+                                'file_path': f"{file_path}:{nested_finding.get('line', '')}",
+                                'recommendation': nested_finding.get('recommendation', ''),
+                                'gdpr_article': nested_finding.get('gdpr_principle', ''),
+                            })
+                    else:
+                        # Handle flat format
+                        severity = finding.get('risk_level', finding.get('severity', 'Medium'))
+                        if isinstance(severity, str) and severity.lower() in ['high', 'medium', 'low']:
+                            severity = severity.capitalize()
+                        else:
+                            severity = 'Medium'  # Default if not specified
+                            
+                        processed_findings.append({
+                            'severity': severity,
+                            'category': finding.get('type', 'Code Issue'),
+                            'description': finding.get('description', finding.get('value', '')),
+                            'file_path': finding.get('file_path', finding.get('location', '')),
+                            'recommendation': finding.get('recommendation', ''),
+                            'gdpr_article': finding.get('gdpr_principle', ''),
+                        })
+                
+                # Update the scan result with processed findings for the report
+                scan_result['findings'] = processed_findings
+        
+        # Use the professional certification-style PDF report generator for all scan types
         success, report_path, report_content = generate_certified_pdf_report(scan_result)
         if success and report_content:
             return report_content
         else:
             # Fall back to standard generators if certification report fails
             logger.warning("Certification report generation failed, falling back to legacy generators")
-            if scan_result.get('scan_type') == 'DPIA':
+            if scan_result.get('scan_type', '').lower() == 'dpia':
                 # Use GDPR report generator for DPIA reports (legacy)
                 from services.gdpr_report_generator import generate_gdpr_report
                 success, report_path, report_content = generate_gdpr_report(scan_result)
