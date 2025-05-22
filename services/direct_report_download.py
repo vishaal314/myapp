@@ -14,7 +14,7 @@ from datetime import datetime
 import tempfile
 
 import streamlit as st
-from services.modern_pdf_report import generate_modern_pdf_report
+from services.certified_pdf_report import generate_certified_pdf_report
 from services.report_generator import generate_report
 
 # Configure logging
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def generate_pdf_report(scan_result: Dict[str, Any]) -> bytes:
     """
-    Generate a PDF report from scan results with modern design.
+    Generate a PDF report from scan results with a professional certification design.
     
     Args:
         scan_result: The scan result to generate a report for
@@ -31,13 +31,13 @@ def generate_pdf_report(scan_result: Dict[str, Any]) -> bytes:
         PDF content as bytes
     """
     try:
-        # Use the simpler modern PDF report generator
-        success, report_path, report_content = generate_modern_pdf_report(scan_result)
+        # Use the professional certification-style PDF report generator
+        success, report_path, report_content = generate_certified_pdf_report(scan_result)
         if success and report_content:
             return report_content
         else:
-            # Fall back to standard generators if modern version fails
-            logger.warning("Modern PDF report generation failed, falling back to legacy generators")
+            # Fall back to standard generators if certification report fails
+            logger.warning("Certification report generation failed, falling back to legacy generators")
             if scan_result.get('scan_type') == 'DPIA':
                 # Use GDPR report generator for DPIA reports (legacy)
                 from services.gdpr_report_generator import generate_gdpr_report
