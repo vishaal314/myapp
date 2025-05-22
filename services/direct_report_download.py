@@ -458,7 +458,10 @@ def display_report_options(scan_result: Dict[str, Any]):
             
             # If we have PDF data, display the download button
             if pdf_data:
-                pdf_filename = f"compliance_report_{scan_id}_{timestamp}.pdf"
+                # Generate unique IDs for the filename to avoid conflicts
+                local_scan_id = scan_result.get('scan_id', str(uuid.uuid4())[:8])
+                local_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                pdf_filename = f"compliance_report_{local_scan_id}_{local_timestamp}.pdf"
                 
                 st.download_button(
                     label="📥 Download PDF Report",
@@ -489,6 +492,11 @@ def display_report_options(scan_result: Dict[str, Any]):
     # HTML Report Button - Using native Streamlit download button
     with col2:
         try:
+            # Generate unique identifiers for the reports if they don't exist yet
+            local_scan_id = scan_result.get('scan_id', str(uuid.uuid4())[:8])
+            local_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            html_data = None
+            
             # Check if we already have the HTML report in session state
             if 'html_report_data' not in st.session_state:
                 with st.spinner("Preparing HTML report download..."):
@@ -503,7 +511,7 @@ def display_report_options(scan_result: Dict[str, Any]):
             
             # If we have HTML data, display the download button
             if html_data:
-                html_filename = f"compliance_report_{scan_id}_{timestamp}.html"
+                html_filename = f"compliance_report_{local_scan_id}_{local_timestamp}.html"
                 
                 st.download_button(
                     label="📥 Download HTML Report",
