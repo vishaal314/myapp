@@ -3249,10 +3249,10 @@ else:
                             with report_tab:
                                 st.write("### Export Report Options")
                                 
-                                # Import our improved report download functionality
-                                from services.improved_report_download import display_report_options
+                                # Import our direct report download functionality with native Streamlit buttons
+                                from services.direct_report_download import display_report_options
                                 
-                                # Use the enhanced report display module with better download functionality
+                                # Use native Streamlit download buttons for reliable direct downloads
                                 display_report_options(result)
                                 
                                 # Ensure we have all necessary data for report generation
