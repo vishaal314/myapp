@@ -2242,12 +2242,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
     elements.append(metadata_table)
     elements.append(Spacer(1, 0.2*inch))
     
-    # Add sustainability score visualization
-    elements.append(Spacer(1, 0.1*inch))
-    if current_lang == 'nl':
-        elements.append(Paragraph("<b>Duurzaamheidsscore</b>", subheading_style))
-    else:
-        elements.append(Paragraph("<b>Sustainability Score</b>", subheading_style))
+    # Sustainability score visualization removed as requested
     
     # Create a visual score meter
     score_color = '#10b981'  # Default green
