@@ -297,63 +297,7 @@ class ComplianceBanner(Flowable):
         # Draw the entire drawing
         renderPDF.draw(d, self.canv, 0, 0)
 
-# SustainabilityMeter class removed as requested
-        
-        # Add /100 below score
-        denominator = String(center_x - 10, center_y - 20, 
-                            "/100", 
-                            fontSize=10, 
-                            fillColor=HexColor('#64748b'))
-        d.add(denominator)
-        
-        # Add status text
-        status_text = String(center_x - 20, center_y + 25, 
-                            f"{status}", 
-                            fontSize=10, 
-                            fillColor=color)
-        d.add(status_text)
-        
-        # Add scale markings
-        for i in range(0, 101, 25):
-            # Convert percentage to angle
-            angle = math.radians(360 * i / 100)
-            
-            # Calculate outer and inner positions
-            outer_x = center_x + (outer_radius + 5) * math.sin(angle)
-            outer_y = center_y + (outer_radius + 5) * math.cos(angle)
-            inner_x = center_x + (outer_radius - 2) * math.sin(angle)
-            inner_y = center_y + (outer_radius - 2) * math.cos(angle)
-            
-            # Add marking line
-            mark = Line(inner_x, inner_y, outer_x, outer_y,
-                       strokeColor=HexColor('#94a3b8'),
-                       strokeWidth=1)
-            d.add(mark)
-            
-            # Add label
-            label_x = center_x + (outer_radius + 15) * math.sin(angle) - 6
-            label_y = center_y + (outer_radius + 15) * math.cos(angle) - 5
-            
-            label = String(label_x, label_y, 
-                         f"{i}", 
-                         fontSize=8, 
-                         fillColor=HexColor('#64748b'))
-            d.add(label)
-        
-        # Description text with language support
-        if self.language == 'nl':
-            description_text = "Meet hulpbronnenoptimalisatie, code-efficiëntie en energieverbruik"
-        else:
-            description_text = "Measures resource optimization, code efficiency, and energy consumption"
-            
-        description = String(10, 10, 
-                            description_text, 
-                            fontSize=9, 
-                            fillColor=HexColor('#475569'))
-        d.add(description)
-        
-        # Draw the entire drawing
-        renderPDF.draw(d, self.canv, 0, 0)
+# SustainabilityMeter class removed completely
 
 def create_pie_chart(data, title, colors_dict=None):
     """Creates a pie chart drawing"""
@@ -1289,10 +1233,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     elements.append(Paragraph(sustainability_desc, normal_style))
     elements.append(Spacer(1, 6))
     
-    # Add the sustainability meter with language support
-    sustainability_meter = SustainabilityMeter(sustainability_score, language=current_lang)
-    elements.append(sustainability_meter)
-    elements.append(Spacer(1, 12))
+    # Sustainability meter removed as requested
     
     # Include detailed findings if requested
     if include_details:
