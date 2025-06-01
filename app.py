@@ -2474,35 +2474,19 @@ else:
             # Set start_scan to True for DPIA to bypass the button click
             start_scan = True
         elif scan_type == _("scan.soc2"):
-            # Make SOC2 scan buttons more prominent without hiding any buttons
+            # For SOC2, we need to show the custom interface instead of the normal flow
+            # Hide the standard upload and scan button sections
             st.markdown("""
             <style>
-            /* Make SOC2 primary buttons more prominent */
-            button[kind="primary"] {
-                background-color: #1565C0 !important;
-                color: white !important;
-                font-weight: bold !important;
-                border: 2px solid #0D47A1 !important;
+            /* Hide standard upload and scan sections for SOC2 */
+            #upload-files-section,
+            div[data-testid="stHorizontalBlock"]:has(button) {
+                display: none !important;
             }
             </style>
             """, unsafe_allow_html=True)
-            
-            # Store GitHub tab input values in session state for main button to use
-            if 'repo_url' in st.session_state:
-                github_repo_url = st.session_state.repo_url
-                github_branch = st.session_state.get('branch', '')
-                github_token = st.session_state.get('token', '')
-            
-            # Prominent "Start Scan" button with free trial info
-            scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
-            with scan_btn_col1:
-                # Removed duplicate SOC2 scan button to avoid confusion with tab-specific buttons
-                pass
-            with scan_btn_col2:
-                if 'free_trial_active' in locals() and free_trial_active:
-                    st.success(f"Free Trial: {free_trial_days_left} days left")
-                else:
-                    st.warning("Premium Feature")
+            # Set start_scan to True to bypass normal flow and show SOC2 interface
+            start_scan = True
         elif scan_type == _("scan.ai_model"):
             # Create a more prominent scan button for AI Model scan
             st.markdown("""
