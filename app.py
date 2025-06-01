@@ -4175,16 +4175,17 @@ else:
                             </div>
                             """, unsafe_allow_html=True)
                             
-                        # Create a prominent scan button with improved styling - moved outside container
-                        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-                        scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
-                        with scan_col2:
-                            scan_button = st.button(
-                                "Start SOC2 Compliance Scan",
-                                type="primary",
-                                use_container_width=True,
-                                key="github_soc2_scan_button"
-                            )
+                            # Create a prominent scan button with improved styling - moved outside container
+                            st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                            scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
+                            with scan_col2:
+                                scan_button = st.button(
+                                    "🛡️ Start SOC2 Compliance Scan",
+                                    type="primary",
+                                    use_container_width=True,
+                                    key="github_soc2_scan_button",
+                                    help="Start comprehensive SOC2 compliance scanning for your repository"
+                                )
                             
                             # Handle the scan process
                             if scan_button:
@@ -4274,18 +4275,64 @@ else:
                                                                 delta=None,
                                                                 delta_color="inverse")
                                                     
-                                                    # Add PDF Download button
-                                                    st.markdown("### Download Report")
-                                                    if st.button("Generate PDF Report", type="primary", key="github_soc2_pdf_button"):
-                                                        with st.spinner("Generating PDF report..."):
-                                                            # Generate PDF report
-                                                            pdf_bytes = generate_report(scan_results)
+                                                    # Enhanced action buttons section
+                                                    st.markdown("### Actions")
+                                                    action_col1, action_col2, action_col3 = st.columns(3)
+                                                    
+                                                    with action_col1:
+                                                        if st.button("📄 Generate PDF Report", type="primary", key="github_soc2_pdf_button", use_container_width=True):
+                                                            with st.spinner("Generating comprehensive SOC2 compliance report..."):
+                                                                try:
+                                                                    # Import the enhanced report generator
+                                                                    from services.soc2_display import generate_soc2_pdf_report
+                                                                    
+                                                                    # Generate enhanced PDF report
+                                                                    pdf_bytes = generate_soc2_pdf_report(scan_results)
+                                                                    
+                                                                    # Create download button
+                                                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                                                    pdf_filename = f"soc2_compliance_report_{timestamp}.pdf"
+                                                                    
+                                                                    st.download_button(
+                                                                        label="📥 Download SOC2 Report",
+                                                                        data=pdf_bytes,
+                                                                        file_name=pdf_filename,
+                                                                        mime="application/pdf",
+                                                                        key="soc2_download_btn"
+                                                                    )
+                                                                    st.success("SOC2 compliance report generated successfully!")
+                                                                except Exception as e:
+                                                                    st.error(f"Failed to generate PDF report: {str(e)}")
+                                                    
+                                                    with action_col2:
+                                                        if st.button("🔄 New SOC2 Scan", key="github_soc2_new_scan", use_container_width=True):
+                                                            # Clear session state for new scan
+                                                            for key in list(st.session_state.keys()):
+                                                                if 'soc2' in key.lower():
+                                                                    del st.session_state[key]
+                                                            st.rerun()
+                                                    
+                                                    with action_col3:
+                                                        if st.button("📊 View in Dashboard", key="github_soc2_view_dashboard", use_container_width=True):
+                                                            # Store results in history and redirect to dashboard
+                                                            if 'scan_history' not in st.session_state:
+                                                                st.session_state.scan_history = []
                                                             
-                                                            # Provide download link
-                                                            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-                                                            pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                                                            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
-                                                            st.markdown(href, unsafe_allow_html=True)
+                                                            history_entry = {
+                                                                'timestamp': datetime.now().isoformat(),
+                                                                'scan_type': 'SOC2 Compliance',
+                                                                'repository': repo_url,
+                                                                'branch': branch or 'main',
+                                                                'compliance_score': compliance_score,
+                                                                'total_findings': total_findings,
+                                                                'high_risk': high_risk,
+                                                                'medium_risk': medium_risk,
+                                                                'low_risk': low_risk,
+                                                                'results': scan_results
+                                                            }
+                                                            st.session_state.scan_history.append(history_entry)
+                                                            st.session_state.selected_nav = "Dashboard"
+                                                            st.rerun()
                                                     
                                                     # Display findings table
                                                     st.subheader("Compliance Findings")
