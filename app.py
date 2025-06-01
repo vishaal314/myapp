@@ -4063,18 +4063,18 @@ else:
                             )
                         
                             if repo_source == "GitHub Repository":
-                            # Create a container with a custom border
-                            with st.container():
-                                st.markdown("""
-                                <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
-                                """, unsafe_allow_html=True)
-                                
-                                # Repository URL input
-                                st.subheader(_("scan.repo_details", "Repository Details"))
-                                repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
-                                                    placeholder="https://github.com/username/repository",
-                                                    value="https://github.com/vishaal314/terrascan",
-                                                    key="github_soc2_repo_url")
+                                # Create a container with a custom border
+                                with st.container():
+                                    st.markdown("""
+                                    <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Repository URL input
+                                    st.subheader(_("scan.repo_details", "Repository Details"))
+                                    repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
+                                                        placeholder="https://github.com/username/repository",
+                                                        value="https://github.com/vishaal314/terrascan",
+                                                        key="github_soc2_repo_url")
                                 
                                 # Create columns for the branch and token inputs
                                 col1, col2 = st.columns(2)
@@ -4309,18 +4309,18 @@ else:
                                             st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
                                             status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
                         
-                        elif repo_source == "Azure DevOps Repository":
-                            # Create a container with a custom border for Azure
-                            with st.container():
-                                st.markdown("""
-                                <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
-                                """, unsafe_allow_html=True)
-                                
-                                # Repository URL input
-                                st.subheader(_("scan.azure_repo_details", "Azure DevOps Repository Details"))
-                                repo_url = st.text_input(_("scan.azure_repo_url", "Azure DevOps Repository URL"), 
-                                                placeholder="https://dev.azure.com/organization/project/_git/repository",
-                                                key="azure_soc2_repo_url")
+                            elif repo_source == "Azure DevOps Repository":
+                                # Create a container with a custom border for Azure
+                                with st.container():
+                                    st.markdown("""
+                                    <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Repository URL input
+                                    st.subheader(_("scan.azure_repo_details", "Azure DevOps Repository Details"))
+                                    repo_url = st.text_input(_("scan.azure_repo_url", "Azure DevOps Repository URL"), 
+                                                        placeholder="https://dev.azure.com/organization/project/_git/repository",
+                                                        key="azure_soc2_repo_url")
                                 
                                 # Project name is required for Azure DevOps
                                 project = st.text_input(_("scan.azure_project", "Azure DevOps Project"), 
