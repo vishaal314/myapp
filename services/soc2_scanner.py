@@ -723,7 +723,8 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
             tech = identify_iac_technology(file_path)
             if tech:
                 results["iac_files_found"] += 1
-                results["technologies_detected"].add(tech)
+                if tech not in results["technologies_detected"]:
+                    results["technologies_detected"].append(tech)
                 
                 file_findings = scan_iac_file(file_path, tech)
                 
@@ -891,7 +892,7 @@ def scan_azure_repo_for_soc2(repo_url: str, project: str, branch: Optional[str] 
                         if re.search(pattern, file):
                             iac_files.append((file_path, tech, rel_path))
                             if tech not in results["technologies_detected"]:
-                                results["technologies_detected"].add(tech)
+                                results["technologies_detected"].append(tech)
                             break
         
         results["iac_files_found"] = len(iac_files)

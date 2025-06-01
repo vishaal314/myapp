@@ -4008,8 +4008,6 @@ else:
                         """, unsafe_allow_html=True)
                         
                         # SOC2 scanner UI with enhanced design
-                        st.title(_("scan.soc2_title", "SOC2 Compliance Scanner"))
-                        
                         # Display enhanced description with clear value proposition
                         st.write(_(
                             "scan.soc2_description", 
