@@ -4062,7 +4062,7 @@ else:
                                 key="soc2_repo_source"
                             )
                         
-                        if repo_source == "GitHub Repository":
+                            if repo_source == "GitHub Repository":
                             # Create a container with a custom border
                             with st.container():
                                 st.markdown("""
@@ -4172,18 +4172,19 @@ else:
                             <div style="padding: 10px; border-radius: 5px; background-color: #f0f8ff; margin: 10px 0;">
                                 <span style="font-weight: bold;">Output:</span> SOC2 checklist + mapped violations aligned with Trust Services Criteria
                             </div>
+                            </div>
                             """, unsafe_allow_html=True)
                             
-                            # Create a prominent scan button with improved styling
-                            st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-                            scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
-                            with scan_col2:
-                                scan_button = st.button(
-                                    "Start SOC2 Compliance Scan",
-                                    type="primary",
-                                    use_container_width=True,
-                                    key="github_soc2_scan_button"
-                                )
+                        # Create a prominent scan button with improved styling - moved outside container
+                        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                        scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
+                        with scan_col2:
+                            scan_button = st.button(
+                                "Start SOC2 Compliance Scan",
+                                type="primary",
+                                use_container_width=True,
+                                key="github_soc2_scan_button"
+                            )
                             
                             # Handle the scan process
                             if scan_button:
