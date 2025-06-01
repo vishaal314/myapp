@@ -176,28 +176,34 @@ IaC_FILE_PATTERNS = {
 # Risk patterns for each IaC tool
 # Format: {pattern: (description, severity, recommendation, category)}
 TERRAFORM_RISK_PATTERNS = {
-    r"provider\s+\"aws\"": (
+    r"provider\s+\"aws\"\s*{[^}]*(?!version\s*=)": (
         "AWS provider without version constraint",
         "medium",
         "Specify provider version constraints for better stability and security",
         "security"
     ),
-    r"access_key.*=": (
+    r"(?:access_key|aws_access_key_id)\s*=\s*[\"'][A-Z0-9]{20}[\"']": (
         "Hard-coded AWS access keys",
         "high",
         "Use environment variables, instance profiles, or secret management tools instead of hard-coded credentials",
         "security"
     ),
-    r"secret.*=": (
-        "Possible hard-coded secrets",
+    r"(?:secret|aws_secret_access_key)\s*=\s*[\"'][A-Za-z0-9/+]{40}[\"']": (
+        "Hard-coded AWS secret keys",
         "high",
         "Store secrets in a dedicated secret management service",
         "security"
     ),
-    r"password.*=": (
+    r"(?:password|passwd|pwd)\s*=\s*[\"'][^\"']{3,}[\"']": (
         "Possible hard-coded password",
         "high", 
         "Use secrets manager instead of hard-coded passwords",
+        "security"
+    ),
+    r"(?:api_key|apikey)\s*=\s*[\"'][A-Za-z0-9]{16,}[\"']": (
+        "Hard-coded API keys",
+        "high",
+        "Store API keys in environment variables or secret management services",
         "security"
     ),
     r"ingress\s+{[^}]*0\.0\.0\.0/0": (

@@ -26,10 +26,73 @@ def scan_github_repository(repo_url: str, branch: Optional[str] = None, token: O
         Dictionary with scan results
     """
     try:
-        # Show cloning message - status updates should be handled by the caller
+        # Validate repository URL format
+        if not repo_url or not repo_url.strip():
+            return {
+                "scan_status": "failed",
+                "error": "Repository URL is required",
+                "repo_url": repo_url,
+                "branch": branch or "main"
+            }
+        
+        # Clean up the URL
+        repo_url = repo_url.strip()
+        
+        # Validate GitHub URL format
+        if not repo_url.startswith(("https://github.com/", "http://github.com/")):
+            return {
+                "scan_status": "failed",
+                "error": "Invalid GitHub repository URL format. Please use https://github.com/owner/repo format",
+                "repo_url": repo_url,
+                "branch": branch or "main"
+            }
+        
+        # Check if repository exists and is accessible
+        import requests
+        api_url = repo_url.replace("github.com", "api.github.com/repos")
+        headers = {}
+        if token:
+            headers["Authorization"] = f"token {token}"
+        
+        try:
+            response = requests.get(api_url, headers=headers, timeout=10)
+            if response.status_code == 404:
+                return {
+                    "scan_status": "failed",
+                    "error": "Repository not found or not accessible. Check URL and permissions.",
+                    "repo_url": repo_url,
+                    "branch": branch or "main"
+                }
+            elif response.status_code == 403:
+                return {
+                    "scan_status": "failed",
+                    "error": "Repository access denied. Private repository may require an access token.",
+                    "repo_url": repo_url,
+                    "branch": branch or "main"
+                }
+        except requests.RequestException:
+            # Continue with scan even if API check fails
+            pass
         
         # Perform scan
         scan_results = scan_github_repo_for_soc2(repo_url, branch, token)
+        
+        # Ensure scan results include required fields
+        if not isinstance(scan_results, dict):
+            return {
+                "scan_status": "failed",
+                "error": "Invalid scan results format",
+                "repo_url": repo_url,
+                "branch": branch or "main"
+            }
+        
+        # Add scan metadata
+        scan_results.update({
+            "scan_status": "completed",
+            "repo_url": repo_url,
+            "branch": branch or "main",
+            "scan_timestamp": str(datetime.now())
+        })
         
         return scan_results
         
@@ -37,7 +100,7 @@ def scan_github_repository(repo_url: str, branch: Optional[str] = None, token: O
         # Return error in scan results rather than raising
         return {
             "scan_status": "failed",
-            "error": str(e),
+            "error": f"Scan error: {str(e)}",
             "repo_url": repo_url,
             "branch": branch or "main"
         }

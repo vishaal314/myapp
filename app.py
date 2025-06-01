@@ -4003,15 +4003,10 @@ else:
                         from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository, display_soc2_scan_results
                         from services.report_generator import generate_report
                         
-                        # Hide the Start Scan button and Upload Files section for cleaner UI
+                        # Hide upload-related sections for SOC2 scanner (repository-based only)
                         st.markdown("""
                         <style>
-                        /* Hide the Start Scan button */
-                        div.stButton > button:contains("Start Scan") {
-                            display: none !important;
-                        }
-                        
-                        /* Hide upload-related sections */
+                        /* Hide upload-related sections for SOC2 */
                         .main .block-container h2:contains("Upload Files"),
                         .main .block-container h2:contains("Upload Files") ~ div,
                         .main .block-container hr:has(+ h2:contains("Upload Files")),
