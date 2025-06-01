@@ -636,7 +636,7 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
             "privacy": {"high": 0, "medium": 0, "low": 0}
         },
         "scan_status": "failed",
-        "technologies_detected": set(),
+        "technologies_detected": [],
         "total_files_scanned": 0,
         "iac_files_found": 0,
         "high_risk_count": 0,
@@ -656,18 +656,43 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
         else:
             auth_repo_url = repo_url
             
-        # Add branch parameter if provided
-        branch_param = []
-        if branch:
-            branch_param = ["-b", branch]
-            
-        # Clone repository
+        # Clone repository with fallback for different default branches
         logger.info(f"Cloning repository {repo_url}...")
+        
+        # Try cloning with specified branch or main first
+        target_branch = branch or "main"
         process = subprocess.run(
-            ["git", "clone", "--depth", "1"] + branch_param + [auth_repo_url, temp_dir],
+            ["git", "clone", "--depth", "1", "-b", target_branch, auth_repo_url, temp_dir],
             capture_output=True,
             text=True
         )
+        
+        # If main branch fails, try master branch
+        if process.returncode != 0 and target_branch == "main":
+            logger.info("Main branch not found, trying master branch...")
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            temp_dir = tempfile.mkdtemp()
+            
+            process = subprocess.run(
+                ["git", "clone", "--depth", "1", "-b", "master", auth_repo_url, temp_dir],
+                capture_output=True,
+                text=True
+            )
+            
+            if process.returncode == 0:
+                results["branch"] = "master"
+        
+        # If still failed, try cloning without specifying branch
+        if process.returncode != 0:
+            logger.info("Specified branch not found, trying default branch...")
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            temp_dir = tempfile.mkdtemp()
+            
+            process = subprocess.run(
+                ["git", "clone", "--depth", "1", auth_repo_url, temp_dir],
+                capture_output=True,
+                text=True
+            )
         
         if process.returncode != 0:
             error_msg = process.stderr.strip()
@@ -798,7 +823,7 @@ def scan_azure_repo_for_soc2(repo_url: str, project: str, branch: Optional[str] 
             "privacy": {"high": 0, "medium": 0, "low": 0}
         },
         "scan_status": "failed",
-        "technologies_detected": set(),
+        "technologies_detected": [],
         "total_files_scanned": 0,
         "iac_files_found": 0,
         "high_risk_count": 0,
