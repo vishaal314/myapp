@@ -409,7 +409,7 @@ class ResultsAggregator:
             print(f"Error retrieving user scans from file: {str(e)}")
             return []
 
-    def log_audit_event(self, username: str, action: str, details: Dict[str, Any] = None) -> None:
+    def log_audit_event(self, username: str, action: str, details: Optional[Dict[str, Any]] = None) -> None:
         """
         Log an audit event for tracking user actions and system activities.
         
@@ -454,7 +454,7 @@ class ResultsAggregator:
             self._log_user_action_file(log_id, username, action, details)
     
     # For backward compatibility
-    def log_user_action(self, username: str, action: str, details: Dict[str, Any] = None) -> None:
+    def log_user_action(self, username: str, action: str, details: Optional[Dict[str, Any]] = None) -> None:
         """
         Legacy method for logging user actions, redirects to log_audit_event.
         
@@ -465,7 +465,7 @@ class ResultsAggregator:
         """
         return self.log_audit_event(username, action, details)
     
-    def _log_user_action_file(self, log_id: str, username: str, action: str, details: Dict[str, Any] = None) -> None:
+    def _log_user_action_file(self, log_id: str, username: str, action: str, details: Optional[Dict[str, Any]] = None) -> None:
         """Log user action to file system."""
         try:
             # Load existing logs
@@ -491,6 +491,84 @@ class ResultsAggregator:
                 json.dump(logs[-1000:], f, indent=2)
         except Exception as e:
             print(f"Error logging user action to file: {str(e)}")
+
+    def store_scan_results(self, scan_id: str, username: str, scan_type: str, results: Dict[str, Any]) -> None:
+        """
+        Store scan results (alias for store_scan_result for compatibility).
+        
+        Args:
+            scan_id: Unique scan identifier
+            username: Username associated with the scan
+            scan_type: Type of scan performed
+            results: Scan result dictionary
+        """
+        # Ensure results has required fields
+        results['scan_id'] = scan_id
+        results['scan_type'] = scan_type
+        self.store_scan_result(username, results)
+    
+    def get_scan_by_id(self, scan_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve a scan by its ID.
+        
+        Args:
+            scan_id: Unique scan identifier
+            
+        Returns:
+            Scan results dictionary or None if not found
+        """
+        if self.use_file_storage:
+            return self._get_scan_by_id_file(scan_id)
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                self.use_file_storage = True
+                return self._get_scan_by_id_file(scan_id)
+            
+            cursor = conn.cursor()
+            cursor.execute("""
+            SELECT scan_id, username, timestamp, scan_type, region, 
+                   file_count, total_pii_found, high_risk_count, result_json
+            FROM scans WHERE scan_id = %s
+            """, (scan_id,))
+            
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if row:
+                return {
+                    'scan_id': row[0],
+                    'username': row[1],
+                    'timestamp': row[2],
+                    'scan_type': row[3],
+                    'region': row[4],
+                    'file_count': row[5],
+                    'total_pii_found': row[6],
+                    'high_risk_count': row[7],
+                    'result_json': row[8]
+                }
+            return None
+            
+        except Exception as e:
+            print(f"Error retrieving scan by ID: {str(e)}")
+            self.use_file_storage = True
+            return self._get_scan_by_id_file(scan_id)
+    
+    def _get_scan_by_id_file(self, scan_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieve scan by ID from file storage."""
+        try:
+            if os.path.exists('data/scans.json'):
+                with open('data/scans.json', 'r') as f:
+                    scans = json.load(f)
+                    for scan in scans:
+                        if scan.get('scan_id') == scan_id:
+                            return scan
+            return None
+        except Exception as e:
+            print(f"Error retrieving scan by ID from file: {str(e)}")
+            return None
 
     def store_compliance_score(self, username: str, repo_name: str, scan_id: str, 
                              overall_score: int, principle_scores: Dict[str, int]) -> None:

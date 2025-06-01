@@ -148,7 +148,21 @@
     "medium_risk_count": "Gemiddeld risico items",
     "low_risk_count": "Laag risico items",
     "view_details": "Details bekijken",
-    "export_results": "Resultaten exporteren"
+    "export_results": "Resultaten exporteren",
+    "soc2": "SOC2 Compliance",
+    "soc2_title": "SOC2 Compliance Scanner",
+    "soc2_description": "Scan Infrastructure as Code (IaC) repositories voor SOC2 compliance problemen.",
+    "soc2_info": "SOC2 scanning analyseert uw infrastructuurcode tegen Trust Services Criteria.",
+    "soc2_categories": "SOC2 Categorieën om te Scannen",
+    "soc2_config": "SOC2 Scanner Configuratie",
+    "soc2_no_uploads": "SOC2 scanning vereist geen bestandsuploads.",
+    "soc2_output": "SOC2 checklist + toegewezen overtredingen afgestemd op Trust Services Criteria",
+    "soc2_scan_button": "Start SOC2 Compliance Scan",
+    "soc2_custom_rules": "Aangepaste SOC2 Regels",
+    "soc2_timeframe": "Scan Tijdsbestek",
+    "soc2_pdf_report": "Genereer PDF Rapport",
+    "soc2_new_scan": "Nieuwe SOC2 Scan",
+    "soc2_view_dashboard": "Bekijk in Dashboard"
   },
   "history": {
     "title": "Geschiedenis"
