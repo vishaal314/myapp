@@ -4031,10 +4031,138 @@ else:
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Create tabs for configuration and results
-                        config_tab, results_tab = st.tabs(["SOC2 Scanner Configuration", "Results"])
+                        # Check if we have scan results to display
+                        has_soc2_results = 'soc2_scan_results' in st.session_state and st.session_state.soc2_scan_results
                         
-                        with config_tab:
+                        if has_soc2_results:
+                            # Show only results when scan is complete
+                            scan_results = st.session_state.soc2_scan_results
+                            
+                            # Extract key metrics
+                            compliance_score = scan_results.get("compliance_score", 0)
+                            high_risk = scan_results.get("high_risk_count", 0)
+                            medium_risk = scan_results.get("medium_risk_count", 0)
+                            low_risk = scan_results.get("low_risk_count", 0)
+                            total_findings = high_risk + medium_risk + low_risk
+                            
+                            # Repository info
+                            st.write(f"**Repository:** {scan_results.get('repo_url')}")
+                            st.write(f"**Branch:** {scan_results.get('branch', 'main')}")
+                            
+                            # Create metrics
+                            col1, col2, col3, col4 = st.columns(4)
+                            
+                            # Determine compliance color for styling
+                            if compliance_score >= 80:
+                                compliance_color_css = "green"
+                            elif compliance_score >= 60:
+                                compliance_color_css = "orange"
+                            else:
+                                compliance_color_css = "red"
+                                
+                            with col1:
+                                st.metric("Compliance Score", 
+                                        f"{compliance_score}/100", 
+                                        delta=None,
+                                        delta_color="normal")
+                                        
+                                st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{'✓ Good' if compliance_score >= 80 else '⚠️ Needs Review' if compliance_score >= 60 else '✗ Critical'}</div>", unsafe_allow_html=True)
+                            
+                            with col2:
+                                st.metric("High Risk Issues", 
+                                        high_risk,
+                                        delta=None,
+                                        delta_color="inverse")
+                                        
+                            with col3:
+                                st.metric("Medium Risk Issues", 
+                                        medium_risk,
+                                        delta=None,
+                                        delta_color="inverse")
+                                        
+                            with col4:
+                                st.metric("Low Risk Issues", 
+                                        low_risk,
+                                        delta=None,
+                                        delta_color="inverse")
+                            
+                            # Enhanced action buttons section
+                            st.markdown("### Actions")
+                            action_col1, action_col2, action_col3 = st.columns(3)
+                            
+                            with action_col1:
+                                if st.button("📄 Generate PDF Report", type="primary", key="soc2_results_pdf_button", use_container_width=True):
+                                    with st.spinner("Generating comprehensive SOC2 compliance report..."):
+                                        try:
+                                            from services.soc2_display import generate_soc2_pdf_report
+                                            
+                                            pdf_bytes = generate_soc2_pdf_report(scan_results)
+                                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                            pdf_filename = f"soc2_compliance_report_{timestamp}.pdf"
+                                            
+                                            st.download_button(
+                                                label="📥 Download SOC2 Report",
+                                                data=pdf_bytes,
+                                                file_name=pdf_filename,
+                                                mime="application/pdf",
+                                                key="soc2_results_download_btn"
+                                            )
+                                            st.success("SOC2 compliance report generated successfully!")
+                                        except Exception as e:
+                                            st.error(f"Failed to generate PDF report: {str(e)}")
+                            
+                            with action_col2:
+                                if st.button("🔄 New SOC2 Scan", key="soc2_results_new_scan", use_container_width=True):
+                                    # Clear session state for new scan
+                                    for key in list(st.session_state.keys()):
+                                        if 'soc2' in key.lower():
+                                            del st.session_state[key]
+                                    st.rerun()
+                            
+                            with action_col3:
+                                if st.button("📊 View in Dashboard", key="soc2_results_view_dashboard", use_container_width=True):
+                                    # Store results in history and redirect to dashboard
+                                    if 'scan_history' not in st.session_state:
+                                        st.session_state.scan_history = []
+                                    
+                                    history_entry = {
+                                        'timestamp': datetime.now().isoformat(),
+                                        'scan_type': 'SOC2 Compliance',
+                                        'repository': scan_results.get('repo_url'),
+                                        'branch': scan_results.get('branch', 'main'),
+                                        'compliance_score': compliance_score,
+                                        'total_findings': total_findings,
+                                        'high_risk': high_risk,
+                                        'medium_risk': medium_risk,
+                                        'low_risk': low_risk,
+                                        'results': scan_results
+                                    }
+                                    st.session_state.scan_history.append(history_entry)
+                                    st.session_state.selected_nav = "Dashboard"
+                                    st.rerun()
+                            
+                            # Display findings table
+                            st.subheader("Compliance Findings")
+                            if 'findings' in scan_results and scan_results['findings']:
+                                findings_df = pd.DataFrame([
+                                    {
+                                        "Risk": f.get("risk_level", "Unknown").upper(),
+                                        "Category": f.get("category", "Unknown").capitalize(),
+                                        "Description": f.get("description", "No description"),
+                                        "File": f.get("file", "Unknown"),
+                                        "Line": f.get("line", "N/A"),
+                                    }
+                                    for f in scan_results['findings'][:10]  # Show top 10 findings
+                                ])
+                                st.dataframe(findings_df, use_container_width=True)
+                                
+                                if len(scan_results['findings']) > 10:
+                                    st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")
+                            else:
+                                st.info("No compliance findings detected.")
+                        
+                        else:
+                            # Show configuration only when no results are available
                             # Repository selection
                             st.subheader(_("scan.repo_source", "Repository Source"))
                             repo_source = st.radio(
