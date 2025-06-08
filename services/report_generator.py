@@ -187,112 +187,126 @@ class RiskMeter(Flowable):
         # Draw the entire drawing
         renderPDF.draw(d, self.canv, 0, 0)
 
-class ComplianceBanner(Flowable):
-    """A custom flowable that creates a right banner about GDPR fine protection."""
+class ModernLogoHeader(Flowable):
+    """Modern DataGuardian Pro logo header for professional reports"""
     
-    def __init__(self, compliance_level, language='en'):
+    def __init__(self, report_type="compliance", language='en'):
         Flowable.__init__(self)
-        self.compliance_level = compliance_level
+        self.report_type = report_type
         self.language = language
         self.width = 510  # For US Letter page with margins
-        self.height = 70
+        self.height = 80
     
     def draw(self):
         # Drawing with width and height
         d = Drawing(self.width, self.height)
         
-        # Banner rectangle
-        rect = Rect(0, 0, self.width, self.height, 
-                   fillColor=HexColor('#e8f4f8'), 
-                   strokeColor=HexColor('#3498db'),
-                   strokeWidth=1)
-        d.add(rect)
+        # Modern gradient background
+        gradient_rect = Rect(0, 0, self.width, self.height, 
+                           fillColor=HexColor('#f8fafc'), 
+                           strokeColor=HexColor('#e2e8f0'),
+                           strokeWidth=1)
+        d.add(gradient_rect)
         
-        # GDPR shield icon
-        shield_x = 40
-        shield_y = 35
-        shield_width = 30
-        shield_height = 40
+        # DataGuardian Pro logo elements
+        logo_x = 30
+        logo_y = self.height - 25
         
-        # Draw shield outline
-        shield = Wedge(shield_x, shield_y, shield_width/2, 0, 180, 
-                      fillColor=HexColor('#3498db'))
-        d.add(shield)
+        # Modern shield icon with gradient effect
+        shield_main = Rect(logo_x, logo_y - 25, 40, 40, 
+                          fillColor=HexColor('#1e40af'),  # Modern blue
+                          strokeColor=HexColor('#1e3a8a'),
+                          strokeWidth=2,
+                          rx=8, ry=8)  # Rounded corners
+        d.add(shield_main)
         
-        # Draw shield bottom
-        rect = Rect(shield_x - shield_width/2, shield_y - shield_height/2, 
-                   shield_width, shield_height/2, 
-                   fillColor=HexColor('#3498db'),
-                   strokeColor=None)
-        d.add(rect)
+        # Security checkmark inside shield
+        check_color = HexColor('#ffffff')
+        # Simplified checkmark using polygons for better rendering
+        from reportlab.graphics.shapes import Polygon
+        check_points = [
+            logo_x + 10, logo_y - 10,
+            logo_x + 16, logo_y - 16,
+            logo_x + 30, logo_y - 2,
+            logo_x + 28, logo_y,
+            logo_x + 16, logo_y - 12,
+            logo_x + 12, logo_y - 8
+        ]
+        checkmark = Polygon(check_points, fillColor=check_color, strokeColor=None)
+        d.add(checkmark)
         
-        # Add EU stars symbol
-        star_color = colors.yellow
-        star_radius = 2
-        center_x = shield_x
-        center_y = shield_y - 5
+        # Company name with modern typography
+        company_name = String(logo_x + 55, logo_y - 8, 
+                             "DataGuardian Pro", 
+                             fontSize=22, 
+                             fontName="Helvetica-Bold",
+                             fillColor=HexColor('#1e293b'))
+        d.add(company_name)
         
-        # Draw a circle of stars
-        for i in range(6):
-            angle = i * 60 * 3.14159 / 180
-            star_x = center_x + 10 * np.cos(angle)
-            star_y = center_y + 10 * np.sin(angle)
-            star = Circle(star_x, star_y, star_radius, 
-                         fillColor=star_color, 
-                         strokeColor=None)
-            d.add(star)
-        
-        # Add banner text - translated
-        if self.language == 'nl':
-            title_text = "AVG (GDPR) Nalevingsbescherming"
-        else:
-            title_text = "GDPR Compliance Protection"
-            
-        title = String(shield_x + 50, shield_y + 15, 
-                      title_text, 
-                      fontSize=14, 
-                      fillColor=HexColor('#2c3e50'))
-        d.add(title)
-        
-        # Add subtitle based on compliance level - translated
-        if self.language == 'nl':
-            if self.compliance_level == "Hoog" or self.compliance_level == "High":
-                subtitle_text = "Uw organisatie is goed beschermd tegen mogelijke AVG-boetes"
-                subtitle_color = HexColor('#27ae60')  # Green
-            elif self.compliance_level == "Gemiddeld" or self.compliance_level == "Medium":
-                subtitle_text = "Er bestaat enig risico op AVG-boetes - pak de gemarkeerde problemen aan"
-                subtitle_color = HexColor('#f39c12')  # Orange
+        # Tagline based on report type
+        if self.report_type == "soc2":
+            if self.language == 'nl':
+                tagline_text = "SOC2 Compliance & Beveiligingsanalyse"
             else:
-                subtitle_text = "Hoog risico op mogelijke AVG-boetes - onmiddellijke actie vereist"
-                subtitle_color = HexColor('#e74c3c')  # Red
-        else:
-            if self.compliance_level == "High":
-                subtitle_text = "Your organization is well-protected against potential GDPR fines"
-                subtitle_color = HexColor('#27ae60')  # Green
-            elif self.compliance_level == "Medium":
-                subtitle_text = "Some risk of GDPR fines exists - address highlighted issues"
-                subtitle_color = HexColor('#f39c12')  # Orange
+                tagline_text = "SOC2 Compliance & Security Analysis"
+        elif self.report_type == "ai_model":
+            if self.language == 'nl':
+                tagline_text = "AI Model Risico & Ethiek Beoordeling"
             else:
-                subtitle_text = "High risk of potential GDPR fines - immediate action required"
-                subtitle_color = HexColor('#e74c3c')  # Red
-            
-        subtitle = String(shield_x + 50, shield_y - 5, 
-                         subtitle_text, 
-                         fontSize=10, 
-                         fillColor=subtitle_color)
-        d.add(subtitle)
-        
-        # Add fine amount - translated
-        if self.language == 'nl':
-            fine_text_str = "Mogelijke boetes tot €20 miljoen of 4% van de wereldwijde omzet"
+                tagline_text = "AI Model Risk & Ethics Assessment"
         else:
-            fine_text_str = "Potential fines up to €20 million or 4% of global revenue"
-            
-        fine_text = String(shield_x + 50, shield_y - 20, 
-                          fine_text_str, 
+            if self.language == 'nl':
+                tagline_text = "Privacy Compliance & Data Bescherming"
+            else:
+                tagline_text = "Privacy Compliance & Data Protection"
+                
+        tagline = String(logo_x + 55, logo_y - 28, 
+                        tagline_text, 
+                        fontSize=12, 
+                        fillColor=HexColor('#64748b'))
+        d.add(tagline)
+        
+        # Professional certification badges
+        cert_x = self.width - 120
+        cert_y = logo_y - 15
+        
+        # ISO 27001 badge
+        iso_badge = Rect(cert_x, cert_y, 50, 20, 
+                        fillColor=HexColor('#059669'),
+                        strokeColor=HexColor('#047857'),
+                        strokeWidth=1,
+                        rx=3, ry=3)
+        d.add(iso_badge)
+        
+        iso_text = String(cert_x + 25, cert_y + 6, 
+                         "ISO 27001", 
+                         fontSize=8, 
+                         fontName="Helvetica-Bold",
+                         fillColor=HexColor('#ffffff'),
+                         textAnchor='middle')
+        d.add(iso_text)
+        
+        # GDPR badge
+        gdpr_badge = Rect(cert_x + 55, cert_y, 50, 20, 
+                         fillColor=HexColor('#dc2626'),
+                         strokeColor=HexColor('#b91c1c'),
+                         strokeWidth=1,
+                         rx=3, ry=3)
+        d.add(gdpr_badge)
+        
+        gdpr_text = String(cert_x + 80, cert_y + 6, 
+                          "GDPR", 
                           fontSize=8, 
-                          fillColor=HexColor('#7f8c8d'))
-        d.add(fine_text)
+                          fontName="Helvetica-Bold",
+                          fillColor=HexColor('#ffffff'),
+                          textAnchor='middle')
+        d.add(gdpr_text)
+        
+        # Subtle accent line at bottom
+        accent_line = Rect(0, 0, self.width, 3, 
+                          fillColor=HexColor('#3b82f6'),
+                          strokeColor=None)
+        d.add(accent_line)
         
         # Draw the entire drawing
         renderPDF.draw(d, self.canv, 0, 0)
@@ -874,10 +888,22 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         technologies = scan_data.get('technologies_detected', [])
         technologies_text = ", ".join(technologies) if technologies else "None"
         
+        # Calculate total findings for SOC2 (not PII)
+        total_findings = high_risk + medium_risk + low_risk
+        
+        # Fix compliance score logic - with high risk items, score cannot be good
+        if high_risk > 0:
+            compliance_score = min(compliance_score, 40)  # Cap at 40 if high risk present
+        elif medium_risk > 5:
+            compliance_score = min(compliance_score, 65)  # Cap at 65 if many medium risk
+        
+        # Update scan_data with corrected score
+        scan_data['compliance_score'] = compliance_score
+        
         if current_lang == 'nl':
             summary_text = f"""
             Dit rapport presenteert de bevindingen van een SOC2 compliance analyse uitgevoerd op <b>{repo_url}</b> 
-            (branch: <b>{branch}</b>) op <b>{timestamp}</b>. De scan heeft in totaal <b>{total_pii}</b> compliance problemen 
+            (branch: <b>{branch}</b>) op <b>{timestamp}</b>. De scan heeft in totaal <b>{total_findings}</b> compliance problemen 
             geïdentificeerd met <b>{high_risk}</b> hoog-risico items. De algemene compliance score is <b>{compliance_score}/100</b>.
             
             <b>Gedetecteerde technologieën:</b> {technologies_text}
@@ -893,7 +919,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         else:
             summary_text = f"""
             This report presents the findings of a SOC2 compliance analysis conducted on <b>{repo_url}</b> 
-            (branch: <b>{branch}</b>) on <b>{timestamp}</b>. The scan identified a total of <b>{total_pii}</b> compliance issues 
+            (branch: <b>{branch}</b>) on <b>{timestamp}</b>. The scan identified a total of <b>{total_findings}</b> compliance issues 
             with <b>{high_risk}</b> high-risk items. The overall compliance score is <b>{compliance_score}/100</b>.
             
             <b>Technologies Detected:</b> {technologies_text}

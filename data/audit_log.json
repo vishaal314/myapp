@@ -1,0 +1,38 @@
+[
+  {
+    "log_id": "log_bbf3e091822d427baad91fe209ec6448",
+    "username": "vishaal",
+    "action": "FREE_TRIAL_SCAN",
+    "timestamp": "2025-06-08T19:42:59.064867",
+    "details": {
+      "scan_type": "scan.soc2",
+      "trial_days_left": 3,
+      "trial_scans_used": 2,
+      "user_email": "vishaal314@gmail.com",
+      "timestamp": "2025-06-08T19:42:59.064435"
+    }
+  },
+  {
+    "log_id": "log_8b5550c8aaf74be1bb3dfc8cfcb14305",
+    "username": "vishaal",
+    "action": "SOC2_SCAN_COMPLETED",
+    "timestamp": "2025-06-08T19:43:10.789332",
+    "details": {
+      "scan_id": "5831a168-2cab-48b2-a5c2-310f81840dc8",
+      "repo_url": "https://github.com/yhilpisch/py4fi2nd"
+    }
+  },
+  {
+    "log_id": "log_823e83bf80314da3831343fe7d14fb47",
+    "username": "vishaal",
+    "action": "SCAN_STARTED",
+    "timestamp": "2025-06-08T19:43:10.796131",
+    "details": {
+      "scan_type": "scan.soc2",
+      "region": "Netherlands",
+      "user_email": "vishaal314@gmail.com",
+      "timestamp": "2025-06-08T19:43:10.795748",
+      "user_role": "analyst"
+    }
+  }
+]
