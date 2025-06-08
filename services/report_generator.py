@@ -326,7 +326,6 @@ def create_pie_chart(data, title, colors_dict=None):
     
     # Set data
     pie.data = list(data.values())
-    pie.labels = list(data.keys())
     
     # Set colors based on keys if provided
     if colors_dict:
@@ -335,24 +334,30 @@ def create_pie_chart(data, title, colors_dict=None):
             if key in colors_dict:
                 pie_colors.append(colors_dict[key])
             else:
-                pie_colors.append(toColor(colors.lightblue))
+                pie_colors.append(colors.lightblue)
+        # Apply colors to slices
+        for i, color in enumerate(pie_colors):
+            pie.slices[i].fillColor = color
         pie.slices.strokeWidth = 0.5
         pie.slices.strokeColor = colors.white
-        pie.slices.fillColor = pie_colors
     
     drawing.add(pie)
     
     # Add title
-    title_label = Label()
-    title_label.setText(title)
-    title_label.x = 200
-    title_label.y = 180
-    title_label.textAnchor = 'middle'
-    title_label.fontSize = 14
+    title_label = String(200, 180, title, fontSize=14, textAnchor='middle')
     drawing.add(title_label)
     
-    # Add legend
-    drawing.add(Pie.LegendSwatchMarker())
+    # Add simple legend
+    legend_y = 120
+    for i, (key, value) in enumerate(data.items()):
+        legend_x = 50 + (i * 100)
+        # Color box
+        color_box = Rect(legend_x, legend_y, 10, 10, 
+                        fillColor=colors_dict.get(key, colors.lightblue) if colors_dict else colors.lightblue)
+        drawing.add(color_box)
+        # Label
+        legend_label = String(legend_x + 15, legend_y + 2, f"{key}: {value}", fontSize=10)
+        drawing.add(legend_label)
     
     return drawing
 
@@ -1222,7 +1227,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         sustainability_score = 90  # Excellent sustainability score
     
     # Add GDPR fine protection banner with language support
-    gdpr_banner = ComplianceBanner(compliance_level, language=current_lang)
+    gdpr_banner = ModernLogoHeader(report_type=report_format, language=current_lang)
     elements.append(gdpr_banner)
     elements.append(Spacer(1, 12))
     
