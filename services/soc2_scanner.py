@@ -760,23 +760,31 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
         medium_risk = results["medium_risk_count"]
         low_risk = results["low_risk_count"]
         
-        # Enhanced compliance scoring with proper risk weighting
+        # Realistic compliance scoring that provides actionable insights
         base_score = 100
         if total_findings > 0:
-            # Balanced scoring that reflects compliance risk appropriately
-            # High risk findings have significant but not overwhelming impact
-            high_risk_impact = high_risk * 8  # Each high risk deducts 8 points
-            medium_risk_impact = medium_risk * 4  # Each medium risk deducts 4 points  
-            low_risk_impact = low_risk * 1  # Each low risk deducts 1 point
+            # More balanced scoring approach
+            # Scale impact based on finding density relative to codebase size
+            total_files = results.get("total_files_scanned", 1)
+            finding_density = total_findings / max(total_files, 1) * 100
             
-            total_impact = high_risk_impact + medium_risk_impact + low_risk_impact
+            # Base deductions per finding type
+            high_risk_deduction = min(3, finding_density * 0.1)  # 1-3 points per high risk
+            medium_risk_deduction = min(1.5, finding_density * 0.05)  # 0.5-1.5 points per medium risk
+            low_risk_deduction = min(0.5, finding_density * 0.02)  # 0.1-0.5 points per low risk
             
-            # Additional penalty for multiple high-risk issues
-            if high_risk >= 5:
-                critical_penalty = min(15, (high_risk - 4) * 2)  # Extra penalty for many critical issues
-                total_impact += critical_penalty
+            total_deduction = (high_risk * high_risk_deduction + 
+                             medium_risk * medium_risk_deduction + 
+                             low_risk * low_risk_deduction)
             
-            compliance_score = max(5, base_score - total_impact)  # Minimum score of 5
+            # Cap maximum deduction to ensure reasonable scores
+            max_deduction = 70  # Never go below 30/100
+            total_deduction = min(total_deduction, max_deduction)
+            
+            compliance_score = base_score - total_deduction
+            
+            # Ensure minimum score for repositories with findings
+            compliance_score = max(15, compliance_score)
         else:
             compliance_score = base_score
             
