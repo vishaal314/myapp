@@ -28,12 +28,55 @@ def display_soc2_findings(scan_results):
                     "Description": f.get("description", "No description"),
                     "File": f.get("file", "Unknown"),
                     "Line": f.get("line", "N/A"),
-                    "SOC2 TSC": ", ".join(f.get("soc2_tsc_criteria", []))
+                    "SOC2 TSC": ", ".join(f.get("soc2_tsc_criteria", [])),
+                    "Technology": f.get("technology", "Unknown"),
+                    "Recommendation": f.get("recommendation", "No recommendation")[:100] + "..." if len(f.get("recommendation", "")) > 100 else f.get("recommendation", "No recommendation")
                 })
         
         if valid_findings:
             findings_df = pd.DataFrame(valid_findings)
-            st.dataframe(findings_df, use_container_width=True)
+            
+            # Apply styling to highlight risk levels
+            def highlight_risk_in_table(val):
+                if val == 'HIGH':
+                    return 'background-color: #fee2e2; color: #dc2626; font-weight: bold'
+                elif val == 'MEDIUM':
+                    return 'background-color: #fef3c7; color: #d97706; font-weight: bold'
+                elif val == 'LOW':
+                    return 'background-color: #dcfce7; color: #16a34a; font-weight: bold'
+                return ''
+            
+            styled_df = findings_df.style.applymap(highlight_risk_in_table, subset=['Risk'])
+            st.dataframe(styled_df, use_container_width=True)
+            
+            # Show detailed violation breakdown by category
+            st.markdown("### Detailed Violation Analysis")
+            
+            categories = {}
+            for f in scan_results['findings']:
+                if isinstance(f, dict):
+                    category = f.get('category', 'unknown')
+                    if category not in categories:
+                        categories[category] = {'high': 0, 'medium': 0, 'low': 0, 'items': []}
+                    
+                    risk_level = f.get('risk_level', 'medium')
+                    categories[category][risk_level] += 1
+                    categories[category]['items'].append(f)
+            
+            # Display category breakdown
+            for category, data in categories.items():
+                with st.expander(f"📊 {category.replace('_', ' ').title()} Issues ({data['high']} High, {data['medium']} Medium, {data['low']} Low)"):
+                    for item in data['items']:
+                        risk_color = "#dc2626" if item.get('risk_level') == 'high' else "#d97706" if item.get('risk_level') == 'medium' else "#16a34a"
+                        st.markdown(f"""
+                        <div style="border-left: 4px solid {risk_color}; padding: 10px; margin: 5px 0; background: #f8f9fa;">
+                            <strong>{item.get('risk_level', 'medium').upper()}</strong>: {item.get('description', 'No description')}
+                            <br><small>📁 {item.get('file', 'Unknown')} (Line {item.get('line', 'N/A')})</small>
+                            <br><small>🔧 Technology: {item.get('technology', 'Unknown')}</small>
+                            <br><small>📋 SOC2 TSC: {', '.join(item.get('soc2_tsc_criteria', []))}</small>
+                            <br><em>💡 {item.get('recommendation', 'No recommendation')}</em>
+                        </div>
+                        """, unsafe_allow_html=True)
             
             if len(scan_results['findings']) > 10:
                 st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")

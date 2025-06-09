@@ -760,18 +760,27 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
         medium_risk = results["medium_risk_count"]
         low_risk = results["low_risk_count"]
         
-        # Base score is 100, deduct points based on findings
+        # Enhanced compliance scoring with proper risk weighting
         base_score = 100
         if total_findings > 0:
-            # Calculate weighted impact of findings
-            weighted_impact = (high_risk * 10 + medium_risk * 5 + low_risk * 2) / (results["iac_files_found"] or 1)
-            # Cap the impact to ensure score doesn't go below 0
-            weighted_impact = min(95, weighted_impact)
-            compliance_score = base_score - weighted_impact
+            # More accurate scoring that reflects actual compliance risk
+            # High risk findings have significant impact on score
+            high_risk_impact = high_risk * 20  # Each high risk deducts 20 points
+            medium_risk_impact = medium_risk * 10  # Each medium risk deducts 10 points
+            low_risk_impact = low_risk * 3  # Each low risk deducts 3 points
+            
+            total_impact = high_risk_impact + medium_risk_impact + low_risk_impact
+            
+            # Additional penalty for critical vulnerabilities
+            if high_risk > 0:
+                critical_penalty = min(30, high_risk * 5)  # Up to 30 points for critical issues
+                total_impact += critical_penalty
+            
+            compliance_score = max(0, base_score - total_impact)
         else:
             compliance_score = base_score
             
-        results["compliance_score"] = max(5, int(compliance_score))
+        results["compliance_score"] = int(compliance_score)
         
         # Add recommendations based on actual findings
         results["recommendations"] = generate_recommendations(results)
@@ -977,13 +986,22 @@ def generate_recommendations(scan_results: Dict[str, Any]) -> List[Dict[str, Any
     # Extract unique recommendations to avoid duplication
     unique_recs = {}
     for finding in scan_results.get("findings", []):
-        rec_key = (finding["recommendation"], finding["category"], finding["risk_level"])
+        # Skip invalid findings that are not dictionaries
+        if not isinstance(finding, dict):
+            logger.warning(f"Skipping invalid finding in recommendations: {type(finding)} - {finding}")
+            continue
+            
+        recommendation = finding.get("recommendation", "No recommendation")
+        category = finding.get("category", "unknown")
+        risk_level = finding.get("risk_level", "medium")
+        
+        rec_key = (recommendation, category, risk_level)
         if rec_key not in unique_recs:
             unique_recs[rec_key] = {
-                "description": f"SOC2 {finding['category'].capitalize()} - {finding['recommendation']}",
-                "severity": finding["risk_level"],
-                "impact": "High" if finding["risk_level"] == "high" else "Medium" if finding["risk_level"] == "medium" else "Low",
-                "category": finding["category"],
+                "description": f"SOC2 {category.capitalize()} - {recommendation}",
+                "severity": risk_level,
+                "impact": "High" if risk_level == "high" else "Medium" if risk_level == "medium" else "Low",
+                "category": category,
                 "steps": [],
                 "affected_files": [],
                 "soc2_tsc_criteria": finding.get("soc2_tsc_criteria", []),
@@ -1002,7 +1020,7 @@ def generate_recommendations(scan_results: Dict[str, Any]) -> List[Dict[str, Any
                             unique_recs[rec_key]["soc2_tsc_details"].append(detail)
         
         # Add file to affected files if not already there
-        file_info = f"{finding['file']}:{finding['line']}"
+        file_info = f"{finding.get('file', 'Unknown')}:{finding.get('line', 'N/A')}"
         if file_info not in unique_recs[rec_key]["affected_files"]:
             unique_recs[rec_key]["affected_files"].append(file_info)
     
