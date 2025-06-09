@@ -165,8 +165,33 @@ def display_soc2_scan_results(scan_results: Dict[str, Any]):
     # Display metrics
     col1, col2, col3, col4 = st.columns(4)
     
-    # Color coding based on compliance score
-    if compliance_score >= 80:
+    # Enhanced compliance score validation with proper risk assessment
+    total_findings = high_risk + medium_risk + low_risk
+    
+    # Recalculate compliance score if it appears incorrect
+    if total_findings > 0 and compliance_score == 0:
+        # Emergency recalculation for invalid scores
+        base_score = 100
+        high_risk_impact = high_risk * 20
+        medium_risk_impact = medium_risk * 10
+        low_risk_impact = low_risk * 3
+        
+        if high_risk > 0:
+            critical_penalty = min(30, high_risk * 5)
+            total_impact = high_risk_impact + medium_risk_impact + low_risk_impact + critical_penalty
+        else:
+            total_impact = high_risk_impact + medium_risk_impact + low_risk_impact
+            
+        compliance_score = max(0, base_score - total_impact)
+        
+        # Update the scan results with corrected score
+        scan_results["compliance_score"] = compliance_score
+    
+    # Color coding based on validated compliance score
+    if high_risk > 0:
+        compliance_color_css = "red"
+        compliance_status = "✗ Critical"
+    elif compliance_score >= 80:
         compliance_color_css = "green"
         compliance_status = "✓ Good" 
     elif compliance_score >= 60:

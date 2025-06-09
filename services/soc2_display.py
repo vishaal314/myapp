@@ -46,7 +46,7 @@ def display_soc2_findings(scan_results):
                     return 'background-color: #dcfce7; color: #16a34a; font-weight: bold'
                 return ''
             
-            styled_df = findings_df.style.applymap(highlight_risk_in_table, subset=['Risk'])
+            styled_df = findings_df.style.map(highlight_risk_in_table, subset=['Risk'])
             st.dataframe(styled_df, use_container_width=True)
             
             # Show detailed violation breakdown by category
@@ -63,20 +63,23 @@ def display_soc2_findings(scan_results):
                     categories[category][risk_level] += 1
                     categories[category]['items'].append(f)
             
-            # Display category breakdown
+            # Display category breakdown without nested expanders
             for category, data in categories.items():
-                with st.expander(f"📊 {category.replace('_', ' ').title()} Issues ({data['high']} High, {data['medium']} Medium, {data['low']} Low)"):
-                    for item in data['items']:
-                        risk_color = "#dc2626" if item.get('risk_level') == 'high' else "#d97706" if item.get('risk_level') == 'medium' else "#16a34a"
-                        st.markdown(f"""
-                        <div style="border-left: 4px solid {risk_color}; padding: 10px; margin: 5px 0; background: #f8f9fa;">
-                            <strong>{item.get('risk_level', 'medium').upper()}</strong>: {item.get('description', 'No description')}
-                            <br><small>📁 {item.get('file', 'Unknown')} (Line {item.get('line', 'N/A')})</small>
-                            <br><small>🔧 Technology: {item.get('technology', 'Unknown')}</small>
-                            <br><small>📋 SOC2 TSC: {', '.join(item.get('soc2_tsc_criteria', []))}</small>
-                            <br><em>💡 {item.get('recommendation', 'No recommendation')}</em>
-                        </div>
-                        """, unsafe_allow_html=True)
+                st.markdown(f"#### 📊 {category.replace('_', ' ').title()} Issues ({data['high']} High, {data['medium']} Medium, {data['low']} Low)")
+                
+                for item in data['items']:
+                    risk_color = "#dc2626" if item.get('risk_level') == 'high' else "#d97706" if item.get('risk_level') == 'medium' else "#16a34a"
+                    st.markdown(f"""
+                    <div style="border-left: 4px solid {risk_color}; padding: 10px; margin: 5px 0; background: #f8f9fa;">
+                        <strong>{item.get('risk_level', 'medium').upper()}</strong>: {item.get('description', 'No description')}
+                        <br><small>📁 {item.get('file', 'Unknown')} (Line {item.get('line', 'N/A')})</small>
+                        <br><small>🔧 Technology: {item.get('technology', 'Unknown')}</small>
+                        <br><small>📋 SOC2 TSC: {', '.join(item.get('soc2_tsc_criteria', []))}</small>
+                        <br><em>💡 {item.get('recommendation', 'No recommendation')}</em>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown("---")
             
             if len(scan_results['findings']) > 10:
                 st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")

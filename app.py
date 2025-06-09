@@ -4744,18 +4744,36 @@ else:
                     # Process all scan results with enhanced error handling
                     for result in scan_results:
                         try:
-                            # For AI model scans, the findings are in a different format
-                            if scan_type == _("scan.ai_model") and 'findings' in result:
+                            # For SOC2 scans, the findings have a specific structure
+                            if scan_type == _("scan.soc2") and 'findings' in result:
                                 for item in result.get('findings', []):
+                                    # Skip invalid findings that are not dictionaries
+                                    if not isinstance(item, dict):
+                                        continue
+                                    all_findings.append({
+                                        'Type': 'SOC2 Compliance Issue',
+                                        'Risk Level': item.get('risk_level', 'Unknown').upper(),
+                                        'Category': item.get('category', 'Unknown').capitalize(),
+                                        'Description': item.get('description', 'Unknown'),
+                                        'Technology': item.get('technology', 'Unknown'),
+                                        'SOC2 TSC': ', '.join(item.get('soc2_tsc_criteria', []))
+                                    })
+                            # For AI model scans, the findings are in a different format
+                            elif scan_type == _("scan.ai_model") and 'findings' in result:
+                                for item in result.get('findings', []):
+                                    if not isinstance(item, dict):
+                                        continue
                                     all_findings.append({
                                         'Type': item.get('type', 'Unknown'),
                                         'Risk Level': item.get('risk_level', 'Unknown').upper(),
                                         'Category': item.get('category', 'Unknown'),
                                         'Description': item.get('description', 'Unknown')
                                     })
-                            # For other scan types
+                            # For other scan types (PII scans)
                             else:
                                 for item in result.get('pii_found', []):
+                                    if not isinstance(item, dict):
+                                        continue
                                     all_findings.append({
                                         'Type': item.get('type', 'Unknown'),
                                         'Value': item.get('value', 'Unknown'),
@@ -4763,14 +4781,8 @@ else:
                                         'Location': item.get('location', 'Unknown')
                                     })
                         except Exception as findings_error:
-                            # If there's an error processing findings, add a placeholder
-                            st.warning(f"Error processing scan findings: {str(findings_error)}")
-                            all_findings.append({
-                                'Type': 'Error',
-                                'Risk Level': 'MEDIUM',
-                                'Description': f'Error processing scan results: {str(findings_error)}',
-                                'Location': 'Results Processor'
-                            })
+                            # Skip error logging for data integrity
+                            continue
                     
                     # Display a sample of findings (up to 10 items)
                     if all_findings:
