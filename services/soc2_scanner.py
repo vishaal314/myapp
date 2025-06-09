@@ -777,7 +777,7 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
         results["recommendations"] = generate_recommendations(results)
         
         # Generate SOC2 TSC checklist based on actual findings
-        results["soc2_tsc_checklist"] = generate_soc2_tsc_checklist(results["findings"])
+        results["soc2_tsc_checklist"] = generate_soc2_tsc_checklist(results)
         
         # Update scan status
         results["scan_status"] = "completed"
@@ -1089,25 +1089,30 @@ def generate_soc2_tsc_checklist(scan_results: Dict[str, Any]) -> Dict[str, Any]:
     
     # Update status based on findings
     for finding in scan_results.get("findings", []):
+        # Skip invalid findings that are not dictionaries
+        if not isinstance(finding, dict):
+            logger.warning(f"Skipping invalid finding: {type(finding)} - {finding}")
+            continue
+            
         for criterion in finding.get("soc2_tsc_criteria", []):
             if criterion in checklist:
                 # If any high risk finding, mark as "failed"
-                if finding["risk_level"] == "high":
+                if finding.get("risk_level") == "high":
                     checklist[criterion]["status"] = "failed"
                 # If medium risk and not already failed, mark as "warning"
-                elif finding["risk_level"] == "medium" and checklist[criterion]["status"] != "failed":
+                elif finding.get("risk_level") == "medium" and checklist[criterion]["status"] != "failed":
                     checklist[criterion]["status"] = "warning"
                 # If low risk and not already failed or warning, mark as "info"
-                elif finding["risk_level"] == "low" and checklist[criterion]["status"] not in ["failed", "warning"]:
+                elif finding.get("risk_level") == "low" and checklist[criterion]["status"] not in ["failed", "warning"]:
                     checklist[criterion]["status"] = "info"
                 
                 # Add violation
                 violation = {
-                    "description": finding["description"],
-                    "file": finding["file"],
-                    "line": finding["line"],
-                    "risk_level": finding["risk_level"],
-                    "recommendation": finding["recommendation"]
+                    "description": finding.get("description", "No description"),
+                    "file": finding.get("file", "Unknown"),
+                    "line": finding.get("line", "N/A"),
+                    "risk_level": finding.get("risk_level", "medium"),
+                    "recommendation": finding.get("recommendation", "No recommendation")
                 }
                 checklist[criterion]["violations"].append(violation)
     
