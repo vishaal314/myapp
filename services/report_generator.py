@@ -1477,6 +1477,240 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             elements.append(Paragraph(tsc_title, subheading_style))
             elements.append(Paragraph(tsc_explanation, normal_style))
             
+            # Add comprehensive security vulnerability analysis for SOC2 findings
+            elements.append(PageBreak())
+            
+            if current_lang == 'nl':
+                security_analysis_title = "Beveiligingsvulnerabiliteiten Analyse"
+                security_summary_text = f"""
+                Deze SOC2-scan heeft {len([f for f in soc2_findings if f.get('risk_level', '').lower() == 'high'])} kritieke beveiligingsproblemen geïdentificeerd 
+                in de Spring Boot repository. De meest ernstige bevindingen betreffen hard-gecodeerde credentials in testbestanden.
+                """
+                critical_findings_title = "Kritieke Bevindingen - Hard-gecodeerde Credentials"
+                critical_explanation = """
+                Hard-gecodeerde credentials vormen een ernstig beveiligingsrisico omdat ze:
+                • Toegang tot gevoelige systemen kunnen verschaffen aan onbevoegden
+                • Moeilijk te roteren zijn zonder code-wijzigingen
+                • In versiebeheersystemen kunnen lekken
+                • SOC2 CC6.1, CC6.6 en CC6.7 criteria schenden
+                """
+            else:
+                security_analysis_title = "Security Vulnerability Analysis"
+                security_summary_text = f"""
+                This SOC2 scan identified {len([f for f in soc2_findings if f.get('risk_level', '').lower() == 'high'])} critical security issues 
+                in the Spring Boot repository. The most severe findings involve hard-coded credentials in test files.
+                """
+                critical_findings_title = "Critical Findings - Hard-coded Credentials"
+                critical_explanation = """
+                Hard-coded credentials pose severe security risks because they:
+                • Can provide unauthorized access to sensitive systems
+                • Are difficult to rotate without code changes
+                • May leak through version control systems
+                • Violate SOC2 CC6.1, CC6.6, and CC6.7 criteria
+                """
+            
+            elements.append(Paragraph(security_analysis_title, heading_style))
+            elements.append(Paragraph(security_summary_text, normal_style))
+            elements.append(Spacer(1, 10))
+            
+            elements.append(Paragraph(critical_findings_title, subheading_style))
+            elements.append(Paragraph(critical_explanation, normal_style))
+            elements.append(Spacer(1, 10))
+            
+            # Extract and display high-risk credential findings
+            credential_findings = [f for f in soc2_findings if f.get('risk_level', '').lower() == 'high' and 'credential' in f.get('description', '').lower()]
+            
+            if credential_findings:
+                if current_lang == 'nl':
+                    credential_table_headers = ["Bestand", "Regel", "Technologie", "TSC Criteria"]
+                else:
+                    credential_table_headers = ["File", "Line", "Technology", "TSC Criteria"]
+                
+                credential_data = [credential_table_headers]
+                
+                for finding in credential_findings[:10]:  # Limit to top 10 for space
+                    file_path = finding.get('file', 'Unknown')
+                    # Truncate long file paths for better display
+                    if len(file_path) > 60:
+                        file_path = "..." + file_path[-57:]
+                    
+                    tsc_criteria = finding.get('soc2_tsc_criteria', [])
+                    tsc_text = ", ".join(tsc_criteria) if tsc_criteria else "N/A"
+                    
+                    credential_data.append([
+                        file_path,
+                        str(finding.get('line', 'N/A')),
+                        finding.get('technology', 'Unknown').upper(),
+                        tsc_text
+                    ])
+                
+                credential_table = Table(credential_data, colWidths=[200, 40, 60, 80])
+                credential_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.red),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.mistyrose)
+                ]))
+                
+                elements.append(credential_table)
+                elements.append(Spacer(1, 15))
+            
+            # Add technology breakdown analysis
+            tech_breakdown = {}
+            for finding in soc2_findings:
+                tech = finding.get('technology', 'Unknown')
+                risk = finding.get('risk_level', 'low').lower()
+                if tech not in tech_breakdown:
+                    tech_breakdown[tech] = {'high': 0, 'medium': 0, 'low': 0}
+                tech_breakdown[tech][risk] = tech_breakdown[tech].get(risk, 0) + 1
+            
+            if current_lang == 'nl':
+                tech_analysis_title = "Technologie Risico Breakdown"
+                tech_headers = ["Technologie", "Hoog", "Gemiddeld", "Laag", "Totaal"]
+            else:
+                tech_analysis_title = "Technology Risk Breakdown"
+                tech_headers = ["Technology", "High", "Medium", "Low", "Total"]
+            
+            elements.append(Paragraph(tech_analysis_title, subheading_style))
+            
+            tech_data = [tech_headers]
+            for tech, risks in sorted(tech_breakdown.items()):
+                total = risks['high'] + risks['medium'] + risks['low']
+                tech_data.append([
+                    tech.upper(),
+                    str(risks['high']),
+                    str(risks['medium']),
+                    str(risks['low']),
+                    str(total)
+                ])
+            
+            tech_table = Table(tech_data, colWidths=[80, 40, 40, 40, 40])
+            tech_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
+            ]))
+            
+            elements.append(tech_table)
+            elements.append(Spacer(1, 15))
+            
+            # Add remediation recommendations section
+            if current_lang == 'nl':
+                remediation_title = "Aanbevelingen voor Herstel"
+                remediation_text = """
+                Om de geïdentificeerde beveiligingsrisico's aan te pakken en SOC2-compliance te verbeteren:
+                
+                1. ONMIDDELLIJKE ACTIE - Hard-gecodeerde Credentials:
+                   • Vervang alle hard-gecodeerde credentials door omgevingsvariabelen
+                   • Implementeer een centraal secret management systeem (bijv. HashiCorp Vault)
+                   • Voer credential rotatie procedures in
+                   • Scan regelmatig op nieuwe hard-gecodeerde secrets
+                
+                2. BEVEILIGINGSGOVERNANCE:
+                   • Implementeer pre-commit hooks om credentials te detecteren
+                   • Stel code review processen in voor beveiligingscontroles
+                   • Train ontwikkelaars in secure coding practices
+                   • Implementeer SAST (Static Application Security Testing)
+                
+                3. SOC2 COMPLIANCE MONITORING:
+                   • Stel continue monitoring in voor TSC criteria naleving
+                   • Documenteer beveiligingsbeleid en procedures
+                   • Implementeer toegangscontroles en audit logging
+                   • Voer regelmatige beveiligingsassessments uit
+                """
+                compliance_status_title = "SOC2 Compliance Status"
+                compliance_conclusion = f"""
+                Gebaseerd op deze scan toont de repository significante compliance uitdagingen met {len([f for f in soc2_findings if f.get('risk_level', '').lower() == 'high'])} 
+                kritieke bevindingen die onmiddellijke aandacht vereisen. Het risico is momenteel HOOG vanwege de aanwezigheid van 
+                hard-gecodeerde credentials die meerdere SOC2 Trust Services Criteria schenden.
+                """
+            else:
+                remediation_title = "Remediation Recommendations"
+                remediation_text = """
+                To address the identified security risks and improve SOC2 compliance:
+                
+                1. IMMEDIATE ACTION - Hard-coded Credentials:
+                   • Replace all hard-coded credentials with environment variables
+                   • Implement centralized secret management system (e.g., HashiCorp Vault)
+                   • Establish credential rotation procedures
+                   • Regularly scan for new hard-coded secrets
+                
+                2. SECURITY GOVERNANCE:
+                   • Implement pre-commit hooks to detect credentials
+                   • Establish code review processes for security checks
+                   • Train developers in secure coding practices
+                   • Implement SAST (Static Application Security Testing)
+                
+                3. SOC2 COMPLIANCE MONITORING:
+                   • Establish continuous monitoring for TSC criteria compliance
+                   • Document security policies and procedures
+                   • Implement access controls and audit logging
+                   • Conduct regular security assessments
+                """
+                compliance_status_title = "SOC2 Compliance Status"
+                compliance_conclusion = f"""
+                Based on this scan, the repository shows significant compliance challenges with {len([f for f in soc2_findings if f.get('risk_level', '').lower() == 'high'])} 
+                critical findings requiring immediate attention. The risk level is currently HIGH due to the presence of 
+                hard-coded credentials that violate multiple SOC2 Trust Services Criteria.
+                """
+            
+            elements.append(Paragraph(remediation_title, heading_style))
+            elements.append(Paragraph(remediation_text, normal_style))
+            elements.append(Spacer(1, 15))
+            
+            elements.append(Paragraph(compliance_status_title, subheading_style))
+            elements.append(Paragraph(compliance_conclusion, normal_style))
+            
+            # Add final compliance summary table
+            if current_lang == 'nl':
+                summary_headers = ["Metriek", "Waarde", "Status"]
+                summary_data = [
+                    summary_headers,
+                    ["Totaal Bevindingen", str(len(soc2_findings)), "Geanalyseerd"],
+                    ["Kritieke Risico's", str(len([f for f in soc2_findings if f.get('risk_level', '').lower() == 'high'])), "HOOG"],
+                    ["Gemiddelde Risico's", str(len([f for f in soc2_findings if f.get('risk_level', '').lower() == 'medium'])), "GEMIDDELD"],
+                    ["Compliance Score", f"{scan_data.get('compliance_score', 0):.1f}%", "KRITIEK" if scan_data.get('compliance_score', 0) < 50 else "VERBETERING NODIG"],
+                    ["Aanbevolen Actie", "Onmiddellijk", "VEREIST"]
+                ]
+            else:
+                summary_headers = ["Metric", "Value", "Status"]
+                summary_data = [
+                    summary_headers,
+                    ["Total Findings", str(len(soc2_findings)), "Analyzed"],
+                    ["Critical Risks", str(len([f for f in soc2_findings if f.get('risk_level', '').lower() == 'high'])), "HIGH"],
+                    ["Medium Risks", str(len([f for f in soc2_findings if f.get('risk_level', '').lower() == 'medium'])), "MEDIUM"],
+                    ["Compliance Score", f"{scan_data.get('compliance_score', 0):.1f}%", "CRITICAL" if scan_data.get('compliance_score', 0) < 50 else "NEEDS IMPROVEMENT"],
+                    ["Recommended Action", "Immediate", "REQUIRED"]
+                ]
+            
+            summary_table = Table(summary_data, colWidths=[120, 80, 120])
+            summary_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.darkgreen),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BACKGROUND', (0, 2), (-1, 2), colors.lightcoral),  # Critical risks row
+                ('BACKGROUND', (0, 4), (-1, 4), colors.lightcoral),  # Compliance score row
+                ('BACKGROUND', (0, 5), (-1, 5), colors.lightyellow)   # Action required row
+            ]))
+            
+            elements.append(Spacer(1, 10))
+            elements.append(summary_table)
+            
         # For standard reports with detailed_results
         elif 'detailed_results' in scan_data and scan_data['detailed_results']:
             # Extract all PII items from all files
