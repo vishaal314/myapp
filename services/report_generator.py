@@ -1986,32 +1986,53 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                     'Files Scanned': scan_data.get('file_count', 0)
                 }
         elif report_format == "soc2":
-            # Extract SOC2 specific data
-            repository_url = scan_data.get('repository_url', 'N/A')
-            repository_path = scan_data.get('repository_path', 'N/A')
-            repository_provider = scan_data.get('repository_provider', 'GitHub')
+            # Extract SOC2 specific data with correct field mappings
+            repository_url = scan_data.get('repo_url', scan_data.get('repository_url', 'Not available'))
+            repository_path = scan_data.get('repo_path', scan_data.get('repository_path', 'Not available'))
+            repository_provider = scan_data.get('repo_provider', 'GitHub')
             branch = scan_data.get('branch', 'main')
             
-            # Extract SOC2 specific metrics
-            tsc_categories = scan_data.get('tsc_categories', {})
-            cc_findings = tsc_categories.get('CC', 0)
-            a_findings = tsc_categories.get('A', 0)
-            pi_findings = tsc_categories.get('PI', 0)
-            c_findings = tsc_categories.get('C', 0)
-            p_findings = tsc_categories.get('P', 0)
+            # Get actual scan metadata
+            scan_id_value = scan_data.get('scan_id', f"SOC2-{datetime.now().strftime('%Y%m%d')}-{scan_data.get('timestamp', '')[:8]}")
+            region_value = scan_data.get('region', 'Global')
+            username_value = scan_data.get('username', st.session_state.get('username', 'System'))
+            files_scanned = scan_data.get('total_files_scanned', scan_data.get('file_count', 0))
+            
+            # Calculate TSC findings from actual findings data
+            findings = scan_data.get('findings', [])
+            cc_findings = 0
+            a_findings = 0  
+            pi_findings = 0
+            c_findings = 0
+            p_findings = 0
+            
+            for finding in findings:
+                if isinstance(finding, dict):
+                    tsc_criteria = finding.get('soc2_tsc_criteria', [])
+                    for criterion in tsc_criteria:
+                        if criterion.startswith('CC'):
+                            cc_findings += 1
+                        elif criterion.startswith('A'):
+                            a_findings += 1
+                        elif criterion.startswith('PI'):
+                            pi_findings += 1
+                        elif criterion.startswith('C') and not criterion.startswith('CC'):
+                            c_findings += 1
+                        elif criterion.startswith('P'):
+                            p_findings += 1
             
             if current_lang == 'nl':
                 metadata_labels = {
-                    'Scan ID': scan_id,
+                    'Scan ID': scan_id_value,
                     'Scan Type': scan_type,
-                    'Regio': region,
+                    'Regio': region_value,
                     'Tijdstempel': timestamp,
                     'Repository Aanbieder': repository_provider,
-                    'Repository URL': repository_url if repository_url != 'N/A' else 'Niet beschikbaar',
-                    'Repository Pad': repository_path if repository_path != 'N/A' else 'Niet beschikbaar',
+                    'Repository URL': repository_url,
+                    'Repository Pad': repository_path,
                     'Branch': branch,
-                    'Gebruikersnaam': scan_data.get('username', 'Onbekend'),
-                    'Bestanden Gescand': scan_data.get('file_count', 0),
+                    'Gebruikersnaam': username_value,
+                    'Bestanden Gescand': files_scanned,
                     'CC Bevindingen': cc_findings,
                     'A Bevindingen': a_findings,
                     'PI Bevindingen': pi_findings,
@@ -2020,16 +2041,16 @@ def _generate_report_internal(scan_data: Dict[str, Any],
                 }
             else:
                 metadata_labels = {
-                    'Scan ID': scan_id,
+                    'Scan ID': scan_id_value,
                     'Scan Type': scan_type,
-                    'Region': region,
+                    'Region': region_value,
                     'Timestamp': timestamp,
                     'Repository Provider': repository_provider,
-                    'Repository URL': repository_url if repository_url != 'N/A' else 'Not available',
-                    'Repository Path': repository_path if repository_path != 'N/A' else 'Not available',
+                    'Repository URL': repository_url,
+                    'Repository Path': repository_path,
                     'Branch': branch,
-                    'Username': scan_data.get('username', 'Unknown'),
-                    'Files Scanned': scan_data.get('file_count', 0),
+                    'Username': username_value,
+                    'Files Scanned': files_scanned,
                     'CC Findings': cc_findings,
                     'A Findings': a_findings,
                     'PI Findings': pi_findings,
