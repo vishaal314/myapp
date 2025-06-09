@@ -773,11 +773,14 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
             
         results["compliance_score"] = max(5, int(compliance_score))
         
+        # Add recommendations based on actual findings
+        results["recommendations"] = generate_recommendations(results)
+        
+        # Generate SOC2 TSC checklist based on actual findings
+        results["soc2_tsc_checklist"] = generate_soc2_tsc_checklist(results["findings"])
+        
         # Update scan status
         results["scan_status"] = "completed"
-        
-        # Add recommendations
-        results["recommendations"] = generate_recommendations(results)
         
     except Exception as e:
         logger.error(f"Error scanning repository: {str(e)}")

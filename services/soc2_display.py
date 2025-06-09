@@ -17,21 +17,30 @@ def display_soc2_findings(scan_results):
     # Display findings table with enhanced TSC mapping
     st.subheader("Compliance Findings")
     if 'findings' in scan_results and scan_results['findings']:
-        findings_df = pd.DataFrame([
-            {
-                "Risk": f.get("risk_level", "Unknown").upper(),
-                "Category": f.get("category", "Unknown").capitalize(),
-                "Description": f.get("description", "No description"),
-                "File": f.get("file", "Unknown"),
-                "Line": f.get("line", "N/A"),
-                "SOC2 TSC": ", ".join(f.get("soc2_tsc_criteria", []))
-            }
-            for f in scan_results['findings'][:10]  # Show top 10 findings
-        ])
-        st.dataframe(findings_df, use_container_width=True)
+        # Filter out invalid findings and ensure proper data structure
+        valid_findings = []
+        for f in scan_results['findings'][:10]:
+            # Only process dictionary-based findings (authentic scan results)
+            if isinstance(f, dict):
+                valid_findings.append({
+                    "Risk": f.get("risk_level", "Unknown").upper(),
+                    "Category": f.get("category", "Unknown").capitalize(),
+                    "Description": f.get("description", "No description"),
+                    "File": f.get("file", "Unknown"),
+                    "Line": f.get("line", "N/A"),
+                    "SOC2 TSC": ", ".join(f.get("soc2_tsc_criteria", []))
+                })
         
-        if len(scan_results['findings']) > 10:
-            st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")
+        if valid_findings:
+            findings_df = pd.DataFrame(valid_findings)
+            st.dataframe(findings_df, use_container_width=True)
+            
+            if len(scan_results['findings']) > 10:
+                st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")
+        else:
+            st.info("No compliance findings detected in this scan.")
+    else:
+        st.info("No compliance findings detected in this scan.")
             
         # Add detailed TSC mapping explanation
         st.markdown("### SOC2 Trust Services Criteria Details")
