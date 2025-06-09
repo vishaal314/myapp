@@ -763,24 +763,24 @@ def scan_github_repo_for_soc2(repo_url: str, branch: Optional[str] = None, token
         # Enhanced compliance scoring with proper risk weighting
         base_score = 100
         if total_findings > 0:
-            # More accurate scoring that reflects actual compliance risk
-            # High risk findings have significant impact on score
-            high_risk_impact = high_risk * 20  # Each high risk deducts 20 points
-            medium_risk_impact = medium_risk * 10  # Each medium risk deducts 10 points
-            low_risk_impact = low_risk * 3  # Each low risk deducts 3 points
+            # Balanced scoring that reflects compliance risk appropriately
+            # High risk findings have significant but not overwhelming impact
+            high_risk_impact = high_risk * 8  # Each high risk deducts 8 points
+            medium_risk_impact = medium_risk * 4  # Each medium risk deducts 4 points  
+            low_risk_impact = low_risk * 1  # Each low risk deducts 1 point
             
             total_impact = high_risk_impact + medium_risk_impact + low_risk_impact
             
-            # Additional penalty for critical vulnerabilities
-            if high_risk > 0:
-                critical_penalty = min(30, high_risk * 5)  # Up to 30 points for critical issues
+            # Additional penalty for multiple high-risk issues
+            if high_risk >= 5:
+                critical_penalty = min(15, (high_risk - 4) * 2)  # Extra penalty for many critical issues
                 total_impact += critical_penalty
             
-            compliance_score = max(0, base_score - total_impact)
+            compliance_score = max(5, base_score - total_impact)  # Minimum score of 5
         else:
             compliance_score = base_score
             
-        results["compliance_score"] = int(compliance_score)
+        results["compliance_score"] = round(compliance_score, 1)
         
         # Add recommendations based on actual findings
         results["recommendations"] = generate_recommendations(results)

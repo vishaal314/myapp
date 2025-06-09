@@ -896,47 +896,22 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         # Calculate total findings for SOC2 (not PII)
         total_findings = high_risk + medium_risk + low_risk
         
-        # Fix compliance score logic - with high risk items, score cannot be good
-        if high_risk > 0:
-            compliance_score = min(compliance_score, 40)  # Cap at 40 if high risk present
-        elif medium_risk > 5:
-            compliance_score = min(compliance_score, 65)  # Cap at 65 if many medium risk
-        
-        # Update scan_data with corrected score
-        scan_data['compliance_score'] = compliance_score
-        
         if current_lang == 'nl':
             summary_text = f"""
-            Dit rapport presenteert de bevindingen van een SOC2 compliance analyse uitgevoerd op <b>{repo_url}</b> 
-            (branch: <b>{branch}</b>) op <b>{timestamp}</b>. De scan heeft in totaal <b>{total_findings}</b> compliance problemen 
-            geïdentificeerd met <b>{high_risk}</b> hoog-risico items. De algemene compliance score is <b>{compliance_score}/100</b>.
-            
-            <b>Gedetecteerde technologieën:</b> {technologies_text}
-            
-            Elke bevinding in dit rapport is gekoppeld aan specifieke SOC2 Trust Services Criteria (TSC) om u te helpen begrijpen
-            hoe het uw compliance-status beïnvloedt. De TSC-categorieën omvatten:
-            • CC: Common Criteria (Beveiliging)
-            • A: Beschikbaarheid
-            • PI: Verwerkingsintegriteit
-            • C: Vertrouwelijkheid
-            • P: Privacy
+            Dit rapport presenteert de bevindingen van een SOC2 compliance scan uitgevoerd op repository <b>{repo_url}</b> 
+            (branch: <b>{branch}</b>) op <b>{timestamp}</b>. De scan heeft <b>{total_findings}</b> compliance issues geïdentificeerd 
+            met <b>{high_risk}</b> kritieke bevindingen. Compliance score: <b>{compliance_score:.1f}%</b>. 
+            Gedetecteerde technologieën: <b>{technologies_text}</b>.
             """
         else:
             summary_text = f"""
-            This report presents the findings of a SOC2 compliance analysis conducted on <b>{repo_url}</b> 
-            (branch: <b>{branch}</b>) on <b>{timestamp}</b>. The scan identified a total of <b>{total_findings}</b> compliance issues 
-            with <b>{high_risk}</b> high-risk items. The overall compliance score is <b>{compliance_score}/100</b>.
-            
-            <b>Technologies Detected:</b> {technologies_text}
-            
-            Each finding in this report is mapped to specific SOC2 Trust Services Criteria (TSC) to help you understand 
-            how it impacts your compliance posture. The TSC categories include:
-            • CC: Common Criteria (Security)
-            • A: Availability
-            • PI: Processing Integrity
-            • C: Confidentiality
-            • P: Privacy
+            This report presents the findings of a SOC2 compliance scan conducted on repository <b>{repo_url}</b> 
+            (branch: <b>{branch}</b>) on <b>{timestamp}</b>. The scan identified <b>{total_findings}</b> compliance issues 
+            with <b>{high_risk}</b> critical findings. Compliance score: <b>{compliance_score:.1f}%</b>. 
+            Detected technologies: <b>{technologies_text}</b>.
             """
+        
+        # Keep the original compliance score from scanner calculations
     else:
         if current_lang == 'nl':
             summary_text = f"""
