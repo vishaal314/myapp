@@ -2338,141 +2338,70 @@ else:
                 else:
                     st.info("No findings detected in the AI model scan.")
                 
-                # Generate Report buttons with comprehensive error handling
+                # Download Reports Section
+                st.subheader("📊 Download Reports")
+                
                 report_col1, report_col2 = st.columns(2)
                 
+                # PDF Report Download
                 with report_col1:
-                    if st.button("Generate PDF Report", key="ai_model_pdf_report_button", type="primary"):
-                        try:
-                            with st.spinner("Generating AI model PDF report..."):
-                                # Import report generator
-                                try:
-                                    from services.report_generator import generate_report
-                                except ImportError as import_error:
-                                    st.error(f"Failed to import report generator: {str(import_error)}")
-                                    st.stop()
-                                
-                                # Validate input data before report generation
-                                if not isinstance(ai_model_scan_results, dict):
-                                    st.error("Invalid scan results: scan data must be a dictionary")
-                                    st.stop()
-                                
-                                # Make sure required fields are present in scan results
-                                required_fields = ['scan_id', 'timestamp', 'model_source', 'findings']
-                                missing_fields = [field for field in required_fields if field not in ai_model_scan_results]
-                                if missing_fields:
-                                    st.warning(f"Scan results missing required fields: {', '.join(missing_fields)}")
-                                    # Continue anyway, report generator will handle missing fields
-                                
-                                try:
-                                    # Log the findings for debugging
-                                    if st.session_state.get('debug_mode', False):
-                                        st.write("Debug - AI Model findings data structure:")
-                                        st.write(ai_model_scan_results.get('findings', []))
-                                    
-                                    # Log scan_data to debug console
-                                    findings_count = len(ai_model_scan_results.get('findings', []))
-                                    logging.info(f"AI model report generation with {findings_count} findings")
-                                    
-                                    # Generate PDF report with AI model format
-                                    pdf_bytes = generate_report(
-                                        ai_model_scan_results,
-                                        report_format="ai_model"
-                                    )
-                                    
-                                    # Validate the generated PDF
-                                    if not pdf_bytes or not isinstance(pdf_bytes, bytes):
-                                        st.error("Failed to generate report: Invalid output from report generator")
-                                        st.stop()
-                                    
-                                    # Create proper download button
-                                    try:
-                                        scan_id = ai_model_scan_results.get('scan_id', 'unknown')
-                                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                                        pdf_filename = f"AI_Model_Scan_Report_{scan_id}_{timestamp}.pdf"
-                                        
-                                        st.download_button(
-                                            label="📥 Download AI Model PDF Report",
-                                            data=pdf_bytes,
-                                            file_name=pdf_filename,
-                                            mime="application/pdf",
-                                            key="ai_model_pdf_download_btn"
-                                        )
-                                        st.success("AI Model PDF report generated successfully")
-                                    except Exception as encoding_error:
-                                        st.error(f"Error creating download link: {str(encoding_error)}")
-                                        # Try fallback approach to save file
-                                        try:
-                                            # Create reports directory if it doesn't exist
-                                            os.makedirs("reports", exist_ok=True)
-                                            report_path = f"reports/AI_Model_Scan_Report_{scan_id}.pdf"
-                                            with open(report_path, "wb") as f:
-                                                f.write(pdf_bytes)
-                                            st.info(f"Report saved to {report_path}")
-                                        except Exception as save_error:
-                                            st.error(f"Failed to save report to file: {str(save_error)}")
-                                
-                                except Exception as report_error:
-                                    st.error(f"Error generating report: {str(report_error)}")
-                                    if st.session_state.get('debug_mode', False):
-                                        import traceback
-                                        st.code(traceback.format_exc())
+                    try:
+                        from services.report_generator import generate_report
                         
-                        except Exception as e:
-                            st.error(f"Critical error in report generation process: {str(e)}")
-                            if st.session_state.get('debug_mode', False):
-                                import traceback
-                                st.code(traceback.format_exc())
+                        # Generate PDF report with AI model format
+                        pdf_bytes = generate_report(
+                            ai_model_scan_results,
+                            report_format="ai_model"
+                        )
+                        
+                        if pdf_bytes and isinstance(pdf_bytes, bytes):
+                            scan_id = ai_model_scan_results.get('scan_id', 'unknown')
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            pdf_filename = f"AI_Model_Scan_Report_{scan_id}_{timestamp}.pdf"
+                            
+                            st.download_button(
+                                label="📥 Download PDF Report",
+                                data=pdf_bytes,
+                                file_name=pdf_filename,
+                                mime="application/pdf",
+                                key="ai_model_pdf_download_ready",
+                                type="primary"
+                            )
+                        else:
+                            st.error("Failed to generate PDF report")
+                            
+                    except Exception as pdf_error:
+                        st.error(f"Error generating PDF report: {str(pdf_error)}")
                 
+                # HTML Report Download
                 with report_col2:
-                    if st.button("Generate HTML Report", key="ai_model_html_report_button", type="primary"):
-                        try:
-                            with st.spinner("Generating AI model HTML report..."):
-                                # Import HTML report generator
-                                try:
-                                    from services.html_report_generator import get_html_report_as_base64
-                                except ImportError as import_error:
-                                    st.error(f"Failed to import HTML report generator: {str(import_error)}")
-                                    st.stop()
-                                
-                                # Validate input data before report generation
-                                if not isinstance(ai_model_scan_results, dict):
-                                    st.error("Invalid scan results: scan data must be a dictionary")
-                                    st.stop()
-                                
-                                try:
-                                    # Get HTML report as base64
-                                    scan_id = ai_model_scan_results.get('scan_id', 'unknown')
-                                    html_b64 = get_html_report_as_base64(ai_model_scan_results)
-                                    
-                                    # Create proper download button
-                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                                    html_filename = f"AI_Model_Scan_Report_{scan_id}_{timestamp}.html"
-                                    
-                                    # Decode base64 to get actual HTML content for download button
-                                    import base64
-                                    html_content = base64.b64decode(html_b64)
-                                    
-                                    st.download_button(
-                                        label="📥 Download AI Model HTML Report",
-                                        data=html_content,
-                                        file_name=html_filename,
-                                        mime="text/html",
-                                        key="ai_model_html_download_btn"
-                                    )
-                                    st.success("AI Model HTML report generated successfully")
-                                
-                                except Exception as html_error:
-                                    st.error(f"Error generating HTML report: {str(html_error)}")
-                                    if st.session_state.get('debug_mode', False):
-                                        import traceback
-                                        st.code(traceback.format_exc())
+                    try:
+                        from services.html_report_generator import get_html_report_as_base64
+                        import base64
                         
-                        except Exception as e:
-                            st.error(f"Critical error in HTML report generation: {str(e)}")
-                            if st.session_state.get('debug_mode', False):
-                                import traceback
-                                st.code(traceback.format_exc())
+                        scan_id = ai_model_scan_results.get('scan_id', 'unknown')
+                        html_b64 = get_html_report_as_base64(ai_model_scan_results)
+                        
+                        if html_b64:
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            html_filename = f"AI_Model_Scan_Report_{scan_id}_{timestamp}.html"
+                            html_content = base64.b64decode(html_b64)
+                            
+                            st.download_button(
+                                label="📥 Download HTML Report",
+                                data=html_content,
+                                file_name=html_filename,
+                                mime="text/html",
+                                key="ai_model_html_download_ready",
+                                type="secondary"
+                            )
+                        else:
+                            st.error("Failed to generate HTML report")
+                            
+                    except Exception as html_error:
+                        st.error(f"Error generating HTML report: {str(html_error)}")
+                
+                # End of AI Model scan results display
                 
         elif scan_type == _("scan.soc2"):
             # SOC2 scanning does not require file uploads
