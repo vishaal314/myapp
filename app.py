@@ -3924,11 +3924,15 @@ else:
                                                             # Generate PDF report
                                                             pdf_bytes = generate_report(scan_results)
                                                             
-                                                            # Provide download link
-                                                            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+                                                            # Provide download button
                                                             pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                                                            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
-                                                            st.markdown(href, unsafe_allow_html=True)
+                                                            st.download_button(
+                                                                label="📥 Download SOC2 Compliance Report PDF",
+                                                                data=pdf_bytes,
+                                                                file_name=pdf_filename,
+                                                                mime="application/pdf",
+                                                                key="soc2_pdf_download_github"
+                                                            )
                                                     
                                                     # Display findings table
                                                     st.subheader("Compliance Findings")
@@ -4192,11 +4196,15 @@ else:
                                                             # Generate PDF report
                                                             pdf_bytes = generate_report(scan_results)
                                                             
-                                                            # Provide download link
-                                                            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+                                                            # Provide download button
                                                             pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                                                            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
-                                                            st.markdown(href, unsafe_allow_html=True)
+                                                            st.download_button(
+                                                                label="📥 Download SOC2 Compliance Report PDF",
+                                                                data=pdf_bytes,
+                                                                file_name=pdf_filename,
+                                                                mime="application/pdf",
+                                                                key="soc2_pdf_download_azure"
+                                                            )
                                                     
                                                     # Display findings table
                                                     st.subheader("Compliance Findings")
