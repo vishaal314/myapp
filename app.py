@@ -2285,11 +2285,6 @@ else:
             else:
                 uploaded_files = []
                 
-        elif scan_type == _("scan.soc2"):
-            # SOC2 scanning does not require file uploads
-            st.info("SOC2 scanning does not require file uploads. Configure the repository details in the Advanced Configuration section and click the scan button below.")
-            uploaded_files = []
-                
             # Check if we already have completed scan results for this AI model scan
             if 'ai_model_scan_complete' in st.session_state and st.session_state.ai_model_scan_complete:
                 # Display the AI model scan results
