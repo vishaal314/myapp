@@ -2445,9 +2445,21 @@ else:
                                     scan_id = ai_model_scan_results.get('scan_id', 'unknown')
                                     html_b64 = get_html_report_as_base64(ai_model_scan_results)
                                     
-                                    # Create download link
-                                    href = f'<a href="data:text/html;base64,{html_b64}" download="AI_Model_Scan_Report_{scan_id}.html">Download AI Model HTML Report</a>'
-                                    st.markdown(href, unsafe_allow_html=True)
+                                    # Create proper download button
+                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                    html_filename = f"AI_Model_Scan_Report_{scan_id}_{timestamp}.html"
+                                    
+                                    # Decode base64 to get actual HTML content for download button
+                                    import base64
+                                    html_content = base64.b64decode(html_b64)
+                                    
+                                    st.download_button(
+                                        label="📥 Download AI Model HTML Report",
+                                        data=html_content,
+                                        file_name=html_filename,
+                                        mime="text/html",
+                                        key="ai_model_html_download_btn"
+                                    )
                                     st.success("AI Model HTML report generated successfully")
                                 
                                 except Exception as html_error:
@@ -2461,6 +2473,11 @@ else:
                             if st.session_state.get('debug_mode', False):
                                 import traceback
                                 st.code(traceback.format_exc())
+                
+        elif scan_type == _("scan.soc2"):
+            # SOC2 scanning does not require file uploads
+            st.info("SOC2 scanning does not require file uploads. Configure the repository details in the Advanced Configuration section and click the scan button below.")
+            uploaded_files = []
                 
         elif scan_type == _("scan.dpia"):
             # No header for DPIA - will be handled by the assessment form
@@ -3256,96 +3273,7 @@ else:
                                 
                                 # Use the comprehensive report display module
                                 display_report_options(result)
-                                                gdpr_scores = [v['score'] for k, v in result['gdpr_compliance'].items()]
-                                                result['overall_gdpr_score'] = sum(gdpr_scores) / len(gdpr_scores)
-                                                
-                                            # Generate the PDF report with proper error handling
-                                            try:
-                                                pdf_bytes = generate_report(
-                                                    scan_data=result,
-                                                    include_details=include_details,
-                                                    include_charts=include_charts,
-                                                    include_metadata=include_metadata,
-                                                    include_recommendations=include_recommendations,
-                                                    report_format="code"  # Use code report format for repository scans
-                                                )
-                                                
-                                                # Create download link for the PDF
-                                                if pdf_bytes and len(pdf_bytes) > 0:
-                                                    # Success message
-                                                    st.success("PDF report generated successfully!")
-                                                    
-                                                    # Create download button
-                                                    scan_id = result.get('scan_id', 'repo_scan')
-                                                    st.download_button(
-                                                        label="Download PDF Report",
-                                                        data=pdf_bytes,
-                                                        file_name=f"GDPR_Repo_Scan_{scan_id}.pdf",
-                                                        mime="application/pdf"
-                                                    )
-                                                else:
-                                                    st.error("Failed to generate a valid PDF report.")
-                                                    st.info("Try selecting different report options or using the HTML report instead.")
-                                            except Exception as e:
-                                                st.error(f"Error generating PDF report: {str(e)}")
-                                                st.info("This may be due to complex formatting in the findings. Try the HTML report instead.")
-                                        except Exception as e:
-                                            st.error(f"Error generating report: {str(e)}")
-                                
-                                # Generate HTML report option
-                                if st.button("Generate HTML Report"):
-                                    with st.spinner("Generating HTML report..."):
-                                        try:
-                                            # Import HTML report generator and other needed modules
-                                            from services.html_report_generator import generate_html_report
-                                            import uuid
-                                            from datetime import datetime
-                                            
-                                            # Ensure we have all needed data for HTML report
-                                            result['scan_type'] = 'Repository Scan'
-                                            if 'timestamp' not in result:
-                                                result['timestamp'] = datetime.now().isoformat()
-                                                
-                                            # Add risk counts if missing
-                                            if 'high_risk_count' not in result:
-                                                # Calculate based on findings
-                                                high_count = 0
-                                                medium_count = 0
-                                                low_count = 0
-                                                
-                                                for finding in result.get('findings', []):
-                                                    risk_level = finding.get('risk_level', '').lower()
-                                                    if risk_level == 'high':
-                                                        high_count += 1
-                                                    elif risk_level == 'medium':
-                                                        medium_count += 1
-                                                    else:
-                                                        low_count += 1
-                                                
-                                                result['high_risk_count'] = high_count
-                                                result['medium_risk_count'] = medium_count
-                                                result['low_risk_count'] = low_count
-                                            
-                                            # Generate HTML report
-                                            html_content = generate_html_report(result)
-                                            
-                                            # Create download button for HTML
-                                            if html_content:
-                                                st.success("HTML report generated successfully!")
-                                                
-                                                # Download button for HTML report
-                                                scan_id = result.get('scan_id', 'repo_scan')
-                                                st.download_button(
-                                                    label="Download HTML Report",
-                                                    data=html_content,
-                                                    file_name=f"GDPR_Repo_Scan_{scan_id}.html",
-                                                    mime="text/html"
-                                                )
-                                            else:
-                                                st.error("Failed to generate the HTML report.")
-                                        except Exception as e:
-                                            st.error(f"Error generating HTML report: {str(e)}")
-                            
+                        
                         # Standard directory or file scanning
                         elif len(file_paths) == 1 and os.path.isdir(file_paths[0]):
                             # Scan entire directory with resilient method
