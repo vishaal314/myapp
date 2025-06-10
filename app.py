@@ -3084,32 +3084,6 @@ else:
                                 
                                 # Use the comprehensive report display module
                                 display_report_options(result)
-                                                
-                                                for finding in result.get('findings', []):
-                                                    risk_level = finding.get('risk_level', '').lower()
-                                                    if risk_level == 'high':
-                                                        high_count += 1
-                                                    elif risk_level == 'medium':
-                                                        medium_count += 1
-                                                    else:
-                                                        low_count += 1
-                                                
-                                                result['high_risk_count'] = high_count
-                                                result['medium_risk_count'] = medium_count
-                                                result['low_risk_count'] = low_count
-                                            
-                                            # Generate HTML report
-                                            html_content = generate_html_report(result)
-                                            
-                                            # Create download button for HTML
-                                            if html_content:
-                                                st.success("HTML report generated successfully!")
-                                                
-                                                # Download button for HTML report
-                                                scan_id = result.get('scan_id', 'repo_scan')
-                                                st.download_button(
-                                                    label="Download HTML Report",
-                                                    data=html_content,
                                                     file_name=f"GDPR_Repo_Scan_{scan_id}.html",
                                                     mime="text/html"
                                                 )
