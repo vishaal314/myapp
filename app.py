@@ -4612,9 +4612,14 @@ else:
                     timestamp = selected_scan.get('timestamp', 'N/A')
                     if timestamp != 'N/A':
                         try:
-                            timestamp = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                            if isinstance(timestamp, str):
+                                timestamp = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                            elif hasattr(timestamp, 'strftime'):
+                                timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                            else:
+                                timestamp = str(timestamp)
                         except:
-                            pass
+                            timestamp = str(timestamp)
                     col3.metric(_("dashboard.date_time"), timestamp)
                     
                     # PII Types breakdown
