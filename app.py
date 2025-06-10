@@ -3394,6 +3394,14 @@ else:
                                     context=context
                                 )
                                 
+                                # Store successful scan results in session state immediately
+                                if isinstance(scan_result, dict):
+                                    st.session_state.ai_model_scan_results = scan_result
+                                    st.session_state.ai_model_scan_complete = True
+                                    progress_bar.progress(1.0)
+                                    status_text.text("AI Model Scan: Complete!")
+                                    st.rerun()
+                                
                                 # Validate returned result
                                 if not isinstance(scan_result, dict):
                                     st.warning("Scanner returned invalid result format, using fallback result")
@@ -3429,6 +3437,9 @@ else:
                                 
                                 # Store in scan_results list for aggregator
                                 scan_results = [scan_result]
+                                
+                                # Rerun to immediately show download buttons
+                                st.rerun()
                                 
                             except Exception as scanner_error:
                                 # Show error but continue processing with valid error result
@@ -3467,6 +3478,9 @@ else:
                                 
                                 # Store in scan_results list
                                 scan_results = [scan_result]
+                                
+                                # Rerun to immediately show download buttons
+                                st.rerun()
                         
                         except Exception as e:
                             # Catastrophic error at the app level - show full error but still provide valid result
@@ -3510,6 +3524,9 @@ else:
                                 progress_bar.progress(1.0)
                             if 'status_text' in locals():
                                 status_text.text("AI Model Scan: Failed with Critical Error")
+                            
+                            # Rerun to immediately show download buttons
+                            st.rerun()
                     elif scan_type == _("scan.dpia"):
                         # Skip the informational box and go straight to the improved DPIA form
                         # Import and run our improved DPIA form with a more stable and reliable experience
