@@ -2385,12 +2385,19 @@ else:
                                         st.error("Failed to generate report: Invalid output from report generator")
                                         st.stop()
                                     
-                                    # Create download link
+                                    # Create proper download button
                                     try:
                                         scan_id = ai_model_scan_results.get('scan_id', 'unknown')
-                                        b64_pdf = base64.b64encode(pdf_bytes).decode()
-                                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="AI_Model_Scan_Report_{scan_id}.pdf">Download AI Model PDF Report</a>'
-                                        st.markdown(href, unsafe_allow_html=True)
+                                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                        pdf_filename = f"AI_Model_Scan_Report_{scan_id}_{timestamp}.pdf"
+                                        
+                                        st.download_button(
+                                            label="📥 Download AI Model PDF Report",
+                                            data=pdf_bytes,
+                                            file_name=pdf_filename,
+                                            mime="application/pdf",
+                                            key="ai_model_pdf_download_btn"
+                                        )
                                         st.success("AI Model PDF report generated successfully")
                                     except Exception as encoding_error:
                                         st.error(f"Error creating download link: {str(encoding_error)}")
@@ -3249,6 +3256,39 @@ else:
                                 
                                 # Use the comprehensive report display module
                                 display_report_options(result)
+                                                
+                                                for finding in result.get('findings', []):
+                                                    risk_level = finding.get('risk_level', '').lower()
+                                                    if risk_level == 'high':
+                                                        high_count += 1
+                                                    elif risk_level == 'medium':
+                                                        medium_count += 1
+                                                    else:
+                                                        low_count += 1
+                                                
+                                                result['high_risk_count'] = high_count
+                                                result['medium_risk_count'] = medium_count
+                                                result['low_risk_count'] = low_count
+                                            
+                                            # Generate HTML report
+                                            html_content = generate_html_report(result)
+                                            
+                                            # Create download button for HTML
+                                            if html_content:
+                                                st.success("HTML report generated successfully!")
+                                                
+                                                # Download button for HTML report
+                                                scan_id = result.get('scan_id', 'repo_scan')
+                                                st.download_button(
+                                                    label="Download HTML Report",
+                                                    data=html_content,
+                                                    file_name=f"GDPR_Repo_Scan_{scan_id}.html",
+                                                    mime="text/html"
+                                                )
+                                            else:
+                                                st.error("Failed to generate the HTML report.")
+                                        except Exception as e:
+                                            st.error(f"Error generating HTML report: {str(e)}")
                             
                         # Standard directory or file scanning
                         elif len(file_paths) == 1 and os.path.isdir(file_paths[0]):
