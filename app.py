@@ -3256,6 +3256,62 @@ else:
                                 
                                 # Use the comprehensive report display module
                                 display_report_options(result)
+                                                gdpr_scores = [v['score'] for k, v in result['gdpr_compliance'].items()]
+                                                result['overall_gdpr_score'] = sum(gdpr_scores) / len(gdpr_scores)
+                                                
+                                            # Generate the PDF report with proper error handling
+                                            try:
+                                                pdf_bytes = generate_report(
+                                                    scan_data=result,
+                                                    include_details=include_details,
+                                                    include_charts=include_charts,
+                                                    include_metadata=include_metadata,
+                                                    include_recommendations=include_recommendations,
+                                                    report_format="code"  # Use code report format for repository scans
+                                                )
+                                                
+                                                # Create download link for the PDF
+                                                if pdf_bytes and len(pdf_bytes) > 0:
+                                                    # Success message
+                                                    st.success("PDF report generated successfully!")
+                                                    
+                                                    # Create download button
+                                                    scan_id = result.get('scan_id', 'repo_scan')
+                                                    st.download_button(
+                                                        label="Download PDF Report",
+                                                        data=pdf_bytes,
+                                                        file_name=f"GDPR_Repo_Scan_{scan_id}.pdf",
+                                                        mime="application/pdf"
+                                                    )
+                                                else:
+                                                    st.error("Failed to generate a valid PDF report.")
+                                                    st.info("Try selecting different report options or using the HTML report instead.")
+                                            except Exception as e:
+                                                st.error(f"Error generating PDF report: {str(e)}")
+                                                st.info("This may be due to complex formatting in the findings. Try the HTML report instead.")
+                                        except Exception as e:
+                                            st.error(f"Error generating report: {str(e)}")
+                                
+                                # Generate HTML report option
+                                if st.button("Generate HTML Report"):
+                                    with st.spinner("Generating HTML report..."):
+                                        try:
+                                            # Import HTML report generator and other needed modules
+                                            from services.html_report_generator import generate_html_report
+                                            import uuid
+                                            from datetime import datetime
+                                            
+                                            # Ensure we have all needed data for HTML report
+                                            result['scan_type'] = 'Repository Scan'
+                                            if 'timestamp' not in result:
+                                                result['timestamp'] = datetime.now().isoformat()
+                                                
+                                            # Add risk counts if missing
+                                            if 'high_risk_count' not in result:
+                                                # Calculate based on findings
+                                                high_count = 0
+                                                medium_count = 0
+                                                low_count = 0
                                                 
                                                 for finding in result.get('findings', []):
                                                     risk_level = finding.get('risk_level', '').lower()
