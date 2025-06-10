@@ -754,3 +754,16 @@ class ResultsAggregator:
         except Exception as e:
             print(f"Error retrieving compliance history from file: {str(e)}")
             return []
+    
+    def get_all_scans(self, username: str, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Get all scans for a user (alias for get_user_scans for backward compatibility).
+        
+        Args:
+            username: Username to get scans for
+            limit: Maximum number of scans to return
+            
+        Returns:
+            List of scan metadata dictionaries
+        """
+        return self.get_user_scans(username, limit)
