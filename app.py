@@ -4769,61 +4769,85 @@ else:
                                         'Category': item.get('category', 'Unknown'),
                                         'Description': item.get('description', 'Unknown')
                                     })
-                                
-                                # Add AI Model report generation buttons after displaying results
-                                if scan_type == _("scan.ai_model") and st.session_state.get('ai_model_scan_complete', False):
-                                    st.markdown("---")
-                                    st.subheader("AI Model Scan Report Generation")
-                                    
-                                    # Get scan results from session state
-                                    ai_scan_results = st.session_state.get('ai_model_scan_results', {})
-                                    
-                                    if ai_scan_results:
-                                        report_col1, report_col2 = st.columns(2)
-                                        
-                                        with report_col1:
-                                            # PDF Report Generation
-                                            if st.button("📄 Generate PDF Report", key="ai_model_pdf_report", type="primary", use_container_width=True):
-                                                with st.spinner("Generating AI Model PDF report..."):
-                                                    try:
-                                                        from services.report_generator import generate_report
-                                                        
-                                                        # Generate PDF report for AI Model scan
-                                                        pdf_bytes = generate_report(
-                                                            ai_scan_results,
-                                                            include_details=True,
-                                                            include_charts=True,
-                                                            include_metadata=True,
-                                                            include_recommendations=True,
-                                                            report_format="ai_model"
-                                                        )
-                                                        
-                                                        # Create download link
-                                                        import base64
-                                                        scan_id = ai_scan_results.get('scan_id', 'ai_model_scan')
-                                                        b64_pdf = base64.b64encode(pdf_bytes).decode()
-                                                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="AI_Model_Scan_Report_{scan_id}.pdf">Download AI Model PDF Report</a>'
-                                                        st.markdown(href, unsafe_allow_html=True)
-                                                        st.success("PDF report generated successfully!")
-                                                    except Exception as e:
-                                                        st.error(f"Error generating PDF report: {str(e)}")
-                                        
-                                        with report_col2:
-                                            # HTML Report Generation
-                                            if st.button("🌐 Generate HTML Report", key="ai_model_html_report", use_container_width=True):
-                                                with st.spinner("Generating AI Model HTML report..."):
-                                                    try:
-                                                        from datetime import datetime
-                                                        
-                                                        # Generate HTML report content
-                                                        scan_id = ai_scan_results.get('scan_id', 'ai_model_scan')
-                                                        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                                        model_source = ai_scan_results.get('model_source', 'Unknown')
-                                                        risk_score = ai_scan_results.get('risk_score', 0)
-                                                        
-                                                        # Build HTML content
-                                                        html_content = f"""
-<!DOCTYPE html>
+                            # For other scan types (PII scans)
+                            else:
+                                for item in result.get('pii_found', []):
+                                    if not isinstance(item, dict):
+                                        continue
+                                    all_findings.append({
+                                        'Type': item.get('type', 'Unknown'),
+                                        'Value': item.get('value', 'Unknown'),
+                                        'Risk Level': item.get('risk_level', 'Unknown'),
+                                        'Location': item.get('location', 'Unknown')
+                                    })
+                        except Exception as findings_error:
+                            # Skip error logging for data integrity
+                            continue
+                    
+                    # Display a sample of findings (up to 10 items)
+                    if all_findings:
+                        sample_findings = all_findings[:10]
+                        findings_df = pd.DataFrame(sample_findings)
+                        st.dataframe(findings_df, use_container_width=True)
+                        
+                        # Show how many more findings there are
+                        if len(all_findings) > 10:
+                            st.info(f"Showing 10 of {len(all_findings)} findings. See full results in Scan History.")
+                    else:
+                        st.info("No findings to display.")
+                    
+                    # AI Model Scanner Report Generation (only show if AI Model scan was completed)
+                    if scan_type == _("scan.ai_model") and st.session_state.get('ai_model_scan_complete', False):
+                        st.markdown("---")
+                        st.subheader("AI Model Scan Report Generation")
+                        
+                        # Get scan results from session state
+                        ai_scan_results = st.session_state.get('ai_model_scan_results', {})
+                        
+                        if ai_scan_results:
+                            report_col1, report_col2 = st.columns(2)
+                            
+                            with report_col1:
+                                # PDF Report Generation
+                                if st.button("📄 Generate PDF Report", key="ai_model_pdf_report", type="primary", use_container_width=True):
+                                    with st.spinner("Generating AI Model PDF report..."):
+                                        try:
+                                            from services.report_generator import generate_report
+                                            
+                                            # Generate PDF report for AI Model scan
+                                            pdf_bytes = generate_report(
+                                                ai_scan_results,
+                                                include_details=True,
+                                                include_charts=True,
+                                                include_metadata=True,
+                                                include_recommendations=True
+                                            )
+                                            
+                                            # Create download link
+                                            import base64
+                                            scan_id = ai_scan_results.get('scan_id', 'ai_model_scan')
+                                            b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="AI_Model_Scan_Report_{scan_id}.pdf">Download AI Model PDF Report</a>'
+                                            st.markdown(href, unsafe_allow_html=True)
+                                            st.success("PDF report generated successfully!")
+                                        except Exception as e:
+                                            st.error(f"Error generating PDF report: {str(e)}")
+                            
+                            with report_col2:
+                                # HTML Report Generation
+                                if st.button("🌐 Generate HTML Report", key="ai_model_html_report", use_container_width=True):
+                                    with st.spinner("Generating AI Model HTML report..."):
+                                        try:
+                                            from datetime import datetime
+                                            
+                                            # Generate HTML report content
+                                            scan_id = ai_scan_results.get('scan_id', 'ai_model_scan')
+                                            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                            model_source = ai_scan_results.get('model_source', 'Unknown')
+                                            risk_score = ai_scan_results.get('risk_score', 0)
+                                            
+                                            # Build HTML content
+                                            html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <title>AI Model Risk Assessment Report - {scan_id}</title>
@@ -4867,16 +4891,16 @@ else:
     
     <h2>Detailed Findings</h2>
 """
+                                            
+                                            # Add findings
+                                            findings = ai_scan_results.get('findings', [])
+                                            if findings:
+                                                for finding in findings:
+                                                    if isinstance(finding, dict):
+                                                        risk_level = finding.get('risk_level', 'Unknown').lower()
+                                                        risk_class = "low-risk" if risk_level == "low" else "medium-risk" if risk_level == "medium" else "high-risk"
                                                         
-                                                        # Add findings
-                                                        findings = ai_scan_results.get('findings', [])
-                                                        if findings:
-                                                            for finding in findings:
-                                                                if isinstance(finding, dict):
-                                                                    risk_level = finding.get('risk_level', 'Unknown').lower()
-                                                                    risk_class = "low-risk" if risk_level == "low" else "medium-risk" if risk_level == "medium" else "high-risk"
-                                                                    
-                                                                    html_content += f"""
+                                                        html_content += f"""
     <div class="finding">
         <h3>{finding.get('type', 'Unknown Finding')}</h3>
         <p><strong>Category:</strong> {finding.get('category', 'Unknown')}</p>
@@ -4885,11 +4909,11 @@ else:
         <p><strong>Location:</strong> {finding.get('location', 'Unknown')}</p>
     </div>
 """
-                                                        else:
-                                                            html_content += "<p>No specific findings detected in this scan.</p>"
-                                                        
-                                                        # Add recommendations
-                                                        html_content += """
+                                            else:
+                                                html_content += "<p>No specific findings detected in this scan.</p>"
+                                            
+                                            # Add recommendations
+                                            html_content += """
     <h2>Recommendations</h2>
     <div class="summary">
         <ul>
@@ -4908,58 +4932,32 @@ else:
 </body>
 </html>
 """
-                                                        
-                                                        # Create download button for HTML
-                                                        st.download_button(
-                                                            label="Download HTML Report",
-                                                            data=html_content,
-                                                            file_name=f"AI_Model_Risk_Report_{scan_id}.html",
-                                                            mime="text/html"
-                                                        )
-                                                        st.success("HTML report generated successfully!")
-                                                    except Exception as e:
-                                                        st.error(f"Error generating HTML report: {str(e)}")
-                                        
-                                        # Display scan summary
-                                        st.markdown("### Scan Summary")
-                                        summary_col1, summary_col2, summary_col3 = st.columns(3)
-                                        
-                                        with summary_col1:
-                                            st.metric("Risk Score", f"{ai_scan_results.get('risk_score', 0)}/100")
-                                        
-                                        with summary_col2:
-                                            st.metric("Total Findings", len(ai_scan_results.get('findings', [])))
-                                        
-                                        with summary_col3:
-                                            st.metric("Model Source", ai_scan_results.get('model_source', 'Unknown'))
-                                    else:
-                                        st.warning("No AI Model scan results available. Please run a scan first.")
-                            # For other scan types (PII scans)
-                            else:
-                                for item in result.get('pii_found', []):
-                                    if not isinstance(item, dict):
-                                        continue
-                                    all_findings.append({
-                                        'Type': item.get('type', 'Unknown'),
-                                        'Value': item.get('value', 'Unknown'),
-                                        'Risk Level': item.get('risk_level', 'Unknown'),
-                                        'Location': item.get('location', 'Unknown')
-                                    })
-                        except Exception as findings_error:
-                            # Skip error logging for data integrity
-                            continue
-                    
-                    # Display a sample of findings (up to 10 items)
-                    if all_findings:
-                        sample_findings = all_findings[:10]
-                        findings_df = pd.DataFrame(sample_findings)
-                        st.dataframe(findings_df, use_container_width=True)
-                        
-                        # Show how many more findings there are
-                        if len(all_findings) > 10:
-                            st.info(f"Showing 10 of {len(all_findings)} findings. See full results in Scan History.")
-                    else:
-                        st.info("No findings to display.")
+                                            
+                                            # Create download button for HTML
+                                            st.download_button(
+                                                label="Download HTML Report",
+                                                data=html_content,
+                                                file_name=f"AI_Model_Risk_Report_{scan_id}.html",
+                                                mime="text/html"
+                                            )
+                                            st.success("HTML report generated successfully!")
+                                        except Exception as e:
+                                            st.error(f"Error generating HTML report: {str(e)}")
+                            
+                            # Display scan summary
+                            st.markdown("### Scan Summary")
+                            summary_col1, summary_col2, summary_col3 = st.columns(3)
+                            
+                            with summary_col1:
+                                st.metric("Risk Score", f"{ai_scan_results.get('risk_score', 0)}/100")
+                            
+                            with summary_col2:
+                                st.metric("Total Findings", len(ai_scan_results.get('findings', [])))
+                            
+                            with summary_col3:
+                                st.metric("Model Source", ai_scan_results.get('model_source', 'Unknown'))
+                        else:
+                            st.warning("No AI Model scan results available. Please run a scan first.")
                     
                     # Action buttons
                     col1, col2, col3 = st.columns(3)
