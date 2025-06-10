@@ -4298,10 +4298,15 @@ else:
                                     # Use selected_scan instead of undefined aggregated_result
                                     pdf_bytes = generate_report(selected_scan)
                                     
-                                    # Create download link
-                                    b64_pdf = base64.b64encode(pdf_bytes).decode()
-                                    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{display_scan_id}.pdf">Download PDF Report</a>'
-                                    st.markdown(href, unsafe_allow_html=True)
+                                    # Create download button
+                                    pdf_filename = f"GDPR_Scan_Report_{display_scan_id}.pdf"
+                                    st.download_button(
+                                        label="📥 Download PDF Report",
+                                        data=pdf_bytes,
+                                        file_name=pdf_filename,
+                                        mime="application/pdf",
+                                        key="gdpr_pdf_download_quick"
+                                    )
                         
                         # Compliance Certificate for Premium users
                         with col2:
@@ -4360,10 +4365,15 @@ else:
                                         with open(cert_path, 'rb') as file:
                                             cert_bytes = file.read()
                                         
-                                        # Create download link
-                                        b64_cert = base64.b64encode(cert_bytes).decode()
-                                        href = f'<a href="data:application/pdf;base64,{b64_cert}" download="GDPR_Compliance_Certificate_{display_scan_id}.pdf">Download Compliance Certificate</a>'
-                                        st.markdown(href, unsafe_allow_html=True)
+                                        # Create download button
+                                        cert_filename = f"GDPR_Compliance_Certificate_{display_scan_id}.pdf"
+                                        st.download_button(
+                                            label="📥 Download Compliance Certificate",
+                                            data=cert_bytes,
+                                            file_name=cert_filename,
+                                            mime="application/pdf",
+                                            key="gdpr_cert_download"
+                                        )
                                         
                                         st.success(_("dashboard.certificate_success"))
                                     else:
@@ -4688,10 +4698,15 @@ else:
                             with st.spinner(_("dashboard.generating_pdf_report")):
                                 pdf_bytes = generate_report(selected_scan)
                                 
-                                # Create download link
-                                b64_pdf = base64.b64encode(pdf_bytes).decode()
-                                href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">{_("dashboard.download_pdf_report")}</a>'
-                                st.markdown(href, unsafe_allow_html=True)
+                                # Create download button
+                                pdf_filename = f"GDPR_Scan_Report_{selected_display_id}.pdf"
+                                st.download_button(
+                                    label=_("dashboard.download_pdf_report"),
+                                    data=pdf_bytes,
+                                    file_name=pdf_filename,
+                                    mime="application/pdf",
+                                    key="gdpr_pdf_download_dashboard"
+                                )
                     
                     with report_col2:
                         if st.button(_("dashboard.generate_html_report"), key="gen_html_report"):
@@ -4832,10 +4847,14 @@ else:
                         with open(selected_report, 'r', encoding='utf-8') as f:
                             html_content = f.read()
                         
-                        # Create download link
-                        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-                        href = f'<a href="data:text/html;base64,{b64_html}" download="{os.path.basename(selected_report)}">{_("reports.download_html_report")}</a>'
-                        st.markdown(href, unsafe_allow_html=True)
+                        # Create download button
+                        st.download_button(
+                            label=_("reports.download_html_report"),
+                            data=html_content.encode('utf-8'),
+                            file_name=os.path.basename(selected_report),
+                            mime="text/html",
+                            key="html_report_download"
+                        )
         else:
             st.info(_("reports.no_saved_reports"))
             
@@ -5007,11 +5026,16 @@ else:
                             include_recommendations=include_recommendations
                         )
                         
-                        # Create download link
+                        # Create download button
                         selected_display_id = scan_options[selected_scan_index]['display_id']
-                        b64_pdf = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="GDPR_Scan_Report_{selected_display_id}.pdf">{get_text("report.download_pdf", "Download PDF Report")}</a>'
-                        st.markdown(href, unsafe_allow_html=True)
+                        pdf_filename = f"GDPR_Scan_Report_{selected_display_id}.pdf"
+                        st.download_button(
+                            label=get_text("report.download_pdf", "Download PDF Report"),
+                            data=pdf_bytes,
+                            file_name=pdf_filename,
+                            mime="application/pdf",
+                            key="gdpr_pdf_download_reports"
+                        )
                         
                         st.success(_("report.generated_successfully"))
                 
