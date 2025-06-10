@@ -105,8 +105,20 @@ from utils.animated_language_switcher import animated_language_switcher, get_wel
 initialize()
 
 # Debug translations function for specific keys
-# We have imported display_soc2_scan_results at the top of the file
-# No need to redefine it here, which could cause conflicts
+def display_soc2_scan_results(scan_results):
+    """
+    Use the enhanced SOC2 display function to show scan results.
+    This function uses the enhanced scanner module to display SOC2 findings with
+    proper TSC criteria mapping.
+    
+    Args:
+        scan_results: Dictionary containing SOC2 scan results
+    """
+    # Import is already at the top of file: 
+    # from services.enhanced_soc2_scanner import display_soc2_scan_results
+    # We'll call our enhanced implementation directly
+    from services.enhanced_soc2_scanner import display_soc2_scan_results as enhanced_display
+    enhanced_display(scan_results)
 
 def debug_translations():
     """Print debug information about critical translation keys."""
@@ -1265,27 +1277,18 @@ else:
         except Exception:
             pass
         
-        # Summary metrics - using get_user_scans instead of get_all_scans which is not available
-        try:
-            # Check if get_user_scans method exists
-            if hasattr(results_aggregator, 'get_user_scans'):
-                all_scans = results_aggregator.get_user_scans(st.session_state.username)
-            else:
-                # Fallback to empty list if method doesn't exist
-                all_scans = []
-                st.info("Scan history feature is currently being upgraded. Please check back later.")
+        # Summary metrics
+        all_scans = results_aggregator.get_all_scans(st.session_state.username)
+        
+        if all_scans and len(all_scans) > 0:
+            total_scans = len(all_scans)
+            total_pii = sum(scan.get('total_pii_found', 0) for scan in all_scans)
+            high_risk_items = sum(scan.get('high_risk_count', 0) for scan in all_scans)
             
-            if all_scans and len(all_scans) > 0:
-                total_scans = len(all_scans)
-                total_pii = sum(scan.get('total_pii_found', 0) for scan in all_scans if isinstance(scan, dict))
-                high_risk_items = sum(scan.get('high_risk_count', 0) for scan in all_scans if isinstance(scan, dict))
-                
-                col1, col2, col3 = st.columns(3)
-                col1.metric(_("dashboard.metric.total_scans"), total_scans)
-                col2.metric(_("dashboard.metric.total_pii"), total_pii)
-                col3.metric(_("dashboard.metric.high_risk"), high_risk_items)
-        except Exception as e:
-            st.info("Dashboard metrics are currently being updated. Please check back later.")
+            col1, col2, col3 = st.columns(3)
+            col1.metric(_("dashboard.metric.total_scans"), total_scans)
+            col2.metric(_("dashboard.metric.total_pii"), total_pii)
+            col3.metric(_("dashboard.metric.high_risk"), high_risk_items)
             
             # Real-time Compliance Score Visualization
             st.markdown(f"""
@@ -2287,7 +2290,170 @@ else:
             st.info("SOC2 scanning does not require file uploads. Configure the repository details in the Advanced Configuration section and click the scan button below.")
             uploaded_files = []
                 
-            # Note: AI Model scan results will be displayed after successful scan completion below
+            # Check if we already have completed scan results for this AI model scan
+            if 'ai_model_scan_complete' in st.session_state and st.session_state.ai_model_scan_complete:
+                # Display the AI model scan results
+                st.success("AI Model scan completed successfully!")
+                
+                # Get scan results
+                ai_model_scan_results = st.session_state.ai_model_scan_results
+                
+                # Display metrics and findings
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    risk_score = ai_model_scan_results.get('risk_score', 0)
+                    severity_color = ai_model_scan_results.get('severity_color', '#10b981')
+                    st.markdown(f"""
+                    <div style="background-color: {severity_color}; padding: 20px; border-radius: 10px; color: white;">
+                        <h3 style="text-align: center; margin: 0;">Risk Score</h3>
+                        <h2 style="text-align: center; margin: 10px 0 0 0;">{risk_score}/100</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    findings_count = ai_model_scan_results.get('total_findings', 0)
+                    st.metric("Total Findings", findings_count)
+                
+                with col3:
+                    severity_level = ai_model_scan_results.get('severity_level', 'low').upper()
+                    st.metric("Severity Level", severity_level)
+                
+                # Display findings table
+                st.subheader("Findings")
+                findings = ai_model_scan_results.get('findings', [])
+                
+                if findings:
+                    findings_data = []
+                    for finding in findings:
+                        findings_data.append({
+                            'Type': finding.get('type', 'Unknown'),
+                            'Risk Level': finding.get('risk_level', 'low').upper(),
+                            'Category': finding.get('category', 'Unknown'),
+                            'Description': finding.get('description', 'Unknown')
+                        })
+                    
+                    findings_df = pd.DataFrame(findings_data)
+                    st.dataframe(findings_df, use_container_width=True)
+                else:
+                    st.info("No findings detected in the AI model scan.")
+                
+                # Generate Report buttons with comprehensive error handling
+                report_col1, report_col2 = st.columns(2)
+                
+                with report_col1:
+                    if st.button("Generate PDF Report", key="ai_model_pdf_report_button", type="primary"):
+                        try:
+                            with st.spinner("Generating AI model PDF report..."):
+                                # Import report generator
+                                try:
+                                    from services.report_generator import generate_report
+                                except ImportError as import_error:
+                                    st.error(f"Failed to import report generator: {str(import_error)}")
+                                    st.stop()
+                                
+                                # Validate input data before report generation
+                                if not isinstance(ai_model_scan_results, dict):
+                                    st.error("Invalid scan results: scan data must be a dictionary")
+                                    st.stop()
+                                
+                                # Make sure required fields are present in scan results
+                                required_fields = ['scan_id', 'timestamp', 'model_source', 'findings']
+                                missing_fields = [field for field in required_fields if field not in ai_model_scan_results]
+                                if missing_fields:
+                                    st.warning(f"Scan results missing required fields: {', '.join(missing_fields)}")
+                                    # Continue anyway, report generator will handle missing fields
+                                
+                                try:
+                                    # Log the findings for debugging
+                                    if st.session_state.get('debug_mode', False):
+                                        st.write("Debug - AI Model findings data structure:")
+                                        st.write(ai_model_scan_results.get('findings', []))
+                                    
+                                    # Log scan_data to debug console
+                                    findings_count = len(ai_model_scan_results.get('findings', []))
+                                    logging.info(f"AI model report generation with {findings_count} findings")
+                                    
+                                    # Generate PDF report with AI model format
+                                    pdf_bytes = generate_report(
+                                        ai_model_scan_results,
+                                        report_format="ai_model"
+                                    )
+                                    
+                                    # Validate the generated PDF
+                                    if not pdf_bytes or not isinstance(pdf_bytes, bytes):
+                                        st.error("Failed to generate report: Invalid output from report generator")
+                                        st.stop()
+                                    
+                                    # Create download link
+                                    try:
+                                        scan_id = ai_model_scan_results.get('scan_id', 'unknown')
+                                        b64_pdf = base64.b64encode(pdf_bytes).decode()
+                                        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="AI_Model_Scan_Report_{scan_id}.pdf">Download AI Model PDF Report</a>'
+                                        st.markdown(href, unsafe_allow_html=True)
+                                        st.success("AI Model PDF report generated successfully")
+                                    except Exception as encoding_error:
+                                        st.error(f"Error creating download link: {str(encoding_error)}")
+                                        # Try fallback approach to save file
+                                        try:
+                                            # Create reports directory if it doesn't exist
+                                            os.makedirs("reports", exist_ok=True)
+                                            report_path = f"reports/AI_Model_Scan_Report_{scan_id}.pdf"
+                                            with open(report_path, "wb") as f:
+                                                f.write(pdf_bytes)
+                                            st.info(f"Report saved to {report_path}")
+                                        except Exception as save_error:
+                                            st.error(f"Failed to save report to file: {str(save_error)}")
+                                
+                                except Exception as report_error:
+                                    st.error(f"Error generating report: {str(report_error)}")
+                                    if st.session_state.get('debug_mode', False):
+                                        import traceback
+                                        st.code(traceback.format_exc())
+                        
+                        except Exception as e:
+                            st.error(f"Critical error in report generation process: {str(e)}")
+                            if st.session_state.get('debug_mode', False):
+                                import traceback
+                                st.code(traceback.format_exc())
+                
+                with report_col2:
+                    if st.button("Generate HTML Report", key="ai_model_html_report_button", type="primary"):
+                        try:
+                            with st.spinner("Generating AI model HTML report..."):
+                                # Import HTML report generator
+                                try:
+                                    from services.html_report_generator import get_html_report_as_base64
+                                except ImportError as import_error:
+                                    st.error(f"Failed to import HTML report generator: {str(import_error)}")
+                                    st.stop()
+                                
+                                # Validate input data before report generation
+                                if not isinstance(ai_model_scan_results, dict):
+                                    st.error("Invalid scan results: scan data must be a dictionary")
+                                    st.stop()
+                                
+                                try:
+                                    # Get HTML report as base64
+                                    scan_id = ai_model_scan_results.get('scan_id', 'unknown')
+                                    html_b64 = get_html_report_as_base64(ai_model_scan_results)
+                                    
+                                    # Create download link
+                                    href = f'<a href="data:text/html;base64,{html_b64}" download="AI_Model_Scan_Report_{scan_id}.html">Download AI Model HTML Report</a>'
+                                    st.markdown(href, unsafe_allow_html=True)
+                                    st.success("AI Model HTML report generated successfully")
+                                
+                                except Exception as html_error:
+                                    st.error(f"Error generating HTML report: {str(html_error)}")
+                                    if st.session_state.get('debug_mode', False):
+                                        import traceback
+                                        st.code(traceback.format_exc())
+                        
+                        except Exception as e:
+                            st.error(f"Critical error in HTML report generation: {str(e)}")
+                            if st.session_state.get('debug_mode', False):
+                                import traceback
+                                st.code(traceback.format_exc())
                 
         elif scan_type == _("scan.dpia"):
             # No header for DPIA - will be handled by the assessment form
@@ -2311,19 +2477,35 @@ else:
             # Set start_scan to True for DPIA to bypass the button click
             start_scan = True
         elif scan_type == _("scan.soc2"):
-            # For SOC2, we need to show the custom interface instead of the normal flow
-            # Hide the standard upload and scan button sections
+            # Make SOC2 scan buttons more prominent without hiding any buttons
             st.markdown("""
             <style>
-            /* Hide standard upload and scan sections for SOC2 */
-            #upload-files-section,
-            div[data-testid="stHorizontalBlock"]:has(button) {
-                display: none !important;
+            /* Make SOC2 primary buttons more prominent */
+            button[kind="primary"] {
+                background-color: #1565C0 !important;
+                color: white !important;
+                font-weight: bold !important;
+                border: 2px solid #0D47A1 !important;
             }
             </style>
             """, unsafe_allow_html=True)
-            # Set start_scan to True to bypass normal flow and show SOC2 interface
-            start_scan = True
+            
+            # Store GitHub tab input values in session state for main button to use
+            if 'repo_url' in st.session_state:
+                github_repo_url = st.session_state.repo_url
+                github_branch = st.session_state.get('branch', '')
+                github_token = st.session_state.get('token', '')
+            
+            # Prominent "Start Scan" button with free trial info
+            scan_btn_col1, scan_btn_col2 = st.columns([3, 1])
+            with scan_btn_col1:
+                # Removed duplicate SOC2 scan button to avoid confusion with tab-specific buttons
+                pass
+            with scan_btn_col2:
+                if 'free_trial_active' in locals() and free_trial_active:
+                    st.success(f"Free Trial: {free_trial_days_left} days left")
+                else:
+                    st.warning("Premium Feature")
         elif scan_type == _("scan.ai_model"):
             # Create a more prominent scan button for AI Model scan
             st.markdown("""
@@ -2937,14 +3119,6 @@ else:
                             gdpr_scores = [v['score'] for k, v in result['gdpr_compliance'].items()]
                             result['overall_gdpr_score'] = sum(gdpr_scores) / len(gdpr_scores)
                             
-                            # Add risk-based score calculation and ensure it's always non-negative
-                            high_risk = result.get('high_risk_count', 0)
-                            medium_risk = result.get('medium_risk_count', 0)
-                            low_risk = result.get('low_risk_count', 0)
-                            risk_adjusted_score = max(0, 100 - (high_risk * 15 + medium_risk * 7 + low_risk * 3))
-                            # Set overall compliance score to be used in reports and UI
-                            result['overall_compliance_score'] = risk_adjusted_score
-                            
                             # Get formatted findings for display
                             formatted_findings = result.get('formatted_findings', [])
                             if not formatted_findings and 'findings' in result:
@@ -3070,389 +3244,100 @@ else:
                             with report_tab:
                                 st.write("### Export Report Options")
                                 
-                                # Import our direct report download functionality with native Streamlit buttons
-                                from services.direct_report_download import display_report_options
+                                # Import the report display functionality
+                                from services.download_reports import display_report_options
                                 
-                                # Use native Streamlit download buttons for reliable direct downloads
+                                # Use the comprehensive report display module
                                 display_report_options(result)
-                                
-                                # Ensure we have all necessary data for report generation
-                                if 'scan_type' not in result:
-                                    result['scan_type'] = 'Repository Scan'
-                                
-                                if 'timestamp' not in result:
-                                    result['timestamp'] = datetime.now().isoformat()
-                                
-                                # Count risk levels if not already present
-                                if 'high_risk_count' not in result or 'medium_risk_count' not in result or 'low_risk_count' not in result:
-                                    high_count = 0
-                                    medium_count = 0
-                                    low_count = 0
-                                    
-                                    for finding in result.get('findings', []):
-                                        risk_level = finding.get('risk_level', '').lower()
-                                        if risk_level == 'high':
-                                            high_count += 1
-                                        elif risk_level == 'medium':
-                                            medium_count += 1
-                                        else:
-                                            low_count += 1
-                                    
-                                    result['high_risk_count'] = high_count
-                                    result['medium_risk_count'] = medium_count
-                                    result['low_risk_count'] = low_count
-                                
-                                # Create columns for report download options
-                                col1, col2 = st.columns(2)
-                                
-                                with col1:
-                                    # PDF Report generation
-                                    if st.button("Generate PDF Report", use_container_width=True):
-                                        with st.spinner("Generating PDF report..."):
+                                                gdpr_scores = [v['score'] for k, v in result['gdpr_compliance'].items()]
+                                                result['overall_gdpr_score'] = sum(gdpr_scores) / len(gdpr_scores)
+                                                
+                                            # Generate the PDF report with proper error handling
                                             try:
-                                                # Create buffer to store PDF
-                                                from io import BytesIO
-                                                from reportlab.lib.pagesizes import letter, A4
-                                                from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-                                                from reportlab.lib.colors import HexColor
-                                                from reportlab.lib.enums import TA_CENTER, TA_RIGHT
-                                                from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-                                                from reportlab.lib.units import inch, cm
-                                                import datetime
-                                                
-                                                # Create a modern-styled PDF
-                                                buffer = BytesIO()
-                                                doc = SimpleDocTemplate(buffer, pagesize=A4, 
-                                                                      leftMargin=1.25*cm, rightMargin=1.25*cm,
-                                                                      topMargin=2*cm, bottomMargin=2*cm)
-                                                
-                                                # Create custom styles for modern design
-                                                styles = getSampleStyleSheet()
-                                                
-                                                # Add custom styles
-                                                styles.add(ParagraphStyle(
-                                                    name='ModernTitle',
-                                                    parent=styles['Heading1'],
-                                                    fontName='Helvetica-Bold',
-                                                    fontSize=20,
-                                                    leading=24,
-                                                    textColor=HexColor('#2c3e50'),
-                                                    alignment=TA_CENTER,
-                                                    spaceAfter=20
-                                                ))
-                                                
-                                                styles.add(ParagraphStyle(
-                                                    name='ModernSubtitle',
-                                                    parent=styles['Heading2'],
-                                                    fontName='Helvetica-Bold',
-                                                    fontSize=16,
-                                                    leading=20,
-                                                    textColor=HexColor('#3498db'),
-                                                    spaceAfter=12
-                                                ))
-                                                
-                                                styles.add(ParagraphStyle(
-                                                    name='ModernHeading',
-                                                    parent=styles['Heading3'],
-                                                    fontName='Helvetica-Bold',
-                                                    fontSize=12,
-                                                    leading=16,
-                                                    textColor=HexColor('#2c3e50'),
-                                                    spaceAfter=8
-                                                ))
-                                                
-                                                styles.add(ParagraphStyle(
-                                                    name='ModernText',
-                                                    parent=styles['Normal'],
-                                                    fontName='Helvetica',
-                                                    fontSize=10,
-                                                    leading=14,
-                                                    textColor=HexColor('#34495e')
-                                                ))
-                                                
-                                                styles.add(ParagraphStyle(
-                                                    name='MetadataText',
-                                                    parent=styles['Normal'],
-                                                    fontName='Helvetica',
-                                                    fontSize=9,
-                                                    leading=12,
-                                                    textColor=HexColor('#7f8c8d')
-                                                ))
-                                                
-                                                styles.add(ParagraphStyle(
-                                                    name='HighRiskText',
-                                                    parent=styles['Normal'],
-                                                    fontName='Helvetica-Bold',
-                                                    fontSize=10,
-                                                    leading=14,
-                                                    textColor=HexColor('#e74c3c')
-                                                ))
-                                                
-                                                styles.add(ParagraphStyle(
-                                                    name='MediumRiskText',
-                                                    parent=styles['Normal'],
-                                                    fontName='Helvetica-Bold',
-                                                    fontSize=10,
-                                                    leading=14,
-                                                    textColor=HexColor('#f39c12')
-                                                ))
-                                                
-                                                styles.add(ParagraphStyle(
-                                                    name='LowRiskText',
-                                                    parent=styles['Normal'],
-                                                    fontName='Helvetica-Bold',
-                                                    fontSize=10,
-                                                    leading=14,
-                                                    textColor=HexColor('#27ae60')
-                                                ))
-                                                
-                                                # Create elements list
-                                                elements = []
-                                                
-                                                # Add logo and title
-                                                repo_name = result.get('repository_url', result.get('repo_url', 'Unknown Repository'))
-                                                elements.append(Paragraph("DataGuardian Pro", styles["ModernTitle"]))
-                                                elements.append(Paragraph("GDPR Compliance Report", styles["ModernSubtitle"]))
-                                                elements.append(Spacer(1, 24))
-                                                
-                                                # Create metadata table with modern styling
-                                                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                                scan_id = result.get('scan_id', 'Unknown')
-                                                
-                                                metadata = [
-                                                    ["Repository:", repo_name],
-                                                    ["Scan ID:", scan_id],
-                                                    ["Generated:", current_time],
-                                                ]
-                                                
-                                                # Create a styled metadata table
-                                                meta_table = Table(metadata, colWidths=[2*cm, 14*cm])
-                                                meta_table.setStyle(TableStyle([
-                                                    ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
-                                                    ('FONT', (1, 0), (1, -1), 'Helvetica'),
-                                                    ('TEXTCOLOR', (0, 0), (0, -1), HexColor('#2c3e50')),
-                                                    ('TEXTCOLOR', (1, 0), (1, -1), HexColor('#7f8c8d')),
-                                                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                                                ]))
-                                                elements.append(meta_table)
-                                                elements.append(Spacer(1, 24))
-                                                
-                                                # Add summary section with modern design
-                                                elements.append(Paragraph("Scan Summary", styles["ModernSubtitle"]))
-                                                elements.append(Spacer(1, 12))
-                                                
-                                                # Add risk counts with modern design
-                                                high_risk = result.get('high_risk_count', 0)
-                                                medium_risk = result.get('medium_risk_count', 0)
-                                                low_risk = result.get('low_risk_count', 0)
-                                                
-                                                # Calculate compliance score
-                                                max_score = max(100, high_risk * 5 + medium_risk * 3 + low_risk)
-                                                compliance_score = max(0, 100 - (high_risk * 5 + medium_risk * 3 + low_risk))
-                                                compliance_percentage = min(100, int(compliance_score))
-                                                
-                                                # Create risk summary table
-                                                risk_data = [
-                                                    ["Risk Level", "Count"],
-                                                    ["High Risk Items:", str(high_risk)],
-                                                    ["Medium Risk Items:", str(medium_risk)],
-                                                    ["Low Risk Items:", str(low_risk)],
-                                                    ["Compliance Score:", f"{compliance_percentage}%"]
-                                                ]
-                                                
-                                                risk_table = Table(risk_data, colWidths=[4*cm, 12*cm])
-                                                risk_table.setStyle(TableStyle([
-                                                    ('FONT', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                                                    ('FONT', (0, 1), (0, -1), 'Helvetica'),
-                                                    ('FONT', (1, 1), (1, 1), 'Helvetica-Bold'),  # High risk
-                                                    ('FONT', (1, 2), (1, 2), 'Helvetica-Bold'),  # Medium risk
-                                                    ('FONT', (1, 3), (1, 3), 'Helvetica-Bold'),  # Low risk
-                                                    ('FONT', (1, 4), (1, 4), 'Helvetica-Bold'),  # Score
-                                                    ('TEXTCOLOR', (0, 0), (-1, 0), HexColor('#ffffff')),
-                                                    ('TEXTCOLOR', (1, 1), (1, 1), HexColor('#e74c3c')),  # High risk
-                                                    ('TEXTCOLOR', (1, 2), (1, 2), HexColor('#f39c12')),  # Medium risk
-                                                    ('TEXTCOLOR', (1, 3), (1, 3), HexColor('#27ae60')),  # Low risk
-                                                    ('TEXTCOLOR', (1, 4), (1, 4), HexColor('#2980b9')),  # Score
-                                                    ('BACKGROUND', (0, 0), (-1, 0), HexColor('#34495e')),
-                                                    ('BACKGROUND', (0, 1), (-1, -1), HexColor('#f8f9fa')),
-                                                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#ecf0f1')),
-                                                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                                                    ('TOPPADDING', (0, 0), (-1, -1), 6),
-                                                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
-                                                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-                                                ]))
-                                                elements.append(risk_table)
-                                                elements.append(Spacer(1, 24))
-                                                
-                                                # Add findings with modern styling
-                                                elements.append(Paragraph("Detailed Findings", styles["ModernSubtitle"]))
-                                                elements.append(Spacer(1, 12))
-                                                
-                                                # Group findings by risk level
-                                                findings = result.get('findings', [])
-                                                if findings:
-                                                    # First process high risk findings
-                                                    high_risk_findings = [f for f in findings if f.get('risk_level', '').lower() == 'high']
-                                                    if high_risk_findings:
-                                                        elements.append(Paragraph("High Risk Findings", styles["HighRiskText"]))
-                                                        elements.append(Spacer(1, 6))
-                                                        
-                                                        for idx, finding in enumerate(high_risk_findings):
-                                                            description = finding.get('description', 'No description')
-                                                            path = finding.get('file_path', 'Unknown path')
-                                                            
-                                                            elements.append(Paragraph(f"{idx+1}. {description}", styles["ModernHeading"]))
-                                                            elements.append(Paragraph(f"<b>Location:</b> {path}", styles["ModernText"]))
-                                                            
-                                                            # Add recommendation if available
-                                                            if 'recommendation' in finding:
-                                                                elements.append(Paragraph(f"<b>Recommendation:</b> {finding['recommendation']}", styles["ModernText"]))
-                                                            
-                                                            elements.append(Spacer(1, 12))
-                                                    
-                                                    # Next process medium risk findings
-                                                    medium_risk_findings = [f for f in findings if f.get('risk_level', '').lower() == 'medium']
-                                                    if medium_risk_findings:
-                                                        elements.append(Paragraph("Medium Risk Findings", styles["MediumRiskText"]))
-                                                        elements.append(Spacer(1, 6))
-                                                        
-                                                        for idx, finding in enumerate(medium_risk_findings):
-                                                            description = finding.get('description', 'No description')
-                                                            path = finding.get('file_path', 'Unknown path')
-                                                            
-                                                            elements.append(Paragraph(f"{idx+1}. {description}", styles["ModernHeading"]))
-                                                            elements.append(Paragraph(f"<b>Location:</b> {path}", styles["ModernText"]))
-                                                            
-                                                            # Add recommendation if available
-                                                            if 'recommendation' in finding:
-                                                                elements.append(Paragraph(f"<b>Recommendation:</b> {finding['recommendation']}", styles["ModernText"]))
-                                                            
-                                                            elements.append(Spacer(1, 12))
-                                                    
-                                                    # Finally process low risk findings
-                                                    low_risk_findings = [f for f in findings if f.get('risk_level', '').lower() == 'low']
-                                                    if low_risk_findings:
-                                                        elements.append(Paragraph("Low Risk Findings", styles["LowRiskText"]))
-                                                        elements.append(Spacer(1, 6))
-                                                        
-                                                        for idx, finding in enumerate(low_risk_findings):
-                                                            description = finding.get('description', 'No description')
-                                                            path = finding.get('file_path', 'Unknown path')
-                                                            
-                                                            elements.append(Paragraph(f"{idx+1}. {description}", styles["ModernHeading"]))
-                                                            elements.append(Paragraph(f"<b>Location:</b> {path}", styles["ModernText"]))
-                                                            
-                                                            # Add recommendation if available
-                                                            if 'recommendation' in finding:
-                                                                elements.append(Paragraph(f"<b>Recommendation:</b> {finding['recommendation']}", styles["ModernText"]))
-                                                            
-                                                            elements.append(Spacer(1, 12))
-                                                else:
-                                                    elements.append(Paragraph("No specific findings detected.", styles["ModernText"]))
-                                                
-                                                # Build PDF
-                                                doc.build(elements)
-                                                pdf_bytes = buffer.getvalue()
-                                                
-                                                # Provide download button
-                                                st.success("PDF report generated successfully!")
-                                                # Download button for PDF
-                                                st.download_button(
-                                                    label="Download PDF Report",
-                                                    data=pdf_bytes,
-                                                    file_name=f"GDPR_Repo_Scan_{scan_id}.pdf",
-                                                    mime="application/pdf"
+                                                pdf_bytes = generate_report(
+                                                    scan_data=result,
+                                                    include_details=include_details,
+                                                    include_charts=include_charts,
+                                                    include_metadata=include_metadata,
+                                                    include_recommendations=include_recommendations,
+                                                    report_format="code"  # Use code report format for repository scans
                                                 )
+                                                
+                                                # Create download link for the PDF
+                                                if pdf_bytes and len(pdf_bytes) > 0:
+                                                    # Success message
+                                                    st.success("PDF report generated successfully!")
+                                                    
+                                                    # Create download button
+                                                    scan_id = result.get('scan_id', 'repo_scan')
+                                                    st.download_button(
+                                                        label="Download PDF Report",
+                                                        data=pdf_bytes,
+                                                        file_name=f"GDPR_Repo_Scan_{scan_id}.pdf",
+                                                        mime="application/pdf"
+                                                    )
+                                                else:
+                                                    st.error("Failed to generate a valid PDF report.")
+                                                    st.info("Try selecting different report options or using the HTML report instead.")
                                             except Exception as e:
                                                 st.error(f"Error generating PDF report: {str(e)}")
+                                                st.info("This may be due to complex formatting in the findings. Try the HTML report instead.")
+                                        except Exception as e:
+                                            st.error(f"Error generating report: {str(e)}")
                                 
-                                with col2:
-                                    # HTML Report generation
-                                    if st.button("Generate HTML Report", use_container_width=True):
-                                        with st.spinner("Generating HTML report..."):
-                                            try:
-                                                # Create simple HTML report directly
-                                                scan_id = result.get('scan_id', 'repo_scan')
-                                                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                # Generate HTML report option
+                                if st.button("Generate HTML Report"):
+                                    with st.spinner("Generating HTML report..."):
+                                        try:
+                                            # Import HTML report generator and other needed modules
+                                            from services.html_report_generator import generate_html_report
+                                            import uuid
+                                            from datetime import datetime
+                                            
+                                            # Ensure we have all needed data for HTML report
+                                            result['scan_type'] = 'Repository Scan'
+                                            if 'timestamp' not in result:
+                                                result['timestamp'] = datetime.now().isoformat()
                                                 
-                                                # Begin HTML content
-                                                html_content = f"""
-                                                <!DOCTYPE html>
-                                                <html>
-                                                <head>
-                                                    <title>GDPR Compliance Report - {scan_id}</title>
-                                                    <style>
-                                                        body {{ font-family: Arial, sans-serif; margin: 40px; }}
-                                                        h1 {{ color: #2c3e50; }}
-                                                        h2 {{ color: #3498db; margin-top: 30px; }}
-                                                        .high-risk {{ color: #e74c3c; }}
-                                                        .medium-risk {{ color: #f39c12; }}
-                                                        .low-risk {{ color: #27ae60; }}
-                                                        .finding {{ margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }}
-                                                        .metadata {{ color: #7f8c8d; font-size: 0.9em; }}
-                                                    </style>
-                                                </head>
-                                                <body>
-                                                    <h1>GDPR Compliance Report</h1>
-                                                    <p class="metadata">Generated: {timestamp}</p>
-                                                    <p class="metadata">Scan ID: {scan_id}</p>
-                                                    
-                                                    <h2>Scan Summary</h2>
-                                                """
+                                            # Add risk counts if missing
+                                            if 'high_risk_count' not in result:
+                                                # Calculate based on findings
+                                                high_count = 0
+                                                medium_count = 0
+                                                low_count = 0
                                                 
-                                                # Add risk counts
-                                                high_risk = result.get('high_risk_count', 0)
-                                                medium_risk = result.get('medium_risk_count', 0)
-                                                low_risk = result.get('low_risk_count', 0)
-                                                
-                                                # Calculate compliance score with proper bounds (always between 0-100)
-                                                raw_score = 100 - (high_risk * 15 + medium_risk * 7 + low_risk * 3)
-                                                compliance_score = max(0, min(100, raw_score))  # Ensure score is between 0-100
-                                                
-                                                html_content += f"""
-                                                    <p><strong>High Risk Items:</strong> {high_risk}</p>
-                                                    <p><strong>Medium Risk Items:</strong> {medium_risk}</p>
-                                                    <p><strong>Low Risk Items:</strong> {low_risk}</p>
-                                                    
-                                                    <h2>Detailed Findings</h2>
-                                                """
-                                                
-                                                # Add findings
                                                 for finding in result.get('findings', []):
-                                                    description = finding.get('description', 'No description')
-                                                    path = finding.get('file_path', 'Unknown path')
-                                                    risk = finding.get('risk_level', 'Unknown').lower()
-                                                    
-                                                    risk_class = "medium-risk"
-                                                    if risk == "high":
-                                                        risk_class = "high-risk"
-                                                    elif risk == "low":
-                                                        risk_class = "low-risk"
-                                                    
-                                                    html_content += f"""
-                                                    <div class="finding">
-                                                        <h3>{description}</h3>
-                                                        <p><strong>Path:</strong> {path}</p>
-                                                        <p><strong>Risk Level:</strong> <span class="{risk_class}">{risk.upper()}</span></p>
-                                                    </div>
-                                                    """
+                                                    risk_level = finding.get('risk_level', '').lower()
+                                                    if risk_level == 'high':
+                                                        high_count += 1
+                                                    elif risk_level == 'medium':
+                                                        medium_count += 1
+                                                    else:
+                                                        low_count += 1
                                                 
-                                                # Close HTML document
-                                                html_content += """
-                                                </body>
-                                                </html>
-                                                """
-                                                
-                                                # Create download button for HTML
+                                                result['high_risk_count'] = high_count
+                                                result['medium_risk_count'] = medium_count
+                                                result['low_risk_count'] = low_count
+                                            
+                                            # Generate HTML report
+                                            html_content = generate_html_report(result)
+                                            
+                                            # Create download button for HTML
+                                            if html_content:
                                                 st.success("HTML report generated successfully!")
+                                                
+                                                # Download button for HTML report
+                                                scan_id = result.get('scan_id', 'repo_scan')
                                                 st.download_button(
                                                     label="Download HTML Report",
                                                     data=html_content,
                                                     file_name=f"GDPR_Repo_Scan_{scan_id}.html",
                                                     mime="text/html"
                                                 )
-                                            except Exception as e:
-                                                st.error(f"Error generating HTML report: {str(e)}")
+                                            else:
+                                                st.error("Failed to generate the HTML report.")
+                                        except Exception as e:
+                                            st.error(f"Error generating HTML report: {str(e)}")
                             
                         # Standard directory or file scanning
                         elif len(file_paths) == 1 and os.path.isdir(file_paths[0]):
@@ -3479,15 +3364,13 @@ else:
                             from services.code_scanner import CodeScanner
                             directory_scanner = CodeScanner(region=region)
                             
-                            # Run the resilient scan with checkpointing and smart sampling for large repos
+                            # Run the resilient scan with checkpointing
                             result = directory_scanner.scan_directory(
                                 directory_path=directory_path,
                                 progress_callback=update_progress,
                                 ignore_patterns=ignore_patterns,
                                 max_file_size_mb=50,
-                                continue_from_checkpoint=True,
-                                smart_sampling=True,
-                                max_files_to_scan=2000  # Increased limit for more thorough scanning
+                                continue_from_checkpoint=True
                             )
                             
                             # Store directory scan result
@@ -3769,8 +3652,9 @@ else:
                             if 'status_text' in locals():
                                 status_text.text("AI Model Scan: Failed with Critical Error")
                     elif scan_type == _("scan.dpia"):
-                        # Use our enhanced and crash-resistant DPIA module
-                        from dpia_module import run_enhanced_dpia
+                        # Skip the informational box and go straight to the improved DPIA form
+                        # Import and run our improved DPIA form with a more stable and reliable experience
+                        from improved_dpia import run_improved_dpia
                         
                         # Hide the Start Scan button and Upload Files section and other unnecessary UI for DPIA
                         st.markdown("""
@@ -3810,11 +3694,10 @@ else:
                         </style>
                         """, unsafe_allow_html=True)
                         
-                        # Run our new GDPR 7-step DPIA workflow
-                        from gdpr_7step_dpia import run_gdpr_7step_dpia
-                        run_gdpr_7step_dpia()
+                        # Run the improved DPIA form directly
+                        run_improved_dpia()
                         
-                        # Stop normal flow to proceed with only the DPIA form
+                        # Stop normal flow to proceed with only the improved DPIA form
                         scan_running = False
                     
                     elif scan_type == _("scan.soc2"):
@@ -3824,10 +3707,15 @@ else:
                         from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository, display_soc2_scan_results
                         from services.report_generator import generate_report
                         
-                        # Hide upload-related sections for SOC2 scanner (repository-based only)
+                        # Hide the Start Scan button and Upload Files section for cleaner UI
                         st.markdown("""
                         <style>
-                        /* Hide upload-related sections for SOC2 */
+                        /* Hide the Start Scan button */
+                        div.stButton > button:contains("Start Scan") {
+                            display: none !important;
+                        }
+                        
+                        /* Hide upload-related sections */
                         .main .block-container h2:contains("Upload Files"),
                         .main .block-container h2:contains("Upload Files") ~ div,
                         .main .block-container hr:has(+ h2:contains("Upload Files")),
@@ -3845,6 +3733,8 @@ else:
                         """, unsafe_allow_html=True)
                         
                         # SOC2 scanner UI with enhanced design
+                        st.title(_("scan.soc2_title", "SOC2 Compliance Scanner"))
+                        
                         # Display enhanced description with clear value proposition
                         st.write(_(
                             "scan.soc2_description", 
@@ -3868,138 +3758,10 @@ else:
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Check if we have scan results to display
-                        has_soc2_results = 'soc2_scan_results' in st.session_state and st.session_state.soc2_scan_results
+                        # Create tabs for configuration and results
+                        config_tab, results_tab = st.tabs(["SOC2 Scanner Configuration", "Results"])
                         
-                        if has_soc2_results:
-                            # Show only results when scan is complete
-                            scan_results = st.session_state.soc2_scan_results
-                            
-                            # Extract key metrics
-                            compliance_score = scan_results.get("compliance_score", 0)
-                            high_risk = scan_results.get("high_risk_count", 0)
-                            medium_risk = scan_results.get("medium_risk_count", 0)
-                            low_risk = scan_results.get("low_risk_count", 0)
-                            total_findings = high_risk + medium_risk + low_risk
-                            
-                            # Repository info
-                            st.write(f"**Repository:** {scan_results.get('repo_url')}")
-                            st.write(f"**Branch:** {scan_results.get('branch', 'main')}")
-                            
-                            # Create metrics
-                            col1, col2, col3, col4 = st.columns(4)
-                            
-                            # Determine compliance color for styling
-                            if compliance_score >= 80:
-                                compliance_color_css = "green"
-                            elif compliance_score >= 60:
-                                compliance_color_css = "orange"
-                            else:
-                                compliance_color_css = "red"
-                                
-                            with col1:
-                                st.metric("Compliance Score", 
-                                        f"{compliance_score}/100", 
-                                        delta=None,
-                                        delta_color="normal")
-                                        
-                                st.markdown(f"<div style='text-align: center; color: {compliance_color_css};'>{'✓ Good' if compliance_score >= 80 else '⚠️ Needs Review' if compliance_score >= 60 else '✗ Critical'}</div>", unsafe_allow_html=True)
-                            
-                            with col2:
-                                st.metric("High Risk Issues", 
-                                        high_risk,
-                                        delta=None,
-                                        delta_color="inverse")
-                                        
-                            with col3:
-                                st.metric("Medium Risk Issues", 
-                                        medium_risk,
-                                        delta=None,
-                                        delta_color="inverse")
-                                        
-                            with col4:
-                                st.metric("Low Risk Issues", 
-                                        low_risk,
-                                        delta=None,
-                                        delta_color="inverse")
-                            
-                            # Enhanced action buttons section
-                            st.markdown("### Actions")
-                            action_col1, action_col2, action_col3 = st.columns(3)
-                            
-                            with action_col1:
-                                if st.button("📄 Generate PDF Report", type="primary", key="soc2_results_pdf_button", use_container_width=True):
-                                    with st.spinner("Generating comprehensive SOC2 compliance report..."):
-                                        try:
-                                            from services.soc2_display import generate_soc2_pdf_report
-                                            
-                                            pdf_bytes = generate_soc2_pdf_report(scan_results)
-                                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                                            pdf_filename = f"soc2_compliance_report_{timestamp}.pdf"
-                                            
-                                            st.download_button(
-                                                label="📥 Download SOC2 Report",
-                                                data=pdf_bytes,
-                                                file_name=pdf_filename,
-                                                mime="application/pdf",
-                                                key="soc2_results_download_btn"
-                                            )
-                                            st.success("SOC2 compliance report generated successfully!")
-                                        except Exception as e:
-                                            st.error(f"Failed to generate PDF report: {str(e)}")
-                            
-                            with action_col2:
-                                if st.button("🔄 New SOC2 Scan", key="soc2_results_new_scan", use_container_width=True):
-                                    # Clear session state for new scan
-                                    for key in list(st.session_state.keys()):
-                                        if 'soc2' in key.lower():
-                                            del st.session_state[key]
-                                    st.rerun()
-                            
-                            with action_col3:
-                                if st.button("📊 View in Dashboard", key="soc2_results_view_dashboard", use_container_width=True):
-                                    # Store results in history and redirect to dashboard
-                                    if 'scan_history' not in st.session_state:
-                                        st.session_state.scan_history = []
-                                    
-                                    history_entry = {
-                                        'timestamp': datetime.now().isoformat(),
-                                        'scan_type': 'SOC2 Compliance',
-                                        'repository': scan_results.get('repo_url'),
-                                        'branch': scan_results.get('branch', 'main'),
-                                        'compliance_score': compliance_score,
-                                        'total_findings': total_findings,
-                                        'high_risk': high_risk,
-                                        'medium_risk': medium_risk,
-                                        'low_risk': low_risk,
-                                        'results': scan_results
-                                    }
-                                    st.session_state.scan_history.append(history_entry)
-                                    st.session_state.selected_nav = "Dashboard"
-                                    st.rerun()
-                            
-                            # Display findings table
-                            st.subheader("Compliance Findings")
-                            if 'findings' in scan_results and scan_results['findings']:
-                                findings_df = pd.DataFrame([
-                                    {
-                                        "Risk": f.get("risk_level", "Unknown").upper(),
-                                        "Category": f.get("category", "Unknown").capitalize(),
-                                        "Description": f.get("description", "No description"),
-                                        "File": f.get("file", "Unknown"),
-                                        "Line": f.get("line", "N/A"),
-                                    }
-                                    for f in scan_results['findings'][:10]  # Show top 10 findings
-                                ])
-                                st.dataframe(findings_df, use_container_width=True)
-                                
-                                if len(scan_results['findings']) > 10:
-                                    st.info(f"Showing 10 of {len(scan_results['findings'])} findings. Download the PDF report for complete results.")
-                            else:
-                                st.info("No compliance findings detected.")
-                        
-                        else:
-                            # Show configuration only when no results are available
+                        with config_tab:
                             # Repository selection
                             st.subheader(_("scan.repo_source", "Repository Source"))
                             repo_source = st.radio(
@@ -4009,19 +3771,19 @@ else:
                                 key="soc2_repo_source"
                             )
                         
-                            if repo_source == "GitHub Repository":
-                                # Create a container with a custom border
-                                with st.container():
-                                    st.markdown("""
-                                    <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
-                                    """, unsafe_allow_html=True)
-                                    
-                                    # Repository URL input
-                                    st.subheader(_("scan.repo_details", "Repository Details"))
-                                    repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
-                                                        placeholder="https://github.com/username/repository",
-                                                        value="https://github.com/vishaal314/terrascan",
-                                                        key="github_soc2_repo_url")
+                        if repo_source == "GitHub Repository":
+                            # Create a container with a custom border
+                            with st.container():
+                                st.markdown("""
+                                <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                                """, unsafe_allow_html=True)
+                                
+                                # Repository URL input
+                                st.subheader(_("scan.repo_details", "Repository Details"))
+                                repo_url = st.text_input(_("scan.repo_url", "GitHub Repository URL"), 
+                                                    placeholder="https://github.com/username/repository",
+                                                    value="https://github.com/vishaal314/terrascan",
+                                                    key="github_soc2_repo_url")
                                 
                                 # Create columns for the branch and token inputs
                                 col1, col2 = st.columns(2)
@@ -4119,19 +3881,17 @@ else:
                             <div style="padding: 10px; border-radius: 5px; background-color: #f0f8ff; margin: 10px 0;">
                                 <span style="font-weight: bold;">Output:</span> SOC2 checklist + mapped violations aligned with Trust Services Criteria
                             </div>
-                            </div>
                             """, unsafe_allow_html=True)
                             
-                            # Create a prominent scan button with improved styling - moved outside container
+                            # Create a prominent scan button with improved styling
                             st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
                             scan_col1, scan_col2, scan_col3 = st.columns([1, 2, 1])
                             with scan_col2:
                                 scan_button = st.button(
-                                    "🛡️ Start SOC2 Compliance Scan",
+                                    "Start SOC2 Compliance Scan",
                                     type="primary",
                                     use_container_width=True,
-                                    key="github_soc2_scan_button",
-                                    help="Start comprehensive SOC2 compliance scanning for your repository"
+                                    key="github_soc2_scan_button"
                                 )
                             
                             # Handle the scan process
@@ -4222,64 +3982,18 @@ else:
                                                                 delta=None,
                                                                 delta_color="inverse")
                                                     
-                                                    # Enhanced action buttons section
-                                                    st.markdown("### Actions")
-                                                    action_col1, action_col2, action_col3 = st.columns(3)
-                                                    
-                                                    with action_col1:
-                                                        if st.button("📄 Generate PDF Report", type="primary", key="github_soc2_pdf_button", use_container_width=True):
-                                                            with st.spinner("Generating comprehensive SOC2 compliance report..."):
-                                                                try:
-                                                                    # Import the enhanced report generator
-                                                                    from services.soc2_display import generate_soc2_pdf_report
-                                                                    
-                                                                    # Generate enhanced PDF report
-                                                                    pdf_bytes = generate_soc2_pdf_report(scan_results)
-                                                                    
-                                                                    # Create download button
-                                                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                                                                    pdf_filename = f"soc2_compliance_report_{timestamp}.pdf"
-                                                                    
-                                                                    st.download_button(
-                                                                        label="📥 Download SOC2 Report",
-                                                                        data=pdf_bytes,
-                                                                        file_name=pdf_filename,
-                                                                        mime="application/pdf",
-                                                                        key="soc2_download_btn"
-                                                                    )
-                                                                    st.success("SOC2 compliance report generated successfully!")
-                                                                except Exception as e:
-                                                                    st.error(f"Failed to generate PDF report: {str(e)}")
-                                                    
-                                                    with action_col2:
-                                                        if st.button("🔄 New SOC2 Scan", key="github_soc2_new_scan", use_container_width=True):
-                                                            # Clear session state for new scan
-                                                            for key in list(st.session_state.keys()):
-                                                                if 'soc2' in key.lower():
-                                                                    del st.session_state[key]
-                                                            st.rerun()
-                                                    
-                                                    with action_col3:
-                                                        if st.button("📊 View in Dashboard", key="github_soc2_view_dashboard", use_container_width=True):
-                                                            # Store results in history and redirect to dashboard
-                                                            if 'scan_history' not in st.session_state:
-                                                                st.session_state.scan_history = []
+                                                    # Add PDF Download button
+                                                    st.markdown("### Download Report")
+                                                    if st.button("Generate PDF Report", type="primary", key="github_soc2_pdf_button"):
+                                                        with st.spinner("Generating PDF report..."):
+                                                            # Generate PDF report
+                                                            pdf_bytes = generate_report(scan_results)
                                                             
-                                                            history_entry = {
-                                                                'timestamp': datetime.now().isoformat(),
-                                                                'scan_type': 'SOC2 Compliance',
-                                                                'repository': repo_url,
-                                                                'branch': branch or 'main',
-                                                                'compliance_score': compliance_score,
-                                                                'total_findings': total_findings,
-                                                                'high_risk': high_risk,
-                                                                'medium_risk': medium_risk,
-                                                                'low_risk': low_risk,
-                                                                'results': scan_results
-                                                            }
-                                                            st.session_state.scan_history.append(history_entry)
-                                                            st.session_state.selected_nav = "Dashboard"
-                                                            st.rerun()
+                                                            # Provide download link
+                                                            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+                                                            pdf_filename = f"soc2_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                                                            href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_filename}">Download SOC2 Compliance Report PDF</a>'
+                                                            st.markdown(href, unsafe_allow_html=True)
                                                     
                                                     # Display findings table
                                                     st.subheader("Compliance Findings")
@@ -4303,18 +4017,18 @@ else:
                                             st.error(f"{_('scan.scan_failed', 'Scan failed')}: {str(e)}")
                                             status.update(label=_("scan.scan_failed", "Scan failed"), state="error")
                         
-                            elif repo_source == "Azure DevOps Repository":
-                                # Create a container with a custom border for Azure
-                                with st.container():
-                                    st.markdown("""
-                                    <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
-                                    """, unsafe_allow_html=True)
-                                    
-                                    # Repository URL input
-                                    st.subheader(_("scan.azure_repo_details", "Azure DevOps Repository Details"))
-                                    repo_url = st.text_input(_("scan.azure_repo_url", "Azure DevOps Repository URL"), 
-                                                        placeholder="https://dev.azure.com/organization/project/_git/repository",
-                                                        key="azure_soc2_repo_url")
+                        elif repo_source == "Azure DevOps Repository":
+                            # Create a container with a custom border for Azure
+                            with st.container():
+                                st.markdown("""
+                                <div style="border: 1px solid #e6e6e6; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                                """, unsafe_allow_html=True)
+                                
+                                # Repository URL input
+                                st.subheader(_("scan.azure_repo_details", "Azure DevOps Repository Details"))
+                                repo_url = st.text_input(_("scan.azure_repo_url", "Azure DevOps Repository URL"), 
+                                                placeholder="https://dev.azure.com/organization/project/_git/repository",
+                                                key="azure_soc2_repo_url")
                                 
                                 # Project name is required for Azure DevOps
                                 project = st.text_input(_("scan.azure_project", "Azure DevOps Project"), 
@@ -4581,36 +4295,18 @@ else:
                     # Process all scan results with enhanced error handling
                     for result in scan_results:
                         try:
-                            # For SOC2 scans, the findings have a specific structure
-                            if scan_type == _("scan.soc2") and 'findings' in result:
-                                for item in result.get('findings', []):
-                                    # Skip invalid findings that are not dictionaries
-                                    if not isinstance(item, dict):
-                                        continue
-                                    all_findings.append({
-                                        'Type': 'SOC2 Compliance Issue',
-                                        'Risk Level': item.get('risk_level', 'Unknown').upper(),
-                                        'Category': item.get('category', 'Unknown').capitalize(),
-                                        'Description': item.get('description', 'Unknown'),
-                                        'Technology': item.get('technology', 'Unknown'),
-                                        'SOC2 TSC': ', '.join(item.get('soc2_tsc_criteria', []))
-                                    })
                             # For AI model scans, the findings are in a different format
-                            elif scan_type == _("scan.ai_model") and 'findings' in result:
+                            if scan_type == _("scan.ai_model") and 'findings' in result:
                                 for item in result.get('findings', []):
-                                    if not isinstance(item, dict):
-                                        continue
                                     all_findings.append({
                                         'Type': item.get('type', 'Unknown'),
                                         'Risk Level': item.get('risk_level', 'Unknown').upper(),
                                         'Category': item.get('category', 'Unknown'),
                                         'Description': item.get('description', 'Unknown')
                                     })
-                            # For other scan types (PII scans)
+                            # For other scan types
                             else:
                                 for item in result.get('pii_found', []):
-                                    if not isinstance(item, dict):
-                                        continue
                                     all_findings.append({
                                         'Type': item.get('type', 'Unknown'),
                                         'Value': item.get('value', 'Unknown'),
@@ -4618,8 +4314,14 @@ else:
                                         'Location': item.get('location', 'Unknown')
                                     })
                         except Exception as findings_error:
-                            # Skip error logging for data integrity
-                            continue
+                            # If there's an error processing findings, add a placeholder
+                            st.warning(f"Error processing scan findings: {str(findings_error)}")
+                            all_findings.append({
+                                'Type': 'Error',
+                                'Risk Level': 'MEDIUM',
+                                'Description': f'Error processing scan results: {str(findings_error)}',
+                                'Location': 'Results Processor'
+                            })
                     
                     # Display a sample of findings (up to 10 items)
                     if all_findings:
@@ -4632,8 +4334,6 @@ else:
                             st.info(f"Showing 10 of {len(all_findings)} findings. See full results in Scan History.")
                     else:
                         st.info("No findings to display.")
-                    
-                    # AI Model scan results will be displayed in scan results aggregation below
                     
                     # Action buttons
                     col1, col2, col3 = st.columns(3)
@@ -4764,12 +4464,7 @@ else:
             st.stop()
         
         # Get all scans for the user
-        try:
-            # Safely try to get scan history
-            all_scans = results_aggregator.get_user_scans(st.session_state.username) if hasattr(results_aggregator, 'get_user_scans') else []
-        except Exception:
-            all_scans = []
-            st.info("Scan history is currently being updated. Please check back soon!")
+        all_scans = results_aggregator.get_all_scans(st.session_state.username)
         
         if all_scans and len(all_scans) > 0:
             # Convert to DataFrame for display
@@ -5289,12 +4984,7 @@ else:
             st.stop()
             
         # Get all scans
-        try:
-            # Safely try to get scan history
-            all_scans = results_aggregator.get_user_scans(st.session_state.username) if hasattr(results_aggregator, 'get_user_scans') else []
-        except Exception:
-            all_scans = []
-            st.info("Dashboard features are currently being updated. Please check back soon!")
+        all_scans = results_aggregator.get_all_scans(st.session_state.username)
         
         if all_scans and len(all_scans) > 0:
             # Create a DataFrame for easy manipulation
