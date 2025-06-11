@@ -2023,34 +2023,41 @@ else:
                             progress_bar.progress(progress)
                             status_text.text(f"Scanning page {current}/{total}: {url}")
                         
-                        # Initialize scanner
+                        # Initialize scanner with correct parameters
                         scanner = WebsiteScanner(
-                            languages=website_languages if 'website_languages' in locals() else ["English"],
-                            region=region,
-                            rate_limit=requests_per_minute if 'requests_per_minute' in locals() else 30,
                             max_pages=20,
                             max_depth=scan_depth if 'scan_depth' in locals() else 2,
-                            cookies_enabled=True,
-                            js_enabled=True
+                            crawl_delay=60 / (requests_per_minute if 'requests_per_minute' in locals() else 30),
+                            region=region,
+                            check_ssl=True,
+                            check_dns=True
                         )
                         
                         scanner.set_progress_callback(website_progress_callback)
                         
                         # Run the scan
+                        status_text.text("Initializing website scan...")
                         scan_result = scanner.scan_website(
                             url=website_url,
                             follow_links=True
                         )
                         
-                        # Store results
-                        st.session_state.website_scan_results = scan_result
-                        st.session_state.website_scan_complete = True
-                        
-                        # Clear progress
-                        progress_container.empty()
-                        
-                        # Success message
-                        st.success(f"✅ Website scan completed successfully!")
+                        # Validate scan results
+                        if scan_result and isinstance(scan_result, dict):
+                            # Store results
+                            st.session_state.website_scan_results = scan_result
+                            st.session_state.website_scan_complete = True
+                            
+                            # Clear progress
+                            progress_container.empty()
+                            
+                            # Success message
+                            st.success(f"Website scan completed successfully!")
+                            st.rerun()
+                        else:
+                            progress_container.empty()
+                            st.error("Website scan completed but returned invalid results")
+                            st.session_state.website_scan_complete = False
                         
                     except Exception as e:
                         progress_container.empty()
