@@ -854,8 +854,11 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         medium_risk = scan_data.get('medium_risk_count', 0)
         low_risk = scan_data.get('low_risk_count', 0)
     
-    # Get URL information
-    url = scan_data.get('url', scan_data.get('domain', 'Not available'))
+    # Get URL information - for AI Model scans, use repository_url
+    if report_format == "ai_model":
+        url = scan_data.get('repository_url', scan_data.get('model_name', scan_data.get('hub_url', scan_data.get('api_endpoint', 'Not available'))))
+    else:
+        url = scan_data.get('url', scan_data.get('domain', 'Not available'))
     
     if timestamp != 'Unknown':
         try:

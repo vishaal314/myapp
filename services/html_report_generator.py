@@ -95,10 +95,15 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
     scan_type = scan_data.get('scan_type', 'Unknown')
     region = scan_data.get('region', 'Unknown')
     timestamp = scan_data.get('timestamp', 'Unknown')
-    url = scan_data.get('url', scan_data.get('domain', 'Not available'))
     
     # Check if this is an AI model scan
     is_ai_model_scan = scan_type.lower() == 'ai model' or 'ai_model' in str(scan_type).lower()
+    
+    # Get URL information - for AI Model scans, use repository_url
+    if is_ai_model_scan:
+        url = scan_data.get('repository_url', scan_data.get('model_name', scan_data.get('hub_url', scan_data.get('api_endpoint', 'Not available'))))
+    else:
+        url = scan_data.get('url', scan_data.get('domain', 'Not available'))
     
     # Import logging for debugging
     import logging
