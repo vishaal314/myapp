@@ -505,6 +505,45 @@ class GithubRepoSustainabilityScanner:
         
         return min(75, base_potential * size_multiplier)
     
+    def _calculate_energy_waste(self, unused_imports: List[Dict], dead_code: List[Dict], 
+                               package_duplications: List[Dict], large_ml_models: List[Dict]) -> float:
+        """Calculate total energy waste in kWh annually from code inefficiencies"""
+        import_waste = self._calculate_import_energy_waste(unused_imports)
+        dead_code_waste = self._calculate_dead_code_energy_waste(dead_code)
+        package_waste = self._calculate_package_duplication_energy_waste(package_duplications)
+        model_waste = self._calculate_ml_model_energy_waste(large_ml_models)
+        
+        return import_waste + dead_code_waste + package_waste + model_waste
+    
+    def _calculate_import_energy_waste(self, unused_imports: List[Dict]) -> float:
+        """Calculate energy waste from unused imports in kWh annually"""
+        total_waste_kb = sum(imp.get('estimated_size_kb', 0) for imp in unused_imports)
+        # Estimate: 1KB unused memory = 0.001 kWh annually (including load time, memory overhead)
+        return total_waste_kb * 0.001 * 8760  # Hours per year
+    
+    def _calculate_dead_code_energy_waste(self, dead_code: List[Dict]) -> float:
+        """Calculate energy waste from dead code in kWh annually"""
+        total_lines = sum(dc.get('estimated_lines', 0) for dc in dead_code)
+        # Estimate: 1 line of dead code = 0.0001 kWh annually (compilation, deployment, scanning)
+        return total_lines * 0.0001 * 365  # Days per year
+    
+    def _calculate_package_duplication_energy_waste(self, package_duplications: List[Dict]) -> float:
+        """Calculate energy waste from package duplications in kWh annually"""
+        total_bloat_mb = sum(dup.get('estimated_bloat_mb', 0) for dup in package_duplications)
+        # Estimate: 1MB package bloat = 0.01 kWh annually (storage, transfer, loading)
+        return total_bloat_mb * 0.01 * 365
+    
+    def _calculate_ml_model_energy_waste(self, large_ml_models: List[Dict]) -> float:
+        """Calculate energy waste from oversized ML models in kWh annually"""
+        total_waste = 0
+        for model in large_ml_models:
+            size_mb = model.get('size_mb', 0)
+            optimization_potential = model.get('optimization_potential', 0) / 100
+            # Estimate: 1MB model overhead = 0.05 kWh annually (loading, inference, storage)
+            waste_per_model = size_mb * optimization_potential * 0.05 * 8760
+            total_waste += waste_per_model
+        return total_waste
+    
     def _detect_model_type(self, file_path):
         """Detect ML model type from file extension"""
         if file_path.endswith('.pkl') or file_path.endswith('.joblib'):
@@ -635,55 +674,72 @@ unused-package==1.0.0"""
         # Compute total duplication percentage
         total_duplication_pct = round(min(random.uniform(5, 30), 100), 1)
         
-        # Create a list of recommended optimization actions with new code intelligence features
+        # Calculate carbon footprint metrics
+        total_energy_waste_kwh = self._calculate_energy_waste(unused_imports, dead_code, package_duplications, large_ml_models)
+        carbon_footprint_kg = total_energy_waste_kwh * 0.4  # Average global carbon intensity
+        tree_equivalent = carbon_footprint_kg / 21.77  # kg CO2 absorbed by one tree per year
+        
+        # Create a list of carbon-focused optimization actions
         recommendations = [
             {
-                'title': 'Remove unused imports and dependencies',
-                'description': f'Found {len(unused_imports)} unused imports consuming {sum(imp.get("estimated_size_kb", 0) for imp in unused_imports):.1f}KB of unnecessary memory.',
+                'title': 'Eliminate unused imports to reduce carbon footprint',
+                'description': f'Found {len(unused_imports)} unused imports wasting {sum(imp.get("estimated_size_kb", 0) for imp in unused_imports):.1f}KB memory and {self._calculate_import_energy_waste(unused_imports):.2f} kWh annually.',
                 'priority': 'High',
-                'impact': f'Removing unused imports can reduce memory usage by up to {sum(imp.get("estimated_size_kb", 0) for imp in unused_imports):.1f}KB and improve startup performance',
+                'carbon_impact': f'Reduces CO₂ emissions by {self._calculate_import_energy_waste(unused_imports) * 0.4:.2f}kg annually',
+                'energy_savings': f'{self._calculate_import_energy_waste(unused_imports):.2f} kWh/year',
+                'cost_savings': f'${self._calculate_import_energy_waste(unused_imports) * 0.12:.2f}/year in electricity costs',
+                'impact': f'Reducing memory overhead decreases server energy consumption and carbon emissions',
                 'steps': [
-                    "Run automated import analysis tools (e.g., unimport for Python)",
-                    "Remove identified unused import statements",
-                    "Update IDE settings to highlight unused imports",
-                    "Add pre-commit hooks to prevent future unused imports"
+                    "Run unimport --remove-all to eliminate unused imports",
+                    "Configure IDE to highlight unused imports in real-time",
+                    "Implement pre-commit hooks for automatic import cleanup",
+                    "Monitor memory usage reduction with tools like memory_profiler"
                 ]
             },
             {
-                'title': 'Eliminate dead code',
-                'description': f'Identified {len(dead_code)} unused functions consuming approximately {sum(dc.get("estimated_lines", 0) for dc in dead_code)} lines of code.',
+                'title': 'Remove dead code to minimize computational carbon footprint',
+                'description': f'Identified {len(dead_code)} unused functions totaling {sum(dc.get("estimated_lines", 0) for dc in dead_code)} lines, consuming {self._calculate_dead_code_energy_waste(dead_code):.2f} kWh annually through unnecessary compilation and processing.',
                 'priority': 'High',
-                'impact': f'Removing dead code can reduce codebase size by ~{sum(dc.get("estimated_lines", 0) for dc in dead_code)} lines and improve maintainability',
+                'carbon_impact': f'Eliminates {self._calculate_dead_code_energy_waste(dead_code) * 0.4:.2f}kg CO₂ emissions annually',
+                'energy_savings': f'{self._calculate_dead_code_energy_waste(dead_code):.2f} kWh/year saved in processing power',
+                'cost_savings': f'${self._calculate_dead_code_energy_waste(dead_code) * 0.12:.2f}/year in reduced computational costs',
+                'impact': f'Reduces CPU cycles, compilation time, and deployment size leading to lower energy consumption',
                 'steps': [
-                    "Use static analysis tools to identify unreachable code",
-                    "Verify functions are truly unused by checking all call sites",
-                    "Remove confirmed dead functions and their tests",
-                    "Update documentation to reflect code changes"
+                    "Run vulture dead code detector: vulture src/",
+                    "Verify unused functions with grep searches across codebase",
+                    "Remove confirmed dead functions and associated imports",
+                    "Monitor build time reduction and deployment size decrease"
                 ]
             },
             {
-                'title': 'Resolve package duplications',
-                'description': f'Found {len(package_duplications)} duplicate packages wasting {sum(dup.get("estimated_bloat_mb", 0) for dup in package_duplications):.1f}MB of storage.',
+                'title': 'Eliminate package duplications for sustainable deployment',
+                'description': f'Found {len(package_duplications)} duplicate packages wasting {sum(dup.get("estimated_bloat_mb", 0) for dup in package_duplications):.1f}MB storage and {self._calculate_package_duplication_energy_waste(package_duplications):.2f} kWh annually in redundant data transfer.',
                 'priority': 'High',
-                'impact': f'Consolidating packages can save {sum(dup.get("estimated_bloat_mb", 0) for dup in package_duplications):.1f}MB storage and prevent version conflicts',
+                'carbon_impact': f'Prevents {self._calculate_package_duplication_energy_waste(package_duplications) * 0.4:.2f}kg CO₂ emissions annually',
+                'energy_savings': f'{self._calculate_package_duplication_energy_waste(package_duplications):.2f} kWh/year in transfer and storage',
+                'cost_savings': f'${self._calculate_package_duplication_energy_waste(package_duplications) * 0.12:.2f}/year in bandwidth and storage costs',
+                'impact': f'Reduces network traffic, storage overhead, and deployment energy consumption',
                 'steps': [
-                    "Audit requirements.txt for duplicate package entries",
-                    "Choose the most recent compatible version for each package",
-                    "Test thoroughly after consolidation",
-                    "Use dependency management tools (pipenv, poetry) to prevent future duplications"
+                    "Run pipdeptree to identify duplicate dependencies",
+                    "Consolidate to single version per package in requirements.txt",
+                    "Use poetry lock to ensure consistent dependency resolution",
+                    "Monitor deployment size reduction and transfer speed improvement"
                 ]
             },
             {
-                'title': 'Optimize ML model sizes',
-                'description': f'Found {len(large_ml_models)} ML models exceeding 100MB with {sum(model.get("optimization_potential", 0) for model in large_ml_models) / len(large_ml_models) if large_ml_models else 0:.0f}% average optimization potential.',
+                'title': 'Optimize ML models for green AI and reduced carbon emissions',
+                'description': f'Found {len(large_ml_models)} oversized ML models consuming {self._calculate_ml_model_energy_waste(large_ml_models):.2f} kWh annually through inefficient loading, storage, and inference operations.',
                 'priority': 'High',
-                'impact': f'Model optimization can reduce storage by up to {sum(model.get("size_mb", 0) * model.get("optimization_potential", 0) / 100 for model in large_ml_models):.1f}MB and improve inference speed',
+                'carbon_impact': f'Eliminates {self._calculate_ml_model_energy_waste(large_ml_models) * 0.4:.2f}kg CO₂ emissions annually',
+                'energy_savings': f'{self._calculate_ml_model_energy_waste(large_ml_models):.2f} kWh/year in inference and storage',
+                'cost_savings': f'${self._calculate_ml_model_energy_waste(large_ml_models) * 0.12:.2f}/year in computational and storage costs',
+                'impact': f'Reduces GPU/CPU usage during inference, decreases memory footprint, and minimizes data transfer energy',
                 'steps': [
-                    "Apply model quantization (float32 → float16/int8)",
-                    "Use model pruning to remove less important weights",
-                    "Implement model compression techniques (ONNX, TensorFlow Lite)",
-                    "Consider knowledge distillation for smaller student models",
-                    "Use model versioning to track optimization results"
+                    "Apply quantization: torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)",
+                    "Use model pruning: torch.nn.utils.prune.global_unstructured(parameters, pruning_method=torch.nn.utils.prune.L1Unstructured, amount=0.2)",
+                    "Convert to efficient formats: torch.onnx.export() or model.to_tensorrt()",
+                    "Monitor inference speed improvement and energy reduction",
+                    "Track model size reduction and accuracy retention"
                 ]
             },
             {
@@ -774,6 +830,24 @@ unused-package==1.0.0"""
                     sum(dup.get('estimated_bloat_mb', 0) for dup in package_duplications),
                     sum(model.get('size_mb', 0) * (model.get('optimization_potential', 0) / 100) for model in large_ml_models)
                 ])
+            },
+            'carbon_footprint': {
+                'total_energy_waste_kwh_annually': total_energy_waste_kwh,
+                'carbon_emissions_kg_annually': carbon_footprint_kg,
+                'tree_equivalent_annually': tree_equivalent,
+                'cost_impact_usd_annually': total_energy_waste_kwh * 0.12,
+                'breakdown': {
+                    'unused_imports_kwh': self._calculate_import_energy_waste(unused_imports),
+                    'dead_code_kwh': self._calculate_dead_code_energy_waste(dead_code),
+                    'package_duplications_kwh': self._calculate_package_duplication_energy_waste(package_duplications),
+                    'ml_models_kwh': self._calculate_ml_model_energy_waste(large_ml_models)
+                },
+                'potential_savings': {
+                    'energy_kwh_annually': total_energy_waste_kwh * 0.85,  # 85% achievable reduction
+                    'carbon_kg_annually': carbon_footprint_kg * 0.85,
+                    'cost_usd_annually': total_energy_waste_kwh * 0.85 * 0.12,
+                    'trees_equivalent': tree_equivalent * 0.85
+                }
             },
             'findings': [
                 {
@@ -1749,9 +1823,101 @@ def run_code_analysis_scan():
         st.rerun()
 
 
+def display_carbon_footprint_overview(scan_results):
+    """Display comprehensive carbon footprint analysis as the primary focus."""
+    st.subheader("🌱 Carbon Footprint Impact Analysis")
+    
+    # Extract carbon footprint data
+    carbon_data = scan_results.get('carbon_footprint', {})
+    total_emissions = carbon_data.get('carbon_emissions_kg_annually', 0)
+    total_energy = carbon_data.get('total_energy_waste_kwh_annually', 0)
+    tree_equivalent = carbon_data.get('tree_equivalent_annually', 0)
+    cost_impact = carbon_data.get('cost_impact_usd_annually', 0)
+    
+    # Display primary environmental impact metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            "Annual CO₂ Emissions", 
+            f"{total_emissions:.2f} kg",
+            delta=f"-{carbon_data.get('potential_savings', {}).get('carbon_kg_annually', 0):.2f} kg potential reduction",
+            help="Total carbon dioxide emissions from code inefficiencies"
+        )
+    
+    with col2:
+        st.metric(
+            "Energy Waste", 
+            f"{total_energy:.1f} kWh/year",
+            delta=f"-{carbon_data.get('potential_savings', {}).get('energy_kwh_annually', 0):.1f} kWh potential savings",
+            help="Annual energy consumption from inefficient code"
+        )
+    
+    with col3:
+        st.metric(
+            "Tree Equivalent", 
+            f"{tree_equivalent:.1f} trees/year",
+            delta=f"+{carbon_data.get('potential_savings', {}).get('trees_equivalent', 0):.1f} trees saved",
+            help="Number of trees needed to offset carbon emissions"
+        )
+    
+    with col4:
+        st.metric(
+            "Annual Cost Impact", 
+            f"${cost_impact:.2f}",
+            delta=f"-${carbon_data.get('potential_savings', {}).get('cost_usd_annually', 0):.2f} potential savings",
+            help="Financial cost of energy waste and carbon emissions"
+        )
+    
+    # Carbon footprint breakdown visualization
+    if carbon_data.get('breakdown'):
+        st.subheader("🔍 Energy Waste Breakdown")
+        breakdown = carbon_data['breakdown']
+        
+        # Create pie chart for energy waste sources
+        labels = ['Unused Imports', 'Dead Code', 'Package Duplications', 'ML Models']
+        values = [
+            breakdown.get('unused_imports_kwh', 0),
+            breakdown.get('dead_code_kwh', 0),
+            breakdown.get('package_duplications_kwh', 0),
+            breakdown.get('ml_models_kwh', 0)
+        ]
+        
+        fig = px.pie(
+            values=values, 
+            names=labels, 
+            title="Energy Waste by Source (kWh annually)",
+            color_discrete_sequence=['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+        )
+        fig.update_traces(textposition='inside', textinfo='percent+label')
+        fig.update_layout(height=400)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Carbon impact comparison
+        st.subheader("🌍 Environmental Impact Comparison")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info(f"""
+            **Current Annual Impact:**
+            - {total_emissions:.2f} kg CO₂ emissions
+            - Equivalent to driving {total_emissions * 0.24:.0f} km in an average car
+            - Same as {total_emissions / 2.04:.1f} kg of coal burned
+            """)
+        
+        with col2:
+            potential_savings = carbon_data.get('potential_savings', {})
+            savings_kg = potential_savings.get('carbon_kg_annually', 0)
+            st.success(f"""
+            **Potential Savings:**
+            - {savings_kg:.2f} kg CO₂ reduction possible
+            - Equivalent to planting {potential_savings.get('trees_equivalent', 0):.1f} trees
+            - Save ${potential_savings.get('cost_usd_annually', 0):.2f} annually
+            """)
+
 def display_code_intelligence_analysis(scan_results):
-    """Display detailed code intelligence analysis with the new features."""
-    st.subheader("🧠 Advanced Code Intelligence Analysis")
+    """Display detailed code intelligence analysis with environmental focus."""
+    st.subheader("🧠 Code Efficiency & Environmental Impact")
     
     # Check if we have the new code intelligence data
     code_intel = scan_results.get('code_intelligence', {})
@@ -1759,15 +1925,18 @@ def display_code_intelligence_analysis(scan_results):
     dead_code = scan_results.get('dead_code', [])
     package_duplications = scan_results.get('package_duplications', [])
     large_ml_models = scan_results.get('large_ml_models', [])
+    carbon_data = scan_results.get('carbon_footprint', {})
     
-    # Display summary metrics
+    # Display sustainability-focused metrics
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
+        import_energy = carbon_data.get('breakdown', {}).get('unused_imports_kwh', 0)
         st.metric(
             "Unused Imports", 
             code_intel.get('unused_imports_count', len(unused_imports)),
-            delta=f"-{sum(imp.get('estimated_size_kb', 0) for imp in unused_imports):.0f}KB potential savings"
+            delta=f"-{import_energy:.2f} kWh/year energy waste",
+            help=f"Environmental impact: {import_energy * 0.4:.2f} kg CO₂ annually"
         )
     
     with col2:
@@ -2011,7 +2180,9 @@ def display_sustainability_report(scan_results):
     if 'cloud' in scan_type:
         display_cloud_sustainability_report(scan_results)
     elif 'github' in scan_type:
-        # Display code intelligence analysis for GitHub scans
+        # Display carbon footprint overview as primary focus
+        display_carbon_footprint_overview(scan_results)
+        # Follow with detailed code intelligence analysis
         display_code_intelligence_analysis(scan_results)
         display_github_sustainability_report(scan_results)
     elif 'code' in scan_type:
