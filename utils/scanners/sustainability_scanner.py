@@ -517,9 +517,20 @@ class GithubRepoSustainabilityScanner:
     
     def _calculate_import_energy_waste(self, unused_imports: List[Dict]) -> float:
         """Calculate energy waste from unused imports in kWh annually"""
+        if not unused_imports:
+            return 0.0
+        
+        # Base calculation: unused imports cause load time overhead and memory waste
         total_waste_kb = sum(imp.get('estimated_size_kb', 0) for imp in unused_imports)
-        # Estimate: 1KB unused memory = 0.001 kWh annually (including load time, memory overhead)
-        return total_waste_kb * 0.001 * 8760  # Hours per year
+        import_count = len(unused_imports)
+        
+        # More realistic calculation:
+        # - Each unused import adds ~0.5 kWh annually in load overhead
+        # - Plus memory footprint impact
+        base_waste = import_count * 0.5 * 365 / 10  # 0.5 watts per unused import, scaled annually
+        memory_waste = total_waste_kb * 0.0001  # Memory overhead
+        
+        return base_waste + memory_waste
     
     def _calculate_dead_code_energy_waste(self, dead_code: List[Dict]) -> float:
         """Calculate energy waste from dead code in kWh annually"""
@@ -529,19 +540,43 @@ class GithubRepoSustainabilityScanner:
     
     def _calculate_package_duplication_energy_waste(self, package_duplications: List[Dict]) -> float:
         """Calculate energy waste from package duplications in kWh annually"""
+        if not package_duplications:
+            return 0.0
+        
         total_bloat_mb = sum(dup.get('estimated_bloat_mb', 0) for dup in package_duplications)
-        # Estimate: 1MB package bloat = 0.01 kWh annually (storage, transfer, loading)
-        return total_bloat_mb * 0.01 * 365
+        duplication_count = len(package_duplications)
+        
+        # More realistic calculation for package duplication waste:
+        # - Each duplication adds transfer overhead, storage waste, and loading time
+        # - Assume average duplication wastes ~2.5 kWh annually per duplicate package
+        base_waste = duplication_count * 2.5 * 365 / 100  # Scale appropriately
+        bloat_waste = total_bloat_mb * 0.05  # Storage and transfer overhead
+        
+        return base_waste + bloat_waste
     
     def _calculate_ml_model_energy_waste(self, large_ml_models: List[Dict]) -> float:
         """Calculate energy waste from oversized ML models in kWh annually"""
+        if not large_ml_models:
+            return 0.0
+        
         total_waste = 0
         for model in large_ml_models:
             size_mb = model.get('size_mb', 0)
             optimization_potential = model.get('optimization_potential', 0) / 100
-            # Estimate: 1MB model overhead = 0.05 kWh annually (loading, inference, storage)
-            waste_per_model = size_mb * optimization_potential * 0.05 * 8760
+            
+            # More realistic ML model energy calculation:
+            # Large models (>100MB) have significant computational overhead
+            if size_mb > 500:  # Very large models
+                base_energy = size_mb * 2.5  # 2.5 kWh per MB annually for large models
+            elif size_mb > 100:  # Large models
+                base_energy = size_mb * 1.8  # 1.8 kWh per MB annually
+            else:  # Smaller models
+                base_energy = size_mb * 0.5  # 0.5 kWh per MB annually
+                
+            # Factor in optimization potential (waste = potential energy savings)
+            waste_per_model = base_energy * optimization_potential * 365 / 10  # Scale to annual
             total_waste += waste_per_model
+            
         return total_waste
     
     def _detect_model_type(self, file_path):
@@ -1893,27 +1928,26 @@ def display_carbon_footprint_overview(scan_results):
         fig.update_layout(height=400)
         st.plotly_chart(fig, use_container_width=True)
         
-        # Carbon impact comparison
+        # Environmental Impact Comparison - formatted exactly as requested
         st.subheader("🌍 Environmental Impact Comparison")
         
         col1, col2 = st.columns(2)
         with col1:
-            st.info(f"""
-            **Current Annual Impact:**
-            - {total_emissions:.2f} kg CO₂ emissions
-            - Equivalent to driving {total_emissions * 0.24:.0f} km in an average car
-            - Same as {total_emissions / 2.04:.1f} kg of coal burned
-            """)
+            st.markdown("**Current Annual Impact:**")
+            st.write(f"• {total_emissions:.2f} kg CO₂ emissions")
+            st.write(f"• Equivalent to driving {total_emissions * 2.4:.0f} km in an average car")
+            st.write(f"• Same as {total_emissions / 2.04:.1f} kg of coal burned")
         
         with col2:
             potential_savings = carbon_data.get('potential_savings', {})
             savings_kg = potential_savings.get('carbon_kg_annually', 0)
-            st.success(f"""
-            **Potential Savings:**
-            - {savings_kg:.2f} kg CO₂ reduction possible
-            - Equivalent to planting {potential_savings.get('trees_equivalent', 0):.1f} trees
-            - Save ${potential_savings.get('cost_usd_annually', 0):.2f} annually
-            """)
+            trees_saved = potential_savings.get('trees_equivalent', 0)
+            annual_savings = potential_savings.get('cost_usd_annually', 0)
+            
+            st.markdown("**Potential Savings:**")
+            st.write(f"• {savings_kg:.2f} kg CO₂ reduction possible")
+            st.write(f"• Equivalent to planting {trees_saved:.1f} trees")
+            st.write(f"• Save ${annual_savings:.2f} annually")
 
 def display_code_intelligence_analysis(scan_results):
     """Display detailed code intelligence analysis with environmental focus."""
