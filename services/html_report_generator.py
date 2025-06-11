@@ -787,201 +787,266 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
             </div>
         </div>
     </div>
-    ''' if 'sustainability' in scan_type.lower() and 'carbon_footprint' in scan_data else ''}
-    
-    <!-- Website Scan Report Section -->
-    {f'''
-    <div style="margin: 30px 0;">
-        <h1 style="color: #1e40af; text-align: center; margin-bottom: 30px; font-size: 28px;">
-            🌐 Website Privacy Compliance Report
-        </h1>
-        
-        <div style="background: white; border-radius: 15px; padding: 30px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
-            <h2 style="color: #1e40af; margin-bottom: 20px;">📊 Scan Overview</h2>
-            
-            <div style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); padding: 20px; border-radius: 10px; margin-bottom: 25px;">
-                <h3 style="color: #0c4a6e; margin: 0 0 15px 0;">Scanned Website:</h3>
-                <p style="color: #0369a1; font-size: 18px; font-weight: bold; margin: 0;">
-                    {scan_data.get('url', scan_data.get('base_domain', 'Website Analysis'))}
-                </p>
-            </div>
-            
-            <!-- Summary Metrics -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 25px 0;">
-                <div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 25px; border-radius: 10px; text-align: center;">
-                    <h3 style="margin: 0 0 10px 0; font-size: 16px;">Pages Scanned</h3>
-                    <div style="font-size: 32px; font-weight: bold;">
-                        {scan_data.get('stats', {}).get('pages_scanned', 0)}
-                    </div>
-                </div>
+    ''' if 'sustainability' in scan_type.lower() and 'carbon_footprint' in scan_data else '')
+
+    # Generate website report content
+    website_content = ""
+    if scan_type.lower() == 'website':
+        # Helper function to generate findings table
+        def generate_findings_table():
+            if 'findings' in scan_data and scan_data['findings']:
+                findings_rows = ""
+                for i, finding in enumerate(scan_data.get('findings', [])[:20]):
+                    severity = finding.get('severity', 'Low')
+                    severity_color = '#ef4444' if severity.lower() == 'high' else '#f59e0b' if severity.lower() == 'medium' else '#10b981'
+                    bg_color = '#fef2f2' if i % 2 == 0 else '#fef7f7'
+                    
+                    findings_rows += f'''
+                    <tr style="background-color: {bg_color};">
+                        <td style="border: 1px solid #fecaca; padding: 12px; color: #7f1d1d; font-weight: 500;">{finding.get('type', 'Unknown')}</td>
+                        <td style="border: 1px solid #fecaca; padding: 12px; color: #7f1d1d;">
+                            <span style="background: {severity_color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                {severity}
+                            </span>
+                        </td>
+                        <td style="border: 1px solid #fecaca; padding: 12px; color: #7f1d1d;">{(finding.get('description', '')[:80] + '...' if len(finding.get('description', '')) > 80 else finding.get('description', ''))}</td>
+                        <td style="border: 1px solid #fecaca; padding: 12px; color: #7f1d1d; font-size: 12px;">{(finding.get('url', '')[:30] + '...' if len(finding.get('url', '')) > 30 else finding.get('url', ''))}</td>
+                    </tr>'''
                 
-                <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 25px; border-radius: 10px; text-align: center;">
-                    <h3 style="margin: 0 0 10px 0; font-size: 16px;">Total Findings</h3>
-                    <div style="font-size: 32px; font-weight: bold;">
-                        {scan_data.get('stats', {}).get('total_findings', 0)}
+                return f'''
+                <div style="background: white; border-radius: 15px; padding: 30px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
+                    <h2 style="color: #dc2626; margin-bottom: 20px;">🔍 Privacy Findings</h2>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+                                    <th style="border: 1px solid #fecaca; padding: 15px; text-align: left; color: white; font-weight: bold;">Type</th>
+                                    <th style="border: 1px solid #fecaca; padding: 15px; text-align: left; color: white; font-weight: bold;">Severity</th>
+                                    <th style="border: 1px solid #fecaca; padding: 15px; text-align: left; color: white; font-weight: bold;">Description</th>
+                                    <th style="border: 1px solid #fecaca; padding: 15px; text-align: left; color: white; font-weight: bold;">URL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {findings_rows}
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-                
-                <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 25px; border-radius: 10px; text-align: center;">
-                    <h3 style="margin: 0 0 10px 0; font-size: 16px;">Cookies Found</h3>
-                    <div style="font-size: 32px; font-weight: bold;">
-                        {scan_data.get('stats', {}).get('total_cookies', 0)}
-                    </div>
-                </div>
-                
-                <div style="background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; padding: 25px; border-radius: 10px; text-align: center;">
-                    <h3 style="margin: 0 0 10px 0; font-size: 16px;">Trackers Detected</h3>
-                    <div style="font-size: 32px; font-weight: bold;">
-                        {scan_data.get('stats', {}).get('total_trackers', 0)}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Additional Metrics -->
-            <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 25px 0;">
-                <h3 style="color: #374151; margin-bottom: 15px;">Additional Scan Details</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                        <strong style="color: #1f2937;">Scan Duration:</strong>
-                        <span style="color: #4b5563;">{scan_data.get('duration_seconds', 0):.1f} seconds</span>
-                    </div>
-                    <div>
-                        <strong style="color: #1f2937;">Scan Timestamp:</strong>
-                        <span style="color: #4b5563;">{scan_data.get('scan_time', timestamp)}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    <p style="color: #6b7280; font-style: italic; margin-top: 15px;">Showing {min(20, len(scan_data.get('findings', [])))} of {len(scan_data.get('findings', []))} total findings</p>
+                </div>'''
+            return ""
         
-        <!-- Privacy Findings Section -->
-        {f'''
-        <div style="background: white; border-radius: 15px; padding: 30px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
-            <h2 style="color: #dc2626; margin-bottom: 20px;">🔍 Privacy Findings</h2>
-            
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <thead>
-                        <tr style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
-                            <th style="border: 1px solid #fecaca; padding: 15px; text-align: left; color: white; font-weight: bold;">Type</th>
-                            <th style="border: 1px solid #fecaca; padding: 15px; text-align: left; color: white; font-weight: bold;">Severity</th>
-                            <th style="border: 1px solid #fecaca; padding: 15px; text-align: left; color: white; font-weight: bold;">Description</th>
-                            <th style="border: 1px solid #fecaca; padding: 15px; text-align: left; color: white; font-weight: bold;">URL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {''.join([f'''
-                        <tr style="background-color: {'#fef2f2' if i % 2 == 0 else '#fef7f7'};">
-                            <td style="border: 1px solid #fecaca; padding: 12px; color: #7f1d1d; font-weight: 500;">{finding.get('type', 'Unknown')}</td>
-                            <td style="border: 1px solid #fecaca; padding: 12px; color: #7f1d1d;">
-                                <span style="background: {'#ef4444' if finding.get('severity', 'Low').lower() == 'high' else '#f59e0b' if finding.get('severity', 'Low').lower() == 'medium' else '#10b981'}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-                                    {finding.get('severity', 'Low')}
-                                </span>
-                            </td>
-                            <td style="border: 1px solid #fecaca; padding: 12px; color: #7f1d1d;">{(finding.get('description', '')[:80] + '...' if len(finding.get('description', '')) > 80 else finding.get('description', ''))}</td>
-                            <td style="border: 1px solid #fecaca; padding: 12px; color: #7f1d1d; font-size: 12px;">{(finding.get('url', '')[:30] + '...' if len(finding.get('url', '')) > 30 else finding.get('url', ''))}</td>
-                        </tr>
-                        ''' for i, finding in enumerate(scan_data.get('findings', [])[:20])])}
-                    </tbody>
-                </table>
-            </div>
-            
-            {f'<p style="color: #6b7280; font-style: italic; margin-top: 15px;">Showing {min(20, len(scan_data.get("findings", [])))} of {len(scan_data.get("findings", []))} total findings</p>' if len(scan_data.get('findings', [])) > 20 else ''}
-        </div>
-        ''' if 'findings' in scan_data and scan_data['findings'] else ''}
-        
-        <!-- Cookie Analysis Section -->
-        {f'''
-        <div style="background: white; border-radius: 15px; padding: 30px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
-            <h2 style="color: #f59e0b; margin-bottom: 20px;">🍪 Cookie Analysis</h2>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                <div>
-                    <h3 style="color: #92400e; margin-bottom: 15px;">Cookie Categories</h3>
-                    <div style="background: #fef3c7; padding: 20px; border-radius: 10px;">
-                        {''.join([f'''
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #fde68a;">
-                            <span style="color: #92400e; font-weight: 500;">{category.title()}</span>
-                            <span style="color: #92400e; font-weight: bold;">{count}</span>
+        # Helper function to generate detailed cookie analysis
+        def generate_cookie_analysis():
+            if 'cookies' in scan_data and scan_data['cookies']:
+                cookie_categories = scan_data.get('cookie_categories', {})
+                cookies = scan_data.get('cookies', {})
+                
+                # Generate category breakdown
+                category_rows = ""
+                for category, count in cookie_categories.items():
+                    category_rows += f'''
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #fde68a;">
+                        <span style="color: #92400e; font-weight: 500;">{category.title()}</span>
+                        <span style="color: #92400e; font-weight: bold;">{count}</span>
+                    </div>'''
+                
+                # Generate detailed cookie table
+                cookie_rows = ""
+                for i, (name, cookie_data) in enumerate(list(cookies.items())[:15]):
+                    bg_color = '#fef3c7' if i % 2 == 0 else '#fde68a'
+                    purpose = cookie_data.get('purpose', 'Unknown')[:30] + ('...' if len(cookie_data.get('purpose', '')) > 30 else '')
+                    
+                    cookie_rows += f'''
+                    <tr style="background-color: {bg_color};">
+                        <td style="border: 1px solid #fde68a; padding: 12px; color: #92400e; font-weight: 500;">{name}</td>
+                        <td style="border: 1px solid #fde68a; padding: 12px; color: #92400e;">{cookie_data.get('category', 'Unknown')}</td>
+                        <td style="border: 1px solid #fde68a; padding: 12px; color: #92400e;">{purpose}</td>
+                        <td style="border: 1px solid #fde68a; padding: 12px; color: #92400e;">{'Yes' if cookie_data.get('persistent', True) else 'No'}</td>
+                        <td style="border: 1px solid #fde68a; padding: 12px; color: #92400e;">{cookie_data.get('expiry', 'Session')}</td>
+                    </tr>'''
+                
+                session_count = sum(1 for cookie in cookies.values() if not cookie.get('persistent', True))
+                persistent_count = sum(1 for cookie in cookies.values() if cookie.get('persistent', True))
+                
+                return f'''
+                <div style="background: white; border-radius: 15px; padding: 30px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
+                    <h2 style="color: #f59e0b; margin-bottom: 20px;">🍪 In-Depth Cookie Analysis</h2>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+                        <div>
+                            <h3 style="color: #92400e; margin-bottom: 15px;">Cookie Categories</h3>
+                            <div style="background: #fef3c7; padding: 20px; border-radius: 10px;">
+                                {category_rows}
+                            </div>
                         </div>
-                        ''' for category, count in scan_data.get('cookie_categories', {}).items()])}
+                        
+                        <div>
+                            <h3 style="color: #92400e; margin-bottom: 15px;">Cookie Summary</h3>
+                            <div style="background: #fef3c7; padding: 20px; border-radius: 10px;">
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #92400e;">Total Cookies:</strong>
+                                    <span style="color: #78350f;">{len(cookies)}</span>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #92400e;">Session Cookies:</strong>
+                                    <span style="color: #78350f;">{session_count}</span>
+                                </div>
+                                <div>
+                                    <strong style="color: #92400e;">Persistent Cookies:</strong>
+                                    <span style="color: #78350f;">{persistent_count}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="color: #92400e; margin-bottom: 15px;">Detailed Cookie Inventory</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                    <th style="border: 1px solid #fde68a; padding: 15px; text-align: left; color: white; font-weight: bold;">Name</th>
+                                    <th style="border: 1px solid #fde68a; padding: 15px; text-align: left; color: white; font-weight: bold;">Category</th>
+                                    <th style="border: 1px solid #fde68a; padding: 15px; text-align: left; color: white; font-weight: bold;">Purpose</th>
+                                    <th style="border: 1px solid #fde68a; padding: 15px; text-align: left; color: white; font-weight: bold;">Persistent</th>
+                                    <th style="border: 1px solid #fde68a; padding: 15px; text-align: left; color: white; font-weight: bold;">Expiry</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {cookie_rows}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p style="color: #6b7280; font-style: italic; margin-top: 15px;">Showing {min(15, len(cookies))} of {len(cookies)} total cookies</p>
+                </div>'''
+            return ""
+        
+        # Helper function to generate tracker analysis
+        def generate_tracker_analysis():
+            if 'trackers' in scan_data and scan_data['trackers']:
+                tracker_rows = ""
+                for i, tracker in enumerate(scan_data.get('trackers', [])[:15]):
+                    bg_color = '#f3e8ff' if i % 2 == 0 else '#faf5ff'
+                    risk = tracker.get('privacy_risk', 'Low')
+                    risk_color = '#ef4444' if risk.lower() == 'high' else '#f59e0b' if risk.lower() == 'medium' else '#10b981'
+                    
+                    tracker_rows += f'''
+                    <tr style="background-color: {bg_color};">
+                        <td style="border: 1px solid #ddd6fe; padding: 12px; color: #581c87; font-weight: 500;">{tracker.get('name', 'Unknown')}</td>
+                        <td style="border: 1px solid #ddd6fe; padding: 12px; color: #581c87;">{tracker.get('type', 'Unknown')}</td>
+                        <td style="border: 1px solid #ddd6fe; padding: 12px; color: #581c87;">{(tracker.get('purpose', 'Unknown')[:40] + '...' if len(tracker.get('purpose', '')) > 40 else tracker.get('purpose', 'Unknown'))}</td>
+                        <td style="border: 1px solid #ddd6fe; padding: 12px; color: #581c87;">
+                            <span style="background: {risk_color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                {risk}
+                            </span>
+                        </td>
+                    </tr>'''
+                
+                return f'''
+                <div style="background: white; border-radius: 15px; padding: 30px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
+                    <h2 style="color: #7c3aed; margin-bottom: 20px;">📊 Tracking Analysis</h2>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+                                    <th style="border: 1px solid #ddd6fe; padding: 15px; text-align: left; color: white; font-weight: bold;">Name</th>
+                                    <th style="border: 1px solid #ddd6fe; padding: 15px; text-align: left; color: white; font-weight: bold;">Type</th>
+                                    <th style="border: 1px solid #ddd6fe; padding: 15px; text-align: left; color: white; font-weight: bold;">Purpose</th>
+                                    <th style="border: 1px solid #ddd6fe; padding: 15px; text-align: left; color: white; font-weight: bold;">Privacy Risk</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tracker_rows}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p style="color: #6b7280; font-style: italic; margin-top: 15px;">Showing {min(15, len(scan_data.get('trackers', [])))} of {len(scan_data.get('trackers', []))} total trackers</p>
+                </div>'''
+            return ""
+        
+        website_content = f'''
+        <div style="margin: 30px 0;">
+            <h1 style="color: #1e40af; text-align: center; margin-bottom: 30px; font-size: 28px;">
+                🌐 Website Privacy Compliance Report
+            </h1>
+            
+            <div style="background: white; border-radius: 15px; padding: 30px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
+                <h2 style="color: #1e40af; margin-bottom: 20px;">📊 Scan Overview</h2>
+                
+                <div style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                    <h3 style="color: #0c4a6e; margin: 0 0 15px 0;">Scanned Website:</h3>
+                    <p style="color: #0369a1; font-size: 18px; font-weight: bold; margin: 0;">
+                        {scan_data.get('url', scan_data.get('base_domain', 'Website Analysis'))}
+                    </p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 25px 0;">
+                    <div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 16px;">Pages Scanned</h3>
+                        <div style="font-size: 32px; font-weight: bold;">
+                            {scan_data.get('stats', {}).get('pages_scanned', 0)}
+                        </div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 16px;">Total Findings</h3>
+                        <div style="font-size: 32px; font-weight: bold;">
+                            {scan_data.get('stats', {}).get('total_findings', 0)}
+                        </div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 16px;">Cookies Found</h3>
+                        <div style="font-size: 32px; font-weight: bold;">
+                            {scan_data.get('stats', {}).get('total_cookies', 0)}
+                        </div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 16px;">Trackers Detected</h3>
+                        <div style="font-size: 32px; font-weight: bold;">
+                            {scan_data.get('stats', {}).get('total_trackers', 0)}
+                        </div>
                     </div>
                 </div>
                 
-                <div>
-                    <h3 style="color: #92400e; margin-bottom: 15px;">Cookie Details</h3>
-                    <div style="background: #fef3c7; padding: 20px; border-radius: 10px;">
-                        <div style="margin-bottom: 10px;">
-                            <strong style="color: #92400e;">Total Cookies:</strong>
-                            <span style="color: #78350f;">{len(scan_data.get('cookies', {}))}</span>
-                        </div>
-                        <div style="margin-bottom: 10px;">
-                            <strong style="color: #92400e;">Session Cookies:</strong>
-                            <span style="color: #78350f;">{sum(1 for cookie in scan_data.get('cookies', {}).values() if not cookie.get('persistent', True))}</span>
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 25px 0;">
+                    <h3 style="color: #374151; margin-bottom: 15px;">Additional Scan Details</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <strong style="color: #1f2937;">Scan Duration:</strong>
+                            <span style="color: #4b5563;">{scan_data.get('duration_seconds', 0):.1f} seconds</span>
                         </div>
                         <div>
-                            <strong style="color: #92400e;">Persistent Cookies:</strong>
-                            <span style="color: #78350f;">{sum(1 for cookie in scan_data.get('cookies', {}).values() if cookie.get('persistent', True))}</span>
+                            <strong style="color: #1f2937;">Scan Timestamp:</strong>
+                            <span style="color: #4b5563;">{scan_data.get('scan_time', timestamp)}</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        ''' if 'cookies' in scan_data and scan_data['cookies'] else ''}
-        
-        <!-- Tracking Analysis Section -->
-        {f'''
-        <div style="background: white; border-radius: 15px; padding: 30px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
-            <h2 style="color: #7c3aed; margin-bottom: 20px;">📊 Tracking Analysis</h2>
             
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <thead>
-                        <tr style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
-                            <th style="border: 1px solid #ddd6fe; padding: 15px; text-align: left; color: white; font-weight: bold;">Name</th>
-                            <th style="border: 1px solid #ddd6fe; padding: 15px; text-align: left; color: white; font-weight: bold;">Type</th>
-                            <th style="border: 1px solid #ddd6fe; padding: 15px; text-align: left; color: white; font-weight: bold;">Purpose</th>
-                            <th style="border: 1px solid #ddd6fe; padding: 15px; text-align: left; color: white; font-weight: bold;">Privacy Risk</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {''.join([f'''
-                        <tr style="background-color: {'#f3e8ff' if i % 2 == 0 else '#faf5ff'};">
-                            <td style="border: 1px solid #ddd6fe; padding: 12px; color: #581c87; font-weight: 500;">{tracker.get('name', 'Unknown')}</td>
-                            <td style="border: 1px solid #ddd6fe; padding: 12px; color: #581c87;">{tracker.get('type', 'Unknown')}</td>
-                            <td style="border: 1px solid #ddd6fe; padding: 12px; color: #581c87;">{(tracker.get('purpose', 'Unknown')[:40] + '...' if len(tracker.get('purpose', '')) > 40 else tracker.get('purpose', 'Unknown'))}</td>
-                            <td style="border: 1px solid #ddd6fe; padding: 12px; color: #581c87;">
-                                <span style="background: {'#ef4444' if tracker.get('privacy_risk', 'Low').lower() == 'high' else '#f59e0b' if tracker.get('privacy_risk', 'Low').lower() == 'medium' else '#10b981'}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-                                    {tracker.get('privacy_risk', 'Low')}
-                                </span>
-                            </td>
-                        </tr>
-                        ''' for i, tracker in enumerate(scan_data.get('trackers', [])[:15])])}
-                    </tbody>
-                </table>
-            </div>
+            {generate_findings_table()}
+            {generate_cookie_analysis()}
+            {generate_tracker_analysis()}
             
-            {f'<p style="color: #6b7280; font-style: italic; margin-top: 15px;">Showing {min(15, len(scan_data.get("trackers", [])))} of {len(scan_data.get("trackers", []))} total trackers</p>' if len(scan_data.get('trackers', [])) > 15 else ''}
-        </div>
-        ''' if 'trackers' in scan_data and scan_data['trackers'] else ''}
-        
-        <!-- Report Footer -->
-        <div style="background: white; border-radius: 15px; margin: 30px 0; padding: 30px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
-            <p style="color: #374151; font-size: 12px; line-height: 1.6; max-width: 600px; margin: 0 auto;">
-                This website privacy assessment was conducted on {timestamp} using DataGuardian Pro's comprehensive 
-                website scanner. The assessment analyzed privacy compliance, cookie usage, tracker detection, and GDPR compliance requirements.
-            </p>
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
-                <p style="color: #6b7280; font-size: 11px; margin: 5px 0;">
-                    <strong>DataGuardian Pro Enterprise Certification Authority</strong>
+            <div style="background: white; border-radius: 15px; margin: 30px 0; padding: 30px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
+                <p style="color: #374151; font-size: 12px; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+                    This website privacy assessment was conducted on {timestamp} using DataGuardian Pro's comprehensive 
+                    website scanner. The assessment analyzed privacy compliance, cookie usage, tracker detection, and GDPR compliance requirements.
                 </p>
-                <p style="color: #6b7280; font-size: 10px; margin: 0;">
-                    Enterprise Privacy & Compliance Platform
-                </p>
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                    <p style="color: #6b7280; font-size: 11px; margin: 5px 0;">
+                        <strong>DataGuardian Pro Enterprise Certification Authority</strong>
+                    </p>
+                    <p style="color: #6b7280; font-size: 10px; margin: 0;">
+                        Enterprise Privacy & Compliance Platform
+                    </p>
+                </div>
             </div>
-        </div>
-    </div>
-    ''' if scan_type.lower() == 'website' else ''}
-
+        </div>'''
+    
+    html_content += website_content
+    
+    html_content += f"""
     <div class="section">
         <h2>{recommendations_title}</h2>
         {recommendations_html if recommendations_html else f"<p>{no_recommendations}</p>"}
