@@ -621,67 +621,171 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
         </table>
     </div>
     
-    <!-- Environmental Impact Section for Sustainability Reports -->
+    <!-- Professional Certificate-Style Layout for Sustainability Reports -->
     {f'''
-    <div class="section" style="background-color: #f0fdf4; border: 2px solid #bbf7d0; border-radius: 10px; padding: 25px; margin: 30px 0;">
-        <h2 style="color: #166534; display: flex; align-items: center; margin-bottom: 20px;">
-            🌍 Environmental Impact Comparison
-        </h2>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 20px 0;">
-            <div>
-                <h3 style="color: #059669; border-bottom: 2px solid #bbf7d0; padding-bottom: 8px;">Current Annual Impact:</h3>
-                <ul style="color: #065f46; line-height: 1.8;">
-                    <li><strong>{scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0):.2f} kg CO₂ emissions</strong></li>
-                    <li>Equivalent to driving <strong>{scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0) * 2.4:.0f} km</strong> in an average car</li>
-                    <li>Same as <strong>{scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0) / 2.04:.1f} kg</strong> of coal burned</li>
-                </ul>
+    <div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); padding: 0; margin: 0;">
+        <!-- Certificate Header -->
+        <div style="background: white; border: 3px solid #059669; border-radius: 15px; margin: 20px; padding: 30px; position: relative; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+            <!-- Certificate Border Pattern -->
+            <div style="position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: 2px solid #10b981; border-radius: 10px; background: linear-gradient(45deg, #f0fdf4 25%, transparent 25%), linear-gradient(-45deg, #f0fdf4 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0fdf4 75%), linear-gradient(-45deg, transparent 75%, #f0fdf4 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;"></div>
+            
+            <!-- Certificate Seal -->
+            <div style="position: absolute; top: 30px; right: 50px; width: 80px; height: 80px; background: linear-gradient(135deg, #059669, #10b981); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);">
+                <div style="color: white; font-size: 24px; font-weight: bold;">✓</div>
             </div>
             
-            <div>
-                <h3 style="color: #059669; border-bottom: 2px solid #bbf7d0; padding-bottom: 8px;">Potential Savings:</h3>
-                <ul style="color: #065f46; line-height: 1.8;">
-                    <li><strong>{scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("carbon_kg_annually", 0):.2f} kg CO₂</strong> reduction possible</li>
-                    <li>Equivalent to planting <strong>{scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("trees_equivalent", 0):.1f} trees</strong></li>
-                    <li>Save <strong>${scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("cost_usd_annually", 0):.2f}</strong> annually</li>
-                </ul>
+            <!-- Certificate Title -->
+            <div style="text-align: center; position: relative; z-index: 10;">
+                <h1 style="color: #166534; font-size: 28px; margin-bottom: 10px; font-family: 'Times New Roman', serif; letter-spacing: 2px;">
+                    SUSTAINABILITY COMPLIANCE CERTIFICATE
+                </h1>
+                <h2 style="color: #059669; font-size: 16px; margin-bottom: 30px; font-weight: normal;">
+                    DataGuardian Pro Enterprise Certification
+                </h2>
+                
+                <p style="font-size: 14px; color: #374151; margin: 20px 0;">This certifies that</p>
+                <h3 style="color: #166534; font-size: 20px; margin: 10px 0; font-weight: bold; text-decoration: underline;">
+                    {scan_data.get("repository_url", scan_data.get("url", "Repository Analysis"))}
+                </h3>
+                <p style="font-size: 14px; color: #374151; margin: 20px 0;">has been assessed for environmental sustainability compliance</p>
+                
+                <p style="font-size: 12px; color: #6b7280; margin-top: 30px;">
+                    Certified on {datetime.now().strftime("%B %d, %Y")}
+                </p>
             </div>
         </div>
         
-        <h3 style="color: #059669; margin-top: 30px; border-bottom: 2px solid #bbf7d0; padding-bottom: 8px;">
-            🧠 Code Efficiency & Environmental Impact
-        </h3>
-        <table style="width: 100%; border-collapse: collapse; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <thead>
-                <tr style="background: linear-gradient(135deg, #059669, #10b981);">
-                    <th style="border: 1px solid #bbf7d0; padding: 15px; text-align: left; color: white; font-weight: bold;">Category</th>
-                    <th style="border: 1px solid #bbf7d0; padding: 15px; text-align: left; color: white; font-weight: bold;">Count</th>
-                    <th style="border: 1px solid #bbf7d0; padding: 15px; text-align: left; color: white; font-weight: bold;">Energy Waste (kWh/year)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr style="background-color: #f0fdf4;">
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46; font-weight: 500;">Unused Imports</td>
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{len(scan_data.get("unused_imports", []))}</td>
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{scan_data.get("carbon_footprint", {}).get("breakdown", {}).get("unused_imports_kwh", 0):.2f}</td>
-                </tr>
-                <tr style="background-color: #ecfdf5;">
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46; font-weight: 500;">Dead Functions</td>
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{len(scan_data.get("dead_code", []))}</td>
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{scan_data.get("carbon_footprint", {}).get("breakdown", {}).get("dead_code_kwh", 0):.2f}</td>
-                </tr>
-                <tr style="background-color: #f0fdf4;">
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46; font-weight: 500;">Duplicate Packages</td>
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{len(scan_data.get("package_duplications", []))}</td>
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{scan_data.get("carbon_footprint", {}).get("breakdown", {}).get("package_duplications_kwh", 0):.2f}</td>
-                </tr>
-                <tr style="background-color: #ecfdf5;">
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46; font-weight: 500;">Large ML Models</td>
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{len(scan_data.get("large_ml_models", []))}</td>
-                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{scan_data.get("carbon_footprint", {}).get("breakdown", {}).get("ml_models_kwh", 0):.2f}</td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- Professional Score Dashboard -->
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin: 30px 20px;">
+            <!-- Score Card -->
+            <div style="background: white; border-radius: 15px; padding: 30px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
+                <div style="background: {"linear-gradient(135deg, #10b981, #059669)" if scan_data.get("sustainability_score", 0) >= 80 else "linear-gradient(135deg, #f59e0b, #d97706)" if scan_data.get("sustainability_score", 0) >= 60 else "linear-gradient(135deg, #ef4444, #dc2626)"}; color: white; padding: 40px 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="font-size: 48px; font-weight: bold; margin-bottom: 10px;">
+                        {int(scan_data.get("sustainability_score", 0))}
+                    </div>
+                    <div style="font-size: 16px; font-weight: bold; letter-spacing: 2px;">
+                        SUSTAINABILITY SCORE
+                    </div>
+                </div>
+                
+                <div style="text-align: left; margin-top: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #1f2937;">Annual CO₂ Emissions:</strong><br>
+                        <span style="color: #dc2626; font-size: 18px; font-weight: bold;">
+                            {scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0):.1f} kg
+                        </span>
+                    </div>
+                    <div>
+                        <strong style="color: #1f2937;">Energy Waste:</strong><br>
+                        <span style="color: #dc2626; font-size: 18px; font-weight: bold;">
+                            {scan_data.get("carbon_footprint", {}).get("total_energy_waste_kwh_annually", 0):.1f} kWh/yr
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Environmental Impact Visualization -->
+            <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
+                <h3 style="color: #166534; text-align: center; margin-bottom: 30px; font-size: 18px;">
+                    Environmental Impact Analysis
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px;">
+                    <!-- Current Impact Bar -->
+                    <div style="text-align: center;">
+                        <div style="background: #dc2626; height: {min(120, (scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0) / max(scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0), 1)) * 120)}px; width: 60px; margin: 0 auto 15px; border-radius: 5px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold; padding: 10px 0;">
+                        </div>
+                        <div style="font-weight: bold; color: #374151; margin-bottom: 5px;">Current Impact</div>
+                        <div style="font-size: 12px; color: #6b7280;">
+                            {scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0):.1f} kg CO₂
+                        </div>
+                    </div>
+                    
+                    <!-- Potential Reduction Bar -->
+                    <div style="text-align: center;">
+                        <div style="background: #10b981; height: {min(120, (scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("carbon_kg_annually", 0) / max(scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0), 1)) * 120)}px; width: 60px; margin: 0 auto 15px; border-radius: 5px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold; padding: 10px 0;">
+                        </div>
+                        <div style="font-weight: bold; color: #374151; margin-bottom: 5px;">Potential Reduction</div>
+                        <div style="font-size: 12px; color: #6b7280;">
+                            {scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("carbon_kg_annually", 0):.1f} kg CO₂
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Professional Summary Table -->
+        <div style="margin: 30px 20px;">
+            <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
+                <h3 style="color: #166534; text-align: center; margin-bottom: 30px; font-size: 20px;">
+                    Environmental Impact Summary
+                </h3>
+                
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #059669, #10b981);">
+                            <th style="padding: 20px; text-align: left; color: white; font-weight: bold; border-radius: 8px 0 0 0;">Metric</th>
+                            <th style="padding: 20px; text-align: center; color: white; font-weight: bold;">Current Impact</th>
+                            <th style="padding: 20px; text-align: center; color: white; font-weight: bold; border-radius: 0 8px 0 0;">Potential Improvement</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background-color: #f0fdf4;">
+                            <td style="padding: 15px; color: #065f46; font-weight: 500; border-bottom: 1px solid #bbf7d0;">Annual CO₂ Emissions</td>
+                            <td style="padding: 15px; text-align: center; color: #065f46; border-bottom: 1px solid #bbf7d0;">
+                                {scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0):.2f} kg
+                            </td>
+                            <td style="padding: 15px; text-align: center; color: #065f46; border-bottom: 1px solid #bbf7d0;">
+                                -{scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("carbon_kg_annually", 0):.2f} kg
+                            </td>
+                        </tr>
+                        <tr style="background-color: #ecfdf5;">
+                            <td style="padding: 15px; color: #065f46; font-weight: 500; border-bottom: 1px solid #bbf7d0;">Energy Consumption</td>
+                            <td style="padding: 15px; text-align: center; color: #065f46; border-bottom: 1px solid #bbf7d0;">
+                                {scan_data.get("carbon_footprint", {}).get("total_energy_waste_kwh_annually", 0):.1f} kWh/year
+                            </td>
+                            <td style="padding: 15px; text-align: center; color: #065f46; border-bottom: 1px solid #bbf7d0;">
+                                -{scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("energy_kwh_annually", 0):.1f} kWh/year
+                            </td>
+                        </tr>
+                        <tr style="background-color: #f0fdf4;">
+                            <td style="padding: 15px; color: #065f46; font-weight: 500; border-bottom: 1px solid #bbf7d0;">Tree Equivalent</td>
+                            <td style="padding: 15px; text-align: center; color: #065f46; border-bottom: 1px solid #bbf7d0;">
+                                {scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0)/22:.1f} trees needed
+                            </td>
+                            <td style="padding: 15px; text-align: center; color: #065f46; border-bottom: 1px solid #bbf7d0;">
+                                +{scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("trees_equivalent", 0):.1f} trees saved
+                            </td>
+                        </tr>
+                        <tr style="background-color: #ecfdf5;">
+                            <td style="padding: 15px; color: #065f46; font-weight: 500;">Annual Cost Impact</td>
+                            <td style="padding: 15px; text-align: center; color: #065f46;">
+                                ${scan_data.get("carbon_footprint", {}).get("cost_impact_usd_annually", 0):.2f}
+                            </td>
+                            <td style="padding: 15px; text-align: center; color: #065f46;">
+                                -${scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("cost_usd_annually", 0):.2f}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Certificate Footer -->
+        <div style="background: white; border-radius: 15px; margin: 30px 20px; padding: 30px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
+            <p style="color: #374151; font-size: 12px; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+                This sustainability assessment was conducted on {timestamp} using DataGuardian Pro's advanced environmental impact analysis. 
+                The assessment evaluated code efficiency, energy consumption patterns, and carbon footprint optimization opportunities.
+            </p>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                <p style="color: #6b7280; font-size: 11px; margin: 5px 0;">
+                    <strong>DataGuardian Pro Enterprise Certification Authority</strong>
+                </p>
+                <p style="color: #6b7280; font-size: 10px; margin: 0;">
+                    Enterprise Privacy & Sustainability Compliance Platform
+                </p>
+            </div>
+        </div>
     </div>
     ''' if 'sustainability' in scan_type.lower() and 'carbon_footprint' in scan_data else ''}
 
