@@ -1599,6 +1599,213 @@ def run_code_analysis_scan():
         st.rerun()
 
 
+def display_code_intelligence_analysis(scan_results):
+    """Display detailed code intelligence analysis with the new features."""
+    st.subheader("🧠 Advanced Code Intelligence Analysis")
+    
+    # Check if we have the new code intelligence data
+    code_intel = scan_results.get('code_intelligence', {})
+    unused_imports = scan_results.get('unused_imports', [])
+    dead_code = scan_results.get('dead_code', [])
+    package_duplications = scan_results.get('package_duplications', [])
+    large_ml_models = scan_results.get('large_ml_models', [])
+    
+    # Display summary metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            "Unused Imports", 
+            code_intel.get('unused_imports_count', len(unused_imports)),
+            delta=f"-{sum(imp.get('estimated_size_kb', 0) for imp in unused_imports):.0f}KB potential savings"
+        )
+    
+    with col2:
+        st.metric(
+            "Dead Functions", 
+            code_intel.get('dead_functions_count', len(dead_code)),
+            delta=f"-{sum(dc.get('estimated_lines', 0) for dc in dead_code)} lines potential removal"
+        )
+    
+    with col3:
+        st.metric(
+            "Duplicate Packages", 
+            code_intel.get('duplicate_packages_count', len(package_duplications)),
+            delta=f"-{sum(dup.get('estimated_bloat_mb', 0) for dup in package_duplications):.0f}MB potential savings"
+        )
+    
+    with col4:
+        st.metric(
+            "Large ML Models", 
+            code_intel.get('large_models_count', len(large_ml_models)),
+            delta=f"{sum(model.get('optimization_potential', 0) for model in large_ml_models) / len(large_ml_models) if large_ml_models else 0:.0f}% avg optimization potential"
+        )
+    
+    # Detailed analysis tabs
+    tab1, tab2, tab3, tab4 = st.tabs(["🚫 Unused Imports", "💀 Dead Code", "📦 Package Duplications", "🤖 ML Models"])
+    
+    with tab1:
+        st.subheader("Unused Import Analysis")
+        if unused_imports:
+            st.write(f"Found **{len(unused_imports)}** unused imports consuming approximately **{sum(imp.get('estimated_size_kb', 0) for imp in unused_imports):.1f}KB** of memory.")
+            
+            # Create detailed table
+            import_data = []
+            for imp in unused_imports[:10]:  # Show top 10
+                import_data.append({
+                    'File': imp.get('file', 'Unknown'),
+                    'Line': imp.get('line', 0),
+                    'Import Statement': imp.get('statement', ''),
+                    'Unused Symbols': ', '.join(imp.get('unused_symbols', [])),
+                    'Est. Size (KB)': f"{imp.get('estimated_size_kb', 0):.1f}"
+                })
+            
+            if import_data:
+                df_imports = pd.DataFrame(import_data)
+                st.dataframe(df_imports, use_container_width=True)
+                
+                st.subheader("🛠️ Action Steps")
+                st.write("**Immediate Actions:**")
+                st.code("""
+# Remove unused imports automatically
+pip install unimport
+unimport --remove-all src/
+
+# Or manually remove specific imports:
+# Remove: import unused_library
+# Remove: from sklearn import unused_metric
+                """)
+        else:
+            st.success("✅ No unused imports detected!")
+    
+    with tab2:
+        st.subheader("Dead Code Analysis") 
+        if dead_code:
+            st.write(f"Found **{len(dead_code)}** potentially unused functions totaling approximately **{sum(dc.get('estimated_lines', 0) for dc in dead_code)}** lines of code.")
+            
+            # Create detailed table
+            dead_code_data = []
+            for dc in dead_code[:10]:  # Show top 10
+                dead_code_data.append({
+                    'File': dc.get('file', 'Unknown'),
+                    'Function': dc.get('function', ''),
+                    'Type': dc.get('type', ''),
+                    'Est. Lines': dc.get('estimated_lines', 0),
+                    'Confidence': f"{dc.get('confidence', 0)*100:.0f}%"
+                })
+            
+            if dead_code_data:
+                df_dead = pd.DataFrame(dead_code_data)
+                st.dataframe(df_dead, use_container_width=True)
+                
+                st.subheader("🛠️ Action Steps")
+                st.write("**Verification Process:**")
+                st.code("""
+# Use vulture to find dead code
+pip install vulture
+vulture src/
+
+# Manual verification steps:
+# 1. Search for function calls across codebase
+# 2. Check if functions are used in tests
+# 3. Verify they're not called dynamically
+# 4. Remove confirmed dead functions
+                """)
+        else:
+            st.success("✅ No dead code detected!")
+    
+    with tab3:
+        st.subheader("Package Duplication Analysis")
+        if package_duplications:
+            st.write(f"Found **{len(package_duplications)}** packages with multiple versions wasting **{sum(dup.get('estimated_bloat_mb', 0) for dup in package_duplications):.1f}MB** of storage.")
+            
+            # Create detailed table
+            dup_data = []
+            for dup in package_duplications:
+                dup_data.append({
+                    'Package': dup.get('package', 'Unknown'),
+                    'Versions': ' vs '.join(dup.get('versions', [])),
+                    'Lines in File': ', '.join(map(str, dup.get('lines', []))),
+                    'Est. Bloat (MB)': f"{dup.get('estimated_bloat_mb', 0):.1f}"
+                })
+            
+            if dup_data:
+                df_dups = pd.DataFrame(dup_data)
+                st.dataframe(df_dups, use_container_width=True)
+                
+                st.subheader("🛠️ Action Steps")
+                st.write("**Resolution Commands:**")
+                st.code("""
+# Check for duplicate packages
+pipdeptree --warn silence
+
+# Clean up requirements.txt
+# Keep only the latest compatible version
+# Example: pandas==1.4.0 (remove pandas==1.3.0)
+
+# Use poetry for better dependency management
+poetry add package_name
+poetry lock
+                """)
+        else:
+            st.success("✅ No package duplications detected!")
+    
+    with tab4:
+        st.subheader("ML Model Size Analysis")
+        if large_ml_models:
+            total_size = sum(model.get('size_mb', 0) for model in large_ml_models)
+            potential_savings = sum(model.get('size_mb', 0) * model.get('optimization_potential', 0) / 100 for model in large_ml_models)
+            
+            st.write(f"Found **{len(large_ml_models)}** large ML models totaling **{total_size:.1f}MB** with potential savings of **{potential_savings:.1f}MB**.")
+            
+            # Create detailed table
+            model_data = []
+            for model in large_ml_models:
+                model_data.append({
+                    'Model File': model.get('file', 'Unknown'),
+                    'Size (MB)': f"{model.get('size_mb', 0):.1f}",
+                    'Type': model.get('type', 'Unknown'),
+                    'Optimization Potential': f"{model.get('optimization_potential', 0):.0f}%",
+                    'Potential Savings (MB)': f"{model.get('size_mb', 0) * model.get('optimization_potential', 0) / 100:.1f}"
+                })
+            
+            if model_data:
+                df_models = pd.DataFrame(model_data)
+                st.dataframe(df_models, use_container_width=True)
+                
+                # Model optimization visualization
+                fig = px.bar(
+                    df_models, 
+                    x='Model File', 
+                    y='Size (MB)', 
+                    title="ML Model Sizes",
+                    color_discrete_sequence=['#FF6B6B']
+                )
+                fig.update_layout(height=400)
+                st.plotly_chart(fig, use_container_width=True)
+                
+                st.subheader("🛠️ Optimization Strategies")
+                st.write("**Model Compression Techniques:**")
+                st.code("""
+# TensorFlow Model Optimization
+import tensorflow_model_optimization as tfmot
+
+# Quantization (float32 → int8)
+quantized_model = tfmot.quantization.keras.quantize_model(model)
+
+# PyTorch Quantization
+import torch.quantization
+quantized_model = torch.quantization.quantize_dynamic(
+    model, {torch.nn.Linear}, dtype=torch.qint8
+)
+
+# ONNX Conversion for smaller models
+import torch.onnx
+torch.onnx.export(model, dummy_input, "model.onnx")
+                """)
+        else:
+            st.success("✅ No large ML models detected!")
+
 def display_sustainability_report(scan_results):
     """Display sustainability scan results and report."""
     # Clear previous display
@@ -1654,6 +1861,8 @@ def display_sustainability_report(scan_results):
     if 'cloud' in scan_type:
         display_cloud_sustainability_report(scan_results)
     elif 'github' in scan_type:
+        # Display code intelligence analysis for GitHub scans
+        display_code_intelligence_analysis(scan_results)
         display_github_sustainability_report(scan_results)
     elif 'code' in scan_type:
         display_code_analysis_report(scan_results)
