@@ -1979,6 +1979,225 @@ else:
                 st.text_area("Custom PII patterns to detect", 
                            placeholder="email: [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\nphone_nl: (\\+31|0)\\s?[1-9][0-9]{8}")
                 
+                # Start Scan Button
+                st.markdown("---")
+                
+                col1, col2, col3 = st.columns([2, 1, 2])
+                with col2:
+                    start_website_scan = st.button(
+                        "🚀 Start Website Scan", 
+                        type="primary", 
+                        use_container_width=True,
+                        disabled=not website_url.strip() if 'website_url' in locals() else True
+                    )
+                
+                # Website Scan Results
+                if start_website_scan and website_url:
+                    # Validate URL
+                    if not website_url.startswith(('http://', 'https://')):
+                        website_url = f"https://{website_url}"
+                    
+                    # Initialize session state for website scan
+                    if 'website_scan_results' not in st.session_state:
+                        st.session_state.website_scan_results = None
+                    if 'website_scan_complete' not in st.session_state:
+                        st.session_state.website_scan_complete = False
+                    
+                    # Start the scan
+                    st.session_state.website_scan_complete = False
+                    
+                    # Progress tracking
+                    progress_container = st.container()
+                    with progress_container:
+                        st.info(f"Starting website scan for: {website_url}")
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                    
+                    try:
+                        # Import website scanner
+                        from services.website_scanner import WebsiteScanner
+                        
+                        # Progress callback
+                        def website_progress_callback(current, total, url):
+                            progress = min(current / max(total, 1), 1.0)
+                            progress_bar.progress(progress)
+                            status_text.text(f"Scanning page {current}/{total}: {url}")
+                        
+                        # Initialize scanner
+                        scanner = WebsiteScanner(
+                            languages=website_languages if 'website_languages' in locals() else ["English"],
+                            region=region,
+                            rate_limit=requests_per_minute if 'requests_per_minute' in locals() else 30,
+                            max_pages=20,
+                            max_depth=scan_depth if 'scan_depth' in locals() else 2,
+                            cookies_enabled=True,
+                            js_enabled=True
+                        )
+                        
+                        scanner.set_progress_callback(website_progress_callback)
+                        
+                        # Run the scan
+                        scan_result = scanner.scan_website(
+                            url=website_url,
+                            follow_links=True
+                        )
+                        
+                        # Store results
+                        st.session_state.website_scan_results = scan_result
+                        st.session_state.website_scan_complete = True
+                        
+                        # Clear progress
+                        progress_container.empty()
+                        
+                        # Success message
+                        st.success(f"✅ Website scan completed successfully!")
+                        
+                    except Exception as e:
+                        progress_container.empty()
+                        st.error(f"❌ Website scan failed: {str(e)}")
+                        st.session_state.website_scan_complete = False
+                
+                # Display website scan results if available
+                if st.session_state.get('website_scan_complete', False) and st.session_state.get('website_scan_results'):
+                    website_results = st.session_state.website_scan_results
+                    
+                    st.markdown("---")
+                    st.subheader("🌐 Website Scan Results")
+                    
+                    # Summary metrics
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    with col1:
+                        pages_scanned = website_results.get('stats', {}).get('pages_scanned', 0)
+                        st.metric("Pages Scanned", pages_scanned)
+                    
+                    with col2:
+                        total_findings = website_results.get('stats', {}).get('total_findings', 0)
+                        st.metric("Total Findings", total_findings)
+                    
+                    with col3:
+                        total_cookies = website_results.get('stats', {}).get('total_cookies', 0)
+                        st.metric("Cookies Found", total_cookies)
+                    
+                    with col4:
+                        total_trackers = website_results.get('stats', {}).get('total_trackers', 0)
+                        st.metric("Trackers Detected", total_trackers)
+                    
+                    # Findings table
+                    if website_results.get('findings'):
+                        st.subheader("🔍 Findings")
+                        findings_data = []
+                        
+                        for finding in website_results['findings']:
+                            findings_data.append({
+                                'Type': finding.get('type', 'Unknown'),
+                                'Severity': finding.get('severity', 'Low'),
+                                'URL': finding.get('url', ''),
+                                'Description': finding.get('description', '')
+                            })
+                        
+                        if findings_data:
+                            findings_df = pd.DataFrame(findings_data)
+                            st.dataframe(findings_df, use_container_width=True)
+                        else:
+                            st.info("No privacy findings detected.")
+                    
+                    # Cookies analysis
+                    if website_results.get('cookies'):
+                        st.subheader("🍪 Cookie Analysis")
+                        cookie_categories = website_results.get('cookie_categories', {})
+                        
+                        if cookie_categories:
+                            col1, col2 = st.columns(2)
+                            
+                            with col1:
+                                st.write("**Cookie Categories:**")
+                                for category, count in cookie_categories.items():
+                                    st.write(f"- {category.title()}: {count}")
+                            
+                            with col2:
+                                # Create a simple visualization
+                                import plotly.express as px
+                                fig = px.pie(
+                                    values=list(cookie_categories.values()),
+                                    names=list(cookie_categories.keys()),
+                                    title="Cookie Distribution"
+                                )
+                                st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Trackers
+                    if website_results.get('trackers'):
+                        st.subheader("📊 Tracking Analysis")
+                        trackers = website_results['trackers']
+                        
+                        tracker_data = []
+                        for tracker in trackers:
+                            tracker_data.append({
+                                'Name': tracker.get('name', 'Unknown'),
+                                'Type': tracker.get('type', 'Unknown'),
+                                'Purpose': tracker.get('purpose', 'Unknown'),
+                                'Privacy Risk': tracker.get('privacy_risk', 'Low')
+                            })
+                        
+                        if tracker_data:
+                            tracker_df = pd.DataFrame(tracker_data)
+                            st.dataframe(tracker_df, use_container_width=True)
+                    
+                    # Download Reports Section
+                    st.markdown("---")
+                    st.subheader("📊 Download Reports")
+                    
+                    report_col1, report_col2 = st.columns(2)
+                    
+                    # PDF Report Download
+                    with report_col1:
+                        try:
+                            from services.report_generator import generate_report
+                            
+                            # Generate PDF report
+                            pdf_bytes = generate_report(
+                                website_results,
+                                report_format="website"
+                            )
+                            
+                            st.download_button(
+                                label="📄 Download PDF Report",
+                                data=pdf_bytes,
+                                file_name=f"website_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
+                            
+                        except Exception as e:
+                            st.error(f"Failed to generate PDF report: {str(e)}")
+                    
+                    # HTML Report Download
+                    with report_col2:
+                        try:
+                            from services.html_report_generator import get_html_report_as_base64
+                            import base64
+                            
+                            # Generate HTML report
+                            html_b64 = get_html_report_as_base64(website_results)
+                            html_bytes = base64.b64decode(html_b64)
+                            
+                            st.download_button(
+                                label="🌐 Download HTML Report",
+                                data=html_bytes,
+                                file_name=f"website_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                                mime="text/html",
+                                use_container_width=True
+                            )
+                            
+                        except Exception as e:
+                            st.error(f"Failed to generate HTML report: {str(e)}")
+                    
+                    # Reset scan button
+                    if st.button("🔄 Start New Website Scan", use_container_width=True):
+                        st.session_state.website_scan_complete = False
+                        st.session_state.website_scan_results = None
+                        st.rerun()
+                
             elif scan_type == _("scan.manual"):
                 # 6. Manual Upload Tool
                 st.subheader("Manual Upload Configuration")
