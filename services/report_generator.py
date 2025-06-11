@@ -72,19 +72,23 @@ class SustainabilityCertificateHeader(Flowable):
         # Certificate title
         canvas.setFont("Helvetica-Bold", 18)
         canvas.setFillColor(HexColor('#166534'))
-        canvas.drawCentredText(self.width/2, self.height - 40, self.title)
+        text_width = canvas.stringWidth(self.title, "Helvetica-Bold", 18)
+        canvas.drawString((self.width - text_width) / 2, self.height - 40, self.title)
         
         # Subtitle
         canvas.setFont("Helvetica", 12)
         canvas.setFillColor(HexColor('#059669'))
         subtitle = "DataGuardian Pro Enterprise Certification" if self.language == 'en' else "DataGuardian Pro Enterprise Certificering"
-        canvas.drawCentredText(self.width/2, self.height - 60, subtitle)
+        subtitle_width = canvas.stringWidth(subtitle, "Helvetica", 12)
+        canvas.drawString((self.width - subtitle_width) / 2, self.height - 60, subtitle)
         
         # Date and certification details
         canvas.setFont("Helvetica", 10)
         canvas.setFillColor(HexColor('#065f46'))
         cert_date = datetime.now().strftime('%B %d, %Y') if self.language == 'en' else datetime.now().strftime('%d %B %Y')
-        canvas.drawCentredText(self.width/2, self.height - 85, f"Certified on {cert_date}")
+        cert_text = f"Certified on {cert_date}"
+        cert_width = canvas.stringWidth(cert_text, "Helvetica", 10)
+        canvas.drawString((self.width - cert_width) / 2, self.height - 85, cert_text)
 
 class SustainabilityScoreCard(Flowable):
     """Professional score display card for sustainability metrics"""
@@ -123,10 +127,13 @@ class SustainabilityScoreCard(Flowable):
         # Score text
         canvas.setFont("Helvetica-Bold", 36)
         canvas.setFillColor(colors.white)
-        canvas.drawCentredText(score_width/2, self.height/2 + 20, f"{int(self.score)}")
+        score_text = f"{int(self.score)}"
+        score_text_width = canvas.stringWidth(score_text, "Helvetica-Bold", 36)
+        canvas.drawString((score_width - score_text_width) / 2, self.height/2 + 20, score_text)
         
         canvas.setFont("Helvetica-Bold", 12)
-        canvas.drawCentredText(score_width/2, self.height/2 - 10, "SCORE")
+        score_label_width = canvas.stringWidth("SCORE", "Helvetica-Bold", 12)
+        canvas.drawString((score_width - score_label_width) / 2, self.height/2 - 10, "SCORE")
         
         # Carbon emissions section
         canvas.setFont("Helvetica-Bold", 14)
@@ -168,7 +175,8 @@ class EnvironmentalImpactChart(Flowable):
         canvas.setFont("Helvetica-Bold", 16)
         canvas.setFillColor(HexColor('#1f2937'))
         title = "Environmental Impact Analysis" if self.language == 'en' else "Milieu Impact Analyse"
-        canvas.drawCentredText(self.width/2, self.height - 30, title)
+        title_width = canvas.stringWidth(title, "Helvetica-Bold", 16)
+        canvas.drawString((self.width - title_width) / 2, self.height - 30, title)
         
         # Current vs Potential bar chart
         bar_width = 60
@@ -193,13 +201,25 @@ class EnvironmentalImpactChart(Flowable):
         # Labels
         canvas.setFont("Helvetica-Bold", 10)
         canvas.setFillColor(HexColor('#374151'))
-        canvas.drawCentredText(self.width/3, 40, "Current Impact")
-        canvas.drawCentredText(2*self.width/3, 40, "Potential Reduction")
+        
+        current_label = "Current Impact"
+        current_label_width = canvas.stringWidth(current_label, "Helvetica-Bold", 10)
+        canvas.drawString((self.width/3 - current_label_width/2), 40, current_label)
+        
+        potential_label = "Potential Reduction"
+        potential_label_width = canvas.stringWidth(potential_label, "Helvetica-Bold", 10)
+        canvas.drawString((2*self.width/3 - potential_label_width/2), 40, potential_label)
         
         # Values
         canvas.setFont("Helvetica", 8)
-        canvas.drawCentredText(self.width/3, 25, f"{current_emissions:.1f} kg CO₂")
-        canvas.drawCentredText(2*self.width/3, 25, f"{potential_savings:.1f} kg CO₂")
+        
+        current_value = f"{current_emissions:.1f} kg CO₂"
+        current_value_width = canvas.stringWidth(current_value, "Helvetica", 8)
+        canvas.drawString((self.width/3 - current_value_width/2), 25, current_value)
+        
+        potential_value = f"{potential_savings:.1f} kg CO₂"
+        potential_value_width = canvas.stringWidth(potential_value, "Helvetica", 8)
+        canvas.drawString((2*self.width/3 - potential_value_width/2), 25, potential_value)
 
 # Configure a logger for the report generator
 logger = logging.getLogger(__name__)
