@@ -17,6 +17,7 @@ from reportlab.lib.colors import HexColor, toColor
 from reportlab.lib.units import inch, cm
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, Flowable, KeepTogether, CondPageBreak, Image, Frame, FrameBreak, NextPageTemplate, PageTemplate
+from reportlab.platypus.flowables import Flowable
 from reportlab.graphics.shapes import Drawing, Circle, Rect, Line, String, Wedge
 from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
 from reportlab.graphics.charts.piecharts import Pie, LegendedPie
@@ -29,6 +30,176 @@ import uuid
 
 # Import translation utilities
 from utils.i18n import get_text, _
+
+class SustainabilityCertificateHeader(Flowable):
+    """Professional certificate-style header for sustainability reports"""
+    
+    def __init__(self, title="Sustainability Compliance Certificate", scan_data=None, language='en'):
+        Flowable.__init__(self)
+        self.title = title
+        self.scan_data = scan_data or {}
+        self.language = language
+        self.width = 7.5 * inch
+        self.height = 2.5 * inch
+        
+    def draw(self):
+        canvas = self.canv
+        
+        # Certificate border with elegant styling
+        canvas.setStrokeColor(HexColor('#059669'))
+        canvas.setLineWidth(3)
+        canvas.roundRect(0, 0, self.width, self.height, 10, fill=0, stroke=1)
+        
+        # Inner border
+        canvas.setStrokeColor(HexColor('#10b981'))
+        canvas.setLineWidth(1)
+        canvas.roundRect(10, 10, self.width-20, self.height-20, 5, fill=0, stroke=1)
+        
+        # Background gradient effect simulation
+        canvas.setFillColor(HexColor('#f0fdf4'))
+        canvas.roundRect(15, 15, self.width-30, self.height-30, 5, fill=1, stroke=0)
+        
+        # Certificate emblem/seal
+        canvas.setFillColor(HexColor('#059669'))
+        canvas.circle(self.width - 80, self.height - 80, 25, fill=1, stroke=0)
+        
+        # Checkmark in seal
+        canvas.setStrokeColor(colors.white)
+        canvas.setLineWidth(3)
+        canvas.line(self.width - 90, self.height - 80, self.width - 85, self.height - 75)
+        canvas.line(self.width - 85, self.height - 75, self.width - 75, self.height - 85)
+        
+        # Certificate title
+        canvas.setFont("Helvetica-Bold", 18)
+        canvas.setFillColor(HexColor('#166534'))
+        canvas.drawCentredText(self.width/2, self.height - 40, self.title)
+        
+        # Subtitle
+        canvas.setFont("Helvetica", 12)
+        canvas.setFillColor(HexColor('#059669'))
+        subtitle = "DataGuardian Pro Enterprise Certification" if self.language == 'en' else "DataGuardian Pro Enterprise Certificering"
+        canvas.drawCentredText(self.width/2, self.height - 60, subtitle)
+        
+        # Date and certification details
+        canvas.setFont("Helvetica", 10)
+        canvas.setFillColor(HexColor('#065f46'))
+        cert_date = datetime.now().strftime('%B %d, %Y') if self.language == 'en' else datetime.now().strftime('%d %B %Y')
+        canvas.drawCentredText(self.width/2, self.height - 85, f"Certified on {cert_date}")
+
+class SustainabilityScoreCard(Flowable):
+    """Professional score display card for sustainability metrics"""
+    
+    def __init__(self, score, carbon_emissions, energy_waste, language='en'):
+        Flowable.__init__(self)
+        self.score = score
+        self.carbon_emissions = carbon_emissions
+        self.energy_waste = energy_waste
+        self.language = language
+        self.width = 7.5 * inch
+        self.height = 3 * inch
+        
+    def draw(self):
+        canvas = self.canv
+        
+        # Main card background
+        canvas.setFillColor(HexColor('#f8fafc'))
+        canvas.setStrokeColor(HexColor('#e2e8f0'))
+        canvas.roundRect(0, 0, self.width, self.height, 8, fill=1, stroke=1)
+        
+        # Score section
+        score_width = self.width / 3
+        
+        # Score background
+        if self.score >= 80:
+            score_color = HexColor('#10b981')
+        elif self.score >= 60:
+            score_color = HexColor('#f59e0b')
+        else:
+            score_color = HexColor('#ef4444')
+            
+        canvas.setFillColor(score_color)
+        canvas.roundRect(20, 20, score_width - 40, self.height - 40, 5, fill=1, stroke=0)
+        
+        # Score text
+        canvas.setFont("Helvetica-Bold", 36)
+        canvas.setFillColor(colors.white)
+        canvas.drawCentredText(score_width/2, self.height/2 + 20, f"{int(self.score)}")
+        
+        canvas.setFont("Helvetica-Bold", 12)
+        canvas.drawCentredText(score_width/2, self.height/2 - 10, "SCORE")
+        
+        # Carbon emissions section
+        canvas.setFont("Helvetica-Bold", 14)
+        canvas.setFillColor(HexColor('#1f2937'))
+        canvas.drawString(score_width + 20, self.height - 40, "Annual CO₂ Emissions")
+        
+        canvas.setFont("Helvetica-Bold", 24)
+        canvas.setFillColor(HexColor('#dc2626'))
+        canvas.drawString(score_width + 20, self.height - 70, f"{self.carbon_emissions:.1f} kg")
+        
+        # Energy waste section
+        canvas.setFont("Helvetica-Bold", 14)
+        canvas.setFillColor(HexColor('#1f2937'))
+        canvas.drawString(score_width + 20, self.height - 110, "Energy Waste")
+        
+        canvas.setFont("Helvetica-Bold", 24)
+        canvas.setFillColor(HexColor('#dc2626'))
+        canvas.drawString(score_width + 20, self.height - 140, f"{self.energy_waste:.1f} kWh/yr")
+
+class EnvironmentalImpactChart(Flowable):
+    """Professional environmental impact visualization"""
+    
+    def __init__(self, carbon_data, language='en'):
+        Flowable.__init__(self)
+        self.carbon_data = carbon_data
+        self.language = language
+        self.width = 7.5 * inch
+        self.height = 4 * inch
+        
+    def draw(self):
+        canvas = self.canv
+        
+        # Chart background
+        canvas.setFillColor(HexColor('#ffffff'))
+        canvas.setStrokeColor(HexColor('#e5e7eb'))
+        canvas.roundRect(0, 0, self.width, self.height, 8, fill=1, stroke=1)
+        
+        # Chart title
+        canvas.setFont("Helvetica-Bold", 16)
+        canvas.setFillColor(HexColor('#1f2937'))
+        title = "Environmental Impact Analysis" if self.language == 'en' else "Milieu Impact Analyse"
+        canvas.drawCentredText(self.width/2, self.height - 30, title)
+        
+        # Current vs Potential bar chart
+        bar_width = 60
+        bar_height_max = 120
+        
+        current_emissions = self.carbon_data.get('carbon_emissions_kg_annually', 0)
+        potential_savings = self.carbon_data.get('potential_savings', {}).get('carbon_kg_annually', 0)
+        
+        # Normalize values for chart
+        max_value = max(current_emissions, potential_savings) if max(current_emissions, potential_savings) > 0 else 1
+        current_height = (current_emissions / max_value) * bar_height_max
+        savings_height = (potential_savings / max_value) * bar_height_max
+        
+        # Current emissions bar
+        canvas.setFillColor(HexColor('#dc2626'))
+        canvas.rect(self.width/3 - bar_width/2, 60, bar_width, current_height, fill=1, stroke=0)
+        
+        # Potential savings bar
+        canvas.setFillColor(HexColor('#10b981'))
+        canvas.rect(2*self.width/3 - bar_width/2, 60, bar_width, savings_height, fill=1, stroke=0)
+        
+        # Labels
+        canvas.setFont("Helvetica-Bold", 10)
+        canvas.setFillColor(HexColor('#374151'))
+        canvas.drawCentredText(self.width/3, 40, "Current Impact")
+        canvas.drawCentredText(2*self.width/3, 40, "Potential Reduction")
+        
+        # Values
+        canvas.setFont("Helvetica", 8)
+        canvas.drawCentredText(self.width/3, 25, f"{current_emissions:.1f} kg CO₂")
+        canvas.drawCentredText(2*self.width/3, 25, f"{potential_savings:.1f} kg CO₂")
 
 # Configure a logger for the report generator
 logger = logging.getLogger(__name__)
@@ -1225,70 +1396,132 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     
     # Sustainability meter removed as requested
     
-    # Add environmental impact section for sustainability reports
+    # Professional certificate-style layout for sustainability reports
     if report_format == "sustainability" and 'carbon_footprint' in scan_data:
-        elements.append(PageBreak())
+        # Clear existing elements for clean certificate design
+        elements = []
         
-        # Environmental Impact Comparison section
-        elements.append(Paragraph("🌍 Environmental Impact Comparison", heading_style))
-        elements.append(Spacer(1, 12))
+        # Certificate header
+        cert_title = "Sustainability Compliance Certificate" if current_lang == 'en' else "Duurzaamheids Compliance Certificaat"
+        cert_header = SustainabilityCertificateHeader(cert_title, scan_data, current_lang)
+        elements.append(cert_header)
+        elements.append(Spacer(1, 30))
         
+        # Organization and scan details in certificate style
+        org_style = ParagraphStyle(
+            'OrgStyle',
+            parent=normal_style,
+            fontSize=14,
+            textColor=HexColor('#166534'),
+            alignment=1,  # Center alignment
+            fontName='Helvetica-Bold'
+        )
+        
+        scan_url = scan_data.get('repository_url', scan_data.get('url', 'Repository Analysis'))
+        
+        # Center-aligned certificate text
+        cert_text_style = ParagraphStyle(
+            'CertText',
+            parent=normal_style,
+            fontSize=12,
+            alignment=1,  # Center alignment
+            textColor=HexColor('#374151')
+        )
+        
+        elements.append(Paragraph("This certifies that", cert_text_style))
+        elements.append(Spacer(1, 6))
+        elements.append(Paragraph(f"<b>{scan_url}</b>", org_style))
+        elements.append(Spacer(1, 6))
+        elements.append(Paragraph("has been assessed for environmental sustainability compliance", cert_text_style))
+        elements.append(Spacer(1, 30))
+        
+        # Professional score card
         carbon_data = scan_data.get('carbon_footprint', {})
+        sustainability_score = scan_data.get('sustainability_score', 0)
         total_emissions = carbon_data.get('carbon_emissions_kg_annually', 0)
         total_energy = carbon_data.get('total_energy_waste_kwh_annually', 0)
+        
+        score_card = SustainabilityScoreCard(sustainability_score, total_emissions, total_energy, current_lang)
+        elements.append(score_card)
+        elements.append(Spacer(1, 30))
+        
+        # Environmental impact visualization
+        impact_chart = EnvironmentalImpactChart(carbon_data, current_lang)
+        elements.append(impact_chart)
+        elements.append(Spacer(1, 30))
+        
+        # Professional findings summary table
+        breakdown = carbon_data.get('breakdown', {})
         potential_savings = carbon_data.get('potential_savings', {})
         
-        # Current Annual Impact
-        current_impact_text = f"""
-        <b>Current Annual Impact:</b><br/>
-        • {total_emissions:.2f} kg CO₂ emissions<br/>
-        • Equivalent to driving {total_emissions * 2.4:.0f} km in an average car<br/>
-        • Same as {total_emissions / 2.04:.1f} kg of coal burned
-        """
-        elements.append(Paragraph(current_impact_text, normal_style))
-        elements.append(Spacer(1, 12))
+        summary_title = "Environmental Impact Summary" if current_lang == 'en' else "Milieu Impact Samenvatting"
+        summary_style = ParagraphStyle(
+            'SummaryStyle',
+            parent=heading_style,
+            fontSize=16,
+            textColor=HexColor('#166534'),
+            alignment=1,
+            spaceAfter=20
+        )
+        elements.append(Paragraph(summary_title, summary_style))
         
-        # Potential Savings
-        savings_kg = potential_savings.get('carbon_kg_annually', 0)
-        trees_saved = potential_savings.get('trees_equivalent', 0)
-        annual_savings = potential_savings.get('cost_usd_annually', 0)
-        
-        potential_savings_text = f"""
-        <b>Potential Savings:</b><br/>
-        • {savings_kg:.2f} kg CO₂ reduction possible<br/>
-        • Equivalent to planting {trees_saved:.1f} trees<br/>
-        • Save ${annual_savings:.2f} annually
-        """
-        elements.append(Paragraph(potential_savings_text, normal_style))
-        elements.append(Spacer(1, 24))
-        
-        # Code Efficiency & Environmental Impact section
-        elements.append(Paragraph("🧠 Code Efficiency & Environmental Impact", heading_style))
-        elements.append(Spacer(1, 12))
-        
-        # Energy breakdown table
-        breakdown = carbon_data.get('breakdown', {})
-        energy_data = [
-            ['Category', 'Count', 'Energy Waste (kWh/year)'],
-            ['Unused Imports', str(len(scan_data.get('unused_imports', []))), f"{breakdown.get('unused_imports_kwh', 0):.2f}"],
-            ['Dead Functions', str(len(scan_data.get('dead_code', []))), f"{breakdown.get('dead_code_kwh', 0):.2f}"],
-            ['Duplicate Packages', str(len(scan_data.get('package_duplications', []))), f"{breakdown.get('package_duplications_kwh', 0):.2f}"],
-            ['Large ML Models', str(len(scan_data.get('large_ml_models', []))), f"{breakdown.get('ml_models_kwh', 0):.2f}"]
+        # Clean summary table with professional styling
+        summary_data = [
+            ['Metric', 'Current Impact', 'Potential Improvement'],
+            ['Annual CO₂ Emissions', f"{total_emissions:.2f} kg", f"-{potential_savings.get('carbon_kg_annually', 0):.2f} kg"],
+            ['Energy Consumption', f"{total_energy:.1f} kWh/year", f"-{potential_savings.get('energy_kwh_annually', 0):.1f} kWh/year"],
+            ['Tree Equivalent', f"{total_emissions/22:.1f} trees needed", f"+{potential_savings.get('trees_equivalent', 0):.1f} trees saved"],
+            ['Annual Cost Impact', f"${carbon_data.get('cost_impact_usd_annually', 0):.2f}", f"-${potential_savings.get('cost_usd_annually', 0):.2f}"]
         ]
         
-        energy_table = Table(energy_data, colWidths=[150, 80, 150])
-        energy_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        summary_table = Table(summary_data, colWidths=[200, 150, 150])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#059669')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ('TOPPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), HexColor('#f0fdf4')),
+            ('GRID', (0, 0), (-1, -1), 1, HexColor('#bbf7d0')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [HexColor('#f0fdf4'), HexColor('#ecfdf5')])
         ]))
-        elements.append(energy_table)
-        elements.append(Spacer(1, 24))
+        elements.append(summary_table)
+        elements.append(Spacer(1, 30))
+        
+        # Certification statement
+        cert_text = f"""
+        This sustainability assessment was conducted on {timestamp} using DataGuardian Pro's 
+        advanced environmental impact analysis. The assessment evaluated code efficiency, 
+        energy consumption patterns, and carbon footprint optimization opportunities.
+        """
+        
+        cert_statement_style = ParagraphStyle(
+            'CertStatement',
+            parent=normal_style,
+            fontSize=10,
+            textColor=HexColor('#374151'),
+            alignment=1,
+            leftIndent=50,
+            rightIndent=50
+        )
+        elements.append(Paragraph(cert_text, cert_statement_style))
+        elements.append(Spacer(1, 40))
+        
+        # Certification footer with digital signature area
+        footer_style = ParagraphStyle(
+            'Footer',
+            parent=normal_style,
+            fontSize=9,
+            textColor=HexColor('#6b7280'),
+            alignment=1
+        )
+        
+        elements.append(Paragraph("DataGuardian Pro Enterprise Certification Authority", footer_style))
+        elements.append(Paragraph("Enterprise Privacy & Sustainability Compliance Platform", footer_style))
 
     # Include detailed findings if requested
     if include_details:
