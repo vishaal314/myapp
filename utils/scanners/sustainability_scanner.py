@@ -1394,14 +1394,7 @@ def display_sustainability_report(scan_results):
                     from services.html_report_generator import generate_html_report
                     
                     # Generate the actual HTML report
-                    html_content = generate_html_report(
-                        scan_data=scan_results,
-                        include_details=True,
-                        include_charts=True,
-                        include_metadata=True,
-                        include_recommendations=True,
-                        report_format="sustainability"
-                    )
+                    html_content = generate_html_report(scan_results)
                     
                     # Ensure we have valid HTML content
                     if html_content and len(html_content) > 0:
