@@ -2183,7 +2183,7 @@ else:
                     # HTML Report Download
                     with report_col2:
                         try:
-                            from services.html_report_generator import get_html_report_as_base64
+                            from services.html_report_generator_fixed import get_html_report_as_base64
                             import base64
                             
                             # Generate HTML report
@@ -2599,7 +2599,7 @@ else:
                 # HTML Report Download
                 with report_col2:
                     try:
-                        from services.html_report_generator import get_html_report_as_base64
+                        from services.html_report_generator_fixed import get_html_report_as_base64
                         import base64
                         
                         scan_id = ai_model_scan_results.get('scan_id', 'unknown')
@@ -4552,7 +4552,7 @@ else:
                         # Quick HTML Report generation
                         if st.button("Generate HTML Report", key="quick_html_report"):
                             # Import HTML report generator
-                            from services.html_report_generator import save_html_report
+                            from services.html_report_generator_fixed import save_html_report
                             
                             with st.spinner("Generating HTML report..."):
                                 # Create reports directory if it doesn't exist
@@ -4885,7 +4885,7 @@ else:
                     with report_col2:
                         if st.button(_("dashboard.generate_html_report"), key="gen_html_report"):
                             # Import HTML report generator
-                            from services.html_report_generator import save_html_report, get_html_report_as_base64
+                            from services.html_report_generator_fixed import save_html_report, get_html_report_as_base64
                             
                             with st.spinner(_("dashboard.generating_html_report")):
                                 # Create reports directory if it doesn't exist
@@ -4933,7 +4933,7 @@ else:
     elif selected_nav == _("results.title"):
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
-        from services.html_report_generator import get_html_report_as_base64, save_html_report
+        from services.html_report_generator_fixed import get_html_report_as_base64, save_html_report
         import glob
         import os
         
