@@ -2268,10 +2268,7 @@ else:
                 help=upload_help
             )
             
-        elif scan_type == _("scan.sustainability"):
-            # No file upload needed for Sustainability scan
-            uploaded_files = []
-            st.info("The Sustainability Scanner will analyze cloud resources for optimization opportunities.")
+
                 
         elif scan_type == _("scan.ai_model"):
             if model_source == "Upload Files":
