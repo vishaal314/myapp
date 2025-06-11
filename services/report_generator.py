@@ -1225,6 +1225,71 @@ def _generate_report_internal(scan_data: Dict[str, Any],
     
     # Sustainability meter removed as requested
     
+    # Add environmental impact section for sustainability reports
+    if report_format == "sustainability" and 'carbon_footprint' in scan_data:
+        elements.append(PageBreak())
+        
+        # Environmental Impact Comparison section
+        elements.append(Paragraph("🌍 Environmental Impact Comparison", heading_style))
+        elements.append(Spacer(1, 12))
+        
+        carbon_data = scan_data.get('carbon_footprint', {})
+        total_emissions = carbon_data.get('carbon_emissions_kg_annually', 0)
+        total_energy = carbon_data.get('total_energy_waste_kwh_annually', 0)
+        potential_savings = carbon_data.get('potential_savings', {})
+        
+        # Current Annual Impact
+        current_impact_text = f"""
+        <b>Current Annual Impact:</b><br/>
+        • {total_emissions:.2f} kg CO₂ emissions<br/>
+        • Equivalent to driving {total_emissions * 2.4:.0f} km in an average car<br/>
+        • Same as {total_emissions / 2.04:.1f} kg of coal burned
+        """
+        elements.append(Paragraph(current_impact_text, normal_style))
+        elements.append(Spacer(1, 12))
+        
+        # Potential Savings
+        savings_kg = potential_savings.get('carbon_kg_annually', 0)
+        trees_saved = potential_savings.get('trees_equivalent', 0)
+        annual_savings = potential_savings.get('cost_usd_annually', 0)
+        
+        potential_savings_text = f"""
+        <b>Potential Savings:</b><br/>
+        • {savings_kg:.2f} kg CO₂ reduction possible<br/>
+        • Equivalent to planting {trees_saved:.1f} trees<br/>
+        • Save ${annual_savings:.2f} annually
+        """
+        elements.append(Paragraph(potential_savings_text, normal_style))
+        elements.append(Spacer(1, 24))
+        
+        # Code Efficiency & Environmental Impact section
+        elements.append(Paragraph("🧠 Code Efficiency & Environmental Impact", heading_style))
+        elements.append(Spacer(1, 12))
+        
+        # Energy breakdown table
+        breakdown = carbon_data.get('breakdown', {})
+        energy_data = [
+            ['Category', 'Count', 'Energy Waste (kWh/year)'],
+            ['Unused Imports', str(len(scan_data.get('unused_imports', []))), f"{breakdown.get('unused_imports_kwh', 0):.2f}"],
+            ['Dead Functions', str(len(scan_data.get('dead_code', []))), f"{breakdown.get('dead_code_kwh', 0):.2f}"],
+            ['Duplicate Packages', str(len(scan_data.get('package_duplications', []))), f"{breakdown.get('package_duplications_kwh', 0):.2f}"],
+            ['Large ML Models', str(len(scan_data.get('large_ml_models', []))), f"{breakdown.get('ml_models_kwh', 0):.2f}"]
+        ]
+        
+        energy_table = Table(energy_data, colWidths=[150, 80, 150])
+        energy_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(energy_table)
+        elements.append(Spacer(1, 24))
+
     # Include detailed findings if requested
     if include_details:
         elements.append(PageBreak())
