@@ -21,6 +21,7 @@ from plotly.subplots import make_subplots
 
 # Import translations utility
 from utils.translations import _
+from utils.scanners.energy_constants import EnergyConstants, ValidationConstants, ModelTypeConstants
 
 
 class CloudResourcesScanner:
@@ -520,23 +521,22 @@ class GithubRepoSustainabilityScanner:
         if not unused_imports:
             return 0.0
         
-        # Base calculation: unused imports cause load time overhead and memory waste
+        # Base calculation using centralized constants
         total_waste_kb = sum(imp.get('estimated_size_kb', 0) for imp in unused_imports)
         import_count = len(unused_imports)
         
-        # More realistic calculation:
-        # - Each unused import adds ~0.5 kWh annually in load overhead
-        # - Plus memory footprint impact
-        base_waste = import_count * 0.5 * 365 / 10  # 0.5 watts per unused import, scaled annually
-        memory_waste = total_waste_kb * 0.0001  # Memory overhead
+        # Calculate using energy constants
+        base_waste = (import_count * EnergyConstants.IMPORT_OVERHEAD_WATTS * 
+                     EnergyConstants.DAYS_PER_YEAR / EnergyConstants.IMPORT_SCALING_FACTOR)
+        memory_waste = total_waste_kb * 0.0001  # Memory overhead factor
         
         return base_waste + memory_waste
     
     def _calculate_dead_code_energy_waste(self, dead_code: List[Dict]) -> float:
         """Calculate energy waste from dead code in kWh annually"""
         total_lines = sum(dc.get('estimated_lines', 0) for dc in dead_code)
-        # Estimate: 1 line of dead code = 0.0001 kWh annually (compilation, deployment, scanning)
-        return total_lines * 0.0001 * 365  # Days per year
+        # Calculate using energy constants
+        return total_lines * EnergyConstants.DEAD_CODE_FACTOR * EnergyConstants.DAYS_PER_YEAR
     
     def _calculate_package_duplication_energy_waste(self, package_duplications: List[Dict]) -> float:
         """Calculate energy waste from package duplications in kWh annually"""
@@ -1560,12 +1560,12 @@ def run_code_analysis_scan():
         # Different processing based on source
         if source_type == "GitHub Repository":
             # Validate GitHub URL format
-            if not github_url.startswith("https://github.com/"):
+            if not github_url or not isinstance(github_url, str) or not github_url.startswith("https://github.com/"):
                 st.error("Please enter a valid GitHub repository URL (starting with https://github.com/).")
                 st.stop()
             
             # Extract repository name for display
-            repo_parts = github_url.strip('/').split('/')
+            repo_parts = github_url.strip('/').split('/') if github_url else []
             repo_name = f"{repo_parts[-2]}/{repo_parts[-1]}" if len(repo_parts) >= 4 else github_url
             
             with st.spinner(f"Analyzing GitHub repository: {repo_name}..."):
@@ -1684,27 +1684,28 @@ def run_code_analysis_scan():
                 }
         else:
             # Process uploaded files
-            with st.spinner(f"Analyzing {len(uploaded_files)} uploaded files..."):
-                # Create results structure
-                scan_results = {
-                    'scan_id': f"code-{int(time.time())}",
-                    'scan_type': 'Code Analysis',
-                    'timestamp': datetime.now().isoformat(),
-                    'files_analyzed': len(uploaded_files),
-                    'region': region if 'region' in locals() else 'Europe',  # Use selected region or default
-                    'url': 'Local Files',
-                    'domain': 'local.files',
-                    'findings': [],
-                    'recommendations': [],
-                    'status': 'in_progress'
-                }
-                
-                # Process each file
-                for i, file in enumerate(uploaded_files):
-                    # Update progress
-                    progress = (i + 1) / len(uploaded_files)
-                    progress_bar.progress(progress)
-                    status_text.text(f"Analyzing file {i+1}/{len(uploaded_files)}: {file.name}")
+            if uploaded_files and len(uploaded_files) > 0:
+                with st.spinner(f"Analyzing {len(uploaded_files)} uploaded files..."):
+                    # Create results structure
+                    scan_results = {
+                        'scan_id': f"code-{int(time.time())}",
+                        'scan_type': 'Code Analysis',
+                        'timestamp': datetime.now().isoformat(),
+                        'files_analyzed': len(uploaded_files),
+                        'region': region if 'region' in locals() else 'Europe',  # Use selected region or default
+                        'url': 'Local Files',
+                        'domain': 'local.files',
+                        'findings': [],
+                        'recommendations': [],
+                        'status': 'in_progress'
+                    }
+                    
+                    # Process each file
+                    for i, file in enumerate(uploaded_files):
+                        # Update progress
+                        progress = (i + 1) / len(uploaded_files)
+                        progress_bar.progress(progress)
+                        status_text.text(f"Analyzing file {i+1}/{len(uploaded_files)}: {file.name}")
                     
                     # Read file content
                     content = file.read().decode('utf-8')
