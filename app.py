@@ -1984,11 +1984,13 @@ else:
                 
                 col1, col2, col3 = st.columns([2, 1, 2])
                 with col2:
+                    # Check if URL is provided and valid
+                    url_provided = bool(website_url and website_url.strip())
                     start_website_scan = st.button(
                         "🚀 Start Website Scan", 
                         type="primary", 
                         use_container_width=True,
-                        disabled=not website_url.strip() if 'website_url' in locals() else True
+                        disabled=not url_provided
                     )
                 
                 # Website Scan Results

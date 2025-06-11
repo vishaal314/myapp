@@ -1542,6 +1542,141 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         
         elements.append(Paragraph("DataGuardian Pro Enterprise Certification Authority", footer_style))
         elements.append(Paragraph("Enterprise Privacy & Sustainability Compliance Platform", footer_style))
+        
+    elif report_format == "website":
+        # Website Scan Report Format
+        elements.append(Paragraph("Website Privacy Compliance Report", title_style))
+        elements.append(Spacer(1, 20))
+        
+        # Scan overview
+        scan_url = scan_data.get('url', scan_data.get('base_domain', 'Website Analysis'))
+        elements.append(Paragraph(f"Scanned Website: {scan_url}", heading_style))
+        elements.append(Spacer(1, 15))
+        
+        # Summary metrics
+        stats = scan_data.get('stats', {})
+        pages_scanned = stats.get('pages_scanned', 0)
+        total_findings = stats.get('total_findings', 0)
+        total_cookies = stats.get('total_cookies', 0)
+        total_trackers = stats.get('total_trackers', 0)
+        
+        # Create summary table
+        summary_data = [
+            ['Metric', 'Value'],
+            ['Pages Scanned', str(pages_scanned)],
+            ['Total Findings', str(total_findings)],
+            ['Cookies Found', str(total_cookies)],
+            ['Trackers Detected', str(total_trackers)],
+            ['Scan Duration', f"{scan_data.get('duration_seconds', 0):.1f} seconds"]
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[3*inch, 2*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#3b82f6')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), HexColor('#f8fafc')),
+            ('GRID', (0, 0), (-1, -1), 1, HexColor('#e2e8f0')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [HexColor('#f8fafc'), HexColor('#f1f5f9')])
+        ]))
+        elements.append(summary_table)
+        elements.append(Spacer(1, 20))
+        
+        # Privacy Findings Section
+        if 'findings' in scan_data and scan_data['findings']:
+            elements.append(Paragraph("Privacy Findings", heading_style))
+            elements.append(Spacer(1, 10))
+            
+            findings_data = [['Type', 'Severity', 'Description', 'URL']]
+            for finding in scan_data['findings'][:20]:  # Limit to first 20 findings
+                findings_data.append([
+                    finding.get('type', 'Unknown'),
+                    finding.get('severity', 'Low'),
+                    finding.get('description', '')[:100] + ('...' if len(finding.get('description', '')) > 100 else ''),
+                    finding.get('url', '')[:40] + ('...' if len(finding.get('url', '')) > 40 else '')
+                ])
+            
+            findings_table = Table(findings_data, colWidths=[1.2*inch, 0.8*inch, 2.5*inch, 1.5*inch])
+            findings_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#dc2626')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                ('TOPPADDING', (0, 0), (-1, 0), 8),
+                ('BACKGROUND', (0, 1), (-1, -1), HexColor('#fef2f2')),
+                ('GRID', (0, 0), (-1, -1), 1, HexColor('#fecaca')),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            elements.append(findings_table)
+            elements.append(Spacer(1, 20))
+        
+        # Cookie Analysis Section
+        if 'cookies' in scan_data and scan_data['cookies']:
+            elements.append(Paragraph("Cookie Analysis", heading_style))
+            elements.append(Spacer(1, 10))
+            
+            cookie_categories = scan_data.get('cookie_categories', {})
+            if cookie_categories:
+                cookie_data = [['Category', 'Count']]
+                for category, count in cookie_categories.items():
+                    cookie_data.append([category.title(), str(count)])
+                
+                cookie_table = Table(cookie_data, colWidths=[3*inch, 1*inch])
+                cookie_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), HexColor('#f59e0b')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 11),
+                    ('FONTSIZE', (0, 1), (-1, -1), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                    ('TOPPADDING', (0, 0), (-1, 0), 10),
+                    ('BACKGROUND', (0, 1), (-1, -1), HexColor('#fef3c7')),
+                    ('GRID', (0, 0), (-1, -1), 1, HexColor('#fde68a')),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ]))
+                elements.append(cookie_table)
+                elements.append(Spacer(1, 20))
+        
+        # Tracker Analysis Section
+        if 'trackers' in scan_data and scan_data['trackers']:
+            elements.append(Paragraph("Tracking Analysis", heading_style))
+            elements.append(Spacer(1, 10))
+            
+            tracker_data = [['Name', 'Type', 'Purpose', 'Privacy Risk']]
+            for tracker in scan_data['trackers'][:15]:  # Limit to first 15 trackers
+                tracker_data.append([
+                    tracker.get('name', 'Unknown'),
+                    tracker.get('type', 'Unknown'),
+                    tracker.get('purpose', 'Unknown')[:30] + ('...' if len(tracker.get('purpose', '')) > 30 else ''),
+                    tracker.get('privacy_risk', 'Low')
+                ])
+            
+            tracker_table = Table(tracker_data, colWidths=[1.5*inch, 1*inch, 2*inch, 1.5*inch])
+            tracker_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#7c3aed')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                ('TOPPADDING', (0, 0), (-1, 0), 8),
+                ('BACKGROUND', (0, 1), (-1, -1), HexColor('#f3e8ff')),
+                ('GRID', (0, 0), (-1, -1), 1, HexColor('#ddd6fe')),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            elements.append(tracker_table)
+            elements.append(Spacer(1, 20))
 
     # Include detailed findings if requested
     if include_details:
