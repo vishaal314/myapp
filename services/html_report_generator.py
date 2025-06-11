@@ -621,6 +621,70 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
         </table>
     </div>
     
+    <!-- Environmental Impact Section for Sustainability Reports -->
+    {f'''
+    <div class="section" style="background-color: #f0fdf4; border: 2px solid #bbf7d0; border-radius: 10px; padding: 25px; margin: 30px 0;">
+        <h2 style="color: #166534; display: flex; align-items: center; margin-bottom: 20px;">
+            🌍 Environmental Impact Comparison
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 20px 0;">
+            <div>
+                <h3 style="color: #059669; border-bottom: 2px solid #bbf7d0; padding-bottom: 8px;">Current Annual Impact:</h3>
+                <ul style="color: #065f46; line-height: 1.8;">
+                    <li><strong>{scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0):.2f} kg CO₂ emissions</strong></li>
+                    <li>Equivalent to driving <strong>{scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0) * 2.4:.0f} km</strong> in an average car</li>
+                    <li>Same as <strong>{scan_data.get("carbon_footprint", {}).get("carbon_emissions_kg_annually", 0) / 2.04:.1f} kg</strong> of coal burned</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 style="color: #059669; border-bottom: 2px solid #bbf7d0; padding-bottom: 8px;">Potential Savings:</h3>
+                <ul style="color: #065f46; line-height: 1.8;">
+                    <li><strong>{scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("carbon_kg_annually", 0):.2f} kg CO₂</strong> reduction possible</li>
+                    <li>Equivalent to planting <strong>{scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("trees_equivalent", 0):.1f} trees</strong></li>
+                    <li>Save <strong>${scan_data.get("carbon_footprint", {}).get("potential_savings", {}).get("cost_usd_annually", 0):.2f}</strong> annually</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h3 style="color: #059669; margin-top: 30px; border-bottom: 2px solid #bbf7d0; padding-bottom: 8px;">
+            🧠 Code Efficiency & Environmental Impact
+        </h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <thead>
+                <tr style="background: linear-gradient(135deg, #059669, #10b981);">
+                    <th style="border: 1px solid #bbf7d0; padding: 15px; text-align: left; color: white; font-weight: bold;">Category</th>
+                    <th style="border: 1px solid #bbf7d0; padding: 15px; text-align: left; color: white; font-weight: bold;">Count</th>
+                    <th style="border: 1px solid #bbf7d0; padding: 15px; text-align: left; color: white; font-weight: bold;">Energy Waste (kWh/year)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background-color: #f0fdf4;">
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46; font-weight: 500;">Unused Imports</td>
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{len(scan_data.get("unused_imports", []))}</td>
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{scan_data.get("carbon_footprint", {}).get("breakdown", {}).get("unused_imports_kwh", 0):.2f}</td>
+                </tr>
+                <tr style="background-color: #ecfdf5;">
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46; font-weight: 500;">Dead Functions</td>
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{len(scan_data.get("dead_code", []))}</td>
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{scan_data.get("carbon_footprint", {}).get("breakdown", {}).get("dead_code_kwh", 0):.2f}</td>
+                </tr>
+                <tr style="background-color: #f0fdf4;">
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46; font-weight: 500;">Duplicate Packages</td>
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{len(scan_data.get("package_duplications", []))}</td>
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{scan_data.get("carbon_footprint", {}).get("breakdown", {}).get("package_duplications_kwh", 0):.2f}</td>
+                </tr>
+                <tr style="background-color: #ecfdf5;">
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46; font-weight: 500;">Large ML Models</td>
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{len(scan_data.get("large_ml_models", []))}</td>
+                    <td style="border: 1px solid #bbf7d0; padding: 12px; color: #065f46;">{scan_data.get("carbon_footprint", {}).get("breakdown", {}).get("ml_models_kwh", 0):.2f}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    ''' if 'sustainability' in scan_type.lower() and 'carbon_footprint' in scan_data else ''}
+
     <div class="section">
         <h2>{recommendations_title}</h2>
         {recommendations_html if recommendations_html else f"<p>{no_recommendations}</p>"}
