@@ -1940,24 +1940,30 @@ def display_code_intelligence_analysis(scan_results):
         )
     
     with col2:
+        dead_code_energy = carbon_data.get('breakdown', {}).get('dead_code_kwh', 0)
         st.metric(
             "Dead Functions", 
             code_intel.get('dead_functions_count', len(dead_code)),
-            delta=f"-{sum(dc.get('estimated_lines', 0) for dc in dead_code)} lines potential removal"
+            delta=f"-{dead_code_energy:.2f} kWh/year energy waste",
+            help=f"Environmental impact: {dead_code_energy * 0.4:.2f} kg CO₂ annually"
         )
     
     with col3:
+        package_energy = carbon_data.get('breakdown', {}).get('package_duplications_kwh', 0)
         st.metric(
             "Duplicate Packages", 
             code_intel.get('duplicate_packages_count', len(package_duplications)),
-            delta=f"-{sum(dup.get('estimated_bloat_mb', 0) for dup in package_duplications):.0f}MB potential savings"
+            delta=f"-{package_energy:.2f} kWh/year energy waste",
+            help=f"Environmental impact: {package_energy * 0.4:.2f} kg CO₂ annually"
         )
     
     with col4:
+        ml_energy = carbon_data.get('breakdown', {}).get('ml_models_kwh', 0)
         st.metric(
             "Large ML Models", 
             code_intel.get('large_models_count', len(large_ml_models)),
-            delta=f"{sum(model.get('optimization_potential', 0) for model in large_ml_models) / len(large_ml_models) if large_ml_models else 0:.0f}% avg optimization potential"
+            delta=f"-{ml_energy:.2f} kWh/year energy waste",
+            help=f"Environmental impact: {ml_energy * 0.4:.2f} kg CO₂ annually"
         )
     
     # Detailed analysis tabs
