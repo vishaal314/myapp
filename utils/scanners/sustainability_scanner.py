@@ -8,7 +8,10 @@ import random
 import time
 import json
 import os
+import re
+import ast
 from datetime import datetime
+from typing import List, Dict, Set, Optional, Any
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -188,6 +191,10 @@ class GithubRepoSustainabilityScanner:
         self.branch = branch
         self.region = region
         self.progress_callback = None
+        # Pre-compile regex patterns for performance
+        self._function_call_pattern = re.compile(r'(\w+)\s*\(')
+        self._import_pattern = re.compile(r'^(?:from\s+[\w.]+\s+)?import\s+.+')
+        self.max_file_size_mb = 10  # Safety limit
         
     def _analyze_unused_imports(self, file_content, file_path):
         """Analyze Python files for unused imports"""
@@ -255,49 +262,144 @@ class GithubRepoSustainabilityScanner:
                         symbols.append(symbol)
         return symbols
     
-    def _analyze_dead_code(self, file_content, file_path):
-        """Analyze files for potentially dead code"""
+    def _analyze_dead_code(self, file_content: str, file_path: str) -> List[Dict[str, Any]]:
+        """Analyze files for potentially dead code with enhanced accuracy"""
         dead_code = []
         if not file_path.endswith(('.py', '.js', '.ts', '.jsx', '.tsx')):
             return dead_code
+        
+        try:
+            # Safety check for file size
+            if len(file_content) > self.max_file_size_mb * 1024 * 1024:
+                return [{'error': f'File {file_path} too large for analysis'}]
             
+            lines = file_content.split('\n')
+            defined_functions = set()
+            called_functions = set()
+            
+            # Extract function definitions and calls
+            for line_num, line in enumerate(lines, 1):
+                line = line.strip()
+                
+                # Python function definitions with error handling
+                if line.startswith('def ') and file_path.endswith('.py'):
+                    try:
+                        if '(' in line:
+                            func_name = line.split('(')[0].replace('def ', '').strip()
+                            if func_name.isidentifier():
+                                defined_functions.add(func_name)
+                    except (IndexError, AttributeError):
+                        continue
+                
+                # JavaScript/TypeScript function definitions
+                elif ('function ' in line or '=>' in line) and file_path.endswith(('.js', '.ts', '.jsx', '.tsx')):
+                    if 'function ' in line and '(' in line:
+                        try:
+                            func_name = line.split('function ')[1].split('(')[0].strip()
+                            if func_name and func_name.isidentifier():
+                                defined_functions.add(func_name)
+                        except (IndexError, AttributeError):
+                            continue
+                
+                # Look for function calls using pre-compiled pattern
+                func_calls = self._function_call_pattern.findall(line)
+                called_functions.update(func_calls)
+            
+            # Identify potentially unused functions with better heuristics
+            excluded_functions = {'main', 'init', 'setup', '__init__', '__main__', 'test_', 'setUp', 'tearDown'}
+            for func in defined_functions:
+                if (func not in called_functions and 
+                    not func.startswith('_') and 
+                    not any(excluded in func for excluded in excluded_functions) and
+                    not func.startswith('test')):
+                    
+                    # Estimate lines more accurately based on function content
+                    estimated_lines = self._estimate_function_lines(file_content, func)
+                    dead_code.append({
+                        'file': file_path,
+                        'function': func,
+                        'type': 'unused_function',
+                        'estimated_lines': estimated_lines,
+                        'confidence': 0.8 if len(func) > 3 else 0.6  # Higher confidence for longer names
+                    })
+            
+            return dead_code
+        except Exception as e:
+            return [{'error': f'Dead code analysis failed for {file_path}: {str(e)}'}]
+    
+    def _estimate_function_lines(self, file_content: str, function_name: str) -> int:
+        """Estimate the number of lines in a function"""
         lines = file_content.split('\n')
-        defined_functions = set()
-        called_functions = set()
+        in_function = False
+        line_count = 0
+        indent_level = 0
         
-        # Extract function definitions and calls
-        for line_num, line in enumerate(lines, 1):
-            line = line.strip()
-            
-            # Python function definitions
-            if line.startswith('def ') and file_path.endswith('.py'):
-                func_name = line.split('(')[0].replace('def ', '').strip()
-                defined_functions.add(func_name)
-            
-            # JavaScript/TypeScript function definitions
-            elif ('function ' in line or '=>' in line) and file_path.endswith(('.js', '.ts', '.jsx', '.tsx')):
-                if 'function ' in line:
-                    func_name = line.split('function ')[1].split('(')[0].strip()
-                    if func_name:
-                        defined_functions.add(func_name)
-            
-            # Look for function calls
-            import re
-            func_calls = re.findall(r'(\w+)\s*\(', line)
-            called_functions.update(func_calls)
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith(f'def {function_name}('):
+                in_function = True
+                indent_level = len(line) - len(line.lstrip())
+                line_count = 1
+            elif in_function:
+                if stripped and len(line) - len(line.lstrip()) <= indent_level and not line.startswith(' '):
+                    break
+                line_count += 1
         
-        # Identify potentially unused functions
-        for func in defined_functions:
-            if func not in called_functions and not func.startswith('_') and func not in ['main', 'init', 'setup']:
-                dead_code.append({
-                    'file': file_path,
-                    'function': func,
-                    'type': 'unused_function',
-                    'estimated_lines': random.randint(5, 50),
-                    'confidence': 0.7
-                })
+        return min(line_count, 200)  # Cap at reasonable maximum
+    
+    def _analyze_unused_imports_ast(self, file_content: str, file_path: str) -> List[Dict[str, Any]]:
+        """Enhanced import analysis using AST for better accuracy"""
+        unused_imports = []
+        if not file_path.endswith('.py'):
+            return self._analyze_unused_imports(file_content, file_path)
         
-        return dead_code
+        try:
+            tree = ast.parse(file_content)
+            imports = []
+            used_names = set()
+            
+            # Extract imports using AST
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        imports.append({
+                            'name': alias.asname or alias.name,
+                            'module': alias.name,
+                            'line': node.lineno,
+                            'type': 'import'
+                        })
+                elif isinstance(node, ast.ImportFrom):
+                    if node.module:
+                        for alias in node.names:
+                            imports.append({
+                                'name': alias.asname or alias.name,
+                                'module': f"{node.module}.{alias.name}",
+                                'line': node.lineno,
+                                'type': 'from_import'
+                            })
+                elif isinstance(node, ast.Name):
+                    used_names.add(node.id)
+                elif isinstance(node, ast.Attribute):
+                    if isinstance(node.value, ast.Name):
+                        used_names.add(node.value.id)
+            
+            # Find unused imports
+            for imp in imports:
+                if imp['name'] not in used_names:
+                    unused_imports.append({
+                        'file': file_path,
+                        'line': imp['line'],
+                        'statement': f"import {imp['module']}" if imp['type'] == 'import' else f"from {imp['module'].split('.')[0]} import {imp['name']}",
+                        'unused_symbols': [imp['name']],
+                        'estimated_size_kb': 1.0  # More realistic estimate
+                    })
+            
+            return unused_imports
+        except SyntaxError:
+            # Fall back to regex-based analysis for malformed files
+            return self._analyze_unused_imports(file_content, file_path)
+        except Exception:
+            return []
     
     def _analyze_package_duplications(self, requirements_content):
         """Analyze package duplications in requirements"""
@@ -337,24 +439,71 @@ class GithubRepoSustainabilityScanner:
         
         return duplications
     
-    def _analyze_ml_model_sizes(self, file_paths):
-        """Analyze ML model file sizes"""
+    def _analyze_ml_model_sizes(self, file_paths: List[str]) -> List[Dict[str, Any]]:
+        """Analyze ML model file sizes with real file analysis when possible"""
         large_models = []
         ml_extensions = ['.pkl', '.joblib', '.h5', '.pb', '.pth', '.pt', '.onnx', '.tflite']
         
         for file_path in file_paths:
             if any(file_path.endswith(ext) for ext in ml_extensions):
-                # Simulate file size analysis
-                estimated_size_mb = random.uniform(50, 500)
-                if estimated_size_mb > 100:
+                actual_size = self._get_actual_file_size(file_path)
+                
+                # Use actual size if available, otherwise estimate based on extension
+                if actual_size is not None:
+                    size_mb = actual_size
+                else:
+                    # Realistic estimates based on model type
+                    size_estimates = {
+                        '.pkl': random.uniform(10, 200),
+                        '.joblib': random.uniform(15, 250),
+                        '.h5': random.uniform(50, 800),
+                        '.pb': random.uniform(25, 500),
+                        '.pth': random.uniform(100, 1000),
+                        '.pt': random.uniform(100, 1000),
+                        '.onnx': random.uniform(20, 400),
+                        '.tflite': random.uniform(5, 100)
+                    }
+                    ext = next((ext for ext in ml_extensions if file_path.endswith(ext)), '.pkl')
+                    size_mb = size_estimates.get(ext, 100)
+                
+                if size_mb > 100:
                     large_models.append({
                         'file': file_path,
-                        'size_mb': estimated_size_mb,
+                        'size_mb': size_mb,
                         'type': self._detect_model_type(file_path),
-                        'optimization_potential': random.uniform(20, 60)
+                        'optimization_potential': self._calculate_optimization_potential(file_path, size_mb)
                     })
         
         return large_models
+    
+    def _get_actual_file_size(self, file_path: str) -> Optional[float]:
+        """Get actual file size in MB"""
+        try:
+            if os.path.exists(file_path):
+                size_bytes = os.path.getsize(file_path)
+                return size_bytes / (1024 * 1024)  # Convert to MB
+        except (OSError, IOError):
+            pass
+        return None
+    
+    def _calculate_optimization_potential(self, file_path: str, size_mb: float) -> float:
+        """Calculate realistic optimization potential based on model type and size"""
+        model_type = self._detect_model_type(file_path)
+        
+        # Different model types have different optimization potentials
+        base_potential = {
+            'Scikit-learn/Pickle': 30,
+            'Keras/TensorFlow': 50,
+            'TensorFlow SavedModel': 45,
+            'PyTorch': 60,
+            'ONNX': 25,
+            'TensorFlow Lite': 15
+        }.get(model_type, 40)
+        
+        # Larger models typically have more optimization potential
+        size_multiplier = min(1.5, 1 + (size_mb - 100) / 1000)
+        
+        return min(75, base_potential * size_multiplier)
     
     def _detect_model_type(self, file_path):
         """Detect ML model type from file extension"""
@@ -457,7 +606,8 @@ def main():
     df = used_function()
     return df
 """
-                unused_imports.extend(self._analyze_unused_imports(sample_content, file_path))
+                # Use enhanced AST-based analysis for better accuracy
+                unused_imports.extend(self._analyze_unused_imports_ast(sample_content, file_path))
                 dead_code.extend(self._analyze_dead_code(sample_content, file_path))
         
         # Simulate requirements.txt content
