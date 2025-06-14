@@ -235,7 +235,270 @@ class WebsiteScanner:
                     self.known_trackers = json.load(f)
         except Exception as e:
             logger.warning(f"Failed to load trackers database: {str(e)}")
+        
+        # Define comprehensive cookie database with categorization
+        self.cookie_database = {
+            # Cloudflare cookies
+            '__cf_bm': {
+                'category': 'Security',
+                'purpose': 'Bot detection and DDoS protection by Cloudflare',
+                'persistent': False,
+                'expiry': '30 minutes',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Legitimate interest for security'
+            },
+            '__cfruid': {
+                'category': 'Security',
+                'purpose': 'Cloudflare session identifier for security',
+                'persistent': False,
+                'expiry': 'Session',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Legitimate interest for security'
+            },
+            '_cf_chl_opt': {
+                'category': 'Security',
+                'purpose': 'Cloudflare challenge optimization',
+                'persistent': False,
+                'expiry': '24 hours',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Legitimate interest for security'
+            },
+            # Google Analytics cookies
+            '_ga': {
+                'category': 'Analytics',
+                'purpose': 'Google Analytics - distinguishes unique users',
+                'persistent': True,
+                'expiry': '2 years',
+                'privacy_risk': 'Medium',
+                'gdpr_basis': 'Consent required'
+            },
+            '_ga_*': {
+                'category': 'Analytics',
+                'purpose': 'Google Analytics 4 - session and campaign data',
+                'persistent': True,
+                'expiry': '2 years',
+                'privacy_risk': 'Medium',
+                'gdpr_basis': 'Consent required'
+            },
+            '_gid': {
+                'category': 'Analytics',
+                'purpose': 'Google Analytics - distinguishes users',
+                'persistent': True,
+                'expiry': '24 hours',
+                'privacy_risk': 'Medium',
+                'gdpr_basis': 'Consent required'
+            },
+            '_gat': {
+                'category': 'Analytics',
+                'purpose': 'Google Analytics - throttle request rate',
+                'persistent': False,
+                'expiry': '1 minute',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Consent required'
+            },
+            # Session and functionality cookies
+            'PHPSESSID': {
+                'category': 'Essential',
+                'purpose': 'PHP session identifier for website functionality',
+                'persistent': False,
+                'expiry': 'Session',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            },
+            'JSESSIONID': {
+                'category': 'Essential',
+                'purpose': 'Java session identifier for website functionality',
+                'persistent': False,
+                'expiry': 'Session',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            },
+            'ASP.NET_SessionId': {
+                'category': 'Essential',
+                'purpose': 'ASP.NET session identifier for website functionality',
+                'persistent': False,
+                'expiry': 'Session',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            },
+            # Consent management cookies
+            'CookieConsent': {
+                'category': 'Functional',
+                'purpose': 'Stores user cookie consent preferences',
+                'persistent': True,
+                'expiry': '1 year',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            },
+            'cookieconsent_status': {
+                'category': 'Functional',
+                'purpose': 'Records cookie consent status',
+                'persistent': True,
+                'expiry': '1 year',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            },
+            # Facebook cookies
+            '_fbp': {
+                'category': 'Marketing',
+                'purpose': 'Facebook Pixel - tracks conversions and user behavior',
+                'persistent': True,
+                'expiry': '3 months',
+                'privacy_risk': 'High',
+                'gdpr_basis': 'Consent required'
+            },
+            '_fbc': {
+                'category': 'Marketing',
+                'purpose': 'Facebook click identifier for conversion tracking',
+                'persistent': True,
+                'expiry': '3 months',
+                'privacy_risk': 'High',
+                'gdpr_basis': 'Consent required'
+            },
+            # YouTube/Google cookies
+            'YSC': {
+                'category': 'Marketing',
+                'purpose': 'YouTube - registers unique ID for statistics',
+                'persistent': False,
+                'expiry': 'Session',
+                'privacy_risk': 'Medium',
+                'gdpr_basis': 'Consent required'
+            },
+            'VISITOR_INFO1_LIVE': {
+                'category': 'Marketing',
+                'purpose': 'YouTube - estimates bandwidth for video quality',
+                'persistent': True,
+                'expiry': '5 months',
+                'privacy_risk': 'Medium',
+                'gdpr_basis': 'Consent required'
+            }
+        }
     
+    def _categorize_cookie(self, cookie_name: str, cookie_value: str = "") -> Dict[str, Any]:
+        """
+        Categorize a cookie based on its name and value using the comprehensive database.
+        
+        Args:
+            cookie_name: The name of the cookie
+            cookie_value: The value of the cookie (optional)
+            
+        Returns:
+            Dictionary with category, purpose, persistent status, and expiry information
+        """
+        cookie_name_lower = cookie_name.lower()
+        
+        # Check exact matches first
+        if cookie_name in self.cookie_database:
+            return self.cookie_database[cookie_name]
+        
+        # Check pattern matches for Google Analytics cookies
+        if cookie_name.startswith('_ga_'):
+            return self.cookie_database['_ga_*']
+        
+        # Pattern-based matching for common cookie types
+        patterns = {
+            # Session cookies
+            'session': {
+                'category': 'Essential',
+                'purpose': 'Session management for website functionality',
+                'persistent': False,
+                'expiry': 'Session',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            },
+            'sess': {
+                'category': 'Essential',
+                'purpose': 'Session identifier for website functionality',
+                'persistent': False,
+                'expiry': 'Session',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            },
+            # Security cookies
+            'csrf': {
+                'category': 'Security',
+                'purpose': 'Cross-site request forgery protection',
+                'persistent': False,
+                'expiry': 'Session',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            },
+            'xsrf': {
+                'category': 'Security',
+                'purpose': 'Cross-site request forgery protection',
+                'persistent': False,
+                'expiry': 'Session',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            },
+            # Analytics patterns
+            'analytics': {
+                'category': 'Analytics',
+                'purpose': 'Website analytics and user behavior tracking',
+                'persistent': True,
+                'expiry': 'Variable',
+                'privacy_risk': 'Medium',
+                'gdpr_basis': 'Consent required'
+            },
+            'utm': {
+                'category': 'Analytics',
+                'purpose': 'Campaign tracking and attribution',
+                'persistent': True,
+                'expiry': 'Variable',
+                'privacy_risk': 'Medium',
+                'gdpr_basis': 'Consent required'
+            },
+            # Marketing cookies
+            'fb': {
+                'category': 'Marketing',
+                'purpose': 'Facebook advertising and tracking',
+                'persistent': True,
+                'expiry': 'Variable',
+                'privacy_risk': 'High',
+                'gdpr_basis': 'Consent required'
+            },
+            'google': {
+                'category': 'Marketing',
+                'purpose': 'Google advertising and tracking',
+                'persistent': True,
+                'expiry': 'Variable',
+                'privacy_risk': 'Medium',
+                'gdpr_basis': 'Consent required'
+            },
+            # Consent cookies
+            'consent': {
+                'category': 'Functional',
+                'purpose': 'Cookie consent preferences storage',
+                'persistent': True,
+                'expiry': '1 year',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            },
+            'cookie': {
+                'category': 'Functional',
+                'purpose': 'Cookie preferences and settings',
+                'persistent': True,
+                'expiry': '1 year',
+                'privacy_risk': 'Low',
+                'gdpr_basis': 'Strictly necessary'
+            }
+        }
+        
+        # Check for pattern matches
+        for pattern, info in patterns.items():
+            if pattern in cookie_name_lower:
+                return info
+        
+        # Default categorization for unknown cookies
+        return {
+            'category': 'Functional',
+            'purpose': f'Website functionality cookie ({cookie_name})',
+            'persistent': True,
+            'expiry': 'Unknown',
+            'privacy_risk': 'Medium',
+            'gdpr_basis': 'Review required - may need consent'
+        }
+
     def set_progress_callback(self, callback_function):
         """
         Set a callback function for progress updates during website scanning.
@@ -678,21 +941,21 @@ class WebsiteScanner:
                 except:
                     expiry = str(cookie.expires)
             
-            # Categorize the cookie
-            category = self._categorize_cookie(cookie.name, cookie.domain)
+            # Categorize the cookie using comprehensive database
+            cookie_info = self._categorize_cookie(cookie.name, cookie.value)
             
             # Evaluate cookie compliance
             compliance_issues = []
             if not secure:
                 compliance_issues.append("Cookie not marked as Secure")
-            if not httponly and category == 'essential':
+            if not httponly and cookie_info['category'] == 'Essential':
                 compliance_issues.append("Essential cookie not marked as HttpOnly")
-            if not samesite and category != 'essential':
+            if not samesite and cookie_info['category'] != 'Essential':
                 compliance_issues.append("Missing SameSite attribute")
-            if category in ['advertising', 'analytics'] and not samesite == 'None':
+            if cookie_info['category'] in ['Marketing', 'Analytics'] and not samesite == 'None':
                 compliance_issues.append("Tracking cookie should use SameSite=None")
             
-            # Add cookie data
+            # Add cookie data with comprehensive information
             cookies[cookie.name] = {
                 'name': cookie.name,
                 'domain': cookie.domain,
@@ -701,45 +964,19 @@ class WebsiteScanner:
                 'secure': secure,
                 'httponly': httponly,
                 'samesite': samesite,
-                'expiry': expiry,
+                'expiry': expiry or cookie_info.get('expiry', 'Session'),
                 'session': cookie.expires is None,
-                'category': category,
+                'category': cookie_info.get('category', 'Functional'),
+                'purpose': cookie_info.get('purpose', 'Website functionality'),
+                'persistent': cookie_info.get('persistent', True),
+                'privacy_risk': cookie_info.get('privacy_risk', 'Medium'),
+                'gdpr_basis': cookie_info.get('gdpr_basis', 'Review required'),
                 'compliance_issues': compliance_issues
             }
         
         return cookies
     
-    def _categorize_cookie(self, name: str, domain: str = None) -> str:
-        """
-        Categorize a cookie based on its name and domain.
-        
-        Args:
-            name: Cookie name
-            domain: Cookie domain (optional)
-            
-        Returns:
-            Category name (essential, functional, analytics, advertising, social, or unknown)
-        """
-        name_lower = name.lower()
-        
-        # First check by domain, then by name
-        if domain:
-            domain_lower = domain.lower()
-            if any(tracker in domain_lower for tracker in ['google-analytics', 'analytics.google']):
-                return 'analytics'
-            if any(tracker in domain_lower for tracker in ['doubleclick', 'googleadservices']):
-                return 'advertising'
-            if any(social in domain_lower for social in ['facebook', 'twitter', 'linkedin', 'instagram']):
-                return 'social'
-        
-        # Check by cookie name against known categories
-        for category, patterns in self.cookie_categories.items():
-            for pattern in patterns:
-                if pattern in name_lower:
-                    return category
-        
-        # Return unknown if no match
-        return 'unknown'
+
     
     def _categorize_cookies(self, cookies: Dict[str, Any]) -> Dict[str, List[str]]:
         """
