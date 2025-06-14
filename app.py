@@ -1909,30 +1909,39 @@ else:
                                          type="password",
                                          help="Bearer token, API key, or other authentication credential")
                 
-                # Advanced scanning options
-                with st.expander("Advanced Scanning Options"):
+                # Advanced scanning options (removed nested expander)
+                st.subheader("Advanced Scanning Options")
+                
+                col1, col2 = st.columns(2)
+                with col1:
                     max_endpoints = st.number_input("Maximum Endpoints to Scan", 
                                                   min_value=10, max_value=200, value=50, step=10)
                     
                     request_timeout = st.slider("Request Timeout (seconds)", 
                                               min_value=5, max_value=30, value=10)
-                    
+                
+                with col2:
                     rate_limit_delay = st.slider("Rate Limit Delay (seconds)", 
                                                 min_value=0.5, max_value=5.0, value=1.0, step=0.5)
-                    
+                
+                # Scanning options
+                col1, col2 = st.columns(2)
+                with col1:
                     st.checkbox("Verify SSL Certificates", value=True, key="api_verify_ssl")
                     st.checkbox("Follow HTTP Redirects", value=True, key="api_follow_redirects")
+                
+                with col2:
                     st.checkbox("Test for Vulnerabilities", value=True, key="api_test_vulns")
                     st.checkbox("Analyze PII Exposure", value=True, key="api_analyze_pii")
                 
                 # Custom endpoints (optional)
-                with st.expander("Custom Endpoints (Optional)"):
-                    custom_endpoints_text = st.text_area("Custom Endpoints (one per line)", 
-                                                       placeholder="/api/users\n/api/admin\n/api/data",
-                                                       help="Specify additional endpoints to scan, one per line")
-                    
-                    custom_endpoints = [ep.strip() for ep in custom_endpoints_text.split('\n') 
-                                      if ep.strip()] if custom_endpoints_text else None
+                st.subheader("Custom Endpoints (Optional)")
+                custom_endpoints_text = st.text_area("Custom Endpoints (one per line)", 
+                                                   placeholder="/api/users\n/api/admin\n/api/data",
+                                                   help="Specify additional endpoints to scan, one per line")
+                
+                custom_endpoints = [ep.strip() for ep in custom_endpoints_text.split('\n') 
+                                  if ep.strip()] if custom_endpoints_text else None
                 
                 # Store API scanner configuration in session state
                 st.session_state.api_config = {
