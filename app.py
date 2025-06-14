@@ -6215,3 +6215,187 @@ else:
             These logs are immutable and cannot be modified or deleted, even by administrators.
             """)
 
+# API Scanner Results Display Section
+def display_api_scan_results():
+    """Display API scan results with downloadable reports."""
+    if 'api_scan_results' in st.session_state and st.session_state.get('api_scan_complete', False):
+        st.header("API Security & Privacy Assessment Results")
+        
+        api_results = st.session_state.api_scan_results
+        
+        # Display summary metrics
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            endpoints_scanned = api_results.get('endpoints_scanned', 0)
+            st.metric("Endpoints Scanned", endpoints_scanned)
+        
+        with col2:
+            total_findings = api_results.get('stats', {}).get('total_findings', 0)
+            st.metric("Total Findings", total_findings)
+        
+        with col3:
+            critical_findings = api_results.get('stats', {}).get('critical_findings', 0)
+            st.metric("Critical Issues", critical_findings)
+        
+        with col4:
+            pii_exposures = len(api_results.get('pii_exposures', []))
+            st.metric("PII Exposures", pii_exposures)
+        
+        # Download buttons
+        st.subheader("Download Reports")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Generate and download HTML report
+            try:
+                from services.api_report_generator import generate_api_html_report
+                html_report = generate_api_html_report(api_results)
+                
+                st.download_button(
+                    label="📄 Download HTML Report",
+                    data=html_report,
+                    file_name=f"api_security_report_{api_results.get('base_url', 'unknown').replace('/', '_').replace(':', '')}.html",
+                    mime="text/html",
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.error(f"Error generating HTML report: {str(e)}")
+        
+        with col2:
+            # Generate and download PDF report
+            try:
+                import tempfile
+                import os
+                from services.api_report_generator import generate_api_pdf_report
+                
+                # Create temporary file for PDF
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                    pdf_path = generate_api_pdf_report(api_results, tmp_file.name)
+                    
+                    # Read PDF content
+                    with open(pdf_path, 'rb') as pdf_file:
+                        pdf_data = pdf_file.read()
+                    
+                    st.download_button(
+                        label="📑 Download PDF Report",
+                        data=pdf_data,
+                        file_name=f"api_security_report_{api_results.get('base_url', 'unknown').replace('/', '_').replace(':', '')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                    
+                    # Clean up temporary file
+                    os.unlink(pdf_path)
+                    
+            except Exception as e:
+                st.error(f"Error generating PDF report: {str(e)}")
+        
+        # Display detailed findings
+        st.subheader("Security Findings")
+        
+        findings = api_results.get('findings', [])
+        if findings:
+            # Create a DataFrame for better display
+            import pandas as pd
+            
+            findings_data = []
+            for finding in findings[:20]:  # Show first 20 findings
+                findings_data.append({
+                    'Severity': finding.get('severity', 'Unknown'),
+                    'Type': finding.get('type', 'Unknown').replace('_', ' ').title(),
+                    'Description': finding.get('description', 'No description')[:100] + '...' if len(finding.get('description', '')) > 100 else finding.get('description', 'No description'),
+                    'Method': finding.get('method', 'N/A'),
+                    'Endpoint': finding.get('endpoint', 'N/A')
+                })
+            
+            if findings_data:
+                findings_df = pd.DataFrame(findings_data)
+                
+                # Apply styling to the dataframe
+                def highlight_severity(val):
+                    if val == 'Critical':
+                        color = 'background-color: #fecaca; color: #991b1b'
+                    elif val == 'High':
+                        color = 'background-color: #fed7aa; color: #c2410c'
+                    elif val == 'Medium':
+                        color = 'background-color: #fef3c7; color: #a16207'
+                    else:
+                        color = 'background-color: #dcfce7; color: #15803d'
+                    return color
+                
+                styled_df = findings_df.style.applymap(highlight_severity, subset=['Severity'])
+                st.dataframe(styled_df, use_container_width=True)
+                
+                if len(findings) > 20:
+                    st.info(f"Showing 20 of {len(findings)} total findings. Download the full report for complete details.")
+        else:
+            st.info("No security findings detected.")
+        
+        # Display PII exposures
+        st.subheader("PII Exposure Analysis")
+        
+        pii_exposures = api_results.get('pii_exposures', [])
+        if pii_exposures:
+            pii_data = []
+            for pii in pii_exposures[:15]:  # Show first 15 PII exposures
+                pii_data.append({
+                    'PII Type': pii.get('type', 'Unknown').replace('_', ' ').title(),
+                    'Severity': pii.get('severity', 'Medium'),
+                    'Count': pii.get('count', 0),
+                    'GDPR Category': pii.get('gdpr_category', 'Unknown'),
+                    'Method': pii.get('method', 'N/A')
+                })
+            
+            if pii_data:
+                import pandas as pd
+                pii_df = pd.DataFrame(pii_data)
+                
+                def highlight_pii_severity(val):
+                    if val == 'Critical':
+                        color = 'background-color: #fecaca; color: #991b1b'
+                    elif val == 'High':
+                        color = 'background-color: #fed7aa; color: #c2410c'
+                    elif val == 'Medium':
+                        color = 'background-color: #fef3c7; color: #a16207'
+                    else:
+                        color = 'background-color: #dcfce7; color: #15803d'
+                    return color
+                
+                styled_pii_df = pii_df.style.applymap(highlight_pii_severity, subset=['Severity'])
+                st.dataframe(styled_pii_df, use_container_width=True)
+                
+                if len(pii_exposures) > 15:
+                    st.info(f"Showing 15 of {len(pii_exposures)} total PII exposures. Download the full report for complete details.")
+        else:
+            st.info("No PII exposures detected.")
+        
+        # Display recommendations
+        st.subheader("Security Recommendations")
+        
+        try:
+            from services.api_scanner import APIScanner
+            scanner = APIScanner()
+            recommendations = scanner.generate_privacy_recommendations(api_results)
+            
+            if recommendations:
+                for i, rec in enumerate(recommendations[:8], 1):
+                    st.markdown(f"**{i}.** {rec}")
+            else:
+                st.info("No specific recommendations generated.")
+        except Exception as e:
+            st.warning(f"Could not generate recommendations: {str(e)}")
+        
+        # Clear results button
+        if st.button("Clear Results", type="secondary"):
+            if 'api_scan_results' in st.session_state:
+                del st.session_state.api_scan_results
+            if 'api_scan_complete' in st.session_state:
+                del st.session_state.api_scan_complete
+            st.rerun()
+
+# Check if API scan results should be displayed
+if st.session_state.get('api_scan_complete', False):
+    display_api_scan_results()
+
