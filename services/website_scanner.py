@@ -111,43 +111,79 @@ class WebsiteScanner:
     def _load_tracking_databases(self):
         """Load known tracking databases from JSON files"""
         
-        # Define default trackers if database files don't exist
+        # Define default trackers with comprehensive analysis data
         self.known_trackers = {
             'Google Analytics': {
                 'domains': ['google-analytics.com', 'analytics.google.com'],
-                'patterns': ['ga', 'gtag', 'gtm', 'analytics']
+                'patterns': ['ga', 'gtag', 'gtm', 'analytics'],
+                'purpose': 'Website analytics and user behavior tracking',
+                'privacy_risk': 'Medium',
+                'data_collected': 'User behavior, page views, demographics, device info',
+                'gdpr_basis': 'Legitimate interest or consent required'
             },
             'Google Tag Manager': {
                 'domains': ['googletagmanager.com', 'tagmanager.google.com'],
-                'patterns': ['gtm', 'tagmanager']
+                'patterns': ['gtm', 'tagmanager'],
+                'purpose': 'Tag management system for deploying tracking codes',
+                'privacy_risk': 'Medium',
+                'data_collected': 'Variable based on configured tags',
+                'gdpr_basis': 'Depends on tags deployed'
             },
             'Facebook Pixel': {
                 'domains': ['facebook.com', 'facebook.net', 'fbcdn.net'],
-                'patterns': ['fbq', 'fbevents', 'facebook-jssdk']
+                'patterns': ['fbq', 'fbevents', 'facebook-jssdk'],
+                'purpose': 'Social media advertising and conversion tracking',
+                'privacy_risk': 'High',
+                'data_collected': 'User behavior, conversions, demographics for ad targeting',
+                'gdpr_basis': 'Consent required for non-essential tracking'
             },
             'LinkedIn Insight': {
                 'domains': ['linkedin.com', 'licdn.com'],
-                'patterns': ['_linkedin_partner_id', 'linkedin_data_partner']
+                'patterns': ['_linkedin_partner_id', 'linkedin_data_partner'],
+                'purpose': 'Professional network advertising and analytics',
+                'privacy_risk': 'Medium',
+                'data_collected': 'Professional demographics, page visits, conversions',
+                'gdpr_basis': 'Consent required for marketing purposes'
             },
             'Twitter Pixel': {
                 'domains': ['twitter.com', 'ads-twitter.com'],
-                'patterns': ['twq', 'twitter_pixel']
+                'patterns': ['twq', 'twitter_pixel'],
+                'purpose': 'Social media advertising and conversion tracking',
+                'privacy_risk': 'High',
+                'data_collected': 'User behavior, interests, ad interactions',
+                'gdpr_basis': 'Consent required for advertising tracking'
             },
             'HotJar': {
                 'domains': ['hotjar.com', 'hotjar.io'],
-                'patterns': ['hjLaunchSurvey', 'hjSiteSettings', 'hjUserAttributes']
+                'patterns': ['hjLaunchSurvey', 'hjSiteSettings', 'hjUserAttributes'],
+                'purpose': 'User experience analytics including heatmaps and recordings',
+                'privacy_risk': 'High',
+                'data_collected': 'Mouse movements, clicks, form interactions, session recordings',
+                'gdpr_basis': 'Consent required for behavioral tracking'
             },
             'Mixpanel': {
                 'domains': ['mixpanel.com'],
-                'patterns': ['mixpanel']
+                'patterns': ['mixpanel'],
+                'purpose': 'Advanced analytics and user behavior tracking',
+                'privacy_risk': 'Medium',
+                'data_collected': 'Event tracking, user properties, funnel analysis',
+                'gdpr_basis': 'Legitimate interest or consent required'
             },
             'Hubspot': {
                 'domains': ['hs-scripts.com', 'hubspot.com'],
-                'patterns': ['hs-script', 'hubspot']
+                'patterns': ['hs-script', 'hubspot'],
+                'purpose': 'Marketing automation and lead tracking',
+                'privacy_risk': 'Medium',
+                'data_collected': 'Contact information, website behavior, email interactions',
+                'gdpr_basis': 'Consent required for marketing communications'
             },
             'Intercom': {
                 'domains': ['intercom.io', 'intercom.com'],
-                'patterns': ['intercom']
+                'patterns': ['intercom'],
+                'purpose': 'Customer messaging and support chat',
+                'privacy_risk': 'Medium',
+                'data_collected': 'User interactions, support conversations, contact details',
+                'gdpr_basis': 'Legitimate interest for support, consent for marketing'
             },
             'Segment': {
                 'domains': ['segment.io', 'segment.com'],
@@ -460,7 +496,11 @@ class WebsiteScanner:
                                 'name': tracker_name,
                                 'url': src,
                                 'type': 'external',
-                                'found_on': url
+                                'found_on': url,
+                                'purpose': tracker_info.get('purpose', 'Analytics and tracking'),
+                                'privacy_risk': tracker_info.get('privacy_risk', 'Medium'),
+                                'data_collected': tracker_info.get('data_collected', 'User behavior data'),
+                                'gdpr_basis': tracker_info.get('gdpr_basis', 'Consent or legitimate interest required')
                             })
                             findings.append({
                                 'type': 'tracker',
@@ -482,7 +522,11 @@ class WebsiteScanner:
                             trackers.append({
                                 'name': tracker_name,
                                 'type': 'inline',
-                                'found_on': url
+                                'found_on': url,
+                                'purpose': tracker_info.get('purpose', 'Analytics and tracking'),
+                                'privacy_risk': tracker_info.get('privacy_risk', 'Medium'),
+                                'data_collected': tracker_info.get('data_collected', 'User behavior data'),
+                                'gdpr_basis': tracker_info.get('gdpr_basis', 'Consent or legitimate interest required')
                             })
                             findings.append({
                                 'type': 'tracker',
