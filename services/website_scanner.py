@@ -1003,6 +1003,94 @@ class WebsiteScanner:
         
         return categories
     
+    def generate_privacy_recommendations(self, scan_results: Dict[str, Any]) -> List[str]:
+        """
+        Generate comprehensive privacy compliance recommendations based on scan results.
+        
+        Args:
+            scan_results: Complete scan results dictionary
+            
+        Returns:
+            List of actionable privacy recommendations
+        """
+        recommendations = []
+        
+        # Cookie-related recommendations
+        cookies = scan_results.get('cookies', {})
+        if cookies:
+            high_risk_cookies = [name for name, data in cookies.items() 
+                               if data.get('privacy_risk', '').lower() == 'high']
+            
+            if high_risk_cookies:
+                recommendations.append(
+                    f"High-risk cookies detected ({len(high_risk_cookies)} found). "
+                    "Ensure explicit consent is obtained before setting marketing/tracking cookies."
+                )
+            
+            # Check for missing consent mechanisms
+            consent_cookies = [name for name in cookies.keys() 
+                             if 'consent' in name.lower() or 'cookie' in name.lower()]
+            
+            if not consent_cookies and len(cookies) > 2:
+                recommendations.append(
+                    "No cookie consent management detected. Implement a GDPR-compliant "
+                    "cookie banner to obtain user consent for non-essential cookies."
+                )
+            
+            # Security recommendations
+            insecure_cookies = [name for name, data in cookies.items() 
+                              if not data.get('secure', False)]
+            
+            if insecure_cookies:
+                recommendations.append(
+                    f"Security issue: {len(insecure_cookies)} cookies not marked as Secure. "
+                    "Add Secure flag to prevent transmission over unencrypted connections."
+                )
+        
+        # Tracker-related recommendations
+        trackers = scan_results.get('trackers', {})
+        if trackers:
+            marketing_trackers = [name for name, data in trackers.items() 
+                                if data.get('purpose', '').lower().find('marketing') != -1]
+            
+            if marketing_trackers:
+                recommendations.append(
+                    f"Marketing trackers detected ({len(marketing_trackers)} found). "
+                    "Ensure these are only loaded after obtaining user consent."
+                )
+        
+        # Privacy policy recommendations
+        findings = scan_results.get('findings', [])
+        privacy_policy_found = any(f.get('type') == 'privacy_policy' for f in findings)
+        
+        if not privacy_policy_found:
+            recommendations.append(
+                "No privacy policy detected. Create and prominently link a comprehensive "
+                "privacy policy explaining data collection and processing activities."
+            )
+        
+        # SSL/Security recommendations
+        ssl_info = scan_results.get('ssl_info', {})
+        if ssl_info and not ssl_info.get('valid', True):
+            recommendations.append(
+                "SSL/TLS configuration issues detected. Ensure valid SSL certificate "
+                "and secure HTTPS implementation for all pages."
+            )
+        
+        # General GDPR compliance recommendations
+        if len(recommendations) == 0:
+            recommendations.append(
+                "Basic privacy compliance appears adequate. Consider regular privacy "
+                "audits and staying updated on data protection regulations."
+            )
+        else:
+            recommendations.append(
+                "Review and update your privacy policy to reflect current data "
+                "processing activities and ensure ongoing GDPR compliance."
+            )
+        
+        return recommendations
+    
     def _check_domain_info(self, domain: str) -> Dict[str, Any]:
         """
         Check domain registration information.

@@ -314,6 +314,47 @@ def generate_website_report_content(scan_data: Dict[str, Any], timestamp: str) -
             <p style="color: #6b7280; font-style: italic; margin-top: 15px;">Showing {min(15, len(cookies))} of {len(cookies)} total cookies</p>
         </div>"""
     
+    # Generate privacy recommendations section
+    recommendations_html = ""
+    try:
+        from services.website_scanner import WebsiteScanner
+        scanner = WebsiteScanner()
+        recommendations = scanner.generate_privacy_recommendations(scan_data)
+        
+        if recommendations:
+            recommendation_items = ""
+            for i, rec in enumerate(recommendations[:8]):
+                recommendation_items += f"""
+                <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 15px; margin-bottom: 15px; border-radius: 0 8px 8px 0;">
+                    <div style="display: flex; align-items: start; gap: 10px;">
+                        <span style="background: #22c55e; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0;">{i+1}</span>
+                        <p style="margin: 0; color: #15803d; line-height: 1.5; font-size: 14px;">{rec}</p>
+                    </div>
+                </div>"""
+            
+            recommendations_html = f"""
+            <div style="background: white; border-radius: 15px; padding: 30px; margin: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
+                <h2 style="color: #059669; margin-bottom: 20px;">💡 Privacy Compliance Recommendations</h2>
+                
+                <div style="background: #ecfdf5; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h3 style="color: #059669; margin: 0 0 10px 0; font-size: 18px;">Actionable Privacy Improvements</h3>
+                    <p style="color: #047857; margin: 0; font-size: 14px;">
+                        Based on comprehensive analysis of cookies, trackers, and privacy policies, here are specific recommendations to enhance GDPR compliance:
+                    </p>
+                </div>
+                
+                {recommendation_items}
+                
+                <div style="background: #f3f4f6; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <p style="color: #6b7280; font-size: 13px; margin: 0; text-align: center;">
+                        <strong>Privacy Compliance Note:</strong> Regular privacy audits and ongoing monitoring are essential for maintaining GDPR compliance.
+                        Implement these recommendations systematically and document your privacy protection measures.
+                    </p>
+                </div>
+            </div>"""
+    except Exception as e:
+        recommendations_html = ""
+
     # Generate tracker analysis
     tracker_html = ""
     if trackers:
@@ -399,6 +440,7 @@ def generate_website_report_content(scan_data: Dict[str, Any], timestamp: str) -
     {findings_html}
     {cookie_html}
     {tracker_html}
+    {recommendations_html}
     
     <div style="background: white; border-radius: 15px; margin: 20px; padding: 30px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
         <p style="color: #374151; font-size: 12px; line-height: 1.6; max-width: 600px; margin: 0 auto;">
