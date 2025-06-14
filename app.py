@@ -1875,16 +1875,81 @@ else:
                 st.checkbox("Generate remediation suggestions", value=True)
                 
             elif scan_type == _("scan.api"):
-                # 5. API Scanner
+                # 5. API Scanner - Enhanced configuration
                 st.subheader("API Scanner Configuration")
-                api_type = st.selectbox("API Type", ["REST", "GraphQL", "SOAP", "gRPC"])
                 
-                api_source = st.radio(_("scan.repository_details"), ["Live Endpoint URL", "OpenAPI/Swagger Specification", "Both"])
+                # API Type selection
+                api_type = st.selectbox("API Type", ["REST", "GraphQL", "SOAP", "gRPC"], index=0)
                 
+                # API Source configuration
+                api_source = st.radio("API Source", ["Live Endpoint URL", "OpenAPI/Swagger Specification", "Both"])
+                
+                # Base URL input
                 if api_source in ["Live Endpoint URL", "Both"]:
-                    st.text_input("API Endpoint URL", placeholder="https://api.example.com/v1")
+                    api_base_url = st.text_input("API Base URL", 
+                                               placeholder="https://api.example.com/v1",
+                                               help="Enter the base URL of the API to scan")
                 
-                st.text_input("Authentication Token (if required)", type="password")
+                # OpenAPI Specification
+                openapi_spec = None
+                if api_source in ["OpenAPI/Swagger Specification", "Both"]:
+                    openapi_input_type = st.radio("OpenAPI Specification", ["URL", "Upload File"])
+                    
+                    if openapi_input_type == "URL":
+                        openapi_spec = st.text_input("OpenAPI/Swagger URL", 
+                                                   placeholder="https://api.example.com/swagger.json")
+                    else:
+                        uploaded_spec = st.file_uploader("Upload OpenAPI/Swagger File", 
+                                                       type=['json', 'yaml', 'yml'])
+                        if uploaded_spec:
+                            openapi_spec = uploaded_spec.read().decode('utf-8')
+                
+                # Authentication configuration
+                auth_token = st.text_input("Authentication Token (optional)", 
+                                         type="password",
+                                         help="Bearer token, API key, or other authentication credential")
+                
+                # Advanced scanning options
+                with st.expander("Advanced Scanning Options"):
+                    max_endpoints = st.number_input("Maximum Endpoints to Scan", 
+                                                  min_value=10, max_value=200, value=50, step=10)
+                    
+                    request_timeout = st.slider("Request Timeout (seconds)", 
+                                              min_value=5, max_value=30, value=10)
+                    
+                    rate_limit_delay = st.slider("Rate Limit Delay (seconds)", 
+                                                min_value=0.5, max_value=5.0, value=1.0, step=0.5)
+                    
+                    st.checkbox("Verify SSL Certificates", value=True, key="api_verify_ssl")
+                    st.checkbox("Follow HTTP Redirects", value=True, key="api_follow_redirects")
+                    st.checkbox("Test for Vulnerabilities", value=True, key="api_test_vulns")
+                    st.checkbox("Analyze PII Exposure", value=True, key="api_analyze_pii")
+                
+                # Custom endpoints (optional)
+                with st.expander("Custom Endpoints (Optional)"):
+                    custom_endpoints_text = st.text_area("Custom Endpoints (one per line)", 
+                                                       placeholder="/api/users\n/api/admin\n/api/data",
+                                                       help="Specify additional endpoints to scan, one per line")
+                    
+                    custom_endpoints = [ep.strip() for ep in custom_endpoints_text.split('\n') 
+                                      if ep.strip()] if custom_endpoints_text else None
+                
+                # Store API scanner configuration in session state
+                st.session_state.api_config = {
+                    'api_type': api_type,
+                    'api_source': api_source,
+                    'api_base_url': api_base_url if api_source in ["Live Endpoint URL", "Both"] else None,
+                    'openapi_spec': openapi_spec,
+                    'auth_token': auth_token,
+                    'max_endpoints': max_endpoints,
+                    'request_timeout': request_timeout,
+                    'rate_limit_delay': rate_limit_delay,
+                    'verify_ssl': st.session_state.get('api_verify_ssl', True),
+                    'follow_redirects': st.session_state.get('api_follow_redirects', True),
+                    'test_vulnerabilities': st.session_state.get('api_test_vulns', True),
+                    'analyze_pii': st.session_state.get('api_analyze_pii', True),
+                    'custom_endpoints': custom_endpoints
+                }
                 
                 scan_mode = st.radio("Scan Mode", ["Static (spec-based)", "Live Testing", "Both"])
                 
@@ -3555,6 +3620,75 @@ else:
                         scanner_instance = ImageScanner(region=region)
                     elif scan_type == _("scan.database"):
                         scanner_instance = DatabaseScanner(region=region)
+                    elif scan_type == _("scan.api"):
+                        # API Scanner - comprehensive API security and privacy scanning
+                        try:
+                            from services.api_scanner import APIScanner
+                            
+                            # Get API configuration from session state
+                            api_config = st.session_state.get('api_config', {})
+                            api_base_url = api_config.get('api_base_url', '')
+                            
+                            if not api_base_url:
+                                st.error("API Base URL not found. Please enter a valid API endpoint.")
+                                st.stop()
+                            
+                            # Initialize API scanner with configuration
+                            api_scanner = APIScanner(
+                                max_endpoints=api_config.get('max_endpoints', 50),
+                                request_timeout=api_config.get('request_timeout', 10),
+                                rate_limit_delay=api_config.get('rate_limit_delay', 1.0),
+                                follow_redirects=api_config.get('follow_redirects', True),
+                                verify_ssl=api_config.get('verify_ssl', True),
+                                region=region
+                            )
+                            
+                            # Set up progress tracking
+                            def api_progress_callback(current, total, endpoint):
+                                """Update the API scan progress"""
+                                progress = current / total if total > 0 else 0
+                                progress_bar.progress(progress)
+                                status_text.text(f"API Scan: Testing {endpoint} ({current}/{total})")
+                            
+                            # Set progress callback
+                            api_scanner.set_progress_callback(api_progress_callback)
+                            
+                            # Perform the API scan
+                            api_result = api_scanner.scan_api(
+                                base_url=api_base_url,
+                                auth_token=api_config.get('auth_token'),
+                                openapi_spec=api_config.get('openapi_spec'),
+                                endpoints=api_config.get('custom_endpoints')
+                            )
+                            
+                            # Process API scan results
+                            if 'findings' in api_result:
+                                # Update progress to complete
+                                progress_bar.progress(1.0)
+                                status_text.text("API Scan: Complete!")
+                                
+                                # Store results for report generation
+                                scan_results = [api_result]
+                                
+                                # Add to session state for download functionality
+                                st.session_state.api_scan_results = api_result
+                                st.session_state.api_scan_complete = True
+                                
+                                # Rerun to immediately show download buttons
+                                st.rerun()
+                            else:
+                                scan_results = []
+                                st.error("No findings returned from API scan")
+                            
+                        except Exception as e:
+                            st.error(f"Error during API scan: {str(e)}")
+                            import traceback
+                            st.code(traceback.format_exc())
+                            scan_results = []
+                        
+                        # Skip the rest of the scanner_instance processing for API scans
+                        if scan_type == _("scan.api"):
+                            pass
                     elif scan_type == _("scan.ai_model"):
                         # Get AI Model Scanner
                         ai_model_scanner = AIModelScanner(region=region)
