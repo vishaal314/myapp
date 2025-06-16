@@ -376,7 +376,9 @@ class DBScanner:
                 
             elif self.db_type == 'sqlite':
                 # Query to get all columns for a table in SQLite
-                cursor.execute(f"PRAGMA table_info({table_name})")
+                # Use escaped identifier to prevent SQL injection
+                escaped_table = self._escape_identifier(table_name)
+                cursor.execute(f"PRAGMA table_info({escaped_table})")
                 columns = [row[1] for row in cursor.fetchall()]
                 cursor.close()
                 return columns
@@ -396,9 +398,28 @@ class DBScanner:
         
         return columns
     
+    def _escape_identifier(self, identifier: str) -> str:
+        """
+        Safely escape database identifiers (table/column names) to prevent SQL injection.
+        
+        Args:
+            identifier: The database identifier to escape
+            
+        Returns:
+            Safely escaped identifier
+        """
+        # Remove any existing quotes and escape internal quotes
+        cleaned = identifier.replace('"', '""').replace('`', '``')
+        
+        # Apply appropriate quoting based on database type
+        if self.db_type == 'mysql':
+            return f'`{cleaned}`'
+        else:  # postgres, sqlite
+            return f'"{cleaned}"'
+    
     def _get_sample_data(self, table_name: str, columns: List[str]) -> List[Dict[str, Any]]:
         """
-        Get sample data from a table.
+        Get sample data from a table with proper SQL injection protection.
         
         Args:
             table_name: Name of the table
@@ -414,17 +435,22 @@ class DBScanner:
         try:
             cursor = self.connection.cursor()
             
-            # Create column list for query
-            column_str = ", ".join([f'"{col}"' for col in columns])
+            # Safely escape identifiers to prevent SQL injection
+            escaped_columns = [self._escape_identifier(col) for col in columns]
+            column_str = ", ".join(escaped_columns)
+            escaped_table = self._escape_identifier(table_name)
             
-            # Query to get sample data from the table
-            # Different syntax for LIMIT in different databases
+            # Use parameterized query for LIMIT to prevent injection
             if self.db_type in ['postgres', 'sqlite']:
-                query = f'SELECT {column_str} FROM "{table_name}" LIMIT {self.max_sample_rows}'
+                if self.db_type == 'postgres':
+                    query = f'SELECT {column_str} FROM {escaped_table} LIMIT %s'
+                    cursor.execute(query, (self.max_sample_rows,))
+                else:  # sqlite
+                    query = f'SELECT {column_str} FROM {escaped_table} LIMIT ?'
+                    cursor.execute(query, (self.max_sample_rows,))
             elif self.db_type == 'mysql':
-                query = f'SELECT {column_str} FROM `{table_name}` LIMIT {self.max_sample_rows}'
-            
-            cursor.execute(query)
+                query = f'SELECT {column_str} FROM {escaped_table} LIMIT %s'
+                cursor.execute(query, (self.max_sample_rows,))
             
             # Fetch all rows
             rows = cursor.fetchall()
