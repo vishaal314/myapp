@@ -1841,7 +1841,7 @@ else:
                 # 4. DB Scanner
                 st.subheader("Database Scanner Configuration")
                 db_type = st.selectbox("Database Type", 
-                                     ["PostgreSQL", "MySQL", "SQL Server", "Oracle", "MongoDB", "Cosmos DB", "DynamoDB", "Snowflake"])
+                                     ["PostgreSQL", "MySQL"])  # Only supported types
                 
                 connection_option = st.radio("Connection Method", ["Connection String", "Individual Parameters"])
                 
@@ -1852,7 +1852,7 @@ else:
                     col1, col2 = st.columns(2)
                     with col1:
                         db_server = st.text_input("Server", placeholder="localhost or db.example.com")
-                        db_port = st.text_input("Port", placeholder="5432")
+                        db_port = st.text_input("Port", placeholder="5432 for PostgreSQL, 3306 for MySQL")
                     with col2:
                         db_username = st.text_input("Username")
                         db_password = st.text_input("Password", type="password")
@@ -1861,18 +1861,51 @@ else:
                 
                 table_option = st.radio("Tables to Scan", ["All Tables", "Specific Tables"])
                 
+                specific_tables = ""
                 if table_option == "Specific Tables":
-                    st.text_area("Tables to Include (comma-separated)", placeholder="users, customers, orders")
+                    specific_tables = st.text_area("Tables to Include (comma-separated)", placeholder="users, customers, orders")
                 
-                st.text_area("Columns to Exclude (comma-separated)", placeholder="id, created_at, updated_at")
+                excluded_columns = st.text_area("Columns to Exclude (comma-separated)", placeholder="id, created_at, updated_at")
                 
-                st.multiselect("PII Types to Scan For", 
+                pii_types = st.multiselect("PII Types to Scan For", 
                              ["Email", "Phone", "Address", "Name", "ID Numbers", "Financial", "Health", "Biometric", "Passwords", "All"],
                              default=["All"])
                 
-                st.number_input("Scan Sample Size (rows per table)", min_value=100, max_value=10000, value=1000, step=100)
-                st.checkbox("Include table statistics", value=True)
-                st.checkbox("Generate remediation suggestions", value=True)
+                sample_size = st.number_input("Scan Sample Size (rows per table)", min_value=100, max_value=10000, value=1000, step=100)
+                include_stats = st.checkbox("Include table statistics", value=True)
+                generate_remediation = st.checkbox("Generate remediation suggestions", value=True)
+                
+                # Store database configuration in session state
+                if connection_option == "Connection String":
+                    st.session_state.db_config = {
+                        'db_type': db_type,
+                        'connection_option': connection_option,
+                        'connection_string': connection_string,
+                        'table_option': table_option,
+                        'specific_tables': specific_tables,
+                        'excluded_columns': excluded_columns,
+                        'pii_types': pii_types,
+                        'sample_size': sample_size,
+                        'include_stats': include_stats,
+                        'generate_remediation': generate_remediation
+                    }
+                else:
+                    st.session_state.db_config = {
+                        'db_type': db_type,
+                        'connection_option': connection_option,
+                        'db_server': db_server,
+                        'db_port': db_port,
+                        'db_username': db_username,
+                        'db_password': db_password,
+                        'db_name': db_name,
+                        'table_option': table_option,
+                        'specific_tables': specific_tables,
+                        'excluded_columns': excluded_columns,
+                        'pii_types': pii_types,
+                        'sample_size': sample_size,
+                        'include_stats': include_stats,
+                        'generate_remediation': generate_remediation
+                    }
                 
             elif scan_type == _("scan.api"):
                 # 5. API Scanner - Enhanced configuration
@@ -3628,7 +3661,150 @@ else:
                     elif scan_type == _("scan.image"):
                         scanner_instance = ImageScanner(region=region)
                     elif scan_type == _("scan.database"):
-                        scanner_instance = DatabaseScanner(region=region)
+                        # Database Scanner - comprehensive database PII scanning
+                        try:
+                            from services.db_scanner import DatabaseScanner
+                            
+                            # Get database configuration from session state
+                            db_config = st.session_state.get('db_config', {})
+                            
+                            # Validate required configuration
+                            if not db_config:
+                                st.error("Database configuration not found. Please configure the database connection.")
+                                st.stop()
+                            
+                            # Initialize database scanner
+                            db_scanner = DatabaseScanner(region=region)
+                            
+                            # Set up database connection
+                            connection_params = {}
+                            
+                            if db_config.get('connection_option') == 'Connection String':
+                                connection_string = db_config.get('connection_string', '')
+                                if not connection_string:
+                                    st.error("Connection string is required.")
+                                    st.stop()
+                                
+                                # Parse connection string to extract parameters
+                                from urllib.parse import urlparse
+                                parsed = urlparse(connection_string)
+                                
+                                if parsed.scheme == 'postgresql':
+                                    connection_params = {
+                                        'db_type': 'postgres',
+                                        'host': parsed.hostname,
+                                        'port': parsed.port or 5432,
+                                        'dbname': parsed.path.lstrip('/'),
+                                        'user': parsed.username,
+                                        'password': parsed.password
+                                    }
+                                elif parsed.scheme == 'mysql':
+                                    connection_params = {
+                                        'db_type': 'mysql',
+                                        'host': parsed.hostname,
+                                        'port': parsed.port or 3306,
+                                        'database': parsed.path.lstrip('/'),
+                                        'user': parsed.username,
+                                        'password': parsed.password
+                                    }
+                                else:
+                                    st.error(f"Unsupported database type in connection string: {parsed.scheme}")
+                                    st.stop()
+                            else:
+                                # Individual parameters
+                                db_type = db_config.get('db_type', '').lower()
+                                if db_type == 'postgresql':
+                                    connection_params = {
+                                        'db_type': 'postgres',
+                                        'host': db_config.get('db_server'),
+                                        'port': int(db_config.get('db_port', 5432)),
+                                        'dbname': db_config.get('db_name'),
+                                        'user': db_config.get('db_username'),
+                                        'password': db_config.get('db_password')
+                                    }
+                                elif db_type == 'mysql':
+                                    connection_params = {
+                                        'db_type': 'mysql',
+                                        'host': db_config.get('db_server'),
+                                        'port': int(db_config.get('db_port', 3306)),
+                                        'database': db_config.get('db_name'),
+                                        'user': db_config.get('db_username'),
+                                        'password': db_config.get('db_password')
+                                    }
+                                else:
+                                    st.error(f"Unsupported database type: {db_type}")
+                                    st.stop()
+                            
+                            # Validate connection parameters
+                            required_keys = ['host', 'user', 'password']
+                            if connection_params['db_type'] == 'postgres':
+                                required_keys.append('dbname')
+                            elif connection_params['db_type'] == 'mysql':
+                                required_keys.append('database')
+                            
+                            missing_keys = [key for key in required_keys if not connection_params.get(key)]
+                            if missing_keys:
+                                st.error(f"Missing required database parameters: {', '.join(missing_keys)}")
+                                st.stop()
+                            
+                            # Attempt database connection
+                            status_text.text("Connecting to database...")
+                            if not db_scanner.connect_to_database(connection_params):
+                                st.error("Failed to connect to database. Please check your connection parameters.")
+                                st.stop()
+                            
+                            # Set up progress tracking
+                            def db_progress_callback(current, total, table_name):
+                                """Update the database scan progress"""
+                                progress = current / total if total > 0 else 0
+                                progress_bar.progress(progress)
+                                status_text.text(f"Database Scan: Analyzing table '{table_name}' ({current}/{total})")
+                            
+                            # Perform the database scan
+                            status_text.text("Scanning database for PII...")
+                            db_result = db_scanner.scan_database(callback_fn=db_progress_callback)
+                            
+                            # Disconnect from database
+                            db_scanner.disconnect()
+                            
+                            # Process database scan results
+                            if 'findings' in db_result and db_result['findings']:
+                                # Update progress to complete
+                                progress_bar.progress(1.0)
+                                status_text.text("Database Scan: Complete!")
+                                
+                                # Store results for report generation
+                                scan_results = [db_result]
+                                
+                                # Add to session state for download functionality
+                                st.session_state.db_scan_results = db_result
+                                st.session_state.db_scan_complete = True
+                                
+                                # Rerun to immediately show download buttons
+                                st.rerun()
+                            elif 'error' in db_result:
+                                st.error(f"Database scan failed: {db_result['error']}")
+                                scan_results = []
+                            else:
+                                # No PII found
+                                progress_bar.progress(1.0)
+                                status_text.text("Database Scan: Complete - No PII detected!")
+                                scan_results = [db_result]
+                                
+                                # Store results even if no PII found
+                                st.session_state.db_scan_results = db_result
+                                st.session_state.db_scan_complete = True
+                                st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"Error during database scan: {str(e)}")
+                            import traceback
+                            st.code(traceback.format_exc())
+                            scan_results = []
+                        
+                        # Skip the rest of the scanner_instance processing for database scans
+                        if scan_type == _("scan.database"):
+                            pass
                     elif scan_type == _("scan.api"):
                         # API Scanner - comprehensive API security and privacy scanning
                         try:
@@ -6225,6 +6401,246 @@ else:
             """)
 
 # API Scanner Results Display Section
+def display_database_scan_results():
+    """Display database scan results with downloadable reports."""
+    st.subheader("Database Scanner Results")
+    
+    if not st.session_state.get('db_scan_complete', False):
+        st.info("No database scan results available.")
+        return
+    
+    db_results = st.session_state.get('db_scan_results', {})
+    
+    if not db_results or 'findings' not in db_results:
+        st.error("Database scan results are invalid or missing.")
+        return
+    
+    # Display scan metadata
+    metadata = db_results.get('metadata', {})
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Tables Scanned", metadata.get('tables_scanned', 0))
+    with col2:
+        st.metric("PII Findings", len(db_results.get('findings', [])))
+    with col3:
+        st.metric("Tables with PII", db_results.get('tables_with_pii', 0))
+    with col4:
+        risk_summary = db_results.get('risk_summary', {})
+        overall_level = risk_summary.get('overall_level', 'Unknown')
+        st.metric("Risk Level", overall_level)
+    
+    # Display risk summary
+    if 'risk_summary' in db_results:
+        risk_summary = db_results['risk_summary']
+        st.subheader("Risk Distribution")
+        
+        risk_col1, risk_col2, risk_col3, risk_col4 = st.columns(4)
+        by_level = risk_summary.get('by_level', {})
+        
+        with risk_col1:
+            st.metric("Critical", by_level.get('Critical', 0), delta_color="inverse")
+        with risk_col2:
+            st.metric("High", by_level.get('High', 0), delta_color="inverse")
+        with risk_col3:
+            st.metric("Medium", by_level.get('Medium', 0), delta_color="normal")
+        with risk_col4:
+            st.metric("Low", by_level.get('Low', 0), delta_color="normal")
+    
+    # Display findings table
+    findings = db_results.get('findings', [])
+    if findings:
+        st.subheader("PII Findings Details")
+        
+        # Create DataFrame for display
+        findings_df = pd.DataFrame(findings)
+        
+        # Select relevant columns for display
+        display_columns = ['table', 'column_name', 'type', 'risk_level', 'confidence', 'detection_method', 'reason']
+        available_columns = [col for col in display_columns if col in findings_df.columns]
+        
+        if available_columns:
+            display_df = findings_df[available_columns].copy()
+            
+            # Format confidence as percentage
+            if 'confidence' in display_df.columns:
+                display_df['confidence'] = display_df['confidence'].apply(lambda x: f"{x:.1%}")
+            
+            # Apply styling for risk levels
+            def highlight_risk_level(val):
+                if val == 'Critical':
+                    return 'background-color: #fee2e2; color: #dc2626'
+                elif val == 'High':
+                    return 'background-color: #fef3c7; color: #d97706'
+                elif val == 'Medium':
+                    return 'background-color: #fde68a; color: #ca8a04'
+                else:
+                    return 'background-color: #d1fae5; color: #059669'
+            
+            # Style the dataframe
+            if 'risk_level' in display_df.columns:
+                styled_df = display_df.style.applymap(
+                    highlight_risk_level, subset=['risk_level']
+                ).format({'confidence': '{}'})
+                st.dataframe(styled_df, use_container_width=True)
+            else:
+                st.dataframe(display_df, use_container_width=True)
+        else:
+            st.write("No detailed findings data available for display.")
+    
+    # Display table-specific results
+    table_results = db_results.get('table_results', {})
+    if table_results:
+        st.subheader("Table Analysis Summary")
+        
+        table_summary = []
+        for table_name, result in table_results.items():
+            if 'error' not in result:
+                findings_count = len(result.get('findings', []))
+                risk_score = result.get('risk_score', {})
+                table_summary.append({
+                    'Table': table_name,
+                    'PII Findings': findings_count,
+                    'Risk Score': risk_score.get('score', 0),
+                    'Risk Level': risk_score.get('level', 'Unknown'),
+                    'Scan Time (ms)': result.get('metadata', {}).get('process_time_ms', 0)
+                })
+        
+        if table_summary:
+            table_df = pd.DataFrame(table_summary)
+            
+            # Style the risk level column
+            def highlight_risk_level(val):
+                if val == 'Critical':
+                    return 'background-color: #fee2e2; color: #dc2626'
+                elif val == 'High':
+                    return 'background-color: #fef3c7; color: #d97706'
+                elif val == 'Medium':
+                    return 'background-color: #fde68a; color: #ca8a04'
+                else:
+                    return 'background-color: #d1fae5; color: #059669'
+            
+            styled_table_df = table_df.style.applymap(
+                highlight_risk_level, subset=['Risk Level']
+            )
+            st.dataframe(styled_table_df, use_container_width=True)
+    
+    # Download buttons
+    st.subheader("Download Reports")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Download raw JSON results
+        json_data = json.dumps(db_results, indent=2, default=str)
+        st.download_button(
+            label="📥 Download Raw Results (JSON)",
+            data=json_data,
+            file_name=f"database_scan_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            mime="application/json"
+        )
+    
+    with col2:
+        # Download findings CSV
+        if findings:
+            findings_df = pd.DataFrame(findings)
+            csv_data = findings_df.to_csv(index=False)
+            st.download_button(
+                label="📥 Download Findings (CSV)",
+                data=csv_data,
+                file_name=f"database_pii_findings_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv"
+            )
+    
+    with col3:
+        # Generate and download HTML report
+        if st.button("📄 Generate HTML Report"):
+            try:
+                from services.db_report_generator import generate_database_html_report
+                
+                with st.spinner("Generating HTML report..."):
+                    html_content = generate_database_html_report(db_results)
+                    
+                    st.download_button(
+                        label="📥 Download HTML Report",
+                        data=html_content,
+                        file_name=f"database_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                        mime="text/html"
+                    )
+                    st.success("HTML report generated successfully!")
+            except ImportError:
+                st.warning("HTML report generator not available. Using basic HTML export.")
+                
+                # Create basic HTML report
+                html_content = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Database Scan Report</title>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                        .header {{ background-color: #f8f9fa; padding: 20px; border-radius: 5px; }}
+                        .metric {{ display: inline-block; margin: 10px; padding: 10px; border: 1px solid #ddd; }}
+                        .critical {{ background-color: #fee2e2; color: #dc2626; }}
+                        .high {{ background-color: #fef3c7; color: #d97706; }}
+                        .medium {{ background-color: #fde68a; color: #ca8a04; }}
+                        .low {{ background-color: #d1fae5; color: #059669; }}
+                        table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+                        th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+                        th {{ background-color: #f2f2f2; }}
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Database Scan Report</h1>
+                        <p>Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                        <p>Database Type: {metadata.get('db_type', 'Unknown')}</p>
+                    </div>
+                    
+                    <h2>Summary</h2>
+                    <div class="metric">Tables Scanned: {metadata.get('tables_scanned', 0)}</div>
+                    <div class="metric">PII Findings: {len(findings)}</div>
+                    <div class="metric">Tables with PII: {db_results.get('tables_with_pii', 0)}</div>
+                    <div class="metric">Overall Risk: {risk_summary.get('overall_level', 'Unknown')}</div>
+                    
+                    <h2>PII Findings</h2>
+                    <table>
+                        <tr>
+                            <th>Table</th>
+                            <th>Column</th>
+                            <th>PII Type</th>
+                            <th>Risk Level</th>
+                            <th>Confidence</th>
+                            <th>Reason</th>
+                        </tr>
+                """
+                
+                for finding in findings:
+                    risk_class = finding.get('risk_level', 'low').lower()
+                    html_content += f"""
+                        <tr>
+                            <td>{finding.get('table', '')}</td>
+                            <td>{finding.get('column_name', '')}</td>
+                            <td>{finding.get('type', '')}</td>
+                            <td class="{risk_class}">{finding.get('risk_level', '')}</td>
+                            <td>{finding.get('confidence', 0):.1%}</td>
+                            <td>{finding.get('reason', '')}</td>
+                        </tr>
+                    """
+                
+                html_content += """
+                    </table>
+                </body>
+                </html>
+                """
+                
+                st.download_button(
+                    label="📥 Download HTML Report",
+                    data=html_content,
+                    file_name=f"database_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                    mime="text/html"
+                )
+
 def display_api_scan_results():
     """Display API scan results with downloadable reports."""
     if 'api_scan_results' in st.session_state and st.session_state.get('api_scan_complete', False):
@@ -6407,4 +6823,8 @@ def display_api_scan_results():
 # Check if API scan results should be displayed
 if st.session_state.get('api_scan_complete', False):
     display_api_scan_results()
+
+# Check if Database scan results should be displayed
+if st.session_state.get('db_scan_complete', False):
+    display_database_scan_results()
 
