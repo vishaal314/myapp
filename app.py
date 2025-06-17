@@ -6486,6 +6486,212 @@ else:
             """)
 
 # API Scanner Results Display Section
+def display_image_scan_results():
+    """Display image scan results with downloadable reports."""
+    
+    if not st.session_state.get('image_scan_complete', False):
+        st.info("No image scan results available. Please run an image scan first.")
+        return
+    
+    image_scan_results = st.session_state.get('image_scan_results', {})
+    
+    if not image_scan_results:
+        st.info("No image scan results found.")
+        return
+    
+    st.subheader("🖼️ Image Scan Results")
+    
+    # Display summary metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        images_scanned = image_scan_results.get('metadata', {}).get('images_scanned', 0)
+        st.metric("Images Scanned", images_scanned)
+    
+    with col2:
+        total_findings = len(image_scan_results.get('findings', []))
+        st.metric("Total PII Findings", total_findings)
+    
+    with col3:
+        images_with_pii = image_scan_results.get('images_with_pii', 0)
+        st.metric("Images with PII", images_with_pii)
+    
+    with col4:
+        risk_score = image_scan_results.get('risk_summary', {}).get('score', 0)
+        st.metric("Risk Score", f"{risk_score}/100")
+    
+    # Display findings in expandable sections
+    findings = image_scan_results.get('findings', [])
+    
+    if findings:
+        st.subheader("🔍 Detailed PII Findings")
+        
+        # Group findings by PII type
+        findings_by_type = {}
+        for finding in findings:
+            pii_type = finding.get('type', 'Other')
+            if pii_type not in findings_by_type:
+                findings_by_type[pii_type] = []
+            findings_by_type[pii_type].append(finding)
+        
+        # Display each PII type
+        for pii_type, type_findings in findings_by_type.items():
+            with st.expander(f"{pii_type} ({len(type_findings)} findings)", expanded=True):
+                
+                # Create DataFrame for this PII type
+                df_data = []
+                for finding in type_findings:
+                    df_data.append({
+                        'Source Image': os.path.basename(finding.get('source', 'Unknown')),
+                        'PII Type': finding.get('type', 'Unknown'),
+                        'Risk Level': finding.get('risk_level', 'Medium'),
+                        'Confidence': f"{finding.get('confidence', 0):.0%}",
+                        'Detection Method': finding.get('extraction_method', 'Unknown'),
+                        'Context': finding.get('context', 'No context'),
+                        'GDPR Reason': finding.get('reason', 'No reason provided')
+                    })
+                
+                if df_data:
+                    df = pd.DataFrame(df_data)
+                    
+                    # Apply color coding based on risk level
+                    def highlight_risk_level(val):
+                        if val == 'Critical':
+                            return 'background-color: #fee2e2; color: #991b1b'
+                        elif val == 'High':
+                            return 'background-color: #fef3c7; color: #92400e'
+                        elif val == 'Medium':
+                            return 'background-color: #fef3c7; color: #92400e'
+                        elif val == 'Low':
+                            return 'background-color: #dcfce7; color: #166534'
+                        return ''
+                    
+                    # Apply styling
+                    styled_df = df.style.applymap(highlight_risk_level, subset=['Risk Level'])
+                    st.dataframe(styled_df, use_container_width=True)
+    
+    # Display individual image results
+    image_results = image_scan_results.get('image_results', {})
+    if image_results:
+        st.subheader("📸 Individual Image Results")
+        
+        for image_path, result in image_results.items():
+            image_name = os.path.basename(image_path)
+            image_findings = result.get('findings', [])
+            has_pii = result.get('has_pii', False)
+            
+            # Color code based on PII presence
+            status_color = "🔴" if has_pii else "🟢"
+            pii_status = f"PII Detected ({len(image_findings)} findings)" if has_pii else "No PII Detected"
+            
+            with st.expander(f"{status_color} {image_name} - {pii_status}", expanded=has_pii):
+                if has_pii:
+                    # Show findings for this image
+                    for finding in image_findings:
+                        st.write(f"**{finding.get('type', 'Unknown PII')}**")
+                        st.write(f"- Risk Level: {finding.get('risk_level', 'Unknown')}")
+                        st.write(f"- Confidence: {finding.get('confidence', 0):.0%}")
+                        st.write(f"- Detection: {finding.get('extraction_method', 'Unknown')}")
+                        st.write(f"- Context: {finding.get('context', 'No context')}")
+                        st.write(f"- GDPR Compliance: {finding.get('reason', 'No reason')}")
+                        st.write("---")
+                else:
+                    st.write("✅ No personal data detected in this image.")
+                
+                # Show metadata
+                metadata = result.get('metadata', {})
+                if metadata:
+                    st.write(f"**Format:** {metadata.get('format', 'Unknown')}")
+                    st.write(f"**Process Time:** {metadata.get('process_time_ms', 0)} ms")
+    
+    # Display risk summary
+    risk_summary = image_scan_results.get('risk_summary', {})
+    if risk_summary:
+        st.subheader("⚠️ Risk Assessment")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            risk_level = risk_summary.get('level', 'Low')
+            risk_color = {
+                'Critical': '🔴',
+                'High': '🟠', 
+                'Medium': '🟡',
+                'Low': '🟢'
+            }.get(risk_level, '🟢')
+            
+            st.write(f"**Overall Risk Level:** {risk_color} {risk_level}")
+            st.write(f"**Risk Score:** {risk_summary.get('score', 0)}/100")
+        
+        with col2:
+            factors = risk_summary.get('factors', [])
+            if factors:
+                st.write("**Risk Factors:**")
+                for factor in factors:
+                    st.write(f"- {factor}")
+    
+    # Download buttons
+    st.subheader("📥 Download Reports")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("📄 Download HTML Report", key="download_image_html"):
+            try:
+                from services.html_report_generator_fixed import generate_html_report
+                html_content = generate_html_report(image_scan_results, scan_type="image")
+                
+                # Provide download
+                st.download_button(
+                    label="💾 Save HTML Report",
+                    data=html_content,
+                    file_name=f"image_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                    mime="text/html",
+                    key="save_image_html"
+                )
+                st.success("HTML report generated successfully!")
+                
+            except Exception as e:
+                st.error(f"Error generating HTML report: {str(e)}")
+    
+    with col2:
+        if st.button("📑 Download PDF Certificate", key="download_image_pdf"):
+            try:
+                from services.image_report_generator import ImageReportGenerator
+                
+                # Generate PDF report
+                generator = ImageReportGenerator()
+                pdf_content = generator.generate_pdf_report(image_scan_results)
+                
+                # Provide download
+                st.download_button(
+                    label="💾 Save PDF Certificate",
+                    data=pdf_content,
+                    file_name=f"image_scan_certificate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                    mime="application/pdf",
+                    key="save_image_pdf"
+                )
+                st.success("PDF certificate generated successfully!")
+                
+            except Exception as e:
+                st.error(f"Error generating PDF certificate: {str(e)}")
+    
+    # Display scan metadata
+    metadata = image_scan_results.get('metadata', {})
+    if metadata:
+        with st.expander("📊 Scan Metadata", expanded=False):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.write(f"**Scan Time:** {metadata.get('scan_time', 'Unknown')}")
+                st.write(f"**Process Time:** {metadata.get('process_time_seconds', 0):.2f} seconds")
+                st.write(f"**Region:** {metadata.get('region', 'Unknown')}")
+            
+            with col2:
+                st.write(f"**Images Total:** {metadata.get('images_total', 0)}")
+                st.write(f"**Images Scanned:** {metadata.get('images_scanned', 0)}")
+                st.write(f"**Total Findings:** {metadata.get('total_findings', 0)}")
+
 def display_database_scan_results():
     """Display database scan results with downloadable reports."""
     st.subheader("Database Scanner Results")
