@@ -3659,7 +3659,92 @@ else:
                     if scan_type == _("scan.document"):
                         scanner_instance = BlobScanner(region=region)
                     elif scan_type == _("scan.image"):
-                        scanner_instance = ImageScanner(region=region)
+                        # Image Scanner - comprehensive image PII scanning
+                        try:
+                            from services.image_scanner import ImageScanner
+                            
+                            # Get image configuration from session state
+                            image_config = st.session_state.get('image_config', {})
+                            
+                            # Initialize image scanner
+                            image_scanner = ImageScanner(region=region)
+                            
+                            # Set up progress tracking
+                            def image_progress_callback(current, total, image_name):
+                                """Update the image scan progress"""
+                                progress = current / total if total > 0 else 0
+                                progress_bar.progress(progress)
+                                status_text.text(f"Image Scan: Analyzing '{image_name}' ({current}/{total})")
+                            
+                            # Process uploaded images
+                            if uploaded_files:
+                                # Save uploaded files temporarily
+                                temp_dir = f"temp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                                os.makedirs(temp_dir, exist_ok=True)
+                                
+                                image_paths = []
+                                for uploaded_file in uploaded_files:
+                                    # Save the uploaded file
+                                    file_path = os.path.join(temp_dir, uploaded_file.name)
+                                    with open(file_path, "wb") as f:
+                                        f.write(uploaded_file.getbuffer())
+                                    image_paths.append(file_path)
+                                
+                                # Perform the image scan
+                                status_text.text("Scanning images for PII...")
+                                image_result = image_scanner.scan_multiple_images(
+                                    image_paths=image_paths,
+                                    callback_fn=image_progress_callback
+                                )
+                                
+                                # Clean up temporary files
+                                try:
+                                    import shutil
+                                    shutil.rmtree(temp_dir)
+                                except Exception as cleanup_error:
+                                    logger.warning(f"Failed to clean up temp directory: {cleanup_error}")
+                                
+                                # Process image scan results
+                                if 'findings' in image_result and image_result['findings']:
+                                    # Update progress to complete
+                                    progress_bar.progress(1.0)
+                                    status_text.text("Image Scan: Complete!")
+                                    
+                                    # Store results for report generation
+                                    scan_results = [image_result]
+                                    
+                                    # Add to session state for download functionality
+                                    st.session_state.image_scan_results = image_result
+                                    st.session_state.image_scan_complete = True
+                                    
+                                    # Rerun to immediately show download buttons
+                                    st.rerun()
+                                elif 'errors' in image_result and image_result['errors']:
+                                    st.error(f"Image scan encountered errors: {image_result['errors']}")
+                                    scan_results = []
+                                else:
+                                    # No PII found
+                                    progress_bar.progress(1.0)
+                                    status_text.text("Image Scan: Complete - No PII detected!")
+                                    scan_results = [image_result]
+                                    
+                                    # Store results even if no PII found
+                                    st.session_state.image_scan_results = image_result
+                                    st.session_state.image_scan_complete = True
+                                    st.rerun()
+                            else:
+                                st.error("No images uploaded for scanning.")
+                                scan_results = []
+                            
+                        except Exception as e:
+                            st.error(f"Error during image scan: {str(e)}")
+                            import traceback
+                            st.code(traceback.format_exc())
+                            scan_results = []
+                        
+                        # Skip the rest of the scanner_instance processing for image scans
+                        if scan_type == _("scan.image"):
+                            pass
                     elif scan_type == _("scan.database"):
                         # Database Scanner - comprehensive database PII scanning
                         try:
