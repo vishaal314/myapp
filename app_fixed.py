@@ -33,53 +33,45 @@ def initialize_session_state():
     if 'language' not in st.session_state:
         st.session_state.language = 'en'
 
-def load_translations():
-    """Load translations for the current language"""
-    try:
-        with open(f'translations/{st.session_state.language}.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        # Fallback to English
-        try:
-            with open('translations/en.json', 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            # Basic fallback translations
-            return {
-                'app': {
-                    'title': 'DataGuardian Pro',
-                    'subtitle': 'Enterprise Privacy Compliance Platform',
-                    'tagline': 'Detect, Manage, and Report Privacy Compliance with AI-powered Precision'
-                },
-                'login': {
-                    'title': 'Login',
-                    'username': 'Username or Email',
-                    'password': 'Password',
-                    'login_button': 'Login',
-                    'register_link': 'Register'
-                },
-                'register': {
-                    'title': 'Register',
-                    'username': 'Username',
-                    'email': 'Email',
-                    'password': 'Password',
-                    'confirm_password': 'Confirm Password',
-                    'register_button': 'Register'
-                }
-            }
-
 def get_text(key, default=None):
-    """Get translated text for a key"""
-    translations = load_translations()
-    keys = key.split('.')
-    value = translations
+    """Get text for interface elements"""
+    # Simple text mapping without external file dependencies
+    text_map = {
+        'app.title': 'DataGuardian Pro',
+        'app.subtitle': 'Enterprise Privacy Compliance Platform', 
+        'app.tagline': 'Detect, Manage, and Report Privacy Compliance with AI-powered Precision',
+        'login.title': 'Login',
+        'login.username': 'Username or Email',
+        'login.password': 'Password',
+        'login.login_button': 'Login',
+        'register.title': 'Register',
+        'register.username': 'Username',
+        'register.email': 'Email',
+        'register.password': 'Password',
+        'register.confirm_password': 'Confirm Password',
+        'register.register_button': 'Register'
+    }
     
-    try:
-        for k in keys:
-            value = value[k]
-        return value
-    except (KeyError, TypeError):
-        return default or key
+    # Handle Dutch translations if needed
+    if st.session_state.language == 'nl':
+        dutch_map = {
+            'app.title': 'DataGuardian Pro',
+            'app.subtitle': 'Enterprise Privacy Compliance Platform',
+            'app.tagline': 'Detecteer, Beheer en Rapporteer Privacy Compliance met AI-aangedreven Precisie',
+            'login.title': 'Inloggen',
+            'login.username': 'Gebruikersnaam of E-mail',
+            'login.password': 'Wachtwoord',
+            'login.login_button': 'Inloggen',
+            'register.title': 'Registreren',
+            'register.username': 'Gebruikersnaam',
+            'register.email': 'E-mail',
+            'register.password': 'Wachtwoord',
+            'register.confirm_password': 'Bevestig Wachtwoord',
+            'register.register_button': 'Registreren'
+        }
+        text_map.update(dutch_map)
+    
+    return text_map.get(key, default or key)
 
 def main():
     """Main application function"""
