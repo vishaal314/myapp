@@ -188,6 +188,94 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
     
     return html_content
 
+
+def generate_image_report(scan_data: Dict[str, Any]) -> str:
+    """Generate HTML report for image scan results."""
+    from datetime import datetime
+    
+    findings = scan_data.get('findings', [])
+    metadata = scan_data.get('metadata', {})
+    risk_summary = scan_data.get('risk_summary', {})
+    
+    images_scanned = metadata.get('images_scanned', 0)
+    total_findings = len(findings)
+    images_with_pii = scan_data.get('images_with_pii', 0)
+    risk_score = risk_summary.get('score', 0)
+    
+    if total_findings == 0:
+        compliance_status = "EXCELLENT"
+        compliance_color = "#22c55e"
+        compliance_message = "No personal data detected in any scanned images."
+    else:
+        compliance_status = "REQUIRES REVIEW"
+        compliance_color = "#f97316"
+        compliance_message = f"Found {total_findings} PII instances requiring review."
+    
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Privacy Assessment Report</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }}
+        .container {{ max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
+        .header {{ text-align: center; margin-bottom: 30px; }}
+        .metrics {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 20px 0; }}
+        .metric {{ background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; }}
+        .compliance {{ background: {compliance_color}; color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖼️ Image Privacy Assessment Certificate</h1>
+            <p>DataGuardian Pro Enterprise Privacy Compliance Platform</p>
+        </div>
+        
+        <div class="compliance">
+            <h3>GDPR Compliance Status: {compliance_status}</h3>
+            <p>{compliance_message}</p>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric">
+                <h3>{images_scanned}</h3>
+                <p>Images Scanned</p>
+            </div>
+            <div class="metric">
+                <h3>{total_findings}</h3>
+                <p>PII Findings</p>
+            </div>
+            <div class="metric">
+                <h3>{images_with_pii}</h3>
+                <p>Images with PII</p>
+            </div>
+            <div class="metric">
+                <h3>{risk_score}/100</h3>
+                <p>Risk Score</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center;">
+            <p>Assessment conducted on {timestamp}</p>
+            <p><strong>DataGuardian Pro Enterprise Certification Authority</strong></p>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_content
+
+
+class HTMLReportGenerator:
+    """Enhanced HTML report generator with image support."""
+    
+    def generate_image_report(self, scan_data: Dict[str, Any]) -> str:
+        """Generate HTML report for image scan results."""
+        return generate_image_report(scan_data)
+
 def generate_website_report_content(scan_data: Dict[str, Any], timestamp: str) -> str:
     """Generate comprehensive website report content with in-depth cookie analysis."""
     
