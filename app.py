@@ -3714,16 +3714,108 @@ else:
                                 
                                 # Check if PII was found and display appropriate message
                                 findings_count = len(image_result.get('findings', []))
+                                images_processed = image_result.get('metadata', {}).get('images_scanned', len(uploaded_files))
+                                
                                 if findings_count > 0:
                                     status_text.text(f"Image Scan: Complete! Found {findings_count} PII instances.")
                                     st.success(f"✅ Image scan completed successfully! Found {findings_count} PII instances.")
+                                    
+                                    # Display results for PII found case
+                                    st.markdown("---")
+                                    st.subheader("🖼️ Image Scan Results - PII Detected")
+                                    
+                                    # Show summary metrics
+                                    col1, col2, col3, col4 = st.columns(4)
+                                    with col1:
+                                        st.metric("Images Scanned", images_processed)
+                                    with col2:
+                                        st.metric("Total PII Findings", findings_count)
+                                    with col3:
+                                        st.metric("Images with PII", image_result.get('images_with_pii', 0))
+                                    with col4:
+                                        risk_score = image_result.get('risk_summary', {}).get('score', 0)
+                                        st.metric("Risk Score", f"{risk_score}/100")
+                                    
+                                    # Show detailed findings
+                                    st.subheader("🔍 Detailed Findings")
+                                    findings = image_result.get('findings', [])
+                                    for i, finding in enumerate(findings):
+                                        with st.expander(f"Finding {i+1}: {finding.get('type', 'Unknown PII')}", expanded=True):
+                                            st.write(f"**Source:** {os.path.basename(finding.get('source', 'Unknown'))}")
+                                            st.write(f"**Risk Level:** {finding.get('risk_level', 'Unknown')}")
+                                            st.write(f"**Confidence:** {finding.get('confidence', 0):.0%}")
+                                            st.write(f"**Detection Method:** {finding.get('extraction_method', 'Unknown')}")
+                                            st.write(f"**Context:** {finding.get('context', 'No context')}")
+                                            st.write(f"**GDPR Compliance:** {finding.get('reason', 'No reason')}")
+                                
                                 else:
                                     status_text.text("Image Scan: Complete - No PII detected!")
                                     st.success("✅ Image scan completed successfully! No personal data detected in your images.")
+                                    
+                                    # Display results for clean scan
+                                    st.markdown("---")
+                                    st.subheader("🖼️ Image Scan Results - Clean Scan")
+                                    st.success(f"✅ All {images_processed} images scanned successfully with no personal data detected!")
+                                    st.markdown("""
+                                    <div style="padding: 15px; background-color: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 5px; margin: 10px 0;">
+                                        <h4 style="color: #1e40af; margin-top: 0;">GDPR Compliance Status: EXCELLENT</h4>
+                                        <p style="margin-bottom: 0;">Your images contain no detectable personal data, which means excellent privacy compliance. You can download an official compliance certificate below.</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Display summary metrics for clean scan
+                                    col1, col2, col3, col4 = st.columns(4)
+                                    with col1:
+                                        st.metric("Images Scanned", images_processed)
+                                    with col2:
+                                        st.metric("Total PII Findings", 0)
+                                    with col3:
+                                        st.metric("Images with PII", 0)
+                                    with col4:
+                                        st.metric("Risk Score", "0/100")
                                 
-                                # Always show results immediately
-                                st.markdown("---")
-                                display_image_scan_results()
+                                # Show certificate download options (for both cases)
+                                st.subheader("📜 Download Reports")
+                                
+                                col1, col2 = st.columns(2)
+                                
+                                with col1:
+                                    # PDF Certificate Download
+                                    try:
+                                        from services.image_report_generator import ImageReportGenerator
+                                        
+                                        generator = ImageReportGenerator()
+                                        pdf_content = generator.generate_pdf_report(image_result)
+                                        
+                                        st.download_button(
+                                            label="📄 Download PDF Certificate",
+                                            data=pdf_content,
+                                            file_name=f"image_scan_certificate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                            mime="application/pdf",
+                                            key="save_image_pdf_inline"
+                                        )
+                                        
+                                    except Exception as e:
+                                        st.error(f"PDF generation error: {str(e)}")
+                                
+                                with col2:
+                                    # HTML Report Download
+                                    try:
+                                        from services.html_report_generator_fixed import HTMLReportGenerator
+                                        
+                                        html_generator = HTMLReportGenerator()
+                                        html_content = html_generator.generate_image_report(image_result)
+                                        
+                                        st.download_button(
+                                            label="🌐 Download HTML Report",
+                                            data=html_content,
+                                            file_name=f"image_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                                            mime="text/html",
+                                            key="save_image_html_inline"
+                                        )
+                                        
+                                    except Exception as e:
+                                        st.error(f"HTML generation error: {str(e)}")
                                 
                                 # Show navigation tip
                                 st.info("💡 You can also view these results in the 'Results' section of the navigation menu.")
