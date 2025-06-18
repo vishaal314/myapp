@@ -207,8 +207,9 @@ except FileNotFoundError:
 
 
 # Create top-right language switcher in a container with minimal style
-lang_col1, lang_col2, lang_col3 = st.columns([6, 3, 1])
-with lang_col3:
+try:
+    lang_col1, lang_col2, lang_col3 = st.columns([6, 3, 1])
+    with lang_col3:
     # Create a clean language selector in the top-right
     st.markdown("""
     <div style="float: right; margin-right: 10px; margin-top: 5px;">
