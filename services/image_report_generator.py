@@ -125,7 +125,8 @@ class ImageReportGenerator:
         canvas.circle(80, A4[1] - 30, 15, fill=1)
         canvas.setFillColor(colors.white)
         canvas.setFont("Helvetica-Bold", 8)
-        canvas.drawCentredText(80, A4[1] - 33, "DG")
+        text_width = canvas.stringWidth("DG", "Helvetica-Bold", 8)
+        canvas.drawString(80 - text_width/2, A4[1] - 33, "DG")
         
         # Header text
         canvas.setFillColor(colors.HexColor('#1a365d'))
@@ -139,7 +140,8 @@ class ImageReportGenerator:
         canvas.circle(A4[0] - 80, A4[1] - 30, 20, fill=1)
         canvas.setFillColor(colors.white)
         canvas.setFont("Helvetica-Bold", 8)
-        canvas.drawCentredText(A4[0] - 80, A4[1] - 33, "CERTIFIED")
+        text_width = canvas.stringWidth("CERTIFIED", "Helvetica-Bold", 8)
+        canvas.drawString(A4[0] - 80 - text_width/2, A4[1] - 33, "CERTIFIED")
         
         # Footer
         canvas.setStrokeColor(colors.HexColor('#e2e8f0'))
@@ -150,7 +152,9 @@ class ImageReportGenerator:
         canvas.setFont("Helvetica", 8)
         canvas.drawString(50, 35, f"Generated on {datetime.now().strftime('%B %d, %Y at %H:%M UTC')}")
         canvas.drawRightString(A4[0] - 50, 35, f"Page {doc.page}")
-        canvas.drawCentredText(A4[0] / 2, 35, "This certificate verifies GDPR compliance assessment results")
+        footer_text = "This certificate verifies GDPR compliance assessment results"
+        text_width = canvas.stringWidth(footer_text, "Helvetica", 8)
+        canvas.drawString(A4[0] / 2 - text_width/2, 35, footer_text)
         
         canvas.restoreState()
     
@@ -301,9 +305,7 @@ class ImageReportGenerator:
                 story.append(Spacer(1, 20))
                 
                 # Add GDPR compliance note for this PII type
-                sample_finding = type_findings[0]
-                gdpr_reason = sample_finding.get('reason', 'Requires data protection compliance')
-                story.append(Paragraph(f"<b>GDPR Compliance Note:</b> {gdpr_reason}", 
+                story.append(Paragraph(f"<b>GDPR Compliance Note:</b> {pii_type} data requires appropriate data protection measures per GDPR Article 6 and Article 9 (if applicable).", 
                                      self.styles['Normal']))
                 story.append(Spacer(1, 15))
         

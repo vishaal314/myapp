@@ -7089,3 +7089,10 @@ if st.session_state.get('api_scan_complete', False):
 if st.session_state.get('db_scan_complete', False):
     display_database_scan_results()
 
+# Main application execution
+if __name__ == "__main__":
+    # Initialize language system
+    initialize()
+    
+    # Run the main application
+    main()
