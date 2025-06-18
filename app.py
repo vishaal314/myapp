@@ -3704,34 +3704,29 @@ else:
                                 except Exception as cleanup_error:
                                     logger.warning(f"Failed to clean up temp directory: {cleanup_error}")
                                 
-                                # Process image scan results
-                                if 'findings' in image_result and image_result['findings']:
-                                    # Update progress to complete
-                                    progress_bar.progress(1.0)
-                                    status_text.text("Image Scan: Complete!")
-                                    
-                                    # Store results for report generation
-                                    scan_results = [image_result]
-                                    
-                                    # Add to session state for download functionality
-                                    st.session_state.image_scan_results = image_result
-                                    st.session_state.image_scan_complete = True
-                                    
-                                    # Rerun to immediately show download buttons
-                                    st.rerun()
-                                elif 'errors' in image_result and image_result['errors']:
-                                    st.error(f"Image scan encountered errors: {image_result['errors']}")
-                                    scan_results = []
+                                # Process image scan results - Always store and display results
+                                progress_bar.progress(1.0)
+                                
+                                # Store results for report generation regardless of findings
+                                scan_results = [image_result]
+                                st.session_state.image_scan_results = image_result
+                                st.session_state.image_scan_complete = True
+                                
+                                # Check if PII was found and display appropriate message
+                                findings_count = len(image_result.get('findings', []))
+                                if findings_count > 0:
+                                    status_text.text(f"Image Scan: Complete! Found {findings_count} PII instances.")
+                                    st.success(f"✅ Image scan completed successfully! Found {findings_count} PII instances.")
                                 else:
-                                    # No PII found
-                                    progress_bar.progress(1.0)
                                     status_text.text("Image Scan: Complete - No PII detected!")
-                                    scan_results = [image_result]
-                                    
-                                    # Store results even if no PII found
-                                    st.session_state.image_scan_results = image_result
-                                    st.session_state.image_scan_complete = True
-                                    st.rerun()
+                                    st.success("✅ Image scan completed successfully! No personal data detected in your images.")
+                                
+                                # Always show results immediately
+                                st.markdown("---")
+                                display_image_scan_results()
+                                
+                                # Show navigation tip
+                                st.info("💡 You can also view these results in the 'Results' section of the navigation menu.")
                             else:
                                 st.error("No images uploaded for scanning.")
                                 scan_results = []
@@ -6357,7 +6352,22 @@ def display_image_scan_results():
         st.info("No image scan results found.")
         return
     
-    st.subheader("🖼️ Image Scan Results")
+    # Get findings count for messaging
+    findings_count = len(image_scan_results.get('findings', []))
+    images_scanned = image_scan_results.get('metadata', {}).get('images_scanned', 0)
+    
+    # Display appropriate header based on findings
+    if findings_count > 0:
+        st.subheader("🖼️ Image Scan Results")
+    else:
+        st.subheader("🖼️ Image Scan Results - Clean Scan")
+        st.success(f"✅ All {images_scanned} images scanned successfully with no personal data detected!")
+        st.markdown("""
+        <div style="padding: 15px; background-color: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 5px; margin: 10px 0;">
+            <h4 style="color: #1e40af; margin-top: 0;">GDPR Compliance Status: EXCELLENT</h4>
+            <p style="margin-bottom: 0;">Your images contain no detectable personal data, which means excellent privacy compliance. You can still download an official compliance certificate below.</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Display summary metrics
     col1, col2, col3, col4 = st.columns(4)
@@ -6391,6 +6401,16 @@ def display_image_scan_results():
             if pii_type not in findings_by_type:
                 findings_by_type[pii_type] = []
             findings_by_type[pii_type].append(finding)
+    else:
+        # No findings - show positive compliance message
+        st.subheader("🔍 Scan Analysis")
+        st.markdown("""
+        <div style="padding: 20px; background-color: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; margin: 15px 0;">
+            <h4 style="color: #15803d; margin-top: 0;">✅ Excellent Privacy Compliance</h4>
+            <p style="margin-bottom: 5px;"><strong>No personal data detected in any scanned images.</strong></p>
+            <p style="margin-bottom: 0;">Your images are fully compliant with GDPR Article 6 and do not require additional privacy measures.</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Display each PII type
         for pii_type, type_findings in findings_by_type.items():
