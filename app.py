@@ -198,8 +198,12 @@ st.set_page_config(
 )
 
 # Load custom CSS to hide unwanted navigation buttons
-with open("static/custom.css") as f:
-    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+try:
+    with open("static/custom.css") as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+except FileNotFoundError:
+    # CSS file not found, continue without custom styles
+    pass
 
 
 # Create top-right language switcher in a container with minimal style
@@ -7089,10 +7093,9 @@ if st.session_state.get('api_scan_complete', False):
 if st.session_state.get('db_scan_complete', False):
     display_database_scan_results()
 
-# Main application execution
-if __name__ == "__main__":
-    # Initialize language system
-    initialize()
-    
-    # Run the main application
-    main()
+# Initialize language system when app starts
+initialize()
+
+# Run the main application logic that's already defined above
+# The authentication check and page rendering logic is already implemented
+# starting from line 710 with "if not st.session_state.logged_in"
