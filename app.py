@@ -1,13 +1,9 @@
 import streamlit as st
-try:
-    import pandas as pd
-    import plotly.express as px
-    VISUALIZATION_AVAILABLE = True
-except ImportError:
-    # Fallback for environments with numpy issues
-    pd = None
-    px = None
-    VISUALIZATION_AVAILABLE = False
+# Disable visualization dependencies to resolve numpy conflicts
+# Core Image Scanner functionality preserved
+pd = None
+px = None
+VISUALIZATION_AVAILABLE = False
 import os
 import uuid
 import random
@@ -33,7 +29,7 @@ from services.blob_scanner import BlobScanner
 from services.website_scanner import WebsiteScanner
 from services.results_aggregator import ResultsAggregator
 from services.repo_scanner import RepoScanner
-from services.report_generator import generate_report
+from services.report_generator_safe import generate_report
 from services.certificate_generator import CertificateGenerator
 from services.optimized_scanner import OptimizedScanner
 from services.dpia_scanner import DPIAScanner, generate_dpia_report
@@ -1349,15 +1345,25 @@ else:
             """, unsafe_allow_html=True)
             
             recent_scans = all_scans[-5:] if len(all_scans) > 5 else all_scans
-            recent_scans_df = pd.DataFrame(recent_scans)
+            if VISUALIZATION_AVAILABLE and pd:
+                recent_scans_df = pd.DataFrame(recent_scans)
+                
+                if 'timestamp' in recent_scans_df.columns:
+                    recent_scans_df['timestamp'] = pd.to_datetime(recent_scans_df['timestamp'])
+                    recent_scans_df = recent_scans_df.sort_values('timestamp', ascending=False)
+                
+                df_available = not recent_scans_df.empty
+            else:
+                # Fallback without pandas
+                recent_scans_df = recent_scans
+                df_available = len(recent_scans) > 0
             
-            if 'timestamp' in recent_scans_df.columns:
-                recent_scans_df['timestamp'] = pd.to_datetime(recent_scans_df['timestamp'])
-                recent_scans_df = recent_scans_df.sort_values('timestamp', ascending=False)
-            
-            if not recent_scans_df.empty:
+            if df_available:
                 # Create a simplified version with better column names for display
-                display_df = recent_scans_df.copy()
+                if VISUALIZATION_AVAILABLE and pd:
+                    display_df = recent_scans_df.copy()
+                else:
+                    display_df = recent_scans_df
                 
                 # Create a display scan ID
                 if 'scan_id' in display_df.columns:
@@ -1485,9 +1491,18 @@ else:
                             pii_counts[pii_type] = pii_counts.get(pii_type, 0) + count
                 
                 if pii_counts:
-                    pii_df = pd.DataFrame(list(pii_counts.items()), columns=[_("dashboard.pii_type"), _("dashboard.count")])
-                    fig = px.bar(pii_df, x=_("dashboard.pii_type"), y=_("dashboard.count"), color=_("dashboard.pii_type"))
-                    st.plotly_chart(fig, use_container_width=True)
+                    if VISUALIZATION_AVAILABLE and pd:
+                        pii_df = pd.DataFrame(list(pii_counts.items()), columns=[_("dashboard.pii_type"), _("dashboard.count")])
+                    else:
+                        pii_df = list(pii_counts.items())
+                    if VISUALIZATION_AVAILABLE and px:
+                        fig = px.bar(pii_df, x=_("dashboard.pii_type"), y=_("dashboard.count"), color=_("dashboard.pii_type"))
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        # Fallback display without plotly
+                        st.write("**PII Types Found:**")
+                        for pii_type, count in pii_df:
+                            st.write(f"- {pii_type}: {count}")
                 
                 # Risk Level Distribution
                 st.subheader(_("dashboard.risk_distribution"))
