@@ -3,10 +3,15 @@ Compliance score visualization utilities for DataGuardian Pro.
 Provides interactive components for visualizing compliance scores in real-time.
 """
 import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
+# Disable plotly and numpy to resolve dependency conflicts
+# import plotly.express as px
+# import plotly.graph_objects as go
+# import pandas as pd
+# import numpy as np
+px = None
+go = None
+pd = None
+np = None
 from typing import Dict, List, Any, Optional, Tuple
 import random
 import json

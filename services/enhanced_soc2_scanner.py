@@ -9,7 +9,7 @@ import streamlit as st
 from typing import Dict, Any, Optional
 from services.soc2_scanner import scan_github_repo_for_soc2, scan_azure_repo_for_soc2
 from services.soc2_display import display_soc2_findings
-from services.report_generator import generate_report
+from services.report_generator_safe import generate_report
 import base64
 from datetime import datetime
 

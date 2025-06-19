@@ -6356,27 +6356,31 @@ else:
                     audit_logs = results_aggregator.get_audit_logs()
                     
                     if audit_logs and len(audit_logs) > 0:
-                        # Convert to DataFrame
-                        logs_df = pd.DataFrame(audit_logs)
+                        # Sort audit logs by timestamp if available
+                        try:
+                            # Sort by timestamp if present
+                            if audit_logs and 'timestamp' in audit_logs[0]:
+                                audit_logs = sorted(audit_logs, key=lambda x: x.get('timestamp', ''), reverse=True)
+                        except (IndexError, TypeError):
+                            pass
                         
-                        # Format timestamp
-                        if 'timestamp' in logs_df.columns:
-                            logs_df['timestamp'] = pd.to_datetime(logs_df['timestamp'])
-                            logs_df = logs_df.sort_values('timestamp', ascending=False)
-                        
-                        # Display logs
-                        st.dataframe(logs_df, use_container_width=True)
+                        # Display logs as a table
+                        st.dataframe(audit_logs, use_container_width=True)
                         
                         # Filters
                         st.subheader("Filter Logs")
                         
-                        if 'action' in logs_df.columns:
-                            action_types = logs_df['action'].unique().tolist()
-                            selected_actions = st.multiselect("Filter by Action", action_types)
-                            
-                            if selected_actions:
-                                filtered_df = logs_df[logs_df['action'].isin(selected_actions)]
-                                st.dataframe(filtered_df, use_container_width=True)
+                        # Extract unique action types from audit logs
+                        try:
+                            action_types = list(set(log.get('action', '') for log in audit_logs if log.get('action')))
+                            if action_types:
+                                selected_actions = st.multiselect("Filter by Action", action_types)
+                                
+                                if selected_actions:
+                                    filtered_logs = [log for log in audit_logs if log.get('action') in selected_actions]
+                                    st.dataframe(filtered_logs, use_container_width=True)
+                        except Exception:
+                            pass
                     else:
                         st.info("No audit logs found.")
                 except Exception as e:
@@ -6544,23 +6548,8 @@ def display_image_scan_results():
                     })
                 
                 if df_data:
-                    df = pd.DataFrame(df_data)
-                    
-                    # Apply color coding based on risk level
-                    def highlight_risk_level(val):
-                        if val == 'Critical':
-                            return 'background-color: #fee2e2; color: #991b1b'
-                        elif val == 'High':
-                            return 'background-color: #fef3c7; color: #92400e'
-                        elif val == 'Medium':
-                            return 'background-color: #fef3c7; color: #92400e'
-                        elif val == 'Low':
-                            return 'background-color: #dcfce7; color: #166534'
-                        return ''
-                    
-                    # Apply styling
-                    styled_df = df.style.applymap(highlight_risk_level, subset=['Risk Level'])
-                    st.dataframe(styled_df, use_container_width=True)
+                    # Display as a table without pandas dependency
+                    st.dataframe(df_data, use_container_width=True)
     
     # Display individual image results
     image_results = image_scan_results.get('image_results', {})
