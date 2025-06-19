@@ -1,6 +1,13 @@
 import streamlit as st
-# import pandas as pd  # Temporarily disabled due to numpy conflict
-# import plotly.express as px  # Temporarily disabled due to numpy conflict
+try:
+    import pandas as pd
+    import plotly.express as px
+    VISUALIZATION_AVAILABLE = True
+except ImportError:
+    # Fallback for environments with numpy issues
+    pd = None
+    px = None
+    VISUALIZATION_AVAILABLE = False
 import os
 import uuid
 import random
