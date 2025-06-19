@@ -787,3 +787,90 @@ class BlobScanner:
                 results['files_skipped'] += 1
         
         return results
+    
+    def scan_multiple_documents(self, file_paths: List[str], callback_fn=None) -> Dict[str, Any]:
+        """
+        Scan multiple documents for PII with comprehensive reporting.
+        
+        Args:
+            file_paths: List of document file paths to scan
+            callback_fn: Optional callback function for progress updates
+            
+        Returns:
+            Dictionary containing comprehensive scan results matching Image Scanner structure
+        """
+        logger.info(f"Starting document scan of {len(file_paths)} files")
+        
+        # Initialize results structure
+        all_findings = []
+        document_results = []
+        errors = []
+        documents_scanned = 0
+        documents_with_pii = 0
+        
+        # Process each document
+        for i, file_path in enumerate(file_paths):
+            if callback_fn:
+                callback_fn(i + 1, len(file_paths), os.path.basename(file_path))
+            
+            try:
+                # Scan individual document
+                result = self.scan_file(file_path)
+                document_results.append(result)
+                
+                if result['status'] == 'scanned':
+                    documents_scanned += 1
+                    
+                    # Collect findings
+                    document_findings = result.get('pii_found', [])
+                    if document_findings:
+                        documents_with_pii += 1
+                        all_findings.extend(document_findings)
+                        
+                        logger.info(f"Completed scan for {os.path.basename(file_path)}. Found {len(document_findings)} PII instances.")
+                    else:
+                        logger.info(f"Completed scan for {os.path.basename(file_path)}. Found 0 PII instances.")
+                
+                elif result['status'] == 'error':
+                    errors.append({
+                        'file': os.path.basename(file_path),
+                        'error': result.get('error', 'Unknown error')
+                    })
+                    
+            except Exception as e:
+                logger.error(f"Error scanning {file_path}: {str(e)}")
+                errors.append({
+                    'file': os.path.basename(file_path),
+                    'error': str(e)
+                })
+        
+        # Calculate overall risk assessment
+        overall_risk = self._calculate_risk_score(all_findings)
+        
+        # Generate metadata
+        metadata = {
+            'scan_type': 'document',
+            'documents_scanned': documents_scanned,
+            'documents_with_pii': documents_with_pii,
+            'total_findings': len(all_findings),
+            'scan_timestamp': datetime.now().isoformat(),
+            'region': self.region,
+            'scanner_version': '2.0.0'
+        }
+        
+        logger.info(f"Completed document scan. Scanned {documents_scanned} documents, found {len(all_findings)} PII instances.")
+        
+        return {
+            "scan_type": "document",
+            "metadata": metadata,
+            "document_results": document_results,
+            "findings": all_findings,
+            "documents_with_pii": documents_with_pii,
+            "errors": errors,
+            "risk_summary": overall_risk
+        }
+
+# Create an alias for compatibility
+def create_document_scanner(region: str = "Netherlands") -> BlobScanner:
+    """Factory function to create BlobScanner instance for document scanning."""
+    return BlobScanner(region=region)
