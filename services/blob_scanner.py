@@ -1,12 +1,17 @@
 import os
 import tempfile
 import re
+import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable
 import PyPDF2
 import textract
 from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class BlobScanner:
     """
@@ -181,13 +186,30 @@ class BlobScanner:
             # Scan the extracted text for PII
             pii_items = self._scan_text(text, file_path)
             
-            # Create results
+            # Calculate risk assessment
+            risk_assessment = self._calculate_risk_score(pii_items)
+            
+            # Determine GDPR categories
+            gdpr_categories = self._get_gdpr_categories(pii_items)
+            
+            # Generate compliance notes
+            compliance_notes = self._generate_compliance_notes(pii_items, file_type)
+            
+            # Create comprehensive results
             result = {
                 'file_name': os.path.basename(file_path),
+                'file_path': file_path,
                 'status': 'scanned',
                 'file_type': file_type,
+                'file_size': os.path.getsize(file_path),
                 'pii_found': pii_items,
-                'pii_count': len(pii_items)
+                'pii_count': len(pii_items),
+                'risk_assessment': risk_assessment,
+                'risk_level': risk_assessment.get('level', 'Low'),
+                'gdpr_categories': gdpr_categories,
+                'compliance_notes': compliance_notes,
+                'scan_timestamp': datetime.now().isoformat(),
+                'region': self.region
             }
             
             return result
@@ -431,6 +453,142 @@ class BlobScanner:
         
         # Default reason if specific one not found
         return f"{pii_type} is potentially personal data under GDPR"
+    
+    def _calculate_risk_score(self, findings: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Calculate risk score based on findings.
+        
+        Args:
+            findings: List of PII findings
+            
+        Returns:
+            Dictionary with risk score details
+        """
+        if not findings:
+            return {
+                "score": 0,
+                "max_score": 100,
+                "level": "Low",
+                "factors": []
+            }
+        
+        # Count findings by risk level
+        risk_counts = {
+            "Critical": 0,
+            "High": 0,
+            "Medium": 0,
+            "Low": 0
+        }
+        
+        for finding in findings:
+            risk_level = finding.get("risk_level", "Medium")
+            if risk_level in risk_counts:
+                risk_counts[risk_level] += 1
+        
+        # Calculate weighted score
+        weights = {
+            "Critical": 25,
+            "High": 15,
+            "Medium": 7,
+            "Low": 2
+        }
+        
+        score = sum(risk_counts[level] * weights[level] for level in risk_counts)
+        score = min(score, 100)  # Cap at 100
+        
+        # Determine overall risk level
+        level = "Low"
+        if score >= 75:
+            level = "Critical"
+        elif score >= 50:
+            level = "High"
+        elif score >= 25:
+            level = "Medium"
+        
+        # Risk factors explanation
+        factors = []
+        for risk_level, count in risk_counts.items():
+            if count > 0:
+                factors.append(f"{count} {risk_level} risk finding{'s' if count > 1 else ''}")
+        
+        return {
+            "score": score,
+            "max_score": 100,
+            "level": level,
+            "factors": factors
+        }
+    
+    def _get_gdpr_categories(self, findings: List[Dict[str, Any]]) -> List[str]:
+        """
+        Determine GDPR categories based on findings.
+        
+        Args:
+            findings: List of PII findings
+            
+        Returns:
+            List of GDPR categories
+        """
+        categories = set()
+        
+        for finding in findings:
+            pii_type = finding.get('type', '')
+            
+            # Map PII types to GDPR categories
+            if pii_type in ['Name', 'Email', 'Phone', 'Address', 'IP Address']:
+                categories.add('Personal Data (Article 4)')
+            elif pii_type in ['BSN', 'Passport Number', 'Credit Card', 'Financial Data']:
+                categories.add('Personal Data (Article 4)')
+                categories.add('Sensitive Personal Data')
+            elif pii_type in ['Medical Data', 'Health Information']:
+                categories.add('Special Category Data (Article 9)')
+            elif pii_type in ['Date of Birth', 'Minor Data']:
+                categories.add('Personal Data (Article 4)')
+                if 'Minor' in pii_type:
+                    categories.add('Children\'s Data (Article 8)')
+        
+        return list(categories)
+    
+    def _generate_compliance_notes(self, findings: List[Dict[str, Any]], file_type: str) -> List[str]:
+        """
+        Generate compliance notes based on findings and file type.
+        
+        Args:
+            findings: List of PII findings
+            file_type: Type of file scanned
+            
+        Returns:
+            List of compliance notes
+        """
+        notes = []
+        
+        if not findings:
+            notes.append("No PII detected in document")
+            return notes
+        
+        # High-risk data types
+        high_risk_types = [f['type'] for f in findings if f.get('risk_level') == 'High']
+        if high_risk_types:
+            notes.append(f"High-risk PII detected: {', '.join(set(high_risk_types))}")
+        
+        # Special category data
+        special_categories = [f['type'] for f in findings if f['type'] in ['Medical Data', 'Biometric Data']]
+        if special_categories:
+            notes.append("Special category data found - requires explicit consent under GDPR Article 9")
+        
+        # Dutch-specific BSN
+        bsn_found = any(f['type'] == 'BSN' for f in findings)
+        if bsn_found and self.region == "Netherlands":
+            notes.append("BSN detected - subject to Dutch UAVG special protection requirements")
+        
+        # File type specific notes
+        if file_type in ['PDF', 'DOCX']:
+            notes.append("Document contains structured PII - ensure proper data retention policies")
+        elif file_type in ['CSV', 'XLSX']:
+            notes.append("Spreadsheet data requires careful access controls and encryption")
+        elif file_type in ['JSON', 'XML']:
+            notes.append("Structured data format - verify API security if this data is transmitted")
+        
+        return notes
     
     def _scan_file_with_timeout(self, file_path: str, timeout: int = 30) -> Dict[str, Any]:
         """
