@@ -721,40 +721,67 @@ if not st.session_state.logged_in:
     # Add animated welcome message in multiple languages
     st.markdown(get_welcome_message_animation(), unsafe_allow_html=True)
     
-    # Simplified landing page display with error handling
-    try:
-        from utils.landing_page import display_landing_page_grid
-        display_landing_page_grid()
-    except Exception as e:
-        # Fallback landing page content
-        st.markdown("""
-        <div style="background-color: #f8fafc; padding: 30px; border-radius: 10px; margin: 20px 0;">
-            <h1 style="color: #1e3a8a; margin-bottom: 10px;">DataGuardian Pro</h1>
-            <h3 style="color: #4b5563; font-weight: 500; margin-top: 0; margin-bottom: 20px;">Enterprise Privacy Compliance Platform</h3>
-            <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">
-                Comprehensive GDPR compliance platform that helps organizations identify, analyze, and protect 
-                personally identifiable information (PII) across multiple data sources.
-            </p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <h4 style="color: #4f46e5; margin-top: 0;">🔍 Code Scanner</h4>
-                    <p style="color: #6b7280; margin-bottom: 0;">Detect PII and security vulnerabilities in source code repositories.</p>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <h4 style="color: #4f46e5; margin-top: 0;">📄 Document Scanner</h4>
-                    <p style="color: #6b7280; margin-bottom: 0;">Find sensitive information in PDFs, Word documents, and other files.</p>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <h4 style="color: #4f46e5; margin-top: 0;">🖼️ Image Scanner</h4>
-                    <p style="color: #6b7280; margin-bottom: 0;">Find faces and other PII in images using computer vision.</p>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <h4 style="color: #4f46e5; margin-top: 0;">🗄️ Database Scanner</h4>
-                    <p style="color: #6b7280; margin-bottom: 0;">Identify PII stored in databases and data warehouses.</p>
-                </div>
+    # Always display the landing page content
+    st.markdown("""
+    <div style="background-color: #f8fafc; padding: 30px; border-radius: 10px; margin: 20px 0;">
+        <h1 style="color: #1e3a8a; margin-bottom: 10px;">DataGuardian Pro</h1>
+        <h3 style="color: #4b5563; font-weight: 500; margin-top: 0; margin-bottom: 20px;">Enterprise Privacy Compliance Platform</h3>
+        <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">
+            Comprehensive GDPR compliance platform that helps organizations identify, analyze, and protect 
+            personally identifiable information (PII) across multiple data sources.
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">🔍 Code Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Detect PII and security vulnerabilities in source code repositories.</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">📄 Document Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Find sensitive information in PDFs, Word documents, and other files.</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">🖼️ Image Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Find faces and other PII in images using computer vision.</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">🗄️ Database Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Identify PII stored in databases and data warehouses.</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">🌐 Website Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Analyze web applications for privacy compliance and data collection practices.</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">🔌 API Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Assess API endpoints for security vulnerabilities and data exposure risks.</p>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Additional landing page features
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 15px; margin: 30px 0; color: white; text-align: center;">
+        <h2 style="margin: 0 0 20px 0; color: white;">Start Your Privacy Compliance Journey</h2>
+        <p style="font-size: 18px; margin: 0 0 30px 0; opacity: 0.9;">
+            Get started with our comprehensive GDPR scanning platform and ensure your organization meets privacy compliance requirements.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <strong>Multi-Source Scanning</strong><br>
+                <span style="opacity: 0.9;">Code, Documents, Images & More</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <strong>Professional Reports</strong><br>
+                <span style="opacity: 0.9;">Certificate-Style PDF & HTML</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <strong>GDPR Compliance</strong><br>
+                <span style="opacity: 0.9;">Dutch & EU Standards</span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Add spacing
     st.markdown("<br><br>", unsafe_allow_html=True)
