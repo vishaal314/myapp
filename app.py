@@ -1,6 +1,6 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
+# import pandas as pd  # Temporarily disabled due to numpy conflict
+# import plotly.express as px  # Temporarily disabled due to numpy conflict
 import os
 import uuid
 import random
