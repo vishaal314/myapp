@@ -5,7 +5,9 @@ This module provides specialized display functions for SOC2 scan results.
 """
 
 import streamlit as st
-import pandas as pd
+# Disable pandas to resolve numpy conflicts
+# import pandas as pd
+pd = None
 
 def display_soc2_findings(scan_results):
     """

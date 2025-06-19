@@ -13,7 +13,9 @@ import hashlib
 import streamlit as st
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple
-import pandas as pd
+# Disable pandas to resolve numpy conflicts
+# import pandas as pd
+pd = None
 
 # Import internal dependencies
 from utils.i18n import get_text, _
