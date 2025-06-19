@@ -6828,7 +6828,7 @@ def display_database_scan_results():
         # Generate and download HTML report
         if st.button("📄 Generate HTML Report"):
             try:
-                from services.db_report_generator import generate_database_html_report
+                from services.report_generator_safe import generate_database_html_report
                 
                 with st.spinner("Generating HTML report..."):
                     html_content = generate_database_html_report(db_results)

@@ -7,8 +7,11 @@ based on scan results and privacy compliance status.
 import math
 import random
 from typing import Dict, Any, List, Tuple, Optional
-import pandas as pd
-import numpy as np
+# Disable pandas and numpy to resolve dependency conflicts
+# import pandas as pd
+# import numpy as np
+pd = None
+np = None
 
 # Default storage costs per GB per month in euros
 DEFAULT_STORAGE_COSTS = {

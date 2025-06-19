@@ -13,11 +13,17 @@ import ast
 from datetime import datetime
 from typing import List, Dict, Set, Optional, Any
 import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+# Disable pandas, matplotlib, and plotly to resolve numpy dependency conflicts
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# import plotly.express as px
+# import plotly.graph_objects as go
+# from plotly.subplots import make_subplots
+pd = None
+plt = None
+px = None
+go = None
+make_subplots = None
 
 # Import translations utility
 from utils.translations import _

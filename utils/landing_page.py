@@ -4,9 +4,13 @@ Provides professionally designed UI components for the landing page.
 """
 
 import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+# Disable pandas and plotly to resolve numpy dependency conflicts
+# import pandas as pd
+# import plotly.express as px
+# import plotly.graph_objects as go
+pd = None
+px = None
+go = None
 from typing import Dict, Any, List, Optional
 
 def display_gdpr_fine_card() -> None:
