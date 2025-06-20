@@ -1755,11 +1755,26 @@ else:
                 include_variables = st.checkbox("Analyze variable names", value=True)
                 
             elif scan_type == _("scan.document"):
-                # 2. Blob Scanner
-                st.subheader("Blob Scanner Configuration")
-                blob_source = st.radio(_("scan.repository_details"), [_("scan.upload_files"), "Azure Blob", "AWS S3", "Local Path"])
+                # 2. Document Scanner (Blob Scanner)
+                st.subheader("Document Scanner Configuration")
+                blob_source = st.radio("Data Source", ["Upload Files", "Azure Blob", "AWS S3", "Local Path"])
                 
-                if blob_source in ["Azure Blob", "AWS S3"]:
+                if blob_source == "Upload Files":
+                    st.info("Upload documents to scan for PII and sensitive data")
+                    uploaded_files = st.file_uploader(
+                        "Select Document Files", 
+                        accept_multiple_files=True,
+                        type=["pdf", "docx", "doc", "txt", "csv", "xlsx", "xls", "rtf", "xml", "json", "html"],
+                        help="Supported formats: PDF, Word documents, Text files, Spreadsheets, RTF, XML, JSON, HTML"
+                    )
+                    
+                    # Show file details if files are uploaded
+                    if uploaded_files:
+                        st.success(f"Selected {len(uploaded_files)} file(s) for scanning")
+                        for file in uploaded_files:
+                            st.write(f"📄 {file.name} ({file.size} bytes)")
+                
+                elif blob_source in ["Azure Blob", "AWS S3"]:
                     st.text_input(f"{blob_source} URL/Connection String", 
                                 placeholder="https://account.blob.core.windows.net/container" if blob_source == "Azure Blob" else "s3://bucket-name/prefix")
                     st.text_input("Storage Account Key/Access Key", type="password")
@@ -2525,11 +2540,11 @@ else:
                 # Empty upload files list - will be handled differently
                 uploaded_files = []
         
-        elif scan_type == _("scan.blob"):
-            if 'blob_source' in locals() and blob_source == _("scan.upload_files"):
-                upload_help = "Upload document files to scan for PII"
+        elif scan_type == _("scan.document"):
+            if 'blob_source' in locals() and blob_source == "Upload Files":
+                upload_help = "Upload document files to scan for PII and sensitive data"
                 uploaded_files = st.file_uploader(
-                    "Upload Document Files", 
+                    "Select Document Files for Scanning", 
                     accept_multiple_files=True,
                     type=["pdf", "docx", "doc", "txt", "csv", "xlsx", "xls", "rtf", "xml", "json", "html"],
                     help=upload_help
