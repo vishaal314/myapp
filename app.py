@@ -926,6 +926,7 @@ else:
     nav_options = [scan_title, dashboard_title, history_title, results_title, report_title]
     
     # Add Admin section if user has admin permissions
+    admin_title = None
     if has_permission('admin:access'):
         admin_title = get_text("admin.title")
         nav_options.append(admin_title)
@@ -1092,6 +1093,12 @@ else:
     
     # Call our custom navigation function
     selected_nav = create_modern_sidebar_nav(nav_options)
+    
+    # Ensure we have a valid selected navigation
+    if not selected_nav or selected_nav not in nav_options:
+        # Default to dashboard if no valid selection
+        selected_nav = dashboard_title
+        st.session_state.selected_nav = selected_nav
     
     # Membership section
     st.sidebar.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
@@ -1596,7 +1603,7 @@ else:
         else:
             st.info(_("dashboard.no_scan_data"))
     
-    elif selected_nav == _("scan.title"):
+    elif selected_nav == scan_title:
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
@@ -5144,7 +5151,7 @@ else:
                 st.markdown("---")
                 st.info(f"You can also access the full results in the '{_('history.title')}' section.")
         
-    elif selected_nav == _("history.title"):
+    elif selected_nav == history_title:
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
@@ -5501,7 +5508,7 @@ else:
         else:
             st.info(_("dashboard.no_scan_history"))
     
-    elif selected_nav == _("results.title"):
+    elif selected_nav == results_title:
         # Import permission checking functionality
         from services.auth import require_permission, has_permission
         
@@ -5653,7 +5660,7 @@ else:
             
     # SOC2 Scanner is now only accessed through the scan menu
         
-    elif selected_nav == _("admin.title"):
+    elif admin_title and selected_nav == admin_title:
         # Import required auth functionality
         from services.auth import require_permission, get_all_roles, get_all_permissions, get_user, create_user, update_user, delete_user, add_custom_permissions
         
