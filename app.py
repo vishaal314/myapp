@@ -932,10 +932,10 @@ else:
         nav_options.append(admin_title)
         print(f"  admin.title: '{admin_title}'")
     
-    # Custom function to create a modern sidebar navigation
+    # Simple navigation function to display scanner options
     def create_modern_sidebar_nav(nav_options, icon_map=None):
         """
-        Creates a modern sidebar navigation with icons and hover effects.
+        Creates a simple sidebar navigation with working buttons.
         
         Args:
             nav_options: List of navigation options
@@ -955,140 +955,27 @@ else:
                 get_text("admin.title"): "⚙️"
             }
         
-        # Ensure the sidebar navigation title is also freshly translated
-        sidebar_nav_title = get_text("sidebar.navigation")
-        
-        # Add a stylish header for navigation
-        st.sidebar.markdown(f"<div class='sidebar-header'>{sidebar_nav_title}</div>", unsafe_allow_html=True)
-        
-        # Create container for navigation items
-        st.sidebar.markdown("<div class='sidebar-nav'>", unsafe_allow_html=True)
+        # Add navigation header
+        st.sidebar.markdown("### Navigation")
         
         # Store the selection in session state
         if 'selected_nav' not in st.session_state:
-            st.session_state.selected_nav = nav_options[0]
+            st.session_state.selected_nav = nav_options[0] if nav_options else dashboard_title
         
-        # Create custom navigation buttons with icons
+        # Create navigation buttons
         for nav_option in nav_options:
-            # Skip 'app' and 'SOC2 Scanner' items
-            if nav_option.lower() == 'app' or 'soc2' in nav_option.lower():
+            # Skip invalid options
+            if not nav_option or nav_option.lower() == 'app':
                 continue
                 
-            icon = icon_map.get(nav_option, "🔗")  # Default icon if not found
-            is_active = st.session_state.selected_nav == nav_option
-            active_class = "active" if is_active else ""
+            icon = icon_map.get(nav_option, "🔗")
             
-            button_html = f"""
-            <div class='nav-button {active_class}' onclick="this.closest('form').querySelector('button[value=\'{nav_option}\']').click();">
-                <span class='nav-icon'>{icon}</span>
-                <span>{nav_option}</span>
-            </div>
-            """
-            st.sidebar.markdown(button_html, unsafe_allow_html=True)
-            
-            # Hidden button to capture clicks
-            # Use CSS to hide the button visually but keep it functional
-            st.sidebar.markdown(
-                f"""
-                <style>
-                div[data-testid="stButton"][aria-label="{nav_option}"] {{
-                    position: absolute;
-                    width: 100%;
-                    height: 100%;
-                    top: 0;
-                    left: 0;
-                    opacity: 0;
-                    z-index: 1;
-                }}
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
-            
-            if st.sidebar.button(nav_option, key=f"nav_{nav_option}"):
+            # Create working navigation button
+            if st.sidebar.button(f"{icon} {nav_option}", key=f"nav_{nav_option.replace(' ', '_')}", use_container_width=True):
                 st.session_state.selected_nav = nav_option
                 st.rerun()
         
-        st.sidebar.markdown("</div>", unsafe_allow_html=True)
-        
-        # Create a divider
-        st.sidebar.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
-        
-        # Quick access section
-        st.sidebar.markdown(f"<div class='sidebar-header'>{_('sidebar.quick_access')}</div>", unsafe_allow_html=True)
-        
-        # Use direct get_text to ensure the most updated translations
-        dash_text = get_text("dashboard.welcome")
-        sidebar_dashboard_text = get_text("sidebar.dashboard") 
-        sidebar_dashboard_help_text = get_text("sidebar.dashboard_help")
-        
-        report_text = get_text("report.generate")
-        sidebar_reports_text = get_text("sidebar.reports")
-        sidebar_reports_help_text = get_text("sidebar.reports_help")
-        
-        # Modern quick access buttons
-        st.sidebar.markdown("<div class='quick-access-container'>", unsafe_allow_html=True)
-        
-        # Dashboard quick access
-        dashboard_html = f"""
-        <div class='quick-access-button' onclick="this.closest('form').querySelector('button[value=\'dashboard\']').click();">
-            <span class='quick-access-icon'>📊</span>
-            <span>{sidebar_dashboard_text}</span>
-        </div>
-        """
-        st.sidebar.markdown(dashboard_html, unsafe_allow_html=True)
-        
-        # Reports quick access
-        reports_html = f"""
-        <div class='quick-access-button' onclick="this.closest('form').querySelector('button[value=\'reports\']').click();">
-            <span class='quick-access-icon'>📑</span>
-            <span>{sidebar_reports_text}</span>
-        </div>
-        """
-        st.sidebar.markdown(reports_html, unsafe_allow_html=True)
-        
-        # Hidden buttons for quick access - CSS to hide them
-        st.sidebar.markdown(
-            """
-            <style>
-            div[data-testid="stButton"][aria-label="dashboard"] {
-                position: absolute;
-                width: 1px;
-                height: 1px;
-                padding: 0;
-                margin: -1px;
-                overflow: hidden;
-                clip: rect(0, 0, 0, 0);
-                white-space: nowrap;
-                border-width: 0;
-            }
-            div[data-testid="stButton"][aria-label="reports"] {
-                position: absolute;
-                width: 1px;
-                height: 1px;
-                padding: 0;
-                margin: -1px;
-                overflow: hidden;
-                clip: rect(0, 0, 0, 0);
-                white-space: nowrap;
-                border-width: 0;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-        
-        if st.sidebar.button("dashboard", key="quick_dashboard_hidden"):
-            st.session_state.selected_nav = dash_text
-            st.rerun()
-            
-        if st.sidebar.button("reports", key="quick_reports_hidden"):
-            st.session_state.selected_nav = report_text
-            st.rerun()
-            
-        st.sidebar.markdown("</div>", unsafe_allow_html=True)
-        
-        # Return the selected nav option from session state
+        # Return the selected navigation option
         return st.session_state.selected_nav
     
     # Call our custom navigation function
