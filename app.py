@@ -3647,6 +3647,64 @@ else:
                     # Initialize the appropriate scanner based on scan type
                     if scan_type == _("scan.document"):
                         scanner_instance = BlobScanner(region=region)
+                        
+                        # Process document scanning with BlobScanner
+                        if uploaded_files and len(uploaded_files) > 0:
+                            try:
+                                # Save uploaded files temporarily
+                                temp_dir = f"temp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                                os.makedirs(temp_dir, exist_ok=True)
+                                
+                                file_paths = []
+                                for uploaded_file in uploaded_files:
+                                    file_path = os.path.join(temp_dir, uploaded_file.name)
+                                    with open(file_path, "wb") as f:
+                                        f.write(uploaded_file.getbuffer())
+                                    file_paths.append(file_path)
+                                
+                                # Initialize progress tracking
+                                progress_bar.progress(0.1)
+                                status_text.text("Starting document scan...")
+                                
+                                # Perform document scan
+                                document_results = scanner_instance.scan_files(
+                                    file_paths, 
+                                    callback=lambda current, total, current_file: [
+                                        progress_bar.progress(0.1 + (current / total * 0.8)),
+                                        status_text.text(f"Scanning document {current}/{total}: {current_file}")
+                                    ]
+                                )
+                                
+                                # Complete progress
+                                progress_bar.progress(1.0)
+                                status_text.text("Document scan completed!")
+                                
+                                # Store results in session state
+                                st.session_state.document_scan_results = document_results
+                                st.session_state.document_scan_complete = True
+                                
+                                # Store in scan_results for the general processing section
+                                scan_results = [document_results] if document_results else []
+                                
+                                # Display document scan results
+                                display_document_scan_results()
+                                
+                                # Cleanup temporary files
+                                import shutil
+                                if os.path.exists(temp_dir):
+                                    shutil.rmtree(temp_dir)
+                                
+                                # Skip the rest of the scanner processing for document scans
+                                scan_running = False
+                                
+                            except Exception as e:
+                                st.error(f"Error during document scan: {str(e)}")
+                                scan_results = []
+                                scan_running = False
+                                # Cleanup on error
+                                if 'temp_dir' in locals() and os.path.exists(temp_dir):
+                                    import shutil
+                                    shutil.rmtree(temp_dir)
                     elif scan_type == _("scan.image"):
                         # Image Scanner - comprehensive image PII scanning
                         try:
