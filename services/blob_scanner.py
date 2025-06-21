@@ -8,6 +8,9 @@ import PyPDF2
 import textract
 from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
+from utils.netherlands_gdpr import detect_nl_violations
+from utils.comprehensive_gdpr_validator import validate_comprehensive_gdpr_compliance
+from utils.eu_ai_act_compliance import detect_ai_act_violations, generate_ai_act_compliance_report
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -186,14 +189,30 @@ class BlobScanner:
             # Scan the extracted text for PII
             pii_items = self._scan_text(text, file_path)
             
-            # Calculate risk assessment
-            risk_assessment = self._calculate_risk_score(pii_items)
+            # Perform comprehensive compliance validation
+            gdpr_compliance = validate_comprehensive_gdpr_compliance(text, self.region)
+            netherlands_violations = detect_nl_violations(text) if self.region == "Netherlands" else []
+            ai_act_violations = detect_ai_act_violations(text)
+            
+            # Combine all findings
+            all_compliance_findings = []
+            all_compliance_findings.extend(gdpr_compliance.get('findings', []))
+            all_compliance_findings.extend(netherlands_violations)
+            all_compliance_findings.extend(ai_act_violations)
+            
+            # Calculate risk assessment including compliance findings
+            risk_assessment = self._calculate_risk_score(pii_items + all_compliance_findings)
             
             # Determine GDPR categories
             gdpr_categories = self._get_gdpr_categories(pii_items)
             
-            # Generate compliance notes
-            compliance_notes = self._generate_compliance_notes(pii_items, file_type)
+            # Generate comprehensive compliance notes
+            compliance_notes = self._generate_comprehensive_compliance_notes(
+                pii_items, all_compliance_findings, file_type, gdpr_compliance, ai_act_violations
+            )
+            
+            # Generate AI Act compliance report
+            ai_act_report = generate_ai_act_compliance_report(ai_act_violations)
             
             # Create comprehensive results
             result = {
@@ -550,7 +569,7 @@ class BlobScanner:
     
     def _generate_compliance_notes(self, findings: List[Dict[str, Any]], file_type: str) -> List[str]:
         """
-        Generate compliance notes based on findings and file type.
+        Generate comprehensive compliance notes based on findings and file type.
         
         Args:
             findings: List of PII findings
@@ -570,23 +589,86 @@ class BlobScanner:
         if high_risk_types:
             notes.append(f"High-risk PII detected: {', '.join(set(high_risk_types))}")
         
-        # Special category data
-        special_categories = [f['type'] for f in findings if f['type'] in ['Medical Data', 'Biometric Data']]
+        # Special category data (GDPR Article 9)
+        special_categories = [f['type'] for f in findings if f['type'] in ['Medical Data', 'Biometric Data', 'Genetic Data', 'Health Information']]
         if special_categories:
             notes.append("Special category data found - requires explicit consent under GDPR Article 9")
         
         # Dutch-specific BSN
         bsn_found = any(f['type'] == 'BSN' for f in findings)
         if bsn_found and self.region == "Netherlands":
-            notes.append("BSN detected - subject to Dutch UAVG special protection requirements")
+            notes.append("BSN (Dutch Citizen Service Number) detected - requires special handling under UAVG Article 46")
+        
+        return notes
+    
+    def _generate_comprehensive_compliance_notes(self, pii_findings: List[Dict[str, Any]], 
+                                               compliance_findings: List[Dict[str, Any]], 
+                                               file_type: str, gdpr_compliance: Dict[str, Any],
+                                               ai_act_violations: List[Dict[str, Any]]) -> List[str]:
+        """
+        Generate comprehensive compliance notes including GDPR, Netherlands-specific, and AI Act findings.
+        """
+        notes = []
+        
+        # Start with basic PII notes
+        if not pii_findings and not compliance_findings:
+            notes.append("No PII or compliance issues detected in document")
+            return notes
+        
+        # PII findings summary
+        if pii_findings:
+            high_risk_types = [f['type'] for f in pii_findings if f.get('risk_level') == 'High']
+            if high_risk_types:
+                notes.append(f"High-risk PII detected: {', '.join(set(high_risk_types))}")
+            
+            # Special category data (GDPR Article 9)
+            special_categories = [f['type'] for f in pii_findings if f['type'] in ['Medical Data', 'Biometric Data', 'Genetic Data', 'Health Information']]
+            if special_categories:
+                notes.append("Special category data found - requires explicit consent under GDPR Article 9")
+        
+        # GDPR compliance summary
+        gdpr_score = gdpr_compliance.get('overall_compliance_score', 100)
+        if gdpr_score < 70:
+            notes.append(f"GDPR compliance score: {gdpr_score}/100 - Significant compliance gaps identified")
+        elif gdpr_score < 90:
+            notes.append(f"GDPR compliance score: {gdpr_score}/100 - Minor compliance improvements needed")
+        else:
+            notes.append(f"GDPR compliance score: {gdpr_score}/100 - Good compliance level")
+        
+        # Netherlands-specific findings
+        if self.region == "Netherlands":
+            nl_violations = [f for f in compliance_findings if f.get('gdpr_principle') == 'netherlands_specific']
+            if nl_violations:
+                notes.append(f"Netherlands UAVG violations detected: {len(nl_violations)} issues requiring attention")
+        
+        # EU AI Act findings
+        if ai_act_violations:
+            critical_ai = [f for f in ai_act_violations if f.get('risk_level') == 'Critical']
+            high_ai = [f for f in ai_act_violations if f.get('risk_level') == 'High']
+            
+            if critical_ai:
+                notes.append(f"EU AI Act CRITICAL violations: {len(critical_ai)} prohibited practices detected")
+            if high_ai:
+                notes.append(f"EU AI Act high-risk systems: {len(high_ai)} require compliance framework")
+        
+        # Data subject rights assessment
+        rights_scores = gdpr_compliance.get('rights_compliance', {}).get('scores', {})
+        missing_rights = [right.replace('_', ' ').title() for right, score in rights_scores.items() if score < 80]
+        if missing_rights:
+            notes.append(f"Data subject rights gaps: {', '.join(missing_rights[:3])}{'...' if len(missing_rights) > 3 else ''}")
+        
+        # GDPR principles assessment
+        principle_scores = gdpr_compliance.get('principle_compliance', {}).get('scores', {})
+        weak_principles = [principle.replace('_', ' ').title() for principle, score in principle_scores.items() if score < 70]
+        if weak_principles:
+            notes.append(f"GDPR principle weaknesses: {', '.join(weak_principles[:3])}{'...' if len(weak_principles) > 3 else ''}")
         
         # File type specific notes
-        if file_type in ['PDF', 'DOCX']:
-            notes.append("Document contains structured PII - ensure proper data retention policies")
-        elif file_type in ['CSV', 'XLSX']:
-            notes.append("Spreadsheet data requires careful access controls and encryption")
-        elif file_type in ['JSON', 'XML']:
-            notes.append("Structured data format - verify API security if this data is transmitted")
+        if file_type in ['PDF', 'DOCX', 'HTML'] and any('automated' in str(f).lower() for f in compliance_findings):
+            notes.append("Document contains automated processing references - ensure GDPR Article 22 compliance")
+        
+        if file_type in ['JSON', 'XML'] and pii_findings:
+            notes.append("Structured data with PII - ensure data minimization and purpose limitation")
         
         return notes
     
