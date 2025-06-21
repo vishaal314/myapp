@@ -6640,6 +6640,220 @@ def display_image_scan_results():
                 st.write(f"**Images Scanned:** {metadata.get('images_scanned', 0)}")
                 st.write(f"**Total Findings:** {metadata.get('total_findings', 0)}")
 
+def display_document_scan_results():
+    """Display document scan results with downloadable reports."""
+    
+    if not st.session_state.get('document_scan_complete', False):
+        st.info("No document scan results available. Please run a document scan first.")
+        return
+    
+    document_scan_results = st.session_state.get('document_scan_results', {})
+    
+    if not document_scan_results:
+        st.info("No document scan results found.")
+        return
+    
+    # Get findings count for messaging
+    findings_count = len(document_scan_results.get('findings', []))
+    documents_scanned = document_scan_results.get('metadata', {}).get('documents_scanned', 0)
+    
+    # Display appropriate header based on findings
+    if findings_count > 0:
+        st.subheader("📄 Document Scan Results")
+    else:
+        st.subheader("📄 Document Scan Results - Clean Scan")
+        st.success(f"All {documents_scanned} documents scanned successfully with no personal data detected!")
+        st.markdown("""
+        <div style="padding: 15px; background-color: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 5px; margin: 10px 0;">
+            <h4 style="color: #1e40af; margin-top: 0;">GDPR Compliance Status: EXCELLENT</h4>
+            <p style="margin-bottom: 0;">Your documents contain no detectable personal data, which means excellent privacy compliance. You can still download an official compliance certificate below.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Display summary metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        documents_scanned = document_scan_results.get('metadata', {}).get('documents_scanned', 0)
+        st.metric("Documents Scanned", documents_scanned)
+    
+    with col2:
+        total_findings = len(document_scan_results.get('findings', []))
+        st.metric("Total PII Findings", total_findings)
+    
+    with col3:
+        documents_with_pii = document_scan_results.get('documents_with_pii', 0)
+        st.metric("Documents with PII", documents_with_pii)
+    
+    with col4:
+        risk_score = document_scan_results.get('risk_summary', {}).get('score', 0)
+        st.metric("Risk Score", f"{risk_score}/100")
+    
+    # Display findings in expandable sections
+    findings = document_scan_results.get('findings', [])
+    
+    if findings:
+        st.subheader("🔍 Detailed PII Findings")
+        
+        # Group findings by PII type
+        findings_by_type = {}
+        for finding in findings:
+            pii_type = finding.get('type', 'Other')
+            if pii_type not in findings_by_type:
+                findings_by_type[pii_type] = []
+            findings_by_type[pii_type].append(finding)
+        
+        # Display each PII type
+        for pii_type, type_findings in findings_by_type.items():
+            with st.expander(f"{pii_type} ({len(type_findings)} findings)", expanded=True):
+                
+                # Create DataFrame for this PII type
+                df_data = []
+                for finding in type_findings:
+                    df_data.append({
+                        'Source Document': os.path.basename(finding.get('source', 'Unknown')),
+                        'PII Type': finding.get('type', 'Unknown'),
+                        'Risk Level': finding.get('risk_level', 'Medium'),
+                        'Confidence': f"{finding.get('confidence', 0):.0%}",
+                        'Location': finding.get('location', 'Unknown'),
+                        'Context': finding.get('context', 'No context'),
+                        'GDPR Reason': finding.get('reason', 'No reason provided')
+                    })
+                
+                if df_data:
+                    st.dataframe(df_data, use_container_width=True)
+    else:
+        # No findings - show positive compliance message
+        st.subheader("🔍 Scan Analysis")
+        st.markdown("""
+        <div style="padding: 20px; background-color: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; margin: 15px 0;">
+            <h4 style="color: #15803d; margin-top: 0;">Excellent Privacy Compliance</h4>
+            <p style="margin-bottom: 5px;"><strong>No personal data detected in any scanned documents.</strong></p>
+            <p style="margin-bottom: 0;">Your documents are fully compliant with GDPR Article 6 and do not require additional privacy measures.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Display individual document results
+    document_results = document_scan_results.get('document_results', {})
+    if document_results:
+        st.subheader("📋 Individual Document Results")
+        
+        for doc_path, result in document_results.items():
+            doc_name = os.path.basename(doc_path)
+            doc_findings = result.get('findings', [])
+            has_pii = result.get('has_pii', False)
+            
+            # Color code based on PII presence
+            status_color = "🔴" if has_pii else "🟢"
+            pii_status = f"PII Detected ({len(doc_findings)} findings)" if has_pii else "No PII Detected"
+            
+            with st.expander(f"{status_color} {doc_name} - {pii_status}", expanded=has_pii):
+                if has_pii:
+                    # Show findings for this document
+                    for finding in doc_findings:
+                        st.write(f"**{finding.get('type', 'Unknown PII')}**")
+                        st.write(f"- Risk Level: {finding.get('risk_level', 'Unknown')}")
+                        st.write(f"- Confidence: {finding.get('confidence', 0):.0%}")
+                        st.write(f"- Location: {finding.get('location', 'Unknown')}")
+                        st.write(f"- Context: {finding.get('context', 'No context')}")
+                        st.write(f"- GDPR Compliance: {finding.get('reason', 'No reason')}")
+                        st.write("---")
+                else:
+                    st.write("No personal data detected in this document.")
+                
+                # Show metadata
+                metadata = result.get('metadata', {})
+                if metadata:
+                    st.write(f"**Format:** {metadata.get('format', 'Unknown')}")
+                    st.write(f"**Process Time:** {metadata.get('process_time_ms', 0)} ms")
+    
+    # Display risk summary
+    risk_summary = document_scan_results.get('risk_summary', {})
+    if risk_summary:
+        st.subheader("⚠️ Risk Assessment")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            risk_level = risk_summary.get('level', 'Low')
+            risk_color = {
+                'Critical': '🔴',
+                'High': '🟠', 
+                'Medium': '🟡',
+                'Low': '🟢'
+            }.get(risk_level, '🟢')
+            
+            st.write(f"**Overall Risk Level:** {risk_color} {risk_level}")
+            st.write(f"**Risk Score:** {risk_summary.get('score', 0)}/100")
+        
+        with col2:
+            factors = risk_summary.get('factors', [])
+            if factors:
+                st.write("**Risk Factors:**")
+                for factor in factors:
+                    st.write(f"- {factor}")
+    
+    # Download buttons
+    st.subheader("📥 Download Reports")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("📄 Download HTML Report", key="download_document_html"):
+            try:
+                from services.document_report_generator import generate_document_html_report
+                html_content = generate_document_html_report(document_scan_results)
+                
+                # Provide download
+                st.download_button(
+                    label="💾 Save HTML Report",
+                    data=html_content,
+                    file_name=f"document_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                    mime="text/html",
+                    key="save_document_html"
+                )
+                st.success("HTML report generated successfully!")
+                
+            except Exception as e:
+                st.error(f"Error generating HTML report: {str(e)}")
+    
+    with col2:
+        if st.button("📑 Download PDF Certificate", key="download_document_pdf"):
+            try:
+                from services.document_report_generator import generate_document_pdf_report
+                
+                # Generate PDF report
+                pdf_content = generate_document_pdf_report(document_scan_results)
+                
+                # Provide download
+                st.download_button(
+                    label="💾 Save PDF Certificate",
+                    data=pdf_content,
+                    file_name=f"document_scan_certificate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                    mime="application/pdf",
+                    key="save_document_pdf"
+                )
+                st.success("PDF certificate generated successfully!")
+                
+            except Exception as e:
+                st.error(f"Error generating PDF certificate: {str(e)}")
+    
+    # Display scan metadata
+    metadata = document_scan_results.get('metadata', {})
+    if metadata:
+        with st.expander("📊 Scan Metadata", expanded=False):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.write(f"**Scan Time:** {metadata.get('scan_time', 'Unknown')}")
+                st.write(f"**Process Time:** {metadata.get('process_time_seconds', 0):.2f} seconds")
+                st.write(f"**Region:** {metadata.get('region', 'Unknown')}")
+            
+            with col2:
+                st.write(f"**Documents Total:** {metadata.get('documents_total', 0)}")
+                st.write(f"**Documents Scanned:** {metadata.get('documents_scanned', 0)}")
+                st.write(f"**Total Findings:** {metadata.get('total_findings', 0)}")
+
 def display_database_scan_results():
     """Display database scan results with downloadable reports."""
     st.subheader("Database Scanner Results")
