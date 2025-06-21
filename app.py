@@ -3682,20 +3682,72 @@ else:
                                 progress_bar.progress(1.0)
                                 status_text.text("Document scan completed!")
                                 
-                                # Store results in session state
+                                # Store results in session state for the display function
                                 st.session_state.document_scan_results = document_results
                                 st.session_state.document_scan_complete = True
                                 
                                 # Store in scan_results for the general processing section
                                 scan_results = [document_results] if document_results else []
                                 
-                                # Display document scan results
-                                display_document_scan_results()
-                                
                                 # Cleanup temporary files
                                 import shutil
                                 if os.path.exists(temp_dir):
                                     shutil.rmtree(temp_dir)
+                                
+                                # Mark scan as complete and show success
+                                st.success("Document scan completed successfully!")
+                                st.write(f"Scanned {len(file_paths)} document(s)")
+                                
+                                if document_results and 'total_pii_found' in document_results:
+                                    st.write(f"Found {document_results['total_pii_found']} PII instances")
+                                    
+                                # Display the results immediately
+                                st.subheader("Document Scan Results")
+                                
+                                # Show basic metrics
+                                if document_results:
+                                    col1, col2, col3, col4 = st.columns(4)
+                                    
+                                    with col1:
+                                        st.metric("Files Scanned", document_results.get('file_count', 0))
+                                    with col2:
+                                        st.metric("Total PII Found", document_results.get('total_pii_found', 0))
+                                    with col3:
+                                        st.metric("High Risk Items", document_results.get('high_risk_count', 0))
+                                    with col4:
+                                        st.metric("Medium Risk Items", document_results.get('medium_risk_count', 0))
+                                    
+                                    # Add download buttons
+                                    st.markdown("### Download Reports")
+                                    col1, col2 = st.columns(2)
+                                    
+                                    with col1:
+                                        if st.button("📄 Download PDF Certificate", key="doc_pdf_cert"):
+                                            from services.document_report_generator import DocumentReportGenerator
+                                            generator = DocumentReportGenerator()
+                                            pdf_bytes = generator.generate_pdf_certificate(document_results)
+                                            
+                                            st.download_button(
+                                                label="📥 Download PDF Certificate",
+                                                data=pdf_bytes,
+                                                file_name=f"document_scan_certificate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                                mime="application/pdf",
+                                                key="doc_pdf_download"
+                                            )
+                                    
+                                    with col2:
+                                        if st.button("📊 Download HTML Report", key="doc_html_report"):
+                                            from services.document_report_generator import DocumentReportGenerator
+                                            generator = DocumentReportGenerator()
+                                            html_content = generator.generate_html_report(document_results)
+                                            
+                                            st.download_button(
+                                                label="📥 Download HTML Report",
+                                                data=html_content,
+                                                file_name=f"document_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                                                mime="text/html",
+                                                key="doc_html_download"
+                                            )
                                 
                                 # Skip the rest of the scanner processing for document scans
                                 scan_running = False
