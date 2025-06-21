@@ -1761,18 +1761,7 @@ else:
                 
                 if blob_source == "Upload Files":
                     st.info("Upload documents to scan for PII and sensitive data")
-                    uploaded_files = st.file_uploader(
-                        "Select Document Files", 
-                        accept_multiple_files=True,
-                        type=["pdf", "docx", "doc", "txt", "csv", "xlsx", "xls", "rtf", "xml", "json", "html"],
-                        help="Supported formats: PDF, Word documents, Text files, Spreadsheets, RTF, XML, JSON, HTML"
-                    )
-                    
-                    # Show file details if files are uploaded
-                    if uploaded_files:
-                        st.success(f"Selected {len(uploaded_files)} file(s) for scanning")
-                        for file in uploaded_files:
-                            st.write(f"📄 {file.name} ({file.size} bytes)")
+                    # File upload will be handled in the upload section below
                 
                 elif blob_source in ["Azure Blob", "AWS S3"]:
                     st.text_input(f"{blob_source} URL/Connection String", 
@@ -2546,9 +2535,19 @@ else:
                 uploaded_files = st.file_uploader(
                     "Select Document Files for Scanning", 
                     accept_multiple_files=True,
-                    type=["pdf", "docx", "doc", "txt", "csv", "xlsx", "xls", "rtf", "xml", "json", "html"],
+                    type=["pdf", "docx", "doc", "txt", "csv", "xlsx", "xls", "rtf", "xml", "json", "html", "htm"],
                     help=upload_help
                 )
+                
+                # Show file details if files are uploaded
+                if uploaded_files:
+                    st.success(f"Selected {len(uploaded_files)} file(s) for scanning")
+                    with st.expander("View Selected Files", expanded=True):
+                        for i, file in enumerate(uploaded_files, 1):
+                            file_size_mb = file.size / (1024 * 1024)
+                            st.write(f"📄 **{i}.** {file.name}")
+                            st.write(f"   Size: {file_size_mb:.2f} MB ({file.size:,} bytes)")
+                            st.write(f"   Type: {file.type if file.type else 'Unknown'}")
             else:
                 # For other blob source options
                 uploaded_files = []
