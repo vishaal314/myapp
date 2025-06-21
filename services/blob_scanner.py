@@ -228,7 +228,29 @@ class BlobScanner:
                 'gdpr_categories': gdpr_categories,
                 'compliance_notes': compliance_notes,
                 'scan_timestamp': datetime.now().isoformat(),
-                'region': self.region
+                'region': self.region,
+                'file_size': os.path.getsize(file_path) if os.path.exists(file_path) else 0,
+                'text_length': len(text) if text else 0,
+                # Enhanced compliance reporting
+                'gdpr_compliance': {
+                    'overall_score': gdpr_compliance.get('overall_compliance_score', 0),
+                    'status': gdpr_compliance.get('compliance_status', 'Unknown'),
+                    'principle_scores': gdpr_compliance.get('principle_compliance', {}),
+                    'rights_scores': gdpr_compliance.get('rights_compliance', {}),
+                    'recommendations': gdpr_compliance.get('recommendations', [])
+                },
+                'netherlands_compliance': {
+                    'violations_found': len(netherlands_violations),
+                    'violations': netherlands_violations
+                } if self.region == "Netherlands" else {},
+                'ai_act_compliance': {
+                    'compliance_score': ai_act_report.get('compliance_score', 100),
+                    'status': ai_act_report.get('compliance_status', 'Compliant'),
+                    'risk_distribution': ai_act_report.get('risk_distribution', {}),
+                    'violations': ai_act_violations,
+                    'recommendations': ai_act_report.get('recommendations', [])
+                },
+                'all_compliance_findings': all_compliance_findings
             }
             
             return result
