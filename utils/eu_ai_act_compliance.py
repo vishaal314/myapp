@@ -228,6 +228,9 @@ def _detect_algorithmic_accountability(content: str) -> List[Dict[str, Any]]:
 def generate_ai_act_compliance_report(findings: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Generate a comprehensive AI Act compliance report."""
     
+    if not findings:
+        findings = []
+    
     risk_distribution = {
         'Critical': len([f for f in findings if f.get('risk_level') == 'Critical']),
         'High': len([f for f in findings if f.get('risk_level') == 'High']),

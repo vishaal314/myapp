@@ -193,19 +193,19 @@ class BlobScanner:
             try:
                 gdpr_compliance = validate_comprehensive_gdpr_compliance(text, self.region)
             except Exception as e:
-                self.logger.warning(f"GDPR compliance validation failed: {str(e)}")
+                print(f"GDPR compliance validation failed: {str(e)}")
                 gdpr_compliance = {'findings': [], 'overall_compliance_score': 100}
             
             try:
                 netherlands_violations = detect_nl_violations(text) if self.region == "Netherlands" else []
             except Exception as e:
-                self.logger.warning(f"Netherlands violations detection failed: {str(e)}")
+                print(f"Netherlands violations detection failed: {str(e)}")
                 netherlands_violations = []
             
             try:
                 ai_act_violations = detect_ai_act_violations(text)
             except Exception as e:
-                self.logger.warning(f"AI Act violations detection failed: {str(e)}")
+                print(f"AI Act violations detection failed: {str(e)}")
                 ai_act_violations = []
             
             # Combine all findings
@@ -235,7 +235,7 @@ class BlobScanner:
             try:
                 ai_act_report = generate_ai_act_compliance_report(ai_act_violations)
             except Exception as e:
-                self.logger.warning(f"AI Act report generation failed: {str(e)}")
+                print(f"AI Act report generation failed: {str(e)}")
                 ai_act_report = {'compliance_score': 100, 'compliance_status': 'Compliant', 'risk_distribution': {}, 'recommendations': []}
             
             # Create comprehensive results
@@ -459,7 +459,7 @@ class BlobScanner:
             return formatted_findings
             
         except Exception as e:
-            self.logger.error(f"Error scanning text: {str(e)}")
+            print(f"Error scanning text: {str(e)}")
             return []
     
     def _detect_demonstration_violations(self, text: str, file_path: str) -> List[Dict[str, Any]]:
