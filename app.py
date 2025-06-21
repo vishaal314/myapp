@@ -3666,13 +3666,16 @@ else:
                                 progress_bar.progress(0.1)
                                 status_text.text("Starting document scan...")
                                 
-                                # Perform document scan
-                                document_results = scanner_instance.scan_files(
+                                # Define progress callback function
+                                def doc_progress_callback(current, total, current_file):
+                                    progress = 0.1 + (current / total * 0.8)
+                                    progress_bar.progress(progress)
+                                    status_text.text(f"Scanning document {current}/{total}: {os.path.basename(current_file)}")
+                                
+                                # Perform document scan using the correct method
+                                document_results = scanner_instance.scan_multiple_documents(
                                     file_paths, 
-                                    callback=lambda current, total, current_file: [
-                                        progress_bar.progress(0.1 + (current / total * 0.8)),
-                                        status_text.text(f"Scanning document {current}/{total}: {current_file}")
-                                    ]
+                                    callback_fn=doc_progress_callback
                                 )
                                 
                                 # Complete progress
