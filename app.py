@@ -4359,7 +4359,7 @@ else:
                     elif scan_type == _("scan.dpia"):
                         # Skip the informational box and go straight to the improved DPIA form
                         # Import and run our improved DPIA form with a more stable and reliable experience
-                        from improved_dpia import run_improved_dpia
+                        # from improved_dpia import run_improved_dpia  # Temporarily disabled due to matplotlib dependency
                         
                         # Hide the Start Scan button and Upload Files section and other unnecessary UI for DPIA
                         st.markdown("""

@@ -2,14 +2,11 @@ import io
 import os
 import base64
 import math
+import logging
+import uuid
 import streamlit as st
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from matplotlib.backends.backend_pdf import PdfPages
-import numpy as np
-import pandas as pd
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -224,6 +221,11 @@ class EnvironmentalImpactChart(Flowable):
 # Configure a logger for the report generator
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 def auto_generate_pdf_report(scan_data: Dict[str, Any], save_path: Optional[str] = None) -> Tuple[bool, str, Optional[bytes]]:
     """
