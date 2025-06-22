@@ -8,7 +8,13 @@ storing it in memory, and generating comprehensive reports.
 import streamlit as st
 from datetime import datetime
 from services.dpia_data_collector import DPIADataCollector
-from services.dpia_report_generator import DPIAReportGenerator
+# Report generator import with fallback
+try:
+    from services.dpia_report_generator import DPIAReportGenerator
+    REPORT_GENERATOR_AVAILABLE = True
+except ImportError:
+    REPORT_GENERATOR_AVAILABLE = False
+    DPIAReportGenerator = None
 
 def run_dpia_data_collection():
     """Main DPIA data collection interface."""
@@ -445,13 +451,18 @@ def display_report_summary(report_data: Dict):
     # Key metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Overall Risk", exec_summary.get('overall_risk_level', 'Unknown').upper())
+        risk_level = exec_summary.get('overall_risk_level', 'Unknown').upper()
+        risk_color = {"HIGH": "red", "MEDIUM": "orange", "LOW": "green"}.get(risk_level, "gray")
+        st.metric("Overall Risk", risk_level)
     with col2:
-        st.metric("GDPR Score", f"{compliance.get('gdpr_score', 0)}%")
+        gdpr_score = compliance.get('gdpr_score', 0)
+        st.metric("GDPR Score", f"{gdpr_score}%", delta=f"{gdpr_score-80}%" if gdpr_score >= 80 else None)
     with col3:
-        st.metric("UAVG Score", f"{compliance.get('uavg_score', 0)}%")
+        uavg_score = compliance.get('uavg_score', 0) 
+        st.metric("UAVG Score", f"{uavg_score}%", delta=f"{uavg_score-80}%" if uavg_score >= 80 else None)
     with col4:
-        st.metric("Compliance", "✅" if compliance.get('can_proceed', False) else "❌")
+        can_proceed = compliance.get('can_proceed', False)
+        st.metric("Can Proceed", "YES" if can_proceed else "NO")
     
     # Risk factors
     if risk_summary.get('high_risk_factors'):
@@ -471,28 +482,45 @@ def generate_downloadable_report(report_data: Dict):
     """Generate downloadable report files."""
     st.markdown("### Download Reports")
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         # JSON report
         import json
         json_report = json.dumps(report_data, indent=2, default=str)
         st.download_button(
-            label="📄 Download JSON Report",
+            label="Download JSON Report",
             data=json_report,
             file_name=f"DPIA_Report_{report_data['report_id'][:8]}.json",
             mime="application/json"
         )
     
     with col2:
-        # HTML report (simplified)
+        # HTML report
         html_report = generate_html_report(report_data)
         st.download_button(
-            label="🌐 Download HTML Report",
+            label="Download HTML Report",
             data=html_report,
             file_name=f"DPIA_Report_{report_data['report_id'][:8]}.html",
             mime="text/html"
         )
+    
+    with col3:
+        # PDF report (if generator available)
+        if REPORT_GENERATOR_AVAILABLE:
+            generator = DPIAReportGenerator()
+            try:
+                pdf_bytes = generator.generate_pdf_report(report_data)
+                st.download_button(
+                    label="Download PDF Report",
+                    data=pdf_bytes,
+                    file_name=f"DPIA_Report_{report_data['report_id'][:8]}.pdf",
+                    mime="application/pdf"
+                )
+            except Exception as e:
+                st.error(f"PDF generation failed: {str(e)}")
+        else:
+            st.info("PDF generator not available")
 
 def generate_html_report(report_data: Dict) -> str:
     """Generate HTML version of DPIA report."""
