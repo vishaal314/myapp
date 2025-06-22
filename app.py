@@ -4398,10 +4398,11 @@ else:
                         </style>
                         """, unsafe_allow_html=True)
                         
-                        # Run the improved DPIA form directly
-                        run_improved_dpia()
+                        # Run the working DPIA form directly
+                        from gdpr_7step_dpia import run_gdpr_7step_dpia
+                        run_gdpr_7step_dpia()
                         
-                        # Stop normal flow to proceed with only the improved DPIA form
+                        # Stop normal flow to proceed with only the DPIA form
                         scan_running = False
                     
                     elif scan_type == _("scan.soc2"):
