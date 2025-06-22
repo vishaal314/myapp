@@ -7402,3 +7402,89 @@ if st.session_state.get('api_scan_complete', False):
 if st.session_state.get('db_scan_complete', False):
     display_database_scan_results()
 
+def main():
+    """Main application entry point"""
+    try:
+        # Initialize language system
+        initialize()
+        
+        # Set page configuration
+        st.set_page_config(
+            page_title="DataGuardian Pro - Enterprise Privacy Compliance Platform",
+            page_icon="🛡️",
+            layout="wide",
+            initial_sidebar_state="expanded"
+        )
+        
+        # Simple Document Scanner interface for testing
+        st.title("🛡️ DataGuardian Pro")
+        st.subheader("Enterprise Privacy Compliance Platform")
+        st.write("Document Scanner - Upload and scan documents for GDPR compliance violations")
+        
+        # File uploader
+        uploaded_file = st.file_uploader("Upload a document", type=['txt', 'pdf', 'docx'])
+        
+        if uploaded_file:
+            st.success(f"File uploaded: {uploaded_file.name}")
+            
+            if st.button("Run Document Scan"):
+                with st.spinner("Scanning document for GDPR violations..."):
+                    from services.blob_scanner import BlobScanner
+                    from services.document_report_generator import generate_document_html_report, generate_document_pdf_report
+                    
+                    # Save uploaded file temporarily
+                    temp_path = f"temp_{uploaded_file.name}"
+                    with open(temp_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                    
+                    # Run scanner
+                    scanner = BlobScanner(region='Netherlands')
+                    results = scanner.scan_multiple_documents([temp_path])
+                    
+                    # Display results
+                    st.success("Scan completed!")
+                    
+                    # Metrics
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Total Findings", len(results.get('findings', [])))
+                    with col2:
+                        st.metric("Critical Risk", results.get('critical_risk_count', 0))
+                    with col3:
+                        st.metric("High Risk", results.get('high_risk_count', 0))
+                    with col4:
+                        st.metric("Medium Risk", results.get('medium_risk_count', 0))
+                    
+                    # Generate and offer reports
+                    html_content = generate_document_html_report(results)
+                    pdf_bytes = generate_document_pdf_report(results)
+                    
+                    st.markdown("### Download Reports")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.download_button(
+                            label="📊 Download HTML Report",
+                            data=html_content,
+                            file_name=f"document_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                            mime="text/html",
+                            use_container_width=True
+                        )
+                    with col2:
+                        st.download_button(
+                            label="📄 Download PDF Certificate",
+                            data=pdf_bytes,
+                            file_name=f"document_scan_certificate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    
+                    # Clean up temporary file
+                    os.remove(temp_path)
+                    
+    except Exception as e:
+        st.error(f"Application error: {str(e)}")
+        logger.error(f"Main app error: {str(e)}")
+
+if __name__ == "__main__":
+    main()
+
