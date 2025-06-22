@@ -7408,13 +7408,17 @@ def main():
         # Initialize language system
         initialize()
         
-        # Set page configuration
-        st.set_page_config(
-            page_title="DataGuardian Pro - Enterprise Privacy Compliance Platform",
-            page_icon="🛡️",
-            layout="wide",
-            initial_sidebar_state="expanded"
-        )
+        # Page configuration (only set if not already set)
+        try:
+            st.set_page_config(
+                page_title="DataGuardian Pro - Enterprise Privacy Compliance Platform",
+                page_icon="🛡️",
+                layout="wide",
+                initial_sidebar_state="expanded"
+            )
+        except st.errors.StreamlitAPIException:
+            # Page config already set, continue
+            pass
         
         # Simple Document Scanner interface for testing
         st.title("🛡️ DataGuardian Pro")

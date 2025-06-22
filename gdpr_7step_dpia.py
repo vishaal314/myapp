@@ -124,7 +124,7 @@ def handle_step1():
     
     This step collects information about the data processing activities that will be evaluated.
     """
-    with st.form("dpia_step1_form"):
+    with st.form(f"dpia_step1_form_{st.session_state.get('form_counter', 0)}"):
         st.markdown("""
         ### Step 1: Describe the processing
         
