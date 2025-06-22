@@ -4357,11 +4357,10 @@ else:
                             # Rerun to immediately show download buttons
                             st.rerun()
                     elif scan_type == _("scan.dpia"):
-                        # Skip the informational box and go straight to the improved DPIA form
-                        # Import and run our improved DPIA form with a more stable and reliable experience
-                        # from improved_dpia import run_improved_dpia  # Temporarily disabled due to matplotlib dependency
-                        
-                        # Hide the Start Scan button and Upload Files section and other unnecessary UI for DPIA
+                        # Use the working DPIA form from gdpr_7step_dpia module
+                        from gdpr_7step_dpia import run_gdpr_7step_dpia
+                        run_gdpr_7step_dpia()
+                        # Note: DPIA form handles everything, no additional UI needed
                         st.markdown("""
                         <style>
                         /* Hide the Start Scan button */
