@@ -36,8 +36,9 @@ def generate_document_html_report(scan_results: Dict[str, Any]) -> str:
     risk_summary = scan_results.get('risk_summary', {})
     documents_scanned = len(scan_results.get('document_results', []))
     
-    # Calculate statistics
+    # Calculate statistics including critical risk
     total_findings = len(findings)
+    critical_risk_count = len([f for f in findings if f.get('risk_level') == 'Critical'])
     high_risk_count = len([f for f in findings if f.get('risk_level') == 'High'])
     medium_risk_count = len([f for f in findings if f.get('risk_level') == 'Medium'])
     low_risk_count = len([f for f in findings if f.get('risk_level') == 'Low'])
@@ -357,20 +358,21 @@ def generate_document_html_report(scan_results: Dict[str, Any]) -> str:
     
     return html_content
 
-def generate_document_pdf_report(scan_results: Dict[str, Any], output_path: str) -> str:
+def generate_document_pdf_report(scan_results: Dict[str, Any]) -> bytes:
     """
     Generate a professional PDF report for document scan results.
     
     Args:
         scan_results: Dictionary containing document scan results
-        output_path: Path where the PDF should be saved
         
     Returns:
-        Path to the generated PDF file
+        PDF content as bytes
     """
+    import io
     try:
-        # Create the PDF document
-        doc = SimpleDocTemplate(output_path, pagesize=A4)
+        # Create PDF in memory
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
         story = []
         styles = getSampleStyleSheet()
         
@@ -511,8 +513,13 @@ def generate_document_pdf_report(scan_results: Dict[str, Any], output_path: str)
         
         # Build the PDF
         doc.build(story)
-        logger.info(f"Generated PDF report: {output_path}")
-        return output_path
+        
+        # Get PDF bytes
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        
+        logger.info("Generated PDF report successfully")
+        return pdf_bytes
         
     except Exception as e:
         logger.error(f"Error generating PDF report: {str(e)}")

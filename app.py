@@ -3725,31 +3725,37 @@ else:
                                     
                                     with col1:
                                         if st.button("📄 Download PDF Certificate", key="doc_pdf_cert"):
-                                            from services.document_report_generator import DocumentReportGenerator
-                                            generator = DocumentReportGenerator()
-                                            pdf_bytes = generator.generate_pdf_certificate(document_results)
-                                            
-                                            st.download_button(
-                                                label="📥 Download PDF Certificate",
-                                                data=pdf_bytes,
-                                                file_name=f"document_scan_certificate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                                                mime="application/pdf",
-                                                key="doc_pdf_download"
-                                            )
+                                            try:
+                                                from services.document_report_generator import generate_document_pdf_report
+                                                pdf_bytes = generate_document_pdf_report(document_results)
+                                                
+                                                st.download_button(
+                                                    label="📥 Download PDF Certificate",
+                                                    data=pdf_bytes,
+                                                    file_name=f"document_scan_certificate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                                    mime="application/pdf",
+                                                    key="doc_pdf_download"
+                                                )
+                                                st.success("PDF certificate generated successfully!")
+                                            except Exception as e:
+                                                st.error(f"Error generating PDF: {str(e)}")
                                     
                                     with col2:
                                         if st.button("📊 Download HTML Report", key="doc_html_report"):
-                                            from services.document_report_generator import DocumentReportGenerator
-                                            generator = DocumentReportGenerator()
-                                            html_content = generator.generate_html_report(document_results)
-                                            
-                                            st.download_button(
-                                                label="📥 Download HTML Report",
-                                                data=html_content,
-                                                file_name=f"document_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                                                mime="text/html",
-                                                key="doc_html_download"
-                                            )
+                                            try:
+                                                from services.document_report_generator import generate_document_html_report
+                                                html_content = generate_document_html_report(document_results)
+                                                
+                                                st.download_button(
+                                                    label="📥 Download HTML Report",
+                                                    data=html_content,
+                                                    file_name=f"document_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                                                    mime="text/html",
+                                                    key="doc_html_download"
+                                                )
+                                                st.success("HTML report generated successfully!")
+                                            except Exception as e:
+                                                st.error(f"Error generating HTML: {str(e)}")
                                 
                                 # Skip the rest of the scanner processing for document scans
                                 scan_running = False
