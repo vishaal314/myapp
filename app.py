@@ -4357,10 +4357,10 @@ else:
                             # Rerun to immediately show download buttons
                             st.rerun()
                     elif scan_type == _("scan.dpia"):
-                        # Use the working DPIA form from gdpr_7step_dpia module
-                        from gdpr_7step_dpia import run_gdpr_7step_dpia
-                        run_gdpr_7step_dpia()
-                        # Note: DPIA form handles everything, no additional UI needed
+                        # Use the comprehensive DPIA assessment tool
+                        from comprehensive_dpia_assessment import run_comprehensive_dpia_assessment
+                        run_comprehensive_dpia_assessment()
+                        # Note: Comprehensive DPIA handles everything, no additional UI needed
                         st.markdown("""
                         <style>
                         /* Hide the Start Scan button */
