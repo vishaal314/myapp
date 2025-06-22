@@ -124,7 +124,10 @@ def handle_step1():
     
     This step collects information about the data processing activities that will be evaluated.
     """
-    with st.form(f"dpia_step1_form_{st.session_state.get('form_counter', 0)}"):
+    # Use unique form key with timestamp to avoid conflicts
+    import time
+    form_key = f"dpia_step1_form_{int(time.time() * 1000)}"
+    with st.form(form_key):
         st.markdown("""
         ### Step 1: Describe the processing
         
@@ -218,7 +221,9 @@ def handle_step2():
     
     This step covers consultation with stakeholders, including data subjects and DPO.
     """
-    with st.form("dpia_step2_form"):
+    import time
+    form_key = f"dpia_step2_form_{int(time.time() * 1000)}"
+    with st.form(form_key):
         st.markdown("""
         ### Step 2: Consider consultation
         
@@ -316,7 +321,9 @@ def handle_step3():
     
     This step evaluates whether the processing is necessary and proportionate.
     """
-    with st.form("dpia_step3_form"):
+    import time
+    form_key = f"dpia_step3_form_{int(time.time() * 1000)}"
+    with st.form(form_key):
         st.markdown("""
         ### Step 3: Assess necessity and proportionality
         
@@ -461,7 +468,9 @@ def handle_step4(scanner):
             question_count = len(assessment_categories[category]['questions'])
             st.session_state.gdpr_dpia_answers['step4']['risk_assessment'][category] = [0] * question_count
     
-    with st.form("dpia_step4_form"):
+    import time
+    form_key = f"dpia_step4_form_{int(time.time() * 1000)}"
+    with st.form(form_key):
         st.markdown("""
         ### Step 4: Identify and assess risks
         
@@ -533,7 +542,9 @@ def handle_step5():
     
     This step identifies measures to reduce the risks identified in step 4.
     """
-    with st.form("dpia_step5_form"):
+    import time
+    form_key = f"dpia_step5_form_{int(time.time() * 1000)}"
+    with st.form(form_key):
         st.markdown("""
         ### Step 5: Identify measures to mitigate risk
         
@@ -652,7 +663,9 @@ def handle_step6():
     
     This step involves formally accepting the outcomes of the DPIA and documenting sign-off.
     """
-    with st.form("dpia_step6_form"):
+    import time
+    form_key = f"dpia_step6_form_{int(time.time() * 1000)}"
+    with st.form(form_key):
         st.markdown("""
         ### Step 6: Sign off and record outcomes
         
@@ -760,7 +773,9 @@ def handle_step7(scanner):
     
     This final step involves planning how to implement the identified measures and complete the DPIA.
     """
-    with st.form("dpia_step7_form"):
+    import time
+    form_key = f"dpia_step7_form_{int(time.time() * 1000)}"
+    with st.form(form_key):
         st.markdown("""
         ### Step 7: Integrate outcomes into plan
         
