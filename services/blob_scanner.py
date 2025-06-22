@@ -1110,12 +1110,26 @@ class BlobScanner:
         
         logger.info(f"Completed document scan. Scanned {documents_scanned} documents, found {len(all_findings)} PII instances.")
         
+        # Count findings by risk level for proper UI display
+        critical_count = len([f for f in all_findings if f.get('risk_level') == 'Critical'])
+        high_count = len([f for f in all_findings if f.get('risk_level') == 'High'])
+        medium_count = len([f for f in all_findings if f.get('risk_level') == 'Medium'])
+        low_count = len([f for f in all_findings if f.get('risk_level') == 'Low'])
+        
         return {
-            "scan_type": "document",
+            "scan_type": "document", 
+            "scan_id": f"doc_scan_{int(time.time())}",
+            "timestamp": datetime.now().isoformat(),
             "metadata": metadata,
             "document_results": document_results,
             "findings": all_findings,
             "documents_with_pii": documents_with_pii,
+            "file_count": documents_scanned,
+            "total_pii_found": len(all_findings),
+            "critical_risk_count": critical_count,
+            "high_risk_count": high_count,
+            "medium_risk_count": medium_count,
+            "low_risk_count": low_count,
             "errors": errors,
             "risk_summary": overall_risk
         }

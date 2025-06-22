@@ -3710,11 +3710,14 @@ else:
                                     with col1:
                                         st.metric("Files Scanned", document_results.get('file_count', 0))
                                     with col2:
-                                        st.metric("Total PII Found", document_results.get('total_pii_found', 0))
+                                        total_pii = document_results.get('total_pii_found', 0)
+                                        st.metric("Total PII Found", total_pii)
                                     with col3:
-                                        st.metric("High Risk Items", document_results.get('high_risk_count', 0))
+                                        high_risk = document_results.get('high_risk_count', 0) + document_results.get('critical_risk_count', 0)
+                                        st.metric("High Risk Items", high_risk)
                                     with col4:
-                                        st.metric("Medium Risk Items", document_results.get('medium_risk_count', 0))
+                                        medium_risk = document_results.get('medium_risk_count', 0)
+                                        st.metric("Medium Risk Items", medium_risk)
                                     
                                     # Add download buttons
                                     st.markdown("### Download Reports")
