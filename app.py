@@ -3719,43 +3719,43 @@ else:
                                         medium_risk = document_results.get('medium_risk_count', 0)
                                         st.metric("Medium Risk Items", medium_risk)
                                     
-                                    # Add download buttons
+                                    # Add download buttons - Direct approach
                                     st.markdown("### Download Reports")
                                     col1, col2 = st.columns(2)
                                     
-                                    with col1:
-                                        if st.button("📄 Download PDF Certificate", key="doc_pdf_cert"):
-                                            try:
-                                                from services.document_report_generator import generate_document_pdf_report
-                                                pdf_bytes = generate_document_pdf_report(document_results)
-                                                
-                                                st.download_button(
-                                                    label="📥 Download PDF Certificate",
-                                                    data=pdf_bytes,
-                                                    file_name=f"document_scan_certificate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                                                    mime="application/pdf",
-                                                    key="doc_pdf_download"
-                                                )
-                                                st.success("PDF certificate generated successfully!")
-                                            except Exception as e:
-                                                st.error(f"Error generating PDF: {str(e)}")
-                                    
-                                    with col2:
-                                        if st.button("📊 Download HTML Report", key="doc_html_report"):
-                                            try:
-                                                from services.document_report_generator import generate_document_html_report
-                                                html_content = generate_document_html_report(document_results)
-                                                
-                                                st.download_button(
-                                                    label="📥 Download HTML Report",
-                                                    data=html_content,
-                                                    file_name=f"document_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                                                    mime="text/html",
-                                                    key="doc_html_download"
-                                                )
-                                                st.success("HTML report generated successfully!")
-                                            except Exception as e:
-                                                st.error(f"Error generating HTML: {str(e)}")
+                                    # Generate reports immediately for download
+                                    try:
+                                        from services.document_report_generator import generate_document_html_report, generate_document_pdf_report
+                                        
+                                        with col1:
+                                            pdf_bytes = generate_document_pdf_report(document_results)
+                                            st.download_button(
+                                                label="📄 Download PDF Certificate",
+                                                data=pdf_bytes,
+                                                file_name=f"document_scan_certificate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                                mime="application/pdf",
+                                                key="doc_pdf_download",
+                                                use_container_width=True
+                                            )
+                                        
+                                        with col2:
+                                            html_content = generate_document_html_report(document_results)
+                                            st.download_button(
+                                                label="📊 Download HTML Report", 
+                                                data=html_content,
+                                                file_name=f"document_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                                                mime="text/html",
+                                                key="doc_html_download",
+                                                use_container_width=True
+                                            )
+                                            
+                                    except Exception as e:
+                                        st.error(f"Report generation error: {str(e)}")
+                                        st.write("Debug info:", {
+                                            'total_pii_found': document_results.get('total_pii_found', 0),
+                                            'file_count': document_results.get('file_count', 0),
+                                            'findings_length': len(document_results.get('findings', []))
+                                        })
                                 
                                 # Skip the rest of the scanner processing for document scans
                                 scan_running = False
