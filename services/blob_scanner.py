@@ -1118,7 +1118,7 @@ class BlobScanner:
         
         return {
             "scan_type": "document", 
-            "scan_id": f"doc_scan_{int(time.time())}",
+            "scan_id": f"doc_scan_{int(datetime.now().timestamp())}",
             "timestamp": datetime.now().isoformat(),
             "metadata": metadata,
             "document_results": document_results,
