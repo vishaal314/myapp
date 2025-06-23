@@ -4357,10 +4357,18 @@ else:
                             # Rerun to immediately show download buttons
                             st.rerun()
                     elif scan_type == _("scan.dpia"):
-                        # Use the comprehensive DPIA assessment tool
-                        from comprehensive_dpia_assessment import run_comprehensive_dpia_assessment
-                        run_comprehensive_dpia_assessment()
-                        # Note: Comprehensive DPIA handles everything, no additional UI needed
+                        # Use the Netherlands DPIA assessment tool
+                        try:
+                            from pages.nl_dpia_assessment import run_netherlands_dpia_assessment
+                            run_netherlands_dpia_assessment()
+                        except ImportError:
+                            st.error("Netherlands DPIA module not available")
+                            # Fallback to comprehensive DPIA
+                            try:
+                                from comprehensive_dpia_assessment import run_comprehensive_dpia_assessment
+                                run_comprehensive_dpia_assessment()
+                            except ImportError:
+                                st.error("No DPIA modules available")
                         st.markdown("""
                         <style>
                         /* Hide the Start Scan button */
