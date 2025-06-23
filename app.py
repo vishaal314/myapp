@@ -5052,30 +5052,12 @@ else:
                     st.markdown("---")
                     st.subheader("Next Steps")
                     
+                    # Action buttons
                     col1, col2, col3 = st.columns(3)
                     
                     with col1:
-                        if st.button("View Detailed Results", use_container_width=True, type="primary"):
-                            # Set session state to switch to results view
-                            st.session_state.show_detailed_results = True
-                            st.rerun()
-                    
-                    with col2:
-                        if st.button("Generate Reports", use_container_width=True):
-                            # Set session state to switch to reports view
-                            st.session_state.show_reports_section = True
-                            st.rerun()
-                    
-                    with col3:
-                        if st.button("New Scan", use_container_width=True):
-                            # Clear all scan-related session state
-                            scan_state_keys = [k for k in st.session_state.keys() if 'scan' in k.lower()]
-                            for key in scan_state_keys:
-                                if key in st.session_state:
-                                    del st.session_state[key]
-                            
-                            # Reset payment state
-                            st.session_state.payment_successful = False
+                        if st.button("View Full Report", key="view_full_report"):
+                            st.session_state.selected_nav = _("history.title")
                             st.rerun()
                     
                     # Action buttons
@@ -7424,15 +7406,11 @@ def display_api_scan_results():
                 del st.session_state.api_scan_complete
             st.rerun()
 
-# Check if API scan results should be displayed (only if not in special view modes)
-if (st.session_state.get('api_scan_complete', False) and 
-    not st.session_state.get('show_detailed_results', False) and 
-    not st.session_state.get('show_reports_section', False)):
+# Check if API scan results should be displayed
+if st.session_state.get('api_scan_complete', False):
     display_api_scan_results()
 
-# Check if Database scan results should be displayed (only if not in special view modes)  
-if (st.session_state.get('db_scan_complete', False) and
-    not st.session_state.get('show_detailed_results', False) and
-    not st.session_state.get('show_reports_section', False)):
+# Check if Database scan results should be displayed
+if st.session_state.get('db_scan_complete', False):
     display_database_scan_results()
 
