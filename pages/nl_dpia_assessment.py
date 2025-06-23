@@ -1,5 +1,5 @@
 """
-🇳🇱 Netherlands DPIA Assessment Interface
+Netherlands DPIA Assessment Interface
 
 Comprehensive DPIA assessment interface for Netherlands jurisdiction with:
 - GDPR compliance
@@ -20,11 +20,11 @@ def run_netherlands_dpia_assessment():
     dpia_service = NetherlandsDPIAService()
     html_generator = NetherlandsDPIAHTMLGenerator()
     
-    # Header with Dutch flag and professional styling
+    # Clean header without flag
     st.markdown("""
     <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
                 padding: 30px; border-radius: 10px; text-align: center; color: white; margin-bottom: 30px;">
-        <h1>🇳🇱 Netherlands DPIA Assessment</h1>
+        <h1>Data Protection Impact Assessment</h1>
         <h3>GDPR • Dutch UAVG • Police Act Compliance</h3>
         <p>Comprehensive Data Protection Impact Assessment for Netherlands Jurisdiction</p>
     </div>
