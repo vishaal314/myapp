@@ -5068,14 +5068,6 @@ else:
                             st.session_state.selected_nav = _("history.title")
                             st.rerun()
                     
-                    # Action buttons
-                    col1, col2, col3 = st.columns(3)
-                    
-                    with col1:
-                        if st.button("View Full Report", key="view_full_report"):
-                            st.session_state.selected_nav = _("history.title")
-                            st.rerun()
-                    
                     with col2:
                         # Report and Certificate Generation
                         col1, col2 = st.columns(2)
