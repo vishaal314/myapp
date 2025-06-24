@@ -40,6 +40,19 @@ class DPIAAssessment:
     overall_risk_level: str
     compliance_status: str
 
+def get_step_title(step):
+    """Get the title for each GDPR DPIA step."""
+    titles = [
+        "Describe the processing",
+        "Consider consultation", 
+        "Assess necessity and proportionality",
+        "Identify and assess risks",
+        "Identify measures to mitigate risk",
+        "Sign off and record outcomes",
+        "Integrate outcomes into plan"
+    ]
+    return titles[step - 1] if step <= len(titles) else "Unknown Step"
+
 def run_comprehensive_dpia_assessment():
     """Main function to run the comprehensive DPIA assessment."""
     st.title("Data Protection Impact Assessment")
