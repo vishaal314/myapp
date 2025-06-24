@@ -914,22 +914,6 @@ def generate_assessment_details_html(assessment_data):
                 html += f"<li><strong>{key.replace('_', ' ').title()}:</strong> {value}</li>"
             html += "</ul>"
     return html
-                    "Small (<1,000 individuals)",
-                    "Medium (1,000-10,000 individuals)", 
-                    "Large (10,000-100,000 individuals)",
-                    "Very Large (>100,000 individuals)"
-                ],
-                help="Estimated number of data subjects affected"
-            )
-            
-            processing_frequency = st.selectbox(
-                "Processing Frequency *",
-                options=[
-                    "One-time",
-                    "Periodic (monthly/quarterly)",
-                    "Regular (daily/weekly)",
-                    "Continuous/Real-time"
-                ]
             )
             
         with col2:
