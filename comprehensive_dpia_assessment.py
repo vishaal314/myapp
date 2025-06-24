@@ -42,59 +42,53 @@ class DPIAAssessment:
 
 def run_comprehensive_dpia_assessment():
     """Main function to run the comprehensive DPIA assessment."""
-    st.title("🇳🇱 Comprehensive DPIA Assessment")
+    st.title("Data Protection Impact Assessment")
     st.subheader("GDPR • Dutch Police Act • Netherlands Jurisdiction Compliance")
     
-    # Initialize session state
-    if 'dpia_assessment_data' not in st.session_state:
-        st.session_state.dpia_assessment_data = initialize_dpia_data()
+    # Check if we should show results instead
+    if st.session_state.get('dpia_show_results', False):
+        if 'dpia_results' in st.session_state:
+            display_assessment_results(
+                st.session_state.dpia_results,
+                st.session_state.dpia_report_data
+            )
+            return
     
-    if 'dpia_current_section' not in st.session_state:
-        st.session_state.dpia_current_section = 0
+    # Initialize session state for 7-step GDPR DPIA
+    if 'gdpr_dpia_step' not in st.session_state:
+        st.session_state.gdpr_dpia_step = 1
     
-    # Assessment sections
-    sections = [
-        "Organization Information",
-        "Processing Description", 
-        "Legal Basis Analysis",
-        "Data Categories & Subjects",
-        "Data Sharing & Transfers",
-        "Technical & Organizational Measures",
-        "Risk Assessment",
-        "Dutch Specific Requirements",
-        "Police Act Compliance",
-        "Mitigation Measures",
-        "Final Assessment & Report"
-    ]
+    if 'gdpr_dpia_answers' not in st.session_state:
+        st.session_state.gdpr_dpia_answers = {
+            'step1': {},
+            'step2': {},
+            'step3': {},
+            'step4': {},
+            'step5': {},
+            'step6': {},
+            'step7': {}
+        }
     
-    # Progress indicator
-    progress = (st.session_state.dpia_current_section + 1) / len(sections)
-    st.progress(progress)
-    st.caption(f"Section {st.session_state.dpia_current_section + 1} of {len(sections)}: {sections[st.session_state.dpia_current_section]}")
+    # Progress indicator for 7 steps
+    progress_value = (st.session_state.gdpr_dpia_step - 1) / 7
+    st.progress(progress_value)
+    st.markdown(f"**Step {st.session_state.gdpr_dpia_step} of 7:** {get_step_title(st.session_state.gdpr_dpia_step)}")
     
-    # Route to current section
-    if st.session_state.dpia_current_section == 0:
-        handle_organization_info()
-    elif st.session_state.dpia_current_section == 1:
-        handle_processing_description()
-    elif st.session_state.dpia_current_section == 2:
-        handle_legal_basis()
-    elif st.session_state.dpia_current_section == 3:
-        handle_data_categories()
-    elif st.session_state.dpia_current_section == 4:
-        handle_data_sharing()
-    elif st.session_state.dpia_current_section == 5:
-        handle_technical_measures()
-    elif st.session_state.dpia_current_section == 6:
-        handle_risk_assessment()
-    elif st.session_state.dpia_current_section == 7:
-        handle_dutch_requirements()
-    elif st.session_state.dpia_current_section == 8:
-        handle_police_act_compliance()
-    elif st.session_state.dpia_current_section == 9:
-        handle_mitigation_measures()
-    elif st.session_state.dpia_current_section == 10:
-        handle_final_assessment()
+    # Navigation based on current step
+    if st.session_state.gdpr_dpia_step == 1:
+        handle_step1_processing()
+    elif st.session_state.gdpr_dpia_step == 2:
+        handle_step2_consultation()
+    elif st.session_state.gdpr_dpia_step == 3:
+        handle_step3_necessity()
+    elif st.session_state.gdpr_dpia_step == 4:
+        handle_step4_risks()
+    elif st.session_state.gdpr_dpia_step == 5:
+        handle_step5_mitigation()
+    elif st.session_state.gdpr_dpia_step == 6:
+        handle_step6_signoff()
+    elif st.session_state.gdpr_dpia_step == 7:
+        handle_step7_integration()
 
 def initialize_dpia_data() -> Dict[str, Any]:
     """Initialize empty DPIA assessment data structure."""
@@ -215,39 +209,711 @@ def handle_organization_info():
             st.session_state.dpia_current_section = 1
             st.rerun()
 
-def handle_processing_description():
-    """Handle processing description collection."""
-    st.markdown("### Processing Description")
-    st.markdown("Describe the data processing activities in detail.")
+def handle_step2_consultation():
+    """Step 2: Consider consultation with stakeholders."""
+    st.markdown("### Step 2: Consider consultation")
+    st.markdown("This step covers consultation with stakeholders, including data subjects and DPO.")
     
-    form_key = f"processing_desc_{int(time.time() * 1000)}"
+    form_key = f"step2_{int(time.time() * 1000)}"
     with st.form(form_key):
-        processing_name = st.text_input(
-            "Processing Activity Name *",
-            value=st.session_state.dpia_assessment_data['processing_description'].get('name', ''),
-            help="Short descriptive name for this processing activity"
+        st.markdown("#### Consultation with Data Subjects")
+        
+        consultation_needed = st.radio(
+            "Is consultation with data subjects needed or practical?",
+            options=["Yes", "No", "Unsure"],
+            index=["Yes", "No", "Unsure"].index(st.session_state.gdpr_dpia_answers['step2'].get('consultation_needed', "Unsure"))
         )
         
-        processing_purpose = st.text_area(
-            "Primary Purpose *",
-            value=st.session_state.dpia_assessment_data['processing_description'].get('purpose', ''),
-            help="Describe the main purpose and objectives of the processing",
-            height=120
+        consultation_method = st.text_area(
+            "If yes, how will you seek the views of data subjects?",
+            value=st.session_state.gdpr_dpia_answers['step2'].get('consultation_method', ''),
+            help="Describe your approach to consultation (e.g., surveys, focus groups)"
         )
         
-        processing_description = st.text_area(
-            "Detailed Description *",
-            value=st.session_state.dpia_assessment_data['processing_description'].get('description', ''),
-            help="Provide a comprehensive description of how data will be processed",
+        st.markdown("#### Data Protection Officer")
+        
+        dpo_consultation = st.radio(
+            "Have you consulted your Data Protection Officer (DPO)?",
+            options=["Yes", "No", "Not applicable"],
+            index=["Yes", "No", "Not applicable"].index(st.session_state.gdpr_dpia_answers['step2'].get('dpo_consultation', "No"))
+        )
+        
+        dpo_advice = st.text_area(
+            "If yes, what advice did your DPO provide?",
+            value=st.session_state.gdpr_dpia_answers['step2'].get('dpo_advice', '')
+        )
+        
+        other_consultations = st.multiselect(
+            "Have you consulted any other stakeholders?",
+            options=[
+                "IT security team",
+                "Legal department", 
+                "Compliance officer",
+                "External privacy consultant",
+                "Supervisory authority",
+                "Processor or service provider",
+                "Other departments in your organization",
+                "Industry association",
+                "None of the above"
+            ],
+            default=st.session_state.gdpr_dpia_answers['step2'].get('other_consultations', [])
+        )
+        
+        consultation_outcomes = st.text_area(
+            "Summarize the key outcomes from consultations:",
+            value=st.session_state.gdpr_dpia_answers['step2'].get('consultation_outcomes', '')
+        )
+        
+        # Navigation buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            back = st.form_submit_button("Back to Step 1")
+        with col2:
+            next_step = st.form_submit_button("Continue to Step 3", type="primary")
+    
+    if back:
+        st.session_state.gdpr_dpia_step = 1
+        st.rerun()
+    
+    if next_step:
+        # Store answers
+        st.session_state.gdpr_dpia_answers['step2'] = {
+            'consultation_needed': consultation_needed,
+            'consultation_method': consultation_method,
+            'dpo_consultation': dpo_consultation,
+            'dpo_advice': dpo_advice,
+            'other_consultations': other_consultations,
+            'consultation_outcomes': consultation_outcomes
+        }
+        
+        # Move to next step
+        st.session_state.gdpr_dpia_step = 3
+        st.rerun()
+
+def handle_step3_necessity():
+    """Step 3: Assess necessity and proportionality."""
+    st.markdown("### Step 3: Assess necessity and proportionality") 
+    st.markdown("Evaluate whether the processing is necessary and proportionate.")
+    
+    form_key = f"step3_{int(time.time() * 1000)}"
+    with st.form(form_key):
+        legal_basis = st.selectbox(
+            "What is the legal basis for processing?",
+            options=[
+                "Consent",
+                "Contract",
+                "Legal obligation", 
+                "Vital interests",
+                "Public task",
+                "Legitimate interests"
+            ],
+            index=["Consent", "Contract", "Legal obligation", "Vital interests", "Public task", "Legitimate interests"].index(
+                st.session_state.gdpr_dpia_answers['step3'].get('legal_basis', "Consent")
+            )
+        )
+        
+        necessity_justification = st.text_area(
+            "Justify why the processing is necessary:",
+            value=st.session_state.gdpr_dpia_answers['step3'].get('necessity_justification', ''),
+            help="Explain why you cannot achieve your purpose without processing personal data"
+        )
+        
+        proportionality_assessment = st.text_area(
+            "Assess proportionality - is the processing proportionate to the aim?",
+            value=st.session_state.gdpr_dpia_answers['step3'].get('proportionality_assessment', ''),
+            help="Consider whether less intrusive methods could achieve the same result"
+        )
+        
+        data_minimization = st.radio(
+            "Have you applied data minimization principles?",
+            options=["Yes, fully applied", "Partially applied", "Not yet applied", "Not applicable"],
+            index=["Yes, fully applied", "Partially applied", "Not yet applied", "Not applicable"].index(
+                st.session_state.gdpr_dpia_answers['step3'].get('data_minimization', "Not yet applied")
+            )
+        )
+        
+        retention_period = st.text_input(
+            "Data retention period:",
+            value=st.session_state.gdpr_dpia_answers['step3'].get('retention_period', ''),
+            help="How long will personal data be kept?"
+        )
+        
+        # Navigation buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            back = st.form_submit_button("Back to Step 2")
+        with col2:
+            next_step = st.form_submit_button("Continue to Step 4", type="primary")
+    
+    if back:
+        st.session_state.gdpr_dpia_step = 2
+        st.rerun()
+    
+    if next_step:
+        # Store answers
+        st.session_state.gdpr_dpia_answers['step3'] = {
+            'legal_basis': legal_basis,
+            'necessity_justification': necessity_justification,
+            'proportionality_assessment': proportionality_assessment,
+            'data_minimization': data_minimization,
+            'retention_period': retention_period
+        }
+        
+        # Move to next step
+        st.session_state.gdpr_dpia_step = 4
+        st.rerun()
+
+def handle_step4_risks():
+    """Step 4: Identify and assess risks."""
+    st.markdown("### Step 4: Identify and assess risks")
+    st.markdown("Identify privacy risks and assess their likelihood and impact.")
+    
+    form_key = f"step4_{int(time.time() * 1000)}"
+    with st.form(form_key):
+        identified_risks = st.text_area(
+            "What privacy risks have you identified?",
+            value=st.session_state.gdpr_dpia_answers['step4'].get('identified_risks', ''),
+            help="List specific risks to individuals' rights and freedoms",
             height=150
         )
         
-        col1, col2 = st.columns(2)
+        risk_sources = st.multiselect(
+            "What are the sources of risk?",
+            options=[
+                "Data collection methods",
+                "Data storage and security",
+                "Data processing activities", 
+                "Data sharing and transfers",
+                "Third party processors",
+                "New technology or algorithms",
+                "Profiling or automated decision-making",
+                "Large scale processing",
+                "Vulnerable data subjects",
+                "Other"
+            ],
+            default=st.session_state.gdpr_dpia_answers['step4'].get('risk_sources', [])
+        )
         
+        likelihood_assessment = st.radio(
+            "Overall likelihood of risks occurring:",
+            options=["Low", "Medium", "High"],
+            index=["Low", "Medium", "High"].index(
+                st.session_state.gdpr_dpia_answers['step4'].get('likelihood_assessment', "Medium")
+            )
+        )
+        
+        impact_assessment = st.radio(
+            "Potential impact on individuals if risks occur:",
+            options=["Low", "Medium", "High"],
+            index=["Low", "Medium", "High"].index(
+                st.session_state.gdpr_dpia_answers['step4'].get('impact_assessment', "Medium")
+            )
+        )
+        
+        overall_risk_level = st.radio(
+            "Overall risk level:",
+            options=["Low", "Medium", "High"],
+            index=["Low", "Medium", "High"].index(
+                st.session_state.gdpr_dpia_answers['step4'].get('overall_risk_level', "Medium")
+            )
+        )
+        
+        # Navigation buttons
+        col1, col2 = st.columns(2)
         with col1:
-            data_volume = st.selectbox(
-                "Expected Data Volume *",
-                options=[
+            back = st.form_submit_button("Back to Step 3")
+        with col2:
+            next_step = st.form_submit_button("Continue to Step 5", type="primary")
+    
+    if back:
+        st.session_state.gdpr_dpia_step = 3
+        st.rerun()
+    
+    if next_step:
+        # Store answers
+        st.session_state.gdpr_dpia_answers['step4'] = {
+            'identified_risks': identified_risks,
+            'risk_sources': risk_sources,
+            'likelihood_assessment': likelihood_assessment,
+            'impact_assessment': impact_assessment,
+            'overall_risk_level': overall_risk_level
+        }
+        
+        # Move to next step
+        st.session_state.gdpr_dpia_step = 5
+        st.rerun()
+
+def handle_step5_mitigation():
+    """Step 5: Identify measures to mitigate risk."""
+    st.markdown("### Step 5: Identify measures to mitigate risk")
+    st.markdown("Specify measures to reduce the identified risks.")
+    
+    form_key = f"step5_{int(time.time() * 1000)}"
+    with st.form(form_key):
+        technical_measures = st.text_area(
+            "Technical measures to reduce risks:",
+            value=st.session_state.gdpr_dpia_answers['step5'].get('technical_measures', ''),
+            help="e.g., encryption, access controls, anonymization",
+            height=120
+        )
+        
+        organizational_measures = st.text_area(
+            "Organizational measures to reduce risks:",
+            value=st.session_state.gdpr_dpia_answers['step5'].get('organizational_measures', ''),
+            help="e.g., policies, training, governance procedures",
+            height=120
+        )
+        
+        additional_safeguards = st.text_area(
+            "Additional safeguards or controls:",
+            value=st.session_state.gdpr_dpia_answers['step5'].get('additional_safeguards', ''),
+            help="Any other measures to protect individuals",
+            height=100
+        )
+        
+        residual_risk = st.radio(
+            "Residual risk level after implementing measures:",
+            options=["Low", "Medium", "High"],
+            index=["Low", "Medium", "High"].index(
+                st.session_state.gdpr_dpia_answers['step5'].get('residual_risk', "Low")
+            )
+        )
+        
+        # Navigation buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            back = st.form_submit_button("Back to Step 4")
+        with col2:
+            next_step = st.form_submit_button("Continue to Step 6", type="primary")
+    
+    if back:
+        st.session_state.gdpr_dpia_step = 4
+        st.rerun()
+    
+    if next_step:
+        # Store answers
+        st.session_state.gdpr_dpia_answers['step5'] = {
+            'technical_measures': technical_measures,
+            'organizational_measures': organizational_measures,
+            'additional_safeguards': additional_safeguards,
+            'residual_risk': residual_risk
+        }
+        
+        # Move to next step
+        st.session_state.gdpr_dpia_step = 6
+        st.rerun()
+
+def handle_step6_signoff():
+    """Step 6: Sign off and record outcomes."""
+    st.markdown("### Step 6: Sign off and record outcomes")
+    st.markdown("Document the decision and outcome of the DPIA.")
+    
+    form_key = f"step6_{int(time.time() * 1000)}"
+    with st.form(form_key):
+        decision = st.radio(
+            "What is your decision about proceeding with the processing?",
+            options=[
+                "Proceed - Risks have been eliminated",
+                "Proceed - Risks have been reduced to acceptable level", 
+                "Proceed - Benefits outweigh risks",
+                "Proceed - Only with prior consultation with supervisory authority",
+                "Do not proceed - Risks remain unacceptably high"
+            ],
+            index=["Proceed - Risks have been eliminated", 
+                   "Proceed - Risks have been reduced to acceptable level", 
+                   "Proceed - Benefits outweigh risks",
+                   "Proceed - Only with prior consultation with supervisory authority",
+                   "Do not proceed - Risks remain unacceptably high"].index(
+                st.session_state.gdpr_dpia_answers['step6'].get('decision', "Proceed - Risks have been reduced to acceptable level")
+            )
+        )
+        
+        decision_rationale = st.text_area(
+            "Decision rationale:",
+            value=st.session_state.gdpr_dpia_answers['step6'].get('decision_rationale', ''),
+            help="Explain the reasoning behind this decision"
+        )
+        
+        approver_name = st.text_input(
+            "Approver name:",
+            value=st.session_state.gdpr_dpia_answers['step6'].get('approver_name', ''),
+            help="Name of the person approving this DPIA"
+        )
+        
+        approver_role = st.text_input(
+            "Approver role:",
+            value=st.session_state.gdpr_dpia_answers['step6'].get('approver_role', ''),
+            help="Role/title of the approver"
+        )
+        
+        approval_date = st.date_input(
+            "Approval date:",
+            value=datetime.now().date()
+        )
+        
+        # Navigation buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            back = st.form_submit_button("Back to Step 5")
+        with col2:
+            next_step = st.form_submit_button("Continue to Step 7", type="primary")
+    
+    if back:
+        st.session_state.gdpr_dpia_step = 5
+        st.rerun()
+    
+    if next_step:
+        # Store answers
+        st.session_state.gdpr_dpia_answers['step6'] = {
+            'decision': decision,
+            'decision_rationale': decision_rationale,
+            'approver_name': approver_name,
+            'approver_role': approver_role,
+            'approval_date': approval_date.isoformat()
+        }
+        
+        # Move to next step
+        st.session_state.gdpr_dpia_step = 7
+        st.rerun()
+
+def handle_step7_integration():
+    """Step 7: Integrate outcomes into plan."""
+    st.markdown("### Step 7: Integrate outcomes into plan")
+    st.markdown("Plan how to implement the identified measures and complete the DPIA.")
+    
+    form_key = f"step7_{int(time.time() * 1000)}"
+    with st.form(form_key):
+        implementation_plan = st.text_area(
+            "Implementation plan for identified measures:",
+            value=st.session_state.gdpr_dpia_answers['step7'].get('implementation_plan', ''),
+            help="How will you implement the risk mitigation measures?",
+            height=150
+        )
+        
+        timeline = st.text_input(
+            "Timeline for implementation:",
+            value=st.session_state.gdpr_dpia_answers['step7'].get('timeline', ''),
+            help="Provide target dates for implementing measures"
+        )
+        
+        responsibility = st.text_input(
+            "Who is responsible for implementation?",
+            value=st.session_state.gdpr_dpia_answers['step7'].get('responsibility', ''),
+            help="Name and role of responsible person/team"
+        )
+        
+        review_schedule = st.radio(
+            "How often will this DPIA be reviewed?",
+            options=[
+                "Quarterly",
+                "Semi-annually", 
+                "Annually",
+                "When significant changes occur",
+                "Other"
+            ],
+            index=["Quarterly", "Semi-annually", "Annually", "When significant changes occur", "Other"].index(
+                st.session_state.gdpr_dpia_answers['step7'].get('review_schedule', "Annually")
+            )
+        )
+        
+        monitoring_process = st.text_area(
+            "How will you monitor the effectiveness of measures?",
+            value=st.session_state.gdpr_dpia_answers['step7'].get('monitoring_process', ''),
+            help="Describe ongoing monitoring and review processes"
+        )
+        
+        # Navigation buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            back = st.form_submit_button("Back to Step 6")
+        with col2:
+            complete = st.form_submit_button("Complete DPIA Assessment", type="primary")
+    
+    if back:
+        st.session_state.gdpr_dpia_step = 6
+        st.rerun()
+    
+    if complete:
+        # Store answers
+        st.session_state.gdpr_dpia_answers['step7'] = {
+            'implementation_plan': implementation_plan,
+            'timeline': timeline,
+            'responsibility': responsibility,
+            'review_schedule': review_schedule,
+            'monitoring_process': monitoring_process
+        }
+        
+        # Process the completed assessment
+        process_dpia_assessment()
+        st.rerun()
+
+def process_dpia_assessment():
+    """Process the completed DPIA assessment and generate results."""
+    try:
+        # Create assessment results from collected answers
+        assessment_results = {
+            'assessment_id': str(uuid.uuid4()),
+            'created_date': datetime.now().isoformat(),
+            'overall_risk_level': st.session_state.gdpr_dpia_answers['step4'].get('overall_risk_level', 'Medium'),
+            'decision': st.session_state.gdpr_dpia_answers['step6'].get('decision', 'Proceed'),
+            'project_name': st.session_state.gdpr_dpia_answers['step1'].get('project_name', 'Unnamed Project'),
+            'findings': generate_findings_from_answers(),
+            'recommendations': generate_recommendations_from_answers(),
+            'compliance_status': 'Compliant' if st.session_state.gdpr_dpia_answers['step5'].get('residual_risk', 'Medium') == 'Low' else 'Action Required'
+        }
+        
+        # Generate report data
+        report_data = {
+            'title': f"DPIA Report - {assessment_results['project_name']}",
+            'generated_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'assessment_data': st.session_state.gdpr_dpia_answers,
+            'summary': assessment_results
+        }
+        
+        # Store results in session state
+        st.session_state.dpia_results = assessment_results
+        st.session_state.dpia_report_data = report_data
+        st.session_state.dpia_show_results = True
+        
+        st.success("DPIA assessment completed successfully!")
+        
+    except Exception as e:
+        st.error(f"Error processing DPIA assessment: {str(e)}")
+
+def generate_findings_from_answers():
+    """Generate findings summary from user answers."""
+    findings = []
+    
+    # Risk level findings
+    risk_level = st.session_state.gdpr_dpia_answers['step4'].get('overall_risk_level', 'Medium')
+    findings.append({
+        'category': 'Risk Assessment',
+        'finding': f'Overall risk level assessed as {risk_level}',
+        'severity': risk_level.lower()
+    })
+    
+    # Legal basis findings
+    legal_basis = st.session_state.gdpr_dpia_answers['step3'].get('legal_basis', 'Not specified')
+    findings.append({
+        'category': 'Legal Compliance',
+        'finding': f'Processing based on legal basis: {legal_basis}',
+        'severity': 'medium'
+    })
+    
+    # Data minimization findings
+    data_min = st.session_state.gdpr_dpia_answers['step3'].get('data_minimization', 'Not yet applied')
+    if data_min != 'Yes, fully applied':
+        findings.append({
+            'category': 'Data Minimization',
+            'finding': f'Data minimization status: {data_min}',
+            'severity': 'medium' if 'Partially' in data_min else 'high'
+        })
+    
+    return findings
+
+def generate_recommendations_from_answers():
+    """Generate recommendations from user answers."""
+    recommendations = []
+    
+    # Risk-based recommendations
+    risk_level = st.session_state.gdpr_dpia_answers['step4'].get('overall_risk_level', 'Medium')
+    if risk_level == 'High':
+        recommendations.append("Implement additional technical and organizational measures to reduce high-risk processing")
+        recommendations.append("Consider consultation with supervisory authority before proceeding")
+    
+    # Legal basis recommendations
+    legal_basis = st.session_state.gdpr_dpia_answers['step3'].get('legal_basis', '')
+    if legal_basis == 'Consent':
+        recommendations.append("Ensure consent is freely given, specific, informed and withdrawable")
+    elif legal_basis == 'Legitimate interests':
+        recommendations.append("Conduct and document legitimate interests assessment")
+    
+    # Data minimization recommendations
+    data_min = st.session_state.gdpr_dpia_answers['step3'].get('data_minimization', 'Not yet applied')
+    if data_min != 'Yes, fully applied':
+        recommendations.append("Review data collection to ensure only necessary data is processed")
+    
+    # General recommendations
+    recommendations.append("Implement regular DPIA reviews as specified in Step 7")
+    recommendations.append("Ensure staff training on privacy requirements")
+    recommendations.append("Maintain documentation of all processing activities")
+    
+    return recommendations
+
+def display_assessment_results(results, report_data):
+    """Display the DPIA assessment results."""
+    st.markdown("## DPIA Assessment Results")
+    
+    # Summary metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Overall Risk", results.get('overall_risk_level', 'Unknown'))
+    
+    with col2:
+        st.metric("Decision", results.get('decision', 'Pending')[:20] + "...")
+    
+    with col3:
+        st.metric("Compliance Status", results.get('compliance_status', 'Unknown'))
+    
+    with col4:
+        st.metric("Assessment ID", results.get('assessment_id', 'Unknown')[:8] + "...")
+    
+    # Findings
+    if 'findings' in results and results['findings']:
+        st.markdown("### Key Findings")
+        findings_df = []
+        for finding in results['findings']:
+            findings_df.append({
+                'Category': finding.get('category', ''),
+                'Finding': finding.get('finding', ''),
+                'Severity': finding.get('severity', '').title()
+            })
+        
+        if findings_df:
+            import pandas as pd
+            df = pd.DataFrame(findings_df)
+            st.dataframe(df, use_container_width=True)
+    
+    # Recommendations  
+    if 'recommendations' in results and results['recommendations']:
+        st.markdown("### Recommendations")
+        for i, rec in enumerate(results['recommendations'], 1):
+            st.markdown(f"{i}. {rec}")
+    
+    # Assessment Details
+    with st.expander("View Assessment Details"):
+        st.json(st.session_state.gdpr_dpia_answers)
+    
+    # Action buttons
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("Download HTML Report", type="primary"):
+            html_report = generate_html_report(results, report_data)
+            st.download_button(
+                label="Save HTML Report",
+                data=html_report,
+                file_name=f"DPIA_Report_{results.get('assessment_id', 'unknown')[:8]}.html",
+                mime="text/html"
+            )
+    
+    with col2:
+        if st.button("New Assessment"):
+            # Clear session state for new assessment
+            for key in list(st.session_state.keys()):
+                if key.startswith('gdpr_dpia') or key.startswith('dpia_'):
+                    del st.session_state[key]
+            st.rerun()
+    
+    with col3:
+        if st.button("View in History"):
+            st.session_state.selected_nav = "History"
+            st.rerun()
+
+def generate_html_report(results, report_data):
+    """Generate HTML report for the DPIA assessment."""
+    html_template = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>DPIA Assessment Report</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 40px; }}
+            .header {{ background-color: #1e3c72; color: white; padding: 20px; text-align: center; }}
+            .section {{ margin: 20px 0; padding: 15px; border-left: 4px solid #1e3c72; }}
+            .metric {{ display: inline-block; margin: 10px; padding: 10px; background-color: #f5f5f5; border-radius: 5px; }}
+            .finding {{ margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-radius: 5px; }}
+            .high {{ border-left: 4px solid #dc3545; }}
+            .medium {{ border-left: 4px solid #ffc107; }}
+            .low {{ border-left: 4px solid #28a745; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>Data Protection Impact Assessment Report</h1>
+            <p>Generated on {report_data.get('generated_date', 'Unknown')}</p>
+        </div>
+        
+        <div class="section">
+            <h2>Assessment Summary</h2>
+            <div class="metric">
+                <strong>Project:</strong> {results.get('project_name', 'Unknown')}
+            </div>
+            <div class="metric">
+                <strong>Overall Risk:</strong> {results.get('overall_risk_level', 'Unknown')}
+            </div>
+            <div class="metric">
+                <strong>Decision:</strong> {results.get('decision', 'Pending')}
+            </div>
+            <div class="metric">
+                <strong>Compliance Status:</strong> {results.get('compliance_status', 'Unknown')}
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Key Findings</h2>
+            {generate_findings_html(results.get('findings', []))}
+        </div>
+        
+        <div class="section">
+            <h2>Recommendations</h2>
+            {generate_recommendations_html(results.get('recommendations', []))}
+        </div>
+        
+        <div class="section">
+            <h2>Assessment Details</h2>
+            {generate_assessment_details_html(report_data.get('assessment_data', {}))}
+        </div>
+        
+        <div class="section">
+            <p><small>This report was generated by DataGuardian Pro DPIA Assessment Tool</small></p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html_template
+
+def generate_findings_html(findings):
+    """Generate HTML for findings section."""
+    if not findings:
+        return "<p>No specific findings to report.</p>"
+    
+    html = ""
+    for finding in findings:
+        severity = finding.get('severity', 'medium')
+        html += f"""
+        <div class="finding {severity}">
+            <strong>{finding.get('category', 'General')}:</strong> {finding.get('finding', '')}
+        </div>
+        """
+    return html
+
+def generate_recommendations_html(recommendations):
+    """Generate HTML for recommendations section."""
+    if not recommendations:
+        return "<p>No specific recommendations at this time.</p>"
+    
+    html = "<ol>"
+    for rec in recommendations:
+        html += f"<li>{rec}</li>"
+    html += "</ol>"
+    return html
+
+def generate_assessment_details_html(assessment_data):
+    """Generate HTML for assessment details."""
+    html = ""
+    for step, data in assessment_data.items():
+        if data:  # Only show steps with data
+            html += f"<h3>Step {step.replace('step', '').upper()}</h3>"
+            html += "<ul>"
+            for key, value in data.items():
+                if isinstance(value, list):
+                    value = ", ".join(value)
+                html += f"<li><strong>{key.replace('_', ' ').title()}:</strong> {value}</li>"
+            html += "</ul>"
+    return html
                     "Small (<1,000 individuals)",
                     "Medium (1,000-10,000 individuals)", 
                     "Large (10,000-100,000 individuals)",
