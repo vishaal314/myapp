@@ -119,6 +119,7 @@ DataGuardian Pro is a comprehensive enterprise privacy compliance platform built
 - Both comprehensive and simple DPIA options now available in main interface
 - Removed complex "DPIA Assessment Step 1 of 7" section headers for cleaner interface
 - Replaced complex 7-step DPIA workflow with simple DPIA interface throughout application
+- Enhanced digital signature section with clearer name input fields and improved styling
 
 ## User Preferences
 

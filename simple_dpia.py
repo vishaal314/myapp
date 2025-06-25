@@ -122,11 +122,12 @@ def run_simple_dpia():
     }
     
     .signature-section {
-        background: #f8f9fa;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         padding: 2rem;
-        border-radius: 10px;
+        border-radius: 15px;
         margin: 2rem 0;
-        border: 2px solid #dee2e6;
+        border: 2px solid #4a90e2;
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.1);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -272,34 +273,40 @@ def show_assessment_form():
     </div>
     """, unsafe_allow_html=True)
     
-    # Signature Section
-    st.markdown("### Digital Signature")
+    # Digital Signature Section
+    st.markdown("### 📝 Digital Signature")
+    st.markdown("**Please provide your details to digitally sign this assessment:**")
     st.markdown('<div class="signature-section">', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
     with col1:
         assessor_name = st.text_input(
-            "Assessor Name",
+            "👤 Full Name *",
             value=st.session_state.simple_dpia_answers.get('assessor_name', ''),
-            placeholder="Full name of person completing assessment"
+            placeholder="Enter your full name",
+            help="This will appear as the digital signature on your DPIA report"
         )
         
         assessor_role = st.text_input(
-            "Role/Title",
+            "💼 Job Title/Role *",
             value=st.session_state.simple_dpia_answers.get('assessor_role', ''),
-            placeholder="Your role or job title"
+            placeholder="e.g., Data Protection Officer, Privacy Manager",
+            help="Your professional role or title within the organization"
         )
     
     with col2:
         assessment_date = st.date_input(
-            "Assessment Date",
-            value=datetime.now().date()
+            "📅 Assessment Date",
+            value=datetime.now().date(),
+            help="Date of assessment completion"
         )
         
+        st.markdown("### ✅ Confirmation")
         confirmation = st.checkbox(
-            "I confirm that the above information is accurate and complete to the best of my knowledge.",
-            value=st.session_state.simple_dpia_answers.get('confirmation', False)
+            "I confirm that the above information is accurate and complete to the best of my knowledge, and I digitally sign this DPIA assessment.",
+            value=st.session_state.simple_dpia_answers.get('confirmation', False),
+            help="Your digital signature confirms the accuracy of this assessment"
         )
     
     st.markdown('</div>', unsafe_allow_html=True)
@@ -315,7 +322,21 @@ def show_assessment_form():
     )
     
     if not can_submit:
-        st.warning("Please complete all fields and questions before submitting.")
+        missing_fields = []
+        if not project_name:
+            missing_fields.append("Project Name")
+        if not organization:
+            missing_fields.append("Organization")
+        if not assessor_name:
+            missing_fields.append("Your Full Name")
+        if not assessor_role:
+            missing_fields.append("Your Job Title")
+        if not confirmation:
+            missing_fields.append("Digital Signature Confirmation")
+        if not all(answers.values()):
+            missing_fields.append("All Assessment Questions")
+        
+        st.warning(f"Please complete the following fields: {', '.join(missing_fields)}")
     
     if st.button("Generate DPIA Report", type="primary", disabled=not can_submit):
         # Save all data
