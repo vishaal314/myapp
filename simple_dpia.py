@@ -162,15 +162,23 @@ def show_assessment_form():
         project_name = st.text_input(
             "Project Name",
             value=st.session_state.simple_dpia_answers.get('project_name', ''),
-            placeholder="Enter your project name"
+            placeholder="Enter your project name",
+            key="project_name_input"
         )
     
     with col2:
         organization = st.text_input(
             "Organization",
             value=st.session_state.simple_dpia_answers.get('organization', ''),
-            placeholder="Your organization name"
+            placeholder="Your organization name",
+            key="organization_input"
         )
+    
+    # Update session state immediately
+    if project_name:
+        st.session_state.simple_dpia_answers['project_name'] = project_name
+    if organization:
+        st.session_state.simple_dpia_answers['organization'] = organization
     
     # DPIA Questions
     st.markdown("### DPIA Assessment Questions")
@@ -249,6 +257,9 @@ def show_assessment_form():
         if answer == "Yes":
             risk_score += 10
         
+        # Update session state for this question
+        st.session_state.simple_dpia_answers[q['key']] = answer
+        
         st.markdown('</div>', unsafe_allow_html=True)
     
     # Real-time risk indicator
@@ -285,69 +296,92 @@ def show_assessment_form():
             "👤 Full Name *",
             value=st.session_state.simple_dpia_answers.get('assessor_name', ''),
             placeholder="Enter your full name",
-            help="This will appear as the digital signature on your DPIA report"
+            help="This will appear as the digital signature on your DPIA report",
+            key="assessor_name_input"
         )
         
         assessor_role = st.text_input(
             "💼 Job Title/Role *",
             value=st.session_state.simple_dpia_answers.get('assessor_role', ''),
             placeholder="e.g., Data Protection Officer, Privacy Manager",
-            help="Your professional role or title within the organization"
+            help="Your professional role or title within the organization",
+            key="assessor_role_input"
         )
+        
+        # Update session state immediately
+        if assessor_name:
+            st.session_state.simple_dpia_answers['assessor_name'] = assessor_name
+        if assessor_role:
+            st.session_state.simple_dpia_answers['assessor_role'] = assessor_role
     
     with col2:
         assessment_date = st.date_input(
             "📅 Assessment Date",
             value=datetime.now().date(),
-            help="Date of assessment completion"
+            help="Date of assessment completion",
+            key="assessment_date_input"
         )
         
         st.markdown("### ✅ Confirmation")
         confirmation = st.checkbox(
             "I confirm that the above information is accurate and complete to the best of my knowledge, and I digitally sign this DPIA assessment.",
             value=st.session_state.simple_dpia_answers.get('confirmation', False),
-            help="Your digital signature confirms the accuracy of this assessment"
+            help="Your digital signature confirms the accuracy of this assessment",
+            key="confirmation_input"
         )
+        
+        # Update session state immediately
+        st.session_state.simple_dpia_answers['assessment_date'] = assessment_date.isoformat() if assessment_date else None
+        st.session_state.simple_dpia_answers['confirmation'] = confirmation
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Submit button
+    # Submit button - check both current values and session state
+    current_project_name = project_name or st.session_state.simple_dpia_answers.get('project_name', '')
+    current_organization = organization or st.session_state.simple_dpia_answers.get('organization', '')
+    current_assessor_name = assessor_name or st.session_state.simple_dpia_answers.get('assessor_name', '')
+    current_assessor_role = assessor_role or st.session_state.simple_dpia_answers.get('assessor_role', '')
+    current_confirmation = confirmation or st.session_state.simple_dpia_answers.get('confirmation', False)
+    
     can_submit = (
-        project_name and 
-        organization and 
-        assessor_name and 
-        assessor_role and 
-        confirmation and
+        current_project_name and 
+        current_organization and 
+        current_assessor_name and 
+        current_assessor_role and 
+        current_confirmation and
         all(answers.values())
     )
     
     if not can_submit:
         missing_fields = []
-        if not project_name:
+        if not current_project_name:
             missing_fields.append("Project Name")
-        if not organization:
+        if not current_organization:
             missing_fields.append("Organization")
-        if not assessor_name:
+        if not current_assessor_name:
             missing_fields.append("Your Full Name")
-        if not assessor_role:
+        if not current_assessor_role:
             missing_fields.append("Your Job Title")
-        if not confirmation:
+        if not current_confirmation:
             missing_fields.append("Digital Signature Confirmation")
         if not all(answers.values()):
             missing_fields.append("All Assessment Questions")
         
-        st.warning(f"Please complete the following fields: {', '.join(missing_fields)}")
+        if missing_fields:
+            st.warning(f"Please complete the following fields: {', '.join(missing_fields)}")
+        else:
+            st.info("All fields completed! You can now generate your DPIA report.")
     
     if st.button("Generate DPIA Report", type="primary", disabled=not can_submit):
-        # Save all data
+        # Save all data using current values
         assessment_data = {
             'assessment_id': str(uuid.uuid4()),
-            'project_name': project_name,
-            'organization': organization,
-            'assessor_name': assessor_name,
-            'assessor_role': assessor_role,
-            'assessment_date': assessment_date.isoformat(),
-            'confirmation': confirmation,
+            'project_name': current_project_name,
+            'organization': current_organization,
+            'assessor_name': current_assessor_name,
+            'assessor_role': current_assessor_role,
+            'assessment_date': assessment_date.isoformat() if assessment_date else datetime.now().date().isoformat(),
+            'confirmation': current_confirmation,
             'answers': answers,
             'risk_score': risk_score,
             'risk_level': risk_level,
