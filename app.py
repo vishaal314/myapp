@@ -4419,10 +4419,6 @@ else:
                         </style>
                         """, unsafe_allow_html=True)
                         
-                        # Run the working DPIA form directly
-                        from gdpr_7step_dpia import run_gdpr_7step_dpia
-                        run_gdpr_7step_dpia()
-                        
                         # Stop normal flow to proceed with only the DPIA form
                         scan_running = False
                     
