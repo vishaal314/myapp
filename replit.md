@@ -114,7 +114,9 @@ DataGuardian Pro is a comprehensive enterprise privacy compliance platform built
 ## Recent Changes
 - Fixed duplicate button key issues in main application
 - Removed Netherlands DPIA assessment section from main interface per user request
-- Reverted to original comprehensive DPIA assessment implementation
+- Added new Simple DPIA Assessment feature with yes/no questions and digital signature
+- Implemented instant HTML report generation for quick assessments
+- Both comprehensive and simple DPIA options now available in main interface
 
 ## User Preferences
 
