@@ -336,52 +336,46 @@ def show_assessment_form():
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Submit button - check both current values and session state
-    current_project_name = project_name or st.session_state.simple_dpia_answers.get('project_name', '')
-    current_organization = organization or st.session_state.simple_dpia_answers.get('organization', '')
-    current_assessor_name = assessor_name or st.session_state.simple_dpia_answers.get('assessor_name', '')
-    current_assessor_role = assessor_role or st.session_state.simple_dpia_answers.get('assessor_role', '')
-    current_confirmation = confirmation or st.session_state.simple_dpia_answers.get('confirmation', False)
+    # Submit button validation
+    project_valid = bool(project_name and len(project_name.strip()) > 0)
+    org_valid = bool(organization and len(organization.strip()) > 0)
+    name_valid = bool(assessor_name and len(assessor_name.strip()) > 0)
+    role_valid = bool(assessor_role and len(assessor_role.strip()) > 0)
+    answers_valid = len([a for a in answers.values() if a == "Yes" or a == "No"]) >= len(questions)
     
-    can_submit = (
-        current_project_name and 
-        current_organization and 
-        current_assessor_name and 
-        current_assessor_role and 
-        current_confirmation and
-        all(answers.values())
-    )
+    can_submit = project_valid and org_valid and name_valid and role_valid and confirmation and answers_valid
     
     if not can_submit:
         missing_fields = []
-        if not current_project_name:
+        if not project_valid:
             missing_fields.append("Project Name")
-        if not current_organization:
+        if not org_valid:
             missing_fields.append("Organization")
-        if not current_assessor_name:
+        if not name_valid:
             missing_fields.append("Your Full Name")
-        if not current_assessor_role:
+        if not role_valid:
             missing_fields.append("Your Job Title")
-        if not current_confirmation:
+        if not confirmation:
             missing_fields.append("Digital Signature Confirmation")
-        if not all(answers.values()):
-            missing_fields.append("All Assessment Questions")
+        if not answers_valid:
+            unanswered = len(questions) - len([a for a in answers.values() if a == "Yes" or a == "No"])
+            missing_fields.append(f"{unanswered} Assessment Questions")
         
         if missing_fields:
-            st.warning(f"Please complete the following fields: {', '.join(missing_fields)}")
-        else:
-            st.info("All fields completed! You can now generate your DPIA report.")
+            st.warning(f"⚠️ Please complete: {', '.join(missing_fields)}")
+    else:
+        st.success("✅ All fields completed! Ready to generate your DPIA report.")
     
-    if st.button("Generate DPIA Report", type="primary", disabled=not can_submit):
-        # Save all data using current values
+    if st.button("🔍 Generate DPIA Report", type="primary", disabled=not can_submit):
+        # Save all data using current form values
         assessment_data = {
             'assessment_id': str(uuid.uuid4()),
-            'project_name': current_project_name,
-            'organization': current_organization,
-            'assessor_name': current_assessor_name,
-            'assessor_role': current_assessor_role,
+            'project_name': project_name,
+            'organization': organization,
+            'assessor_name': assessor_name,
+            'assessor_role': assessor_role,
             'assessment_date': assessment_date.isoformat() if assessment_date else datetime.now().date().isoformat(),
-            'confirmation': current_confirmation,
+            'confirmation': confirmation,
             'answers': answers,
             'risk_score': risk_score,
             'risk_level': risk_level,
@@ -452,9 +446,11 @@ def show_results():
     
     with col2:
         if st.button("New Assessment"):
-            for key in list(st.session_state.keys()):
-                if key.startswith('simple_dpia'):
-                    del st.session_state[key]
+            # Clear only the simple DPIA related session state
+            st.session_state.simple_dpia_answers = {}
+            st.session_state.simple_dpia_completed = False
+            if 'simple_dpia_report_data' in st.session_state:
+                del st.session_state.simple_dpia_report_data
             st.rerun()
     
     with col3:
