@@ -336,12 +336,12 @@ def show_assessment_form():
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Submit button validation
-    project_valid = bool(project_name and len(project_name.strip()) > 0)
-    org_valid = bool(organization and len(organization.strip()) > 0)
-    name_valid = bool(assessor_name and len(assessor_name.strip()) > 0)
-    role_valid = bool(assessor_role and len(assessor_role.strip()) > 0)
-    answers_valid = len([a for a in answers.values() if a == "Yes" or a == "No"]) >= len(questions)
+    # Submit button validation - handle None values safely
+    project_valid = bool(project_name and project_name.strip())
+    org_valid = bool(organization and organization.strip())
+    name_valid = bool(assessor_name and assessor_name.strip())
+    role_valid = bool(assessor_role and assessor_role.strip())
+    answers_valid = len([a for a in answers.values() if a in ["Yes", "No"]]) == len(questions)
     
     can_submit = project_valid and org_valid and name_valid and role_valid and confirmation and answers_valid
     
@@ -358,7 +358,7 @@ def show_assessment_form():
         if not confirmation:
             missing_fields.append("Digital Signature Confirmation")
         if not answers_valid:
-            unanswered = len(questions) - len([a for a in answers.values() if a == "Yes" or a == "No"])
+            unanswered = len(questions) - len([a for a in answers.values() if a in ["Yes", "No"]])
             missing_fields.append(f"{unanswered} Assessment Questions")
         
         if missing_fields:
