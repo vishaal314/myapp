@@ -354,34 +354,50 @@ def show_assessment_form():
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Enhanced form validation with real-time feedback
-    project_valid = bool(project_name and len(project_name.strip()) > 0)
-    org_valid = bool(organization and len(organization.strip()) > 0)
-    name_valid = bool(assessor_name and len(assessor_name.strip()) > 0)
-    role_valid = bool(assessor_role and len(assessor_role.strip()) > 0)
+    # Debug form validation - show current values
+    st.markdown("---")
+    
+    # Enhanced form validation with detailed checking
+    project_text = project_name.strip() if project_name else ""
+    org_text = organization.strip() if organization else ""
+    name_text = assessor_name.strip() if assessor_name else ""
+    role_text = assessor_role.strip() if assessor_role else ""
+    
+    project_valid = len(project_text) > 0
+    org_valid = len(org_text) > 0
+    name_valid = len(name_text) > 0
+    role_valid = len(role_text) > 0
     answers_valid = len(answers) == len(questions) and all(a in ["Yes", "No"] for a in answers.values())
     
-    # Show validation status in real-time
-    validation_container = st.container()
-    with validation_container:
-        if project_valid and org_valid and name_valid and role_valid and confirmation and answers_valid:
-            st.success("✅ All fields completed! Ready to generate your DPIA report.")
-            can_submit = True
-        else:
-            missing_items = []
-            if not project_valid: missing_items.append("Project Name")
-            if not org_valid: missing_items.append("Organization")
-            if not name_valid: missing_items.append("Your Full Name")
-            if not role_valid: missing_items.append("Your Job Title")
-            if not confirmation: missing_items.append("Digital Signature Confirmation")
-            if not answers_valid: 
-                remaining = len(questions) - len([a for a in answers.values() if a in ["Yes", "No"]])
-                if remaining > 0:
-                    missing_items.append(f"{remaining} Assessment Questions")
-            
-            if missing_items:
-                st.warning(f"⚠️ Please complete: {', '.join(missing_items)}")
-            can_submit = False
+    # Debug information for troubleshooting
+    with st.expander("Form Status (Debug)", expanded=False):
+        st.write(f"Project Name: '{project_text}' - Valid: {project_valid}")
+        st.write(f"Organization: '{org_text}' - Valid: {org_valid}")
+        st.write(f"Assessor Name: '{name_text}' - Valid: {name_valid}")
+        st.write(f"Assessor Role: '{role_text}' - Valid: {role_valid}")
+        st.write(f"Confirmation: {confirmation}")
+        st.write(f"Answers: {len(answers)}/{len(questions)} - Valid: {answers_valid}")
+        st.write(f"Answer values: {list(answers.values())}")
+    
+    # Real-time validation feedback
+    if project_valid and org_valid and name_valid and role_valid and confirmation and answers_valid:
+        st.success("✅ All fields completed! Ready to generate your DPIA report.")
+        can_submit = True
+    else:
+        missing_items = []
+        if not project_valid: missing_items.append("Project Name")
+        if not org_valid: missing_items.append("Organization")
+        if not name_valid: missing_items.append("Your Full Name")
+        if not role_valid: missing_items.append("Your Job Title")
+        if not confirmation: missing_items.append("Digital Signature Confirmation")
+        if not answers_valid: 
+            remaining = len(questions) - len([a for a in answers.values() if a in ["Yes", "No"]])
+            if remaining > 0:
+                missing_items.append(f"{remaining} Assessment Questions")
+        
+        if missing_items:
+            st.warning(f"⚠️ Please complete: {', '.join(missing_items)}")
+        can_submit = False
     
     if st.button("🔍 Generate DPIA Report", type="primary", disabled=not can_submit):
         # Save all data using current form values
