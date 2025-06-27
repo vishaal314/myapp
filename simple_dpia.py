@@ -129,6 +129,21 @@ def run_simple_dpia():
         border: 2px solid #4a90e2;
         box-shadow: 0 4px 15px rgba(74, 144, 226, 0.1);
     }
+    
+    .question-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 1rem 0;
+        border-left: 4px solid #4a90e2;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .question-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
     </style>
     """, unsafe_allow_html=True)
     
@@ -174,11 +189,9 @@ def show_assessment_form():
             key="organization_input"
         )
     
-    # Update session state immediately
-    if project_name:
-        st.session_state.simple_dpia_answers['project_name'] = project_name
-    if organization:
-        st.session_state.simple_dpia_answers['organization'] = organization
+    # Update session state immediately for all fields
+    st.session_state.simple_dpia_answers['project_name'] = project_name or ""
+    st.session_state.simple_dpia_answers['organization'] = organization or ""
     
     # DPIA Questions
     st.markdown("### DPIA Assessment Questions")
@@ -241,26 +254,33 @@ def show_assessment_form():
     risk_score = 0
     
     for i, q in enumerate(questions, 1):
-        st.markdown(f'<div class="question-card">', unsafe_allow_html=True)
-        
-        st.markdown(f"**Question {i}:** {q['question']}")
-        
-        answer = st.radio(
-            f"Select your answer:",
-            options=["No", "Yes"],
-            index=0 if st.session_state.simple_dpia_answers.get(q['key']) != 'Yes' else 1,
-            key=f"q_{q['key']}",
-            help=q['help']
-        )
-        
-        answers[q['key']] = answer
-        if answer == "Yes":
-            risk_score += 10
-        
-        # Update session state for this question
-        st.session_state.simple_dpia_answers[q['key']] = answer
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.container():
+            st.markdown(f'<div class="question-card">', unsafe_allow_html=True)
+            
+            # Clean question display
+            st.markdown(f"**{i}.** {q['question']}")
+            st.caption(q['help'])
+            
+            # Get current answer or default to "No"
+            current_answer = st.session_state.simple_dpia_answers.get(q['key'], "No")
+            
+            answer = st.radio(
+                "Your answer:",
+                options=["No", "Yes"],
+                index=1 if current_answer == "Yes" else 0,
+                key=f"q_{q['key']}",
+                horizontal=True
+            )
+            
+            # Store answer and calculate risk
+            answers[q['key']] = answer
+            st.session_state.simple_dpia_answers[q['key']] = answer
+            
+            if answer == "Yes":
+                risk_score += 10
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("---")
     
     # Real-time risk indicator
     if risk_score <= 30:
@@ -308,11 +328,9 @@ def show_assessment_form():
             key="assessor_role_input"
         )
         
-        # Update session state immediately
-        if assessor_name:
-            st.session_state.simple_dpia_answers['assessor_name'] = assessor_name
-        if assessor_role:
-            st.session_state.simple_dpia_answers['assessor_role'] = assessor_role
+        # Update session state immediately for all signature fields
+        st.session_state.simple_dpia_answers['assessor_name'] = assessor_name or ""
+        st.session_state.simple_dpia_answers['assessor_role'] = assessor_role or ""
     
     with col2:
         assessment_date = st.date_input(
@@ -336,35 +354,34 @@ def show_assessment_form():
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Submit button validation - handle None values safely
-    project_valid = bool(project_name and project_name.strip())
-    org_valid = bool(organization and organization.strip())
-    name_valid = bool(assessor_name and assessor_name.strip())
-    role_valid = bool(assessor_role and assessor_role.strip())
-    answers_valid = len([a for a in answers.values() if a in ["Yes", "No"]]) == len(questions)
+    # Enhanced form validation with real-time feedback
+    project_valid = bool(project_name and len(project_name.strip()) > 0)
+    org_valid = bool(organization and len(organization.strip()) > 0)
+    name_valid = bool(assessor_name and len(assessor_name.strip()) > 0)
+    role_valid = bool(assessor_role and len(assessor_role.strip()) > 0)
+    answers_valid = len(answers) == len(questions) and all(a in ["Yes", "No"] for a in answers.values())
     
-    can_submit = project_valid and org_valid and name_valid and role_valid and confirmation and answers_valid
-    
-    if not can_submit:
-        missing_fields = []
-        if not project_valid:
-            missing_fields.append("Project Name")
-        if not org_valid:
-            missing_fields.append("Organization")
-        if not name_valid:
-            missing_fields.append("Your Full Name")
-        if not role_valid:
-            missing_fields.append("Your Job Title")
-        if not confirmation:
-            missing_fields.append("Digital Signature Confirmation")
-        if not answers_valid:
-            unanswered = len(questions) - len([a for a in answers.values() if a in ["Yes", "No"]])
-            missing_fields.append(f"{unanswered} Assessment Questions")
-        
-        if missing_fields:
-            st.warning(f"⚠️ Please complete: {', '.join(missing_fields)}")
-    else:
-        st.success("✅ All fields completed! Ready to generate your DPIA report.")
+    # Show validation status in real-time
+    validation_container = st.container()
+    with validation_container:
+        if project_valid and org_valid and name_valid and role_valid and confirmation and answers_valid:
+            st.success("✅ All fields completed! Ready to generate your DPIA report.")
+            can_submit = True
+        else:
+            missing_items = []
+            if not project_valid: missing_items.append("Project Name")
+            if not org_valid: missing_items.append("Organization")
+            if not name_valid: missing_items.append("Your Full Name")
+            if not role_valid: missing_items.append("Your Job Title")
+            if not confirmation: missing_items.append("Digital Signature Confirmation")
+            if not answers_valid: 
+                remaining = len(questions) - len([a for a in answers.values() if a in ["Yes", "No"]])
+                if remaining > 0:
+                    missing_items.append(f"{remaining} Assessment Questions")
+            
+            if missing_items:
+                st.warning(f"⚠️ Please complete: {', '.join(missing_items)}")
+            can_submit = False
     
     if st.button("🔍 Generate DPIA Report", type="primary", disabled=not can_submit):
         # Save all data using current form values
