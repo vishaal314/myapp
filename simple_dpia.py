@@ -170,28 +170,42 @@ def show_assessment_form():
     """Display the assessment form"""
     
     # Project Information
-    st.markdown("### Project Information")
+    st.markdown("### 📋 Project Information")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        project_name = st.text_input(
-            "Project Name",
-            value=st.session_state.simple_dpia_answers.get('project_name', ''),
-            placeholder="Enter your project name",
-            key="project_name_input"
-        )
+    # Use form to ensure proper value capture
+    with st.form("project_info_form", clear_on_submit=False):
+        col1, col2 = st.columns(2)
+        with col1:
+            project_name = st.text_input(
+                "Project Name *",
+                value=st.session_state.simple_dpia_answers.get('project_name', ''),
+                placeholder="Enter your project name",
+                help="Name of the project or processing activity"
+            )
+        
+        with col2:
+            organization = st.text_input(
+                "Organization *",
+                value=st.session_state.simple_dpia_answers.get('organization', ''),
+                placeholder="Your organization name",
+                help="Name of your organization or company"
+            )
+        
+        # Submit button for project info
+        project_submitted = st.form_submit_button("💾 Save Project Information")
+        
+        if project_submitted:
+            st.session_state.simple_dpia_answers['project_name'] = project_name
+            st.session_state.simple_dpia_answers['organization'] = organization
+            st.success("Project information saved!")
+            st.rerun()
     
-    with col2:
-        organization = st.text_input(
-            "Organization",
-            value=st.session_state.simple_dpia_answers.get('organization', ''),
-            placeholder="Your organization name",
-            key="organization_input"
-        )
+    # Get saved values for display
+    saved_project = st.session_state.simple_dpia_answers.get('project_name', '')
+    saved_org = st.session_state.simple_dpia_answers.get('organization', '')
     
-    # Update session state immediately for all fields
-    st.session_state.simple_dpia_answers['project_name'] = project_name or ""
-    st.session_state.simple_dpia_answers['organization'] = organization or ""
+    if saved_project and saved_org:
+        st.info(f"✅ Project: **{saved_project}** | Organization: **{saved_org}**")
     
     # DPIA Questions
     st.markdown("### DPIA Assessment Questions")
@@ -309,60 +323,71 @@ def show_assessment_form():
     st.markdown("**Please provide your details to digitally sign this assessment:**")
     st.markdown('<div class="signature-section">', unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
+    # Use form for digital signature to ensure proper value capture
+    with st.form("signature_form", clear_on_submit=False):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            assessor_name = st.text_input(
+                "👤 Full Name *",
+                value=st.session_state.simple_dpia_answers.get('assessor_name', ''),
+                placeholder="Enter your full name",
+                help="This will appear as the digital signature on your DPIA report"
+            )
+            
+            assessor_role = st.text_input(
+                "💼 Job Title/Role *",
+                value=st.session_state.simple_dpia_answers.get('assessor_role', ''),
+                placeholder="e.g., Data Protection Officer, Privacy Manager",
+                help="Your professional role or title within the organization"
+            )
+        
+        with col2:
+            assessment_date = st.date_input(
+                "📅 Assessment Date",
+                value=datetime.now().date(),
+                help="Date of assessment completion"
+            )
+            
+            st.markdown("### ✅ Confirmation")
+            confirmation = st.checkbox(
+                "I confirm that the above information is accurate and complete to the best of my knowledge, and I digitally sign this DPIA assessment.",
+                value=st.session_state.simple_dpia_answers.get('confirmation', False),
+                help="Your digital signature confirms the accuracy of this assessment"
+            )
+        
+        # Submit button for signature
+        signature_submitted = st.form_submit_button("✍️ Apply Digital Signature")
+        
+        if signature_submitted:
+            st.session_state.simple_dpia_answers['assessor_name'] = assessor_name
+            st.session_state.simple_dpia_answers['assessor_role'] = assessor_role
+            st.session_state.simple_dpia_answers['assessment_date'] = assessment_date.isoformat() if assessment_date else None
+            st.session_state.simple_dpia_answers['confirmation'] = confirmation
+            st.success("Digital signature applied!")
+            st.rerun()
     
-    with col1:
-        assessor_name = st.text_input(
-            "👤 Full Name *",
-            value=st.session_state.simple_dpia_answers.get('assessor_name', ''),
-            placeholder="Enter your full name",
-            help="This will appear as the digital signature on your DPIA report",
-            key="assessor_name_input"
-        )
-        
-        assessor_role = st.text_input(
-            "💼 Job Title/Role *",
-            value=st.session_state.simple_dpia_answers.get('assessor_role', ''),
-            placeholder="e.g., Data Protection Officer, Privacy Manager",
-            help="Your professional role or title within the organization",
-            key="assessor_role_input"
-        )
-        
-        # Update session state immediately for all signature fields
-        st.session_state.simple_dpia_answers['assessor_name'] = assessor_name or ""
-        st.session_state.simple_dpia_answers['assessor_role'] = assessor_role or ""
+    # Display saved signature info
+    saved_name = st.session_state.simple_dpia_answers.get('assessor_name', '')
+    saved_role = st.session_state.simple_dpia_answers.get('assessor_role', '')
+    saved_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
     
-    with col2:
-        assessment_date = st.date_input(
-            "📅 Assessment Date",
-            value=datetime.now().date(),
-            help="Date of assessment completion",
-            key="assessment_date_input"
-        )
-        
-        st.markdown("### ✅ Confirmation")
-        confirmation = st.checkbox(
-            "I confirm that the above information is accurate and complete to the best of my knowledge, and I digitally sign this DPIA assessment.",
-            value=st.session_state.simple_dpia_answers.get('confirmation', False),
-            help="Your digital signature confirms the accuracy of this assessment",
-            key="confirmation_input"
-        )
-        
-        # Update session state immediately
-        st.session_state.simple_dpia_answers['assessment_date'] = assessment_date.isoformat() if assessment_date else None
-        st.session_state.simple_dpia_answers['confirmation'] = confirmation
+    if saved_name and saved_role and saved_confirmation:
+        st.info(f"✅ Digitally signed by: **{saved_name}** ({saved_role})")
     
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Debug form validation - show current values
     st.markdown("---")
     
-    # Enhanced form validation with detailed checking
-    project_text = project_name.strip() if project_name else ""
-    org_text = organization.strip() if organization else ""
-    name_text = assessor_name.strip() if assessor_name else ""
-    role_text = assessor_role.strip() if assessor_role else ""
+    # Get all saved values from session state for validation
+    project_text = st.session_state.simple_dpia_answers.get('project_name', '').strip()
+    org_text = st.session_state.simple_dpia_answers.get('organization', '').strip()
+    name_text = st.session_state.simple_dpia_answers.get('assessor_name', '').strip()
+    role_text = st.session_state.simple_dpia_answers.get('assessor_role', '').strip()
+    confirmation_saved = st.session_state.simple_dpia_answers.get('confirmation', False)
     
+    # Validation based on saved values
     project_valid = len(project_text) > 0
     org_valid = len(org_text) > 0
     name_valid = len(name_text) > 0
@@ -375,40 +400,47 @@ def show_assessment_form():
         st.write(f"Organization: '{org_text}' - Valid: {org_valid}")
         st.write(f"Assessor Name: '{name_text}' - Valid: {name_valid}")
         st.write(f"Assessor Role: '{role_text}' - Valid: {role_valid}")
-        st.write(f"Confirmation: {confirmation}")
+        st.write(f"Confirmation: {confirmation_saved}")
         st.write(f"Answers: {len(answers)}/{len(questions)} - Valid: {answers_valid}")
-        st.write(f"Answer values: {list(answers.values())}")
+        st.write(f"Session state keys: {list(st.session_state.simple_dpia_answers.keys())}")
     
-    # Real-time validation feedback
-    if project_valid and org_valid and name_valid and role_valid and confirmation and answers_valid:
-        st.success("✅ All fields completed! Ready to generate your DPIA report.")
-        can_submit = True
+    # Final validation check
+    can_submit = project_valid and org_valid and name_valid and role_valid and confirmation_saved and answers_valid
+    
+    # Show completion status
+    if can_submit:
+        st.success("✅ All sections completed! Ready to generate your DPIA report.")
     else:
         missing_items = []
-        if not project_valid: missing_items.append("Project Name")
-        if not org_valid: missing_items.append("Organization")
-        if not name_valid: missing_items.append("Your Full Name")
-        if not role_valid: missing_items.append("Your Job Title")
-        if not confirmation: missing_items.append("Digital Signature Confirmation")
+        if not project_valid: missing_items.append("Project Information")
+        if not org_valid: missing_items.append("Organization Information")
+        if not name_valid or not role_valid: missing_items.append("Digital Signature Details")
+        if not confirmation_saved: missing_items.append("Digital Signature Confirmation")
         if not answers_valid: 
             remaining = len(questions) - len([a for a in answers.values() if a in ["Yes", "No"]])
             if remaining > 0:
                 missing_items.append(f"{remaining} Assessment Questions")
         
         if missing_items:
-            st.warning(f"⚠️ Please complete: {', '.join(missing_items)}")
-        can_submit = False
+            st.info(f"📝 Please complete: {', '.join(missing_items)}")
+            st.markdown("**Steps to complete:**")
+            if not project_valid or not org_valid:
+                st.markdown("1. Fill out and save Project Information")
+            if not answers_valid:
+                st.markdown("2. Answer all assessment questions")
+            if not name_valid or not role_valid or not confirmation_saved:
+                st.markdown("3. Complete and apply Digital Signature")
     
     if st.button("🔍 Generate DPIA Report", type="primary", disabled=not can_submit):
-        # Save all data using current form values
+        # Save all data using saved session values
         assessment_data = {
             'assessment_id': str(uuid.uuid4()),
-            'project_name': project_name,
-            'organization': organization,
-            'assessor_name': assessor_name,
-            'assessor_role': assessor_role,
-            'assessment_date': assessment_date.isoformat() if assessment_date else datetime.now().date().isoformat(),
-            'confirmation': confirmation,
+            'project_name': project_text,
+            'organization': org_text,
+            'assessor_name': name_text,
+            'assessor_role': role_text,
+            'assessment_date': st.session_state.simple_dpia_answers.get('assessment_date', datetime.now().date().isoformat()),
+            'confirmation': confirmation_saved,
             'answers': answers,
             'risk_score': risk_score,
             'risk_level': risk_level,
