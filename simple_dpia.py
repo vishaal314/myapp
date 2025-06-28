@@ -419,8 +419,10 @@ def show_assessment_form():
         )
         
         # Auto-save name to session state
-        if assessor_name and assessor_name.strip() != current_name:
+        if assessor_name and assessor_name.strip():
             st.session_state.simple_dpia_answers['assessor_name'] = assessor_name.strip()
+        elif not assessor_name:
+            st.session_state.simple_dpia_answers['assessor_name'] = ''
         
         # Auto-saving role input
         assessor_role = st.text_input(
@@ -432,8 +434,10 @@ def show_assessment_form():
         )
         
         # Auto-save role to session state
-        if assessor_role and assessor_role.strip() != current_role:
+        if assessor_role and assessor_role.strip():
             st.session_state.simple_dpia_answers['assessor_role'] = assessor_role.strip()
+        elif not assessor_role:
+            st.session_state.simple_dpia_answers['assessor_role'] = ''
     
     with col2:
         # Auto-saving date input
@@ -494,10 +498,10 @@ def show_assessment_form():
         st.warning(f"⚠️ Complete these fields: {', '.join(missing_items)}")
     
     # Enhanced signature status display with comprehensive validation
-    saved_name = st.session_state.simple_dpia_answers.get('assessor_name', '').strip()
-    saved_role = st.session_state.simple_dpia_answers.get('assessor_role', '').strip()
-    saved_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
-    saved_date = st.session_state.simple_dpia_answers.get('assessment_date', '')
+    display_name = st.session_state.simple_dpia_answers.get('assessor_name', '')
+    display_role = st.session_state.simple_dpia_answers.get('assessor_role', '')
+    display_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
+    display_date = st.session_state.simple_dpia_answers.get('assessment_date', '')
     signature_timestamp = st.session_state.simple_dpia_answers.get('signature_timestamp', '')
     signature_applied = st.session_state.simple_dpia_answers.get('signature_applied', False)
     
