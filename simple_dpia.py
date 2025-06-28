@@ -520,10 +520,10 @@ def show_assessment_form():
     date_valid = bool(current_date_input)
     confirm_valid = bool(current_confirm_input)
     
-    # Single signature validation and display
+    # Enhanced signature validation and display with proper completion tracking
     if signature_applied:
         st.success("✅ **Digital Signature Applied Successfully**")
-        signature_timestamp = st.session_state.simple_dpia_answers.get('signature_timestamp', datetime.now().isoformat())
+        signature_timestamp = saved_data.get('signature_timestamp', datetime.now().isoformat())
         try:
             formatted_timestamp = datetime.fromisoformat(signature_timestamp.replace('Z', '+00:00') if signature_timestamp.endswith('Z') else signature_timestamp).strftime('%B %d, %Y at %I:%M %p')
         except:
@@ -542,7 +542,12 @@ def show_assessment_form():
         st.success("✅ All signature requirements met - ready to apply digital signature")
         
         if st.button("✍️ Apply Digital Signature", type="primary", key="apply_signature"):
+            # Ensure all signature data is properly saved before applying
             st.session_state.simple_dpia_answers.update({
+                'assessor_name': current_name_input.strip(),
+                'assessor_role': current_role_input.strip(),
+                'assessment_date': current_date_input.isoformat() if current_date_input else datetime.now().date().isoformat(),
+                'confirmation': current_confirm_input,
                 'signature_timestamp': datetime.now().isoformat(),
                 'signature_applied': True
             })
@@ -585,8 +590,16 @@ def show_assessment_form():
     org_valid = bool(org_text and len(org_text.strip()) > 0)
     answers_valid = len(current_saved_answers) == len(questions)
     
-    # Final validation check
+    # Enhanced final validation check with debug info
     can_submit = project_valid and org_valid and signature_complete and answers_valid
+    
+    # Debug validation status
+    st.write("**Debug - Validation Status:**")
+    st.write(f"- Project Valid: {project_valid} (text: '{project_text[:20]}...' if project_text else 'empty')")
+    st.write(f"- Organization Valid: {org_valid} (text: '{org_text[:20]}...' if org_text else 'empty')")
+    st.write(f"- Signature Complete: {signature_complete} (applied: {signature_applied})")
+    st.write(f"- Answers Valid: {answers_valid} (count: {len(current_saved_answers)}/{len(questions)})")
+    st.write(f"- **Can Submit: {can_submit}**")
     
     # Enhanced completion status with visual progress
     st.markdown("### 🎯 Completion Status")
