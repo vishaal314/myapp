@@ -245,7 +245,7 @@ def show_assessment_form():
     current_org = st.session_state.simple_dpia_answers.get('organization', '')
     
     with col1:
-        st.text_input(
+        project_input = st.text_input(
             "Project Name *",
             value=current_project,
             placeholder="Enter your project name",
@@ -253,6 +253,10 @@ def show_assessment_form():
             key="project_name_input",
             on_change=save_project_name
         )
+        
+        # Force immediate save if value exists and differs from saved
+        if project_input and project_input.strip() != current_project:
+            st.session_state.simple_dpia_answers['project_name'] = project_input.strip()
         
         # Real-time validation for project name
         project_value = st.session_state.get("project_name_input", current_project)
@@ -265,7 +269,7 @@ def show_assessment_form():
             st.info("💡 Enter your project name")
     
     with col2:
-        st.text_input(
+        org_input = st.text_input(
             "Organization *",
             value=current_org,
             placeholder="Your organization name",
@@ -273,6 +277,10 @@ def show_assessment_form():
             key="organization_input",
             on_change=save_organization
         )
+        
+        # Force immediate save if value exists and differs from saved
+        if org_input and org_input.strip() != current_org:
+            st.session_state.simple_dpia_answers['organization'] = org_input.strip()
         
         # Real-time validation for organization
         org_value = st.session_state.get("organization_input", current_org)
@@ -448,6 +456,38 @@ def show_assessment_form():
         st.write(f"- Org Complete: {org_complete}")
         st.write(f"- Questions Complete: {questions_complete} ({completed_answers}/{len(questions)})")
         st.write(f"- Can Submit: {can_submit}")
+        
+        st.write("**Question Status:**")
+        for i, q in enumerate(questions, 1):
+            answer = st.session_state.simple_dpia_answers.get(q['key'], '')
+            status = "✓" if answer in ["Yes", "No"] else "✗"
+            st.write(f"- Q{i} ({q['key']}): '{answer}' {status}")
+        
+        st.write("**All Session State Keys:**")
+        for key in sorted(st.session_state.keys()):
+            if 'simple_dpia' in key or 'radio_' in key or 'project_' in key or 'organization_' in key:
+                st.write(f"- {key}: {st.session_state[key]}")
+        
+        # Emergency fix button
+        if st.button("🚨 Emergency Fix - Force Save Everything"):
+            # Force save project info from session state
+            proj_input = st.session_state.get("project_name_input", "")
+            org_input = st.session_state.get("organization_input", "")
+            if proj_input:
+                st.session_state.simple_dpia_answers['project_name'] = proj_input
+            if org_input:
+                st.session_state.simple_dpia_answers['organization'] = org_input
+            
+            # Force save all radio button answers
+            for q in questions:
+                radio_key = f"radio_{q['key']}"
+                if radio_key in st.session_state:
+                    answer = st.session_state[radio_key]
+                    if answer:
+                        st.session_state.simple_dpia_answers[q['key']] = answer
+            
+            st.success("Emergency fix applied!")
+            st.rerun()
     
     # Enhanced completion status with visual progress
     st.markdown("### 🎯 Completion Status")
