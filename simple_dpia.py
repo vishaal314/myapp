@@ -420,7 +420,7 @@ def show_assessment_form():
     answers_valid = len(saved_answers) == len(questions) and all(a in ["Yes", "No"] for a in saved_answers.values())
     
     # Debug information for troubleshooting
-    with st.expander("Form Status (Debug)", expanded=False):
+    with st.expander("Form Status (Debug)", expanded=True):
         st.write(f"Project Name: '{project_text}' - Valid: {project_valid}")
         st.write(f"Organization: '{org_text}' - Valid: {org_valid}")
         st.write(f"Assessor Name: '{name_text}' - Valid: {name_valid}")
@@ -429,9 +429,12 @@ def show_assessment_form():
         st.write(f"Answers: {len(saved_answers)}/{len(questions)} - Valid: {answers_valid}")
         st.write(f"Saved answers: {saved_answers}")
         st.write(f"Session state keys: {list(st.session_state.simple_dpia_answers.keys())}")
+        st.write(f"All validation results: project={project_valid}, org={org_valid}, name={name_valid}, role={role_valid}, confirm={confirmation_saved}, answers={answers_valid}")
     
     # Final validation check
     can_submit = project_valid and org_valid and name_valid and role_valid and confirmation_saved and answers_valid
+    
+    st.write(f"**CAN SUBMIT: {can_submit}** (Debug mode)")  # Temporary debug
     
     # Enhanced completion status with visual progress
     st.markdown("### 🎯 Completion Status")
