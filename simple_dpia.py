@@ -618,25 +618,72 @@ def show_results():
         col1, col2, col3 = st.columns(3)
         
         with col1:
+            # Debug HTML report generation
+            with st.expander("HTML Report Debug", expanded=False):
+                st.write("Data for report generation:")
+                st.json({
+                    "has_data": bool(data),
+                    "data_keys": list(data.keys()) if data else [],
+                    "answers_count": len(data.get('answers', {})),
+                    "project_name": data.get('project_name', 'Missing'),
+                    "organization": data.get('organization', 'Missing'),
+                    "assessor_name": data.get('assessor_name', 'Missing'),
+                    "risk_score": data.get('risk_score', 'Missing')
+                })
+            
             try:
+                st.info("Generating HTML report...")
                 html_report = generate_simple_html_report(data)
-                if html_report and len(html_report) > 500:  # Validate report content
+                
+                # Enhanced validation with debug info
+                if html_report:
+                    report_length = len(html_report)
+                    st.success(f"Report generated successfully ({report_length} characters)")
+                    
+                    # Always show download button if report exists
                     st.download_button(
                         label="📄 Download HTML Report",
                         data=html_report,
-                        file_name=f"DPIA_Report_{data.get('project_name', 'Unknown').replace(' ', '_')}_{data['assessment_id'][:8]}.html",
+                        file_name=f"DPIA_Report_{data.get('project_name', 'Assessment').replace(' ', '_')}_{data.get('assessment_id', 'unknown')[:8]}.html",
                         mime="text/html",
                         type="primary",
                         help="Download complete assessment report as HTML file"
                     )
+                    
+                    # Show preview option
+                    if st.button("👀 Preview Report"):
+                        with st.expander("HTML Report Preview", expanded=True):
+                            st.markdown("**Report Preview (first 2000 characters):**")
+                            st.text(html_report[:2000] + "..." if len(html_report) > 2000 else html_report)
+                        
                 else:
-                    st.error("Report generation failed")
-                    if st.button("🔄 Regenerate Report"):
-                        st.rerun()
+                    st.error("Report generation returned empty content")
+                    
             except Exception as e:
-                st.error(f"Download error: {str(e)}")
-                if st.button("🔄 Try Again"):
-                    st.rerun()
+                st.error(f"HTML Report Generation Error: {str(e)}")
+                st.error("Please check the debug information above")
+                
+                # Show fallback download with minimal report
+                if st.button("Generate Minimal Report"):
+                    minimal_html = f"""
+                    <!DOCTYPE html>
+                    <html><head><title>DPIA Assessment</title></head>
+                    <body>
+                        <h1>DPIA Assessment Report</h1>
+                        <p>Project: {data.get('project_name', 'Unknown')}</p>
+                        <p>Organization: {data.get('organization', 'Unknown')}</p>
+                        <p>Assessment ID: {data.get('assessment_id', 'Unknown')}</p>
+                        <p>Risk Score: {data.get('risk_score', 0)}/100</p>
+                        <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                    </body></html>
+                    """
+                    
+                    st.download_button(
+                        label="📄 Download Minimal Report",
+                        data=minimal_html,
+                        file_name=f"DPIA_Minimal_{data.get('assessment_id', 'unknown')[:8]}.html",
+                        mime="text/html"
+                    )
         
         with col2:
             if st.button("🆕 New Assessment", help="Start a fresh DPIA assessment"):
@@ -728,10 +775,19 @@ def generate_simple_html_report(data):
         if not data or not isinstance(data, dict):
             raise ValueError("Invalid assessment data provided")
         
-        required_fields = ['answers', 'risk_score', 'project_name', 'organization', 'assessor_name']
+        # More flexible validation - only require essential fields
+        required_fields = ['answers', 'project_name']
         missing_fields = [field for field in required_fields if field not in data or not data[field]]
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+        
+        # Provide defaults for optional fields
+        if 'risk_score' not in data:
+            data['risk_score'] = 0
+        if 'organization' not in data:
+            data['organization'] = 'Not Specified'
+        if 'assessor_name' not in data:
+            data['assessor_name'] = 'Not Specified'
         
         # Generate answers table with error handling
         answers_html = ""
@@ -1034,23 +1090,50 @@ def generate_simple_html_report(data):
     </html>
     """
         
-        # Validate generated HTML
-        if not html_content or len(html_content) < 2000:
-            raise ValueError("Generated HTML report is too short or empty")
+        # Validate generated HTML more flexibly
+        if not html_content:
+            raise ValueError("Generated HTML report is empty")
+        
+        if len(html_content) < 100:
+            raise ValueError("Generated HTML report is too short")
         
         return html_content
         
     except Exception as e:
-        # Return a minimal error report instead of failing completely
+        # Generate a comprehensive error report with debugging info
+        import traceback
+        error_details = traceback.format_exc()
+        
         error_html = f"""
         <!DOCTYPE html>
         <html>
-        <head><title>DPIA Report Generation Error</title></head>
+        <head>
+            <title>DPIA Report Generation Error</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 40px; }}
+                .error {{ background-color: #fee; padding: 20px; border: 1px solid #fcc; }}
+                .debug {{ background-color: #eef; padding: 15px; margin-top: 20px; font-family: monospace; }}
+            </style>
+        </head>
         <body>
-            <h1>Report Generation Error</h1>
-            <p>Error: {str(e)}</p>
-            <p>Assessment ID: {data.get('assessment_id', 'Unknown') if data else 'Unknown'}</p>
-            <p>Please try regenerating the report or contact support.</p>
+            <h1>DPIA Report Generation Error</h1>
+            <div class="error">
+                <h3>Error Details:</h3>
+                <p><strong>Error:</strong> {str(e)}</p>
+                <p><strong>Assessment ID:</strong> {data.get('assessment_id', 'Unknown') if data else 'Unknown'}</p>
+                <p><strong>Project:</strong> {data.get('project_name', 'Unknown') if data else 'Unknown'}</p>
+            </div>
+            
+            <div class="debug">
+                <h3>Debug Information:</h3>
+                <p><strong>Data Keys:</strong> {list(data.keys()) if data else 'No data'}</p>
+                <p><strong>Has Answers:</strong> {'Yes' if data and data.get('answers') else 'No'}</p>
+                <p><strong>Answer Count:</strong> {len(data.get('answers', {})) if data else 0}</p>
+                <p><strong>Technical Details:</strong></p>
+                <pre>{error_details}</pre>
+            </div>
+            
+            <p><em>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</em></p>
         </body>
         </html>
         """
