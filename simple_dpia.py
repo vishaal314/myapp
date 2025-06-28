@@ -223,100 +223,54 @@ def show_assessment_form():
         }
     ]
     
-    # Project Information - Auto-saving inputs
+    # Project Information - Simplified Input Section
     st.markdown("### 📋 Project Information")
     st.markdown("**Please provide basic information about your project:**")
     
-    # Enhanced callback functions that force immediate save
-    def save_project_name():
-        name = st.session_state.get("project_name_input", "")
-        if name:  # Save any non-empty value
-            st.session_state.simple_dpia_answers['project_name'] = name.strip()
-    
-    def save_organization():
-        org = st.session_state.get("organization_input", "")
-        if org:  # Save any non-empty value
-            st.session_state.simple_dpia_answers['organization'] = org.strip()
-    
-    col1, col2 = st.columns(2)
-    
-    # Get current saved values
-    current_project = st.session_state.simple_dpia_answers.get('project_name', '')
-    current_org = st.session_state.simple_dpia_answers.get('organization', '')
-    
-    with col1:
-        project_input = st.text_input(
-            "Project Name *",
-            value=current_project,
-            placeholder="Enter your project name",
-            help="Name of the project or processing activity",
-            key="project_name_input",
-            on_change=save_project_name
-        )
+    # Use form for reliable submission
+    with st.form("project_info_form"):
+        col1, col2 = st.columns(2)
         
-        # Force immediate save if value exists and differs from saved
-        if project_input and project_input.strip() != current_project:
-            st.session_state.simple_dpia_answers['project_name'] = project_input.strip()
+        # Get current saved values for display
+        current_project = st.session_state.simple_dpia_answers.get('project_name', '')
+        current_org = st.session_state.simple_dpia_answers.get('organization', '')
         
-        # Real-time validation for project name
-        project_value = st.session_state.get("project_name_input", current_project)
-        if project_value:
-            if len(project_value.strip()) > 0:
-                st.success("✓ Valid project name")
-            else:
-                st.warning("⚠️ Project name cannot be empty")
-        else:
-            st.info("💡 Enter your project name")
-    
-    with col2:
-        org_input = st.text_input(
-            "Organization *",
-            value=current_org,
-            placeholder="Your organization name",
-            help="Name of your organization or company",
-            key="organization_input",
-            on_change=save_organization
-        )
+        with col1:
+            project_name = st.text_input(
+                "Project Name *",
+                value=current_project,
+                placeholder="Enter your project name",
+                help="Name of the project or processing activity"
+            )
         
-        # Force immediate save if value exists and differs from saved
-        if org_input and org_input.strip() != current_org:
-            st.session_state.simple_dpia_answers['organization'] = org_input.strip()
+        with col2:
+            organization = st.text_input(
+                "Organization *",
+                value=current_org,
+                placeholder="Your organization name",
+                help="Name of your organization or company"
+            )
         
-        # Real-time validation for organization
-        org_value = st.session_state.get("organization_input", current_org)
-        if org_value:
-            if len(org_value.strip()) > 0:
-                st.success("✓ Valid organization")
-            else:
-                st.warning("⚠️ Organization cannot be empty")
-        else:
-            st.info("💡 Enter your organization name")
-    
-    # Manual save button as backup
-    col1_btn, col2_btn = st.columns([1, 3])
-    with col1_btn:
-        if st.button("💾 Save Project Info", type="secondary"):
-            # Force save current values
-            current_name = st.session_state.get("project_name_input", "").strip()
-            current_org = st.session_state.get("organization_input", "").strip()
-            
-            if current_name and current_org:
-                st.session_state.simple_dpia_answers['project_name'] = current_name
-                st.session_state.simple_dpia_answers['organization'] = current_org
-                st.success("Project information saved!")
+        # Submit button for the form
+        submitted = st.form_submit_button("💾 Save Project Information", type="primary")
+        
+        if submitted:
+            if project_name.strip() and organization.strip():
+                st.session_state.simple_dpia_answers['project_name'] = project_name.strip()
+                st.session_state.simple_dpia_answers['organization'] = organization.strip()
+                st.success("✅ Project information saved successfully!")
                 st.rerun()
             else:
-                st.error("Please fill in both fields before saving")
+                st.error("⚠️ Please fill in both Project Name and Organization")
     
     # Show current saved status
     saved_project = st.session_state.simple_dpia_answers.get('project_name', '')
     saved_org = st.session_state.simple_dpia_answers.get('organization', '')
     
-    with col2_btn:
-        if saved_project and saved_org:
-            st.success(f"✅ Saved: {saved_project} | {saved_org}")
-        else:
-            st.warning("⚠️ Project information not saved yet")
+    if saved_project and saved_org:
+        st.info(f"📋 Current Project: **{saved_project}** | **{saved_org}**")
+    else:
+        st.warning("⚠️ Please save your project information above")
     
     # DPIA Questions
     st.markdown("### 📊 DPIA Assessment Questions")
@@ -463,10 +417,16 @@ def show_assessment_form():
             status = "✓" if answer in ["Yes", "No"] else "✗"
             st.write(f"- Q{i} ({q['key']}): '{answer}' {status}")
         
-        st.write("**All Session State Keys:**")
-        for key in sorted(st.session_state.keys()):
-            if 'simple_dpia' in key or 'radio_' in key or 'project_' in key or 'organization_' in key:
+        st.write("**Relevant Session State Keys:**")
+        relevant_keys = ['simple_dpia_answers', 'project_name_input', 'organization_input']
+        for key in relevant_keys:
+            if key in st.session_state:
                 st.write(f"- {key}: {st.session_state[key]}")
+        
+        # Show radio button keys
+        radio_keys = [k for k in st.session_state.keys() if str(k).startswith('radio_')]
+        for key in radio_keys:
+            st.write(f"- {key}: {st.session_state[key]}")
         
         # Emergency fix button
         if st.button("🚨 Emergency Fix - Force Save Everything"):
