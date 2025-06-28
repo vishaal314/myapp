@@ -566,9 +566,12 @@ def show_assessment_form():
     
     st.markdown("---")
     
-    # Optimized validation using existing saved_data reference
+    # Optimized validation using existing saved_data reference  
     project_text = saved_data.get('project_name', '')
     org_text = saved_data.get('organization', '')
+    name_text = saved_data.get('assessor_name', '')
+    role_text = saved_data.get('assessor_role', '')
+    confirmation_saved = saved_data.get('confirmation', False)
     
     # Get current saved answers efficiently
     current_saved_answers = {}
@@ -634,8 +637,8 @@ def show_assessment_form():
     if st.button("🔍 Generate DPIA Report", type="primary", disabled=not can_submit):
         with st.spinner("Generating DPIA report..."):
             try:
-                # Optimized validation using streamlined variables
-                if not all([project_text, org_text, signature_complete]):
+                # Optimized validation using streamlined variables already defined in scope
+                if not all([project_text, org_text, name_text, role_text, confirmation_saved, signature_complete]):
                     st.error("Missing required information. Please complete all sections including digital signature.")
                     st.stop()
                 
