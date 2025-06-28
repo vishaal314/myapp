@@ -473,18 +473,25 @@ def show_assessment_form():
     st.markdown("---")
     
     # Get all saved values from session state for validation
-    project_text = st.session_state.simple_dpia_answers.get('project_name', '').strip()
-    org_text = st.session_state.simple_dpia_answers.get('organization', '').strip()
-    name_text = st.session_state.simple_dpia_answers.get('assessor_name', '').strip()
-    role_text = st.session_state.simple_dpia_answers.get('assessor_role', '').strip()
+    project_text = st.session_state.simple_dpia_answers.get('project_name', '')
+    org_text = st.session_state.simple_dpia_answers.get('organization', '')
+    name_text = st.session_state.simple_dpia_answers.get('assessor_name', '')
+    role_text = st.session_state.simple_dpia_answers.get('assessor_role', '')
     confirmation_saved = st.session_state.simple_dpia_answers.get('confirmation', False)
     
+    # Ensure we have the latest saved_answers data
+    current_saved_answers = {}
+    for q in questions:
+        saved_answer = st.session_state.simple_dpia_answers.get(q['key'], '')
+        if saved_answer in ["Yes", "No"]:
+            current_saved_answers[q['key']] = saved_answer
+    
     # Validation based on saved values
-    project_valid = len(project_text) > 0
-    org_valid = len(org_text) > 0
-    name_valid = len(name_text) > 0
-    role_valid = len(role_text) > 0
-    answers_valid = len(saved_answers) == len(questions) and all(a in ["Yes", "No"] for a in saved_answers.values())
+    project_valid = bool(project_text and len(project_text.strip()) > 0)
+    org_valid = bool(org_text and len(org_text.strip()) > 0)
+    name_valid = bool(name_text and len(name_text.strip()) > 0)
+    role_valid = bool(role_text and len(role_text.strip()) > 0)
+    answers_valid = len(current_saved_answers) == len(questions)
     
     # Debug information for troubleshooting
     with st.expander("Form Status (Debug)", expanded=True):
@@ -493,8 +500,8 @@ def show_assessment_form():
         st.write(f"Assessor Name: '{name_text}' - Valid: {name_valid}")
         st.write(f"Assessor Role: '{role_text}' - Valid: {role_valid}")
         st.write(f"Confirmation: {confirmation_saved}")
-        st.write(f"Answers: {len(saved_answers)}/{len(questions)} - Valid: {answers_valid}")
-        st.write(f"Saved answers: {saved_answers}")
+        st.write(f"Answers: {len(current_saved_answers)}/{len(questions)} - Valid: {answers_valid}")
+        st.write(f"Saved answers: {current_saved_answers}")
         st.write(f"Session state keys: {list(st.session_state.simple_dpia_answers.keys())}")
         st.write(f"All validation results: project={project_valid}, org={org_valid}, name={name_valid}, role={role_valid}, confirm={confirmation_saved}, answers={answers_valid}")
     
@@ -557,27 +564,40 @@ def show_assessment_form():
                     st.error("Missing required information. Please complete all sections.")
                     st.stop()
                 
-                if len(saved_answers) != len(questions):
+                if len(current_saved_answers) != len(questions):
                     st.error("Not all questions have been answered. Please complete the assessment.")
                     st.stop()
                 
-                # Create comprehensive assessment data
+                # Create comprehensive assessment data using corrected saved answers
+                current_risk_score = len([a for a in current_saved_answers.values() if a == "Yes"]) * 10
+                
+                # Determine risk level based on current score
+                if current_risk_score <= 30:
+                    current_risk_level = "Low Risk"
+                    current_dpia_required = "DPIA may not be required, but recommended for good practice"
+                elif current_risk_score <= 60:
+                    current_risk_level = "Medium Risk"
+                    current_dpia_required = "DPIA is likely required - proceed with caution"
+                else:
+                    current_risk_level = "High Risk"
+                    current_dpia_required = "DPIA is definitely required before processing"
+                
                 assessment_data = {
                     'assessment_id': str(uuid.uuid4()),
-                    'project_name': project_text,
-                    'organization': org_text,
-                    'assessor_name': name_text,
-                    'assessor_role': role_text,
+                    'project_name': project_text.strip(),
+                    'organization': org_text.strip(),
+                    'assessor_name': name_text.strip(),
+                    'assessor_role': role_text.strip(),
                     'assessment_date': st.session_state.simple_dpia_answers.get('assessment_date', datetime.now().date().isoformat()),
                     'confirmation': confirmation_saved,
-                    'answers': saved_answers,
-                    'risk_score': saved_risk_score,
-                    'risk_level': risk_level,
-                    'dpia_required': dpia_required,
+                    'answers': current_saved_answers,
+                    'risk_score': current_risk_score,
+                    'risk_level': current_risk_level,
+                    'dpia_required': current_dpia_required,
                     'compliance_status': 'Completed',
                     'created_timestamp': datetime.now().isoformat(),
                     'question_count': len(questions),
-                    'yes_answers': sum(1 for answer in saved_answers.values() if answer == "Yes")
+                    'yes_answers': sum(1 for answer in current_saved_answers.values() if answer == "Yes")
                 }
                 
                 # Test HTML report generation before saving
