@@ -223,65 +223,64 @@ def show_assessment_form():
         }
     ]
     
-    # Project Information
+    # Project Information - Auto-saving inputs
     st.markdown("### 📋 Project Information")
+    st.markdown("**Please provide basic information about your project:**")
     
-    # Project Information Form - fixed for proper form submission
-    with st.form("project_info_form", clear_on_submit=False):
-        col1, col2 = st.columns(2)
-        
-        # Get current saved values
-        current_project = st.session_state.simple_dpia_answers.get('project_name', '')
-        current_org = st.session_state.simple_dpia_answers.get('organization', '')
-        
-        with col1:
-            project_name = st.text_input(
-                "Project Name *",
-                value=current_project,
-                placeholder="Enter your project name",
-                help="Name of the project or processing activity"
-            )
-        
-        with col2:
-            organization = st.text_input(
-                "Organization *",
-                value=current_org,
-                placeholder="Your organization name",
-                help="Name of your organization or company"
-            )
-        
-        # Validation feedback within form
-        name_valid = bool(project_name and len(project_name.strip()) > 0)
-        org_valid = bool(organization and len(organization.strip()) > 0)
-        
-        if name_valid and org_valid:
-            st.success("✅ Ready to save project information")
-        else:
-            missing = []
-            if not name_valid: missing.append("Project Name")
-            if not org_valid: missing.append("Organization")
-            st.warning(f"⚠️ Required: {', '.join(missing)}")
-        
-        # Submit button for project info
-        project_submitted = st.form_submit_button(
-            "💾 Save Project Information",
-            disabled=not (name_valid and org_valid),
-            type="primary" if (name_valid and org_valid) else "secondary"
+    # Callback functions for auto-save
+    def save_project_name():
+        name = st.session_state.get("project_name_input", "").strip()
+        st.session_state.simple_dpia_answers['project_name'] = name
+    
+    def save_organization():
+        org = st.session_state.get("organization_input", "").strip()
+        st.session_state.simple_dpia_answers['organization'] = org
+    
+    col1, col2 = st.columns(2)
+    
+    # Get current saved values
+    current_project = st.session_state.simple_dpia_answers.get('project_name', '')
+    current_org = st.session_state.simple_dpia_answers.get('organization', '')
+    
+    with col1:
+        st.text_input(
+            "Project Name *",
+            value=current_project,
+            placeholder="Enter your project name",
+            help="Name of the project or processing activity",
+            key="project_name_input",
+            on_change=save_project_name
         )
         
-        # Handle form submission inside the form context
-        if project_submitted and name_valid and org_valid:
-            try:
-                clean_project_name = project_name.strip() if project_name else ''
-                clean_organization = organization.strip() if organization else ''
-                st.session_state.simple_dpia_answers['project_name'] = clean_project_name
-                st.session_state.simple_dpia_answers['organization'] = clean_organization
-                st.success("✅ Project information saved successfully!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error saving project information: {str(e)}")
-        elif project_submitted:
-            st.error("❌ Please fill in both Project Name and Organization before saving.")
+        # Real-time validation for project name
+        project_value = st.session_state.get("project_name_input", current_project)
+        if project_value:
+            if len(project_value.strip()) > 0:
+                st.success("✓ Valid project name")
+            else:
+                st.warning("⚠️ Project name cannot be empty")
+        else:
+            st.info("💡 Enter your project name")
+    
+    with col2:
+        st.text_input(
+            "Organization *",
+            value=current_org,
+            placeholder="Your organization name",
+            help="Name of your organization or company",
+            key="organization_input",
+            on_change=save_organization
+        )
+        
+        # Real-time validation for organization
+        org_value = st.session_state.get("organization_input", current_org)
+        if org_value:
+            if len(org_value.strip()) > 0:
+                st.success("✓ Valid organization")
+            else:
+                st.warning("⚠️ Organization cannot be empty")
+        else:
+            st.info("💡 Enter your organization name")
     
     # Get saved values for display
     saved_project = st.session_state.simple_dpia_answers.get('project_name', '')
@@ -571,9 +570,13 @@ def show_assessment_form():
     
     st.markdown("---")
     
+    # Get real-time values for project info validation
+    project_input = st.session_state.get("project_name_input", saved_data.get('project_name', ''))
+    org_input = st.session_state.get("organization_input", saved_data.get('organization', ''))
+    
     # Optimized validation using existing saved_data reference  
-    project_text = saved_data.get('project_name', '')
-    org_text = saved_data.get('organization', '')
+    project_text = project_input.strip() if project_input else ''
+    org_text = org_input.strip() if org_input else ''
     name_text = saved_data.get('assessor_name', '')
     role_text = saved_data.get('assessor_role', '')
     confirmation_saved = saved_data.get('confirmation', False)
@@ -593,13 +596,7 @@ def show_assessment_form():
     # Enhanced final validation check with debug info
     can_submit = project_valid and org_valid and signature_complete and answers_valid
     
-    # Debug validation status
-    st.write("**Debug - Validation Status:**")
-    st.write(f"- Project Valid: {project_valid} (text: '{project_text[:20]}...' if project_text else 'empty')")
-    st.write(f"- Organization Valid: {org_valid} (text: '{org_text[:20]}...' if org_text else 'empty')")
-    st.write(f"- Signature Complete: {signature_complete} (applied: {signature_applied})")
-    st.write(f"- Answers Valid: {answers_valid} (count: {len(current_saved_answers)}/{len(questions)})")
-    st.write(f"- **Can Submit: {can_submit}**")
+
     
     # Enhanced completion status with visual progress
     st.markdown("### 🎯 Completion Status")
