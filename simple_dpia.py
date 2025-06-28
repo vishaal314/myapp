@@ -312,61 +312,47 @@ def show_assessment_form():
     st.markdown("### 📊 DPIA Assessment Questions")
     st.markdown("Please answer each question with Yes or No:")
     
-    # Fixed questions form with proper submission handling
-    with st.form("questions_form", clear_on_submit=False):
-        answers = {}
-        risk_score = 0
-        
-        for i, q in enumerate(questions, 1):
-            with st.container():
-                st.markdown(f'<div class="question-card">', unsafe_allow_html=True)
-                
-                # Clean question display
-                st.markdown(f"**{i}.** {q['question']}")
-                st.caption(q['help'])
-                
-                # Get current answer or default to "No"
-                current_answer = st.session_state.simple_dpia_answers.get(q['key'], "No")
-                
-                answer = st.radio(
-                    "Your answer:",
-                    options=["No", "Yes"],
-                    index=1 if current_answer == "Yes" else 0,
-                    key=f"radio_{q['key']}_{i}",
-                    horizontal=True
-                )
-                
-                # Store answer and calculate risk
-                answers[q['key']] = answer
-                
-                if answer == "Yes":
-                    risk_score += 10
-                
-                st.markdown('</div>', unsafe_allow_html=True)
-                st.markdown("---")
-        
-        # Show completion status
-        answered_count = len([a for a in answers.values() if a in ["Yes", "No"]])
-        if answered_count == len(questions):
-            st.success(f"✅ All {len(questions)} questions completed")
-        else:
-            st.warning(f"⚠️ {answered_count}/{len(questions)} questions answered")
-        
-        # Submit button for questions
-        questions_submitted = st.form_submit_button(
-            "💾 Save All Answers",
-            type="primary" if answered_count == len(questions) else "secondary"
-        )
-        
-        if questions_submitted:
-            try:
-                # Save all answers to session state
-                for q in questions:
-                    st.session_state.simple_dpia_answers[q['key']] = answers[q['key']]
-                st.success("✅ All answers saved successfully!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error saving answers: {str(e)}")
+    # Individual question handling with auto-save (no form wrapper)
+    for i, q in enumerate(questions, 1):
+        with st.container():
+            st.markdown(f'<div class="question-card">', unsafe_allow_html=True)
+            
+            # Clean question display
+            st.markdown(f"**{i}.** {q['question']}")
+            st.caption(q['help'])
+            
+            # Get current answer or default to "No"
+            current_answer = st.session_state.simple_dpia_answers.get(q['key'], "No")
+            
+            # Create unique callback for each question using closure
+            def create_save_callback(question_key):
+                def save_question_answer():
+                    answer = st.session_state.get(f"radio_{question_key}")
+                    if answer:
+                        st.session_state.simple_dpia_answers[question_key] = answer
+                return save_question_answer
+            
+            save_callback = create_save_callback(q['key'])
+            
+            answer = st.radio(
+                "Your answer:",
+                options=["No", "Yes"],
+                index=1 if current_answer == "Yes" else 0,
+                key=f"radio_{q['key']}",
+                horizontal=True,
+                on_change=save_callback
+            )
+            
+            # Show saved status
+            saved_answer = st.session_state.simple_dpia_answers.get(q['key'], "")
+            if saved_answer:
+                if saved_answer == "Yes":
+                    st.success(f"✅ Saved: {saved_answer}")
+                else:
+                    st.info(f"💾 Saved: {saved_answer}")
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("---")
     
     # Calculate current risk from saved answers
     saved_answers = {}
