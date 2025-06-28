@@ -169,6 +169,60 @@ def run_simple_dpia():
 def show_assessment_form():
     """Display the assessment form"""
     
+    # Define questions list at the start of the function for global access
+    questions = [
+        {
+            'key': 'large_scale',
+            'question': 'Does your processing involve large-scale processing of personal data?',
+            'help': 'Large-scale typically means processing affecting many individuals (1000+)'
+        },
+        {
+            'key': 'sensitive_data',
+            'question': 'Does your processing involve special categories of personal data?',
+            'help': 'Health data, biometric data, racial/ethnic origin, political opinions, etc.'
+        },
+        {
+            'key': 'vulnerable_subjects',
+            'question': 'Does your processing involve vulnerable data subjects?',
+            'help': 'Children, elderly, patients, employees in vulnerable positions'
+        },
+        {
+            'key': 'automated_decisions',
+            'question': 'Does your processing involve automated decision-making or profiling?',
+            'help': 'Automated systems making decisions that affect individuals'
+        },
+        {
+            'key': 'new_technology',
+            'question': 'Does your processing use innovative or new technology?',
+            'help': 'AI, machine learning, biometric systems, IoT devices'
+        },
+        {
+            'key': 'data_matching',
+            'question': 'Does your processing involve systematic monitoring or tracking?',
+            'help': 'CCTV, location tracking, behavioral monitoring, data matching'
+        },
+        {
+            'key': 'public_access',
+            'question': 'Does your processing prevent individuals from exercising their rights?',
+            'help': 'Difficulty accessing, correcting, or deleting personal data'
+        },
+        {
+            'key': 'cross_border',
+            'question': 'Does your processing involve international data transfers?',
+            'help': 'Transferring data outside the EU/EEA'
+        },
+        {
+            'key': 'data_breach_risk',
+            'question': 'Is there a high risk of data breach or unauthorized access?',
+            'help': 'Poor security measures, public networks, unsecured storage'
+        },
+        {
+            'key': 'consent_issues',
+            'question': 'Are there concerns about the validity of consent?',
+            'help': 'Unclear consent, consent fatigue, power imbalances'
+        }
+    ]
+    
     # Project Information
     st.markdown("### 📋 Project Information")
     
@@ -240,59 +294,6 @@ def show_assessment_form():
     st.markdown("### 📊 DPIA Assessment Questions")
     st.markdown("Please answer each question with Yes or No:")
     
-    questions = [
-        {
-            'key': 'large_scale',
-            'question': 'Does your processing involve large-scale processing of personal data?',
-            'help': 'Large-scale typically means processing affecting many individuals (1000+)'
-        },
-        {
-            'key': 'sensitive_data',
-            'question': 'Does your processing involve special categories of personal data?',
-            'help': 'Health data, biometric data, racial/ethnic origin, political opinions, etc.'
-        },
-        {
-            'key': 'vulnerable_subjects',
-            'question': 'Does your processing involve vulnerable data subjects?',
-            'help': 'Children, elderly, patients, employees in vulnerable positions'
-        },
-        {
-            'key': 'automated_decisions',
-            'question': 'Does your processing involve automated decision-making or profiling?',
-            'help': 'Automated systems making decisions that affect individuals'
-        },
-        {
-            'key': 'new_technology',
-            'question': 'Does your processing use innovative or new technology?',
-            'help': 'AI, machine learning, biometric systems, IoT devices'
-        },
-        {
-            'key': 'data_matching',
-            'question': 'Does your processing involve systematic monitoring or tracking?',
-            'help': 'CCTV, location tracking, behavioral monitoring, data matching'
-        },
-        {
-            'key': 'public_access',
-            'question': 'Does your processing prevent individuals from exercising their rights?',
-            'help': 'Difficulty accessing, correcting, or deleting personal data'
-        },
-        {
-            'key': 'cross_border',
-            'question': 'Does your processing involve international data transfers?',
-            'help': 'Transferring data outside the EU/EEA'
-        },
-        {
-            'key': 'data_breach_risk',
-            'question': 'Is there a high risk of data breach or unauthorized access?',
-            'help': 'Poor security measures, public networks, unsecured storage'
-        },
-        {
-            'key': 'consent_issues',
-            'question': 'Are there concerns about the validity of consent?',
-            'help': 'Unclear consent, consent fatigue, power imbalances'
-        }
-    ]
-    
     # Fixed questions form with proper submission handling
     with st.form("questions_form", clear_on_submit=False):
         answers = {}
@@ -313,6 +314,7 @@ def show_assessment_form():
                     "Your answer:",
                     options=["No", "Yes"],
                     index=1 if current_answer == "Yes" else 0,
+                    key=f"radio_{q['key']}_{i}",
                     horizontal=True
                 )
                 
