@@ -391,92 +391,134 @@ def show_assessment_form():
     st.markdown("**Please provide your details to digitally sign this assessment:**")
     st.markdown('<div class="signature-section">', unsafe_allow_html=True)
     
-    # Simplified Digital Signature Form - auto-saving inputs
+    # Optimized Digital Signature Form with real-time validation
     st.markdown("**Fill in your signature details:**")
+    
+    # Initialize callback functions for auto-save
+    def save_name():
+        name = st.session_state.get("sig_name", "").strip()
+        st.session_state.simple_dpia_answers['assessor_name'] = name
+    
+    def save_role():
+        role = st.session_state.get("sig_role", "").strip()
+        st.session_state.simple_dpia_answers['assessor_role'] = role
+    
+    def save_date():
+        date = st.session_state.get("sig_date")
+        if date:
+            st.session_state.simple_dpia_answers['assessment_date'] = date.isoformat()
+    
+    def save_confirmation():
+        confirm = st.session_state.get("sig_confirm", False)
+        st.session_state.simple_dpia_answers['confirmation'] = confirm
     
     col1, col2 = st.columns(2)
     
-    # Get current saved values
-    current_name = st.session_state.simple_dpia_answers.get('assessor_name', '')
-    current_role = st.session_state.simple_dpia_answers.get('assessor_role', '')
-    current_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
+    # Get current saved values once
+    saved_data = st.session_state.simple_dpia_answers
+    current_name = saved_data.get('assessor_name', '')
+    current_role = saved_data.get('assessor_role', '')
+    current_confirmation = saved_data.get('confirmation', False)
     
-    # Parse saved date with error handling
-    saved_date_str = st.session_state.simple_dpia_answers.get('assessment_date', '')
-    try:
-        current_date = datetime.fromisoformat(saved_date_str).date() if saved_date_str else datetime.now().date()
-    except (ValueError, TypeError):
+    # Streamlined date handling with validation
+    saved_date_str = saved_data.get('assessment_date', '')
+    if saved_date_str:
+        try:
+            current_date = datetime.fromisoformat(saved_date_str).date()
+        except (ValueError, TypeError):
+            current_date = datetime.now().date()
+    else:
         current_date = datetime.now().date()
     
     with col1:
-        # Auto-saving name input
-        assessor_name = st.text_input(
+        # Optimized name input with callback
+        st.text_input(
             "👤 Full Name *",
             value=current_name,
             placeholder="Enter your full name",
             help="This will appear as the digital signature on your DPIA report",
-            key="sig_name"
+            key="sig_name",
+            on_change=save_name
         )
         
-        # Auto-save name to session state
-        if assessor_name and assessor_name.strip():
-            st.session_state.simple_dpia_answers['assessor_name'] = assessor_name.strip()
-        elif not assessor_name:
-            st.session_state.simple_dpia_answers['assessor_name'] = ''
+        # Real-time validation for name
+        name_value = st.session_state.get("sig_name", current_name)
+        if name_value:
+            if len(name_value.strip()) >= 2:
+                st.success("✓ Valid name")
+            else:
+                st.warning("⚠️ Name must be at least 2 characters")
+        else:
+            st.info("💡 Enter your full name")
         
-        # Auto-saving role input
-        assessor_role = st.text_input(
+        # Optimized role input with callback
+        st.text_input(
             "💼 Job Title/Role *", 
             value=current_role,
             placeholder="e.g., Data Protection Officer, Privacy Manager",
             help="Your professional role or title within the organization",
-            key="sig_role"
+            key="sig_role",
+            on_change=save_role
         )
         
-        # Auto-save role to session state
-        if assessor_role and assessor_role.strip():
-            st.session_state.simple_dpia_answers['assessor_role'] = assessor_role.strip()
-        elif not assessor_role:
-            st.session_state.simple_dpia_answers['assessor_role'] = ''
+        # Real-time validation for role
+        role_value = st.session_state.get("sig_role", current_role)
+        if role_value:
+            if len(role_value.strip()) >= 2:
+                st.success("✓ Valid role")
+            else:
+                st.warning("⚠️ Role must be at least 2 characters")
+        else:
+            st.info("💡 Enter your job title or role")
     
     with col2:
-        # Auto-saving date input
-        assessment_date = st.date_input(
+        # Streamlined date input with built-in validation
+        st.date_input(
             "📅 Assessment Date",
             value=current_date,
+            min_value=datetime(2020, 1, 1).date(),
+            max_value=datetime.now().date(),
             help="Date of assessment completion",
-            key="sig_date"
+            key="sig_date",
+            on_change=save_date
         )
         
-        # Auto-save date to session state
-        if assessment_date:
-            st.session_state.simple_dpia_answers['assessment_date'] = assessment_date.isoformat()
+        # Real-time validation for date
+        date_value = st.session_state.get("sig_date", current_date)
+        if date_value:
+            st.success("✓ Valid date selected")
         
         st.markdown("### ✅ Confirmation")
-        # Auto-saving confirmation checkbox
-        confirmation = st.checkbox(
+        # Optimized confirmation checkbox with callback
+        st.checkbox(
             "I confirm that the above information is accurate and complete to the best of my knowledge, and I digitally sign this DPIA assessment.",
             value=current_confirmation,
             help="Your digital signature confirms the accuracy of this assessment",
-            key="sig_confirm"
+            key="sig_confirm",
+            on_change=save_confirmation
         )
         
-        # Auto-save confirmation to session state
-        if confirmation != current_confirmation:
-            st.session_state.simple_dpia_answers['confirmation'] = confirmation
+        # Real-time validation for confirmation
+        confirm_value = st.session_state.get("sig_confirm", current_confirmation)
+        if confirm_value:
+            st.success("✓ Confirmation provided")
+        else:
+            st.info("💡 Please confirm the accuracy of your information")
     
-    # Get current values from session state
-    saved_name = st.session_state.simple_dpia_answers.get('assessor_name', '')
-    saved_role = st.session_state.simple_dpia_answers.get('assessor_role', '')  
-    saved_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
-    saved_date = st.session_state.simple_dpia_answers.get('assessment_date', '')
-    signature_applied = st.session_state.simple_dpia_answers.get('signature_applied', False)
+    # Optimized validation using current session state values
+    signature_applied = saved_data.get('signature_applied', False)
     
-    # Validate fields
-    name_valid = bool(saved_name and len(saved_name.strip()) >= 2)
-    role_valid = bool(saved_role and len(saved_role.strip()) >= 2)
-    date_valid = bool(saved_date)
-    confirm_valid = bool(saved_confirmation)
+    # Get real-time values for validation
+    current_name_input = st.session_state.get("sig_name", current_name)
+    current_role_input = st.session_state.get("sig_role", current_role)
+    current_date_input = st.session_state.get("sig_date", current_date)
+    current_confirm_input = st.session_state.get("sig_confirm", current_confirmation)
+    
+    # Streamlined validation
+    name_valid = bool(current_name_input and len(current_name_input.strip()) >= 2)
+    role_valid = bool(current_role_input and len(current_role_input.strip()) >= 2)
+    date_valid = bool(current_date_input)
+    confirm_valid = bool(current_confirm_input)
     
     # Single signature validation and display
     if signature_applied:
@@ -489,9 +531,9 @@ def show_assessment_form():
         
         st.info(f"""
         **Signature Details:**
-        - **Name:** {saved_name}
-        - **Role:** {saved_role}
-        - **Date:** {saved_date}
+        - **Name:** {saved_data.get('assessor_name', 'Unknown')}
+        - **Role:** {saved_data.get('assessor_role', 'Unknown')}
+        - **Date:** {saved_data.get('assessment_date', 'Unknown')}
         - **Signed:** {formatted_timestamp}
         """)
         signature_complete = True
@@ -522,28 +564,22 @@ def show_assessment_form():
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Debug form validation - show current values
     st.markdown("---")
     
-    # Get all saved values from session state for validation
-    project_text = st.session_state.simple_dpia_answers.get('project_name', '')
-    org_text = st.session_state.simple_dpia_answers.get('organization', '')
-    name_text = st.session_state.simple_dpia_answers.get('assessor_name', '')
-    role_text = st.session_state.simple_dpia_answers.get('assessor_role', '')
-    confirmation_saved = st.session_state.simple_dpia_answers.get('confirmation', False)
+    # Optimized validation using existing saved_data reference
+    project_text = saved_data.get('project_name', '')
+    org_text = saved_data.get('organization', '')
     
-    # Ensure we have the latest saved_answers data
+    # Get current saved answers efficiently
     current_saved_answers = {}
     for q in questions:
-        saved_answer = st.session_state.simple_dpia_answers.get(q['key'], '')
+        saved_answer = saved_data.get(q['key'], '')
         if saved_answer in ["Yes", "No"]:
             current_saved_answers[q['key']] = saved_answer
     
-    # Validation based on saved values
+    # Streamlined validation checks
     project_valid = bool(project_text and len(project_text.strip()) > 0)
     org_valid = bool(org_text and len(org_text.strip()) > 0)
-    name_valid = bool(name_text and len(name_text.strip()) > 0)
-    role_valid = bool(role_text and len(role_text.strip()) > 0)
     answers_valid = len(current_saved_answers) == len(questions)
     
     # Final validation check
@@ -598,8 +634,8 @@ def show_assessment_form():
     if st.button("🔍 Generate DPIA Report", type="primary", disabled=not can_submit):
         with st.spinner("Generating DPIA report..."):
             try:
-                # Validate all required data before generation
-                if not all([project_text, org_text, name_text, role_text, confirmation_saved, signature_complete]):
+                # Optimized validation using streamlined variables
+                if not all([project_text, org_text, signature_complete]):
                     st.error("Missing required information. Please complete all sections including digital signature.")
                     st.stop()
                 
@@ -607,7 +643,7 @@ def show_assessment_form():
                     st.error("Not all questions have been answered. Please complete the assessment.")
                     st.stop()
                 
-                # Create comprehensive assessment data using corrected saved answers
+                # Create comprehensive assessment data using optimized saved answers
                 current_risk_score = len([a for a in current_saved_answers.values() if a == "Yes"]) * 10
                 
                 # Determine risk level based on current score
