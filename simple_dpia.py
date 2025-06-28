@@ -410,6 +410,16 @@ def show_assessment_form():
     org_valid = bool(org_text and len(org_text.strip()) > 0)
     answers_valid = len(current_saved_answers) == len(questions)
     
+    # Debug output for validation
+    st.write("**Debug - Current Values:**")
+    st.write(f"- Project Input: '{project_input}' (Length: {len(project_input) if project_input else 0})")
+    st.write(f"- Organization Input: '{org_input}' (Length: {len(org_input) if org_input else 0})")
+    st.write(f"- Project Valid: {project_valid}")
+    st.write(f"- Organization Valid: {org_valid}")
+    st.write(f"- Answers Valid: {answers_valid} ({len(current_saved_answers)}/{len(questions)})")
+    st.write(f"- Saved in session state - Project: '{st.session_state.simple_dpia_answers.get('project_name', 'NOT_SAVED')}'")
+    st.write(f"- Saved in session state - Organization: '{st.session_state.simple_dpia_answers.get('organization', 'NOT_SAVED')}'")
+    
     # Enhanced final validation check without signature requirement
     can_submit = project_valid and org_valid and answers_valid
     
