@@ -227,16 +227,14 @@ def show_assessment_form():
     st.markdown("### 📋 Project Information")
     st.markdown("**Please provide basic information about your project:**")
     
-    # Enhanced callback functions for auto-save with immediate persistence
+    # Simplified callback functions that always save current values
     def save_project_name():
         name = st.session_state.get("project_name_input", "").strip()
-        if name:  # Only save non-empty values
-            st.session_state.simple_dpia_answers['project_name'] = name
+        st.session_state.simple_dpia_answers['project_name'] = name
     
     def save_organization():
         org = st.session_state.get("organization_input", "").strip()
-        if org:  # Only save non-empty values
-            st.session_state.simple_dpia_answers['organization'] = org
+        st.session_state.simple_dpia_answers['organization'] = org
     
     col1, col2 = st.columns(2)
     
@@ -411,32 +409,24 @@ def show_assessment_form():
     
     st.markdown("---")
     
-    # Fixed validation logic - check saved values in session state
+    # Streamlined validation - always use saved session state values
     saved_project = st.session_state.simple_dpia_answers.get('project_name', '').strip()
     saved_org = st.session_state.simple_dpia_answers.get('organization', '').strip()
     
-    # Also check current input values as backup
-    current_project_input = st.session_state.get("project_name_input", '').strip()
-    current_org_input = st.session_state.get("organization_input", '').strip()
-    
-    # Use the most recent values (either saved or current input)
-    project_text = saved_project or current_project_input
-    org_text = saved_org or current_org_input
-    
-    # Get current saved answers efficiently
-    current_saved_answers = {}
+    # Count completed questions
+    completed_answers = 0
     for q in questions:
         saved_answer = st.session_state.simple_dpia_answers.get(q['key'], '')
         if saved_answer in ["Yes", "No"]:
-            current_saved_answers[q['key']] = saved_answer
+            completed_answers += 1
     
-    # Clear validation checks
-    project_valid = bool(project_text and len(project_text) > 0)
-    org_valid = bool(org_text and len(org_text) > 0)
-    answers_valid = len(current_saved_answers) == len(questions)
+    # Simple validation checks
+    project_complete = bool(saved_project)
+    org_complete = bool(saved_org) 
+    questions_complete = completed_answers == len(questions)
     
-    # Final validation check
-    can_submit = project_valid and org_valid and answers_valid
+    # Enable download when all three sections are complete
+    can_submit = project_complete and org_complete and questions_complete
     
 
     
@@ -447,13 +437,13 @@ def show_assessment_form():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if project_valid and org_valid:
+        if project_complete and org_complete:
             st.success("✅ Step 1\nProject Info")
         else:
             st.error("❌ Step 1\nProject Info")
     
     with col2:
-        if answers_valid:
+        if questions_complete:
             st.success("✅ Step 2\nQuestions")
         else:
             st.warning("⏳ Step 2\nQuestions")
@@ -468,9 +458,9 @@ def show_assessment_form():
         st.success("🎉 All sections completed! Ready to generate your DPIA report.")
     else:
         remaining_steps = []
-        if not (project_valid and org_valid):
+        if not (project_complete and org_complete):
             remaining_steps.append("1️⃣ Fill out and save Project Information")
-        if not answers_valid:
+        if not questions_complete:
             remaining_steps.append("2️⃣ Answer all questions and save answers")
         
         if remaining_steps:
@@ -481,8 +471,15 @@ def show_assessment_form():
     if st.button("📥 Download HTML Report", type="primary", disabled=not can_submit):
         with st.spinner("Generating DPIA report..."):
             try:
-                # Validation using simplified variables
-                if not all([project_text, org_text]):
+                # Get current saved answers for processing
+                current_saved_answers = {}
+                for q in questions:
+                    saved_answer = st.session_state.simple_dpia_answers.get(q['key'], '')
+                    if saved_answer in ["Yes", "No"]:
+                        current_saved_answers[q['key']] = saved_answer
+                
+                # Validation using saved session state values
+                if not all([saved_project, saved_org]):
                     st.error("Missing required information. Please complete project information.")
                     st.stop()
                 
@@ -506,8 +503,8 @@ def show_assessment_form():
                 
                 assessment_data = {
                     'assessment_id': str(uuid.uuid4()),
-                    'project_name': project_text.strip(),
-                    'organization': org_text.strip(),
+                    'project_name': saved_project.strip(),
+                    'organization': saved_org.strip(),
                     'assessor_name': 'Assessment User',
                     'assessor_role': 'Data Protection Assessment',
                     'assessment_date': datetime.now().date().isoformat(),
