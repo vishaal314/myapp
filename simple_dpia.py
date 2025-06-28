@@ -208,7 +208,7 @@ def show_assessment_form():
         st.info(f"✅ Project: **{saved_project}** | Organization: **{saved_org}**")
     
     # DPIA Questions
-    st.markdown("### DPIA Assessment Questions")
+    st.markdown("### 📊 DPIA Assessment Questions")
     st.markdown("Please answer each question with Yes or No:")
     
     questions = [
@@ -264,44 +264,69 @@ def show_assessment_form():
         }
     ]
     
-    answers = {}
-    risk_score = 0
+    # Use form for questions to ensure proper submission
+    with st.form("questions_form", clear_on_submit=False):
+        answers = {}
+        risk_score = 0
+        
+        for i, q in enumerate(questions, 1):
+            with st.container():
+                st.markdown(f'<div class="question-card">', unsafe_allow_html=True)
+                
+                # Clean question display
+                st.markdown(f"**{i}.** {q['question']}")
+                st.caption(q['help'])
+                
+                # Get current answer or default to "No"
+                current_answer = st.session_state.simple_dpia_answers.get(q['key'], "No")
+                
+                answer = st.radio(
+                    "Your answer:",
+                    options=["No", "Yes"],
+                    index=1 if current_answer == "Yes" else 0,
+                    key=f"q_{q['key']}",
+                    horizontal=True
+                )
+                
+                # Store answer and calculate risk
+                answers[q['key']] = answer
+                
+                if answer == "Yes":
+                    risk_score += 10
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown("---")
+        
+        # Submit button for questions
+        questions_submitted = st.form_submit_button("💾 Save All Answers")
+        
+        if questions_submitted:
+            # Save all answers to session state
+            for q in questions:
+                st.session_state.simple_dpia_answers[q['key']] = answers[q['key']]
+            st.success("All answers saved!")
+            st.rerun()
     
-    for i, q in enumerate(questions, 1):
-        with st.container():
-            st.markdown(f'<div class="question-card">', unsafe_allow_html=True)
-            
-            # Clean question display
-            st.markdown(f"**{i}.** {q['question']}")
-            st.caption(q['help'])
-            
-            # Get current answer or default to "No"
-            current_answer = st.session_state.simple_dpia_answers.get(q['key'], "No")
-            
-            answer = st.radio(
-                "Your answer:",
-                options=["No", "Yes"],
-                index=1 if current_answer == "Yes" else 0,
-                key=f"q_{q['key']}",
-                horizontal=True
-            )
-            
-            # Store answer and calculate risk
-            answers[q['key']] = answer
-            st.session_state.simple_dpia_answers[q['key']] = answer
-            
-            if answer == "Yes":
-                risk_score += 10
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-            st.markdown("---")
+    # Calculate current risk from saved answers
+    saved_answers = {}
+    saved_risk_score = 0
+    for q in questions:
+        saved_answer = st.session_state.simple_dpia_answers.get(q['key'], "No")
+        saved_answers[q['key']] = saved_answer
+        if saved_answer == "Yes":
+            saved_risk_score += 10
     
-    # Real-time risk indicator
-    if risk_score <= 30:
+    # Show completion status for questions
+    answered_count = len([a for a in saved_answers.values() if a in ["Yes", "No"]])
+    if answered_count == len(questions):
+        st.info(f"✅ All {len(questions)} questions answered")
+    
+    # Real-time risk indicator based on saved answers
+    if saved_risk_score <= 30:
         risk_level = "Low Risk"
         risk_class = "risk-low"
         dpia_required = "DPIA may not be required, but recommended for good practice"
-    elif risk_score <= 60:
+    elif saved_risk_score <= 60:
         risk_level = "Medium Risk"
         risk_class = "risk-medium"
         dpia_required = "DPIA is likely required - proceed with caution"
@@ -313,7 +338,7 @@ def show_assessment_form():
     st.markdown(f"""
     <div class="risk-indicator {risk_class}">
         <h3>Current Risk Assessment: {risk_level}</h3>
-        <p>Score: {risk_score}/100</p>
+        <p>Score: {saved_risk_score}/100</p>
         <p>{dpia_required}</p>
     </div>
     """, unsafe_allow_html=True)
@@ -392,7 +417,7 @@ def show_assessment_form():
     org_valid = len(org_text) > 0
     name_valid = len(name_text) > 0
     role_valid = len(role_text) > 0
-    answers_valid = len(answers) == len(questions) and all(a in ["Yes", "No"] for a in answers.values())
+    answers_valid = len(saved_answers) == len(questions) and all(a in ["Yes", "No"] for a in saved_answers.values())
     
     # Debug information for troubleshooting
     with st.expander("Form Status (Debug)", expanded=False):
@@ -401,35 +426,58 @@ def show_assessment_form():
         st.write(f"Assessor Name: '{name_text}' - Valid: {name_valid}")
         st.write(f"Assessor Role: '{role_text}' - Valid: {role_valid}")
         st.write(f"Confirmation: {confirmation_saved}")
-        st.write(f"Answers: {len(answers)}/{len(questions)} - Valid: {answers_valid}")
+        st.write(f"Answers: {len(saved_answers)}/{len(questions)} - Valid: {answers_valid}")
+        st.write(f"Saved answers: {saved_answers}")
         st.write(f"Session state keys: {list(st.session_state.simple_dpia_answers.keys())}")
     
     # Final validation check
     can_submit = project_valid and org_valid and name_valid and role_valid and confirmation_saved and answers_valid
     
-    # Show completion status
+    # Enhanced completion status with visual progress
+    st.markdown("### 🎯 Completion Status")
+    
+    # Progress indicators
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if project_valid and org_valid:
+            st.success("✅ Step 1\nProject Info")
+        else:
+            st.error("❌ Step 1\nProject Info")
+    
+    with col2:
+        if answers_valid:
+            st.success("✅ Step 2\nQuestions")
+        else:
+            st.warning("⏳ Step 2\nQuestions")
+    
+    with col3:
+        if name_valid and role_valid and confirmation_saved:
+            st.success("✅ Step 3\nSignature")
+        else:
+            st.warning("⏳ Step 3\nSignature")
+    
+    with col4:
+        if can_submit:
+            st.success("✅ Step 4\nReady!")
+        else:
+            st.info("⏸️ Step 4\nGenerate")
+    
     if can_submit:
-        st.success("✅ All sections completed! Ready to generate your DPIA report.")
+        st.success("🎉 All sections completed! Ready to generate your DPIA report.")
     else:
-        missing_items = []
-        if not project_valid: missing_items.append("Project Information")
-        if not org_valid: missing_items.append("Organization Information")
-        if not name_valid or not role_valid: missing_items.append("Digital Signature Details")
-        if not confirmation_saved: missing_items.append("Digital Signature Confirmation")
-        if not answers_valid: 
-            remaining = len(questions) - len([a for a in answers.values() if a in ["Yes", "No"]])
-            if remaining > 0:
-                missing_items.append(f"{remaining} Assessment Questions")
+        remaining_steps = []
+        if not (project_valid and org_valid):
+            remaining_steps.append("1️⃣ Fill out and save Project Information")
+        if not answers_valid:
+            remaining_steps.append("2️⃣ Answer all questions and save answers")
+        if not (name_valid and role_valid and confirmation_saved):
+            remaining_steps.append("3️⃣ Complete and apply Digital Signature")
         
-        if missing_items:
-            st.info(f"📝 Please complete: {', '.join(missing_items)}")
-            st.markdown("**Steps to complete:**")
-            if not project_valid or not org_valid:
-                st.markdown("1. Fill out and save Project Information")
-            if not answers_valid:
-                st.markdown("2. Answer all assessment questions")
-            if not name_valid or not role_valid or not confirmation_saved:
-                st.markdown("3. Complete and apply Digital Signature")
+        if remaining_steps:
+            st.info("📋 Complete these steps:")
+            for step in remaining_steps:
+                st.markdown(f"- {step}")
     
     if st.button("🔍 Generate DPIA Report", type="primary", disabled=not can_submit):
         # Save all data using saved session values
@@ -441,8 +489,8 @@ def show_assessment_form():
             'assessor_role': role_text,
             'assessment_date': st.session_state.simple_dpia_answers.get('assessment_date', datetime.now().date().isoformat()),
             'confirmation': confirmation_saved,
-            'answers': answers,
-            'risk_score': risk_score,
+            'answers': saved_answers,
+            'risk_score': saved_risk_score,
             'risk_level': risk_level,
             'dpia_required': dpia_required,
             'compliance_status': 'Completed'
