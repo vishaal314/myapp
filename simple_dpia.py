@@ -227,14 +227,16 @@ def show_assessment_form():
     st.markdown("### 📋 Project Information")
     st.markdown("**Please provide basic information about your project:**")
     
-    # Simplified callback functions that always save current values
+    # Enhanced callback functions that force immediate save
     def save_project_name():
-        name = st.session_state.get("project_name_input", "").strip()
-        st.session_state.simple_dpia_answers['project_name'] = name
+        name = st.session_state.get("project_name_input", "")
+        if name:  # Save any non-empty value
+            st.session_state.simple_dpia_answers['project_name'] = name.strip()
     
     def save_organization():
-        org = st.session_state.get("organization_input", "").strip()
-        st.session_state.simple_dpia_answers['organization'] = org
+        org = st.session_state.get("organization_input", "")
+        if org:  # Save any non-empty value
+            st.session_state.simple_dpia_answers['organization'] = org.strip()
     
     col1, col2 = st.columns(2)
     
@@ -395,9 +397,26 @@ def show_assessment_form():
     
     st.markdown("---")
     
-    # Streamlined validation - always use saved session state values
+    # Enhanced validation - check both saved values and current input values
     saved_project = st.session_state.simple_dpia_answers.get('project_name', '').strip()
     saved_org = st.session_state.simple_dpia_answers.get('organization', '').strip()
+    
+    # Also check current input values as fallback
+    current_project_input = st.session_state.get("project_name_input", '').strip()
+    current_org_input = st.session_state.get("organization_input", '').strip()
+    
+    # Use whichever value exists (saved or current input)
+    final_project = saved_project or current_project_input
+    final_org = saved_org or current_org_input
+    
+    # Force save current input values if they exist but aren't saved
+    if current_project_input and not saved_project:
+        st.session_state.simple_dpia_answers['project_name'] = current_project_input
+        final_project = current_project_input
+    
+    if current_org_input and not saved_org:
+        st.session_state.simple_dpia_answers['organization'] = current_org_input
+        final_org = current_org_input
     
     # Count completed questions
     completed_answers = 0
@@ -406,15 +425,29 @@ def show_assessment_form():
         if saved_answer in ["Yes", "No"]:
             completed_answers += 1
     
-    # Simple validation checks
-    project_complete = bool(saved_project)
-    org_complete = bool(saved_org) 
+    # Simple validation checks using final values
+    project_complete = bool(final_project)
+    org_complete = bool(final_org) 
     questions_complete = completed_answers == len(questions)
     
     # Enable download when all three sections are complete
     can_submit = project_complete and org_complete and questions_complete
     
 
+    
+    # Debug section to show current validation state
+    with st.expander("🔧 Debug Information", expanded=False):
+        st.write("**Current Values:**")
+        st.write(f"- Saved Project: '{saved_project}'")
+        st.write(f"- Saved Organization: '{saved_org}'")
+        st.write(f"- Current Project Input: '{current_project_input}'")
+        st.write(f"- Current Org Input: '{current_org_input}'")
+        st.write(f"- Final Project: '{final_project}'")
+        st.write(f"- Final Organization: '{final_org}'")
+        st.write(f"- Project Complete: {project_complete}")
+        st.write(f"- Org Complete: {org_complete}")
+        st.write(f"- Questions Complete: {questions_complete} ({completed_answers}/{len(questions)})")
+        st.write(f"- Can Submit: {can_submit}")
     
     # Enhanced completion status with visual progress
     st.markdown("### 🎯 Completion Status")
@@ -453,6 +486,14 @@ def show_assessment_form():
             st.info("📋 Complete these steps:")
             for step in remaining_steps:
                 st.markdown(f"- {step}")
+        
+        # Force save button if project info exists but isn't validated
+        if current_project_input and current_org_input and not (project_complete and org_complete):
+            if st.button("🔧 Force Save Project Information", type="secondary"):
+                st.session_state.simple_dpia_answers['project_name'] = current_project_input
+                st.session_state.simple_dpia_answers['organization'] = current_org_input
+                st.success("Project information force saved!")
+                st.rerun()
     
     if st.button("📥 Download HTML Report", type="primary", disabled=not can_submit):
         with st.spinner("Generating DPIA report..."):
