@@ -546,22 +546,8 @@ def show_assessment_form():
     role_valid = bool(role_text and len(role_text.strip()) > 0)
     answers_valid = len(current_saved_answers) == len(questions)
     
-    # Debug information for troubleshooting
-    with st.expander("Form Status (Debug)", expanded=True):
-        st.write(f"Project Name: '{project_text}' - Valid: {project_valid}")
-        st.write(f"Organization: '{org_text}' - Valid: {org_valid}")
-        st.write(f"Assessor Name: '{name_text}' - Valid: {name_valid}")
-        st.write(f"Assessor Role: '{role_text}' - Valid: {role_valid}")
-        st.write(f"Confirmation: {confirmation_saved}")
-        st.write(f"Answers: {len(current_saved_answers)}/{len(questions)} - Valid: {answers_valid}")
-        st.write(f"Saved answers: {current_saved_answers}")
-        st.write(f"Session state keys: {list(st.session_state.simple_dpia_answers.keys())}")
-        st.write(f"All validation results: project={project_valid}, org={org_valid}, name={name_valid}, role={role_valid}, confirm={confirmation_saved}, answers={answers_valid}")
-    
     # Final validation check
     can_submit = project_valid and org_valid and signature_complete and answers_valid
-    
-    st.write(f"**CAN SUBMIT: {can_submit}** (Debug mode)")  # Temporary debug
     
     # Enhanced completion status with visual progress
     st.markdown("### 🎯 Completion Status")
@@ -613,8 +599,8 @@ def show_assessment_form():
         with st.spinner("Generating DPIA report..."):
             try:
                 # Validate all required data before generation
-                if not all([project_text, org_text, name_text, role_text, confirmation_saved]):
-                    st.error("Missing required information. Please complete all sections.")
+                if not all([project_text, org_text, name_text, role_text, confirmation_saved, signature_complete]):
+                    st.error("Missing required information. Please complete all sections including digital signature.")
                     st.stop()
                 
                 if len(current_saved_answers) != len(questions):
@@ -662,8 +648,8 @@ def show_assessment_form():
                     st.error(f"Error generating HTML report: {str(e)}")
                     st.stop()
                 
-                # Save to session state
-                st.session_state.simple_dpia_answers = assessment_data
+                # Update session state without overwriting existing data
+                st.session_state.simple_dpia_answers.update(assessment_data)
                 st.session_state.simple_dpia_completed = True
                 
                 # Save to database with error handling
