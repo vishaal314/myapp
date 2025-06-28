@@ -381,24 +381,75 @@ def show_assessment_form():
                 help="Your digital signature confirms the accuracy of this assessment"
             )
         
-        # Submit button for signature
-        signature_submitted = st.form_submit_button("✍️ Apply Digital Signature")
+        # Enhanced validation for signature fields
+        name_filled = bool(assessor_name and assessor_name.strip())
+        role_filled = bool(assessor_role and assessor_role.strip())
         
-        if signature_submitted:
-            st.session_state.simple_dpia_answers['assessor_name'] = assessor_name
-            st.session_state.simple_dpia_answers['assessor_role'] = assessor_role
-            st.session_state.simple_dpia_answers['assessment_date'] = assessment_date.isoformat() if assessment_date else None
+        # Show validation status in form
+        if name_filled and role_filled and confirmation:
+            st.success("✅ Ready to apply digital signature")
+        else:
+            missing_items = []
+            if not name_filled: missing_items.append("Full Name")
+            if not role_filled: missing_items.append("Job Title/Role")
+            if not confirmation: missing_items.append("Confirmation checkbox")
+            st.warning(f"⚠️ Required: {', '.join(missing_items)}")
+        
+        # Submit button for signature
+        signature_submitted = st.form_submit_button(
+            "✍️ Apply Digital Signature",
+            disabled=not (name_filled and role_filled and confirmation),
+            help="Complete all required fields to apply signature"
+        )
+        
+        if signature_submitted and name_filled and role_filled and confirmation:
+            # Save signature data with proper null checking
+            st.session_state.simple_dpia_answers['assessor_name'] = assessor_name.strip() if assessor_name else ''
+            st.session_state.simple_dpia_answers['assessor_role'] = assessor_role.strip() if assessor_role else ''
+            st.session_state.simple_dpia_answers['assessment_date'] = assessment_date.isoformat() if assessment_date else datetime.now().date().isoformat()
             st.session_state.simple_dpia_answers['confirmation'] = confirmation
-            st.success("Digital signature applied!")
+            st.session_state.simple_dpia_answers['signature_timestamp'] = datetime.now().isoformat()
+            
+            st.success("✅ Digital signature successfully applied!")
+            st.balloons()  # Celebration for successful signature
             st.rerun()
+        elif signature_submitted:
+            st.error("❌ Please complete all required signature fields before applying.")
     
-    # Display saved signature info
+    # Enhanced display of saved signature info
     saved_name = st.session_state.simple_dpia_answers.get('assessor_name', '')
     saved_role = st.session_state.simple_dpia_answers.get('assessor_role', '')
     saved_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
+    saved_date = st.session_state.simple_dpia_answers.get('assessment_date', '')
+    signature_timestamp = st.session_state.simple_dpia_answers.get('signature_timestamp', '')
     
+    # Show signature status
     if saved_name and saved_role and saved_confirmation:
-        st.info(f"✅ Digitally signed by: **{saved_name}** ({saved_role})")
+        st.success("✅ **Digital Signature Applied Successfully**")
+        
+        # Display signature details in a professional format
+        signature_info = f"""
+        **Signed by:** {saved_name}  
+        **Title:** {saved_role}  
+        **Date:** {saved_date}  
+        **Confirmation:** ✓ Accuracy confirmed  
+        """
+        if signature_timestamp:
+            timestamp_formatted = datetime.fromisoformat(signature_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+            signature_info += f"**Applied:** {timestamp_formatted}"
+        
+        st.info(signature_info)
+    else:
+        # Show what's missing for complete signature
+        missing_signature_items = []
+        if not saved_name: missing_signature_items.append("Full Name")
+        if not saved_role: missing_signature_items.append("Job Title/Role") 
+        if not saved_confirmation: missing_signature_items.append("Confirmation")
+        
+        if missing_signature_items:
+            st.warning(f"⚠️ **Digital signature incomplete.** Missing: {', '.join(missing_signature_items)}")
+        else:
+            st.info("📝 Ready to apply digital signature")
     
     st.markdown('</div>', unsafe_allow_html=True)
     
