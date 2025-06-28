@@ -391,106 +391,107 @@ def show_assessment_form():
     st.markdown("**Please provide your details to digitally sign this assessment:**")
     st.markdown('<div class="signature-section">', unsafe_allow_html=True)
     
-    # Digital Signature Form - enhanced with robust state management
-    with st.form("signature_form", clear_on_submit=False):
-        col1, col2 = st.columns(2)
-        
-        # Get current saved values with fallback handling
-        current_name = st.session_state.simple_dpia_answers.get('assessor_name', '')
-        current_role = st.session_state.simple_dpia_answers.get('assessor_role', '')
-        current_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
-        
-        # Parse saved date with error handling
-        saved_date_str = st.session_state.simple_dpia_answers.get('assessment_date', '')
-        try:
-            current_date = datetime.fromisoformat(saved_date_str).date() if saved_date_str else datetime.now().date()
-        except (ValueError, TypeError):
-            current_date = datetime.now().date()
-        
-        with col1:
-            assessor_name = st.text_input(
-                "👤 Full Name *",
-                value=current_name,
-                placeholder="Enter your full name",
-                help="This will appear as the digital signature on your DPIA report"
-            )
-            
-            assessor_role = st.text_input(
-                "💼 Job Title/Role *", 
-                value=current_role,
-                placeholder="e.g., Data Protection Officer, Privacy Manager",
-                help="Your professional role or title within the organization"
-            )
-        
-        with col2:
-            assessment_date = st.date_input(
-                "📅 Assessment Date",
-                value=current_date,
-                help="Date of assessment completion"
-            )
-            
-            st.markdown("### ✅ Confirmation")
-            confirmation = st.checkbox(
-                "I confirm that the above information is accurate and complete to the best of my knowledge, and I digitally sign this DPIA assessment.",
-                value=current_confirmation,
-                help="Your digital signature confirms the accuracy of this assessment"
-            )
-        
-        # Enhanced validation with detailed feedback
-        name_valid = bool(assessor_name and len(assessor_name.strip()) >= 2)
-        role_valid = bool(assessor_role and len(assessor_role.strip()) >= 2)
-        date_valid = bool(assessment_date)
-        
-        # Real-time validation feedback
-        if name_valid and role_valid and confirmation and date_valid:
-            st.success("✅ All signature requirements met - ready to apply")
-        else:
-            missing_items = []
-            if not name_valid: missing_items.append("Full Name (minimum 2 characters)")
-            if not role_valid: missing_items.append("Job Title/Role (minimum 2 characters)")
-            if not confirmation: missing_items.append("Confirmation checkbox")
-            if not date_valid: missing_items.append("Valid assessment date")
-            st.warning(f"⚠️ Complete these fields: {', '.join(missing_items)}")
-        
-        # Submit button with enhanced validation
-        can_submit = name_valid and role_valid and confirmation and date_valid
-        signature_submitted = st.form_submit_button(
-            "✍️ Apply Digital Signature",
-            disabled=not can_submit,
-            help="All required fields must be completed to apply signature",
-            type="primary" if can_submit else "secondary"
+    # Simplified Digital Signature Form - auto-saving inputs
+    st.markdown("**Fill in your signature details:**")
+    
+    col1, col2 = st.columns(2)
+    
+    # Get current saved values
+    current_name = st.session_state.simple_dpia_answers.get('assessor_name', '')
+    current_role = st.session_state.simple_dpia_answers.get('assessor_role', '')
+    current_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
+    
+    # Parse saved date with error handling
+    saved_date_str = st.session_state.simple_dpia_answers.get('assessment_date', '')
+    try:
+        current_date = datetime.fromisoformat(saved_date_str).date() if saved_date_str else datetime.now().date()
+    except (ValueError, TypeError):
+        current_date = datetime.now().date()
+    
+    with col1:
+        # Auto-saving name input
+        assessor_name = st.text_input(
+            "👤 Full Name *",
+            value=current_name,
+            placeholder="Enter your full name",
+            help="This will appear as the digital signature on your DPIA report",
+            key="sig_name"
         )
         
-        # Robust signature submission handling
-        if signature_submitted and can_submit:
-            try:
-                # Clean and validate input data with proper null handling
-                clean_name = str(assessor_name or '').strip()
-                clean_role = str(assessor_role or '').strip()
-                
-                # Ensure minimum length requirements
-                if len(clean_name) < 2 or len(clean_role) < 2:
-                    st.error("Name and role must be at least 2 characters long")
-                    return
-                
-                # Save to session state with comprehensive data
-                st.session_state.simple_dpia_answers.update({
-                    'assessor_name': clean_name,
-                    'assessor_role': clean_role,
-                    'assessment_date': assessment_date.isoformat(),
-                    'confirmation': True,
-                    'signature_timestamp': datetime.now().isoformat(),
-                    'signature_applied': True
-                })
-                
-                st.success("✅ Digital signature successfully applied!")
-                st.balloons()
-                st.rerun()
-                
-            except Exception as e:
-                st.error(f"Error applying signature: {str(e)}")
-        elif signature_submitted:
-            st.error("❌ Please complete all required fields before applying signature")
+        # Auto-save name to session state
+        if assessor_name and assessor_name.strip() != current_name:
+            st.session_state.simple_dpia_answers['assessor_name'] = assessor_name.strip()
+        
+        # Auto-saving role input
+        assessor_role = st.text_input(
+            "💼 Job Title/Role *", 
+            value=current_role,
+            placeholder="e.g., Data Protection Officer, Privacy Manager",
+            help="Your professional role or title within the organization",
+            key="sig_role"
+        )
+        
+        # Auto-save role to session state
+        if assessor_role and assessor_role.strip() != current_role:
+            st.session_state.simple_dpia_answers['assessor_role'] = assessor_role.strip()
+    
+    with col2:
+        # Auto-saving date input
+        assessment_date = st.date_input(
+            "📅 Assessment Date",
+            value=current_date,
+            help="Date of assessment completion",
+            key="sig_date"
+        )
+        
+        # Auto-save date to session state
+        if assessment_date:
+            st.session_state.simple_dpia_answers['assessment_date'] = assessment_date.isoformat()
+        
+        st.markdown("### ✅ Confirmation")
+        # Auto-saving confirmation checkbox
+        confirmation = st.checkbox(
+            "I confirm that the above information is accurate and complete to the best of my knowledge, and I digitally sign this DPIA assessment.",
+            value=current_confirmation,
+            help="Your digital signature confirms the accuracy of this assessment",
+            key="sig_confirm"
+        )
+        
+        # Auto-save confirmation to session state
+        if confirmation != current_confirmation:
+            st.session_state.simple_dpia_answers['confirmation'] = confirmation
+    
+    # Validation using saved values
+    saved_name = st.session_state.simple_dpia_answers.get('assessor_name', '').strip()
+    saved_role = st.session_state.simple_dpia_answers.get('assessor_role', '').strip()
+    saved_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
+    saved_date = st.session_state.simple_dpia_answers.get('assessment_date', '')
+    
+    name_valid = bool(saved_name and len(saved_name) >= 2)
+    role_valid = bool(saved_role and len(saved_role) >= 2)
+    date_valid = bool(saved_date)
+    confirm_valid = bool(saved_confirmation)
+    
+    # Real-time validation feedback
+    if name_valid and role_valid and confirm_valid and date_valid:
+        st.success("✅ All signature requirements met - ready to apply digital signature")
+        
+        # Apply signature button
+        if st.button("✍️ Apply Digital Signature", type="primary", key="apply_signature"):
+            st.session_state.simple_dpia_answers.update({
+                'signature_timestamp': datetime.now().isoformat(),
+                'signature_applied': True
+            })
+            st.success("✅ Digital signature successfully applied!")
+            st.balloons()
+            st.rerun()
+    else:
+        missing_items = []
+        if not name_valid: missing_items.append("Full Name (minimum 2 characters)")
+        if not role_valid: missing_items.append("Job Title/Role (minimum 2 characters)")
+        if not confirm_valid: missing_items.append("Confirmation checkbox")
+        if not date_valid: missing_items.append("Valid assessment date")
+        st.warning(f"⚠️ Complete these fields: {', '.join(missing_items)}")
     
     # Enhanced signature status display with comprehensive validation
     saved_name = st.session_state.simple_dpia_answers.get('assessor_name', '').strip()
