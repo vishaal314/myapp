@@ -172,7 +172,7 @@ def show_assessment_form():
     # Project Information
     st.markdown("### 📋 Project Information")
     
-    # Use form to ensure proper value capture
+    # Project Information Form - with proper state persistence
     with st.form("project_info_form", clear_on_submit=False):
         col1, col2 = st.columns(2)
         with col1:
@@ -180,7 +180,8 @@ def show_assessment_form():
                 "Project Name *",
                 value=st.session_state.simple_dpia_answers.get('project_name', ''),
                 placeholder="Enter your project name",
-                help="Name of the project or processing activity"
+                help="Name of the project or processing activity",
+                key="project_name_input"
             )
         
         with col2:
@@ -188,17 +189,23 @@ def show_assessment_form():
                 "Organization *",
                 value=st.session_state.simple_dpia_answers.get('organization', ''),
                 placeholder="Your organization name",
-                help="Name of your organization or company"
+                help="Name of your organization or company",
+                key="organization_input"
             )
         
         # Submit button for project info
         project_submitted = st.form_submit_button("💾 Save Project Information")
-        
-        if project_submitted:
-            st.session_state.simple_dpia_answers['project_name'] = project_name
-            st.session_state.simple_dpia_answers['organization'] = organization
-            st.success("Project information saved!")
+    
+    # Handle form submission outside the form context
+    if project_submitted:
+        # Validate inputs before saving
+        if project_name and len(project_name.strip()) > 0 and organization and len(organization.strip()) > 0:
+            st.session_state.simple_dpia_answers['project_name'] = project_name.strip()
+            st.session_state.simple_dpia_answers['organization'] = organization.strip()
+            st.success("✅ Project information saved successfully!")
             st.rerun()
+        else:
+            st.error("❌ Please fill in both Project Name and Organization before saving.")
     
     # Get saved values for display
     saved_project = st.session_state.simple_dpia_answers.get('project_name', '')
@@ -348,7 +355,7 @@ def show_assessment_form():
     st.markdown("**Please provide your details to digitally sign this assessment:**")
     st.markdown('<div class="signature-section">', unsafe_allow_html=True)
     
-    # Use form for digital signature to ensure proper value capture
+    # Digital Signature Form - with proper state persistence
     with st.form("signature_form", clear_on_submit=False):
         col1, col2 = st.columns(2)
         
@@ -357,28 +364,32 @@ def show_assessment_form():
                 "👤 Full Name *",
                 value=st.session_state.simple_dpia_answers.get('assessor_name', ''),
                 placeholder="Enter your full name",
-                help="This will appear as the digital signature on your DPIA report"
+                help="This will appear as the digital signature on your DPIA report",
+                key="assessor_name_input"
             )
             
             assessor_role = st.text_input(
                 "💼 Job Title/Role *",
                 value=st.session_state.simple_dpia_answers.get('assessor_role', ''),
                 placeholder="e.g., Data Protection Officer, Privacy Manager",
-                help="Your professional role or title within the organization"
+                help="Your professional role or title within the organization",
+                key="assessor_role_input"
             )
         
         with col2:
             assessment_date = st.date_input(
                 "📅 Assessment Date",
                 value=datetime.now().date(),
-                help="Date of assessment completion"
+                help="Date of assessment completion",
+                key="assessment_date_input"
             )
             
             st.markdown("### ✅ Confirmation")
             confirmation = st.checkbox(
                 "I confirm that the above information is accurate and complete to the best of my knowledge, and I digitally sign this DPIA assessment.",
                 value=st.session_state.simple_dpia_answers.get('confirmation', False),
-                help="Your digital signature confirms the accuracy of this assessment"
+                help="Your digital signature confirms the accuracy of this assessment",
+                key="confirmation_input"
             )
         
         # Enhanced validation for signature fields
@@ -402,18 +413,23 @@ def show_assessment_form():
             help="Complete all required fields to apply signature"
         )
         
-        if signature_submitted and name_filled and role_filled and confirmation:
-            # Save signature data with proper null checking
-            st.session_state.simple_dpia_answers['assessor_name'] = assessor_name.strip() if assessor_name else ''
-            st.session_state.simple_dpia_answers['assessor_role'] = assessor_role.strip() if assessor_role else ''
+    # Handle signature submission outside form context
+    if signature_submitted:
+        if name_filled and role_filled and confirmation:
+            # Save signature data with proper validation and null checking
+            clean_name = (assessor_name or '').strip()
+            clean_role = (assessor_role or '').strip()
+            
+            st.session_state.simple_dpia_answers['assessor_name'] = clean_name
+            st.session_state.simple_dpia_answers['assessor_role'] = clean_role
             st.session_state.simple_dpia_answers['assessment_date'] = assessment_date.isoformat() if assessment_date else datetime.now().date().isoformat()
-            st.session_state.simple_dpia_answers['confirmation'] = confirmation
+            st.session_state.simple_dpia_answers['confirmation'] = True
             st.session_state.simple_dpia_answers['signature_timestamp'] = datetime.now().isoformat()
             
             st.success("✅ Digital signature successfully applied!")
-            st.balloons()  # Celebration for successful signature
+            st.balloons()
             st.rerun()
-        elif signature_submitted:
+        else:
             st.error("❌ Please complete all required signature fields before applying.")
     
     # Enhanced display of saved signature info
