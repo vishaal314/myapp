@@ -195,17 +195,17 @@ def show_assessment_form():
         
         # Submit button for project info
         project_submitted = st.form_submit_button("💾 Save Project Information")
-    
-    # Handle form submission outside the form context
-    if project_submitted:
-        # Validate inputs before saving
-        if project_name and len(project_name.strip()) > 0 and organization and len(organization.strip()) > 0:
-            st.session_state.simple_dpia_answers['project_name'] = project_name.strip()
-            st.session_state.simple_dpia_answers['organization'] = organization.strip()
-            st.success("✅ Project information saved successfully!")
-            st.rerun()
-        else:
-            st.error("❌ Please fill in both Project Name and Organization before saving.")
+        
+        # Handle form submission inside the form context
+        if project_submitted:
+            # Validate inputs before saving
+            if project_name and len(project_name.strip()) > 0 and organization and len(organization.strip()) > 0:
+                st.session_state.simple_dpia_answers['project_name'] = project_name.strip()
+                st.session_state.simple_dpia_answers['organization'] = organization.strip()
+                st.success("✅ Project information saved successfully!")
+                st.rerun()
+            else:
+                st.error("❌ Please fill in both Project Name and Organization before saving.")
     
     # Get saved values for display
     saved_project = st.session_state.simple_dpia_answers.get('project_name', '')
@@ -413,24 +413,24 @@ def show_assessment_form():
             help="Complete all required fields to apply signature"
         )
         
-    # Handle signature submission outside form context
-    if signature_submitted:
-        if name_filled and role_filled and confirmation:
-            # Save signature data with proper validation and null checking
-            clean_name = (assessor_name or '').strip()
-            clean_role = (assessor_role or '').strip()
-            
-            st.session_state.simple_dpia_answers['assessor_name'] = clean_name
-            st.session_state.simple_dpia_answers['assessor_role'] = clean_role
-            st.session_state.simple_dpia_answers['assessment_date'] = assessment_date.isoformat() if assessment_date else datetime.now().date().isoformat()
-            st.session_state.simple_dpia_answers['confirmation'] = True
-            st.session_state.simple_dpia_answers['signature_timestamp'] = datetime.now().isoformat()
-            
-            st.success("✅ Digital signature successfully applied!")
-            st.balloons()
-            st.rerun()
-        else:
-            st.error("❌ Please complete all required signature fields before applying.")
+        # Handle signature submission inside form context
+        if signature_submitted:
+            if name_filled and role_filled and confirmation:
+                # Save signature data with proper validation and null checking
+                clean_name = (assessor_name or '').strip()
+                clean_role = (assessor_role or '').strip()
+                
+                st.session_state.simple_dpia_answers['assessor_name'] = clean_name
+                st.session_state.simple_dpia_answers['assessor_role'] = clean_role
+                st.session_state.simple_dpia_answers['assessment_date'] = assessment_date.isoformat() if assessment_date else datetime.now().date().isoformat()
+                st.session_state.simple_dpia_answers['confirmation'] = True
+                st.session_state.simple_dpia_answers['signature_timestamp'] = datetime.now().isoformat()
+                
+                st.success("✅ Digital signature successfully applied!")
+                st.balloons()
+                st.rerun()
+            else:
+                st.error("❌ Please complete all required signature fields before applying.")
     
     # Enhanced display of saved signature info
     saved_name = st.session_state.simple_dpia_answers.get('assessor_name', '')
