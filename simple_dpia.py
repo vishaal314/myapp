@@ -465,22 +465,40 @@ def show_assessment_form():
         if confirmation != current_confirmation:
             st.session_state.simple_dpia_answers['confirmation'] = confirmation
     
-    # Validation using saved values
-    saved_name = st.session_state.simple_dpia_answers.get('assessor_name', '').strip()
-    saved_role = st.session_state.simple_dpia_answers.get('assessor_role', '').strip()
+    # Get current values from session state
+    saved_name = st.session_state.simple_dpia_answers.get('assessor_name', '')
+    saved_role = st.session_state.simple_dpia_answers.get('assessor_role', '')  
     saved_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
     saved_date = st.session_state.simple_dpia_answers.get('assessment_date', '')
+    signature_applied = st.session_state.simple_dpia_answers.get('signature_applied', False)
     
-    name_valid = bool(saved_name and len(saved_name) >= 2)
-    role_valid = bool(saved_role and len(saved_role) >= 2)
+    # Validate fields
+    name_valid = bool(saved_name and len(saved_name.strip()) >= 2)
+    role_valid = bool(saved_role and len(saved_role.strip()) >= 2)
     date_valid = bool(saved_date)
     confirm_valid = bool(saved_confirmation)
     
-    # Real-time validation feedback
-    if name_valid and role_valid and confirm_valid and date_valid:
+    # Single signature validation and display
+    if signature_applied:
+        st.success("✅ **Digital Signature Applied Successfully**")
+        signature_timestamp = st.session_state.simple_dpia_answers.get('signature_timestamp', datetime.now().isoformat())
+        try:
+            formatted_timestamp = datetime.fromisoformat(signature_timestamp.replace('Z', '+00:00') if signature_timestamp.endswith('Z') else signature_timestamp).strftime('%B %d, %Y at %I:%M %p')
+        except:
+            formatted_timestamp = "Recently applied"
+        
+        st.info(f"""
+        **Signature Details:**
+        - **Name:** {saved_name}
+        - **Role:** {saved_role}
+        - **Date:** {saved_date}
+        - **Signed:** {formatted_timestamp}
+        """)
+        signature_complete = True
+        
+    elif name_valid and role_valid and confirm_valid and date_valid:
         st.success("✅ All signature requirements met - ready to apply digital signature")
         
-        # Apply signature button
         if st.button("✍️ Apply Digital Signature", type="primary", key="apply_signature"):
             st.session_state.simple_dpia_answers.update({
                 'signature_timestamp': datetime.now().isoformat(),
@@ -489,6 +507,8 @@ def show_assessment_form():
             st.success("✅ Digital signature successfully applied!")
             st.balloons()
             st.rerun()
+        signature_complete = False
+        
     else:
         missing_items = []
         if not name_valid: missing_items.append("Full Name (minimum 2 characters)")
@@ -496,78 +516,9 @@ def show_assessment_form():
         if not confirm_valid: missing_items.append("Confirmation checkbox")
         if not date_valid: missing_items.append("Valid assessment date")
         st.warning(f"⚠️ Complete these fields: {', '.join(missing_items)}")
+        signature_complete = False
     
-    # Enhanced signature status display with comprehensive validation
-    display_name = st.session_state.simple_dpia_answers.get('assessor_name', '')
-    display_role = st.session_state.simple_dpia_answers.get('assessor_role', '')
-    display_confirmation = st.session_state.simple_dpia_answers.get('confirmation', False)
-    display_date = st.session_state.simple_dpia_answers.get('assessment_date', '')
-    signature_timestamp = st.session_state.simple_dpia_answers.get('signature_timestamp', '')
-    signature_applied = st.session_state.simple_dpia_answers.get('signature_applied', False)
-    
-    # Comprehensive signature validation
-    name_complete = bool(saved_name and len(saved_name) >= 2)
-    role_complete = bool(saved_role and len(saved_role) >= 2)
-    date_complete = bool(saved_date)
-    
-    signature_complete = name_complete and role_complete and saved_confirmation and date_complete and signature_applied
-    
-    if signature_complete:
-        st.success("✅ **Digital Signature Applied Successfully**")
-        
-        # Professional signature display with error handling
-        try:
-            # Format timestamp with fallback
-            if signature_timestamp:
-                try:
-                    timestamp_obj = datetime.fromisoformat(signature_timestamp)
-                    formatted_timestamp = timestamp_obj.strftime('%B %d, %Y at %I:%M %p')
-                except (ValueError, TypeError):
-                    formatted_timestamp = "Invalid timestamp"
-            else:
-                formatted_timestamp = "Not recorded"
-            
-            # Format assessment date with fallback
-            try:
-                if saved_date:
-                    date_obj = datetime.fromisoformat(saved_date).date()
-                    formatted_date = date_obj.strftime('%B %d, %Y')
-                else:
-                    formatted_date = "Not specified"
-            except (ValueError, TypeError):
-                formatted_date = "Invalid date"
-            
-            signature_info = f"""
-            **Signed by:** {saved_name}  
-            **Title:** {saved_role}  
-            **Assessment Date:** {formatted_date}  
-            **Confirmation:** ✓ Accuracy and completeness confirmed  
-            **Digital Signature Applied:** {formatted_timestamp}
-            """
-            
-            st.info(signature_info)
-            
-        except Exception as e:
-            st.warning(f"Signature applied but display error: {str(e)}")
-            
-    else:
-        # Detailed status for incomplete signature
-        missing_items = []
-        if not name_complete: 
-            missing_items.append("Full Name (minimum 2 characters)")
-        if not role_complete: 
-            missing_items.append("Job Title/Role (minimum 2 characters)")
-        if not saved_confirmation: 
-            missing_items.append("Confirmation checkbox")
-        if not date_complete: 
-            missing_items.append("Assessment date")
-        if not signature_applied:
-            missing_items.append("Apply signature button")
-        
-        if missing_items:
-            st.warning(f"⚠️ **Digital signature incomplete.** Required: {', '.join(missing_items)}")
-        else:
-            st.info("📝 All requirements met - ready to apply digital signature")
+    # Remove duplicate validation - already handled above
     
     st.markdown('</div>', unsafe_allow_html=True)
     
@@ -608,7 +559,7 @@ def show_assessment_form():
         st.write(f"All validation results: project={project_valid}, org={org_valid}, name={name_valid}, role={role_valid}, confirm={confirmation_saved}, answers={answers_valid}")
     
     # Final validation check
-    can_submit = project_valid and org_valid and name_valid and role_valid and confirmation_saved and answers_valid
+    can_submit = project_valid and org_valid and signature_complete and answers_valid
     
     st.write(f"**CAN SUBMIT: {can_submit}** (Debug mode)")  # Temporary debug
     
@@ -631,7 +582,7 @@ def show_assessment_form():
             st.warning("⏳ Step 2\nQuestions")
     
     with col3:
-        if name_valid and role_valid and confirmation_saved:
+        if signature_complete:
             st.success("✅ Step 3\nSignature")
         else:
             st.warning("⏳ Step 3\nSignature")
@@ -650,7 +601,7 @@ def show_assessment_form():
             remaining_steps.append("1️⃣ Fill out and save Project Information")
         if not answers_valid:
             remaining_steps.append("2️⃣ Answer all questions and save answers")
-        if not (name_valid and role_valid and confirmation_saved):
+        if not signature_complete:
             remaining_steps.append("3️⃣ Complete and apply Digital Signature")
         
         if remaining_steps:
