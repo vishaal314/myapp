@@ -480,96 +480,197 @@ def show_assessment_form():
                 st.markdown(f"- {step}")
     
     if st.button("🔍 Generate DPIA Report", type="primary", disabled=not can_submit):
-        # Save all data using saved session values
-        assessment_data = {
-            'assessment_id': str(uuid.uuid4()),
-            'project_name': project_text,
-            'organization': org_text,
-            'assessor_name': name_text,
-            'assessor_role': role_text,
-            'assessment_date': st.session_state.simple_dpia_answers.get('assessment_date', datetime.now().date().isoformat()),
-            'confirmation': confirmation_saved,
-            'answers': saved_answers,
-            'risk_score': saved_risk_score,
-            'risk_level': risk_level,
-            'dpia_required': dpia_required,
-            'compliance_status': 'Completed'
-        }
-        
-        st.session_state.simple_dpia_answers = assessment_data
-        st.session_state.simple_dpia_completed = True
-        
-        # Save to database
-        save_assessment_to_db(assessment_data)
-        
-        st.success("Assessment completed! Generating report...")
-        st.rerun()
+        with st.spinner("Generating DPIA report..."):
+            try:
+                # Validate all required data before generation
+                if not all([project_text, org_text, name_text, role_text, confirmation_saved]):
+                    st.error("Missing required information. Please complete all sections.")
+                    st.stop()
+                
+                if len(saved_answers) != len(questions):
+                    st.error("Not all questions have been answered. Please complete the assessment.")
+                    st.stop()
+                
+                # Create comprehensive assessment data
+                assessment_data = {
+                    'assessment_id': str(uuid.uuid4()),
+                    'project_name': project_text,
+                    'organization': org_text,
+                    'assessor_name': name_text,
+                    'assessor_role': role_text,
+                    'assessment_date': st.session_state.simple_dpia_answers.get('assessment_date', datetime.now().date().isoformat()),
+                    'confirmation': confirmation_saved,
+                    'answers': saved_answers,
+                    'risk_score': saved_risk_score,
+                    'risk_level': risk_level,
+                    'dpia_required': dpia_required,
+                    'compliance_status': 'Completed',
+                    'created_timestamp': datetime.now().isoformat(),
+                    'question_count': len(questions),
+                    'yes_answers': sum(1 for answer in saved_answers.values() if answer == "Yes")
+                }
+                
+                # Test HTML report generation before saving
+                try:
+                    test_html = generate_simple_html_report(assessment_data)
+                    if not test_html or len(test_html) < 1000:  # Basic validation
+                        raise ValueError("Generated report appears incomplete")
+                except Exception as e:
+                    st.error(f"Error generating HTML report: {str(e)}")
+                    st.stop()
+                
+                # Save to session state
+                st.session_state.simple_dpia_answers = assessment_data
+                st.session_state.simple_dpia_completed = True
+                
+                # Save to database with error handling
+                db_saved = save_assessment_to_db(assessment_data)
+                if db_saved:
+                    st.success("Assessment completed and saved to database!")
+                else:
+                    st.warning("Assessment completed but could not save to database. Report generation will continue.")
+                
+                # Force page refresh to show results
+                st.rerun()
+                
+            except Exception as e:
+                st.error(f"Unexpected error during report generation: {str(e)}")
+                st.error("Please try again or contact support if the problem persists.")
 
 def show_results():
-    """Display assessment results"""
-    data = st.session_state.simple_dpia_answers
-    
-    st.markdown("## Assessment Complete!")
-    
-    # Summary metrics
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Risk Score", f"{data['risk_score']}/100")
-    
-    with col2:
-        st.metric("Risk Level", data['risk_level'])
-    
-    with col3:
-        yes_count = sum(1 for answer in data['answers'].values() if answer == "Yes")
-        st.metric("Yes Answers", f"{yes_count}/10")
-    
-    with col4:
-        st.metric("Status", "Complete")
-    
-    # DPIA Requirement
-    risk_class = "risk-low" if data['risk_score'] <= 30 else "risk-medium" if data['risk_score'] <= 60 else "risk-high"
-    
-    st.markdown(f"""
-    <div class="risk-indicator {risk_class}">
-        <h3>DPIA Requirement Assessment</h3>
-        <p>{data['dpia_required']}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Recommendations
-    st.markdown("### Recommendations")
-    
-    recommendations = generate_recommendations(data)
-    for i, rec in enumerate(recommendations, 1):
-        st.markdown(f"{i}. {rec}")
-    
-    # Action buttons
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        html_report = generate_simple_html_report(data)
-        st.download_button(
-            label="Download HTML Report",
-            data=html_report,
-            file_name=f"Simple_DPIA_Report_{data['assessment_id'][:8]}.html",
-            mime="text/html",
-            type="primary"
-        )
-    
-    with col2:
-        if st.button("New Assessment"):
-            # Clear only the simple DPIA related session state
-            st.session_state.simple_dpia_answers = {}
-            st.session_state.simple_dpia_completed = False
-            if 'simple_dpia_report_data' in st.session_state:
-                del st.session_state.simple_dpia_report_data
-            st.rerun()
-    
-    with col3:
-        if st.button("View in History"):
-            st.session_state.selected_nav = "History"
-            st.rerun()
+    """Display assessment results with enhanced download functionality"""
+    try:
+        data = st.session_state.simple_dpia_answers
+        
+        # Validate data integrity
+        if not data or 'assessment_id' not in data:
+            st.error("Assessment data not found. Please complete the assessment again.")
+            if st.button("Start New Assessment"):
+                st.session_state.simple_dpia_answers = {}
+                st.session_state.simple_dpia_completed = False
+                st.rerun()
+            return
+        
+        st.markdown("## 🎉 Assessment Complete!")
+        
+        # Enhanced summary metrics with validation
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            risk_score = data.get('risk_score', 0)
+            st.metric("Risk Score", f"{risk_score}/100")
+        
+        with col2:
+            risk_level = data.get('risk_level', 'Unknown')
+            st.metric("Risk Level", risk_level)
+        
+        with col3:
+            answers = data.get('answers', {})
+            yes_count = sum(1 for answer in answers.values() if answer == "Yes")
+            total_questions = len(answers)
+            st.metric("Yes Answers", f"{yes_count}/{total_questions}")
+        
+        with col4:
+            status = data.get('compliance_status', 'Unknown')
+            st.metric("Status", status)
+        
+        # DPIA Requirement with enhanced styling
+        risk_score = data.get('risk_score', 0)
+        risk_class = "risk-low" if risk_score <= 30 else "risk-medium" if risk_score <= 60 else "risk-high"
+        
+        st.markdown(f"""
+        <div class="risk-indicator {risk_class}">
+            <h3>DPIA Requirement Assessment</h3>
+            <p>{data.get('dpia_required', 'Assessment unavailable')}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Assessment details
+        with st.expander("📋 Assessment Details", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write(f"**Project:** {data.get('project_name', 'Unknown')}")
+                st.write(f"**Organization:** {data.get('organization', 'Unknown')}")
+                st.write(f"**Assessment ID:** {data.get('assessment_id', 'Unknown')[:12]}...")
+            with col2:
+                st.write(f"**Assessor:** {data.get('assessor_name', 'Unknown')}")
+                st.write(f"**Role:** {data.get('assessor_role', 'Unknown')}")
+                st.write(f"**Date:** {data.get('assessment_date', 'Unknown')}")
+        
+        # Recommendations
+        st.markdown("### 💡 Recommendations")
+        
+        try:
+            recommendations = generate_recommendations(data)
+            for i, rec in enumerate(recommendations, 1):
+                st.markdown(f"{i}. {rec}")
+        except Exception as e:
+            st.error(f"Error generating recommendations: {str(e)}")
+            st.markdown("- Complete a thorough privacy impact assessment")
+            st.markdown("- Implement appropriate technical and organizational measures")
+            st.markdown("- Maintain ongoing compliance monitoring")
+        
+        # Enhanced action buttons with error handling
+        st.markdown("### 📥 Download & Actions")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            try:
+                html_report = generate_simple_html_report(data)
+                if html_report and len(html_report) > 500:  # Validate report content
+                    st.download_button(
+                        label="📄 Download HTML Report",
+                        data=html_report,
+                        file_name=f"DPIA_Report_{data.get('project_name', 'Unknown').replace(' ', '_')}_{data['assessment_id'][:8]}.html",
+                        mime="text/html",
+                        type="primary",
+                        help="Download complete assessment report as HTML file"
+                    )
+                else:
+                    st.error("Report generation failed")
+                    if st.button("🔄 Regenerate Report"):
+                        st.rerun()
+            except Exception as e:
+                st.error(f"Download error: {str(e)}")
+                if st.button("🔄 Try Again"):
+                    st.rerun()
+        
+        with col2:
+            if st.button("🆕 New Assessment", help="Start a fresh DPIA assessment"):
+                # Clear session state with confirmation
+                st.session_state.simple_dpia_answers = {}
+                st.session_state.simple_dpia_completed = False
+                if 'simple_dpia_report_data' in st.session_state:
+                    del st.session_state.simple_dpia_report_data
+                st.rerun()
+        
+        with col3:
+            if st.button("📚 View in History", help="View this assessment in the history section"):
+                st.session_state.selected_nav = "History"
+                st.rerun()
+                
+        # Debug information for troubleshooting
+        with st.expander("🔧 Technical Details", expanded=False):
+            st.json({
+                "assessment_id": data.get('assessment_id', 'Unknown'),
+                "created_timestamp": data.get('created_timestamp', 'Unknown'),
+                "question_count": data.get('question_count', 0),
+                "yes_answers": data.get('yes_answers', 0),
+                "risk_calculation": f"{data.get('yes_answers', 0)} * 10 = {data.get('risk_score', 0)}"
+            })
+            
+    except Exception as e:
+        st.error(f"Error displaying results: {str(e)}")
+        st.markdown("### Recovery Options")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔄 Retry Display"):
+                st.rerun()
+        with col2:
+            if st.button("🆕 Start Over"):
+                st.session_state.simple_dpia_answers = {}
+                st.session_state.simple_dpia_completed = False
+                st.rerun()
 
 def generate_recommendations(data):
     """Generate recommendations based on answers"""
@@ -617,11 +718,25 @@ def generate_recommendations(data):
     return recommendations
 
 def generate_simple_html_report(data):
-    """Generate HTML report for simple DPIA"""
+    """Generate HTML report for simple DPIA with comprehensive error handling"""
     
-    answers_html = ""
-    for i, (key, answer) in enumerate(data['answers'].items(), 1):
-        status_class = "yes-answer" if answer == "Yes" else "no-answer"
+    try:
+        # Validate input data
+        if not data or not isinstance(data, dict):
+            raise ValueError("Invalid assessment data provided")
+        
+        required_fields = ['answers', 'risk_score', 'project_name', 'organization', 'assessor_name']
+        missing_fields = [field for field in required_fields if field not in data or not data[field]]
+        if missing_fields:
+            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+        
+        # Generate answers table with error handling
+        answers_html = ""
+        answers = data.get('answers', {})
+        
+        if not answers:
+            raise ValueError("No assessment answers found")
+        
         questions_map = {
             'large_scale': 'Large-scale processing of personal data',
             'sensitive_data': 'Special categories of personal data',
@@ -635,22 +750,64 @@ def generate_simple_html_report(data):
             'consent_issues': 'Concerns about consent validity'
         }
         
-        question_text = questions_map.get(key, key.replace('_', ' ').title())
-        answers_html += f"""
-        <tr class="{status_class}">
-            <td>{i}</td>
-            <td>{question_text}</td>
-            <td><strong>{answer}</strong></td>
-        </tr>
-        """
-    
-    recommendations_html = ""
-    for i, rec in enumerate(generate_recommendations(data), 1):
-        recommendations_html += f"<li>{rec}</li>"
-    
-    risk_class = "low" if data['risk_score'] <= 30 else "medium" if data['risk_score'] <= 60 else "high"
-    
-    html_content = f"""
+        for i, (key, answer) in enumerate(answers.items(), 1):
+            if answer not in ["Yes", "No"]:
+                continue  # Skip invalid answers
+            
+            status_class = "yes-answer" if answer == "Yes" else "no-answer"
+            question_text = questions_map.get(key, key.replace('_', ' ').title())
+            
+            # Escape HTML characters for security
+            question_text = question_text.replace('<', '&lt;').replace('>', '&gt;')
+            answer = str(answer).replace('<', '&lt;').replace('>', '&gt;')
+            
+            answers_html += f"""
+            <tr class="{status_class}">
+                <td>{i}</td>
+                <td>{question_text}</td>
+                <td><strong>{answer}</strong></td>
+            </tr>
+            """
+        
+        if not answers_html:
+            raise ValueError("No valid answers found for report generation")
+        
+        # Generate recommendations with error handling
+        recommendations_html = ""
+        try:
+            recommendations = generate_recommendations(data)
+            for rec in recommendations:
+                # Escape HTML and ensure recommendation is valid
+                safe_rec = str(rec).replace('<', '&lt;').replace('>', '&gt;')
+                if safe_rec.strip():  # Only add non-empty recommendations
+                    recommendations_html += f"<li>{safe_rec}</li>"
+        except Exception as e:
+            # Fallback recommendations if generation fails
+            recommendations_html = """
+                <li>Complete a comprehensive privacy impact assessment</li>
+                <li>Implement appropriate technical and organizational measures</li>
+                <li>Establish regular compliance monitoring procedures</li>
+                <li>Provide staff training on data protection requirements</li>
+            """
+        
+        # Safely extract and validate data fields
+        risk_score = max(0, min(100, int(data.get('risk_score', 0))))  # Ensure valid range
+        risk_class = "low" if risk_score <= 30 else "medium" if risk_score <= 60 else "high"
+        
+        # Safely escape text fields
+        project_name = str(data.get('project_name', 'Unknown')).replace('<', '&lt;').replace('>', '&gt;')
+        organization = str(data.get('organization', 'Unknown')).replace('<', '&lt;').replace('>', '&gt;')
+        assessor_name = str(data.get('assessor_name', 'Unknown')).replace('<', '&lt;').replace('>', '&gt;')
+        assessor_role = str(data.get('assessor_role', 'Unknown')).replace('<', '&lt;').replace('>', '&gt;')
+        assessment_id = str(data.get('assessment_id', 'Unknown'))[:36]  # Limit length
+        assessment_date = str(data.get('assessment_date', datetime.now().date().isoformat()))
+        risk_level = str(data.get('risk_level', 'Unknown'))
+        dpia_required = str(data.get('dpia_required', 'Assessment required'))
+        
+        # Generate timestamp for report
+        generation_time = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+        
+        html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -808,22 +965,22 @@ def generate_simple_html_report(data):
         <div class="header">
             <h1>DPIA Quick Assessment Report</h1>
             <p>Simple Yes/No Questionnaire for GDPR Compliance</p>
-            <p><strong>Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</strong></p>
+            <p><strong>Generated on {generation_time}</strong></p>
         </div>
         
         <div class="summary-section">
             <h2>Project Information</h2>
             <div class="metadata">
-                <strong>Project Name:</strong> {data.get('project_name', 'Unknown')}<br>
-                <strong>Organization:</strong> {data.get('organization', 'Unknown')}<br>
-                <strong>Assessment Date:</strong> {data.get('assessment_date', 'Unknown')}<br>
-                <strong>Assessment ID:</strong> {data.get('assessment_id', 'Unknown')}
+                <strong>Project Name:</strong> {project_name}<br>
+                <strong>Organization:</strong> {organization}<br>
+                <strong>Assessment Date:</strong> {assessment_date}<br>
+                <strong>Assessment ID:</strong> {assessment_id}
             </div>
             
             <div class="risk-indicator {risk_class}">
                 <h3>Risk Assessment Result</h3>
-                <p>Risk Score: {data['risk_score']}/100 • Risk Level: {data['risk_level']}</p>
-                <p>{data['dpia_required']}</p>
+                <p>Risk Score: {risk_score}/100 • Risk Level: {risk_level}</p>
+                <p>{dpia_required}</p>
             </div>
         </div>
         
@@ -854,11 +1011,11 @@ def generate_simple_html_report(data):
             <h3>Digital Signature</h3>
             <div class="signature-grid">
                 <div>
-                    <strong>Assessor Name:</strong> {data.get('assessor_name', 'Unknown')}<br>
-                    <strong>Role/Title:</strong> {data.get('assessor_role', 'Unknown')}
+                    <strong>Assessor Name:</strong> {assessor_name}<br>
+                    <strong>Role/Title:</strong> {assessor_role}
                 </div>
                 <div>
-                    <strong>Date:</strong> {data.get('assessment_date', 'Unknown')}<br>
+                    <strong>Date:</strong> {assessment_date}<br>
                     <strong>Confirmation:</strong> ✓ Confirmed accurate and complete
                 </div>
             </div>
@@ -873,8 +1030,28 @@ def generate_simple_html_report(data):
     </body>
     </html>
     """
-    
-    return html_content
+        
+        # Validate generated HTML
+        if not html_content or len(html_content) < 2000:
+            raise ValueError("Generated HTML report is too short or empty")
+        
+        return html_content
+        
+    except Exception as e:
+        # Return a minimal error report instead of failing completely
+        error_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head><title>DPIA Report Generation Error</title></head>
+        <body>
+            <h1>Report Generation Error</h1>
+            <p>Error: {str(e)}</p>
+            <p>Assessment ID: {data.get('assessment_id', 'Unknown') if data else 'Unknown'}</p>
+            <p>Please try regenerating the report or contact support.</p>
+        </body>
+        </html>
+        """
+        return error_html
 
 if __name__ == "__main__":
     run_simple_dpia()
