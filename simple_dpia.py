@@ -172,40 +172,62 @@ def show_assessment_form():
     # Project Information
     st.markdown("### 📋 Project Information")
     
-    # Project Information Form - with proper state persistence
+    # Project Information Form - fixed for proper form submission
     with st.form("project_info_form", clear_on_submit=False):
         col1, col2 = st.columns(2)
+        
+        # Get current saved values
+        current_project = st.session_state.simple_dpia_answers.get('project_name', '')
+        current_org = st.session_state.simple_dpia_answers.get('organization', '')
+        
         with col1:
             project_name = st.text_input(
                 "Project Name *",
-                value=st.session_state.simple_dpia_answers.get('project_name', ''),
+                value=current_project,
                 placeholder="Enter your project name",
-                help="Name of the project or processing activity",
-                key="project_name_input"
+                help="Name of the project or processing activity"
             )
         
         with col2:
             organization = st.text_input(
                 "Organization *",
-                value=st.session_state.simple_dpia_answers.get('organization', ''),
+                value=current_org,
                 placeholder="Your organization name",
-                help="Name of your organization or company",
-                key="organization_input"
+                help="Name of your organization or company"
             )
         
+        # Validation feedback within form
+        name_valid = bool(project_name and len(project_name.strip()) > 0)
+        org_valid = bool(organization and len(organization.strip()) > 0)
+        
+        if name_valid and org_valid:
+            st.success("✅ Ready to save project information")
+        else:
+            missing = []
+            if not name_valid: missing.append("Project Name")
+            if not org_valid: missing.append("Organization")
+            st.warning(f"⚠️ Required: {', '.join(missing)}")
+        
         # Submit button for project info
-        project_submitted = st.form_submit_button("💾 Save Project Information")
+        project_submitted = st.form_submit_button(
+            "💾 Save Project Information",
+            disabled=not (name_valid and org_valid),
+            type="primary" if (name_valid and org_valid) else "secondary"
+        )
         
         # Handle form submission inside the form context
-        if project_submitted:
-            # Validate inputs before saving
-            if project_name and len(project_name.strip()) > 0 and organization and len(organization.strip()) > 0:
-                st.session_state.simple_dpia_answers['project_name'] = project_name.strip()
-                st.session_state.simple_dpia_answers['organization'] = organization.strip()
+        if project_submitted and name_valid and org_valid:
+            try:
+                clean_project_name = project_name.strip() if project_name else ''
+                clean_organization = organization.strip() if organization else ''
+                st.session_state.simple_dpia_answers['project_name'] = clean_project_name
+                st.session_state.simple_dpia_answers['organization'] = clean_organization
                 st.success("✅ Project information saved successfully!")
                 st.rerun()
-            else:
-                st.error("❌ Please fill in both Project Name and Organization before saving.")
+            except Exception as e:
+                st.error(f"Error saving project information: {str(e)}")
+        elif project_submitted:
+            st.error("❌ Please fill in both Project Name and Organization before saving.")
     
     # Get saved values for display
     saved_project = st.session_state.simple_dpia_answers.get('project_name', '')
@@ -271,7 +293,7 @@ def show_assessment_form():
         }
     ]
     
-    # Use form for questions to ensure proper submission
+    # Fixed questions form with proper submission handling
     with st.form("questions_form", clear_on_submit=False):
         answers = {}
         risk_score = 0
@@ -291,7 +313,6 @@ def show_assessment_form():
                     "Your answer:",
                     options=["No", "Yes"],
                     index=1 if current_answer == "Yes" else 0,
-                    key=f"q_{q['key']}",
                     horizontal=True
                 )
                 
@@ -304,15 +325,28 @@ def show_assessment_form():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
         
+        # Show completion status
+        answered_count = len([a for a in answers.values() if a in ["Yes", "No"]])
+        if answered_count == len(questions):
+            st.success(f"✅ All {len(questions)} questions completed")
+        else:
+            st.warning(f"⚠️ {answered_count}/{len(questions)} questions answered")
+        
         # Submit button for questions
-        questions_submitted = st.form_submit_button("💾 Save All Answers")
+        questions_submitted = st.form_submit_button(
+            "💾 Save All Answers",
+            type="primary" if answered_count == len(questions) else "secondary"
+        )
         
         if questions_submitted:
-            # Save all answers to session state
-            for q in questions:
-                st.session_state.simple_dpia_answers[q['key']] = answers[q['key']]
-            st.success("All answers saved!")
-            st.rerun()
+            try:
+                # Save all answers to session state
+                for q in questions:
+                    st.session_state.simple_dpia_answers[q['key']] = answers[q['key']]
+                st.success("✅ All answers saved successfully!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error saving answers: {str(e)}")
     
     # Calculate current risk from saved answers
     saved_answers = {}
