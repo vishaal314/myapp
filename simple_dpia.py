@@ -227,14 +227,16 @@ def show_assessment_form():
     st.markdown("### 📋 Project Information")
     st.markdown("**Please provide basic information about your project:**")
     
-    # Callback functions for auto-save
+    # Enhanced callback functions for auto-save with immediate persistence
     def save_project_name():
         name = st.session_state.get("project_name_input", "").strip()
-        st.session_state.simple_dpia_answers['project_name'] = name
+        if name:  # Only save non-empty values
+            st.session_state.simple_dpia_answers['project_name'] = name
     
     def save_organization():
         org = st.session_state.get("organization_input", "").strip()
-        st.session_state.simple_dpia_answers['organization'] = org
+        if org:  # Only save non-empty values
+            st.session_state.simple_dpia_answers['organization'] = org
     
     col1, col2 = st.columns(2)
     
@@ -282,12 +284,31 @@ def show_assessment_form():
         else:
             st.info("💡 Enter your organization name")
     
-    # Get saved values for display
+    # Manual save button as backup
+    col1_btn, col2_btn = st.columns([1, 3])
+    with col1_btn:
+        if st.button("💾 Save Project Info", type="secondary"):
+            # Force save current values
+            current_name = st.session_state.get("project_name_input", "").strip()
+            current_org = st.session_state.get("organization_input", "").strip()
+            
+            if current_name and current_org:
+                st.session_state.simple_dpia_answers['project_name'] = current_name
+                st.session_state.simple_dpia_answers['organization'] = current_org
+                st.success("Project information saved!")
+                st.rerun()
+            else:
+                st.error("Please fill in both fields before saving")
+    
+    # Show current saved status
     saved_project = st.session_state.simple_dpia_answers.get('project_name', '')
     saved_org = st.session_state.simple_dpia_answers.get('organization', '')
     
-    if saved_project and saved_org:
-        st.info(f"✅ Project: **{saved_project}** | Organization: **{saved_org}**")
+    with col2_btn:
+        if saved_project and saved_org:
+            st.success(f"✅ Saved: {saved_project} | {saved_org}")
+        else:
+            st.warning("⚠️ Project information not saved yet")
     
     # DPIA Questions
     st.markdown("### 📊 DPIA Assessment Questions")
@@ -390,13 +411,17 @@ def show_assessment_form():
     
     st.markdown("---")
     
-    # Get real-time values for project info validation
-    project_input = st.session_state.get("project_name_input", st.session_state.simple_dpia_answers.get('project_name', ''))
-    org_input = st.session_state.get("organization_input", st.session_state.simple_dpia_answers.get('organization', ''))
+    # Fixed validation logic - check saved values in session state
+    saved_project = st.session_state.simple_dpia_answers.get('project_name', '').strip()
+    saved_org = st.session_state.simple_dpia_answers.get('organization', '').strip()
     
-    # Optimized validation using existing saved_data reference  
-    project_text = project_input.strip() if project_input else ''
-    org_text = org_input.strip() if org_input else ''
+    # Also check current input values as backup
+    current_project_input = st.session_state.get("project_name_input", '').strip()
+    current_org_input = st.session_state.get("organization_input", '').strip()
+    
+    # Use the most recent values (either saved or current input)
+    project_text = saved_project or current_project_input
+    org_text = saved_org or current_org_input
     
     # Get current saved answers efficiently
     current_saved_answers = {}
@@ -405,22 +430,12 @@ def show_assessment_form():
         if saved_answer in ["Yes", "No"]:
             current_saved_answers[q['key']] = saved_answer
     
-    # Streamlined validation checks
-    project_valid = bool(project_text and len(project_text.strip()) > 0)
-    org_valid = bool(org_text and len(org_text.strip()) > 0)
+    # Clear validation checks
+    project_valid = bool(project_text and len(project_text) > 0)
+    org_valid = bool(org_text and len(org_text) > 0)
     answers_valid = len(current_saved_answers) == len(questions)
     
-    # Debug output for validation
-    st.write("**Debug - Current Values:**")
-    st.write(f"- Project Input: '{project_input}' (Length: {len(project_input) if project_input else 0})")
-    st.write(f"- Organization Input: '{org_input}' (Length: {len(org_input) if org_input else 0})")
-    st.write(f"- Project Valid: {project_valid}")
-    st.write(f"- Organization Valid: {org_valid}")
-    st.write(f"- Answers Valid: {answers_valid} ({len(current_saved_answers)}/{len(questions)})")
-    st.write(f"- Saved in session state - Project: '{st.session_state.simple_dpia_answers.get('project_name', 'NOT_SAVED')}'")
-    st.write(f"- Saved in session state - Organization: '{st.session_state.simple_dpia_answers.get('organization', 'NOT_SAVED')}'")
-    
-    # Enhanced final validation check without signature requirement
+    # Final validation check
     can_submit = project_valid and org_valid and answers_valid
     
 
