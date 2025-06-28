@@ -255,7 +255,7 @@ def show_assessment_form():
         submitted = st.form_submit_button("💾 Save Project Information", type="primary")
         
         if submitted:
-            if project_name.strip() and organization.strip():
+            if project_name and organization and project_name.strip() and organization.strip():
                 st.session_state.simple_dpia_answers['project_name'] = project_name.strip()
                 st.session_state.simple_dpia_answers['organization'] = organization.strip()
                 st.success("✅ Project information saved successfully!")
@@ -359,26 +359,9 @@ def show_assessment_form():
     
     st.markdown("---")
     
-    # Enhanced validation - check both saved values and current input values
+    # Simplified validation - only check saved values
     saved_project = st.session_state.simple_dpia_answers.get('project_name', '').strip()
     saved_org = st.session_state.simple_dpia_answers.get('organization', '').strip()
-    
-    # Also check current input values as fallback
-    current_project_input = st.session_state.get("project_name_input", '').strip()
-    current_org_input = st.session_state.get("organization_input", '').strip()
-    
-    # Use whichever value exists (saved or current input)
-    final_project = saved_project or current_project_input
-    final_org = saved_org or current_org_input
-    
-    # Force save current input values if they exist but aren't saved
-    if current_project_input and not saved_project:
-        st.session_state.simple_dpia_answers['project_name'] = current_project_input
-        final_project = current_project_input
-    
-    if current_org_input and not saved_org:
-        st.session_state.simple_dpia_answers['organization'] = current_org_input
-        final_org = current_org_input
     
     # Count completed questions
     completed_answers = 0
@@ -387,9 +370,9 @@ def show_assessment_form():
         if saved_answer in ["Yes", "No"]:
             completed_answers += 1
     
-    # Simple validation checks using final values
-    project_complete = bool(final_project)
-    org_complete = bool(final_org) 
+    # Simple validation checks using saved values
+    project_complete = bool(saved_project)
+    org_complete = bool(saved_org) 
     questions_complete = completed_answers == len(questions)
     
     # Enable download when all three sections are complete
@@ -402,10 +385,6 @@ def show_assessment_form():
         st.write("**Current Values:**")
         st.write(f"- Saved Project: '{saved_project}'")
         st.write(f"- Saved Organization: '{saved_org}'")
-        st.write(f"- Current Project Input: '{current_project_input}'")
-        st.write(f"- Current Org Input: '{current_org_input}'")
-        st.write(f"- Final Project: '{final_project}'")
-        st.write(f"- Final Organization: '{final_org}'")
         st.write(f"- Project Complete: {project_complete}")
         st.write(f"- Org Complete: {org_complete}")
         st.write(f"- Questions Complete: {questions_complete} ({completed_answers}/{len(questions)})")
@@ -417,27 +396,20 @@ def show_assessment_form():
             status = "✓" if answer in ["Yes", "No"] else "✗"
             st.write(f"- Q{i} ({q['key']}): '{answer}' {status}")
         
-        st.write("**Relevant Session State Keys:**")
-        relevant_keys = ['simple_dpia_answers', 'project_name_input', 'organization_input']
-        for key in relevant_keys:
-            if key in st.session_state:
-                st.write(f"- {key}: {st.session_state[key]}")
+        st.write("**Session State - DPIA Answers:**")
+        if 'simple_dpia_answers' in st.session_state:
+            for key, value in st.session_state.simple_dpia_answers.items():
+                st.write(f"- {key}: '{value}'")
         
         # Show radio button keys
         radio_keys = [k for k in st.session_state.keys() if str(k).startswith('radio_')]
-        for key in radio_keys:
-            st.write(f"- {key}: {st.session_state[key]}")
+        if radio_keys:
+            st.write("**Radio Button States:**")
+            for key in radio_keys:
+                st.write(f"- {key}: {st.session_state[key]}")
         
         # Emergency fix button
         if st.button("🚨 Emergency Fix - Force Save Everything"):
-            # Force save project info from session state
-            proj_input = st.session_state.get("project_name_input", "")
-            org_input = st.session_state.get("organization_input", "")
-            if proj_input:
-                st.session_state.simple_dpia_answers['project_name'] = proj_input
-            if org_input:
-                st.session_state.simple_dpia_answers['organization'] = org_input
-            
             # Force save all radio button answers
             for q in questions:
                 radio_key = f"radio_{q['key']}"
@@ -487,13 +459,9 @@ def show_assessment_form():
             for step in remaining_steps:
                 st.markdown(f"- {step}")
         
-        # Force save button if project info exists but isn't validated
-        if current_project_input and current_org_input and not (project_complete and org_complete):
-            if st.button("🔧 Force Save Project Information", type="secondary"):
-                st.session_state.simple_dpia_answers['project_name'] = current_project_input
-                st.session_state.simple_dpia_answers['organization'] = current_org_input
-                st.success("Project information force saved!")
-                st.rerun()
+        # Additional help for project information
+        if not (project_complete and org_complete):
+            st.info("💡 Use the 'Save Project Information' button in the form above to complete Step 1")
     
     if st.button("📥 Download HTML Report", type="primary", disabled=not can_submit):
         with st.spinner("Generating DPIA report..."):
