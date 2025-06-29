@@ -1380,26 +1380,8 @@ else:
                 # Create a card-based view of recent scans
                 st.markdown('<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
                 
-                if VISUALIZATION_AVAILABLE and pd and hasattr(display_df, 'iterrows'):
-                    # DataFrame iteration
-                    for idx, row in display_df.iterrows():
-                        scan_id = recent_scans_df.iloc[idx].get('scan_id', '') if hasattr(recent_scans_df, 'iloc') else ''
-                        scan_type = row.get('Type', 'Unknown')
-                        pii_found = row.get('PII Found', 0)
-                        high_risk = row.get('High Risk', 0)
-                elif isinstance(display_df, list):
-                    # List iteration
-                    for idx, row in enumerate(display_df):
-                        if isinstance(row, dict):
-                            scan_id = row.get('Scan ID', 'N/A')
-                            scan_type = row.get('Type', 'Unknown')
-                            pii_found = row.get('PII Found', 0)
-                            high_risk = row.get('High Risk', 0)
-                        else:
-                            continue
-                    timestamp = row.get('Date & Time', '')
-                    display_id = row.get('Scan ID', 'UNK-ID')
-                    
+                def render_scan_card(scan_id, scan_type, pii_found, high_risk, timestamp, display_id):
+                    """Render a single scan card"""
                     # Determine color based on high risk count
                     if high_risk > 10:
                         risk_color = "#ef4444"  # Red
@@ -1414,8 +1396,17 @@ else:
                         risk_color = "#10b981"  # Green
                         risk_text = "Low"
                     
-                    date_str = timestamp.strftime('%b %d, %Y') if isinstance(timestamp, pd.Timestamp) else timestamp
-                    time_str = timestamp.strftime('%H:%M') if isinstance(timestamp, pd.Timestamp) else ""
+                    # Safe timestamp handling without pandas dependency
+                    if hasattr(timestamp, 'strftime'):
+                        try:
+                            date_str = timestamp.strftime('%b %d, %Y')
+                            time_str = timestamp.strftime('%H:%M')
+                        except:
+                            date_str = str(timestamp) if timestamp else 'N/A'
+                            time_str = ""
+                    else:
+                        date_str = str(timestamp) if timestamp else 'N/A'
+                        time_str = ""
                     
                     # Generate card HTML
                     card_html = f"""
@@ -1423,38 +1414,54 @@ else:
                                 border: 1px solid #e5e7eb; padding: 15px; flex: 1; min-width: 260px; max-width: 350px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <h4 style="margin: 0; font-size: 16px; color: #1e40af;">{display_id}</h4>
-                            <span style="background: {risk_color}; color: white; padding: 2px 6px; border-radius: 12px; 
-                                   font-size: 12px; font-weight: 500;">{risk_text}</span>
+                            <span style="background: {risk_color}; color: white; padding: 2px 8px; 
+                                        border-radius: 12px; font-size: 12px; font-weight: 500;">{risk_text}</span>
                         </div>
-                        <div style="color: #4b5563; font-size: 14px; margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Type:</span>
-                                <span style="font-weight: 500;">{scan_type}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>PII Found:</span>
-                                <span style="font-weight: 500;">{pii_found}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Date:</span>
-                                <span style="font-weight: 500;">{date_str}</span>
-                            </div>
+                        <div style="margin-bottom: 10px;">
+                            <div style="color: #374151; font-weight: 500; margin-bottom: 4px;">{scan_type}</div>
+                            <div style="color: #6b7280; font-size: 14px;">{date_str} {time_str}</div>
                         </div>
-                        <div style="display: flex; gap: 8px; margin-top: 12px;">
-                            <button onclick="window.parent.postMessage({{'action': 'open_report', 'scan_id': '{scan_id}'}}, '*')"
-                                    style="background: #2563eb; color: white; border: none; border-radius: 4px; padding: 5px 10px; 
-                                          font-size: 12px; cursor: pointer; flex: 1; text-align: center;">
-                                View Report
-                            </button>
-                            <button onclick="window.parent.postMessage({{'action': 'download_pdf', 'scan_id': '{scan_id}'}}, '*')"
-                                    style="background: #f3f4f6; color: #1f2937; border: 1px solid #d1d5db; border-radius: 4px; 
-                                          padding: 5px 10px; font-size: 12px; cursor: pointer; flex: 1; text-align: center;">
-                                Download PDF
-                            </button>
+                        <div style="display: flex; justify-content: space-between; padding-top: 10px; 
+                                    border-top: 1px solid #f3f4f6;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 18px; font-weight: 600; color: #1f2937;">{pii_found}</div>
+                                <div style="font-size: 12px; color: #6b7280;">PII Found</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 18px; font-weight: 600; color: {risk_color};">{high_risk}</div>
+                                <div style="font-size: 12px; color: #6b7280;">High Risk</div>
+                            </div>
                         </div>
                     </div>
                     """
                     st.markdown(card_html, unsafe_allow_html=True)
+                
+                if VISUALIZATION_AVAILABLE and pd and hasattr(display_df, 'iterrows'):
+                    # DataFrame iteration
+                    for idx, row in display_df.iterrows():
+                        scan_id = recent_scans_df.iloc[idx].get('scan_id', '') if hasattr(recent_scans_df, 'iloc') else ''
+                        scan_type = row.get('Type', 'Unknown')
+                        pii_found = row.get('PII Found', 0)
+                        high_risk = row.get('High Risk', 0)
+                        timestamp = row.get('Date & Time', '')
+                        display_id = row.get('Scan ID', 'UNK-ID')
+                        
+                        render_scan_card(scan_id, scan_type, pii_found, high_risk, timestamp, display_id)
+                        
+                elif isinstance(display_df, list):
+                    # List iteration
+                    for idx, row in enumerate(display_df):
+                        if isinstance(row, dict):
+                            scan_id = row.get('Scan ID', 'N/A')
+                            scan_type = row.get('Type', 'Unknown')
+                            pii_found = row.get('PII Found', 0)
+                            high_risk = row.get('High Risk', 0)
+                            timestamp = row.get('Date & Time', '')
+                            display_id = row.get('Scan ID', 'UNK-ID')
+                            
+                            render_scan_card(scan_id, scan_type, pii_found, high_risk, timestamp, display_id)
+                        else:
+                            continue
                 
                 st.markdown('</div>', unsafe_allow_html=True)
                 
