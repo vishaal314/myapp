@@ -409,6 +409,106 @@ class ResultsAggregator:
             print(f"Error retrieving user scans from file: {str(e)}")
             return []
 
+    def get_recent_scans(self, days: int = 30, username: str = None) -> List[Dict[str, Any]]:
+        """
+        Get recent scans within the specified number of days.
+        
+        Args:
+            days: Number of days to look back
+            username: Optional username filter
+            
+        Returns:
+            List of recent scan results
+        """
+        if self.use_file_storage:
+            return self._get_recent_scans_file(days, username)
+        
+        try:
+            conn = self._get_connection()
+            if not conn:
+                self.use_file_storage = True
+                return self._get_recent_scans_file(days, username)
+            
+            cursor = conn.cursor()
+            
+            # Calculate cutoff date
+            cutoff_date = datetime.now() - timedelta(days=days)
+            
+            # Build query with optional username filter
+            if username:
+                cursor.execute("""
+                    SELECT scan_id, username, timestamp, scan_type, region, 
+                           file_count, total_pii_found, high_risk_count, result_json
+                    FROM scans 
+                    WHERE timestamp >= %s AND username = %s
+                    ORDER BY timestamp DESC
+                """, (cutoff_date, username))
+            else:
+                cursor.execute("""
+                    SELECT scan_id, username, timestamp, scan_type, region, 
+                           file_count, total_pii_found, high_risk_count, result_json
+                    FROM scans 
+                    WHERE timestamp >= %s
+                    ORDER BY timestamp DESC
+                """, (cutoff_date,))
+            
+            results = cursor.fetchall()
+            
+            cursor.close()
+            conn.close()
+            
+            # Convert to list of dictionaries
+            scans = []
+            for result in results:
+                scans.append({
+                    'scan_id': result[0],
+                    'username': result[1],
+                    'timestamp': result[2].isoformat() if result[2] else None,
+                    'scan_type': result[3],
+                    'region': result[4],
+                    'file_count': result[5],
+                    'total_pii_found': result[6],
+                    'high_risk_count': result[7],
+                    'result': result[8]
+                })
+            
+            return scans
+        except Exception as e:
+            print(f"Error retrieving recent scans: {str(e)}")
+            self.use_file_storage = True
+            return self._get_recent_scans_file(days, username)
+    
+    def _get_recent_scans_file(self, days: int = 30, username: str = None) -> List[Dict[str, Any]]:
+        """Get recent scans from file storage."""
+        try:
+            if not os.path.exists('data/scans.json'):
+                return []
+            
+            with open('data/scans.json', 'r') as f:
+                all_scans = json.load(f)
+            
+            # Calculate cutoff date
+            cutoff_date = datetime.now() - timedelta(days=days)
+            
+            # Filter scans
+            recent_scans = []
+            for scan in all_scans:
+                try:
+                    scan_date = datetime.fromisoformat(scan['timestamp'])
+                    if scan_date >= cutoff_date:
+                        if username is None or scan.get('username') == username:
+                            recent_scans.append(scan)
+                except (ValueError, KeyError):
+                    continue
+            
+            # Sort by timestamp descending
+            recent_scans.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+            
+            return recent_scans
+        except Exception as e:
+            print(f"Error retrieving recent scans from file: {str(e)}")
+            return []
+
     def log_audit_event(self, username: str, action: str, details: Optional[Dict[str, Any]] = None) -> None:
         """
         Log an audit event for tracking user actions and system activities.

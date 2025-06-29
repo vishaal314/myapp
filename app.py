@@ -1320,28 +1320,62 @@ else:
                     display_df = recent_scans_df
                 
                 # Create a display scan ID
-                if 'scan_id' in display_df.columns:
+                if VISUALIZATION_AVAILABLE and pd and hasattr(display_df, 'columns') and 'scan_id' in display_df.columns:
                     display_df['display_id'] = display_df.apply(
                         lambda row: f"{row.get('scan_type', 'UNK')[:3].upper()}-{row['timestamp'].strftime('%m%d')}-{row.get('scan_id', '')[:6]}",
                         axis=1
                     )
+                elif isinstance(display_df, list) and len(display_df) > 0:
+                    # Handle list format
+                    for i, scan in enumerate(display_df):
+                        if isinstance(scan, dict):
+                            scan_type = scan.get('scan_type', 'UNK')[:3].upper()
+                            timestamp = scan.get('timestamp', '')
+                            scan_id = scan.get('scan_id', '')[:6]
+                            try:
+                                if isinstance(timestamp, str):
+                                    from datetime import datetime
+                                    dt = datetime.fromisoformat(timestamp)
+                                    timestamp_str = dt.strftime('%m%d')
+                                else:
+                                    timestamp_str = '0000'
+                                scan['display_id'] = f"{scan_type}-{timestamp_str}-{scan_id}"
+                            except:
+                                scan['display_id'] = f"{scan_type}-{scan_id}"
                 
                 # Select and rename columns for better display
-                cols_to_display = ['display_id', 'scan_type', 'timestamp', 'total_pii_found', 'high_risk_count', 'region']
-                cols_to_display = [col for col in cols_to_display if col in display_df.columns]
-                
-                rename_map = {
-                    'display_id': 'Scan ID',
-                    'scan_type': 'Type',
-                    'timestamp': 'Date & Time',
-                    'total_pii_found': 'PII Found',
-                    'high_risk_count': 'High Risk',
-                    'region': 'Region'
-                }
-                
-                # Rename columns that exist
-                rename_cols = {k: v for k, v in rename_map.items() if k in cols_to_display}
-                display_df = display_df[cols_to_display].rename(columns=rename_cols)
+                if VISUALIZATION_AVAILABLE and pd and hasattr(display_df, 'columns'):
+                    # DataFrame handling
+                    cols_to_display = ['display_id', 'scan_type', 'timestamp', 'total_pii_found', 'high_risk_count', 'region']
+                    cols_to_display = [col for col in cols_to_display if col in display_df.columns]
+                    
+                    rename_map = {
+                        'display_id': 'Scan ID',
+                        'scan_type': 'Type',
+                        'timestamp': 'Date & Time',
+                        'total_pii_found': 'PII Found',
+                        'high_risk_count': 'High Risk',
+                        'region': 'Region'
+                    }
+                    
+                    # Rename columns that exist
+                    rename_cols = {k: v for k, v in rename_map.items() if k in cols_to_display}
+                    display_df = display_df[cols_to_display].rename(columns=rename_cols)
+                elif isinstance(display_df, list):
+                    # Convert list to simplified display format
+                    display_data = []
+                    for scan in display_df:
+                        if isinstance(scan, dict):
+                            display_item = {
+                                'Scan ID': scan.get('display_id', scan.get('scan_id', 'N/A')[:8]),
+                                'Type': scan.get('scan_type', 'Unknown'),
+                                'Date & Time': scan.get('timestamp', 'N/A'),
+                                'PII Found': scan.get('total_pii_found', 0),
+                                'High Risk': scan.get('high_risk_count', 0),
+                                'Region': scan.get('region', 'N/A')
+                            }
+                            display_data.append(display_item)
+                    display_df = display_data
                 
                 # Create a card-based view of recent scans
                 st.markdown('<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
