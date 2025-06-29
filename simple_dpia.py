@@ -940,45 +940,13 @@ def show_results():
                 )
             except Exception as e:
                 st.error(f"Error generating JSON: {str(e)}")
-                        file_name=filename,
-                        mime="text/html",
-                        type="primary",
-                        help="Download complete assessment report as HTML file"
-                    )
-                    
-                    st.success("HTML report ready for download")
-                    
-                else:
-                    st.error("Failed to generate complete HTML report")
-                    
-            except Exception as e:
-                st.error(f"Report generation error: {str(e)}")
-                
-                # Provide fallback minimal report
-                minimal_html = f"""<!DOCTYPE html>
-<html><head><title>DPIA Assessment Report</title>
-<style>body{{font-family:Arial,sans-serif;margin:40px;}} .header{{background:#4a90e2;color:white;padding:20px;text-align:center;}}</style>
-</head><body>
-<div class="header"><h1>DPIA Assessment Report</h1></div>
-<h2>Project Information</h2>
-<p><strong>Project:</strong> {data.get('project_name', 'Unknown')}</p>
-<p><strong>Organization:</strong> {data.get('organization', 'Unknown')}</p>
-<p><strong>Assessment ID:</strong> {data.get('assessment_id', 'Unknown')}</p>
-<p><strong>Risk Score:</strong> {data.get('risk_score', 0)}/100</p>
-<p><strong>Risk Level:</strong> {data.get('risk_level', 'Unknown')}</p>
-<p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-<h2>Assessment Status</h2>
-<p>{data.get('dpia_required', 'Assessment completed successfully')}</p>
-</body></html>"""
-                
-                st.download_button(
-                    label="📄 Download Basic Report",
-                    data=minimal_html,
-                    file_name=f"DPIA_Basic_{data.get('assessment_id', 'unknown')[:8]}.html",
-                    mime="text/html"
-                )
         
-        with col2:
+        # Enhanced action buttons section
+        st.markdown("---")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
             if st.button("🆕 New Assessment", help="Start a fresh DPIA assessment"):
                 # Clear session state with confirmation
                 st.session_state.simple_dpia_answers = {}
@@ -986,6 +954,28 @@ def show_results():
                 if 'simple_dpia_report_data' in st.session_state:
                     del st.session_state.simple_dpia_report_data
                 st.rerun()
+        
+        with col2:
+            if st.button("📄 Generate Basic Report", help="Generate a simplified report"):
+                try:
+                    basic_report = f"""
+                    <html><head><title>DPIA Quick Report</title></head>
+                    <body style="font-family:Arial;margin:20px;">
+                    <h1>DPIA Assessment Report</h1>
+                    <p><strong>Project:</strong> {data.get('project_name', 'Unknown')}</p>
+                    <p><strong>Risk Score:</strong> {data.get('risk_score', 0)}/100</p>
+                    <p><strong>Risk Level:</strong> {data.get('risk_level', 'Unknown')}</p>
+                    </body></html>
+                    """
+                    st.download_button(
+                        label="📥 Download Basic Report",
+                        data=basic_report,
+                        file_name=f"DPIA_Basic_{data.get('assessment_id', 'report')[:8]}.html",
+                        mime="text/html",
+                        key="basic_report_download"
+                    )
+                except Exception as e:
+                    st.error(f"Error generating basic report: {str(e)}")
         
         with col3:
             if st.button("📚 View in History", help="View this assessment in the history section"):
