@@ -6,7 +6,7 @@ and error handling for the Simple DPIA application.
 """
 
 import psycopg2
-from psycopg2 import pool
+import psycopg2.pool
 import os
 import json
 from datetime import datetime

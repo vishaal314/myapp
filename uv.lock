@@ -917,6 +917,18 @@ wheels = [
 ]
 
 [[package]]
+name = "psycopg2-pool"
+version = "1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "psycopg2-binary" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ba/8f/a5ae396ec7aa955e9d234b7d38ae3e975a47fbf45c7f4571be4b0e7473b4/psycopg2-pool-1.2.tar.gz", hash = "sha256:e9ec38d5af15b7cef5546452797935129c99482b25646f258a21786bfb826bf3", size = 11385 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e6/37/99fc8b2725df9b9c3df8a184209480290d1300cd7a4cb14ed6b29ce6ef9e/psycopg2_pool-1.2-py2.py3-none-any.whl", hash = "sha256:3c8251f6fac3145eb4c5bf3407bb61543dbbcbb8117af1341cd7a8b5468aedbb", size = 7349 },
+]
+
+[[package]]
 name = "pyarrow"
 version = "19.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1235,6 +1247,7 @@ dependencies = [
     { name = "pillow" },
     { name = "plotly" },
     { name = "psycopg2-binary" },
+    { name = "psycopg2-pool" },
     { name = "pypdf2" },
     { name = "python-whois" },
     { name = "pyyaml" },
@@ -1258,6 +1271,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=11.2.1" },
     { name = "plotly", specifier = ">=6.1.2" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "psycopg2-pool", specifier = ">=1.2" },
     { name = "pypdf2", specifier = ">=3.0.1" },
     { name = "python-whois", specifier = ">=0.9.5" },
     { name = "pyyaml", specifier = ">=6.0.2" },
