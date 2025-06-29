@@ -1380,11 +1380,23 @@ else:
                 # Create a card-based view of recent scans
                 st.markdown('<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
                 
-                for idx, row in display_df.iterrows():
-                    scan_id = recent_scans_df.iloc[idx].get('scan_id', '')
-                    scan_type = row.get('Type', 'Unknown')
-                    pii_found = row.get('PII Found', 0)
-                    high_risk = row.get('High Risk', 0)
+                if VISUALIZATION_AVAILABLE and pd and hasattr(display_df, 'iterrows'):
+                    # DataFrame iteration
+                    for idx, row in display_df.iterrows():
+                        scan_id = recent_scans_df.iloc[idx].get('scan_id', '') if hasattr(recent_scans_df, 'iloc') else ''
+                        scan_type = row.get('Type', 'Unknown')
+                        pii_found = row.get('PII Found', 0)
+                        high_risk = row.get('High Risk', 0)
+                elif isinstance(display_df, list):
+                    # List iteration
+                    for idx, row in enumerate(display_df):
+                        if isinstance(row, dict):
+                            scan_id = row.get('Scan ID', 'N/A')
+                            scan_type = row.get('Type', 'Unknown')
+                            pii_found = row.get('PII Found', 0)
+                            high_risk = row.get('High Risk', 0)
+                        else:
+                            continue
                     timestamp = row.get('Date & Time', '')
                     display_id = row.get('Scan ID', 'UNK-ID')
                     
