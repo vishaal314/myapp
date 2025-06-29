@@ -538,15 +538,34 @@ def show_assessment_form():
         if not (project_complete and org_complete):
             st.info("💡 Use the 'Save Project Information' button in the form above to complete Step 1")
     
-    # Primary download button
+    # Enhanced download section
+    st.markdown("### 📥 Download Report")
+    
+    if can_submit:
+        st.success("All requirements met! Your report is ready to download.")
+    else:
+        st.info("Complete all sections above to enable the primary download option.")
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        download_primary = st.button("📥 Download HTML Report", type="primary", disabled=not can_submit, key="download_primary_btn")
+        st.markdown("**Full Validation Download**")
+        download_primary = st.button(
+            "📥 Download HTML Report", 
+            type="primary", 
+            disabled=not can_submit, 
+            key="download_primary_btn",
+            help="Download report after full validation (recommended)"
+        )
         
     with col2:
-        # Alternative direct download for troubleshooting
-        force_download = st.button("🚀 Force Download Report", help="Generate report with current data", key="force_download_btn")
+        st.markdown("**Quick Download**")
+        force_download = st.button(
+            "🚀 Generate Report Now", 
+            help="Generate report with current data (for testing/preview)", 
+            key="force_download_btn",
+            type="secondary"
+        )
     
     # Handle force download
     if force_download:
@@ -602,16 +621,57 @@ def show_assessment_form():
                 project_clean = current_project.replace(' ', '_').replace('/', '_')
                 filename = f"DPIA_Report_{project_clean}_{assessment_data['assessment_id'][:8]}.html"
                 
-                st.download_button(
-                    label="📄 Download Generated Report",
-                    data=html_report,
-                    file_name=filename,
-                    mime="text/html",
-                    type="secondary",
-                    key="force_download_btn_final"
-                )
+                # Create multiple download options
+                col_a, col_b = st.columns(2)
                 
-                st.success("Report generated successfully! Click above to download.")
+                with col_a:
+                    st.download_button(
+                        label="📄 Download HTML Report",
+                        data=html_report,
+                        file_name=filename,
+                        mime="text/html",
+                        type="secondary",
+                        key="force_download_btn_final"
+                    )
+                
+                with col_b:
+                    # Generate PDF version (simplified)
+                    try:
+                        from reportlab.lib.pagesizes import letter
+                        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+                        from reportlab.lib.styles import getSampleStyleSheet
+                        from io import BytesIO
+                        
+                        buffer = BytesIO()
+                        doc = SimpleDocTemplate(buffer, pagesize=letter)
+                        styles = getSampleStyleSheet()
+                        story = []
+                        
+                        # Add content to PDF
+                        story.append(Paragraph(f"DPIA Assessment Report", styles['Title']))
+                        story.append(Spacer(1, 12))
+                        story.append(Paragraph(f"Project: {current_project}", styles['Normal']))
+                        story.append(Paragraph(f"Organization: {current_org}", styles['Normal']))
+                        story.append(Paragraph(f"Risk Level: {risk_level}", styles['Normal']))
+                        story.append(Paragraph(f"Risk Score: {risk_score}/100", styles['Normal']))
+                        
+                        doc.build(story)
+                        pdf_data = buffer.getvalue()
+                        buffer.close()
+                        
+                        pdf_filename = filename.replace('.html', '.pdf')
+                        st.download_button(
+                            label="📑 Download PDF Report",
+                            data=pdf_data,
+                            file_name=pdf_filename,
+                            mime="application/pdf",
+                            type="secondary",
+                            key="force_download_pdf_btn"
+                        )
+                    except ImportError:
+                        st.info("PDF generation requires additional setup")
+                
+                st.success("Report generated successfully! Choose your preferred format above.")
             else:
                 st.error("Failed to generate report")
                 
@@ -788,6 +848,98 @@ def show_results():
                     st.download_button(
                         label="📄 Download HTML Report",
                         data=html_report,
+                        file_name=filename,
+                        mime="text/html",
+                        type="primary",
+                        key="results_html_download"
+                    )
+                else:
+                    st.error("Failed to generate HTML report")
+            except Exception as e:
+                st.error(f"Error generating HTML report: {str(e)}")
+        
+        with col2:
+            # PDF export
+            try:
+                import json
+                from reportlab.lib.pagesizes import letter
+                from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+                from reportlab.lib.styles import getSampleStyleSheet
+                from io import BytesIO
+                
+                buffer = BytesIO()
+                doc = SimpleDocTemplate(buffer, pagesize=letter)
+                styles = getSampleStyleSheet()
+                story = []
+                
+                # PDF content
+                story.append(Paragraph("DPIA Assessment Report", styles['Title']))
+                story.append(Spacer(1, 12))
+                story.append(Paragraph(f"Project: {data.get('project_name', 'Unknown')}", styles['Normal']))
+                story.append(Paragraph(f"Organization: {data.get('organization', 'Unknown')}", styles['Normal']))
+                story.append(Paragraph(f"Risk Level: {data.get('risk_level', 'Unknown')}", styles['Normal']))
+                story.append(Paragraph(f"Risk Score: {data.get('risk_score', 0)}/100", styles['Normal']))
+                story.append(Paragraph(f"Assessment Date: {data.get('assessment_date', 'Unknown')}", styles['Normal']))
+                story.append(Spacer(1, 12))
+                story.append(Paragraph("DPIA Requirement:", styles['Heading2']))
+                story.append(Paragraph(data.get('dpia_required', 'Assessment unavailable'), styles['Normal']))
+                
+                doc.build(story)
+                pdf_data = buffer.getvalue()
+                buffer.close()
+                
+                pdf_filename = filename.replace('.html', '.pdf')
+                st.download_button(
+                    label="📑 Download PDF Report",
+                    data=pdf_data,
+                    file_name=pdf_filename,
+                    mime="application/pdf",
+                    type="secondary",
+                    key="results_pdf_download"
+                )
+            except ImportError:
+                st.info("PDF generation requires additional setup")
+            except Exception as e:
+                st.error(f"Error generating PDF: {str(e)}")
+        
+        with col3:
+            # JSON export for data portability
+            try:
+                import json
+                
+                # Create clean export data
+                export_data = {
+                    'assessment_metadata': {
+                        'assessment_id': data.get('assessment_id'),
+                        'project_name': data.get('project_name'),
+                        'organization': data.get('organization'),
+                        'assessment_date': data.get('assessment_date'),
+                        'assessor_name': data.get('assessor_name'),
+                        'assessor_role': data.get('assessor_role')
+                    },
+                    'risk_assessment': {
+                        'risk_score': data.get('risk_score', 0),
+                        'risk_level': data.get('risk_level'),
+                        'dpia_required': data.get('dpia_required'),
+                        'compliance_status': data.get('compliance_status')
+                    },
+                    'assessment_answers': data.get('answers', {}),
+                    'export_timestamp': datetime.now().isoformat()
+                }
+                
+                json_data = json.dumps(export_data, indent=2, ensure_ascii=False)
+                json_filename = filename.replace('.html', '.json')
+                
+                st.download_button(
+                    label="📊 Download JSON Data",
+                    data=json_data,
+                    file_name=json_filename,
+                    mime="application/json",
+                    type="secondary",
+                    key="results_json_download"
+                )
+            except Exception as e:
+                st.error(f"Error generating JSON: {str(e)}")
                         file_name=filename,
                         mime="text/html",
                         type="primary",
