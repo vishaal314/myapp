@@ -223,48 +223,75 @@ def show_assessment_form():
         }
     ]
     
-    # Project Information - Simplified Input Section
+    # Enhanced Project Information Section
     st.markdown("### 📋 Project Information")
-    st.markdown("**Please provide basic information about your project:**")
+    st.info("💡 **Step 1 of 3:** Enter your project details to begin the DPIA assessment.")
     
-    # Use form for reliable submission
-    with st.form("project_info_form"):
-        col1, col2 = st.columns(2)
+    # Use form for reliable submission with enhanced styling
+    with st.form("project_info_form", clear_on_submit=False):
+        st.markdown("#### Basic Project Details")
         
         # Get current saved values for display
         current_project = st.session_state.simple_dpia_answers.get('project_name', '')
         current_org = st.session_state.simple_dpia_answers.get('organization', '')
         
-        with col1:
-            project_name = st.text_input(
-                "Project Name *",
-                value=current_project,
-                placeholder="Enter your project name",
-                help="Name of the project or processing activity"
-            )
+        # Full-width inputs for better visibility
+        project_name = st.text_input(
+            "🏷️ Project Name *",
+            value=current_project,
+            placeholder="e.g., Customer Data Management System, HR Analytics Platform",
+            help="Enter the name of your project or data processing activity"
+        )
         
-        with col2:
-            organization = st.text_input(
-                "Organization *",
-                value=current_org,
-                placeholder="Your organization name",
-                help="Name of your organization or company"
-            )
+        organization = st.text_input(
+            "🏢 Organization *",
+            value=current_org,
+            placeholder="e.g., Your Company Name, Department Name",
+            help="Enter your organization, company, or department name"
+        )
         
-        # Submit button for the form
-        submitted = st.form_submit_button("💾 Save Project Information", type="primary")
+        # Optional additional details in expandable section
+        with st.expander("📝 Additional Details (Optional)", expanded=False):
+            col1, col2 = st.columns(2)
+            with col1:
+                department = st.text_input(
+                    "📧 Department/Team",
+                    value=st.session_state.simple_dpia_answers.get('department', ''),
+                    placeholder="e.g., IT Department, Marketing Team",
+                    help="Specific department or team conducting the assessment"
+                )
+            with col2:
+                contact_email = st.text_input(
+                    "📧 Contact Email",
+                    value=st.session_state.simple_dpia_answers.get('contact_email', ''),
+                    placeholder="e.g., privacy@company.com",
+                    help="Contact email for this assessment"
+                )
+        
+        # Enhanced submit button with better styling
+        submitted = st.form_submit_button("💾 Save Project Information", type="primary", use_container_width=True)
         
         if submitted:
             # Enhanced validation with complete null safety
             project_text = str(project_name or "").strip()
             org_text = str(organization or "").strip()
+            dept_text = str(department or "").strip()
+            email_text = str(contact_email or "").strip()
             
             project_valid = len(project_text) > 0
             org_valid = len(org_text) > 0
             
             if project_valid and org_valid:
+                # Save required fields
                 st.session_state.simple_dpia_answers['project_name'] = project_text
                 st.session_state.simple_dpia_answers['organization'] = org_text
+                
+                # Save optional fields if provided
+                if dept_text:
+                    st.session_state.simple_dpia_answers['department'] = dept_text
+                if email_text:
+                    st.session_state.simple_dpia_answers['contact_email'] = email_text
+                
                 st.success("✅ Project information saved successfully!")
                 st.rerun()
             else:
@@ -275,9 +302,32 @@ def show_assessment_form():
                     missing.append("Organization")
                 st.error(f"⚠️ Please provide: {' and '.join(missing)}")
     
-    # Show current saved status
+    # Enhanced status display section
+    st.markdown("---")
+    
+    # Current project status
     saved_project = st.session_state.simple_dpia_answers.get('project_name', '')
     saved_org = st.session_state.simple_dpia_answers.get('organization', '')
+    saved_dept = st.session_state.simple_dpia_answers.get('department', '')
+    saved_email = st.session_state.simple_dpia_answers.get('contact_email', '')
+    
+    if saved_project and saved_org:
+        st.markdown("### ✅ Current Project Settings")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info(f"**Project:** {saved_project}")
+            if saved_dept:
+                st.info(f"**Department:** {saved_dept}")
+        with col2:
+            st.info(f"**Organization:** {saved_org}")
+            if saved_email:
+                st.info(f"**Contact:** {saved_email}")
+        
+        # Progress indicator
+        st.success("✅ **Ready for Step 2:** You can now proceed to answer the DPIA questions below.")
+    else:
+        st.warning("⚠️ **Please complete project information above to continue with the assessment.**")
     
     if saved_project and saved_org:
         st.info(f"📋 Current Project: **{saved_project}** | **{saved_org}**")
