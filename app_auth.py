@@ -212,7 +212,7 @@ def cleanup_session_state():
             del st.session_state[key]
     
     # Clear scan-related session state
-    scan_keys = [key for key in st.session_state.keys() if key.startswith(('scan_', 'dpia_', 'simple_dpia_'))]
+    scan_keys = [key for key in st.session_state.keys() if str(key).startswith(('scan_', 'dpia_', 'simple_dpia_'))]
     for key in scan_keys:
         del st.session_state[key]
     

@@ -131,7 +131,7 @@ class SessionManager:
         
         # Count temporary keys
         for key in st.session_state.keys():
-            if any(key.startswith(pattern) for pattern in SessionManager.TEMP_KEYS_PATTERNS):
+            if any(str(key).startswith(pattern) for pattern in SessionManager.TEMP_KEYS_PATTERNS):
                 session_info['temp_keys'].append(key)
         
         session_info['temp_key_count'] = len(session_info['temp_keys'])
