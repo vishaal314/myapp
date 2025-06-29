@@ -4367,28 +4367,12 @@ else:
                         # Offer choice between simple and comprehensive DPIA
                         st.markdown("### Choose Your DPIA Assessment Type")
                         
-                        dpia_type = st.radio(
-                            "Select the assessment that best fits your needs:",
-                            options=[
-                                "⚡ Simple DPIA - Quick yes/no questions with instant report",
-                                "📋 Comprehensive DPIA - Full 7-step detailed assessment"
-                            ],
-                            index=0,
-                            help="Simple DPIA provides fast compliance checking. Comprehensive DPIA offers detailed analysis."
-                        )
-                        
-                        if dpia_type.startswith("⚡ Simple"):
-                            try:
-                                from simple_dpia import run_simple_dpia
-                                run_simple_dpia()
-                            except ImportError:
-                                st.error("Simple DPIA module not available")
-                        else:
-                            try:
-                                from comprehensive_dpia_assessment import run_comprehensive_dpia_assessment
-                                run_comprehensive_dpia_assessment()
-                            except ImportError:
-                                st.error("Comprehensive DPIA module not available")
+                        # Run Simple DPIA directly without options
+                        try:
+                            from simple_dpia import run_simple_dpia
+                            run_simple_dpia()
+                        except ImportError:
+                            st.error("Simple DPIA module not available")
                         st.markdown("""
                         <style>
                         /* Hide the Start Scan button */
