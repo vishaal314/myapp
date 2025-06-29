@@ -923,7 +923,8 @@ else:
     print(f"  report.generate: '{report_title}'")
     
     # Base navigation options available to all logged-in users
-    nav_options = [scan_title, dashboard_title, history_title, results_title, report_title]
+    simple_dpia_title = "Simple DPIA"
+    nav_options = [scan_title, simple_dpia_title, dashboard_title, history_title, results_title, report_title]
     
     # Add Admin section if user has admin permissions
     admin_title = None
@@ -948,6 +949,7 @@ else:
             # Default icon mapping
             icon_map = {
                 get_text("scan.title"): "🔍",
+                "Simple DPIA": "📝",
                 get_text("dashboard.welcome"): "📊",
                 get_text("history.title"): "📜",
                 get_text("results.title"): "📋",
@@ -1489,6 +1491,11 @@ else:
                 st.info(_("dashboard.no_scan_data"))
         else:
             st.info(_("dashboard.no_scan_data"))
+    
+    elif selected_nav == simple_dpia_title:
+        # Simple DPIA page - clean, minimal interface
+        from simple_dpia import run_simple_dpia
+        run_simple_dpia()
     
     elif selected_nav == scan_title:
         # Import permission checking functionality
