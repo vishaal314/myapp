@@ -542,82 +542,84 @@ def show_assessment_form():
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("📥 Download HTML Report", type="primary", disabled=not can_submit):
-            # Proceed with full validation download
-            pass
+        download_primary = st.button("📥 Download HTML Report", type="primary", disabled=not can_submit, key="download_primary_btn")
         
     with col2:
         # Alternative direct download for troubleshooting
-        if st.button("🚀 Force Download Report", help="Generate report with current data"):
-            # Simplified direct download
-            try:
-                # Get whatever data is available
-                current_project = st.session_state.simple_dpia_answers.get('project_name', 'Unknown Project')
-                current_org = st.session_state.simple_dpia_answers.get('organization', 'Unknown Organization')
-                
-                # Get current answers
-                current_answers = {}
-                for q in questions:
-                    answer = st.session_state.simple_dpia_answers.get(q['key'], 'No')
-                    current_answers[q['key']] = answer
-                
-                # Calculate risk
-                yes_count = sum(1 for answer in current_answers.values() if answer == "Yes")
-                risk_score = yes_count * 10
-                
-                if risk_score <= 30:
-                    risk_level = "Low Risk"
-                    dpia_req = "DPIA may not be required, but recommended for good practice"
-                elif risk_score <= 60:
-                    risk_level = "Medium Risk"
-                    dpia_req = "DPIA is likely required - proceed with caution"
-                else:
-                    risk_level = "High Risk"
-                    dpia_req = "DPIA is definitely required before processing"
-                
-                # Create assessment data
-                assessment_data = {
-                    'assessment_id': str(uuid.uuid4()),
-                    'project_name': current_project,
-                    'organization': current_org,
-                    'assessor_name': 'Assessment User',
-                    'assessor_role': 'Data Protection Assessment',
-                    'assessment_date': datetime.now().date().isoformat(),
-                    'answers': current_answers,
-                    'risk_score': risk_score,
-                    'risk_level': risk_level,
-                    'dpia_required': dpia_req,
-                    'compliance_status': 'Completed',
-                    'created_timestamp': datetime.now().isoformat(),
-                    'question_count': len(questions),
-                    'yes_answers': yes_count
-                }
-                
-                # Generate HTML report
-                html_report = generate_simple_html_report(assessment_data)
-                
-                if html_report and len(html_report) > 500:
-                    # Create download
-                    project_clean = current_project.replace(' ', '_').replace('/', '_')
-                    filename = f"DPIA_Report_{project_clean}_{assessment_data['assessment_id'][:8]}.html"
-                    
-                    st.download_button(
-                        label="📄 Download Generated Report",
-                        data=html_report,
-                        file_name=filename,
-                        mime="text/html",
-                        type="secondary"
-                    )
-                    
-                    st.success("Report generated successfully! Click above to download.")
-                else:
-                    st.error("Failed to generate report")
-                    
-            except Exception as e:
-                st.error(f"Error generating report: {str(e)}")
+        force_download = st.button("🚀 Force Download Report", help="Generate report with current data", key="force_download_btn")
     
-    # Continue with original validation logic
-    if st.button("📥 Download HTML Report", type="primary", disabled=not can_submit) or False:
+    # Handle force download
+    if force_download:
+        # Simplified direct download
+        try:
+            # Get whatever data is available
+            current_project = st.session_state.simple_dpia_answers.get('project_name', 'Unknown Project')
+            current_org = st.session_state.simple_dpia_answers.get('organization', 'Unknown Organization')
+            
+            # Get current answers
+            current_answers = {}
+            for q in questions:
+                answer = st.session_state.simple_dpia_answers.get(q['key'], 'No')
+                current_answers[q['key']] = answer
+            
+            # Calculate risk
+            yes_count = sum(1 for answer in current_answers.values() if answer == "Yes")
+            risk_score = yes_count * 10
+            
+            if risk_score <= 30:
+                risk_level = "Low Risk"
+                dpia_req = "DPIA may not be required, but recommended for good practice"
+            elif risk_score <= 60:
+                risk_level = "Medium Risk"
+                dpia_req = "DPIA is likely required - proceed with caution"
+            else:
+                risk_level = "High Risk"
+                dpia_req = "DPIA is definitely required before processing"
+            
+            # Create assessment data
+            assessment_data = {
+                'assessment_id': str(uuid.uuid4()),
+                'project_name': current_project,
+                'organization': current_org,
+                'assessor_name': 'Assessment User',
+                'assessor_role': 'Data Protection Assessment',
+                'assessment_date': datetime.now().date().isoformat(),
+                'answers': current_answers,
+                'risk_score': risk_score,
+                'risk_level': risk_level,
+                'dpia_required': dpia_req,
+                'compliance_status': 'Completed',
+                'created_timestamp': datetime.now().isoformat(),
+                'question_count': len(questions),
+                'yes_answers': yes_count
+            }
+            
+            # Generate HTML report
+            html_report = generate_simple_html_report(assessment_data)
+            
+            if html_report and len(html_report) > 500:
+                # Create download
+                project_clean = current_project.replace(' ', '_').replace('/', '_')
+                filename = f"DPIA_Report_{project_clean}_{assessment_data['assessment_id'][:8]}.html"
+                
+                st.download_button(
+                    label="📄 Download Generated Report",
+                    data=html_report,
+                    file_name=filename,
+                    mime="text/html",
+                    type="secondary",
+                    key="force_download_btn_final"
+                )
+                
+                st.success("Report generated successfully! Click above to download.")
+            else:
+                st.error("Failed to generate report")
+                
+        except Exception as e:
+            st.error(f"Error generating report: {str(e)}")
+    
+    # Handle primary download
+    if download_primary:
         with st.spinner("Generating DPIA report..."):
             try:
                 # Get current saved answers for processing
