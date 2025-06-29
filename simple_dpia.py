@@ -1,151 +1,60 @@
 """
-Simple DPIA Assessment - Yes/No Questions with Signature
+Simple DPIA Assessment - Refactored for Performance and Maintainability
 
 This module provides a simplified DPIA assessment interface with:
 - Simple yes/no questions only
 - Digital signature collection
 - Instant HTML report generation
-- Database storage
+- Database storage with connection pooling
+- Centralized validation and CSS loading
 """
 
 import streamlit as st
 import uuid
 from datetime import datetime
-import psycopg2
-import os
 import json
+from utils.database_manager import db_manager
+from utils.validation_helpers import FormValidator, UIValidator, DataValidator
 
-def init_db_connection():
-    """Initialize database connection"""
+def load_css():
+    """Load CSS styles from external file for better performance"""
     try:
-        DATABASE_URL = os.environ.get('DATABASE_URL')
-        if DATABASE_URL:
-            return psycopg2.connect(DATABASE_URL)
-        return None
-    except Exception as e:
-        st.error(f"Database connection error: {str(e)}")
-        return None
-
-def save_assessment_to_db(assessment_data):
-    """Save assessment to database"""
-    try:
-        conn = init_db_connection()
-        if conn:
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS simple_dpia_assessments (
-                    id SERIAL PRIMARY KEY,
-                    assessment_id VARCHAR(255) UNIQUE,
-                    project_name VARCHAR(255),
-                    created_date TIMESTAMP,
-                    assessment_data JSONB,
-                    risk_score INTEGER,
-                    compliance_status VARCHAR(100)
-                )
-            """)
-            
-            cursor.execute("""
-                INSERT INTO simple_dpia_assessments 
-                (assessment_id, project_name, created_date, assessment_data, risk_score, compliance_status)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                ON CONFLICT (assessment_id) DO UPDATE SET
-                    assessment_data = EXCLUDED.assessment_data,
-                    risk_score = EXCLUDED.risk_score,
-                    compliance_status = EXCLUDED.compliance_status
-            """, (
-                assessment_data.get('assessment_id'),
-                assessment_data.get('project_name', 'Unknown'),
-                datetime.now(),
-                json.dumps(assessment_data),
-                assessment_data.get('risk_score', 0),
-                assessment_data.get('compliance_status', 'Pending')
-            ))
-            
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return True
-    except Exception as e:
-        st.error(f"Error saving to database: {str(e)}")
-        return False
+        with open('static/dpia_styles.css', 'r') as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    except FileNotFoundError:
+        # Fallback inline styles if CSS file is not found
+        st.markdown("""
+        <style>
+        .simple-dpia-header {
+            background: linear-gradient(135deg, #4a90e2 0%, #7b68ee 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .question-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            border-left: 4px solid #4a90e2;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .risk-indicator { padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: center; font-weight: bold; }
+        .risk-low { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .risk-medium { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .risk-high { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        </style>
+        """, unsafe_allow_html=True)
 
 def run_simple_dpia():
     """Main function for simple DPIA assessment"""
     
-    # Custom CSS
-    st.markdown("""
-    <style>
-    .simple-dpia-header {
-        background: linear-gradient(135deg, #4a90e2 0%, #7b68ee 100%);
-        padding: 2rem;
-        border-radius: 15px;
-        color: white;
-        text-align: center;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    
-    .question-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 10px;
-        margin: 1rem 0;
-        border-left: 4px solid #4a90e2;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
-    .risk-indicator {
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-        text-align: center;
-        font-weight: bold;
-    }
-    
-    .risk-low {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-    
-    .risk-medium {
-        background-color: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeaa7;
-    }
-    
-    .risk-high {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-    
-    .signature-section {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 2rem;
-        border-radius: 15px;
-        margin: 2rem 0;
-        border: 2px solid #4a90e2;
-        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.1);
-    }
-    
-    .question-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin: 1rem 0;
-        border-left: 4px solid #4a90e2;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .question-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        transform: translateY(-2px);
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # Load CSS styles efficiently
+    load_css()
     
     # Initialize session state
     if 'simple_dpia_answers' not in st.session_state:
@@ -744,7 +653,7 @@ def show_assessment_form():
                 st.session_state.simple_dpia_completed = True
                 
                 # Save to database with error handling
-                db_saved = save_assessment_to_db(assessment_data)
+                db_saved = db_manager.save_assessment(assessment_data)
                 if db_saved:
                     st.success("Assessment completed and saved to database!")
                 else:
