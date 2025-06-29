@@ -307,6 +307,10 @@ def show_assessment_form():
                 on_change=save_callback
             )
             
+            # Force immediate save if answer differs from saved value
+            if answer and answer != current_answer:
+                st.session_state.simple_dpia_answers[q['key']] = answer
+            
             # Show saved status
             saved_answer = st.session_state.simple_dpia_answers.get(q['key'], "")
             if saved_answer:
