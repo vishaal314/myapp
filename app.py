@@ -38,7 +38,9 @@ from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_re
 from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
 from services.soc2_display import display_soc2_findings, run_soc2_display_standalone
 from services.soc2_scanner import scan_github_repo_for_soc2, scan_azure_repo_for_soc2
-from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES
+from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES, verify_payment
+from services.subscription_manager import display_subscription_plans, SubscriptionManager
+from services.stripe_webhooks import get_payment_status
 from utils.gdpr_rules import REGIONS, get_region_rules
 from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_finding, get_risk_color_gradient
 from utils.i18n import initialize, language_selector, get_text, set_language, LANGUAGES, _translations
@@ -3022,13 +3024,23 @@ else:
                             "timestamp": datetime.now().isoformat()
                         }
                         
-                        # Display payment button
-                        checkout_id = display_payment_button(scan_type, user_email, metadata)
+                        # Get user's country for VAT calculation (default to Netherlands)
+                        user_country = st.session_state.get('user_country', 'NL')
+                        
+                        # Display secure payment button with VAT
+                        checkout_id = display_payment_button(scan_type, user_email, metadata, user_country)
                         
                         # Show alternative payment option for easy testing
                         st.markdown("---")
-                        st.markdown("### Test Payment Option")
-                        if st.button("Complete Payment (Demo Mode)"):
+                        st.markdown("### 🧪 Development Mode")
+                        st.info("For testing purposes only - use real payment in production")
+                        
+                        if st.button("Complete Payment (Demo Mode)", type="secondary"):
+                            # Calculate VAT for demo mode
+                            from services.stripe_payment import calculate_vat
+                            base_price = SCAN_PRICES[scan_type]
+                            pricing = calculate_vat(base_price, user_country)
+                            
                             # Generate a unique scan ID
                             scan_id = str(uuid.uuid4())
                             st.session_state.current_scan_id = scan_id
@@ -3037,27 +3049,35 @@ else:
                             st.session_state.payment_successful = True
                             st.session_state.payment_details = {
                                 "status": "succeeded",
-                                "amount": SCAN_PRICES[scan_type] / 100,
+                                "amount": pricing["total"] / 100,  # EUR amount with VAT
+                                "subtotal": pricing["subtotal"] / 100,
+                                "vat": pricing["vat_amount"] / 100,
                                 "scan_type": scan_type,
-                                "user_email": user_email
+                                "user_email": user_email,
+                                "currency": "EUR",
+                                "country_code": user_country,
+                                "is_demo": True
                             }
                             
-                            # Log the successful payment
+                            # Log the demo payment
                             try:
                                 results_aggregator.log_audit_event(
                                     username=st.session_state.username,
-                                    action="PAYMENT_SIMULATED",
+                                    action="DEMO_PAYMENT_COMPLETED",
                                     details={
                                         "scan_type": scan_type,
-                                        "amount": SCAN_PRICES[scan_type] / 100,
+                                        "amount_eur": pricing["total"] / 100,
+                                        "vat_amount": pricing["vat_amount"] / 100,
                                         "user_email": user_email,
+                                        "country_code": user_country,
                                         "timestamp": datetime.now().isoformat()
                                     }
                                 )
                             except Exception as e:
                                 st.warning(f"Audit logging failed: {str(e)}")
                             
-                            # Continue directly to scan without requiring a page reload
+                            st.success(f"Demo payment completed: €{pricing['total']/100:.2f} (incl. VAT)")
+                            st.rerun()
                         
                     # If payment is not completed, stop execution here
                     if not st.session_state.payment_successful:
