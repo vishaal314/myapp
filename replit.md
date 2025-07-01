@@ -133,3 +133,5 @@ DataGuardian Pro is a comprehensive enterprise privacy compliance platform built
 
 Preferred communication style: Simple, everyday language.
 Interface preferences: Clean interface without additional assessment sections on main landing page.
+Data residency requirement: Netherlands/EU only hosting for GDPR compliance.
+Deployment preference: Dutch hosting providers for complete data sovereignty.

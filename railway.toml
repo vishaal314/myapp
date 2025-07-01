@@ -5,7 +5,10 @@ builder = "dockerfile"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
+region = "eu-west-1"
 
 [variables]
 PORT = "5000"
 PYTHONUNBUFFERED = "1"
+DATA_RESIDENCY = "EU"
+GDPR_COMPLIANT = "true"
