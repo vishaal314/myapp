@@ -1525,10 +1525,17 @@ else:
                             elif risk == 'High':
                                 risk_counts[_("severity.high")] += count
                 
-                risk_df = pd.DataFrame(list(risk_counts.items()), columns=[_("dashboard.risk_level"), _("dashboard.count")])
-                fig = px.pie(risk_df, values=_("dashboard.count"), names=_("dashboard.risk_level"), color=_("dashboard.risk_level"),
-                             color_discrete_map={_("severity.low"): 'green', _("severity.medium"): 'orange', _("severity.high"): 'red'})
-                st.plotly_chart(fig, use_container_width=True)
+                if VISUALIZATION_AVAILABLE and pd and px:
+                    risk_df = pd.DataFrame(list(risk_counts.items()), columns=[_("dashboard.risk_level"), _("dashboard.count")])
+                    fig = px.pie(risk_df, values=_("dashboard.count"), names=_("dashboard.risk_level"), color=_("dashboard.risk_level"),
+                                 color_discrete_map={_("severity.low"): 'green', _("severity.medium"): 'orange', _("severity.high"): 'red'})
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    # Display risk counts in a simple format when visualization is not available
+                    for risk_level, count in risk_counts.items():
+                        if count > 0:
+                            color = "#ef4444" if "High" in risk_level else "#f97316" if "Medium" in risk_level else "#10b981"
+                            st.markdown(f"**{risk_level}**: <span style='color: {color}'>{count}</span>", unsafe_allow_html=True)
                 
                 # Scan Types
                 st.subheader(_("dashboard.scan_distribution"))
@@ -1537,9 +1544,14 @@ else:
                     scan_type = scan.get('scan_type', _("dashboard.unknown"))
                     scan_type_counts[scan_type] = scan_type_counts.get(scan_type, 0) + 1
                 
-                scan_type_df = pd.DataFrame(list(scan_type_counts.items()), columns=[_("dashboard.scan_type"), _("dashboard.count")])
-                fig = px.bar(scan_type_df, x=_("dashboard.scan_type"), y=_("dashboard.count"), color=_("dashboard.scan_type"))
-                st.plotly_chart(fig, use_container_width=True)
+                if VISUALIZATION_AVAILABLE and pd and px:
+                    scan_type_df = pd.DataFrame(list(scan_type_counts.items()), columns=[_("dashboard.scan_type"), _("dashboard.count")])
+                    fig = px.bar(scan_type_df, x=_("dashboard.scan_type"), y=_("dashboard.count"), color=_("dashboard.scan_type"))
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    # Display scan type counts in a simple format when visualization is not available
+                    for scan_type, count in scan_type_counts.items():
+                        st.markdown(f"**{scan_type}**: {count}")
             else:
                 st.info(_("dashboard.no_scan_data"))
         else:
