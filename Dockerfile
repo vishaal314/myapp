@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install dependencies for textract and other system libraries
+# Install dependencies for textract and other system libraries including curl for health checks
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     unrtf \
     tesseract-ocr-all \
     libreoffice \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -60,9 +61,14 @@ port = 5000\n\
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV PORT=5000
 
 # Expose the port the app runs on
-EXPOSE 5000
+EXPOSE $PORT
 
-# Command to run the application
-CMD ["streamlit", "run", "app.py", "--server.port=5000", "--server.address=0.0.0.0"]
+# Health check for Railway
+HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:$PORT/_stcore/health || exit 1
+
+# Command to run the application with dynamic port
+CMD streamlit run app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
