@@ -391,21 +391,20 @@ def get_system_capacity() -> Dict[str, Any]:
 
 def display_capacity_status():
     """Display capacity status in Streamlit sidebar."""
-    with st.sidebar:
-        try:
-            metrics = capacity_monitor.get_system_metrics()
-            if "error" not in metrics:
-                capacity = metrics["capacity"]["overall_capacity_percent"]
-                status = metrics["capacity"]["status"]
-                
-                status_icons = {"good": "🟢", "warning": "🟡", "critical": "🔴"}
-                st.metric("System Capacity", f"{capacity:.0f}%", delta=status_icons.get(status, "⚪"))
-                
-                # Show active users
-                active_users = metrics["users"]["total_active_users"]
-                st.metric("Active Users", active_users, delta=f"/{capacity_monitor.max_concurrent_users}")
-        except Exception:
-            pass  # Fail silently in sidebar
+    try:
+        metrics = capacity_monitor.get_system_metrics()
+        if "error" not in metrics:
+            capacity = metrics["capacity"]["overall_capacity_percent"]
+            status = metrics["capacity"]["status"]
+            
+            status_icons = {"good": "🟢", "warning": "🟡", "critical": "🔴"}
+            st.metric("System Capacity", f"{capacity:.0f}%", delta=status_icons.get(status, "⚪"))
+            
+            # Show active users
+            active_users = metrics["users"]["total_active_users"]
+            st.metric("Active Users", active_users, delta=f"/{capacity_monitor.max_concurrent_users}")
+    except Exception:
+        pass  # Fail silently in sidebar
 
 def check_capacity_before_scan() -> bool:
     """

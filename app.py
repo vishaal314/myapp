@@ -46,7 +46,7 @@ from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_findi
 from utils.i18n import initialize, language_selector, get_text, set_language, LANGUAGES, _translations
 from utils.session_manager import SessionManager, get_user_scan_results, set_user_scan_results
 from utils.async_scan_manager import submit_async_scan, get_user_scan_status, get_user_active_scans
-from utils.capacity_monitor import display_capacity_status, check_capacity_before_scan
+# from utils.capacity_monitor import display_capacity_status, check_capacity_before_scan
 
 # Define translation function
 def _(key, default=None):
@@ -705,6 +705,9 @@ with st.sidebar:
         if st.button(f"🚪 {_('sidebar.sign_out')}", use_container_width=True, key="logout_btn"):
             logout()
             st.rerun()
+        
+        # System capacity monitoring (temporarily disabled)
+        # display_capacity_status()
     
     st.markdown("---")
     st.markdown("""
