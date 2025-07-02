@@ -2273,8 +2273,13 @@ else:
                             })
                         
                         if findings_data:
-                            findings_df = pd.DataFrame(findings_data)
-                            st.dataframe(findings_df, use_container_width=True)
+                            # Use Streamlit's native dataframe display when pandas is disabled
+                            if pd is not None:
+                                findings_df = pd.DataFrame(findings_data)
+                                st.dataframe(findings_df, use_container_width=True)
+                            else:
+                                # Display as structured data without pandas
+                                st.dataframe(findings_data, use_container_width=True)
                         else:
                             st.info("No privacy findings detected.")
                     
@@ -2316,8 +2321,13 @@ else:
                             })
                         
                         if tracker_data:
-                            tracker_df = pd.DataFrame(tracker_data)
-                            st.dataframe(tracker_df, use_container_width=True)
+                            # Use Streamlit's native dataframe display when pandas is disabled
+                            if pd is not None:
+                                tracker_df = pd.DataFrame(tracker_data)
+                                st.dataframe(tracker_df, use_container_width=True)
+                            else:
+                                # Display as structured data without pandas
+                                st.dataframe(tracker_data, use_container_width=True)
                     
                     # Download Reports Section
                     st.markdown("---")
@@ -2733,8 +2743,13 @@ else:
                             'Description': finding.get('description', 'Unknown')
                         })
                     
-                    findings_df = pd.DataFrame(findings_data)
-                    st.dataframe(findings_df, use_container_width=True)
+                    # Use Streamlit's native dataframe display when pandas is disabled
+                    if pd is not None:
+                        findings_df = pd.DataFrame(findings_data)
+                        st.dataframe(findings_df, use_container_width=True)
+                    else:
+                        # Display as structured data without pandas
+                        st.dataframe(findings_data, use_container_width=True)
                 else:
                     st.info("No findings detected in the AI model scan.")
                 
@@ -3553,10 +3568,15 @@ else:
                                     st.write("### Detailed PII Findings")
                                     
                                     # Convert findings to DataFrame for better display
-                                    findings_df = pd.DataFrame(formatted_findings)
+                                    if pd is not None:
+                                        findings_df = pd.DataFrame(formatted_findings)
+                                        df_available = not findings_df.empty
+                                    else:
+                                        findings_df = formatted_findings
+                                        df_available = len(formatted_findings) > 0
                                     
                                     # Format the findings DataFrame
-                                    if not findings_df.empty:
+                                    if df_available:
                                         # Select and rename columns for display
                                         display_cols = ['type', 'value', 'location', 'risk_level']
                                         rename_map = {
