@@ -34,9 +34,9 @@ class DatabaseManager:
                 st.error("Database URL not configured")
                 return
             
-            # Create connection pool with 2-10 connections
-            self._connection_pool = psycopg2.pool.SimpleConnectionPool(
-                2, 10, DATABASE_URL
+            # Create connection pool with 5-25 connections for better concurrency
+            self._connection_pool = psycopg2.pool.ThreadedConnectionPool(
+                5, 25, DATABASE_URL
             )
             
             # Create tables on initialization
@@ -47,19 +47,34 @@ class DatabaseManager:
     
     @contextmanager
     def get_connection(self):
-        """Context manager for database connections"""
+        """Context manager for database connections with retry logic"""
         conn = None
-        try:
-            if self._connection_pool:
-                conn = self._connection_pool.getconn()
-                yield conn
-        except Exception as e:
-            if conn:
-                conn.rollback()
-            raise e
-        finally:
-            if conn and self._connection_pool:
-                self._connection_pool.putconn(conn)
+        max_retries = 3
+        retry_delay = 0.1
+        
+        for attempt in range(max_retries):
+            try:
+                if self._connection_pool:
+                    conn = self._connection_pool.getconn()
+                    yield conn
+                    break
+            except psycopg2.pool.PoolError as e:
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(retry_delay * (2 ** attempt))  # Exponential backoff
+                    continue
+                else:
+                    raise Exception(f"Connection pool exhausted after {max_retries} attempts")
+            except Exception as e:
+                if conn:
+                    conn.rollback()
+                raise e
+            finally:
+                if conn and self._connection_pool:
+                    try:
+                        self._connection_pool.putconn(conn)
+                    except Exception:
+                        pass  # Connection already returned or closed
     
     def _create_tables(self):
         """Create necessary database tables"""

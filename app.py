@@ -44,6 +44,9 @@ from services.stripe_webhooks import get_payment_status
 from utils.gdpr_rules import REGIONS, get_region_rules
 from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_finding, get_risk_color_gradient
 from utils.i18n import initialize, language_selector, get_text, set_language, LANGUAGES, _translations
+from utils.session_manager import SessionManager, get_user_scan_results, set_user_scan_results
+from utils.async_scan_manager import submit_async_scan, get_user_scan_status, get_user_active_scans
+from utils.capacity_monitor import display_capacity_status, check_capacity_before_scan
 
 # Define translation function
 def _(key, default=None):
@@ -1927,9 +1930,9 @@ else:
                 include_stats = st.checkbox("Include table statistics", value=True)
                 generate_remediation = st.checkbox("Generate remediation suggestions", value=True)
                 
-                # Store database configuration in session state
+                # Store database configuration in user-specific session state
                 if connection_option == "Connection String":
-                    st.session_state.db_config = {
+                    db_config = {
                         'db_type': db_type,
                         'connection_option': connection_option,
                         'connection_string': connection_string,
@@ -1941,8 +1944,9 @@ else:
                         'include_stats': include_stats,
                         'generate_remediation': generate_remediation
                     }
+                    SessionManager.set_db_config(db_config)
                 else:
-                    st.session_state.db_config = {
+                    db_config = {
                         'db_type': db_type,
                         'connection_option': connection_option,
                         'db_server': db_server,
@@ -1958,6 +1962,7 @@ else:
                         'include_stats': include_stats,
                         'generate_remediation': generate_remediation
                     }
+                    SessionManager.set_db_config(db_config)
                 
             elif scan_type == _("scan.api"):
                 # 5. API Scanner - Enhanced configuration
@@ -4039,8 +4044,8 @@ else:
                         try:
                             from services.db_scanner import DatabaseScanner
                             
-                            # Get database configuration from session state
-                            db_config = st.session_state.get('db_config', {})
+                            # Get database configuration from user-specific session state
+                            db_config = SessionManager.get_db_config() or {}
                             
                             # Validate required configuration
                             if not db_config:
@@ -4165,9 +4170,9 @@ else:
                                 status_text.text("Database Scan: Complete - No PII detected!")
                                 scan_results = [db_result]
                                 
-                                # Store results even if no PII found
-                                st.session_state.db_scan_results = db_result
-                                st.session_state.db_scan_complete = True
+                                # Store results even if no PII found using user-specific session
+                                SessionManager.set_scan_results("database", db_result)
+                                SessionManager.set_scan_complete("database", True)
                                 st.rerun()
                             
                         except Exception as e:
