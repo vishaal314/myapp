@@ -2343,7 +2343,7 @@ else:
                             # Generate PDF report
                             pdf_bytes = generate_report(
                                 website_results,
-                                report_format="website"
+                                report_type="website"
                             )
                             
                             st.download_button(
@@ -2766,7 +2766,7 @@ else:
                         # Generate PDF report with AI model format
                         pdf_bytes = generate_report(
                             ai_model_scan_results,
-                            report_format="ai_model"
+                            report_type="ai_model"
                         )
                         
                         if pdf_bytes and isinstance(pdf_bytes, bytes):
@@ -7526,4 +7526,255 @@ if st.session_state.get('api_scan_complete', False):
 # Check if Database scan results should be displayed
 if st.session_state.get('db_scan_complete', False):
     display_database_scan_results()
+
+# ===== MAIN APPLICATION EXECUTION =====
+# This is the main execution block that renders the UI
+
+# Initialize session state
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+
+# Configure page
+st.set_page_config(
+    page_title="DataGuardian Pro",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Add custom CSS
+st.markdown("""
+<style>
+.main-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    color: white;
+    text-align: center;
+}
+.sidebar-divider {
+    margin: 1rem 0;
+    border: none;
+    border-top: 1px solid #e0e0e0;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Main application logic
+if not st.session_state.authenticated:
+    # Show login page
+    st.markdown('<div class="main-header"><h1>🛡️ DataGuardian Pro</h1><p>Enterprise Privacy Compliance Platform</p></div>', unsafe_allow_html=True)
+    
+    # Language selector
+    current_language = st.session_state.get('language', 'en')
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        # Login/Register tabs
+        tab1, tab2 = st.tabs(["Login", "Register"])
+        
+        with tab1:
+            st.subheader("Login")
+            username_or_email = st.text_input("Username or Email", key="login_username")
+            password = st.text_input("Password", type="password", key="login_password")
+            
+            if st.button("Login", type="primary", use_container_width=True):
+                if username_or_email and password:
+                    user_data = authenticate(username_or_email, password)
+                    if user_data:
+                        st.session_state.authenticated = True
+                        st.session_state.user_data = user_data
+                        st.session_state.username = user_data.get('username')
+                        st.session_state.user_role = user_data.get('role', 'viewer')
+                        st.session_state.user_id = user_data.get('id')
+                        st.success("Login successful!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials")
+                else:
+                    st.error("Please enter username and password")
+        
+        with tab2:
+            st.subheader("Register")
+            new_username = st.text_input("Username", key="reg_username")
+            new_email = st.text_input("Email", key="reg_email")
+            new_password = st.text_input("Password", type="password", key="reg_password")
+            confirm_password = st.text_input("Confirm Password", type="password", key="reg_confirm")
+            
+            if st.button("Register", type="primary", use_container_width=True):
+                if new_username and new_email and new_password:
+                    if new_password == confirm_password:
+                        if validate_email(new_email):
+                            success, message = create_user(new_username, new_password, 'user', new_email)
+                            if success:
+                                st.success(message)
+                            else:
+                                st.error(message)
+                        else:
+                            st.error("Please enter a valid email address")
+                    else:
+                        st.error("Passwords do not match")
+                else:
+                    st.error("Please fill in all fields")
+
+else:
+    # User is authenticated - show main application
+    
+    # Initialize translations
+    initialize()
+    
+    # Get user info
+    username = st.session_state.get('username', 'User')
+    user_role = st.session_state.get('user_role', 'viewer')
+    
+    # Main navigation
+    nav_options = [
+        _("scan.title", "Scan"),
+        _("dashboard.welcome", "Dashboard"), 
+        _("history.title", "History"),
+        _("results.title", "Results"),
+        _("report.generate", "Reports")
+    ]
+    
+    # Add admin option for admin users
+    if user_role == 'admin':
+        nav_options.append(_("admin.title", "Admin"))
+    
+    # Sidebar navigation
+    with st.sidebar:
+        st.markdown(f"<div class='main-header'><h3>🛡️ DataGuardian Pro</h3><p>Welcome, {username}</p></div>", unsafe_allow_html=True)
+        
+        # Language selector
+        current_language = language_selector()
+        
+        # Navigation
+        st.markdown("### Navigation")
+        selected_nav = st.selectbox(
+            "Choose section:",
+            nav_options,
+            index=0 if 'selected_nav' not in st.session_state else nav_options.index(st.session_state.get('selected_nav', nav_options[0]))
+        )
+        st.session_state.selected_nav = selected_nav
+        
+        st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
+        
+        # Logout button
+        if st.button("🚪 Logout", use_container_width=True):
+            logout()
+            st.rerun()
+    
+    # Main content area
+    if selected_nav == _("scan.title", "Scan"):
+        st.title(_("scan.new_scan_title", "New Scan"))
+        
+        # Scan type selector
+        scan_types = [
+            ("code", _("scan.code", "Code Repository")),
+            ("blob", _("scan.blob", "Document")),
+            ("image", _("scan.image", "Image")),
+            ("website", _("scan.website", "Website")),
+            ("dpia", _("scan.dpia", "DPIA Assessment"))
+        ]
+        
+        selected_scan = st.selectbox(
+            _("scan.select_type", "Select Scan Type"),
+            scan_types,
+            format_func=lambda x: x[1]
+        )
+        
+        # Render appropriate scan interface based on selection
+        if selected_scan[0] == "code":
+            st.subheader("Code Repository Scan")
+            repo_url = st.text_input("Repository URL")
+            if st.button("Start Code Scan", type="primary"):
+                if repo_url:
+                    st.info("Starting code scan...")
+                    # Code scan logic would go here
+                else:
+                    st.error("Please enter a repository URL")
+                    
+        elif selected_scan[0] == "blob":
+            st.subheader("Document Scan")
+            uploaded_files = st.file_uploader(
+                "Upload documents",
+                accept_multiple_files=True,
+                type=['pdf', 'docx', 'txt']
+            )
+            if st.button("Start Document Scan", type="primary"):
+                if uploaded_files:
+                    st.info("Starting document scan...")
+                    # Document scan logic would go here
+                else:
+                    st.error("Please upload at least one document")
+                    
+        elif selected_scan[0] == "image":
+            st.subheader("Image Scan")
+            uploaded_images = st.file_uploader(
+                "Upload images",
+                accept_multiple_files=True,
+                type=['jpg', 'jpeg', 'png']
+            )
+            if st.button("Start Image Scan", type="primary"):
+                if uploaded_images:
+                    st.info("Starting image scan...")
+                    # Image scan logic would go here
+                else:
+                    st.error("Please upload at least one image")
+                    
+        elif selected_scan[0] == "website":
+            st.subheader("Website Scan")
+            website_url = st.text_input("Website URL")
+            if st.button("Start Website Scan", type="primary"):
+                if website_url:
+                    st.info("Starting website scan...")
+                    # Website scan logic would go here
+                else:
+                    st.error("Please enter a website URL")
+                    
+        elif selected_scan[0] == "dpia":
+            st.subheader("DPIA Assessment")
+            st.info("Starting DPIA assessment...")
+            # Import and run DPIA module
+            try:
+                from dpia_module import run_enhanced_dpia
+                run_enhanced_dpia()
+            except Exception as e:
+                st.error(f"Error loading DPIA module: {str(e)}")
+                
+    elif selected_nav == _("dashboard.welcome", "Dashboard"):
+        st.title(_("dashboard.welcome", "Welcome Dashboard"))
+        
+        # Dashboard content
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Total Scans", "0", "0")
+            
+        with col2:
+            st.metric("High Risk Items", "0", "0")
+            
+        with col3:
+            st.metric("Compliance Score", "100%", "+0%")
+        
+        st.info("Dashboard features will be implemented based on scan results.")
+        
+    elif selected_nav == _("history.title", "History"):
+        st.title(_("history.title", "Scan History"))
+        st.info("No scan history available yet. Run some scans to see results here.")
+        
+    elif selected_nav == _("results.title", "Results"):
+        st.title(_("results.title", "Scan Results"))
+        st.info("No scan results available. Please run a scan first.")
+        
+    elif selected_nav == _("report.generate", "Reports"):
+        st.title(_("report.generate", "Generate Reports"))
+        st.info("Report generation will be available after running scans.")
+        
+    elif selected_nav == _("admin.title", "Admin") and user_role == 'admin':
+        st.title(_("admin.title", "Admin Panel"))
+        st.info("Admin features coming soon.")
+        
+    else:
+        st.error("Unknown navigation selection")
 
