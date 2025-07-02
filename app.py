@@ -1,4 +1,13 @@
 import streamlit as st
+
+# Configure page FIRST - must be the very first Streamlit command
+st.set_page_config(
+    page_title="DataGuardian Pro",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # Disable visualization dependencies to resolve numpy conflicts
 # Core Image Scanner functionality preserved
 pd = None
@@ -197,17 +206,15 @@ if 'language' not in st.session_state:
 if 'redirect_to_login' not in st.session_state:
     st.session_state.redirect_to_login = False
 
-# Set page config
-st.set_page_config(
-    page_title="DataGuardian Pro - Enterprise Privacy Compliance Platform",
-    page_icon="🔒",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Page config already set at top of file
 
 # Load custom CSS to hide unwanted navigation buttons
-with open("static/custom.css") as f:
-    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+try:
+    with open("static/custom.css") as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+except FileNotFoundError:
+    # File doesn't exist, skip custom CSS
+    pass
 
 
 # Create top-right language switcher in a container with minimal style
@@ -7534,13 +7541,7 @@ if st.session_state.get('db_scan_complete', False):
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 
-# Configure page
-st.set_page_config(
-    page_title="DataGuardian Pro",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Page configuration already set at top of file
 
 # Add custom CSS
 st.markdown("""
