@@ -27,23 +27,66 @@ class DatabaseManager:
             self._initialize_pool()
     
     def _initialize_pool(self):
-        """Initialize database connection pool"""
+        """Initialize database connection pool with optimized settings"""
         try:
             DATABASE_URL = os.environ.get('DATABASE_URL')
             if not DATABASE_URL:
                 st.error("Database URL not configured")
                 return
             
-            # Create connection pool with 5-25 connections for better concurrency
+            # Dynamic connection pool sizing based on system resources
+            import psutil
+            cpu_count = psutil.cpu_count(logical=True)
+            # Scale connections: minimum 8, maximum 35, optimal ~2x CPU cores + some overhead
+            min_connections = max(8, cpu_count)
+            max_connections = min(35, cpu_count * 2 + 10)
+            
+            # Create connection pool with optimized settings
             self._connection_pool = psycopg2.pool.ThreadedConnectionPool(
-                5, 25, DATABASE_URL
+                min_connections, max_connections, DATABASE_URL,
+                # Connection optimization parameters
+                application_name="DataGuardian_Pro",
+                connect_timeout=10,
+                # Keep connections alive to reduce overhead
+                keepalives_idle=600,  # 10 minutes
+                keepalives_interval=30,  # 30 seconds
+                keepalives_count=3
             )
+            self.min_connections = min_connections
+            self.max_connections = max_connections
             
             # Create tables on initialization
             self._create_tables()
             
+            # Pre-warm connection pool for better performance
+            self._prewarm_connections()
+            
         except Exception as e:
             st.error(f"Failed to initialize database pool: {str(e)}")
+    
+    def _prewarm_connections(self):
+        """Pre-warm database connections to reduce initial latency"""
+        try:
+            # Create and immediately return connections to establish them
+            connections = []
+            for _ in range(min(5, self.min_connections)):
+                try:
+                    conn = self._connection_pool.getconn()
+                    if conn:
+                        # Test connection with a simple query
+                        with conn.cursor() as cursor:
+                            cursor.execute("SELECT 1")
+                        connections.append(conn)
+                except Exception:
+                    pass
+            
+            # Return all connections to the pool
+            for conn in connections:
+                self._connection_pool.putconn(conn)
+                
+        except Exception:
+            # Pre-warming is optional, don't fail if it doesn't work
+            pass
     
     @contextmanager
     def get_connection(self):

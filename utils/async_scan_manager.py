@@ -71,10 +71,17 @@ class AsyncScanManager:
     
     def __init__(self):
         if not hasattr(self, 'initialized'):
-            self.executor = ThreadPoolExecutor(max_workers=8)  # Support up to 8 concurrent scans
+            # Dynamic thread pool scaling based on system resources
+            import psutil
+            cpu_count = psutil.cpu_count(logical=True)
+            # Scale workers: minimum 8, maximum 20, optimal ~1.5x CPU cores
+            optimal_workers = min(20, max(8, int(cpu_count * 1.5)))
+            
+            self.executor = ThreadPoolExecutor(max_workers=optimal_workers)
             self.tasks: Dict[str, ScanTask] = {}
             self.user_tasks: Dict[str, List[str]] = {}  # user_id -> list of task_ids
-            self.max_tasks_per_user = 3  # Limit concurrent scans per user
+            self.max_tasks_per_user = 4  # Increased from 3 to support higher throughput
+            self.max_workers = optimal_workers
             self.initialized = True
     
     def submit_scan(self, user_id: str, scan_type: str, scan_function: Callable, 
