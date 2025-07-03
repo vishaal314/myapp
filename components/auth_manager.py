@@ -162,129 +162,247 @@ def debug_translations():
         print(f"DEBUG_TRANSLATIONS - Error: {e}")
 
 def render_login_interface():
-    """Render the complete login interface - extracted from app.py lines 290-470"""
+    """Render the complete login interface - preserving original design from app.py"""
+    
+    # Load custom CSS to hide unwanted navigation buttons
+    try:
+        with open("static/custom.css") as st_css:
+            st.markdown(f'<style>{st_css.read()}</style>', unsafe_allow_html=True)
+    except FileNotFoundError:
+        # File doesn't exist, skip custom CSS
+        pass
+
+    # Create top-right language switcher in a container with minimal style
+    lang_col1, lang_col2, lang_col3 = st.columns([6, 3, 1])
+    with lang_col3:
+        # Create a clean language selector in the top-right
+        st.markdown("""
+        <div style="float: right; margin-right: 10px; margin-top: 5px;">
+            <span style="font-size: 1em; margin-right: 5px;">🌐</span>
+        </div>
+        """, unsafe_allow_html=True)
+        # Add a simple language dropdown
+        current_language = st.session_state.get('language', 'en')
+        language_options = {"en": "🇬🇧 English", "nl": "🇳🇱 Nederlands"}
+        selected_language = st.selectbox(
+            "",
+            options=list(language_options.keys()),
+            format_func=lambda x: language_options[x],
+            index=0 if current_language == "en" else 1,
+            key="lang_selector_top",
+            label_visibility="collapsed"
+        )
+        if selected_language != current_language:
+            st.session_state['language'] = selected_language
+            st.session_state['_persistent_language'] = selected_language
+            from utils.i18n import set_language
+            set_language(selected_language)
+            st.rerun()
+
+    # Authentication sidebar with professional colorful design
+    with st.sidebar:
+        # Ensure translations are initialized with the current language
+        current_language = st.session_state.get('language', 'en')
+        from utils.i18n import set_language
+        set_language(current_language)
+        
+        # Header with gradient background and professional name
+        # Get translations or use defaults if translations aren't loaded yet
+        title = _("app.title", "DataGuardian Pro")
+        subtitle = _("app.subtitle", "Enterprise Privacy Compliance Platform")
+        
+        st.markdown(f"""
+        <div style="background-image: linear-gradient(120deg, #6200EA, #3700B3); 
+                   padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center;
+                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <h2 style="color: white; margin: 0; font-weight: bold;">{title}</h2>
+            <p style="color: #E9DAFF; margin: 5px 0 0 0; font-size: 0.9em;">{subtitle}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Meaningful GDPR theme with privacy-focused visual
+        st.markdown(f"""
+        <div style="text-align: center; margin-bottom: 25px; padding: 0 10px;">
+            <div style="background-image: linear-gradient(120deg, #F5F0FF, #E9DAFF); 
+                       border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+                    <div style="background-image: linear-gradient(120deg, #6200EA, #3700B3); 
+                               width: 40px; height: 40px; border-radius: 8px; display: flex; 
+                               justify-content: center; align-items: center; margin-right: 10px;">
+                        <span style="color: white; font-size: 20px;">🔒</span>
+                    </div>
+                    <div style="background-image: linear-gradient(120deg, #00BFA5, #00897B); 
+                               width: 40px; height: 40px; border-radius: 8px; display: flex; 
+                               justify-content: center; align-items: center; margin-right: 10px;">
+                        <span style="color: white; font-size: 20px;">📊</span>
+                    </div>
+                    <div style="background-image: linear-gradient(120deg, #FF6D00, #E65100); 
+                               width: 40px; height: 40px; border-radius: 8px; display: flex; 
+                               justify-content: center; align-items: center;">
+                        <span style="color: white; font-size: 20px;">📋</span>
+                    </div>
+                </div>
+                <p style="color: #4527A0; font-size: 0.9em; margin: 0; text-align: center;">
+                    {_("app.tagline")}
+                </p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Original tab-based login interface
+        render_original_login_tabs()
+
+
+def render_original_login_tabs():
+    """Render the original tab-based login interface from app.py"""
+    # Tab UI for login/register with colorful styling
     st.markdown("""
-    <div style='text-align: center; padding: 2rem 0;'>
-        <h1 style='color: #1f2937; margin-bottom: 0.5rem;'>🛡️ DataGuardian Pro</h1>
-        <h2 style='color: #4b5563; font-weight: 300; margin-bottom: 2rem;'>Enterprise Privacy Compliance Platform</h2>
-        <p style='color: #6b7280; font-size: 1.1rem; margin-bottom: 3rem;'>Detect, Manage, and Report Privacy Compliance with AI-powered Precision</p>
-    </div>
+    <style>
+    .tab-selected {
+        background-color: #6200EA !important;
+        color: white !important;
+        font-weight: bold;
+        border-radius: 5px;
+        padding: 10px 0;
+    }
+    .tab-not-selected {
+        background-color: #F5F0FF;
+        color: #4527A0;
+        border-radius: 5px;
+        padding: 10px 0;
+    }
+    </style>
     """, unsafe_allow_html=True)
     
-    # Language selector - centered and prominent
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        language_selector()
-    
-    # Get titles and subtitles
-    title = _("app.title", "DataGuardian Pro")
-    subtitle = _("app.subtitle", "Enterprise Privacy Compliance Platform")
-    
-    # Navigation tabs
-    tab1, tab2 = st.tabs([_("login.signin", "Sign In"), _("login.signup", "Sign Up")])
+    tab1, tab2 = st.columns(2)
     
     with tab1:
-        render_signin_tab()
+        if st.button(_("sidebar.sign_in"), key="tab_login", use_container_width=True):
+            st.session_state.active_tab = "login"
     
     with tab2:
+        if st.button(_("sidebar.create_account"), key="tab_register", use_container_width=True):
+            st.session_state.active_tab = "register"
+    
+    # Default to login tab if not set
+    if "active_tab" not in st.session_state:
+        st.session_state.active_tab = "login"
+        
+    # Apply custom styling to selected tab
+    if st.session_state.active_tab == "login":
+        st.markdown("""
+        <style>
+        [data-testid="stButton"] button:nth-child(1) {
+            background-color: #6200EA;
+            color: white;
+            font-weight: bold;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <style>
+        [data-testid="stButton"] button:nth-child(2) {
+            background-color: #6200EA;
+            color: white;
+            font-weight: bold;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+    
+    # Render the appropriate tab content
+    if st.session_state.active_tab == "login":
+        render_signin_tab()
+    else:
         render_signup_tab()
 
 def render_signin_tab():
-    """Render sign-in tab content - extracted from app.py lines 320-470"""
-    col1, col2, col3 = st.columns([1, 2, 1])
+    """Render sign-in tab content - sidebar-compatible version"""
+    st.subheader(_("login.signin", "Sign In"))
     
-    with col2:
-        st.subheader(_("login.signin", "Sign In"))
-        
-        # Password Reset Section
-        with st.expander(_("login.forgot_password", "Forgot Password?")):
-            reset_col1, reset_col2 = st.columns(2)
+    # Main login form
+    with st.form("login_form"):
+        username_or_email = st.text_input(_("login.username_email", "Username or Email"))
+        password = st.text_input(_("login.password", "Password"), type="password")
+        login_button = st.form_submit_button(_("login.signin", "Sign In"))
+    
+    if login_button:
+        user_data = authenticate(username_or_email, password)
+        if user_data:
+            st.session_state.authenticated = True
+            st.session_state.logged_in = True
+            st.session_state.user_data = user_data
+            st.session_state.username = user_data['username']
+            st.session_state.user_role = user_data['role']
+            st.session_state.user_email = user_data['email']
             
-            with reset_col1:
-                st.subheader(_("login.reset_password", "Reset Password"))
-                reset_email = st.text_input(_("login.email", "Email"), key="reset_email")
-                new_password = st.text_input(_("login.new_password", "New Password"), type="password", key="reset_new_password")
-                confirm_password = st.text_input(_("login.confirm_password", "Confirm Password"), type="password", key="reset_confirm_password")
-                
-                if st.button(_("login.reset_submit", "Reset Password"), key="reset_submit"):
-                    if new_password != confirm_password:
-                        st.error(_("login.password_mismatch", "Passwords don't match"))
-                    elif len(new_password) < 6:
-                        st.error(_("login.password_too_short", "Password must be at least 6 characters"))
-                    else:
-                        # Implement password reset logic
-                        if reset_email and new_password:
-                            success, message = create_user(reset_email, new_password, 'user', reset_email)
-                            if success:
-                                st.success(_("login.password_reset_success", "Password reset successful! Please sign in."))
-                            else:
-                                st.error(f"{_('login.reset_failed', 'Reset failed')}: {message}")
+            # Initialize session manager
+            from utils.session_manager import SessionManager
+            try:
+                session_manager = SessionManager(user_data['username'])
+            except:
+                # Fallback if SessionManager doesn't accept username parameter
+                session_manager = SessionManager()
             
-            with reset_col2:
-                st.info(_("login.reset_instructions", "Enter your email and new password to reset your account."))
+            # Handle language forcing after login
+            if 'force_language_after_login' in st.session_state:
+                handle_forced_language_after_login()
+            
+            st.success(_("login.success", "Login successful!"))
+            st.rerun()
+        else:
+            st.error(_("login.invalid", "Invalid username/email or password"))
+    
+    # Password Reset Section
+    with st.expander(_("login.forgot_password", "Forgot Password?")):
+        st.subheader(_("login.reset_password", "Reset Password"))
+        reset_email = st.text_input(_("login.email", "Email"), key="reset_email")
+        new_password = st.text_input(_("login.new_password", "New Password"), type="password", key="reset_new_password")
+        confirm_password = st.text_input(_("login.confirm_password", "Confirm Password"), type="password", key="reset_confirm_password")
         
-        # Main login form
-        with st.form("login_form"):
-            username_or_email = st.text_input(_("login.username_email", "Username or Email"))
-            password = st.text_input(_("login.password", "Password"), type="password")
-            login_button = st.form_submit_button(_("login.signin", "Sign In"))
-        
-        if login_button:
-            user_data = authenticate(username_or_email, password)
-            if user_data:
-                st.session_state.authenticated = True
-                st.session_state.user_data = user_data
-                st.session_state.username = user_data['username']
-                st.session_state.user_role = user_data['role']
-                st.session_state.user_email = user_data['email']
-                
-                # Initialize session manager
-                from utils.session_manager import SessionManager
-                try:
-                    session_manager = SessionManager(user_data['username'])
-                except:
-                    # Fallback if SessionManager doesn't accept username parameter
-                    session_manager = SessionManager()
-                
-                # Handle language forcing after login
-                if 'force_language_after_login' in st.session_state:
-                    handle_forced_language_after_login()
-                
-                st.success(_("login.success", "Login successful!"))
-                st.rerun()
+        if st.button(_("login.reset_submit", "Reset Password"), key="reset_submit"):
+            if new_password != confirm_password:
+                st.error(_("login.password_mismatch", "Passwords don't match"))
+            elif len(new_password) < 6:
+                st.error(_("login.password_too_short", "Password must be at least 6 characters"))
             else:
-                st.error(_("login.invalid", "Invalid username/email or password"))
+                # Implement password reset logic
+                if reset_email and new_password:
+                    success, message = create_user(reset_email, new_password, 'user', reset_email)
+                    if success:
+                        st.success(_("login.password_reset_success", "Password reset successful! Please sign in."))
+                    else:
+                        st.error(f"{_('login.reset_failed', 'Reset failed')}: {message}")
+        
+        st.info(_("login.reset_instructions", "Enter your email and new password to reset your account."))
 
 def render_signup_tab():
-    """Render sign-up tab content - extracted from app.py lines 570-630"""
-    col1, col2, col3 = st.columns([1, 2, 1])
+    """Render sign-up tab content - sidebar-compatible version"""
+    st.subheader(_("register.signup", "Sign Up"))
     
-    with col2:
-        st.subheader(_("register.signup", "Sign Up"))
-        
-        # Role selection
-        role_options = {
-            'user': _("roles.user", "User - Basic scanning permissions"),
-            'analyst': _("roles.analyst", "Analyst - Advanced analysis capabilities"),
-            'manager': _("roles.manager", "Manager - Team management features"),
-            'admin': _("roles.admin", "Admin - Full system access"),
-            'auditor': _("roles.auditor", "Auditor - Compliance reporting"),
-            'developer': _("roles.developer", "Developer - API access"),
-            'security_officer': _("roles.security_officer", "Security Officer - Security oversight")
-        }
-        
-        with st.form("register_form"):
-            new_username = st.text_input(_("register.username", "Username"))
-            new_email = st.text_input(_("register.email", "Email"))
-            new_password = st.text_input(_("register.password", "Password"), type="password")
-            new_role = st.selectbox(_("register.role", "Role"), options=list(role_options.keys()), format_func=lambda x: role_options[x])
-            confirm_password = st.text_input(_("register.confirm_password", "Confirm Password"), type="password")
-            terms = st.checkbox(_("register.terms", "I agree to the Terms of Service and Privacy Policy"))
-            register_button = st.form_submit_button(_("register.signup", "Sign Up"))
-        
-        if register_button:
-            success, message = create_user(new_username, new_password, new_role, new_email)
-            if success:
-                st.success(_("register.success", "Account created successfully! Please sign in."))
-            else:
-                st.error(f"{_('register.failed', 'Registration failed')}: {message}")
+    # Role selection
+    role_options = {
+        'user': _("roles.user", "User - Basic scanning permissions"),
+        'analyst': _("roles.analyst", "Analyst - Advanced analysis capabilities"),
+        'manager': _("roles.manager", "Manager - Team management features"),
+        'admin': _("roles.admin", "Admin - Full system access"),
+        'auditor': _("roles.auditor", "Auditor - Compliance reporting"),
+        'developer': _("roles.developer", "Developer - API access"),
+        'security_officer': _("roles.security_officer", "Security Officer - Security oversight")
+    }
+    
+    with st.form("register_form"):
+        new_username = st.text_input(_("register.username", "Username"))
+        new_email = st.text_input(_("register.email", "Email"))
+        new_password = st.text_input(_("register.password", "Password"), type="password")
+        new_role = st.selectbox(_("register.role", "Role"), options=list(role_options.keys()), format_func=lambda x: role_options[x])
+        confirm_password = st.text_input(_("register.confirm_password", "Confirm Password"), type="password")
+        terms = st.checkbox(_("register.terms", "I agree to the Terms of Service and Privacy Policy"))
+        register_button = st.form_submit_button(_("register.signup", "Sign Up"))
+    
+    if register_button:
+        success, message = create_user(new_username, new_password, new_role, new_email)
+        if success:
+            st.success(_("register.success", "Account created successfully! Please sign in."))
+        else:
+            st.error(f"{_('register.failed', 'Registration failed')}: {message}")
