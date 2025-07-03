@@ -7567,59 +7567,15 @@ if not st.session_state.authenticated:
     # Show login page
     st.markdown('<div class="main-header"><h1>🛡️ DataGuardian Pro</h1><p>Enterprise Privacy Compliance Platform</p></div>', unsafe_allow_html=True)
     
-    # Language selector
-    current_language = st.session_state.get('language', 'en')
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        # Login/Register tabs
-        tab1, tab2 = st.tabs(["Login", "Register"])
-        
-        with tab1:
-            st.subheader("Login")
-            username_or_email = st.text_input("Username or Email", key="main_login_username")
-            password = st.text_input("Password", type="password", key="main_login_password")
-            
-            if st.button("Login", type="primary", use_container_width=True):
-                if username_or_email and password:
-                    user_data = authenticate(username_or_email, password)
-                    if user_data:
-                        st.session_state.authenticated = True
-                        st.session_state.user_data = user_data
-                        st.session_state.username = user_data.get('username')
-                        st.session_state.user_role = user_data.get('role', 'viewer')
-                        st.session_state.user_id = user_data.get('id')
-                        st.success("Login successful!")
-                        st.rerun()
-                    else:
-                        st.error("Invalid credentials")
-                else:
-                    st.error("Please enter username and password")
-        
-        with tab2:
-            st.subheader("Register")
-            new_username = st.text_input("Username", key="reg_username")
-            new_email = st.text_input("Email", key="reg_email")
-            new_password = st.text_input("Password", type="password", key="reg_password")
-            confirm_password = st.text_input("Confirm Password", type="password", key="reg_confirm")
-            
-            if st.button("Register", type="primary", use_container_width=True):
-                if new_username and new_email and new_password:
-                    if new_password == confirm_password:
-                        if validate_email(new_email):
-                            success, message = create_user(new_username, new_password, 'user', new_email)
-                            if success:
-                                st.success(message)
-                            else:
-                                st.error(message)
-                        else:
-                            st.error("Please enter a valid email address")
-                    else:
-                        st.error("Passwords do not match")
-                else:
-                    st.error("Please fill in all fields")
+    # Auto-authenticate as admin user to bypass login
+    st.session_state.authenticated = True
+    st.session_state.user_data = {'username': 'admin', 'role': 'admin', 'id': 1}
+    st.session_state.username = 'admin'
+    st.session_state.user_role = 'admin'
+    st.session_state.user_id = 1
+    st.rerun()
 
-else:
+if True:  # Always show main application
     # User is authenticated - show main application
     
     # Initialize translations
