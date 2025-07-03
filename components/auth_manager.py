@@ -336,13 +336,10 @@ def render_signin_tab():
             st.session_state.user_role = user_data['role']
             st.session_state.user_email = user_data['email']
             
-            # Initialize session manager
+            # Initialize session manager (static class - no instantiation needed)
             from utils.session_manager import SessionManager
-            try:
-                session_manager = SessionManager(user_data['username'])
-            except:
-                # Fallback if SessionManager doesn't accept username parameter
-                session_manager = SessionManager()
+            # SessionManager uses static methods, no instantiation required
+            user_id = SessionManager.get_user_id()
             
             # Handle language forcing after login
             if 'force_language_after_login' in st.session_state:
