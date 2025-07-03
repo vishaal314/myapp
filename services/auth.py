@@ -101,6 +101,20 @@ ROLE_PERMISSIONS = {
             'api:access', 'api:manage_keys'
         ]
     },
+    'user': {
+        'description': 'Standard user with basic scanning and viewing permissions',
+        'permissions': [
+            # Basic scan permissions
+            'scan:create', 'scan:view', 'scan:export',
+            'scan:website', 'scan:code', 'scan:document', 'scan:database', 'scan:api',
+            
+            # Report permissions
+            'report:create', 'report:view', 'report:export',
+            
+            # View permissions
+            'dashboard:view', 'history:view'
+        ]
+    },
     'analyst': {
         'description': 'Can create and analyze scans, generate reports',
         'permissions': [
@@ -270,6 +284,14 @@ DEFAULT_USERS = [
         "role": "manager",
         "email": "manager@example.com",
         "permissions": ROLE_PERMISSIONS["manager"]["permissions"],
+        "created_at": datetime.now().isoformat()
+    },
+    {
+        "username": "user",
+        "password_hash": hashlib.sha256("user123".encode()).hexdigest(),
+        "role": "user",
+        "email": "user@example.com",
+        "permissions": ROLE_PERMISSIONS["user"]["permissions"],
         "created_at": datetime.now().isoformat()
     }
 ]

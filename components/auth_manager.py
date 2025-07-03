@@ -334,7 +334,9 @@ def render_signin_tab():
             st.session_state.user_data = user_data
             st.session_state.username = user_data['username']
             st.session_state.user_role = user_data['role']
+            st.session_state.role = user_data['role']  # Also set 'role' key for permission checks
             st.session_state.user_email = user_data['email']
+            st.session_state.permissions = user_data.get('permissions', [])  # Critical: Set user permissions
             
             # Initialize session manager (static class - no instantiation needed)
             from utils.session_manager import SessionManager
@@ -383,9 +385,10 @@ def render_signup_tab():
         'analyst': _("roles.analyst", "Analyst - Advanced analysis capabilities"),
         'manager': _("roles.manager", "Manager - Team management features"),
         'admin': _("roles.admin", "Admin - Full system access"),
-        'auditor': _("roles.auditor", "Auditor - Compliance reporting"),
+        'viewer': _("roles.viewer", "Viewer - Read-only access"),
         'developer': _("roles.developer", "Developer - API access"),
-        'security_officer': _("roles.security_officer", "Security Officer - Security oversight")
+        'security_officer': _("roles.security_officer", "Security Officer - Security oversight"),
+        'data_protection_officer': _("roles.dpo", "Data Protection Officer - Privacy compliance")
     }
     
     with st.form("register_form"):

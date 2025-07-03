@@ -3,25 +3,183 @@
     "username": "admin",
     "password_hash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
     "role": "admin",
-    "email": "admin@example.com"
+    "email": "admin@example.com",
+    "permissions": [
+      "scan:create",
+      "scan:view",
+      "scan:export",
+      "scan:delete",
+      "scan:premium",
+      "scan:configure",
+      "scan:website",
+      "scan:code",
+      "scan:document",
+      "scan:database",
+      "scan:api",
+      "user:create",
+      "user:view",
+      "user:update",
+      "user:delete",
+      "report:create",
+      "report:view",
+      "report:export",
+      "system:settings",
+      "system:logs",
+      "system:backup",
+      "system:restore",
+      "admin:manage_users",
+      "admin:manage_roles",
+      "admin:view_metrics",
+      "payment:manage",
+      "payment:view",
+      "audit:view",
+      "audit:export",
+      "dashboard:view",
+      "history:view",
+      "api:access",
+      "api:manage_keys"
+    ],
+    "created_at": "2025-07-03T21:31:36.262081"
   },
   "analyst": {
     "username": "analyst",
     "password_hash": "20249749412d73a3f5799f6f1dcf910e7b4aa3ce4de133b1f8a63c044792a4e9",
     "role": "analyst",
-    "email": "analyst@example.com"
+    "email": "analyst@example.com",
+    "permissions": [
+      "scan:create",
+      "scan:view",
+      "scan:export",
+      "scan:premium",
+      "scan:configure",
+      "scan:website",
+      "scan:code",
+      "scan:document",
+      "scan:database",
+      "scan:api",
+      "report:create",
+      "report:view",
+      "report:export",
+      "user:view",
+      "audit:view",
+      "dashboard:view",
+      "history:view",
+      "api:access"
+    ],
+    "created_at": "2025-07-03T21:31:36.262092"
   },
   "viewer": {
     "username": "viewer",
     "password_hash": "65375049b9e4d7cad6c9ba286fdeb9394b28135a3e84136404cfccfdcc438894",
     "role": "viewer",
-    "email": "viewer@example.com"
+    "email": "viewer@example.com",
+    "permissions": [
+      "scan:view",
+      "report:view",
+      "dashboard:view",
+      "history:view"
+    ],
+    "created_at": "2025-07-03T21:31:36.262095"
   },
-  "vishaal": {
-    "username": "vishaal",
-    "password_hash": "531ffc17cd645ccb7578ea6d18ce459dab088ad66125bff36c90033715f8cf64",
-    "role": "analyst",
-    "email": "vishaal314@gmail.com",
-    "password_reset_at": "2025-05-18T10:35:10.777540"
+  "security": {
+    "username": "security",
+    "password_hash": "eae9965e8315dd94b13f0ecf097be92d43fbb5b07f432b824f418d2b84a7de35",
+    "role": "security_officer",
+    "email": "security@example.com",
+    "permissions": [
+      "scan:create",
+      "scan:view",
+      "scan:export",
+      "scan:configure",
+      "scan:website",
+      "scan:code",
+      "scan:document",
+      "report:view",
+      "report:export",
+      "report:create",
+      "system:logs",
+      "audit:view",
+      "audit:export",
+      "dashboard:view",
+      "history:view"
+    ],
+    "created_at": "2025-07-03T21:31:36.262097"
+  },
+  "dpo": {
+    "username": "dpo",
+    "password_hash": "732624aee8b8a316928dc88a8c1909f4d760335d580a85807fc8d490e30143a6",
+    "role": "data_protection_officer",
+    "email": "dpo@example.com",
+    "permissions": [
+      "scan:view",
+      "scan:export",
+      "report:view",
+      "report:export",
+      "report:create",
+      "audit:view",
+      "dashboard:view",
+      "history:view"
+    ],
+    "created_at": "2025-07-03T21:31:36.262099"
+  },
+  "developer": {
+    "username": "developer",
+    "password_hash": "e00884b83db1cc66573a6cb329603ed1b152f326cbb5183a8effaa36934d352a",
+    "role": "developer",
+    "email": "developer@example.com",
+    "permissions": [
+      "scan:create",
+      "scan:view",
+      "scan:export",
+      "scan:website",
+      "scan:code",
+      "scan:api",
+      "report:view",
+      "api:access",
+      "api:manage_keys",
+      "dashboard:view",
+      "history:view"
+    ],
+    "created_at": "2025-07-03T21:31:36.262101"
+  },
+  "manager": {
+    "username": "manager",
+    "password_hash": "866485796cfa8d7c0cf7111640205b83076433547577511d81f8030ae99ecea5",
+    "role": "manager",
+    "email": "manager@example.com",
+    "permissions": [
+      "scan:view",
+      "scan:export",
+      "report:view",
+      "report:export",
+      "admin:view_metrics",
+      "payment:view",
+      "audit:view",
+      "dashboard:view",
+      "history:view"
+    ],
+    "created_at": "2025-07-03T21:31:36.262103"
+  },
+  "user": {
+    "username": "user",
+    "password_hash": "e606e38b0d8c19b24cf0ee3808183162ea7cd63ff7912dbb22b5e803286b4446",
+    "role": "user",
+    "email": "user@example.com",
+    "permissions": [
+      "scan:create",
+      "scan:view",
+      "scan:export",
+      "scan:website",
+      "scan:code",
+      "scan:document",
+      "scan:database",
+      "scan:api",
+      "report:create",
+      "report:view",
+      "report:export",
+      "dashboard:view",
+      "history:view"
+    ],
+    "created_at": "2025-07-03T21:31:36.262105"
   }
 }
