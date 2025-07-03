@@ -74,7 +74,10 @@ def main():
     
     # Check authentication status
     if not is_authenticated():
+        # Show login in sidebar and landing page in main area
         render_login_interface()
+        # Show the beautiful landing page in the main content area
+        render_dashboard_content()
         return
     
     # Authenticated user interface
