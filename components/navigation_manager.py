@@ -194,52 +194,80 @@ def render_membership_status():
 
 def render_dashboard_content():
     """
-    Render dashboard main content
-    Extracted from app.py lines 1200-1400
+    Render the original colorful landing page design
+    Restored from app.py lines 1200-1400 to preserve the beautiful UI
     """
-    st.title(_("dashboard.welcome", "Welcome Dashboard"))
+    # Original beautiful landing page design
+    st.markdown("""
+    <div style="background-color: #f8fafc; padding: 30px; border-radius: 10px; margin: 20px 0;">
+        <h1 style="color: #1e3a8a; margin-bottom: 10px;">DataGuardian Pro</h1>
+        <h3 style="color: #4b5563; font-weight: 500; margin-top: 0; margin-bottom: 20px;">Enterprise Privacy Compliance Platform</h3>
+        <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">
+            Comprehensive GDPR compliance platform that helps organizations identify, analyze, and protect 
+            personally identifiable information (PII) across multiple data sources.
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">🔍 Code Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Scan source code repositories for security vulnerabilities and PII detection.</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">📄 Document Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Analyze documents (PDF, DOCX, TXT) for personally identifiable information.</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">🖼️ Image Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">OCR-based scanning of images for text content and sensitive data.</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">🌐 Website Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Evaluate websites for privacy compliance and data collection practices.</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">🗄️ Database Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Direct database scanning for PII across multiple database types.</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #4f46e5; margin-top: 0;">🔌 API Scanner</h4>
+                <p style="color: #6b7280; margin-bottom: 0;">Assess API endpoints for security vulnerabilities and data exposure risks.</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Dashboard metrics
-    col1, col2, col3 = st.columns(3)
+    # Beautiful gradient feature section
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 15px; margin: 30px 0; color: white; text-align: center;">
+        <h2 style="margin: 0 0 20px 0; color: white;">Start Your Privacy Compliance Journey</h2>
+        <p style="font-size: 18px; margin: 0 0 30px 0; opacity: 0.9;">
+            Get started with our comprehensive GDPR scanning platform and ensure your organization meets privacy compliance requirements.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <strong>Multi-Source Scanning</strong><br>
+                <span style="opacity: 0.9;">Code, Documents, Images & More</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <strong>Professional Reports</strong><br>
+                <span style="opacity: 0.9;">Certificate-Style PDF & HTML</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <strong>GDPR Compliance</strong><br>
+                <span style="opacity: 0.9;">Dutch & EU Standards</span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    with col1:
-        # Total scans metric
-        st.metric(
-            label=_("dashboard.total_scans", "Total Scans"),
-            value="0",
-            delta="0"
-        )
-    
-    with col2:
-        # High risk items metric  
-        st.metric(
-            label=_("dashboard.high_risk_items", "High Risk Items"),
-            value="0", 
-            delta="0"
-        )
-    
-    with col3:
-        # Compliance score metric
-        st.metric(
-            label=_("dashboard.compliance_score", "Compliance Score"),
-            value="100%",
-            delta="+0%"
-        )
-    
-    # Recent activity section
-    st.subheader(_("dashboard.recent_activity", "Recent Activity"))
-    
-    try:
-        # Try to get actual scan results
-        from services.results_aggregator import ResultsAggregator
-        results_aggregator = ResultsAggregator()
-        
-        # Get recent scans (placeholder implementation)
-        st.info(_("dashboard.no_recent_activity", "No recent activity. Start a scan to see results here."))
-        
-    except Exception as e:
-        logger.error(f"Error loading dashboard data: {e}")
-        st.info(_("dashboard.no_scan_data", "Dashboard features will be implemented based on scan results."))
+    # Professional footer section
+    st.markdown("""
+    <div style="text-align: center; padding: 20px; background: linear-gradient(to right, #f8f9fa, #f1f3f5); 
+               border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <h4 style="color: #3B82F6; margin-bottom: 15px;">DataGuardian Pro</h4>
+        <p style="color: #4b5563; margin-bottom: 5px;">Enterprise Privacy Compliance Platform</p>
+        <p style="color: #6b7280; font-size: 0.8em;">© 2025 DataGuardian. All rights reserved.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 def render_scan_history():
     """
