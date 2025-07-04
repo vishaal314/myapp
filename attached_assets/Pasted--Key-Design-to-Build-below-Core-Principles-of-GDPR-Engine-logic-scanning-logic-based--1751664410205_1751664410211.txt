@@ -1,0 +1,385 @@
+
+
+Key Design to Build below - 
+
+Core Principles of GDPR Engine logic - 
+
+scanning logic based on all GDPR rules Netherland 
+Scan files and cloud storage for GDPR-relevant PII and generate a compliance report.
+
+Focus on consent verification, especially for minors.
+
+Ensure legal basis documentation per data type (especially health, criminal, employee).
+
+Include flagging mechanisms for non-compliance with Dutch-specific rules.
+
+Integrate with AP’s breach reporting timelines
+
+Lawfulness, Fairness, and Transparency
+Data must be processed lawfully, fairly, and transparently to the data subject.
+
+Purpose Limitation
+Collect data for specific, explicit, and legitimate purposes, and not process it beyond those purposes.
+
+Data Minimization
+Data must be adequate, relevant, and limited to what is necessary.
+
+Accuracy
+Data must be accurate and kept up to date. Inaccurate data should be erased or corrected without delay.
+
+Storage Limitation
+Keep personal data only as long as necessary for the purpose it was collected.
+
+Integrity and Confidentiality (Security)
+Ensure appropriate security (including protection against unauthorized access or disclosure).
+
+Accountability
+The controller is responsible for and must be able to demonstrate compliance with all the above principles.
+
+Architecture Overview
+
+                                +--------------------------+
+                                |   Admin Dashboard UI     |
+                                | (Streamlit / Power BI)   |
+                                +-----------+--------------+
+                                            |
+                                +-----------v-------------+
+                                |   Results Aggregator DB  |
+                                | Cosmos DB / PostgreSQL   |
+                                +-----------^--------------+
+                                            |
++----------------------------+              |                +---------------------------+
+|        User/API Call       | <----------> |     DSR Orchestrator (Azure Function)     |
+| (Manual, CI/CD, Webhook)   |              +----------------^--------------------------+
++----------------------------+                                 |
+                    |                                          |
+     +--------------+------+-----------+-----------+-----------+-----------+----------+---------+
+     |                     |           |           |           |           |          |         |
+     v                     v           v           v           v           v          v         v
++------------+    +--------------+ +-------------+ +-------------+ +------------+ +--------------+ +----------------------+
+| Code Scan  |    | Blob/File    | | Image Scan | | DB Scanner | | API Scan   | | Manual Upload | | Sustainability Scan  |
+| TruffleHog |    | Presidio+OCR | | Azure Vision| | ADF+Presidio| | Swagger/NLP| | Streamlit UI  | | Azure API + Custom   |
++------------+    +--------------+ +-------------+ +-------------+ +------------+ +--------------+ +----------------------+
+
+ Full Folder & Module Structure
+arduino
+CopyEdit
+gdpr-scan-engine/
+├── services/
+│   ├── code-scanner/
+│   │   ├── app.py
+│   │   ├── scanner.py
+│   │   └── Dockerfile
+│   ├── blob-scanner/
+│   │   ├── app.py
+│   │   ├── file_scanner.py
+│   │   └── ocr_presidio.py
+│   ├── image-scanner/
+│   │   ├── app.py
+│   │   ├── vision_client.py
+│   │   └── face_analyzer.py
+│   ├── db-scanner/
+│   │   ├── app.py
+│   │   ├── adf_pipeline_trigger.py
+│   │   └── presidio_structured_scan.py
+│   ├── api-scanner/
+│   │   ├── app.py
+│   │   ├── swagger_parser.py
+│   │   └── nlp_detector.py
+│   ├── manual-upload-tool/
+│   │   ├── app.py
+│   │   └── ui_streamlit.py
+│   ├── sustainability-scanner/
+│   │   ├── app.py
+│   │   ├── azure_emission_check.py
+│   │   ├── idle_resource_scanner.py
+│   │   ├── code_efficiency_checker.py
+│   │   ├── storage_bloat_analyzer.py
+│   │   └── report_generator.py
+│   ├── dsr-orchestrator/
+│   │   ├── app.py
+│   │   ├── orchestrator.py
+│   │   └── config.py
+│   └── results-aggregator/
+│       ├── app.py
+│       ├── db_writer.py
+│       └── schema_validator.py
+├── dashboard/
+│   ├── streamlit_app.py
+│   └── powerbi_report.pbix
+├── shared/
+│   ├── utils/
+│   │   ├── azure.py
+│   │   ├── logging.py
+│   │   └── risk_scoring.py
+│   ├── schemas/
+│   │   └── result_schema.json
+├── scripts/
+│   ├── deploy_all.sh
+│   ├── test_all_services.py
+│   └── seed_data.py
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
+
+
+Key Services – Breakdown & Purpose to be developed 
+
+Service	Stack	Purpose
+code-scanner/	Python + TruffleHog/Semgrep	Secrets & PII in source code
+blob-scanner/	Python + Presidio + OCR	Scan PDFs, DOCs for PII
+image-scanner/	Azure Vision API	OCR, face, visual identity
+db-scanner/	ADF + Python	Structured DB PII scanning
+api-scanner/	FastAPI + OpenAPI/NLP	Scan endpoints & traffic
+manual-upload-tool/	Streamlit	Upload files manually for scanning
+sustainability-scanner/	Azure API + Python	ESG compliance: emissions, idle, bloat, etc.
+dsr-orchestrator/	Azure Function	Coordinates all services, collects results
+results-aggregator/	Python + Cosmos/Postgres	Normalize & store results
+dashboard/	Streamlit + Power BI	ESG/PII compliance dashboard
+
+
+Login to Main Dashboard with gmail/corporate ID or any valid  Email then only provide next step option to select type of scan 
+for every scan store result locally later  display on dashboard and if user want provide scan results copy into export of pdf as report .
+Design of generated reports should be professional and relevant IN HTML ,pdf 
+provide special attaention to PII ,SECRETS , Passwords,patterns in all type of scans 
+
+Include requirements for scalability if data increases app should not crash .
+include sapearte page for payments integrated with stripe , linked to free scans (10 per day / profile) for all , premium (20 euro/month) , Gold (tbd)
+
+provide option to select regions and specific region GDPR apply example germany,france,belgium
+
+A rich dashboard suported by web , mobile (iphone-Andriod)
+
+also add 2 new scanners 
+
+AI AND DATA MODELS Scanner
+SOC2 Scanner 
+
+
+3.1 GDPR code-scanner/
+Stack: Python + TruffleHog / Semgrep + Presidio + Regex/NLP
+Requirements:
+
+Multi-language support: Python, JS, Java, Terraform, YAML, etc.
+Secrets detection via entropy, regex, and known providers (AWS, Azure, Stripe, etc.)
+Custom rule support (e.g., semgrep-rules.yaml or presidio recognizers)
+Metadata enrichment: Git blame, commit hash, author
+Regional PII tagging (UAVG, BDSG, CNIL, GDPR Article ref.)
+False positive suppression (baseline diffing or ignore rules)
+CI/CD compatibility (CLI + JSON output)
+Output Format:
+
+{
+  "file": "src/auth.py",
+  "line": 72,
+  "type": "API_KEY",
+  "entropy": 4.9,
+  "region_flags": ["GDPR-Article5", "UAVG"],
+  "context_snippet": "api_key = 'sk_test_****'",
+  "commit_info": {
+    "author": "vishaal.kumar",
+    "commit_id": "a8b91a3"
+  }
+} 
+
+OUTPUT : reports OPTIONS ON GUI : pdf ,html 
+
+2. Core GDPR Principles (Implementation Guidelines)
+- **Lawfulness, Fairness, Transparency**: All scans must log metadata of processing.
+- **Purpose Limitation**: Flag data used outside defined scope.
+- **Data Minimization**: Highlight unused or excessive data.
+- **Accuracy**: Validate if detected data is recent and correct.
+- **Storage Limitation**: Detect outdated or stale PII.
+- **Integrity & Confidentiality**: Secure data in transit and at rest.
+- **Accountability**: Generate audit logs and traceable report links.
+
+
+ Added GDPR compliance module imports to CodeScanner
+✓ Enhanced content scanning with GDPR-specific features
+✓ Implemented dedicated functions for DSAR patterns detection
+✓ Added consent verification marker scanning
+✓ Implemented security patterns scanning (GDPR Art. 32)
+✓ Created enhancement function for GDPR data enrichment
+✓ Added GDPR compliance scoring and metrics
+
+
+✓ Successfully implemented GDPR principles scanning for all 7 principles
+✓ Enhanced code scanner with specialized pattern detection for each principle
+✓ Optimized code scanner performance for large repositories
+✓ Added better error handling for scanning timeout issues
+✓ Reduced file scanning timeouts from 30 to 20 seconds for faster performance
+
+3.2 blob-scanner/
+Stack: Python + Azure Presidio + Tika + Tesseract OCR
+Requirements:
+
+Input: File/Blob URLs or local uploads (CSV, XLSX, DOCX, TXT, PDF)
+OCR fallback for scanned PDFs/images within docs
+Page-wise scanning for large docs
+Metadata tagging (filename, mime type, last modified)
+Regional regex/NLP PII recognizers
+Scan summary (PII type frequency per file)
+Output Format:
+
+{
+  "filename": "payroll_october2024.pdf",
+  "pages": [
+    {
+      "page": 1,
+      "pii": [
+        {"type": "EMAIL_ADDRESS", "text": "john.doe@example.com"},
+        {"type": "BANK_ACCOUNT", "text": "NL91ABNA0417164300"}
+      ]
+    }
+  ],
+  "meta": {
+    "mime_type": "application/pdf",
+    "size_kb": 344
+  },
+  "compliance": ["GDPR", "UAVG"]
+}
+3.3 image-scanner/
+Stack: Azure Computer Vision API + Python + PIL
+Requirements:
+
+OCR for JPG, PNG, HEIC formats
+Facial detection: bounding box + count
+Object detection: ID cards, number plates, licenses
+GPS/EXIF extraction
+Detect scanned documents vs personal photos
+Output Format:
+
+{
+  "filename": "passport_scan.jpg",
+  "faces_detected": 1,
+  "objects": ["ID_CARD", "PHOTO"],
+  "ocr_text": "Name: Alice M. Smith\nPassport No: 12345678",
+  "geotag": "52.3667, 4.8945"
+}
+3.4 db-scanner/
+Stack: ADF + Python + Presidio (Batch mode)
+Requirements:
+
+DB Support: PostgreSQL, MySQL, Cosmos DB, Azure SQL
+Column profiling: datatype, null %, cardinality
+Sample row fetching (with masking)
+Regional PII tagging
+Output as JSON and exportable CSV
+Secure connection handling (SSL, token-based access)
+Output Format:
+
+{
+  "table": "employee_data",
+  "column": "email",
+  "datatype": "VARCHAR",
+  "pii_type": "EMAIL_ADDRESS",
+  "sample": "john.doe@company.com",
+  "compliance_flags": ["GDPR", "BDSG"]
+}
+3.5 api-scanner/
+Stack: FastAPI + Swagger/OpenAPI parser + Presidio + Custom NLP
+Requirements:
+
+Input: Swagger 2.0 / OpenAPI 3.1 JSON or YAML
+Endpoint analysis: Methods + Parameters
+Payload tracing for PII types (nested JSON, URL params, headers)
+Security headers inspection (CORS, auth type, rate-limiting)
+Detect PII-in-response or insecure transports (HTTP)
+Output Format:
+
+{
+  "endpoint": "/user/register",
+  "method": "POST",
+  "params": ["email", "phone_number", "password"],
+  "pii_flags": ["EMAIL_ADDRESS", "PHONE_NUMBER"],
+  "security": {
+    "https": true,
+    "auth_type": "Bearer",
+    "headers": ["X-RateLimit-Limit"]
+  }
+}
+3.6 manual-upload-tool/
+Stack: Streamlit + Python (reuses blob-scanner/)
+Requirements:
+
+UI to drag-drop or browse files (max 50MB)
+Show real-time scan results or loading spinner
+Scan status summary with file-level logs
+Export scan result as PDF/CSV/JSON
+Optional email report send
+Output: Same as blob-scanner/ JSON + file download link
+
+3.7 sustainability-scanner/
+Stack: Azure SDK + Python
+Requirements:
+
+List all resources by tag, region, and owner in scan report 
+Detect idle VMs, unattached disks, orphaned snapshots
+Compute estimated CO₂ footprint (Azure APIs) 
+Code bloat detection via size + unused imports (Python)
+Weekly/monthly cost + carbon saving suggestions
+Output Format:
+
+{
+  "resource_id": "/subscriptions/abc/resourceGroups/test-vm",
+  "type": "VirtualMachine",
+  "idle_days": 23,
+  "estimated_co2_kg": 14.2,
+  "suggestion": "Deallocate or resize VM",
+  "tags": {
+    "project": "devtest",
+    "owner": "vishaal"
+  }
+}
+3.8 ai-models-scanner/
+Stack: Python + ONNX/TensorFlow/PyTorch parsers + SHAP + Fairlearn
+Requirements:
+
+Model file input (.onnx, .pt, .pb)
+Embedded text analysis (tokenizers/vocab)
+PII leakage detection via adversarial prompts
+Bias testing: gender, race, age (Fairlearn)
+Explainability: SHAP/LIME metrics for transparency
+Output as bias scores, PII presence %, explainability pass/fail
+
+
+Scraping practices of large AI models (e.g., Copilot-style tools).
+Consent mechanisms for using open-source contributions in training.
+Rights of developers who want their data excluded from models.
+Obligations for explainability when AI tools suggest or generate code.
+Audit trails for models trained with publicly available code
+
+
+
+
+
+Output Format:
+
+{
+  "model": "loan_approval_model.onnx",
+  "bias_flags": ["gender_bias"],
+  "pii_presence_score": 0.78,
+  "explainability_score": 0.62,
+  "status": "Needs mitigation"
+}
+3.9 soc2-scanner/
+Stack: Python + SOC2 TSC mapping DB + rules engine
+Requirements:
+
+Input: Scan results from code/blob/db/api/image modules
+Map findings to SOC2 TSC principles
+Pre-defined rule checks per principle (e.g., “no plaintext passwords” = Security breach)
+Violation heatmap per TSC domain
+Exportable checklist & audit notes
+Output Format:
+
+{
+  "principle": "Confidentiality",
+  "violation": "API endpoint `/export/users` exposes email addresses",
+  "scanner": "api-scanner",
+  "risk_level": "High",
+  "remediation_suggestion": "Apply authentication + response masking"
+}
+
+
+
