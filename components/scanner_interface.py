@@ -16,7 +16,7 @@ from services.code_scanner import CodeScanner
 from services.blob_scanner import BlobScanner
 from services.website_scanner import WebsiteScanner
 from services.ai_model_scanner import AIModelScanner
-from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository
+# Enhanced SOC2 scanner will be imported when needed
 from utils.gdpr_rules import REGIONS
 from utils.i18n import get_text
 from utils.async_scan_manager import submit_async_scan
@@ -368,36 +368,521 @@ def render_manual_upload_config():
         st.success(f"✅ {len(uploaded_files)} files uploaded")
 
 def render_scan_submission():
-    """Render scan submission button and handle scanning - extracted from app.py lines 6500-6600"""
+    """Render scan submission button and handle actual scanning execution"""
     st.markdown("---")
     
-    # Scan submission
+    # Scan submission with real execution
     if st.button(_("scan.start_scan", "🚀 Start Scan"), type="primary", use_container_width=True):
-        try:
-            # Get scan parameters
-            scan_type = st.session_state.get('scan_type', 'code')
-            region = st.session_state.get('region', 'Netherlands')
-            username = st.session_state.get('username', 'anonymous')
+        scan_type = st.session_state.get('scan_type')
+        region = st.session_state.get('region', 'Netherlands')
+        username = st.session_state.get('username', 'anonymous')
+        
+        # Route to appropriate scanner based on scan type
+        if scan_type == _("scan.code"):
+            execute_code_scan(region, username)
+        elif scan_type == _("scan.document"):
+            execute_document_scan(region, username)
+        elif scan_type == _("scan.image"):
+            execute_image_scan(region, username)
+        elif scan_type == _("scan.database"):
+            execute_database_scan(region, username)
+        elif scan_type == _("scan.api"):
+            execute_api_scan(region, username)
+        elif scan_type == _("scan.website"):
+            execute_website_scan(region, username)
+        elif scan_type == _("scan.dpia"):
+            execute_dpia_scan(region, username)
+        elif scan_type == _("scan.sustainability"):
+            execute_sustainability_scan(region, username)
+        elif scan_type == _("scan.ai_model"):
+            execute_ai_model_scan(region, username)
+        elif scan_type == _("scan.soc2"):
+            execute_soc2_scan(region, username)
+        else:
+            execute_manual_upload_scan(region, username)
+
+def execute_code_scan(region: str, username: str):
+    """Execute code scanning with proper result storage - FIXED using working implementation"""
+    try:
+        # Get scan parameters from session state
+        repo_source = st.session_state.get('repo_source', _("scan.upload_files"))
+        
+        # Progress tracking
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        # Initialize results storage
+        scan_results = []
+        import tempfile
+        import os
+        from datetime import datetime
+        from services.code_scanner import CodeScanner
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_paths = []
             
-            # Generate scan ID
-            scan_id = str(uuid.uuid4())
-            
-            # For now, simulate scan submission until proper function mapping is implemented
-            try:
-                st.info(f"Scan type '{scan_type}' configured for region '{region}'")
-                st.info("Scan functionality will be available after function mapping implementation")
-                success = True
-                scan_id = str(uuid.uuid4())
-            except Exception as e:
-                st.error(f"Error submitting scan: {str(e)}")
-                success = False
-            if success:
-                st.success(_("scan.submitted", "Scan submitted successfully! Check the Results page for updates."))
-                # Redirect to results page
-                st.session_state.selected_nav = _("results.title", "Results")
-            else:
-                st.error(_("scan.submission_failed", "Scan submission failed. Please try again."))
+            if repo_source == _("scan.upload_files"):
+                # Handle uploaded files
+                uploaded_files = st.session_state.get('code_files', [])
+                if not uploaded_files:
+                    st.error("Please upload code files to scan.")
+                    return
                 
-        except Exception as e:
-            logger.error(f"Error submitting scan: {e}")
-            st.error(_("scan.error", "An error occurred while submitting the scan."))
+                status_text.text("Processing uploaded files...")
+                progress_bar.progress(0.1)
+                
+                # Save uploaded files to temp directory
+                for i, uploaded_file in enumerate(uploaded_files):
+                    progress = 0.1 + (i / len(uploaded_files) * 0.3)  # 10% to 40%
+                    progress_bar.progress(progress)
+                    status_text.text(f"Processing file {i+1}/{len(uploaded_files)}: {uploaded_file.name}")
+                    
+                    file_path = os.path.join(temp_dir, uploaded_file.name)
+                    with open(file_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                    file_paths.append(file_path)
+                
+                # Scan each file using working implementation
+                scanner = CodeScanner(
+                    extensions=[".py", ".js", ".java", ".tf", ".yaml", ".yml"],
+                    include_comments=True,
+                    region=region,
+                    use_entropy=True,
+                    use_git_metadata=True,
+                    include_article_refs=True
+                )
+                
+                progress_bar.progress(0.5)
+                status_text.text("Starting file analysis...")
+                
+                for i, file_path in enumerate(file_paths):
+                    try:
+                        progress = 0.5 + (i / len(file_paths) * 0.4)  # 50% to 90%
+                        progress_bar.progress(progress)
+                        status_text.text(f"Scanning file {i+1}/{len(file_paths)}: {os.path.basename(file_path)}")
+                        
+                        # Use the working scanner method
+                        result = scanner._scan_file_with_timeout(file_path)
+                        if result:
+                            scan_results.append(result)
+                            
+                    except Exception as e:
+                        logger.error(f"Error scanning file {file_path}: {e}")
+                        continue
+                
+            else:
+                # Handle GitHub repository using working implementation
+                repo_url = st.session_state.get('repo_url', '')
+                if not repo_url:
+                    st.error("Please enter a repository URL to scan.")
+                    return
+                
+                branch_name = st.session_state.get('repo_branch', 'main')
+                auth_token = st.session_state.get('repo_token', None)
+                
+                status_text.text(f"Starting repository scan: {repo_url}")
+                progress_bar.progress(0.1)
+                
+                # Use working GitHub scanner
+                from services.github_repo_scanner import scan_github_repo_for_code
+                
+                def repo_progress_callback(current, total, current_file):
+                    progress = 0.1 + (current / total * 0.8)  # 10% to 90%
+                    progress_bar.progress(min(progress, 0.9))
+                    status_text.text(f"Scanning repository file {current}/{total}: {current_file}")
+                
+                # Execute repository scan
+                repo_result = scan_github_repo_for_code(
+                    repo_url=repo_url,
+                    branch=branch_name,
+                    token=auth_token,
+                    progress_callback=repo_progress_callback
+                )
+                
+                if repo_result.get('status') == 'error':
+                    st.error(f"Repository scan failed: {repo_result.get('message', 'Unknown error')}")
+                    return
+                
+                # Store repository scan results
+                scan_results = [repo_result]
+            
+            # Complete progress
+            progress_bar.progress(1.0)
+            status_text.text("Scan completed!")
+            
+            # Process and store results using working format
+            if scan_results:
+                # Aggregate results in working format
+                if repo_source == _("scan.upload_files"):
+                    total_files = len(file_paths)
+                    source_info = 'uploaded_files'
+                else:
+                    # For repository scans, get info from the first result
+                    first_result = scan_results[0] if scan_results else {}
+                    total_files = first_result.get('files_scanned', 0)
+                    source_info = st.session_state.get('repo_url', 'repository')
+                
+                total_pii = sum(len(res.get('pii_found', [])) for res in scan_results)
+                
+                aggregated_results = {
+                    'scan_id': str(uuid.uuid4()),
+                    'scan_type': 'code',
+                    'timestamp': datetime.now().isoformat(),
+                    'region': region,
+                    'files_scanned': total_files,
+                    'total_pii_found': total_pii,
+                    'scan_results': scan_results,
+                    'source': source_info,
+                    'status': 'completed'
+                }
+                
+                # Store results for display
+                st.session_state['code_scan_results'] = aggregated_results
+                st.session_state['code_scan_complete'] = True
+                st.session_state['last_scan_type'] = 'code'
+                
+                st.success(f"✅ Code scan completed! Found {total_pii} potential PII items in {total_files} files.")
+                
+                # Display results immediately
+                display_code_scan_results(aggregated_results)
+                
+            else:
+                st.warning("Scan completed but no results were generated.")
+                
+    except Exception as e:
+        st.error(f"Code scan error: {str(e)}")
+        logger.error(f"Code scan execution error: {e}")
+        import traceback
+        st.code(traceback.format_exc())
+
+# These functions have been integrated into execute_code_scan() above
+
+def display_code_scan_results(scan_results):
+    """Display code scan results with download options - FIXED using working format"""
+    st.subheader("📊 Code Scan Results")
+    
+    # Summary metrics using working result format
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Files Scanned", scan_results.get('files_scanned', 0))
+    with col2:
+        st.metric("Total PII Found", scan_results.get('total_pii_found', 0))
+    with col3:
+        scan_type = scan_results.get('scan_type', 'code')
+        st.metric("Scan Type", scan_type.title())
+    with col4:
+        region = scan_results.get('region', 'Unknown')
+        st.metric("Region", region)
+    
+    # Display source information
+    source = scan_results.get('source', 'Unknown')
+    if source != 'uploaded_files':
+        st.info(f"📂 **Source**: {source}")
+    else:
+        st.info(f"📁 **Source**: Uploaded Files")
+    
+    # Process findings from scan results
+    all_findings = []
+    individual_results = scan_results.get('scan_results', [])
+    
+    for result in individual_results:
+        pii_found = result.get('pii_found', [])
+        file_name = result.get('file_name', 'unknown_file')
+        
+        for pii_item in pii_found:
+            # Adapt to working PII format
+            finding = {
+                'file': file_name,
+                'type': pii_item.get('type', 'Unknown'),
+                'value': pii_item.get('value', '[REDACTED]'),
+                'location': pii_item.get('location', 'Unknown'),
+                'risk_level': pii_item.get('risk_level', 'Medium'),
+                'reason': pii_item.get('reason', 'No reason provided'),
+                'severity': pii_item.get('risk_level', 'Medium')  # Map risk_level to severity
+            }
+            all_findings.append(finding)
+    
+    # Display findings
+    if all_findings:
+        st.subheader("🔍 Detailed Findings")
+        
+        # Group by risk level
+        high_risk = [f for f in all_findings if f.get('risk_level') == 'High']
+        medium_risk = [f for f in all_findings if f.get('risk_level') == 'Medium']
+        low_risk = [f for f in all_findings if f.get('risk_level') == 'Low']
+        
+        # Display tabs for different risk levels
+        tab1, tab2, tab3 = st.tabs([
+            f"🔴 High Risk ({len(high_risk)})",
+            f"🟡 Medium Risk ({len(medium_risk)})", 
+            f"🟢 Low Risk ({len(low_risk)})"
+        ])
+        
+        with tab1:
+            display_findings_by_risk(high_risk, "High")
+        with tab2:
+            display_findings_by_risk(medium_risk, "Medium")
+        with tab3:
+            display_findings_by_risk(low_risk, "Low")
+            
+    else:
+        st.success("✅ No PII or security issues found in the scanned code!")
+    
+    # Download options
+    st.subheader("📥 Download Reports")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("📄 Download PDF Report", use_container_width=True):
+            st.info("PDF report generation will be available in the next update.")
+    
+    with col2:
+        if st.button("🌐 Download HTML Report", use_container_width=True):
+            st.info("HTML report generation will be available in the next update.")
+
+def display_findings_by_risk(findings, risk_level):
+    """Display findings grouped by risk level"""
+    if not findings:
+        st.info(f"No {risk_level.lower()} risk findings detected.")
+        return
+    
+    for i, finding in enumerate(findings):
+        pii_type = finding.get('type', 'Unknown')
+        file_name = finding.get('file', 'unknown_file')
+        location = finding.get('location', 'Unknown location')
+        value = finding.get('value', '[REDACTED]')
+        reason = finding.get('reason', 'No reason provided')
+        
+        # Color coding
+        color = "🔴" if risk_level == 'High' else "🟡" if risk_level == 'Medium' else "🟢"
+        
+        with st.expander(f"{color} {pii_type} found in {file_name}"):
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
+                st.write(f"**File**: `{file_name}`")
+                st.write(f"**Location**: {location}")
+                st.write(f"**Type**: {pii_type}")
+                st.write(f"**Value**: {value}")
+                st.write(f"**Reason**: {reason}")
+                
+            with col2:
+                st.write(f"**Risk Level**: {risk_level}")
+                
+                # GDPR information
+                if pii_type.upper() in ['EMAIL', 'PHONE', 'BSN', 'CREDIT_CARD']:
+                    st.write("**GDPR Impact**: High")
+                    st.write("**Action Required**: Review and secure")
+                else:
+                    st.write("**GDPR Impact**: Medium")
+                    st.write("**Action Required**: Assess context")
+
+# Placeholder functions for other scanners - to be implemented
+def execute_document_scan(region: str, username: str):
+    st.info("Document scanner execution will be implemented in the next phase.")
+
+def execute_image_scan(region: str, username: str):
+    st.info("Image scanner execution will be implemented in the next phase.")
+
+def execute_database_scan(region: str, username: str):
+    st.info("Database scanner execution will be implemented in the next phase.")
+
+def execute_api_scan(region: str, username: str):
+    st.info("API scanner execution will be implemented in the next phase.")
+
+def execute_website_scan(region: str, username: str):
+    st.info("Website scanner execution will be implemented in the next phase.")
+
+def execute_dpia_scan(region: str, username: str):
+    st.info("DPIA scanner execution will be implemented in the next phase.")
+
+def execute_sustainability_scan(region: str, username: str):
+    st.info("Sustainability scanner execution will be implemented in the next phase.")
+
+def execute_manual_upload_scan(region: str, username: str):
+    st.info("Manual upload scanner execution will be implemented in the next phase.")
+
+def execute_ai_model_scan(region: str, username: str):
+    """Execute AI model scanning with ML framework integration"""
+    try:
+        with st.status("Analyzing AI model...", expanded=True) as status:
+            # Get uploaded model file
+            model_file = st.session_state.get('ai_model_file')
+            model_type = st.session_state.get('ai_model_type', 'Machine Learning Model')
+            
+            if not model_file:
+                st.error("Please upload an AI model file to analyze.")
+                return
+                
+            status.update(label="Loading AI model analysis framework...")
+            
+            # Create enhanced AI model scanner
+            from services.ai_model_scanner import AIModelScanner
+            
+            # Initialize with ML framework support
+            scanner = AIModelScanner()
+            
+            # Enhanced AI model analysis
+            status.update(label="Analyzing model architecture and data...")
+            results = scanner.scan_ai_model_enhanced(
+                model_file=model_file,
+                model_type=model_type,
+                region=region,
+                status=status
+            )
+            
+            if results and results.get('status') != 'failed':
+                st.session_state['ai_model_scan_results'] = results
+                st.session_state['ai_model_scan_complete'] = True
+                st.session_state['last_scan_type'] = 'ai_model'
+                
+                status.update(label="✅ AI model analysis completed!", state="complete")
+                st.success("AI model analysis completed! View results below.")
+                
+                # Display results
+                display_ai_model_scan_results(results)
+            else:
+                error_msg = results.get('error', 'Unknown error occurred') if results else 'Analysis failed'
+                st.error(f"AI model analysis failed: {error_msg}")
+                
+    except Exception as e:
+        st.error(f"AI model analysis error: {str(e)}")
+        logger.error(f"AI model scan execution error: {e}")
+
+def execute_soc2_scan(region: str, username: str):
+    """Execute SOC2 compliance scanning with TSC mapping"""
+    try:
+        with st.status("Running SOC2 compliance analysis...", expanded=True) as status:
+            # Get scan parameters
+            repo_url = st.session_state.get('soc2_repo_url', '')
+            soc2_criteria = st.session_state.get('soc2_criteria', ['Security'])
+            
+            if not repo_url:
+                st.error("Please enter a repository URL for SOC2 analysis.")
+                return
+                
+            status.update(label="Initializing SOC2 compliance framework...")
+            
+            # Create enhanced SOC2 scanner
+            from services.enhanced_soc2_scanner import EnhancedSOC2Scanner
+            
+            # Initialize with TSC mapping
+            scanner = EnhancedSOC2Scanner()
+            
+            # Enhanced SOC2 analysis
+            status.update(label="Analyzing repository for SOC2 compliance...")
+            results = scanner.scan_soc2_compliance_enhanced(
+                repo_url=repo_url,
+                criteria=soc2_criteria,
+                region=region,
+                status=status
+            )
+            
+            if results and results.get('status') != 'failed':
+                st.session_state['soc2_scan_results'] = results
+                st.session_state['soc2_scan_complete'] = True
+                st.session_state['last_scan_type'] = 'soc2'
+                
+                status.update(label="✅ SOC2 compliance analysis completed!", state="complete")
+                st.success("SOC2 compliance analysis completed! View results below.")
+                
+                # Display results
+                display_soc2_scan_results(results)
+            else:
+                error_msg = results.get('error', 'Unknown error occurred') if results else 'Analysis failed'
+                st.error(f"SOC2 analysis failed: {error_msg}")
+                
+    except Exception as e:
+        st.error(f"SOC2 analysis error: {str(e)}")
+        logger.error(f"SOC2 scan execution error: {e}")
+
+def display_ai_model_scan_results(scan_results):
+    """Display AI model scan results"""
+    st.subheader("🤖 AI Model Analysis Results")
+    
+    # Summary metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Model Type", scan_results.get('model_type', 'Unknown'))
+    with col2:
+        bias_score = scan_results.get('bias_score', 0)
+        st.metric("Bias Score", f"{bias_score:.2f}", delta_color="inverse")
+    with col3:
+        pii_score = scan_results.get('pii_presence_score', 0)
+        st.metric("PII Risk", f"{pii_score:.2f}", delta_color="inverse")
+    with col4:
+        explainability = scan_results.get('explainability_score', 0)
+        st.metric("Explainability", f"{explainability:.2f}")
+    
+    # Detailed analysis
+    findings = scan_results.get('findings', [])
+    if findings:
+        st.subheader("🔍 Analysis Findings")
+        for finding in findings:
+            severity = finding.get('severity', 'Medium')
+            color = "🔴" if severity == 'High' else "🟡" if severity == 'Medium' else "🟢"
+            
+            with st.expander(f"{color} {finding.get('category', 'Analysis')} - {finding.get('title', 'Finding')}"):
+                st.write(f"**Category**: {finding.get('category', 'Unknown')}")
+                st.write(f"**Severity**: {severity}")
+                st.write(f"**Description**: {finding.get('description', 'No description')}")
+                if finding.get('recommendation'):
+                    st.write(f"**Recommendation**: {finding['recommendation']}")
+
+def display_soc2_scan_results(scan_results):
+    """Display SOC2 scan results"""
+    st.subheader("🛡️ SOC2 Compliance Analysis Results")
+    
+    # TSC criteria overview
+    criteria_results = scan_results.get('tsc_criteria', {})
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        total_checks = scan_results.get('total_checks', 0)
+        st.metric("Total Checks", total_checks)
+    with col2:
+        passed_checks = scan_results.get('passed_checks', 0)
+        st.metric("Passed", passed_checks, delta_color="normal")
+    with col3:
+        failed_checks = scan_results.get('failed_checks', 0)
+        st.metric("Failed", failed_checks, delta_color="inverse")
+    
+    # TSC criteria breakdown
+    if criteria_results:
+        st.subheader("📋 TSC Criteria Analysis")
+        
+        for criterion, details in criteria_results.items():
+            status = details.get('status', 'Unknown')
+            color = "✅" if status == 'Pass' else "❌" if status == 'Fail' else "⚠️"
+            
+            with st.expander(f"{color} {criterion} - {status}"):
+                st.write(f"**Status**: {status}")
+                st.write(f"**Score**: {details.get('score', 0)}/100")
+                
+                violations = details.get('violations', [])
+                if violations:
+                    st.write("**Violations Found:**")
+                    for violation in violations:
+                        st.write(f"- {violation}")
+                
+                recommendations = details.get('recommendations', [])
+                if recommendations:
+                    st.write("**Recommendations:**")
+                    for rec in recommendations:
+                        st.write(f"- {rec}")
+    
+    # Overall findings
+    findings = scan_results.get('findings', [])
+    if findings:
+        st.subheader("🔍 Detailed Findings")
+        for finding in findings:
+            severity = finding.get('risk_level', 'Medium')
+            color = "🔴" if severity == 'High' else "🟡" if severity == 'Medium' else "🟢"
+            
+            with st.expander(f"{color} {finding.get('principle', 'SOC2')} - {finding.get('violation', 'Issue')}"):
+                st.write(f"**Principle**: {finding.get('principle', 'Unknown')}")
+                st.write(f"**Risk Level**: {severity}")
+                st.write(f"**Violation**: {finding.get('violation', 'No description')}")
+                st.write(f"**Scanner**: {finding.get('scanner', 'soc2-scanner')}")
+                if finding.get('remediation_suggestion'):
+                    st.write(f"**Remediation**: {finding['remediation_suggestion']}")
