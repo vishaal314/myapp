@@ -60,28 +60,48 @@ def main():
     Preserves exact UI behavior while improving maintainability
     """
     
-    # Initialize language system
-    initialize_language_system()
-    
-    # Handle forced language after login
-    handle_forced_language_after_login()
-    
-    # Preserve language during operations
-    preserve_language_during_operations()
-    
-    # Debug translations in development
-    debug_translations()
-    
-    # Check authentication status
-    if not is_authenticated():
-        # Show login in sidebar and landing page in main area
-        render_login_interface()
-        # Show the beautiful landing page in the main content area
-        render_dashboard_content()
-        return
-    
-    # Authenticated user interface
-    render_authenticated_interface()
+    try:
+        # Initialize language system
+        initialize_language_system()
+        
+        # Handle forced language after login
+        handle_forced_language_after_login()
+        
+        # Preserve language during operations
+        preserve_language_during_operations()
+        
+        # Debug translations in development
+        debug_translations()
+        
+        # Check authentication status
+        if not is_authenticated():
+            # Show login in sidebar and landing page in main area
+            render_login_interface()
+            # Show the beautiful landing page in the main content area
+            render_dashboard_content()
+            return
+        
+        # Authenticated user interface
+        render_authenticated_interface()
+        
+    except Exception as e:
+        # Fallback error handling
+        st.error(f"Application Error: {str(e)}")
+        st.write("**Debug Info:**")
+        st.code(f"Error: {type(e).__name__}: {str(e)}")
+        
+        # Show basic landing page as fallback
+        st.title("🛡️ DataGuardian Pro")
+        st.subheader("Enterprise Privacy Compliance Platform")
+        st.warning("Loading in safe mode. Some features may be limited.")
+        
+        # Basic login
+        with st.sidebar:
+            st.header("Login")
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            if st.button("Login"):
+                st.info("Login functionality temporarily limited.")
 
 def render_authenticated_interface():
     """
