@@ -367,7 +367,8 @@ def render_signin_tab():
             else:
                 # Implement password reset logic
                 if reset_email and new_password:
-                    success, message = create_user(reset_email, new_password, 'user', reset_email)
+                    from services.auth import reset_password
+                    success, message = reset_password(reset_email, new_password)
                     if success:
                         st.success(_("login.password_reset_success", "Password reset successful! Please sign in."))
                     else:
