@@ -431,8 +431,8 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         
         elif repo_url:
             status_text.text("Cloning and scanning repository...")
-            from services.simple_repo_scanner import SimpleRepoScanner
-            repo_scanner = SimpleRepoScanner(scanner)
+            from services.fast_repo_scanner import FastRepoScanner
+            repo_scanner = FastRepoScanner(scanner)
             repo_results = repo_scanner.scan_repository(repo_url)
             scan_results.update(repo_results)
         
