@@ -502,7 +502,7 @@ def display_scan_results(scan_results):
                 return "background-color: #f3e5f5"
             return ""
         
-        styled_df = findings_df.style.applymap(highlight_risk, subset=['severity'])
+        styled_df = findings_df.style.map(highlight_risk, subset=['severity'])
         st.dataframe(styled_df, use_container_width=True)
     else:
         st.info("No security issues or PII found in the scanned files.")
@@ -928,12 +928,15 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 scan_results["model_path"] = model_path
                 scan_results["model_file"] = model_path.split('/')[-1]
             
+            # Initialize findings lists
+            privacy_findings = []
+            bias_findings = []
+            compliance_findings = []
+            
             # Privacy Analysis
             if privacy_analysis:
                 status.update(label="Analyzing privacy risks and data leakage...")
                 progress_bar.progress(40)
-                
-                privacy_findings = []
                 
                 # PII Exposure Analysis
                 privacy_findings.append({
@@ -979,8 +982,6 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 status.update(label="Detecting algorithmic bias and fairness issues...")
                 progress_bar.progress(60)
                 
-                bias_findings = []
-                
                 # Demographic Bias
                 bias_findings.append({
                     'type': 'DEMOGRAPHIC_BIAS',
@@ -1025,8 +1026,6 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             if compliance_check:
                 status.update(label="Checking GDPR and privacy regulation compliance...")
                 progress_bar.progress(80)
-                
-                compliance_findings = []
                 
                 # Right to Explanation
                 compliance_findings.append({
