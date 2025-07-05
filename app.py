@@ -93,15 +93,22 @@ def render_landing_page():
             
             if submit:
                 if username and password:
-                    # Simple authentication for demo
-                    if username in ["admin", "user", "demo"] and password:
+                    # Authentication system
+                    valid_credentials = {
+                        "admin": "password",
+                        "user": "password", 
+                        "demo": "demo",
+                        "vishaal314": "fim48uKu"
+                    }
+                    
+                    if username in valid_credentials and password == valid_credentials[username]:
                         st.session_state.authenticated = True
                         st.session_state.username = username
-                        st.session_state.user_role = "admin" if username == "admin" else "user"
+                        st.session_state.user_role = "admin" if username in ["admin", "vishaal314"] else "user"
                         st.success("Login successful!")
                         st.rerun()
                     else:
-                        st.error("Invalid credentials. Try: admin/password or user/password")
+                        st.error("Invalid credentials. Contact administrator for access.")
                 else:
                     st.error("Please enter username and password")
         
