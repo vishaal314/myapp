@@ -32,20 +32,12 @@ def safe_import(module_name, from_list=None):
         logger.error(f"Failed to import {module_name}: {e}")
         return None
 
-# Safe imports with fallbacks
-auth_functions = safe_import('services.auth', ['is_authenticated', 'authenticate', 'logout'])
-language_functions = safe_import('utils.i18n', ['get_text', 'initialize'])
-
-# Fallback functions if imports fail
-def fallback_is_authenticated():
+# Simplified authentication functions
+def is_authenticated():
     return st.session_state.get('authenticated', False)
 
-def fallback_get_text(key, default=None):
+def get_text(key, default=None):
     return default or key
-
-# Use imported functions or fallbacks
-is_authenticated = auth_functions.get('is_authenticated') if auth_functions else fallback_is_authenticated
-get_text = language_functions.get('get_text') if language_functions else fallback_get_text
 
 def _(key, default=None):
     return get_text(key, default)
@@ -58,8 +50,11 @@ def main():
         if 'language' not in st.session_state:
             st.session_state.language = 'en'
         
-        # Check authentication status
-        if not is_authenticated():
+        if 'authenticated' not in st.session_state:
+            st.session_state.authenticated = False
+        
+        # Check authentication status directly
+        if not st.session_state.authenticated:
             render_landing_page()
             return
         
@@ -98,13 +93,14 @@ def render_landing_page():
                         "admin": "password",
                         "user": "password", 
                         "demo": "demo",
-                        "vishaal314": "fim48uKu"
+                        "vishaal314": "fim48uKu",
+                        "vishaal314@gmail.com": "fim48uKu"
                     }
                     
                     if username in valid_credentials and password == valid_credentials[username]:
                         st.session_state.authenticated = True
                         st.session_state.username = username
-                        st.session_state.user_role = "admin" if username in ["admin", "vishaal314"] else "user"
+                        st.session_state.user_role = "admin" if username in ["admin", "vishaal314", "vishaal314@gmail.com"] else "user"
                         st.success("Login successful!")
                         st.rerun()
                     else:
