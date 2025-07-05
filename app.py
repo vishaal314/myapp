@@ -1651,10 +1651,11 @@ def render_sustainability_scanner_interface(region: str, username: str):
             regional_emissions = st.checkbox("Regional Emissions Mapping", value=True)
     
     # Region selection for emissions calculation
+    emissions_region = "eu-west-1 (Netherlands)"  # Default to Netherlands
     if calculate_emissions or regional_emissions:
         emissions_region = st.selectbox("Primary Cloud Region", [
-            "us-east-1 (N. Virginia)", "us-west-2 (Oregon)", "eu-west-1 (Ireland)",
-            "eu-central-1 (Frankfurt)", "ap-southeast-1 (Singapore)", "ap-northeast-1 (Tokyo)"
+            "eu-west-1 (Netherlands)", "eu-central-1 (Germany)", "us-east-1 (N. Virginia)", 
+            "us-west-2 (Oregon)", "ap-southeast-1 (Singapore)", "ap-northeast-1 (Tokyo)"
         ])
     
     if st.button("🚀 Start Comprehensive Sustainability Scan", type="primary", use_container_width=True):
@@ -1668,7 +1669,7 @@ def render_sustainability_scanner_interface(region: str, username: str):
             'dead_code_detection': dead_code_detection,
             'dependency_analysis': dependency_analysis,
             'regional_emissions': regional_emissions,
-            'emissions_region': emissions_region if calculate_emissions else None
+            'emissions_region': emissions_region
         }
         
         if source_type == "Upload Files":
@@ -1714,7 +1715,7 @@ def execute_sustainability_scan(region, username, scan_params):
                 'type': 'ZOMBIE_VM',
                 'resource_id': 'vm-idle-prod-01',
                 'resource_type': 'Virtual Machine',
-                'region': 'us-east-1',
+                'region': 'eu-west-1 (Netherlands)',
                 'cpu_utilization': 2.3,
                 'memory_utilization': 15.7,
                 'last_activity': '2024-12-15T10:30:00Z',
@@ -1727,7 +1728,7 @@ def execute_sustainability_scan(region, username, scan_params):
                 'type': 'ORPHANED_STORAGE',
                 'resource_id': 'vol-snapshot-backup-2023',
                 'resource_type': 'EBS Snapshot',
-                'region': 'us-east-1',
+                'region': 'eu-west-1 (Netherlands)',
                 'size_gb': 500,
                 'age_days': 425,
                 'estimated_monthly_cost': 25.50,
@@ -1795,17 +1796,20 @@ def execute_sustainability_scan(region, username, scan_params):
         progress_bar.progress(60)
         time.sleep(1)
         
-        # Regional emissions factors (kg CO₂e per kWh)
+        # Regional emissions factors (kg CO₂e per kWh) - Netherlands focused
         regional_factors = {
+            'eu-west-1': 0.2956,  # Netherlands - mixed renewable grid
+            'eu-central-1': 0.3686,  # Germany - mixed grid
             'us-east-1': 0.4532,  # Virginia - mixed grid
             'us-west-2': 0.0245,  # Oregon - hydroelectric
-            'eu-west-1': 0.2956,  # Ireland - mixed renewable
-            'eu-central-1': 0.3686,  # Germany - mixed grid
             'ap-southeast-1': 0.4480,  # Singapore - mixed grid
             'ap-northeast-1': 0.4692   # Tokyo - mixed grid
         }
         
-        emissions_factor = regional_factors.get(scan_results['emissions_region'].split(' ')[0], 0.4532)
+        # Extract region code from the selected region
+        selected_region = scan_results.get('emissions_region', 'eu-west-1 (Netherlands)')
+        region_code = selected_region.split(' ')[0] if '(' in selected_region else selected_region
+        emissions_factor = regional_factors.get(region_code, 0.2956)  # Default to Netherlands factor
         
         # Calculate total emissions
         total_energy_consumption = 156.8  # kWh/month from all resources
