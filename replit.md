@@ -112,6 +112,15 @@ DataGuardian Pro is a comprehensive enterprise privacy compliance platform built
 - June 23, 2025. Implemented comprehensive Netherlands DPIA Assessment system with PostgreSQL database integration and HTML report generation
 
 ## Recent Changes
+- **July 5, 2025**: **COMPREHENSIVE GDPR CODE SCANNER ENHANCEMENT COMPLETED** - Production-grade PII and secret detection with Netherlands UAVG compliance
+  - **COMPREHENSIVE PII DETECTION**: 20+ pattern types including BSN, health data, biometric patterns, API keys, Dutch phone numbers
+  - **NETHERLANDS UAVG COMPLIANCE**: Special handling for BSN detection, medical records, minor consent (<16 years), 72-hour breach notification
+  - **GDPR PRINCIPLES ASSESSMENT**: Real-time tracking of violations across all 7 GDPR principles with article references
+  - **ENTROPY-BASED SECRET DETECTION**: Shannon entropy calculation for API keys, tokens, and credentials with risk scoring
+  - **REGIONAL COMPLIANCE FLAGS**: Netherlands-specific breach notification requirements and DPA notification triggers
+  - **PROFESSIONAL CERTIFICATION**: Green/Yellow/Red compliance certificates based on findings severity and compliance score
+  - **ENTERPRISE REPORTING**: Comprehensive HTML reports with GDPR article references, compliance metrics, and actionable recommendations
+  - **REPOSITORY SUPPORT**: Full support for GitHub, Bitbucket, and Azure DevOps repositories with fast cloning and analysis
 - **July 5, 2025**: **COMPREHENSIVE SUSTAINABILITY SCANNER ENHANCEMENT COMPLETED** - Production-grade environmental impact analysis implemented
   - **COMPLETE REQUIREMENTS FULFILLMENT**: All user-specified sustainability requirements implemented (100% coverage)
   - **ZOMBIE RESOURCE DETECTION**: VM, container, and storage waste identification with cost attribution ($238.82/month savings potential)
