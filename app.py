@@ -1621,38 +1621,41 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 else:
                     st.metric("Medium Risk", medium_risk)
             
-            # Display detailed findings
+            # Display detailed findings (outside of status context to avoid nested expanders)
             if privacy_analysis and privacy_findings:
                 st.subheader("🔒 Privacy Analysis")
                 for finding in privacy_findings:
-                    with st.expander(f"🚨 {finding['type']} - {finding['severity']} Severity"):
-                        st.write(f"**Description:** {finding['description']}")
-                        st.write(f"**Location:** {finding['location']}")
-                        st.write(f"**GDPR Impact:** {finding['gdpr_impact']}")
-                        st.write(f"**Recommendation:** {finding['recommendation']}")
-                        st.progress(finding['risk_level']/100)
+                    st.markdown(f"### 🚨 {finding['type']} - {finding['severity']} Severity")
+                    st.write(f"**Description:** {finding['description']}")
+                    st.write(f"**Location:** {finding['location']}")
+                    st.write(f"**GDPR Impact:** {finding['gdpr_impact']}")
+                    st.write(f"**Recommendation:** {finding['recommendation']}")
+                    st.progress(finding['risk_level']/100)
+                    st.markdown("---")
             
             if bias_detection and bias_findings:
                 st.subheader("⚖️ Bias & Fairness Analysis")
                 for finding in bias_findings:
-                    with st.expander(f"📊 {finding['type']} - {finding['severity']} Severity"):
-                        st.write(f"**Description:** {finding['description']}")
-                        if 'metrics' in finding:
-                            st.write(f"**Metrics:** {finding['metrics']}")
-                        if 'affected_groups' in finding:
-                            st.write(f"**Affected Groups:** {', '.join(finding['affected_groups'])}")
-                        st.write(f"**Recommendation:** {finding['recommendation']}")
-                        st.progress(finding['bias_score']/100)
+                    st.markdown(f"### 📊 {finding['type']} - {finding['severity']} Severity")
+                    st.write(f"**Description:** {finding['description']}")
+                    if 'metrics' in finding:
+                        st.write(f"**Metrics:** {finding['metrics']}")
+                    if 'affected_groups' in finding:
+                        st.write(f"**Affected Groups:** {', '.join(finding['affected_groups'])}")
+                    st.write(f"**Recommendation:** {finding['recommendation']}")
+                    st.progress(finding['bias_score']/100)
+                    st.markdown("---")
             
             if compliance_check and compliance_findings:
                 st.subheader("📋 GDPR Compliance")
                 for finding in compliance_findings:
-                    with st.expander(f"⚖️ {finding['type']} - {finding['severity']} Severity"):
-                        st.write(f"**Description:** {finding['description']}")
-                        st.write(f"**Regulation:** {finding['regulation']}")
-                        st.write(f"**Requirement:** {finding['requirement']}")
-                        st.write(f"**Recommendation:** {finding['recommendation']}")
-                        st.progress(finding['compliance_score']/100)
+                    st.markdown(f"### ⚖️ {finding['type']} - {finding['severity']} Severity")
+                    st.write(f"**Description:** {finding['description']}")
+                    st.write(f"**Regulation:** {finding['regulation']}")
+                    st.write(f"**Requirement:** {finding['requirement']}")
+                    st.write(f"**Recommendation:** {finding['recommendation']}")
+                    st.progress(finding['compliance_score']/100)
+                    st.markdown("---")
             
             # Generate comprehensive HTML report
             html_report = generate_html_report(scan_results)
