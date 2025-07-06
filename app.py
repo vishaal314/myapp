@@ -3056,21 +3056,85 @@ def generate_html_report(scan_results):
         </div>
         """
         
+        # GDPR Compliance Section
+        gdpr_compliance = f"""
+        <div class="gdpr-compliance" style="background: #f8fafc; border-radius: 10px; padding: 25px; margin: 20px 0;">
+            <h2 style="color: #1e40af; margin-bottom: 20px;">⚖️ GDPR Compliance Analysis</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h3 style="color: #059669;">✅ GDPR Articles Assessed</h3>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>Article 4(11)</strong> - Definition of consent</li>
+                        <li><strong>Article 6(1)(a)</strong> - Consent as legal basis</li>
+                        <li><strong>Article 7</strong> - Conditions for consent</li>
+                        <li><strong>Article 7(3)</strong> - Withdrawal of consent</li>
+                        <li><strong>Article 12-14</strong> - Transparent information</li>
+                        <li><strong>Article 44-49</strong> - International transfers</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #dc2626;">🚨 Compliance Status</h3>
+                    <p><strong>Overall Score:</strong> <span style="font-size: 24px; color: {'#059669' if scan_results.get('compliance_score', 0) >= 80 else '#dc2626'};">{scan_results.get('compliance_score', 0)}%</span></p>
+                    <p><strong>Risk Level:</strong> <span style="color: {'#059669' if scan_results.get('risk_level') == 'Low' else '#dc2626'};">{scan_results.get('risk_level', 'Unknown')}</span></p>
+                    <p><strong>Total Violations:</strong> {len(scan_results.get('gdpr_violations', []))}</p>
+                    <p><strong>Dark Patterns:</strong> {len(scan_results.get('dark_patterns', []))}</p>
+                </div>
+            </div>
+            
+            <h3 style="color: #1e40af; margin-top: 25px;">📋 GDPR Checklist</h3>
+            <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <p>{'✅' if scan_results.get('consent_mechanism', {}).get('found') else '❌'} <strong>Consent Mechanism</strong></p>
+                        <p>{'✅' if scan_results.get('privacy_policy_status') else '❌'} <strong>Privacy Policy</strong></p>
+                        <p>{'✅' if scan_results.get('gdpr_rights_available') else '❌'} <strong>Data Subject Rights</strong></p>
+                    </div>
+                    <div>
+                        <p>{'✅' if len(scan_results.get('dark_patterns', [])) == 0 else '❌'} <strong>No Dark Patterns</strong></p>
+                        <p>{'✅' if len([t for t in scan_results.get('trackers_detected', []) if t.get('requires_consent')]) == 0 else '❌'} <strong>Consent for Tracking</strong></p>
+                        <p>{'✅' if len([t for t in scan_results.get('trackers_detected', []) if t.get('data_transfer') == 'Non-EU']) == 0 else '❌'} <strong>No Non-EU Transfers</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """
+        
         # Netherlands compliance
         if scan_results.get('netherlands_compliance'):
             nl_violations = [v for v in scan_results.get('gdpr_violations', []) if 'Dutch' in v.get('description', '')]
             nl_compliance = f"""
-            <div class="nl-compliance">
-                <h2>🇳🇱 Netherlands AP Compliance</h2>
-                <p><strong>Region:</strong> Netherlands</p>
-                <p><strong>Dutch-Specific Violations:</strong> {len(nl_violations)}</p>
-                <p><strong>Reject All Button:</strong> {'✅ Found' if any('REJECT_ALL' not in dp.get('type', '') for dp in dark_patterns) else '❌ Missing'}</p>
+            <div class="nl-compliance" style="background: #fef3c7; border-radius: 10px; padding: 25px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                <h2 style="color: #92400e;">🇳🇱 Netherlands AP Authority Compliance</h2>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                    <h3 style="color: #92400e;">Dutch Privacy Law (UAVG) Requirements</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <p><strong>Region:</strong> Netherlands</p>
+                            <p><strong>Applicable Law:</strong> UAVG (Dutch GDPR)</p>
+                            <p><strong>Authority:</strong> Autoriteit Persoonsgegevens (AP)</p>
+                        </div>
+                        <div>
+                            <p><strong>Dutch-Specific Violations:</strong> {len(nl_violations)}</p>
+                            <p><strong>Reject All Button:</strong> {'✅ Found' if not any('REJECT_ALL' in dp.get('type', '') for dp in dark_patterns) else '❌ Missing (Required since 2022)'}</p>
+                            <p><strong>Google Analytics:</strong> {'⚠️ Detected - Requires anonymization' if any('Google Analytics' in t.get('name', '') for t in scan_results.get('trackers_detected', [])) else '✅ Not detected'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="color: #92400e;">🏛️ Dutch Business Compliance</h3>
+                <div style="background: white; padding: 15px; border-radius: 8px;">
+                    <p>{'✅' if not any('MISSING_DUTCH_IMPRINT' in v.get('type', '') for v in scan_results.get('gdpr_violations', [])) else '❌'} <strong>Colofon (Imprint)</strong> - Business details page</p>
+                    <p>{'✅' if not any('MISSING_KVK_NUMBER' in v.get('type', '') for v in scan_results.get('gdpr_violations', [])) else '❌'} <strong>KvK Number</strong> - Chamber of Commerce registration</p>
+                    <p>{'✅' if len([dp for dp in dark_patterns if dp.get('type') == 'PRE_TICKED_MARKETING']) == 0 else '❌'} <strong>No Pre-ticked Marketing</strong> - Forbidden under Dutch law</p>
+                </div>
             </div>
             """
         else:
             nl_compliance = ""
         
-        sustainability_metrics = website_metrics + cookie_analysis + tracker_analysis + nl_compliance
+        sustainability_metrics = website_metrics + cookie_analysis + tracker_analysis + gdpr_compliance + nl_compliance
         quick_wins_html = ""
         
     else:
