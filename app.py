@@ -3117,7 +3117,7 @@ def generate_html_report(scan_results):
             <h2>📊 Executive Summary</h2>
             <p><strong>Files Scanned:</strong> {files_scanned:,}</p>
             <p><strong>Total Findings:</strong> {len(scan_results.get('findings', []))}</p>
-            <p><strong>Lines Analyzed:</strong> {lines_analyzed:,}</p>
+            <p><strong>Lines Analyzed:</strong> {lines_analyzed if isinstance(lines_analyzed, str) else f"{lines_analyzed:,}"}</p>
             <p><strong>Critical Issues:</strong> {len([f for f in scan_results.get('findings', []) if f.get('severity') == 'Critical'])}</p>
             <p><strong>High Risk Issues:</strong> {len([f for f in scan_results.get('findings', []) if f.get('severity') == 'High'])}</p>
         </div>
