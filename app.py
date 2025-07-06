@@ -2079,7 +2079,7 @@ def execute_website_scan(region, username, url, scan_config):
         try:
             response = requests.get(url, headers=headers, timeout=15, verify=scan_config.get('check_https', True))
             content = response.text
-            scan_results['pages_scanned'] = 1
+            scan_results['pages_scanned'] = 1  # Successfully scanned 1 page
         except Exception as e:
             st.error(f"Failed to load website: {str(e)}")
             return
@@ -2323,7 +2323,7 @@ def execute_website_scan(region, username, url, scan_config):
         # Executive dashboard
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("Pages Scanned", scan_results['pages_scanned'])
+            st.metric("Pages Scanned", max(1, scan_results['pages_scanned']))  # Ensure at least 1
         with col2:
             st.metric("Trackers Found", len(scan_results['trackers_detected']))
         with col3:
@@ -2992,8 +2992,8 @@ def generate_html_report(scan_results):
         quick_wins_html = ""
         
     elif scan_results.get('scan_type') == 'GDPR Website Privacy Compliance Scanner':
-        files_scanned = scan_results.get('pages_scanned', 0)
-        lines_analyzed = "N/A (Website Content)"
+        files_scanned = scan_results.get('pages_scanned', 1)  # Ensure at least 1 page scanned
+        lines_analyzed = "Website Content"
         region = scan_results.get('region', 'Global')
         
         # Website-specific content
@@ -3115,9 +3115,9 @@ def generate_html_report(scan_results):
         
         <div class="summary">
             <h2>📊 Executive Summary</h2>
-            <p><strong>Files Scanned:</strong> {files_scanned:,}</p>
+            <p><strong>{'Pages Scanned' if scan_results.get('scan_type') == 'GDPR Website Privacy Compliance Scanner' else 'Files Scanned'}:</strong> {files_scanned:,}</p>
             <p><strong>Total Findings:</strong> {len(scan_results.get('findings', []))}</p>
-            <p><strong>Lines Analyzed:</strong> {lines_analyzed if isinstance(lines_analyzed, str) else f"{lines_analyzed:,}"}</p>
+            <p><strong>{'Content Analysis' if scan_results.get('scan_type') == 'GDPR Website Privacy Compliance Scanner' else 'Lines Analyzed'}:</strong> {lines_analyzed if isinstance(lines_analyzed, str) else f"{lines_analyzed:,}"}</p>
             <p><strong>Critical Issues:</strong> {len([f for f in scan_results.get('findings', []) if f.get('severity') == 'Critical'])}</p>
             <p><strong>High Risk Issues:</strong> {len([f for f in scan_results.get('findings', []) if f.get('severity') == 'High'])}</p>
         </div>
