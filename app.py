@@ -2080,6 +2080,7 @@ def execute_website_scan(region, username, url, scan_config):
             response = requests.get(url, headers=headers, timeout=15, verify=scan_config.get('check_https', True))
             content = response.text
             scan_results['pages_scanned'] = 1  # Successfully scanned 1 page
+            scan_results['html_content'] = content  # Store HTML content for metrics
         except Exception as e:
             st.error(f"Failed to load website: {str(e)}")
             return
@@ -2316,6 +2317,13 @@ def execute_website_scan(region, username, url, scan_config):
         all_findings = scan_results['gdpr_violations'] + scan_results['dark_patterns'] + scan_results['findings']
         scan_results['findings'] = all_findings
         
+        # Calculate proper metrics for display
+        html_content = scan_results.get('html_content', '')
+        scan_results['files_scanned'] = max(1, len(scan_results.get('pages_analyzed', ['main_page'])) + len(scan_results.get('subpages_analyzed', [])))
+        scan_results['lines_analyzed'] = len(html_content.split('\n')) if html_content else len(response.text.split('\n')) if 'response' in locals() and response else 100
+        scan_results['total_findings'] = len(all_findings)
+        scan_results['critical_findings'] = len([f for f in all_findings if f.get('severity') == 'Critical'])
+        
         # Display comprehensive results
         st.markdown("---")
         st.subheader("🌐 GDPR Website Privacy Compliance Results")
@@ -2323,11 +2331,22 @@ def execute_website_scan(region, username, url, scan_config):
         # Executive dashboard
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("Pages Scanned", max(1, scan_results['pages_scanned']))  # Ensure at least 1
+            st.metric("Files Scanned", scan_results.get('files_scanned', 1))
         with col2:
-            st.metric("Trackers Found", len(scan_results['trackers_detected']))
+            st.metric("Lines Analyzed", scan_results.get('lines_analyzed', 0))
         with col3:
+            st.metric("Total Findings", scan_results.get('total_findings', 0))
+        with col4:
+            st.metric("Critical Issues", scan_results.get('critical_findings', 0))
+        
+        # Additional metrics row
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Trackers Found", len(scan_results['trackers_detected']))
+        with col2:
             st.metric("GDPR Violations", len(scan_results['gdpr_violations']))
+        with col3:
+            st.metric("Dark Patterns", len(scan_results['dark_patterns']))
         with col4:
             color = "green" if compliance_score >= 80 else "red"
             st.metric("Compliance Score", f"{compliance_score}%")
