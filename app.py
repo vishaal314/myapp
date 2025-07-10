@@ -3242,7 +3242,9 @@ def execute_dpia_scan(region, username, project_name, data_controller, processin
     try:
         from services.dpia_scanner import DPIAScanner
         
-        scanner = DPIAScanner(region=region)
+        # Convert region to language code for DPIAScanner
+        language = 'nl' if region == 'Netherlands' else 'en'
+        scanner = DPIAScanner(language=language)
         progress_bar = st.progress(0)
         
         scan_results = {
