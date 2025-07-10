@@ -1922,7 +1922,7 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
             "high_findings": high_findings,
             "medium_findings": medium_findings,
             "low_findings": low_findings,
-            "gdpr_compliance": critical_findings == 0 and high_findings < 3,
+            "gdpr_compliance": critical_findings == 0 and high_findings == 0,
             "performance_metrics": {
                 "average_response_time": "< 2 seconds",
                 "endpoints_accessible": scan_results["endpoints_scanned"],
