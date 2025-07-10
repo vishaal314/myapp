@@ -1244,6 +1244,335 @@ def render_api_scanner_interface(region: str, username: str):
     if st.button("🚀 Start API Scan", type="primary", use_container_width=True):
         execute_api_scan(region, username, base_url, endpoints, timeout)
 
+def generate_api_html_report(scan_results):
+    """Generate comprehensive HTML report for API security scan results"""
+    
+    # Extract scan metadata
+    scan_id = scan_results.get('scan_id', 'Unknown')
+    base_url = scan_results.get('base_url', 'Unknown')
+    region = scan_results.get('region', 'Unknown')
+    timestamp = scan_results.get('timestamp', datetime.now().isoformat())
+    
+    # Format timestamp
+    try:
+        formatted_timestamp = datetime.fromisoformat(timestamp).strftime('%B %d, %Y at %I:%M %p')
+    except:
+        formatted_timestamp = timestamp
+    
+    # Extract security metrics
+    security_score = scan_results.get('security_score', 0)
+    endpoints_scanned = scan_results.get('endpoints_scanned', 0)
+    total_endpoints = scan_results.get('total_endpoints', 0)
+    scan_duration = scan_results.get('scan_duration', 0)
+    
+    # Extract findings data
+    findings = scan_results.get('findings', [])
+    total_findings = scan_results.get('total_findings', len(findings))
+    critical_findings = scan_results.get('critical_findings', 0)
+    high_findings = scan_results.get('high_findings', 0)
+    medium_findings = scan_results.get('medium_findings', 0)
+    low_findings = scan_results.get('low_findings', 0)
+    
+    # Determine overall risk level
+    if critical_findings > 0:
+        risk_level = "Critical"
+        risk_color = "#dc2626"
+        risk_bg = "#fef2f2"
+    elif high_findings > 0:
+        risk_level = "High"
+        risk_color = "#ea580c"
+        risk_bg = "#fff7ed"
+    elif medium_findings > 0:
+        risk_level = "Medium"
+        risk_color = "#d97706"
+        risk_bg = "#fffbeb"
+    else:
+        risk_level = "Low"
+        risk_color = "#16a34a"
+        risk_bg = "#f0fdf4"
+    
+    # Generate findings table
+    findings_html = ""
+    if findings:
+        for i, finding in enumerate(findings):
+            severity = finding.get('severity', 'Unknown')
+            finding_type = finding.get('type', 'Unknown').replace('_', ' ').title()
+            description = finding.get('description', 'No description available')
+            endpoint = finding.get('endpoint', 'Unknown')
+            method = finding.get('method', 'N/A')
+            impact = finding.get('impact', 'Impact assessment pending')
+            action_required = finding.get('action_required', 'Review required')
+            gdpr_article = finding.get('gdpr_article', 'General compliance')
+            evidence = finding.get('evidence', 'Evidence collected')
+            
+            severity_color = {
+                'Critical': '#dc2626',
+                'High': '#ea580c',
+                'Medium': '#d97706',
+                'Low': '#16a34a'
+            }.get(severity, '#6b7280')
+            
+            findings_html += f"""
+            <div style="border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px; padding: 16px; background: #fefefe;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 style="margin: 0; color: #374151; font-size: 16px;">{finding_type}</h4>
+                    <span style="background: {severity_color}; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500;">
+                        {severity}
+                    </span>
+                </div>
+                <p style="margin: 8px 0; color: #4b5563; font-size: 14px;"><strong>Description:</strong> {description}</p>
+                <p style="margin: 8px 0; color: #4b5563; font-size: 14px;"><strong>Endpoint:</strong> <code style="background: #f3f4f6; padding: 2px 4px; border-radius: 3px;">{endpoint}</code></p>
+                <p style="margin: 8px 0; color: #4b5563; font-size: 14px;"><strong>Method:</strong> <code style="background: #f3f4f6; padding: 2px 4px; border-radius: 3px;">{method}</code></p>
+                <p style="margin: 8px 0; color: #4b5563; font-size: 14px;"><strong>Impact:</strong> {impact}</p>
+                <p style="margin: 8px 0; color: #4b5563; font-size: 14px;"><strong>Action Required:</strong> {action_required}</p>
+                <p style="margin: 8px 0; color: #4b5563; font-size: 14px;"><strong>GDPR Article:</strong> {gdpr_article}</p>
+                <p style="margin: 8px 0; color: #6b7280; font-size: 13px;"><strong>Evidence:</strong> {evidence}</p>
+            </div>
+            """
+    
+    # Generate comprehensive HTML report
+    html_report = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>API Security Scan Report - {scan_id}</title>
+        <style>
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                line-height: 1.6;
+                color: #374151;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f9fafb;
+            }}
+            .header {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 40px;
+                border-radius: 12px;
+                margin-bottom: 30px;
+                text-align: center;
+            }}
+            .header h1 {{
+                margin: 0;
+                font-size: 2.5em;
+                font-weight: 700;
+            }}
+            .header p {{
+                margin: 10px 0 0 0;
+                font-size: 1.1em;
+                opacity: 0.9;
+            }}
+            .summary-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }}
+            .summary-card {{
+                background: white;
+                border-radius: 12px;
+                padding: 24px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                border-left: 4px solid #667eea;
+            }}
+            .summary-card h3 {{
+                margin: 0 0 10px 0;
+                color: #374151;
+                font-size: 1.1em;
+            }}
+            .summary-card .value {{
+                font-size: 2em;
+                font-weight: 700;
+                color: #667eea;
+                margin: 0;
+            }}
+            .risk-overview {{
+                background: {risk_bg};
+                border: 2px solid {risk_color};
+                border-radius: 12px;
+                padding: 24px;
+                margin-bottom: 30px;
+                text-align: center;
+            }}
+            .risk-level {{
+                font-size: 2em;
+                font-weight: 700;
+                color: {risk_color};
+                margin: 0;
+            }}
+            .content-section {{
+                background: white;
+                border-radius: 12px;
+                padding: 30px;
+                margin-bottom: 30px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }}
+            .content-section h2 {{
+                color: #374151;
+                border-bottom: 2px solid #e5e7eb;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }}
+            .metrics-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 16px;
+                margin-bottom: 20px;
+            }}
+            .metric {{
+                background: #f8fafc;
+                border-radius: 8px;
+                padding: 16px;
+                text-align: center;
+                border: 1px solid #e2e8f0;
+            }}
+            .metric-value {{
+                font-size: 1.8em;
+                font-weight: 700;
+                color: #1e293b;
+            }}
+            .metric-label {{
+                color: #64748b;
+                font-size: 0.9em;
+                margin-top: 4px;
+            }}
+            .compliance-status {{
+                padding: 16px;
+                border-radius: 8px;
+                margin: 20px 0;
+                text-align: center;
+                font-weight: 500;
+            }}
+            .compliant {{
+                background: #dcfce7;
+                color: #166534;
+                border: 1px solid #bbf7d0;
+            }}
+            .non-compliant {{
+                background: #fef2f2;
+                color: #991b1b;
+                border: 1px solid #fecaca;
+            }}
+            .footer {{
+                text-align: center;
+                padding: 20px;
+                color: #6b7280;
+                font-size: 0.9em;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🔒 API Security Scan Report</h1>
+            <p>Comprehensive security analysis for {base_url}</p>
+            <p>Generated on {formatted_timestamp}</p>
+        </div>
+        
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>Security Score</h3>
+                <p class="value">{security_score}/100</p>
+            </div>
+            <div class="summary-card">
+                <h3>Endpoints Scanned</h3>
+                <p class="value">{endpoints_scanned}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Findings</h3>
+                <p class="value">{total_findings}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Scan Duration</h3>
+                <p class="value">{scan_duration}s</p>
+            </div>
+        </div>
+        
+        <div class="risk-overview">
+            <h2>Overall Risk Level</h2>
+            <p class="risk-level">{risk_level}</p>
+            <p>Based on {total_findings} security findings across {endpoints_scanned} endpoints</p>
+        </div>
+        
+        <div class="content-section">
+            <h2>📊 Scan Overview</h2>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <div class="metric-value">{base_url}</div>
+                    <div class="metric-label">Base URL</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">{region}</div>
+                    <div class="metric-label">Region</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">{scan_id}</div>
+                    <div class="metric-label">Scan ID</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2>🔍 Findings Summary</h2>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <div class="metric-value" style="color: #dc2626;">{critical_findings}</div>
+                    <div class="metric-label">Critical</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" style="color: #ea580c;">{high_findings}</div>
+                    <div class="metric-label">High</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" style="color: #d97706;">{medium_findings}</div>
+                    <div class="metric-label">Medium</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" style="color: #16a34a;">{low_findings}</div>
+                    <div class="metric-label">Low</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2>⚖️ GDPR Compliance Status</h2>
+            <div class="compliance-status {'compliant' if scan_results.get('gdpr_compliance', False) else 'non-compliant'}">
+                {'✅ GDPR Compliant' if scan_results.get('gdpr_compliance', False) else '❌ GDPR Non-Compliant'}
+            </div>
+            <p>This assessment is based on security findings that may impact GDPR compliance requirements under Article 32 (Security of processing).</p>
+        </div>
+        
+        <div class="content-section">
+            <h2>🔎 Detailed Findings</h2>
+            {findings_html if findings_html else '<p>No security findings detected during this scan.</p>'}
+        </div>
+        
+        <div class="content-section">
+            <h2>📋 Recommendations</h2>
+            <ul>
+                <li>Review and implement missing security headers (HSTS, CSP, X-Frame-Options)</li>
+                <li>Implement proper authentication and authorization mechanisms</li>
+                <li>Add rate limiting to prevent API abuse and DoS attacks</li>
+                <li>Sanitize and validate all user inputs to prevent injection attacks</li>
+                <li>Implement proper error handling to avoid information disclosure</li>
+                <li>Regular security testing and vulnerability assessments</li>
+                <li>Monitor API usage and implement logging for security events</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>Generated by DataGuardian Pro - API Security Scanner</p>
+            <p>Report ID: {scan_id} | {formatted_timestamp}</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html_report
+
 def execute_api_scan(region, username, base_url, endpoints, timeout):
     """Execute comprehensive API scanning with detailed findings analysis"""
     try:
@@ -1629,6 +1958,45 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
             st.warning(f"⚠️ {high_findings} high-priority security issues found.")
         else:
             st.success("✅ No critical security vulnerabilities detected.")
+        
+        # Add HTML report download functionality
+        st.markdown("---")
+        st.subheader("📄 Download Reports")
+        
+        # Generate HTML report
+        html_report = generate_api_html_report(scan_results)
+        
+        # Create download columns
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.download_button(
+                label="📥 Download HTML Report",
+                data=html_report,
+                file_name=f"api-security-report-{scan_results['scan_id']}.html",
+                mime="text/html",
+                use_container_width=True
+            )
+        
+        with col2:
+            # Generate JSON report for API results
+            json_report = json.dumps(scan_results, indent=2, default=str)
+            st.download_button(
+                label="📊 Download JSON Report",
+                data=json_report,
+                file_name=f"api-security-report-{scan_results['scan_id']}.json",
+                mime="application/json",
+                use_container_width=True
+            )
+        
+        # Display report preview
+        with st.expander("📋 Preview HTML Report"):
+            st.markdown("**Report Summary:**")
+            st.write(f"• **Base URL:** {scan_results['base_url']}")
+            st.write(f"• **Endpoints Scanned:** {scan_results['endpoints_scanned']}")
+            st.write(f"• **Security Score:** {scan_results['security_score']}/100")
+            st.write(f"• **Total Findings:** {scan_results['total_findings']}")
+            st.write(f"• **GDPR Compliance:** {'✅ Compliant' if scan_results['gdpr_compliance'] else '❌ Non-compliant'}")
         
         st.success("✅ Comprehensive API security scan completed!")
         
