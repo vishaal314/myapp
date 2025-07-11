@@ -57,7 +57,7 @@
     "complete_purchase_button": "Aankoop Afronden",
     "error": {
       "card_number": "Vul een geldig kaartnummer in",
-      "expiry": "Vul een geldige vervaldatum in (MM/JJ)",
+      "expiry": "Vul een geldige vervaldatum in (maand/jaar)",
       "cvc": "Vul een geldige CVC-code in",
       "name_on_card": "Vul de naam op de kaart in"
     },
@@ -70,7 +70,7 @@
     "info": "Registratiefunctionaliteit beschikbaar in volledige versie"
   },
   "login": {
-    "email_username": "E-mail of Gebruikersnaam",
+    "email_username": "E-mailadres òf Gebruikersnaam",
     "password": "Wachtwoord",
     "remember_me": "Onthoud mij",
     "forgot_password": "Wachtwoord vergeten?",
@@ -96,8 +96,8 @@
       "passwords_mismatch": "Wachtwoorden komen niet overeen",
       "terms_required": "U moet akkoord gaan met de voorwaarden",
       "email_invalid": "Ongeldig e-mailadres",
-      "username_taken": "Gebruikersnaam is al in gebruik",
-      "email_taken": "E-mail is al in gebruik"
+      "username_taken": "Deze gebruikersnaam is reeds bezet",
+      "email_taken": "Dit e-mailadres is reeds geregistreerd"
     }
   },
   "dashboard": {
@@ -124,7 +124,7 @@
     },
     "analytics_title": "Privacy & Compliance Analyse",
     "cost_efficiency": "Kostenefficiëntie",
-    "potential_savings": "Potentiële Besparingen in GDPR-boetes",
+    "potential_savings": "Potentiële Besparingen bij AVG-boetes",
     "sustainability_score": "Duurzaamheidsscore",
     "scan_activity_over_time": "Scanactiviteit over Tijd"
   },
@@ -145,7 +145,7 @@
     "select_region": "Selecteer Regio",
     "advanced_configuration": "Geavanceerde Configuratie",
     "upload_files": "Bestanden Uploaden",
-    "drag_files": "Sleep bestanden hierheen of klik om te bladeren",
+    "drag_files": "Sleep bestanden hierheen òf klik om te bladeren",
     "start_scan": "Scan Starten",
     "scanning": "Bezig met scannen...",
     "running_scan": "Scan uitvoeren",
@@ -171,7 +171,7 @@
     "soc2_timeframe": "Scan Tijdsbestek",
     "soc2_pdf_report": "Genereer PDF Rapport",
     "soc2_new_scan": "Nieuwe SOC2 Scan",
-    "soc2_view_dashboard": "Bekijk in Dashboard"
+    "soc2_view_dashboard": "Bekijken op Dashboard"
   },
   "history": {
     "title": "Geschiedenis"
@@ -281,7 +281,7 @@
       "vulnerable_subjects": "Kwetsbare betrokkenen",
       "new_technology": "Nieuwe technologie",
       "special_categories": "Bijzondere categorieën van gegevens",
-      "evaluation_scoring": "Evaluatie of scoring"
+      "evaluation_scoring": "Evaluatie òf beoordeling"
     }
   },
   "netherlands_regulatory": {
@@ -308,7 +308,7 @@
     "dutch_compliance": "Nederlandse nalevingsvereisten",
     "cross_border": "Grensoverschrijdende gegevensoverdracht",
     "direct_marketing": "Direct marketing",
-    "direct_marketing_requirements": "Specifieke regels voor direct marketing in Nederland",
+    "direct_marketing_requirements": "Specifieke regels voor directe marketing binnen Nederland",
     "camera_surveillance": "Cameratoezicht",
     "data_leak_register": "Datalekkenregister",
     "processing_register": "Verwerkingsregister",
