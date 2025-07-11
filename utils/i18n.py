@@ -92,7 +92,7 @@ def load_translations(lang_code: str) -> Dict[str, Any]:
 def set_language(lang_code: Optional[str] = None) -> None:
     """
     Set the current language for the application.
-    Enhanced with redundant storage for robustness.
+    Simplified with single source of truth.
     
     Args:
         lang_code: The language code (e.g., 'en', 'nl')
@@ -100,17 +100,8 @@ def set_language(lang_code: Optional[str] = None) -> None:
     global _current_language
     
     if not lang_code:
-        # Priority chain for finding language
-        if '_persistent_language' in st.session_state:
-            lang_code = st.session_state['_persistent_language']
-        elif 'language' in st.session_state:
-            lang_code = st.session_state['language']
-        elif 'pre_login_language' in st.session_state:
-            lang_code = st.session_state['pre_login_language']
-        elif 'backup_language' in st.session_state:
-            lang_code = st.session_state['backup_language']
-        else:
-            lang_code = 'en'  # Default fallback
+        # Single source of truth for language preference
+        lang_code = st.session_state.get('language', 'en')
     
     # Ensure lang_code is a string and valid
     lang_code_str = str(lang_code)
@@ -129,11 +120,8 @@ def set_language(lang_code: Optional[str] = None) -> None:
     # Load translations for the language
     load_translations(lang_code_str)
     
-    # Update ALL session state locations for maximum redundancy
+    # Single source of truth for language preference
     st.session_state['language'] = lang_code_str
-    st.session_state['_persistent_language'] = lang_code_str
-    st.session_state['pre_login_language'] = lang_code_str
-    st.session_state['backup_language'] = lang_code_str
 
 def get_text(key: str, default: Optional[str] = None) -> str:
     """
@@ -308,6 +296,32 @@ def language_selector(key_suffix: str = None) -> None:
                     st.rerun()
 
 # Initialize translations - COMPLETELY FIXED VERSION
+def detect_browser_language() -> str:
+    """
+    Detect user's preferred language from browser or IP location.
+    Returns 'nl' for Netherlands users, 'en' for others.
+    """
+    try:
+        # Try to get user's IP-based location for Netherlands detection
+        # This is a simplified implementation - in production, use proper geolocation
+        import requests
+        
+        # Simple IP-based detection (fallback to 'en' on any error)
+        try:
+            response = requests.get('https://ipapi.co/json/', timeout=2)
+            if response.status_code == 200:
+                data = response.json()
+                country_code = data.get('country_code', '').upper()
+                if country_code == 'NL':
+                    return 'nl'
+        except:
+            pass
+        
+        # Default to English if detection fails
+        return 'en'
+    except:
+        return 'en'
+
 def initialize() -> None:
     """
     Initialize the internationalization module.
@@ -316,45 +330,16 @@ def initialize() -> None:
     """
     global _translations, _current_language
     
-    # LANGUAGE PRIORITY CHAIN:
-    # 1. force_language_after_login (highest - set during auth)
-    # 2. _persistent_language (persistent across all state changes)
-    # 3. language (standard location)
-    # 4. pre_login_language (stored before login)
-    # 5. backup_language (extra backup)
-    # 6. 'en' (default fallback)
-    
-    # Check all possible storage locations in priority order
-    if 'force_language_after_login' in st.session_state:
-        current_lang = st.session_state.pop('force_language_after_login')
-        print(f"INIT - Force Language Available: {current_lang}")
-    elif '_persistent_language' in st.session_state:
-        current_lang = st.session_state.get('_persistent_language')
-        print(f"INIT - Using _persistent_language: {current_lang}")
-    elif 'language' in st.session_state:
-        current_lang = st.session_state.get('language')
-        print(f"INIT - Using language: {current_lang}")
-    elif 'pre_login_language' in st.session_state:
-        current_lang = st.session_state.get('pre_login_language')
-        print(f"INIT - Using pre_login_language: {current_lang}")
-    elif 'backup_language' in st.session_state:
-        current_lang = st.session_state.get('backup_language')
-        print(f"INIT - Using backup_language: {current_lang}")
-    else:
-        # Ultimate fallback
-        current_lang = 'en'
-        print(f"INIT - No language found, using default: {current_lang}")
+    # Simplified language detection and initialization
+    current_lang = st.session_state.get('language', 'en')
     
     # Validate the language is supported
     if current_lang not in LANGUAGES:
         print(f"INIT - Invalid language: {current_lang}, falling back to 'en'")
         current_lang = 'en'
     
-    # Apply language to ALL storage locations for redundancy
+    # Single source of truth for language preference
     st.session_state['language'] = current_lang
-    st.session_state['_persistent_language'] = current_lang
-    st.session_state['pre_login_language'] = current_lang
-    st.session_state['backup_language'] = current_lang
     
     # Completely reset all translations to force reload
     # This is critical for proper translation after auth changes

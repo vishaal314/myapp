@@ -61,7 +61,13 @@
       "cvc": "Enter a valid CVC code",
       "name_on_card": "Enter the name on the card"
     },
-    "basic_user": "Basic User"
+    "basic_user": "Basic User",
+    "plan": "Plan"
+  },
+  "register": {
+    "new_user": "New user?",
+    "create_account": "Create Account",
+    "info": "Registration functionality available in full version"
   },
   "login": {
     "email_username": "Email or Username",
@@ -108,10 +114,13 @@
     "certificate_success": "Compliance certificate generated successfully!",
     "certificate_error": "Failed to generate compliance certificate. Please contact support.",
     "welcome": "Welcome Dashboard",
+    "recent_activity": "Recent Scan Activity",
     "metric": {
       "total_scans": "Total Scans",
       "total_pii": "Total PII Found",
-      "high_risk": "High Risk Items"
+      "high_risk": "High Risk Items",
+      "compliance_score": "Compliance Score",
+      "active_issues": "Active Issues"
     },
     "compliance_status": "Compliance Status",
     "total_scans": "Total Scans",

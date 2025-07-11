@@ -61,7 +61,13 @@
       "cvc": "Vul een geldige CVC-code in",
       "name_on_card": "Vul de naam op de kaart in"
     },
-    "basic_user": "Basisgebruiker"
+    "basic_user": "Basisgebruiker",
+    "plan": "Abonnement"
+  },
+  "register": {
+    "new_user": "Nieuwe gebruiker?",
+    "create_account": "Account Aanmaken",
+    "info": "Registratiefunctionaliteit beschikbaar in volledige versie"
   },
   "login": {
     "email_username": "E-mail of Gebruikersnaam",
@@ -108,10 +114,13 @@
     "certificate_success": "Nalevingscertificaat succesvol gegenereerd!",
     "certificate_error": "Kon geen nalevingscertificaat genereren. Neem contact op met ondersteuning.",
     "welcome": "Welkom Dashboard",
+    "recent_activity": "Recente Scanactiviteit",
     "metric": {
       "total_scans": "Totaal Scans",
       "total_pii": "Totaal PII Gevonden",
-      "high_risk": "Hoog Risico Items"
+      "high_risk": "Hoog Risico Items",
+      "compliance_score": "Nalevingsscore",
+      "active_issues": "Actieve Problemen"
     },
     "analytics_title": "Privacy & Compliance Analyse",
     "cost_efficiency": "Kostenefficiëntie",

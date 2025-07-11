@@ -38,18 +38,31 @@ def is_authenticated():
     return st.session_state.get('authenticated', False)
 
 def get_text(key, default=None):
-    return default or key
+    """Get translated text with proper i18n support"""
+    try:
+        from utils.i18n import get_text as i18n_get_text
+        return i18n_get_text(key, default)
+    except ImportError:
+        return default or key
 
 def _(key, default=None):
+    """Shorthand for get_text"""
     return get_text(key, default)
 
 def main():
     """Main application entry point with comprehensive error handling"""
     
     try:
-        # Initialize basic session state
+        # Initialize internationalization and basic session state
+        from utils.i18n import initialize, detect_browser_language
+        
+        # Detect and set appropriate language
         if 'language' not in st.session_state:
-            st.session_state.language = 'en'
+            detected_lang = detect_browser_language()
+            st.session_state.language = detected_lang
+        
+        # Initialize i18n system
+        initialize()
         
         if 'authenticated' not in st.session_state:
             st.session_state.authenticated = False
@@ -76,16 +89,17 @@ def render_landing_page():
     
     # Sidebar login
     with st.sidebar:
-        st.header("🔐 Login")
+        st.header(f"🔐 {_('login.title', 'Login')}")
         
-        # Language selector
-        language = st.selectbox("Language / Taal", ["English", "Nederlands"], key="language_select")
+        # Language selector with proper i18n
+        from utils.i18n import language_selector
+        language_selector("landing_page")
         
-        # Login form
+        # Login form with Dutch support
         with st.form("login_form"):
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
-            submit = st.form_submit_button("Login")
+            username = st.text_input(_('login.email_username', 'Username'))
+            password = st.text_input(_('login.password', 'Password'), type="password")
+            submit = st.form_submit_button(_('login.button', 'Login'))
             
             if submit:
                 if username and password:
@@ -102,30 +116,43 @@ def render_landing_page():
                         st.session_state.authenticated = True
                         st.session_state.username = username
                         st.session_state.user_role = "admin" if username in ["admin", "vishaal314", "vishaal314@gmail.com"] else "user"
-                        st.success("Login successful!")
+                        st.success(_('login.success', 'Login successful!'))
                         st.rerun()
                     else:
-                        st.error("Invalid credentials. Contact administrator for access.")
+                        st.error(_('login.error.invalid_credentials', 'Invalid credentials. Contact administrator for access.'))
                 else:
-                    st.error("Please enter username and password")
+                    st.error(_('login.error.missing_fields', 'Please enter username and password'))
         
         # Registration option
         st.markdown("---")
-        st.write("**New user?**")
-        if st.button("Create Account"):
-            st.info("Registration functionality available in full version")
+        st.write(f"**{_('register.new_user', 'New user?')}**")
+        if st.button(_('register.create_account', 'Create Account')):
+            st.info(_('register.info', 'Registration functionality available in full version'))
     
-    # Main landing page content
-    st.markdown("""
+    # Show language hint for Dutch users
+    if st.session_state.get('language') == 'en':
+        try:
+            # Check if user might be from Netherlands
+            import requests
+            response = requests.get('https://ipapi.co/json/', timeout=1)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('country_code', '').upper() == 'NL':
+                    st.info("💡 Deze applicatie is ook beschikbaar in het Nederlands - use the language selector in the sidebar")
+        except:
+            pass
+    
+    # Main landing page content with translations
+    st.markdown(f"""
     <div style="text-align: center; padding: 2rem 0;">
         <h1 style="color: #1f77b4; font-size: 3rem; margin-bottom: 0.5rem;">
-            🛡️ DataGuardian Pro
+            🛡️ {_('app.title', 'DataGuardian Pro')}
         </h1>
         <h2 style="color: #666; font-weight: 300; margin-bottom: 2rem;">
-            Enterprise Privacy Compliance Platform
+            {_('app.subtitle', 'Enterprise Privacy Compliance Platform')}
         </h2>
         <p style="font-size: 1.2rem; color: #444; max-width: 800px; margin: 0 auto;">
-            Detect, Manage, and Report Privacy Compliance with AI-powered Precision
+            {_('app.tagline', 'Detect, Manage, and Report Privacy Compliance with AI-powered Precision')}
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -198,25 +225,35 @@ def render_authenticated_interface():
     username = st.session_state.get('username', 'User')
     user_role = st.session_state.get('user_role', 'user')
     
-    # Sidebar navigation
+    # Sidebar navigation with translations
     with st.sidebar:
-        st.success(f"Welcome, {username}!")
+        st.success(f"{_('sidebar.welcome', 'Welcome')}, {username}!")
         
-        # Navigation menu
-        nav_options = ["🏠 Dashboard", "🔍 New Scan", "📊 Results", "📋 History", "⚙️ Settings"]
+        # Add language selector for authenticated users
+        from utils.i18n import language_selector
+        language_selector("authenticated")
+        
+        # Navigation menu with translations
+        nav_options = [
+            f"🏠 {_('sidebar.dashboard', 'Dashboard')}", 
+            f"🔍 {_('scan.new_scan_title', 'New Scan')}", 
+            f"📊 {_('results.title', 'Results')}", 
+            f"📋 {_('history.title', 'History')}", 
+            f"⚙️ {_('sidebar.settings', 'Settings')}"
+        ]
         if user_role == "admin":
-            nav_options.append("👥 Admin")
+            nav_options.append(f"👥 {_('admin.title', 'Admin')}")
         
-        selected_nav = st.selectbox("Navigation", nav_options, key="navigation")
+        selected_nav = st.selectbox(_('sidebar.navigation', 'Navigation'), nav_options, key="navigation")
         
         st.markdown("---")
         
-        # User info
-        st.write(f"**Role:** {user_role.title()}")
-        st.write(f"**Plan:** Premium")  # Placeholder
+        # User info with translations
+        st.write(f"**{_('sidebar.current_role', 'Role')}:** {user_role.title()}")
+        st.write(f"**{_('sidebar.plan', 'Plan')}:** {_('sidebar.premium_member', 'Premium')}")
         
         # Logout
-        if st.button("Logout"):
+        if st.button(_('sidebar.sign_out', 'Logout')):
             for key in ['authenticated', 'username', 'user_role']:
                 if key in st.session_state:
                     del st.session_state[key]
@@ -237,22 +274,22 @@ def render_authenticated_interface():
         render_admin_page()
 
 def render_dashboard():
-    """Render the main dashboard"""
-    st.title("📊 Dashboard")
+    """Render the main dashboard with translations"""
+    st.title(f"📊 {_('dashboard.title', 'Dashboard')}")
     
-    # Metrics
+    # Metrics with translations
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Total Scans", "156", "+12")
+        st.metric(_('dashboard.metric.total_scans', 'Total Scans'), "156", "+12")
     with col2:
-        st.metric("PII Found", "23", "+2")
+        st.metric(_('dashboard.metric.total_pii', 'PII Found'), "23", "+2")
     with col3:
-        st.metric("Compliance Score", "94%", "+3%")
+        st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), "94%", "+3%")
     with col4:
-        st.metric("Active Issues", "2", "-1")
+        st.metric(_('dashboard.metric.active_issues', 'Active Issues'), "2", "-1")
     
     # Recent activity
-    st.subheader("Recent Scan Activity")
+    st.subheader(_('dashboard.recent_activity', 'Recent Scan Activity'))
     
     import pandas as pd
     recent_scans = pd.DataFrame({
@@ -267,7 +304,7 @@ def render_dashboard():
 
 def render_scanner_interface_safe():
     """Complete scanner interface with all functional scanners"""
-    st.title("🔍 New Scan")
+    st.title(f"🔍 {_('scan.new_scan_title', 'New Scan')}")
     
     # Import scanner services
     try:
