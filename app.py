@@ -2873,13 +2873,16 @@ def render_website_scanner_interface(region: str, username: str):
         execute_website_scan(region, username, url, scan_config)
 
 def execute_website_scan(region, username, url, scan_config):
-    """Execute comprehensive GDPR website privacy compliance scanning"""
+    """Execute comprehensive multi-page GDPR website privacy compliance scanning"""
     try:
         import requests
         import time
         import re
         import uuid
         from urllib.parse import urlparse, urljoin
+        from xml.etree import ElementTree as ET
+        import concurrent.futures
+        from collections import defaultdict
         
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -2896,18 +2899,25 @@ def execute_website_scan(region, username, url, scan_config):
             "gdpr_violations": [],
             "netherlands_compliance": region == "Netherlands",
             "pages_scanned": 0,
+            "pages_analyzed": [],
+            "subpages_analyzed": [],
+            "sitemap_urls": [],
             "cookies_found": [],
             "trackers_detected": [],
             "privacy_policy_status": False,
             "consent_mechanism": {},
             "third_party_domains": [],
             "dark_patterns": [],
-            "gdpr_rights_available": False
+            "gdpr_rights_available": False,
+            "site_structure": {},
+            "crawl_depth": 0,
+            "max_pages": scan_config.get('max_pages', 5),
+            "total_html_content": ""
         }
         
-        # Phase 1: Initial Page Analysis
-        status_text.text("🔍 Phase 1: Loading and analyzing website...")
-        progress_bar.progress(10)
+        # Phase 1: Sitemap Discovery and Analysis
+        status_text.text("🗺️ Phase 1: Discovering sitemap and site structure...")
+        progress_bar.progress(5)
         time.sleep(0.5)
         
         # Enhanced user agents for stealth mode
@@ -2927,223 +2937,140 @@ def execute_website_scan(region, username, url, scan_config):
             'Upgrade-Insecure-Requests': '1',
         }
         
-        try:
-            response = requests.get(url, headers=headers, timeout=15, verify=scan_config.get('check_https', True))
-            content = response.text
-            scan_results['pages_scanned'] = 1  # Successfully scanned 1 page
-            scan_results['html_content'] = content  # Store HTML content for metrics
-        except Exception as e:
-            st.error(f"Failed to load website: {str(e)}")
-            return
+        # Parse base URL
+        parsed_url = urlparse(url)
+        base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
         
-        # Phase 2: Cookie Consent Analysis
-        if scan_config.get('analyze_cookies'):
-            status_text.text("🍪 Phase 2: Analyzing cookie consent mechanisms...")
-            progress_bar.progress(25)
-            time.sleep(0.5)
-            
-            # Cookie consent banner detection
-            cookie_consent_patterns = [
-                r'cookie.{0,50}consent',
-                r'accept.{0,20}cookies',
-                r'cookie.{0,20}banner',
-                r'gdpr.{0,20}consent',
-                r'privacy.{0,20}consent',
-                r'cookiebot',
-                r'onetrust',
-                r'quantcast'
-            ]
-            
-            consent_found = False
-            consent_details = {}
-            
-            for pattern in cookie_consent_patterns:
-                if re.search(pattern, content, re.IGNORECASE):
-                    consent_found = True
-                    consent_details['pattern_detected'] = pattern
-                    break
-            
-            # Check for dark patterns
-            dark_patterns_found = []
-            if scan_config.get('dark_patterns'):
-                # Pre-ticked boxes (forbidden in Netherlands)
-                if re.search(r'checked.*?marketing|marketing.*?checked', content, re.IGNORECASE):
-                    dark_patterns_found.append({
-                        'type': 'PRE_TICKED_MARKETING',
-                        'severity': 'Critical',
-                        'description': 'Pre-ticked marketing consent boxes detected (forbidden under Dutch AP rules)',
-                        'gdpr_article': 'Art. 7 GDPR - Conditions for consent'
-                    })
-                
-                # Misleading button text
-                if re.search(r'continue.*?browsing|browse.*?continue', content, re.IGNORECASE):
-                    dark_patterns_found.append({
-                        'type': 'MISLEADING_CONTINUE',
-                        'severity': 'High',
-                        'description': '"Continue browsing" button implies consent without explicit agreement',
-                        'gdpr_article': 'Art. 4(11) GDPR - Definition of consent'
-                    })
-                
-                # Unequal buttons (Netherlands requires "equally easy" reject option)
-                accept_buttons = len(re.findall(r'accept.*?all|allow.*?all', content, re.IGNORECASE))
-                reject_buttons = len(re.findall(r'reject.*?all|decline.*?all', content, re.IGNORECASE))
-                
-                if accept_buttons > 0 and reject_buttons == 0:
-                    dark_patterns_found.append({
-                        'type': 'MISSING_REJECT_ALL',
-                        'severity': 'Critical',
-                        'description': 'No "Reject All" button found - required by Dutch AP since 2022',
-                        'gdpr_article': 'Art. 7(3) GDPR - Withdrawal of consent'
-                    })
-            
-            scan_results['consent_mechanism'] = {
-                'found': consent_found,
-                'details': consent_details,
-                'dark_patterns': dark_patterns_found
-            }
-            scan_results['dark_patterns'] = dark_patterns_found
+        # Discover sitemap URLs
+        sitemap_urls = discover_sitemap_urls(base_url, headers)
+        scan_results['sitemap_urls'] = sitemap_urls
         
-        # Phase 3: Third-party Tracker Detection
-        if scan_config.get('tracking_scripts'):
-            status_text.text("🎯 Phase 3: Detecting third-party trackers and analytics...")
-            progress_bar.progress(45)
-            time.sleep(0.5)
-            
-            # Common tracking domains and services
-            tracking_patterns = {
-                'google_analytics': r'google-analytics\.com|googletagmanager\.com|gtag\(',
-                'facebook_pixel': r'facebook\.net|fbevents\.js|connect\.facebook\.net',
-                'hotjar': r'hotjar\.com|hj\(',
-                'mixpanel': r'mixpanel\.com|mixpanel\.track',
-                'adobe_analytics': r'omniture\.com|adobe\.com.*analytics',
-                'crazy_egg': r'crazyegg\.com',
-                'full_story': r'fullstory\.com',
-                'mouseflow': r'mouseflow\.com',
-                'yandex_metrica': r'metrica\.yandex',
-                'linkedin_insight': r'snap\.licdn\.com'
-            }
-            
-            trackers_detected = []
-            third_party_domains = set()
-            
-            for tracker_name, pattern in tracking_patterns.items():
-                matches = re.findall(pattern, content, re.IGNORECASE)
-                if matches:
-                    trackers_detected.append({
-                        'name': tracker_name.replace('_', ' ').title(),
-                        'type': 'Analytics/Tracking',
-                        'matches': len(matches),
-                        'gdpr_risk': 'High' if tracker_name in ['google_analytics', 'facebook_pixel'] else 'Medium',
-                        'requires_consent': True,
-                        'data_transfer': 'Non-EU' if tracker_name in ['google_analytics', 'facebook_pixel'] else 'Unknown'
-                    })
-                    third_party_domains.add(tracker_name)
-            
-            # Netherlands-specific Google Analytics compliance check
-            if region == "Netherlands" and any(t['name'] == 'Google Analytics' for t in trackers_detected):
-                scan_results['gdpr_violations'].append({
-                    'type': 'GOOGLE_ANALYTICS_NL',
-                    'severity': 'Critical',
-                    'description': 'Google Analytics detected - Dutch AP requires anonymization and consent',
-                    'recommendation': 'Implement IP anonymization and explicit consent before loading GA',
-                    'gdpr_article': 'Art. 44-49 GDPR - International transfers'
-                })
-            
-            scan_results['trackers_detected'] = trackers_detected
-            scan_results['third_party_domains'] = list(third_party_domains)
-        
-        # Phase 4: Privacy Policy Analysis
-        if scan_config.get('privacy_policy'):
-            status_text.text("📜 Phase 4: Analyzing privacy policy and legal disclosures...")
-            progress_bar.progress(60)
-            time.sleep(0.5)
-            
-            # Look for privacy policy links
-            privacy_links = re.findall(r'href=["\']([^"\']*privacy[^"\']*)["\']', content, re.IGNORECASE)
-            privacy_policy_found = len(privacy_links) > 0
-            
-            # Check for GDPR-required elements in content
-            gdpr_elements = {
-                'legal_basis': re.search(r'legal.{0,20}basis|lawful.{0,20}basis', content, re.IGNORECASE),
-                'data_controller': re.search(r'data.{0,20}controller|controller.{0,20}contact', content, re.IGNORECASE),
-                'dpo_contact': re.search(r'data.{0,20}protection.{0,20}officer|dpo', content, re.IGNORECASE),
-                'user_rights': re.search(r'your.{0,20}rights|data.{0,20}subject.{0,20}rights', content, re.IGNORECASE),
-                'retention_period': re.search(r'retention.{0,20}period|how.{0,20}long.*store', content, re.IGNORECASE)
-            }
-            
-            missing_elements = [key for key, found in gdpr_elements.items() if not found]
-            
-            if missing_elements:
-                scan_results['gdpr_violations'].append({
-                    'type': 'INCOMPLETE_PRIVACY_POLICY',
-                    'severity': 'High',
-                    'description': f'Privacy policy missing required GDPR elements: {", ".join(missing_elements)}',
-                    'gdpr_article': 'Art. 12-14 GDPR - Transparent information'
-                })
-            
-            scan_results['privacy_policy_status'] = privacy_policy_found
-            scan_results['gdpr_rights_available'] = gdpr_elements.get('user_rights', False) is not None
-        
-        # Phase 5: Data Collection Forms Analysis
-        if scan_config.get('data_collection'):
-            status_text.text("📝 Phase 5: Analyzing data collection forms...")
-            progress_bar.progress(75)
-            time.sleep(0.5)
-            
-            # Find forms and input fields
-            forms = re.findall(r'<form[^>]*>(.*?)</form>', content, re.DOTALL | re.IGNORECASE)
-            input_fields = re.findall(r'<input[^>]*type=["\']?(email|tel|text|password)["\']?[^>]*>', content, re.IGNORECASE)
-            
-            form_issues = []
-            
-            if forms:
-                # Check for consent checkboxes near forms
-                for form in forms:
-                    if re.search(r'email|newsletter|contact', form, re.IGNORECASE):
-                        # Check if explicit consent is requested
-                        if not re.search(r'consent|agree|terms|privacy', form, re.IGNORECASE):
-                            form_issues.append({
-                                'type': 'MISSING_FORM_CONSENT',
-                                'severity': 'High',
-                                'description': 'Email collection form without explicit consent checkbox',
-                                'gdpr_article': 'Art. 6(1)(a) GDPR - Consent'
-                            })
-            
-            scan_results['findings'].extend(form_issues)
-        
-        # Phase 6: Netherlands-Specific Compliance Checks
-        if scan_config.get('nl_ap_rules') and region == "Netherlands":
-            status_text.text("🇳🇱 Phase 6: Netherlands AP Authority compliance check...")
-            progress_bar.progress(90)
-            time.sleep(0.5)
-            
-            # Check for Dutch imprint (colofon)
-            if scan_config.get('nl_colofon'):
-                colofon_found = bool(re.search(r'colofon|imprint|bedrijfsgegevens', content, re.IGNORECASE))
-                if not colofon_found:
-                    scan_results['gdpr_violations'].append({
-                        'type': 'MISSING_DUTCH_IMPRINT',
-                        'severity': 'Medium',
-                        'description': 'Dutch websites require a colofon/imprint with business details',
-                        'recommendation': 'Add colofon page with company registration details'
-                    })
-            
-            # Check KvK (Chamber of Commerce) number
-            kvk_number = re.search(r'kvk[:\s]*(\d{8})', content, re.IGNORECASE)
-            if not kvk_number:
-                scan_results['gdpr_violations'].append({
-                    'type': 'MISSING_KVK_NUMBER',
-                    'severity': 'Medium',
-                    'description': 'Dutch businesses must display KvK registration number',
-                    'recommendation': 'Add KvK number to imprint/colofon section'
-                })
-        
-        # Phase 7: Compliance Scoring and Risk Assessment
-        status_text.text("⚖️ Phase 7: Calculating GDPR compliance score...")
-        progress_bar.progress(100)
+        # Phase 2: Multi-page Content Discovery
+        status_text.text("🔍 Phase 2: Crawling and analyzing multiple pages...")
+        progress_bar.progress(15)
         time.sleep(0.5)
         
-        # Calculate compliance score
+        # Collect all URLs to scan
+        urls_to_scan = [url]  # Start with main URL
+        
+        # Add sitemap URLs
+        for sitemap_url in sitemap_urls[:scan_config.get('max_pages', 5)]:
+            if sitemap_url not in urls_to_scan:
+                urls_to_scan.append(sitemap_url)
+        
+        # Discover linked pages from main page
+        try:
+            main_response = requests.get(url, headers=headers, timeout=15, verify=scan_config.get('check_https', True))
+            main_content = main_response.text
+            
+            # Find internal links on main page
+            internal_links = discover_internal_links(main_content, base_url, parsed_url.netloc)
+            
+            # Add internal links up to max_pages limit
+            for link in internal_links:
+                if len(urls_to_scan) >= scan_config.get('max_pages', 5):
+                    break
+                if link not in urls_to_scan:
+                    urls_to_scan.append(link)
+                    
+        except Exception as e:
+            st.warning(f"Could not analyze main page for links: {str(e)}")
+            urls_to_scan = [url]  # Fall back to main URL only
+        
+        # Phase 3: Comprehensive Multi-page Analysis
+        status_text.text(f"📊 Phase 3: Analyzing {len(urls_to_scan)} pages comprehensively...")
+        progress_bar.progress(25)
+        time.sleep(0.5)
+        
+        # Analyze all pages concurrently
+        all_page_results = analyze_multiple_pages(urls_to_scan, headers, scan_config)
+        
+        # Aggregate results from all pages
+        scan_results['pages_scanned'] = len(all_page_results)
+        scan_results['pages_analyzed'] = [result['url'] for result in all_page_results]
+        
+        # Combine all HTML content for metrics
+        total_content = ""
+        for page_result in all_page_results:
+            total_content += page_result.get('content', '')
+        scan_results['total_html_content'] = total_content
+        
+        # Combine findings from all pages
+        all_cookies = []
+        all_trackers = []
+        all_dark_patterns = []
+        all_gdpr_violations = []
+        all_findings = []
+        
+        for page_result in all_page_results:
+            all_cookies.extend(page_result.get('cookies', []))
+            all_trackers.extend(page_result.get('trackers', []))
+            all_dark_patterns.extend(page_result.get('dark_patterns', []))
+            all_gdpr_violations.extend(page_result.get('gdpr_violations', []))
+            all_findings.extend(page_result.get('findings', []))
+        
+        # Remove duplicates while preserving order
+        scan_results['cookies_found'] = remove_duplicates(all_cookies, 'name')
+        scan_results['trackers_detected'] = remove_duplicates(all_trackers, 'name')
+        scan_results['dark_patterns'] = remove_duplicates(all_dark_patterns, 'type')
+        scan_results['gdpr_violations'] = remove_duplicates(all_gdpr_violations, 'type')
+        scan_results['findings'] = remove_duplicates(all_findings, 'type')
+        
+        # Check for privacy policy and GDPR rights across all pages
+        privacy_policy_found = any(page_result.get('privacy_policy_found', False) for page_result in all_page_results)
+        gdpr_rights_found = any(page_result.get('gdpr_rights_found', False) for page_result in all_page_results)
+        
+        scan_results['privacy_policy_status'] = privacy_policy_found
+        scan_results['gdpr_rights_available'] = gdpr_rights_found
+        
+        # Set consent mechanism from any page that has it
+        consent_mechanism = {}
+        for page_result in all_page_results:
+            if page_result.get('consent_mechanism', {}).get('found'):
+                consent_mechanism = page_result['consent_mechanism']
+                break
+        scan_results['consent_mechanism'] = consent_mechanism
+        
+        # Phase 4: Netherlands-Specific Multi-page Compliance Checks
+        if scan_config.get('nl_ap_rules') and region == "Netherlands":
+            status_text.text("🇳🇱 Phase 4: Netherlands AP Authority compliance across all pages...")
+            progress_bar.progress(40)
+            time.sleep(0.5)
+            
+            # Analyze all pages for Dutch compliance
+            for page_result in all_page_results:
+                page_content = page_result.get('content', '')
+                page_url = page_result.get('url', '')
+                
+                # Check for Dutch imprint (colofon) across all pages
+                if scan_config.get('nl_colofon'):
+                    colofon_found = bool(re.search(r'colofon|imprint|bedrijfsgegevens', page_content, re.IGNORECASE))
+                    if not colofon_found and page_url == url:  # Only check main page for colofon
+                        scan_results['gdpr_violations'].append({
+                            'type': 'MISSING_DUTCH_IMPRINT',
+                            'severity': 'Medium',
+                            'description': 'Dutch websites require a colofon/imprint with business details',
+                            'recommendation': 'Add colofon page with company registration details',
+                            'page_url': page_url
+                        })
+                
+                # Check KvK (Chamber of Commerce) number across all pages
+                kvk_number = re.search(r'kvk[:\s]*(\d{8})', page_content, re.IGNORECASE)
+                if not kvk_number and page_url == url:  # Only check main page for KvK
+                    scan_results['gdpr_violations'].append({
+                        'type': 'MISSING_KVK_NUMBER',
+                        'severity': 'Medium',
+                        'description': 'Dutch businesses must display KvK registration number',
+                        'recommendation': 'Add KvK number to imprint/colofon section',
+                        'page_url': page_url
+                    })
+        
+        # Phase 5: Compliance Scoring and Risk Assessment
+        status_text.text("⚖️ Phase 5: Calculating comprehensive GDPR compliance score...")
+        progress_bar.progress(90)
+        time.sleep(0.5)
+        
+        # Calculate compliance score based on all findings
         total_violations = len(scan_results['gdpr_violations']) + len(scan_results['dark_patterns'])
         critical_violations = len([v for v in scan_results['gdpr_violations'] if v.get('severity') == 'Critical'])
         high_violations = len([v for v in scan_results['gdpr_violations'] if v.get('severity') == 'High'])
@@ -3168,21 +3095,26 @@ def execute_website_scan(region, username, url, scan_config):
         all_findings = scan_results['gdpr_violations'] + scan_results['dark_patterns'] + scan_results['findings']
         scan_results['findings'] = all_findings
         
-        # Calculate proper metrics for display
-        html_content = scan_results.get('html_content', '')
-        scan_results['files_scanned'] = max(1, len(scan_results.get('pages_analyzed', ['main_page'])) + len(scan_results.get('subpages_analyzed', [])))
-        scan_results['lines_analyzed'] = len(html_content.split('\n')) if html_content else len(response.text.split('\n')) if 'response' in locals() and response else 100
+        # Calculate comprehensive metrics for display
+        total_content = scan_results.get('total_html_content', '')
+        scan_results['files_scanned'] = len(scan_results.get('pages_analyzed', []))
+        scan_results['lines_analyzed'] = len(total_content.split('\n')) if total_content else 0
         scan_results['total_findings'] = len(all_findings)
         scan_results['critical_findings'] = len([f for f in all_findings if f.get('severity') == 'Critical'])
         
+        # Phase 6: Results Display
+        status_text.text("📊 Phase 6: Generating comprehensive results...")
+        progress_bar.progress(100)
+        time.sleep(0.5)
+        
         # Display comprehensive results
         st.markdown("---")
-        st.subheader("🌐 GDPR Website Privacy Compliance Results")
+        st.subheader("🌐 Multi-page GDPR Website Privacy Compliance Results")
         
-        # Executive dashboard
+        # Executive dashboard with enhanced metrics
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("Files Scanned", scan_results.get('files_scanned', 1))
+            st.metric("Pages Scanned", scan_results.get('pages_scanned', 0))
         with col2:
             st.metric("Lines Analyzed", scan_results.get('lines_analyzed', 0))
         with col3:
@@ -3190,32 +3122,33 @@ def execute_website_scan(region, username, url, scan_config):
         with col4:
             st.metric("Critical Issues", scan_results.get('critical_findings', 0))
         
-        # Additional metrics row
+        # Additional comprehensive metrics
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("Trackers Found", len(scan_results['trackers_detected']))
+            st.metric("Sitemap URLs", len(scan_results.get('sitemap_urls', [])))
         with col2:
-            st.metric("GDPR Violations", len(scan_results['gdpr_violations']))
+            st.metric("Trackers Found", len(scan_results['trackers_detected']))
         with col3:
-            st.metric("Dark Patterns", len(scan_results['dark_patterns']))
+            st.metric("GDPR Violations", len(scan_results['gdpr_violations']))
         with col4:
-            color = "green" if compliance_score >= 80 else "red"
+            st.metric("Dark Patterns", len(scan_results['dark_patterns']))
+        
+        # Site structure analysis
+        if scan_results.get('pages_analyzed'):
+            st.markdown("### 🗺️ Site Structure Analysis")
+            st.write(f"**Pages Analyzed:** {len(scan_results['pages_analyzed'])}")
+            with st.expander("View All Analyzed Pages"):
+                for i, page_url in enumerate(scan_results['pages_analyzed'], 1):
+                    st.write(f"{i}. {page_url}")
+        
+        # Compliance score visualization
+        col1, col2 = st.columns(2)
+        with col1:
+            color = "green" if compliance_score >= 80 else "orange" if compliance_score >= 60 else "red"
             st.metric("Compliance Score", f"{compliance_score}%")
-        
-        # Risk level indicator
-        risk_colors = {"Low": "🟢", "Medium": "🟡", "High": "🟠", "Critical": "🔴"}
-        st.markdown(f"### {risk_colors.get(risk_level, '⚪')} **Risk Level: {risk_level}**")
-        
-        # Cookie and consent analysis
-        if scan_config.get('analyze_cookies'):
-            st.markdown("### 🍪 Cookie Consent Analysis")
-            consent_status = "✅ Found" if scan_results['consent_mechanism']['found'] else "❌ Missing"
-            st.write(f"**Consent Mechanism:** {consent_status}")
-            
-            if scan_results['dark_patterns']:
-                st.error(f"**⚠️ Dark Patterns Detected:** {len(scan_results['dark_patterns'])} violations")
-                for pattern in scan_results['dark_patterns']:
-                    st.write(f"- **{pattern['type']}**: {pattern['description']}")
+        with col2:
+            risk_colors = {"Low": "🟢", "Medium": "🟡", "High": "🟠", "Critical": "🔴"}
+            st.markdown(f"### {risk_colors.get(risk_level, '⚪')} **Risk Level: {risk_level}**")
         
         # Netherlands-specific compliance
         if region == "Netherlands":
@@ -3223,7 +3156,9 @@ def execute_website_scan(region, username, url, scan_config):
             if scan_results['gdpr_violations']:
                 dutch_violations = [v for v in scan_results['gdpr_violations'] if 'Dutch' in v.get('description', '')]
                 if dutch_violations:
-                    st.error(f"**Dutch AP Violations:** {len(dutch_violations)} issues found")
+                    st.error(f"**Dutch AP Violations:** {len(dutch_violations)} issues found across {scan_results['pages_scanned']} pages")
+                    for violation in dutch_violations:
+                        st.write(f"- **{violation['type']}**: {violation['description']} (Page: {violation.get('page_url', 'Unknown')})")
                 else:
                     st.success("✅ No Netherlands-specific violations detected")
             else:
@@ -3235,18 +3170,378 @@ def execute_website_scan(region, username, url, scan_config):
         # Generate comprehensive HTML report
         html_report = generate_html_report(scan_results)
         st.download_button(
-            label="📄 Download GDPR Website Compliance Report",
+            label="📄 Download Multi-page GDPR Compliance Report",
             data=html_report,
-            file_name=f"website_gdpr_report_{scan_results['scan_id'][:8]}.html",
+            file_name=f"multipage_gdpr_report_{scan_results['scan_id'][:8]}.html",
             mime="text/html"
         )
         
-        st.success("✅ GDPR website privacy compliance scan completed!")
+        st.success(f"✅ Multi-page GDPR website privacy compliance scan completed! ({scan_results['pages_scanned']} pages analyzed)")
         
     except Exception as e:
-        st.error(f"GDPR website scan failed: {str(e)}")
+        st.error(f"Multi-page GDPR website scan failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
+
+def discover_sitemap_urls(base_url, headers):
+    """Discover sitemap URLs from robots.txt and common sitemap locations"""
+    sitemap_urls = []
+    
+    # Common sitemap locations
+    common_sitemaps = [
+        '/sitemap.xml',
+        '/sitemap_index.xml',
+        '/sitemaps.xml',
+        '/sitemap/sitemap.xml',
+        '/wp-sitemap.xml'
+    ]
+    
+    # Check robots.txt for sitemap references
+    try:
+        robots_response = requests.get(f"{base_url}/robots.txt", headers=headers, timeout=10)
+        if robots_response.status_code == 200:
+            robots_content = robots_response.text
+            # Extract sitemap URLs from robots.txt
+            sitemap_matches = re.findall(r'Sitemap:\s*([^\s]+)', robots_content, re.IGNORECASE)
+            sitemap_urls.extend(sitemap_matches)
+    except:
+        pass
+    
+    # Check common sitemap locations
+    for sitemap_path in common_sitemaps:
+        try:
+            sitemap_url = f"{base_url}{sitemap_path}"
+            response = requests.get(sitemap_url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                # Parse XML sitemap
+                try:
+                    from xml.etree import ElementTree as ET
+                    root = ET.fromstring(response.content)
+                    
+                    # Handle different sitemap formats
+                    namespaces = {
+                        'sitemap': 'http://www.sitemaps.org/schemas/sitemap/0.9',
+                        'xhtml': 'http://www.w3.org/1999/xhtml'
+                    }
+                    
+                    # Extract URLs from sitemap
+                    for url_elem in root.findall('.//sitemap:url', namespaces):
+                        loc_elem = url_elem.find('sitemap:loc', namespaces)
+                        if loc_elem is not None and loc_elem.text:
+                            sitemap_urls.append(loc_elem.text)
+                    
+                    # Handle sitemap index files
+                    for sitemap_elem in root.findall('.//sitemap:sitemap', namespaces):
+                        loc_elem = sitemap_elem.find('sitemap:loc', namespaces)
+                        if loc_elem is not None and loc_elem.text:
+                            sitemap_urls.append(loc_elem.text)
+                            
+                except ET.ParseError:
+                    # Not a valid XML sitemap
+                    pass
+                    
+        except:
+            continue
+    
+    # Remove duplicates and return unique URLs
+    return list(set(sitemap_urls))
+
+def discover_internal_links(content, base_url, domain):
+    """Discover internal links from HTML content"""
+    internal_links = []
+    
+    # Find all href links
+    href_pattern = r'href=["\']([^"\']*)["\']'
+    links = re.findall(href_pattern, content, re.IGNORECASE)
+    
+    for link in links:
+        # Skip anchors, javascript, and mailto links
+        if link.startswith('#') or link.startswith('javascript:') or link.startswith('mailto:'):
+            continue
+            
+        # Handle relative URLs
+        if link.startswith('/'):
+            full_url = base_url + link
+        elif link.startswith('http'):
+            # Check if it's an internal link
+            if domain in link:
+                full_url = link
+            else:
+                continue  # Skip external links
+        else:
+            # Relative path
+            full_url = base_url + '/' + link
+        
+        # Clean up URLs
+        full_url = full_url.split('#')[0]  # Remove anchors
+        full_url = full_url.split('?')[0]  # Remove query parameters
+        
+        if full_url not in internal_links:
+            internal_links.append(full_url)
+    
+    return internal_links
+
+def analyze_multiple_pages(urls, headers, scan_config):
+    """Analyze multiple pages concurrently with comprehensive GDPR scanning"""
+    page_results = []
+    
+    def analyze_single_page(url):
+        """Analyze a single page for GDPR compliance"""
+        try:
+            response = requests.get(url, headers=headers, timeout=15, verify=scan_config.get('check_https', True))
+            content = response.text
+            
+            page_result = {
+                'url': url,
+                'content': content,
+                'status_code': response.status_code,
+                'cookies': [],
+                'trackers': [],
+                'dark_patterns': [],
+                'gdpr_violations': [],
+                'findings': [],
+                'privacy_policy_found': False,
+                'gdpr_rights_found': False,
+                'consent_mechanism': {'found': False}
+            }
+            
+            # Cookie consent analysis
+            if scan_config.get('analyze_cookies'):
+                page_result.update(analyze_cookies_on_page(content, url))
+            
+            # Tracker detection
+            if scan_config.get('tracking_scripts'):
+                page_result.update(analyze_trackers_on_page(content, url, scan_config))
+            
+            # Privacy policy analysis
+            if scan_config.get('privacy_policy'):
+                page_result.update(analyze_privacy_policy_on_page(content, url))
+            
+            # Form analysis
+            if scan_config.get('data_collection'):
+                page_result.update(analyze_forms_on_page(content, url))
+            
+            return page_result
+            
+        except Exception as e:
+            return {
+                'url': url,
+                'error': str(e),
+                'content': '',
+                'status_code': 0,
+                'cookies': [],
+                'trackers': [],
+                'dark_patterns': [],
+                'gdpr_violations': [],
+                'findings': [],
+                'privacy_policy_found': False,
+                'gdpr_rights_found': False,
+                'consent_mechanism': {'found': False}
+            }
+    
+    # Analyze pages concurrently for better performance
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(5, len(urls))) as executor:
+        future_to_url = {executor.submit(analyze_single_page, url): url for url in urls}
+        
+        for future in concurrent.futures.as_completed(future_to_url):
+            url = future_to_url[future]
+            try:
+                result = future.result()
+                page_results.append(result)
+            except Exception as e:
+                page_results.append({
+                    'url': url,
+                    'error': str(e),
+                    'content': '',
+                    'status_code': 0,
+                    'cookies': [],
+                    'trackers': [],
+                    'dark_patterns': [],
+                    'gdpr_violations': [],
+                    'findings': [],
+                    'privacy_policy_found': False,
+                    'gdpr_rights_found': False,
+                    'consent_mechanism': {'found': False}
+                })
+    
+    return page_results
+
+def analyze_cookies_on_page(content, url):
+    """Analyze cookies and consent mechanisms on a specific page"""
+    result = {
+        'cookies': [],
+        'dark_patterns': [],
+        'consent_mechanism': {'found': False}
+    }
+    
+    # Cookie consent banner detection
+    cookie_consent_patterns = [
+        r'cookie.{0,50}consent',
+        r'accept.{0,20}cookies',
+        r'cookie.{0,20}banner',
+        r'gdpr.{0,20}consent',
+        r'privacy.{0,20}consent',
+        r'cookiebot',
+        r'onetrust',
+        r'quantcast'
+    ]
+    
+    consent_found = False
+    for pattern in cookie_consent_patterns:
+        if re.search(pattern, content, re.IGNORECASE):
+            consent_found = True
+            result['consent_mechanism'] = {'found': True, 'pattern': pattern, 'page': url}
+            break
+    
+    # Dark patterns detection
+    dark_patterns = []
+    
+    # Pre-ticked marketing boxes
+    if re.search(r'checked.*?marketing|marketing.*?checked', content, re.IGNORECASE):
+        dark_patterns.append({
+            'type': 'PRE_TICKED_MARKETING',
+            'severity': 'Critical',
+            'description': 'Pre-ticked marketing consent boxes detected (forbidden under Dutch AP rules)',
+            'gdpr_article': 'Art. 7 GDPR - Conditions for consent',
+            'page_url': url
+        })
+    
+    # Misleading button text
+    if re.search(r'continue.*?browsing|browse.*?continue', content, re.IGNORECASE):
+        dark_patterns.append({
+            'type': 'MISLEADING_CONTINUE',
+            'severity': 'High',
+            'description': '"Continue browsing" button implies consent without explicit agreement',
+            'gdpr_article': 'Art. 4(11) GDPR - Definition of consent',
+            'page_url': url
+        })
+    
+    # Missing "Reject All" button
+    accept_buttons = len(re.findall(r'accept.*?all|allow.*?all', content, re.IGNORECASE))
+    reject_buttons = len(re.findall(r'reject.*?all|decline.*?all', content, re.IGNORECASE))
+    
+    if accept_buttons > 0 and reject_buttons == 0:
+        dark_patterns.append({
+            'type': 'MISSING_REJECT_ALL',
+            'severity': 'Critical',
+            'description': 'No "Reject All" button found - required by Dutch AP since 2022',
+            'gdpr_article': 'Art. 7(3) GDPR - Withdrawal of consent',
+            'page_url': url
+        })
+    
+    result['dark_patterns'] = dark_patterns
+    return result
+
+def analyze_trackers_on_page(content, url, scan_config):
+    """Analyze third-party trackers on a specific page"""
+    result = {
+        'trackers': [],
+        'gdpr_violations': []
+    }
+    
+    # Tracking patterns
+    tracking_patterns = {
+        'google_analytics': r'google-analytics\.com|googletagmanager\.com|gtag\(',
+        'facebook_pixel': r'facebook\.net|fbevents\.js|connect\.facebook\.net',
+        'hotjar': r'hotjar\.com|hj\(',
+        'mixpanel': r'mixpanel\.com|mixpanel\.track',
+        'adobe_analytics': r'omniture\.com|adobe\.com.*analytics',
+        'crazy_egg': r'crazyegg\.com',
+        'full_story': r'fullstory\.com',
+        'mouseflow': r'mouseflow\.com',
+        'yandex_metrica': r'metrica\.yandex',
+        'linkedin_insight': r'snap\.licdn\.com'
+    }
+    
+    trackers_detected = []
+    
+    for tracker_name, pattern in tracking_patterns.items():
+        matches = re.findall(pattern, content, re.IGNORECASE)
+        if matches:
+            trackers_detected.append({
+                'name': tracker_name.replace('_', ' ').title(),
+                'type': 'Analytics/Tracking',
+                'matches': len(matches),
+                'gdpr_risk': 'High' if tracker_name in ['google_analytics', 'facebook_pixel'] else 'Medium',
+                'requires_consent': True,
+                'data_transfer': 'Non-EU' if tracker_name in ['google_analytics', 'facebook_pixel'] else 'Unknown',
+                'page_url': url
+            })
+    
+    result['trackers'] = trackers_detected
+    return result
+
+def analyze_privacy_policy_on_page(content, url):
+    """Analyze privacy policy compliance on a specific page"""
+    result = {
+        'privacy_policy_found': False,
+        'gdpr_rights_found': False,
+        'gdpr_violations': []
+    }
+    
+    # Privacy policy links
+    privacy_links = re.findall(r'href=["\']([^"\']*privacy[^"\']*)["\']', content, re.IGNORECASE)
+    result['privacy_policy_found'] = len(privacy_links) > 0
+    
+    # GDPR required elements
+    gdpr_elements = {
+        'legal_basis': re.search(r'legal.{0,20}basis|lawful.{0,20}basis', content, re.IGNORECASE),
+        'data_controller': re.search(r'data.{0,20}controller|controller.{0,20}contact', content, re.IGNORECASE),
+        'dpo_contact': re.search(r'data.{0,20}protection.{0,20}officer|dpo', content, re.IGNORECASE),
+        'user_rights': re.search(r'your.{0,20}rights|data.{0,20}subject.{0,20}rights', content, re.IGNORECASE),
+        'retention_period': re.search(r'retention.{0,20}period|how.{0,20}long.*store', content, re.IGNORECASE)
+    }
+    
+    result['gdpr_rights_found'] = gdpr_elements.get('user_rights') is not None
+    
+    missing_elements = [key for key, found in gdpr_elements.items() if not found]
+    if missing_elements and result['privacy_policy_found']:
+        result['gdpr_violations'].append({
+            'type': 'INCOMPLETE_PRIVACY_POLICY',
+            'severity': 'High',
+            'description': f'Privacy policy missing required GDPR elements: {", ".join(missing_elements)}',
+            'gdpr_article': 'Art. 12-14 GDPR - Transparent information',
+            'page_url': url
+        })
+    
+    return result
+
+def analyze_forms_on_page(content, url):
+    """Analyze data collection forms on a specific page"""
+    result = {
+        'findings': []
+    }
+    
+    # Find forms and input fields
+    forms = re.findall(r'<form[^>]*>(.*?)</form>', content, re.DOTALL | re.IGNORECASE)
+    
+    for form in forms:
+        if re.search(r'email|newsletter|contact', form, re.IGNORECASE):
+            # Check if explicit consent is requested
+            if not re.search(r'consent|agree|terms|privacy', form, re.IGNORECASE):
+                result['findings'].append({
+                    'type': 'MISSING_FORM_CONSENT',
+                    'severity': 'High',
+                    'description': 'Email collection form without explicit consent checkbox',
+                    'gdpr_article': 'Art. 6(1)(a) GDPR - Consent',
+                    'page_url': url
+                })
+    
+    return result
+
+def remove_duplicates(items, key):
+    """Remove duplicates from list of dictionaries based on a key"""
+    seen = set()
+    result = []
+    for item in items:
+        if isinstance(item, dict) and key in item:
+            if item[key] not in seen:
+                seen.add(item[key])
+                result.append(item)
+        elif item not in seen:
+            seen.add(item)
+            result.append(item)
+    return result
 
 def render_dpia_scanner_interface(region: str, username: str):
     """DPIA scanner interface"""
