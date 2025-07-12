@@ -2104,6 +2104,7 @@ def render_ai_model_scanner_interface(region: str, username: str):
         
         privacy_analysis = st.checkbox("Privacy Analysis", value=True, help="Analyze for PII exposure and data leakage")
         bias_detection = st.checkbox("Bias Detection", value=True, help="Detect potential bias in model predictions")
+        ai_act_compliance = st.checkbox("AI Act 2025 Compliance", value=True, help="Check compliance with EU AI Act 2025 requirements")
         
     with col2:
         framework = st.selectbox(
@@ -2114,6 +2115,25 @@ def render_ai_model_scanner_interface(region: str, username: str):
         
         fairness_analysis = st.checkbox("Fairness Analysis", value=True, help="Assess model fairness across demographic groups")
         compliance_check = st.checkbox("GDPR Compliance", value=True, help="Check compliance with privacy regulations")
+        
+    # AI Act 2025 Configuration
+    if ai_act_compliance:
+        st.subheader("🇪🇺 AI Act 2025 Configuration")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**High-Risk Categories:**")
+            critical_infrastructure = st.checkbox("Critical Infrastructure", value=True, help="AI systems for critical infrastructure management")
+            education_training = st.checkbox("Education & Training", value=True, help="AI systems for education and vocational training")
+            employment = st.checkbox("Employment", value=True, help="AI systems for recruitment and worker management")
+            essential_services = st.checkbox("Essential Services", value=True, help="AI systems for access to essential services")
+            
+        with col2:
+            st.write("**Compliance Requirements:**")
+            check_risk_management = st.checkbox("Risk Management System", value=True, help="Assess risk management requirements")
+            check_data_governance = st.checkbox("Data Governance", value=True, help="Evaluate data governance practices")
+            check_human_oversight = st.checkbox("Human Oversight", value=True, help="Verify human oversight mechanisms")
+            check_documentation = st.checkbox("Technical Documentation", value=True, help="Review technical documentation compliance")
     
     # Analysis scope
     st.subheader("Analysis Scope")
@@ -2155,15 +2175,29 @@ def render_ai_model_scanner_interface(region: str, username: str):
             st.error("Please upload a model file, provide a repository URL, or enter a model path.")
             return
             
+        # Prepare AI Act configuration
+        ai_act_config = None
+        if ai_act_compliance:
+            ai_act_config = {
+                'critical_infrastructure': critical_infrastructure,
+                'education_training': education_training,
+                'employment': employment,
+                'essential_services': essential_services,
+                'check_risk_management': check_risk_management,
+                'check_data_governance': check_data_governance,
+                'check_human_oversight': check_human_oversight,
+                'check_documentation': check_documentation
+            }
+            
         execute_ai_model_scan(
             region, username, model_source, uploaded_model, repo_url, model_path, 
             model_type, framework, privacy_analysis, bias_detection, fairness_analysis, 
-            compliance_check, test_data
+            compliance_check, ai_act_compliance, ai_act_config, test_data
         )
 
 def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_url, model_path, 
                          model_type, framework, privacy_analysis, bias_detection, fairness_analysis, 
-                         compliance_check, test_data):
+                         compliance_check, ai_act_compliance, ai_act_config, test_data):
     """Execute comprehensive AI model analysis with privacy and bias detection"""
     try:
         with st.status("Running AI Model Analysis...", expanded=True) as status:
@@ -2187,6 +2221,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 "privacy_findings": [],
                 "bias_findings": [],
                 "compliance_findings": [],
+                "ai_act_findings": [],
                 "risk_score": 0,
                 "privacy_score": 0,
                 "fairness_score": 0,
@@ -2383,6 +2418,122 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 
                 scan_results["compliance_findings"] = compliance_findings
             
+            # AI Act 2025 compliance analysis
+            ai_act_findings = []
+            if ai_act_compliance and ai_act_config:
+                status.update(label="Analyzing AI Act 2025 compliance...")
+                progress_bar.progress(90)
+                
+                # Classify AI system risk level
+                risk_level = "High-Risk"
+                if ai_act_config.get('critical_infrastructure') or ai_act_config.get('employment') or ai_act_config.get('essential_services'):
+                    risk_level = "High-Risk"
+                elif model_type in ["Generative AI", "NLP"]:
+                    risk_level = "Limited Risk"
+                else:
+                    risk_level = "Minimal Risk"
+                
+                scan_results["ai_act_risk_level"] = risk_level
+                
+                # Generate AI Act compliance findings
+                if risk_level == "High-Risk":
+                    # Risk Management System (Article 9)
+                    if ai_act_config.get('check_risk_management'):
+                        ai_act_findings.append({
+                            'type': _('ai_act.violations.missing_risk_assessment', 'Missing Risk Assessment'),
+                            'severity': 'Critical',
+                            'description': _('ai_act.violations.missing_risk_assessment', 'AI Act Article 9 requires comprehensive risk management system for high-risk AI systems'),
+                            'location': f'{scan_results.get("model_file", "AI System")} - Risk Management',
+                            'details': f'High-risk AI system in {model_type} category lacks documented risk management processes required by AI Act Article 9',
+                            'impact': 'Non-compliance with AI Act mandatory requirements may result in up to €35M or 7% of annual turnover in fines',
+                            'regulation': 'AI Act Article 9 - Risk Management System',
+                            'requirement': 'Continuous risk assessment and mitigation throughout AI system lifecycle',
+                            'recommendation': _('ai_act.suggestions.implement_risk_management', 'Implement comprehensive risk management system with documented processes'),
+                            'ai_act_article': 'Article 9',
+                            'compliance_score': 25
+                        })
+                    
+                    # Data Governance (Article 10)
+                    if ai_act_config.get('check_data_governance'):
+                        ai_act_findings.append({
+                            'type': _('ai_act.violations.inadequate_data_governance', 'Inadequate Data Governance'),
+                            'severity': 'High',
+                            'description': _('ai_act.violations.inadequate_data_governance', 'AI Act Article 10 requires robust data governance practices for training datasets'),
+                            'location': f'{scan_results.get("model_file", "AI System")} - Data Management',
+                            'details': f'Training data for {model_type} model lacks proper governance, bias assessment, and error detection measures',
+                            'impact': 'Poor data quality may lead to biased or unreliable AI system outputs',
+                            'regulation': 'AI Act Article 10 - Data and Data Governance',
+                            'requirement': 'Relevant, representative, and error-free training datasets with bias mitigation',
+                            'recommendation': _('ai_act.suggestions.establish_data_governance', 'Establish robust data governance processes with bias assessment'),
+                            'ai_act_article': 'Article 10',
+                            'compliance_score': 40
+                        })
+                    
+                    # Human Oversight (Article 14)
+                    if ai_act_config.get('check_human_oversight'):
+                        ai_act_findings.append({
+                            'type': _('ai_act.violations.no_human_oversight', 'No Human Oversight'),
+                            'severity': 'High',
+                            'description': _('ai_act.violations.no_human_oversight', 'AI Act Article 14 mandates human oversight for high-risk AI systems'),
+                            'location': f'{scan_results.get("model_file", "AI System")} - Human Interface',
+                            'details': f'{model_type} system lacks documented human oversight mechanisms and intervention capabilities',
+                            'impact': 'Inability for humans to understand, monitor, and intervene in AI system decisions',
+                            'regulation': 'AI Act Article 14 - Human Oversight',
+                            'requirement': 'Effective human oversight enabling understanding and intervention',
+                            'recommendation': _('ai_act.suggestions.add_human_oversight', 'Add human oversight mechanisms with clear intervention protocols'),
+                            'ai_act_article': 'Article 14',
+                            'compliance_score': 35
+                        })
+                    
+                    # Technical Documentation (Article 11, Annex IV)
+                    if ai_act_config.get('check_documentation'):
+                        ai_act_findings.append({
+                            'type': _('ai_act.violations.missing_documentation', 'Missing Documentation'),
+                            'severity': 'High',
+                            'description': _('ai_act.violations.missing_documentation', 'AI Act Article 11 requires comprehensive technical documentation per Annex IV'),
+                            'location': f'{scan_results.get("model_file", "AI System")} - Documentation',
+                            'details': f'Technical documentation for {model_type} system is incomplete according to Annex IV requirements',
+                            'impact': 'Insufficient documentation prevents proper compliance assessment and monitoring',
+                            'regulation': 'AI Act Article 11 & Annex IV - Technical Documentation',
+                            'requirement': 'Complete technical documentation including training process, evaluation results, and design choices',
+                            'recommendation': _('ai_act.suggestions.create_documentation', 'Create comprehensive technical documentation per Annex IV'),
+                            'ai_act_article': 'Article 11',
+                            'compliance_score': 30
+                        })
+                    
+                    # Additional high-risk requirements
+                    ai_act_findings.append({
+                        'type': _('ai_act.violations.no_ce_marking', 'Missing CE Marking'),
+                        'severity': 'Critical',
+                        'description': _('ai_act.violations.no_ce_marking', 'AI Act Article 43 requires CE marking for high-risk AI systems before market placement'),
+                        'location': f'{scan_results.get("model_file", "AI System")} - Market Compliance',
+                        'details': f'High-risk {model_type} system lacks CE marking required for EU market placement',
+                        'impact': 'Cannot legally place AI system on EU market without CE marking',
+                        'regulation': 'AI Act Article 43 - CE Marking',
+                        'requirement': 'CE marking and EU declaration of conformity before market placement',
+                        'recommendation': _('ai_act.suggestions.obtain_ce_marking', 'Obtain CE marking through conformity assessment procedure'),
+                        'ai_act_article': 'Article 43',
+                        'compliance_score': 20
+                    })
+                
+                elif risk_level == "Limited Risk":
+                    # Transparency obligations for limited risk systems
+                    ai_act_findings.append({
+                        'type': _('ai_act.violations.transparency_missing', 'Transparency Missing'),
+                        'severity': 'Medium',
+                        'description': _('ai_act.violations.transparency_missing', 'AI Act Article 50 requires transparency for limited risk AI systems'),
+                        'location': f'{scan_results.get("model_file", "AI System")} - User Interface',
+                        'details': f'{model_type} system must inform users they are interacting with an AI system',
+                        'impact': 'Users unaware of AI interaction may make uninformed decisions',
+                        'regulation': 'AI Act Article 50 - Transparency Obligations',
+                        'requirement': 'Clear information that users are interacting with AI system',
+                        'recommendation': _('ai_act.suggestions.ensure_transparency', 'Ensure transparency in AI system interactions'),
+                        'ai_act_article': 'Article 50',
+                        'compliance_score': 60
+                    })
+                
+                scan_results["ai_act_findings"] = ai_act_findings
+            
             # Combine all findings
             all_findings = []
             if privacy_analysis:
@@ -2391,6 +2542,8 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 all_findings.extend(bias_findings)
             if compliance_check:
                 all_findings.extend(compliance_findings)
+            if ai_act_compliance:
+                all_findings.extend(ai_act_findings)
             
             scan_results["findings"] = all_findings
             scan_results["total_findings"] = len(all_findings)
@@ -2500,6 +2653,46 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                     st.write(f"**Requirement:** {finding['requirement']}")
                     st.write(f"**Recommendation:** {finding['recommendation']}")
                     st.progress(finding['compliance_score']/100)
+                    st.markdown("---")
+            
+            if ai_act_compliance and ai_act_findings:
+                st.subheader("🇪🇺 AI Act 2025 Compliance")
+                
+                # Display AI Act risk classification
+                risk_level = scan_results.get("ai_act_risk_level", "Unknown")
+                if risk_level == "High-Risk":
+                    st.error(f"🚨 **Classification: {risk_level}** - Mandatory compliance requirements apply")
+                elif risk_level == "Limited Risk":
+                    st.warning(f"⚠️ **Classification: {risk_level}** - Transparency obligations apply")
+                else:
+                    st.success(f"✅ **Classification: {risk_level}** - Basic requirements apply")
+                
+                # Display AI Act findings
+                for finding in ai_act_findings:
+                    if finding['severity'] == 'Critical':
+                        st.markdown(f"### 🚨 {finding['type']} - {finding['severity']} Severity")
+                    elif finding['severity'] == 'High':
+                        st.markdown(f"### ⚠️ {finding['type']} - {finding['severity']} Severity")
+                    else:
+                        st.markdown(f"### ℹ️ {finding['type']} - {finding['severity']} Severity")
+                    
+                    st.write(f"**Description:** {finding['description']}")
+                    st.write(f"**Location:** {finding['location']}")
+                    st.write(f"**Impact:** {finding['impact']}")
+                    st.write(f"**AI Act Article:** {finding['ai_act_article']}")
+                    st.write(f"**Requirement:** {finding['requirement']}")
+                    st.write(f"**Recommendation:** {finding['recommendation']}")
+                    
+                    # Compliance score with color coding
+                    score = finding['compliance_score']
+                    if score < 30:
+                        st.error(f"Compliance Score: {score}/100")
+                    elif score < 60:
+                        st.warning(f"Compliance Score: {score}/100")
+                    else:
+                        st.success(f"Compliance Score: {score}/100")
+                    
+                    st.progress(score/100)
                     st.markdown("---")
             
             # Generate comprehensive HTML report

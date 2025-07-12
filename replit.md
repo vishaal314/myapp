@@ -112,6 +112,16 @@ DataGuardian Pro is a comprehensive enterprise privacy compliance platform built
 - June 23, 2025. Implemented comprehensive Netherlands DPIA Assessment system with PostgreSQL database integration and HTML report generation
 
 ## Recent Changes
+- **July 12, 2025**: **AI ACT 2025 EUROPE COMPLIANCE ADDED TO AI MODEL SCANNER** - Comprehensive EU AI Act compliance framework implemented
+  - **HIGH-RISK SYSTEM CLASSIFICATION**: Automatic classification of AI systems into High-Risk, Limited Risk, or Minimal Risk categories
+  - **ARTICLE-SPECIFIC COMPLIANCE CHECKS**: Detailed assessment against AI Act Articles 9, 10, 11, 14, 43, and 50
+  - **DUTCH LANGUAGE SUPPORT**: Complete translation of AI Act terminology and compliance messages for Netherlands market
+  - **VIOLATION DETECTION**: Detection of missing risk assessment, inadequate data governance, absent human oversight, and documentation gaps
+  - **ACTIONABLE SUGGESTIONS**: Specific recommendations for implementing risk management, data governance, and CE marking compliance
+  - **REGULATORY IMPACT**: Analysis of potential €35M or 7% annual turnover fines for non-compliance
+  - **REAL-TIME RISK SCORING**: AI Act compliance scoring integrated with existing risk calculation system
+  - **COMPREHENSIVE REPORTING**: AI Act findings included in HTML reports with article references and compliance requirements
+  - **PRODUCTION READY**: Complete implementation with Dutch translations covering all AI Act compliance aspects
 - **July 12, 2025**: **WEBSITE SCANNER ENHANCED WITH CUSTOMER BENEFITS & COMPETITIVE ANALYSIS** - Comprehensive content analysis and business intelligence implemented
   - **CONTENT QUALITY ANALYSIS**: Added deep content assessment with readability scoring, word count analysis, and content depth evaluation
   - **SEO OPTIMIZATION INSIGHTS**: Comprehensive SEO analysis including title tags, meta descriptions, H1 structure, and structured data detection
