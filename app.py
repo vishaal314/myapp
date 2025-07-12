@@ -11,6 +11,8 @@ st.set_page_config(
 # Core imports - keep essential imports minimal
 import logging
 import uuid
+import re
+import concurrent.futures
 from datetime import datetime
 
 # Configure basic logging
@@ -3185,6 +3187,7 @@ def execute_website_scan(region, username, url, scan_config):
 
 def discover_sitemap_urls(base_url, headers):
     """Discover sitemap URLs from robots.txt and common sitemap locations"""
+    import requests
     sitemap_urls = []
     
     # Common sitemap locations
@@ -3283,6 +3286,7 @@ def discover_internal_links(content, base_url, domain):
 
 def analyze_multiple_pages(urls, headers, scan_config):
     """Analyze multiple pages concurrently with comprehensive GDPR scanning"""
+    import requests
     page_results = []
     
     def analyze_single_page(url):
