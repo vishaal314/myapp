@@ -2443,7 +2443,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                             'type': _('ai_act.violations.missing_risk_assessment', 'Missing Risk Assessment'),
                             'severity': 'Critical',
                             'description': _('ai_act.violations.missing_risk_assessment', 'AI Act Article 9 requires comprehensive risk management system for high-risk AI systems'),
+                            'file': scan_results.get("model_file", scan_results.get("hub_url", scan_results.get("repo_url", "AI System"))),
                             'location': f'{scan_results.get("model_file", "AI System")} - Risk Management',
+                            'line': f'AI Act Article 9 - Risk Management System',
                             'details': f'High-risk AI system in {model_type} category lacks documented risk management processes required by AI Act Article 9',
                             'impact': 'Non-compliance with AI Act mandatory requirements may result in up to €35M or 7% of annual turnover in fines',
                             'regulation': 'AI Act Article 9 - Risk Management System',
@@ -2459,7 +2461,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                             'type': _('ai_act.violations.inadequate_data_governance', 'Inadequate Data Governance'),
                             'severity': 'High',
                             'description': _('ai_act.violations.inadequate_data_governance', 'AI Act Article 10 requires robust data governance practices for training datasets'),
+                            'file': scan_results.get("model_file", scan_results.get("hub_url", scan_results.get("repo_url", "AI System"))),
                             'location': f'{scan_results.get("model_file", "AI System")} - Data Management',
+                            'line': f'AI Act Article 10 - Data and Data Governance',
                             'details': f'Training data for {model_type} model lacks proper governance, bias assessment, and error detection measures',
                             'impact': 'Poor data quality may lead to biased or unreliable AI system outputs',
                             'regulation': 'AI Act Article 10 - Data and Data Governance',
@@ -2475,7 +2479,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                             'type': _('ai_act.violations.no_human_oversight', 'No Human Oversight'),
                             'severity': 'High',
                             'description': _('ai_act.violations.no_human_oversight', 'AI Act Article 14 mandates human oversight for high-risk AI systems'),
+                            'file': scan_results.get("model_file", scan_results.get("hub_url", scan_results.get("repo_url", "AI System"))),
                             'location': f'{scan_results.get("model_file", "AI System")} - Human Interface',
+                            'line': f'AI Act Article 14 - Human Oversight',
                             'details': f'{model_type} system lacks documented human oversight mechanisms and intervention capabilities',
                             'impact': 'Inability for humans to understand, monitor, and intervene in AI system decisions',
                             'regulation': 'AI Act Article 14 - Human Oversight',
@@ -2491,7 +2497,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                             'type': _('ai_act.violations.missing_documentation', 'Missing Documentation'),
                             'severity': 'High',
                             'description': _('ai_act.violations.missing_documentation', 'AI Act Article 11 requires comprehensive technical documentation per Annex IV'),
+                            'file': scan_results.get("model_file", scan_results.get("hub_url", scan_results.get("repo_url", "AI System"))),
                             'location': f'{scan_results.get("model_file", "AI System")} - Documentation',
+                            'line': f'AI Act Article 11 & Annex IV - Technical Documentation',
                             'details': f'Technical documentation for {model_type} system is incomplete according to Annex IV requirements',
                             'impact': 'Insufficient documentation prevents proper compliance assessment and monitoring',
                             'regulation': 'AI Act Article 11 & Annex IV - Technical Documentation',
@@ -2506,7 +2514,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                         'type': _('ai_act.violations.no_ce_marking', 'Missing CE Marking'),
                         'severity': 'Critical',
                         'description': _('ai_act.violations.no_ce_marking', 'AI Act Article 43 requires CE marking for high-risk AI systems before market placement'),
+                        'file': scan_results.get("model_file", scan_results.get("hub_url", scan_results.get("repo_url", "AI System"))),
                         'location': f'{scan_results.get("model_file", "AI System")} - Market Compliance',
+                        'line': f'AI Act Article 43 - CE Marking',
                         'details': f'High-risk {model_type} system lacks CE marking required for EU market placement',
                         'impact': 'Cannot legally place AI system on EU market without CE marking',
                         'regulation': 'AI Act Article 43 - CE Marking',
@@ -2522,7 +2532,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                         'type': _('ai_act.violations.transparency_missing', 'Transparency Missing'),
                         'severity': 'Medium',
                         'description': _('ai_act.violations.transparency_missing', 'AI Act Article 50 requires transparency for limited risk AI systems'),
+                        'file': scan_results.get("model_file", scan_results.get("hub_url", scan_results.get("repo_url", "AI System"))),
                         'location': f'{scan_results.get("model_file", "AI System")} - User Interface',
+                        'line': f'AI Act Article 50 - Transparency Obligations',
                         'details': f'{model_type} system must inform users they are interacting with an AI system',
                         'impact': 'Users unaware of AI interaction may make uninformed decisions',
                         'regulation': 'AI Act Article 50 - Transparency Obligations',
@@ -4722,14 +4734,14 @@ def generate_findings_html(findings):
     if not findings:
         return "<p>✅ No issues found in the analysis.</p>"
     
-    # Enhanced table with additional columns for sustainability data
+    # Enhanced table with additional columns for comprehensive location data
     findings_html = """
     <table>
         <tr>
             <th>Type</th>
             <th>Severity</th>
-            <th>Resource/File</th>
-            <th>Location/Details</th>
+            <th>File/Resource</th>
+            <th>Location Details</th>
             <th>Description</th>
             <th>Impact</th>
             <th>Action Required</th>
@@ -4739,11 +4751,38 @@ def generate_findings_html(findings):
     for finding in findings:
         severity_class = finding.get('severity', 'Low').lower()
         
-        # Enhanced data extraction
+        # Enhanced data extraction with comprehensive location information
         finding_type = finding.get('type', 'Unknown')
         severity = finding.get('severity', 'Low')
-        file_info = finding.get('file', 'N/A')
-        line_info = finding.get('line', 'N/A')
+        
+        # Enhanced file/resource information
+        file_info = finding.get('file', finding.get('location', 'N/A'))
+        if file_info == 'N/A':
+            # Check for AI Act specific location info
+            if 'ai_act_article' in finding:
+                file_info = f"AI System ({finding.get('ai_act_article', 'Unknown Article')})"
+            elif 'model_file' in finding:
+                file_info = finding.get('model_file', 'AI Model')
+            elif 'resource' in finding:
+                file_info = finding.get('resource', 'System Resource')
+        
+        # Enhanced location details
+        line_info = finding.get('line', finding.get('details', 'N/A'))
+        if line_info == 'N/A':
+            # Check for additional location details
+            if 'line_number' in finding:
+                line_info = f"Line {finding.get('line_number')}"
+            elif 'pattern_match' in finding:
+                line_info = f"Pattern: {finding.get('pattern_match')}"
+            elif 'regulation' in finding:
+                line_info = finding.get('regulation', 'Regulatory Context')
+            elif 'ai_act_article' in finding:
+                line_info = f"{finding.get('ai_act_article')} - {finding.get('requirement', 'Compliance Requirement')}"
+            elif 'gdpr_article' in finding:
+                line_info = f"GDPR {finding.get('gdpr_article', 'Article')}"
+            elif 'url' in finding:
+                line_info = finding.get('url', 'Web Resource')
+        
         description = finding.get('description', finding.get('content', 'No description'))
         impact = finding.get('impact', finding.get('environmental_impact', 'Impact not specified'))
         action = finding.get('action_required', finding.get('recommendation', 'No action specified'))
@@ -4752,7 +4791,7 @@ def generate_findings_html(findings):
         <tr class="finding {severity_class}">
             <td><strong>{finding_type}</strong></td>
             <td><span class="severity-badge {severity_class}">{severity}</span></td>
-            <td>{file_info}</td>
+            <td><code>{file_info}</code></td>
             <td>{line_info}</td>
             <td>{description}</td>
             <td>{impact}</td>
@@ -4762,7 +4801,7 @@ def generate_findings_html(findings):
     
     findings_html += "</table>"
     
-    # Add severity badge styling
+    # Add enhanced styling for findings table
     findings_html += """
     <style>
         .severity-badge {
@@ -4787,6 +4826,26 @@ def generate_findings_html(findings):
         .severity-badge.low {
             background-color: #28a745;
             color: white;
+        }
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            border: 1px solid #e9ecef;
+        }
+        .finding.critical {
+            background-color: #fff5f5;
+        }
+        .finding.high {
+            background-color: #fffaf0;
+        }
+        .finding.medium {
+            background-color: #fffdf0;
+        }
+        .finding.low {
+            background-color: #f0fff4;
         }
     </style>
     """
