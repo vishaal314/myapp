@@ -4593,25 +4593,25 @@ def generate_html_report(scan_results):
         lines_analyzed = "Website Content"
         region = scan_results.get('region', 'Global')
         
-        # Website-specific content
+        # Website-specific content with translations
         website_metrics = f"""
         <div class="website-metrics">
-            <h2>🌐 Website Privacy Compliance Analysis</h2>
+            <h2>🌐 {t('report.website_compliance_report', 'Website Privacy Compliance Analysis')}</h2>
             <div class="metrics-grid">
                 <div class="metric-card">
-                    <h3>Compliance Score</h3>
+                    <h3>{t('technical_terms.compliance_score', 'Compliance Score')}</h3>
                     <p class="metric-value">{scan_results.get('compliance_score', 0)}%</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Risk Level</h3>
+                    <h3>{t('report.risk_level', 'Risk Level')}</h3>
                     <p class="metric-value">{scan_results.get('risk_level', 'Unknown')}</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Trackers Detected</h3>
+                    <h3>{t('report.trackers_detected', 'Trackers Detected')}</h3>
                     <p class="metric-value">{len(scan_results.get('trackers_detected', []))}</p>
                 </div>
                 <div class="metric-card">
-                    <h3>GDPR Violations</h3>
+                    <h3>{t('report.gdpr_violations', 'GDPR Violations')}</h3>
                     <p class="metric-value">{len(scan_results.get('gdpr_violations', []))}</p>
                 </div>
             </div>
@@ -4630,13 +4630,13 @@ def generate_html_report(scan_results):
                 pattern_type = dp.get('type', 'Unknown')
                 pattern_desc = dp.get('description', 'No description')
                 pattern_items.append(f"<li><strong>{pattern_type}</strong>: {pattern_desc}</li>")
-            dark_patterns_html = f'<div class="dark-patterns"><h3>Dark Pattern Violations:</h3><ul>{"".join(pattern_items)}</ul></div>'
+            dark_patterns_html = f'<div class="dark-patterns"><h3>{t("report.dark_pattern_violations", "Dark Pattern Violations")}:</h3><ul>{"".join(pattern_items)}</ul></div>'
         
         cookie_analysis = f"""
         <div class="cookie-analysis">
-            <h2>🍪 Cookie Consent Analysis</h2>
-            <p><strong>Consent Mechanism:</strong> {'✅ Found' if consent_found else '❌ Missing'}</p>
-            <p><strong>Dark Patterns Detected:</strong> {len(dark_patterns)}</p>
+            <h2>🍪 {t('report.cookie_consent_analysis', 'Cookie Consent Analysis')}</h2>
+            <p><strong>{t('report.consent_mechanism', 'Consent Mechanism')}:</strong> {'✅ ' + t('report.found', 'Found') if consent_found else '❌ ' + t('report.missing', 'Missing')}</p>
+            <p><strong>{t('report.dark_patterns_detected', 'Dark Patterns Detected')}:</strong> {len(dark_patterns)}</p>
             {dark_patterns_html}
         </div>
         """
@@ -4645,9 +4645,9 @@ def generate_html_report(scan_results):
         trackers = scan_results.get('trackers_detected', [])
         tracker_analysis = f"""
         <div class="tracker-analysis">
-            <h2>🎯 Third-Party Tracker Analysis</h2>
+            <h2>🎯 {t('report.third_party_tracker_analysis', 'Third-Party Tracker Analysis')}</h2>
             <table>
-                <tr><th>Tracker Name</th><th>Type</th><th>GDPR Risk</th><th>Data Transfer</th></tr>
+                <tr><th>{t('report.tracker_name', 'Tracker Name')}</th><th>{t('report.type', 'Type')}</th><th>{t('report.gdpr_risk', 'GDPR Risk')}</th><th>{t('report.data_transfer', 'Data Transfer')}</th></tr>
                 {"".join([f"<tr><td>{t.get('name', 'Unknown')}</td><td>{t.get('type', 'Unknown')}</td><td>{t.get('gdpr_risk', 'Unknown')}</td><td>{t.get('data_transfer', 'Unknown')}</td></tr>" for t in trackers[:10]])}
             </table>
         </div>
@@ -4656,41 +4656,41 @@ def generate_html_report(scan_results):
         # GDPR Compliance Section
         gdpr_compliance = f"""
         <div class="gdpr-compliance" style="background: #f8fafc; border-radius: 10px; padding: 25px; margin: 20px 0;">
-            <h2 style="color: #1e40af; margin-bottom: 20px;">⚖️ GDPR Compliance Analysis</h2>
+            <h2 style="color: #1e40af; margin-bottom: 20px;">⚖️ {t('report.gdpr_compliance_report', 'GDPR Compliance Analysis')}</h2>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div>
-                    <h3 style="color: #059669;">✅ GDPR Articles Assessed</h3>
+                    <h3 style="color: #059669;">✅ {t('report.gdpr_articles_assessed', 'GDPR Articles Assessed')}</h3>
                     <ul style="line-height: 1.8;">
-                        <li><strong>Article 4(11)</strong> - Definition of consent</li>
-                        <li><strong>Article 6(1)(a)</strong> - Consent as legal basis</li>
-                        <li><strong>Article 7</strong> - Conditions for consent</li>
-                        <li><strong>Article 7(3)</strong> - Withdrawal of consent</li>
-                        <li><strong>Article 12-14</strong> - Transparent information</li>
-                        <li><strong>Article 44-49</strong> - International transfers</li>
+                        <li><strong>Article 4(11)</strong> - {t('report.definition_of_consent', 'Definition of consent')}</li>
+                        <li><strong>Article 6(1)(a)</strong> - {t('report.consent_as_legal_basis', 'Consent as legal basis')}</li>
+                        <li><strong>Article 7</strong> - {t('report.conditions_for_consent', 'Conditions for consent')}</li>
+                        <li><strong>Article 7(3)</strong> - {t('report.withdrawal_of_consent', 'Withdrawal of consent')}</li>
+                        <li><strong>Article 12-14</strong> - {t('report.transparent_information', 'Transparent information')}</li>
+                        <li><strong>Article 44-49</strong> - {t('report.international_transfers', 'International transfers')}</li>
                     </ul>
                 </div>
                 <div>
-                    <h3 style="color: #dc2626;">🚨 Compliance Status</h3>
-                    <p><strong>Overall Score:</strong> <span style="font-size: 24px; color: {'#059669' if scan_results.get('compliance_score', 0) >= 80 else '#dc2626'};">{scan_results.get('compliance_score', 0)}%</span></p>
-                    <p><strong>Risk Level:</strong> <span style="color: {'#059669' if scan_results.get('risk_level') == 'Low' else '#dc2626'};">{scan_results.get('risk_level', 'Unknown')}</span></p>
-                    <p><strong>Total Violations:</strong> {len(scan_results.get('gdpr_violations', []))}</p>
-                    <p><strong>Dark Patterns:</strong> {len(scan_results.get('dark_patterns', []))}</p>
+                    <h3 style="color: #dc2626;">🚨 {t('report.compliance_status', 'Compliance Status')}</h3>
+                    <p><strong>{t('report.overall_score', 'Overall Score')}:</strong> <span style="font-size: 24px; color: {'#059669' if scan_results.get('compliance_score', 0) >= 80 else '#dc2626'};">{scan_results.get('compliance_score', 0)}%</span></p>
+                    <p><strong>{t('report.risk_level', 'Risk Level')}:</strong> <span style="color: {'#059669' if scan_results.get('risk_level') == 'Low' else '#dc2626'};">{scan_results.get('risk_level', 'Unknown')}</span></p>
+                    <p><strong>{t('report.total_violations', 'Total Violations')}:</strong> {len(scan_results.get('gdpr_violations', []))}</p>
+                    <p><strong>{t('report.dark_patterns', 'Dark Patterns')}:</strong> {len(scan_results.get('dark_patterns', []))}</p>
                 </div>
             </div>
             
-            <h3 style="color: #1e40af; margin-top: 25px;">📋 GDPR Checklist</h3>
+            <h3 style="color: #1e40af; margin-top: 25px;">📋 {t('report.gdpr_checklist', 'GDPR Checklist')}</h3>
             <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
-                        <p>{'✅' if scan_results.get('consent_mechanism', {}).get('found') else '❌'} <strong>Consent Mechanism</strong></p>
-                        <p>{'✅' if scan_results.get('privacy_policy_status') else '❌'} <strong>Privacy Policy</strong></p>
-                        <p>{'✅' if scan_results.get('gdpr_rights_available') else '❌'} <strong>Data Subject Rights</strong></p>
+                        <p>{'✅' if scan_results.get('consent_mechanism', {}).get('found') else '❌'} <strong>{t('report.consent_mechanism', 'Consent Mechanism')}</strong></p>
+                        <p>{'✅' if scan_results.get('privacy_policy_status') else '❌'} <strong>{t('technical_terms.privacy_notice', 'Privacy Policy')}</strong></p>
+                        <p>{'✅' if scan_results.get('gdpr_rights_available') else '❌'} <strong>{t('report.data_subject_rights', 'Data Subject Rights')}</strong></p>
                     </div>
                     <div>
-                        <p>{'✅' if len(scan_results.get('dark_patterns', [])) == 0 else '❌'} <strong>No Dark Patterns</strong></p>
-                        <p>{'✅' if len([t for t in scan_results.get('trackers_detected', []) if t.get('requires_consent')]) == 0 else '❌'} <strong>Consent for Tracking</strong></p>
-                        <p>{'✅' if len([t for t in scan_results.get('trackers_detected', []) if t.get('data_transfer') == 'Non-EU']) == 0 else '❌'} <strong>No Non-EU Transfers</strong></p>
+                        <p>{'✅' if len(scan_results.get('dark_patterns', [])) == 0 else '❌'} <strong>{t('report.no_dark_patterns', 'No Dark Patterns')}</strong></p>
+                        <p>{'✅' if len([t for t in scan_results.get('trackers_detected', []) if t.get('requires_consent')]) == 0 else '❌'} <strong>{t('report.consent_for_tracking', 'Consent for Tracking')}</strong></p>
+                        <p>{'✅' if len([t for t in scan_results.get('trackers_detected', []) if t.get('data_transfer') == 'Non-EU']) == 0 else '❌'} <strong>{t('report.no_non_eu_transfers', 'No Non-EU Transfers')}</strong></p>
                     </div>
                 </div>
             </div>
@@ -4702,29 +4702,29 @@ def generate_html_report(scan_results):
             nl_violations = [v for v in scan_results.get('gdpr_violations', []) if 'Dutch' in v.get('description', '')]
             nl_compliance = f"""
             <div class="nl-compliance" style="background: #fef3c7; border-radius: 10px; padding: 25px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-                <h2 style="color: #92400e;">🇳🇱 Netherlands AP Authority Compliance</h2>
+                <h2 style="color: #92400e;">🇳🇱 {t('report.netherlands_ap_authority_compliance', 'Netherlands AP Authority Compliance')}</h2>
                 
                 <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
-                    <h3 style="color: #92400e;">Dutch Privacy Law (UAVG) Requirements</h3>
+                    <h3 style="color: #92400e;">{t('report.dutch_privacy_law_requirements', 'Dutch Privacy Law (UAVG) Requirements')}</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
-                            <p><strong>Region:</strong> Netherlands</p>
-                            <p><strong>Applicable Law:</strong> UAVG (Dutch GDPR)</p>
-                            <p><strong>Authority:</strong> Autoriteit Persoonsgegevens (AP)</p>
+                            <p><strong>{t('report.region', 'Region')}:</strong> Netherlands</p>
+                            <p><strong>{t('report.applicable_law', 'Applicable Law')}:</strong> UAVG (Dutch GDPR)</p>
+                            <p><strong>{t('report.authority', 'Authority')}:</strong> Autoriteit Persoonsgegevens (AP)</p>
                         </div>
                         <div>
-                            <p><strong>Dutch-Specific Violations:</strong> {len(nl_violations)}</p>
-                            <p><strong>Reject All Button:</strong> {'✅ Found' if not any('REJECT_ALL' in dp.get('type', '') for dp in dark_patterns) else '❌ Missing (Required since 2022)'}</p>
-                            <p><strong>Google Analytics:</strong> {'⚠️ Detected - Requires anonymization' if any('Google Analytics' in t.get('name', '') for t in scan_results.get('trackers_detected', [])) else '✅ Not detected'}</p>
+                            <p><strong>{t('report.dutch_specific_violations', 'Dutch-Specific Violations')}:</strong> {len(nl_violations)}</p>
+                            <p><strong>{t('report.reject_all_button', 'Reject All Button')}:</strong> {'✅ ' + t('report.found', 'Found') if not any('REJECT_ALL' in dp.get('type', '') for dp in dark_patterns) else '❌ ' + t('report.missing_required_since_2022', 'Missing (Required since 2022)')}</p>
+                            <p><strong>Google Analytics:</strong> {'⚠️ ' + t('report.detected_requires_anonymization', 'Detected - Requires anonymization') if any('Google Analytics' in t.get('name', '') for t in scan_results.get('trackers_detected', [])) else '✅ ' + t('report.not_detected', 'Not detected')}</p>
                         </div>
                     </div>
                 </div>
                 
-                <h3 style="color: #92400e;">🏛️ Dutch Business Compliance</h3>
+                <h3 style="color: #92400e;">🏛️ {t('report.dutch_business_compliance', 'Dutch Business Compliance')}</h3>
                 <div style="background: white; padding: 15px; border-radius: 8px;">
-                    <p>{'✅' if not any('MISSING_DUTCH_IMPRINT' in v.get('type', '') for v in scan_results.get('gdpr_violations', [])) else '❌'} <strong>Colofon (Imprint)</strong> - Business details page</p>
-                    <p>{'✅' if not any('MISSING_KVK_NUMBER' in v.get('type', '') for v in scan_results.get('gdpr_violations', [])) else '❌'} <strong>KvK Number</strong> - Chamber of Commerce registration</p>
-                    <p>{'✅' if len([dp for dp in dark_patterns if dp.get('type') == 'PRE_TICKED_MARKETING']) == 0 else '❌'} <strong>No Pre-ticked Marketing</strong> - Forbidden under Dutch law</p>
+                    <p>{'✅' if not any('MISSING_DUTCH_IMPRINT' in v.get('type', '') for v in scan_results.get('gdpr_violations', [])) else '❌'} <strong>Colofon (Imprint)</strong> - {t('report.business_details_page', 'Business details page')}</p>
+                    <p>{'✅' if not any('MISSING_KVK_NUMBER' in v.get('type', '') for v in scan_results.get('gdpr_violations', [])) else '❌'} <strong>KvK Number</strong> - {t('report.chamber_of_commerce_registration', 'Chamber of Commerce registration')}</p>
+                    <p>{'✅' if len([dp for dp in dark_patterns if dp.get('type') == 'PRE_TICKED_MARKETING']) == 0 else '❌'} <strong>{t('report.no_pre_ticked_marketing', 'No Pre-ticked Marketing')}</strong> - {t('report.forbidden_under_dutch_law', 'Forbidden under Dutch law')}</p>
                 </div>
             </div>
             """
@@ -4732,6 +4732,230 @@ def generate_html_report(scan_results):
             nl_compliance = ""
         
         sustainability_metrics = website_metrics + cookie_analysis + tracker_analysis + gdpr_compliance + nl_compliance
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'Document Scanner':
+        files_scanned = scan_results.get('files_scanned', len(scan_results.get('findings', [])))
+        lines_analyzed = scan_results.get('lines_analyzed', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # Document scanner specific content
+        document_metrics = f"""
+        <div class="document-metrics">
+            <h2>📄 {t('report.document_scanner_report', 'Document Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.documents_scanned', 'Documents Scanned')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.pii_instances', 'PII Instances')}</h3>
+                    <p class="metric-value">{len(scan_results.get('findings', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.highest_risk', 'Highest Risk')}</h3>
+                    <p class="metric-value">{max([f.get('severity', 'Low') for f in scan_results.get('findings', [])], default='Low')}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('technical_terms.compliance_score', 'Compliance Score')}</h3>
+                    <p class="metric-value">{scan_results.get('compliance_score', 85)}%</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = document_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'Image Scanner':
+        files_scanned = scan_results.get('files_scanned', len(scan_results.get('findings', [])))
+        lines_analyzed = scan_results.get('lines_analyzed', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # Image scanner specific content
+        image_metrics = f"""
+        <div class="image-metrics">
+            <h2>🖼️ {t('report.image_scanner_report', 'Image Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.images_scanned', 'Images Scanned')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.text_extracted', 'Text Extracted')}</h3>
+                    <p class="metric-value">{scan_results.get('text_extracted', 'Yes')}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.pii_detected', 'PII Detected')}</h3>
+                    <p class="metric-value">{len(scan_results.get('findings', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('technical_terms.compliance_score', 'Compliance Score')}</h3>
+                    <p class="metric-value">{scan_results.get('compliance_score', 90)}%</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = image_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'Database Scanner':
+        files_scanned = scan_results.get('tables_scanned', 0)
+        lines_analyzed = scan_results.get('records_analyzed', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # Database scanner specific content
+        database_metrics = f"""
+        <div class="database-metrics">
+            <h2>🗄️ {t('report.database_scanner_report', 'Database Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.tables_scanned', 'Tables Scanned')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.records_analyzed', 'Records Analyzed')}</h3>
+                    <p class="metric-value">{lines_analyzed:,}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.sensitive_data_found', 'Sensitive Data Found')}</h3>
+                    <p class="metric-value">{len(scan_results.get('findings', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('technical_terms.compliance_score', 'Compliance Score')}</h3>
+                    <p class="metric-value">{scan_results.get('compliance_score', 75)}%</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = database_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') in ['Comprehensive API Security Scanner', 'API Scanner']:
+        files_scanned = scan_results.get('endpoints_scanned', 0)
+        lines_analyzed = scan_results.get('api_calls_analyzed', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # API scanner specific content
+        api_metrics = f"""
+        <div class="api-metrics">
+            <h2>🔌 {t('report.api_scanner_report', 'API Security Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.endpoints_scanned', 'Endpoints Scanned')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.vulnerabilities_found', 'Vulnerabilities Found')}</h3>
+                    <p class="metric-value">{len(scan_results.get('findings', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.security_score', 'Security Score')}</h3>
+                    <p class="metric-value">{scan_results.get('security_score', 80)}%</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.risk_level', 'Risk Level')}</h3>
+                    <p class="metric-value">{scan_results.get('risk_level', 'Medium')}</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = api_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'AI Model Scanner':
+        files_scanned = scan_results.get('model_files_scanned', 1)
+        lines_analyzed = scan_results.get('model_parameters', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # AI Model scanner specific content
+        ai_metrics = f"""
+        <div class="ai-metrics">
+            <h2>🤖 {t('report.ai_model_scanner_report', 'AI Model Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.model_files_analyzed', 'Model Files Analyzed')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.privacy_issues', 'Privacy Issues')}</h3>
+                    <p class="metric-value">{len([f for f in scan_results.get('findings', []) if 'privacy' in f.get('type', '').lower()])}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.bias_detected', 'Bias Detected')}</h3>
+                    <p class="metric-value">{len([f for f in scan_results.get('findings', []) if 'bias' in f.get('type', '').lower()])}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.ai_act_compliance', 'AI Act Compliance')}</h3>
+                    <p class="metric-value">{scan_results.get('ai_act_compliance_score', 85)}%</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = ai_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'SOC2 Scanner':
+        files_scanned = scan_results.get('controls_evaluated', 0)
+        lines_analyzed = scan_results.get('evidence_reviewed', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # SOC2 scanner specific content
+        soc2_metrics = f"""
+        <div class="soc2-metrics">
+            <h2>🛡️ {t('report.soc2_scanner_report', 'SOC2 Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.controls_evaluated', 'Controls Evaluated')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.compliance_gaps', 'Compliance Gaps')}</h3>
+                    <p class="metric-value">{len(scan_results.get('findings', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.soc2_score', 'SOC2 Score')}</h3>
+                    <p class="metric-value">{scan_results.get('soc2_score', 78)}%</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.readiness_level', 'Readiness Level')}</h3>
+                    <p class="metric-value">{scan_results.get('readiness_level', 'Partial')}</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = soc2_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'DPIA Scanner':
+        files_scanned = scan_results.get('assessments_completed', 1)
+        lines_analyzed = scan_results.get('questions_answered', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # DPIA scanner specific content
+        dpia_metrics = f"""
+        <div class="dpia-metrics">
+            <h2>📋 {t('report.dpia_scanner_report', 'DPIA Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.assessments_completed', 'Assessments Completed')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.high_risk_processing', 'High Risk Processing')}</h3>
+                    <p class="metric-value">{len([f for f in scan_results.get('findings', []) if f.get('severity') == 'High'])}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.dpia_score', 'DPIA Score')}</h3>
+                    <p class="metric-value">{scan_results.get('dpia_score', 82)}%</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.recommendations', 'Recommendations')}</h3>
+                    <p class="metric-value">{len(scan_results.get('recommendations', []))}</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = dpia_metrics
         quick_wins_html = ""
         
     else:

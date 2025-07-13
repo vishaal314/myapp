@@ -23,12 +23,20 @@ def t(key, default=""):
 **Impact**: Reports were not translating to Dutch properly due to flawed conditional logic.
 
 ### 2. Enhanced Translation Coverage
-**Added Translation Keys** (79 new Dutch translations):
-- Report structure: `gdpr_compliance_report`, `executive_summary`, `scan_details`
-- Metrics: `files_scanned`, `lines_analyzed`, `total_findings`, `compliance_score`
-- Sustainability: `co2_footprint`, `energy_usage`, `waste_cost`, `sustainability_score`
-- GDPR principles: `gdpr_principles_assessment`, `principle`, `violations_detected`
-- Actions: `terminate_zombie_vm`, `delete_orphaned_snapshots`, `remove_unused_dependencies`
+**Added Translation Keys** (132 new Dutch translations):
+- **Report Structure**: `gdpr_compliance_report`, `executive_summary`, `scan_details`
+- **General Metrics**: `files_scanned`, `lines_analyzed`, `total_findings`, `compliance_score`
+- **Sustainability**: `co2_footprint`, `energy_usage`, `waste_cost`, `sustainability_score`
+- **Website Scanner**: `website_compliance_report`, `cookie_consent_analysis`, `tracker_analysis`
+- **Document Scanner**: `document_scanner_report`, `documents_scanned`, `pii_instances`
+- **Image Scanner**: `image_scanner_report`, `images_scanned`, `text_extracted`
+- **Database Scanner**: `database_scanner_report`, `tables_scanned`, `records_analyzed`
+- **API Scanner**: `api_scanner_report`, `endpoints_scanned`, `vulnerabilities_found`
+- **AI Model Scanner**: `ai_model_scanner_report`, `privacy_issues`, `bias_detected`
+- **SOC2 Scanner**: `soc2_scanner_report`, `controls_evaluated`, `compliance_gaps`
+- **DPIA Scanner**: `dpia_scanner_report`, `assessments_completed`, `high_risk_processing`
+- **GDPR Principles**: `gdpr_principles_assessment`, `principle`, `violations_detected`
+- **Netherlands Compliance**: `netherlands_ap_authority_compliance`, `dutch_privacy_law_requirements`
 
 ### 3. Systematic Translation Implementation
 **Updated Functions**:
@@ -40,8 +48,8 @@ def t(key, default=""):
 
 ### 4. Translation Coverage Analysis
 **English Keys**: 293 keys
-**Dutch Keys**: 372 keys (127% coverage)
-**New Report Keys**: 79 keys added for comprehensive report translation
+**Dutch Keys**: 425 keys (145% coverage)
+**New Report Keys**: 132 keys added for comprehensive report translation across all scanner types
 
 ## Technical Implementation
 
@@ -77,22 +85,37 @@ def t(key, default=""):
 - Netherlands-specific compliance terms
 - Business-appropriate language for enterprise reports
 
-## Testing Requirements
+## Comprehensive Scanner Translation Coverage
+
+### All Scanner Types Now Support Dutch Reports:
+1. **Code Scanner** - GDPR-compliant code analysis with Dutch UAVG terminology
+2. **Website Scanner** - Privacy compliance with Netherlands AP requirements
+3. **Sustainability Scanner** - Environmental impact with Dutch metrics
+4. **Document Scanner** - PII detection in documents with Dutch terminology
+5. **Image Scanner** - OCR-based PII detection with Dutch labels
+6. **Database Scanner** - Database privacy scanning with Dutch compliance terms
+7. **API Scanner** - Security vulnerability assessment with Dutch reporting
+8. **AI Model Scanner** - AI privacy and bias analysis with Dutch AI Act compliance
+9. **SOC2 Scanner** - SOC2 compliance evaluation with Dutch business terms
+10. **DPIA Scanner** - Data Protection Impact Assessment with Dutch UAVG support
+
+### Testing Requirements
 
 ### Functional Testing
 1. Switch language to Dutch (NL)
-2. Run any scanner (code, website, sustainability)
+2. Run any scanner type (all 10 scanners supported)
 3. Generate HTML report 
 4. Verify all sections are in Dutch
-5. Check translation completeness
+5. Check translation completeness for scanner-specific metrics
 
 ### Expected Results
 - Report header in Dutch
 - Executive summary translated
-- All metric labels in Dutch
+- All metric labels in Dutch (scanner-specific)
 - Findings table headers translated
 - GDPR principles in Dutch
 - Professional terminology throughout
+- Scanner-specific metrics in Dutch
 
 ## Production Readiness
 
