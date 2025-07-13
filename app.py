@@ -102,6 +102,11 @@ def main():
     
     with monitor_performance("main_app_initialization"):
         try:
+            # Check if we need to trigger a rerun for language change
+            if st.session_state.get('_trigger_rerun', False):
+                st.session_state['_trigger_rerun'] = False
+                st.rerun()
+            
             # Initialize internationalization and basic session state
             from utils.i18n import initialize, detect_browser_language
             

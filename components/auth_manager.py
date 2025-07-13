@@ -153,8 +153,8 @@ def render_login_interface():
             from utils.i18n import set_language, initialize
             set_language(selected_language)
             initialize()
-            # Force app rerun to refresh all translations
-            st.rerun()
+            # Set flag to trigger rerun on next app cycle (avoids no-op warning)
+            st.session_state['_trigger_rerun'] = True
 
     # Authentication sidebar with professional colorful design
     with st.sidebar:
