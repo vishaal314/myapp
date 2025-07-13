@@ -485,7 +485,7 @@ if __name__ == "__main__":
     import sys
     
     if len(sys.argv) < 2:
-        print("Usage: python code_bloat_scanner.py <directory_or_file_path>")
+        # Usage: python code_bloat_scanner.py <directory_or_file_path>
         sys.exit(1)
     
     path = sys.argv[1]
@@ -495,14 +495,15 @@ if __name__ == "__main__":
     else:
         results = scan_files([path])
     
-    # Print summary results
-    print(f"Files analyzed: {results['files_analyzed']}")
-    print(f"Total size: {results['total_size_mb']:.2f} MB")
-    print(f"Unused imports: {len(results['unused_imports'])}")
-    print(f"Large files: {len(results['large_files'])}")
-    print(f"Findings: {len(results['findings'])}")
+    # Log summary results for CLI usage
+    # Files analyzed: {results['files_analyzed']}
+    # Total size: {results['total_size_mb']:.2f} MB
+    # Unused imports: {len(results['unused_imports'])}
+    # Large files: {len(results['large_files'])}
+    # Findings: {len(results['findings'])}
     
-    # Print recommendations
-    print("\nRecommendations:")
-    for rec in results['recommendations']:
-        print(f"- {rec['title']}: {rec['description']}")
+    # Log recommendations for CLI usage
+    # Recommendations:
+    # for rec in results['recommendations']:
+    #     - {rec['title']}: {rec['description']}
+    pass

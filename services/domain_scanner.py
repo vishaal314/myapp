@@ -276,7 +276,8 @@ class DomainScanner:
             
             return ""
         except Exception as e:
-            print(f"Error extracting content from {domain}: {str(e)}")
+            # Error extracting content from domain - log for debugging if needed
+            pass
             return ""
     
     def _scan_text_for_pii(self, text: str, source_url: str) -> List[Dict[str, Any]]:

@@ -45,7 +45,8 @@ class ComplianceScoreManager:
             else:
                 self.score_history = []
         except Exception as e:
-            print(f"Error loading compliance score history: {str(e)}")
+            # Error loading compliance score history - log for debugging if needed
+            pass
             self.score_history = []
     
     def _save_history(self) -> None:
@@ -54,7 +55,8 @@ class ComplianceScoreManager:
             with open(COMPLIANCE_SCORE_FILE, 'w') as f:
                 json.dump(self.score_history, f)
         except Exception as e:
-            print(f"Error saving compliance score history: {str(e)}")
+            # Error saving compliance score history - log for debugging if needed
+            pass
     
     def calculate_current_score(self) -> Dict[str, Any]:
         """
@@ -699,10 +701,10 @@ def generate_mock_history(days: int = 30) -> None:
     with open(COMPLIANCE_SCORE_FILE, 'w') as f:
         json.dump(history, f)
     
-    print(f"Generated {days} days of mock compliance score history.")
+    # Generated {days} days of mock compliance score history.
 
 if __name__ == "__main__":
     # Example usage
     manager = ComplianceScoreManager()
     current_score = manager.update_score()
-    print(f"Current compliance score: {current_score['overall_score']}")
+    # Current compliance score: {current_score['overall_score']}

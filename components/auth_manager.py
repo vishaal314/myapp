@@ -28,19 +28,15 @@ def initialize_language_system():
         if '_persistent_language' in st.session_state:
             # Use persistent language across app reloads
             current_language = st.session_state['_persistent_language']
-            print(f"INIT: Using _persistent_language: {current_language}")
         elif 'pre_login_language' in st.session_state:
             # Use pre-login language setting
             current_language = st.session_state['pre_login_language']
-            print(f"INIT: Using pre_login_language: {current_language}")
         elif 'backup_language' in st.session_state:
             # Use backup language setting
             current_language = st.session_state['backup_language']
-            print(f"INIT: Using backup_language: {current_language}")
         else:
             # Default to English if no language specified
             current_language = 'en'
-            print("INIT: No language found, defaulting to 'en'")
         
         # Set the language in the primary location
         st.session_state['language'] = current_language
@@ -59,7 +55,6 @@ def handle_forced_language_after_login():
     """Handle forced language setting after login - extracted from app.py lines 101-120"""
     if 'force_language_after_login' in st.session_state and st.session_state['force_language_after_login']:
         forced_language = st.session_state['force_language_after_login']
-        print(f"LOGIN - Forcing language to: {forced_language}")
         
         # Set language immediately
         st.session_state['language'] = forced_language
@@ -71,8 +66,6 @@ def handle_forced_language_after_login():
         # Reinitialize translations with forced language
         set_language(forced_language)
         initialize()
-        
-        print(f"LOGIN - Language successfully set to: {forced_language}")
 
 def preserve_language_during_operations():
     """Preserve language settings during various operations - extracted from app.py lines 475-520"""
@@ -113,53 +106,15 @@ def preserve_language_during_operations():
     return 'en'
 
 def debug_translations():
-    """Print debug information about critical translation keys - extracted from app.py lines 140-180"""
+    """Debug information about critical translation keys - for development only"""
     try:
-        critical_keys = [
-            'app.tagline', 'scan.new_scan_title', 'scan.select_type', 
-            'scan.upload_files', 'scan.title', 'dashboard.welcome',
-            'history.title', 'results.title', 'report.generate'
-        ]
-        print("TRANSLATION DEBUG - Critical Keys:")
-        for key in critical_keys:
-            value = get_text(key, f"MISSING: {key}")
-            print(f"  {key}: '{value}'")
-        
-        # Save the current language
-        temp_saved_lang = st.session_state.get('language', 'en')
-        
-        print(f"TRANSLATIONS DEBUG - Raw data for language {temp_saved_lang}:")
-        
-        # Get the current language setting
-        current_language = st.session_state.get('language', 'en')
-        
-        if current_language in _translations:
-            print(f"  Available top-level keys: {list(_translations[current_language].keys())}")
-            
-            # Check specific key categories
-            if 'app' in _translations[current_language]:
-                print(f"  app keys: {_translations[current_language]['app']}")
-            if 'scan' in _translations[current_language]:
-                print(f"  scan keys: {_translations[current_language]['scan']}")
-        
-        # Language state debugging
-        preserved_language = st.session_state.get('_persistent_language', 'en')
-        print("LANGUAGE DEBUG - Current state:")
-        print(f"  language: {st.session_state.get('language', 'NOT_SET')}")
-        print(f"  _persistent_language: {st.session_state.get('_persistent_language', 'NOT_SET')}")
-        print(f"  pre_login_language: {st.session_state.get('pre_login_language', 'NOT_SET')}")
-        print(f"  backup_language: {st.session_state.get('backup_language', 'NOT_SET')}")
-        print(f"  force_language_after_login: {st.session_state.get('force_language_after_login', 'NOT_SET')}")
-        
         # Set the current language properly
         current_language = st.session_state.get('language', 'en')
         if current_language in LANGUAGES:
             set_language(current_language)
-            print(f"SET_LANGUAGE - Setting language to: {current_language}")
             initialize()
-            print(f"INIT - Successfully initialized translations for: {current_language}")
     except Exception as e:
-        print(f"DEBUG_TRANSLATIONS - Error: {e}")
+        logger.error(f"DEBUG_TRANSLATIONS - Error: {e}")
 
 def render_login_interface():
     """Render the complete login interface - preserving original design from app.py"""

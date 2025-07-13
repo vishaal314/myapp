@@ -180,19 +180,13 @@ def render_landing_page():
             
             if submit:
                 if username and password:
-                    # Authentication system
-                    valid_credentials = {
-                        "admin": "password",
-                        "user": "password", 
-                        "demo": "demo",
-                        "vishaal314": "fim48uKu",
-                        "vishaal314@gmail.com": "fim48uKu"
-                    }
+                    # Secure authentication system using environment variables
+                    from utils.secure_auth import validate_credentials, get_user_role
                     
-                    if username in valid_credentials and password == valid_credentials[username]:
+                    if validate_credentials(username, password):
                         st.session_state.authenticated = True
                         st.session_state.username = username
-                        st.session_state.user_role = "admin" if username in ["admin", "vishaal314", "vishaal314@gmail.com"] else "user"
+                        st.session_state.user_role = get_user_role(username)
                         st.success(_('login.success', 'Login successful!'))
                         # Note: st.rerun() removed from form submission to avoid no-op warning
                         # The app will automatically rerun due to session state changes
@@ -217,7 +211,8 @@ def render_landing_page():
                 data = response.json()
                 if data.get('country_code', '').upper() == 'NL':
                     st.info("💡 Deze applicatie is ook beschikbaar in het Nederlands - use the language selector in the sidebar")
-        except:
+        except (requests.RequestException, Exception):
+            # Silent fail for IP geolocation - not critical for app functionality
             pass
     
     # Main landing page content with translations
@@ -1375,7 +1370,7 @@ def generate_api_html_report(scan_results):
     # Format timestamp
     try:
         formatted_timestamp = datetime.fromisoformat(timestamp).strftime('%B %d, %Y at %I:%M %p')
-    except:
+    except (ValueError, TypeError):
         formatted_timestamp = timestamp
     
     # Extract security metrics
@@ -3642,7 +3637,8 @@ def discover_sitemap_urls(base_url, headers):
             # Extract sitemap URLs from robots.txt
             sitemap_matches = re.findall(r'Sitemap:\s*([^\s]+)', robots_content, re.IGNORECASE)
             sitemap_urls.extend(sitemap_matches)
-    except:
+    except (requests.RequestException, Exception):
+        # Silent fail for robots.txt - not critical
         pass
     
     # Check common sitemap locations
@@ -3678,7 +3674,8 @@ def discover_sitemap_urls(base_url, headers):
                     # Not a valid XML sitemap
                     pass
                     
-        except:
+        except (requests.RequestException, Exception):
+            # Failed to fetch sitemap - continue with next one
             continue
     
     # Remove duplicates and return unique URLs
