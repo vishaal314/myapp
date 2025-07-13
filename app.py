@@ -518,7 +518,7 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
                 "transparency": 0,
                 "accountability": 0
             },
-            "compliance_score": 85,  # Default score before analysis
+            "compliance_score": 0,  # Will be calculated based on findings
             "breach_notification_required": False,
             "high_risk_processing": False
         }
@@ -935,9 +935,9 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         if total_findings == 0:
             compliance_score = 100
         else:
-            # Improved penalty-based scoring system
-            penalty = (critical_findings * 20) + (high_findings * 10) + ((total_findings - critical_findings - high_findings) * 3)
-            compliance_score = max(15, 100 - penalty)  # Minimum 15% to avoid 0%
+            # Penalty-based scoring system (same as English version)
+            penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
+            compliance_score = max(0, 100 - penalty)
         
         scan_results['compliance_score'] = compliance_score
         

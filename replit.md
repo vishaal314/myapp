@@ -112,6 +112,13 @@ DataGuardian Pro is a comprehensive enterprise privacy compliance platform built
 - June 23, 2025. Implemented comprehensive Netherlands DPIA Assessment system with PostgreSQL database integration and HTML report generation
 
 ## Recent Changes
+- **July 13, 2025**: **GDPR COMPLIANCE SCORE CALCULATION STANDARDIZED** - Fixed compliance score calculation to match English version exactly
+  - **CALCULATION UNIFIED**: Dutch and English versions now use identical penalty-based scoring system (Critical: -25%, High: -15%, Medium/Low: -5%)
+  - **SCORING ALGORITHM**: `penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)`
+  - **FINAL SCORE**: `max(0, 100 - penalty)` - consistent across all languages
+  - **HTML REPORT DEFAULTS**: Fixed all default values from inconsistent 85%/90%/75% back to 0% to show calculated values
+  - **LANGUAGE CONSISTENCY**: Compliance scores now identical between Dutch and English reports for same findings
+  - **PRODUCTION READY**: Standardized scoring system ensures consistent compliance assessment across all languages
 - **July 13, 2025**: **DUTCH TRANSLATION SYSTEM COMPREHENSIVE FIXES COMPLETED** - Critical translation logic errors fixed and complete Dutch report support for all 10 scanner types
   - **TRANSLATION LOGIC FIXED**: Fixed critical conditional logic error preventing Dutch translations in HTML reports
   - **ALL SCANNERS SUPPORTED**: Added comprehensive Dutch translation support for all 10 scanner types (Code, Website, Sustainability, Document, Image, Database, API, AI Model, SOC2, DPIA)
