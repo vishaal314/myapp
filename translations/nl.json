@@ -70,6 +70,7 @@
     "info": "Registratiefunctionaliteit beschikbaar in volledige versie"
   },
   "login": {
+    "title": "Inloggen",
     "email_username": "E-mailadres òf Gebruikersnaam",
     "password": "Wachtwoord",
     "remember_me": "Onthoud mij",
