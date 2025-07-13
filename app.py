@@ -340,18 +340,18 @@ def render_authenticated_interface():
             # Force app rerun to refresh after logout
             st.rerun()
     
-    # Main content based on navigation
-    if "Dashboard" in selected_nav:
+    # Main content based on navigation with language-aware matching
+    if _('sidebar.dashboard', 'Dashboard') in selected_nav:
         render_dashboard()
-    elif "New Scan" in selected_nav:
+    elif _('scan.new_scan_title', 'New Scan') in selected_nav:
         render_scanner_interface_safe()
-    elif "Results" in selected_nav:
+    elif _('results.title', 'Results') in selected_nav:
         render_results_page()
-    elif "History" in selected_nav:
+    elif _('history.title', 'History') in selected_nav:
         render_history_page()
-    elif "Settings" in selected_nav:
+    elif _('sidebar.settings', 'Settings') in selected_nav:
         render_settings_page()
-    elif "Admin" in selected_nav:
+    elif _('admin.title', 'Admin') in selected_nav:
         render_admin_page()
     elif "Performance Dashboard" in selected_nav:
         render_performance_dashboard_safe()
