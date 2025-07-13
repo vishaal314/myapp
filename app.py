@@ -88,7 +88,8 @@ def get_text(key, default=None):
     """Get translated text with proper i18n support"""
     try:
         from utils.i18n import get_text as i18n_get_text
-        return i18n_get_text(key, default)
+        result = i18n_get_text(key, default)
+        return result
     except ImportError:
         return default or key
 

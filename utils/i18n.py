@@ -136,15 +136,21 @@ def get_text(key: str, default: Optional[str] = None) -> str:
     """
     global _translations, _current_language
     
-    # If translations are not loaded, load them
-    if _current_language not in _translations:
-        load_translations(_current_language)
+    # Always use session state as the source of truth for current language
+    current_lang = st.session_state.get('language', 'en')
+    
+    # If translations are not loaded for the current language, load them
+    if current_lang not in _translations:
+        load_translations(current_lang)
+    
+    # Update the global variable to match session state
+    _current_language = current_lang
     
     # Split the key into parts (e.g., 'app.title' -> ['app', 'title'])
     parts = key.split('.')
     
     # Get the translation dictionary for current language
-    lang_dict = _translations.get(_current_language, {})
+    lang_dict = _translations.get(current_lang, {})
     
     # Navigate through nested dictionaries based on key parts
     text = None
@@ -163,7 +169,7 @@ def get_text(key: str, default: Optional[str] = None) -> str:
             break
     
     # If not found, try English as fallback
-    if text is None and _current_language != 'en':
+    if text is None and current_lang != 'en':
         if 'en' not in _translations:
             load_translations('en')
             
