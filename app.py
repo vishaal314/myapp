@@ -4468,16 +4468,24 @@ def execute_sustainability_scan(region, username, scan_params):
 def generate_html_report(scan_results):
     """Generate enhanced HTML report with comprehensive data for all scanner types"""
     
+    # Get current language for translations
+    current_lang = st.session_state.get('language', 'en')
+    
+    # Translation helper function
+    def t(key, default=""):
+        """Get translated text based on current language"""
+        return get_text(key, default) if current_lang == 'nl' else default
+    
     # Extract enhanced metrics based on scanner type
     if scan_results.get('scan_type') == 'Comprehensive Sustainability Scanner':
         files_scanned = scan_results.get('files_scanned', 156)
         lines_analyzed = scan_results.get('lines_analyzed', 45720)
         region = scan_results.get('emissions_region', 'eu-west-1 (Netherlands)')
         
-        # Sustainability-specific content
+        # Sustainability-specific content with translations
         sustainability_metrics = f"""
         <div class="sustainability-metrics">
-            <h2>🌍 Environmental Impact Analysis</h2>
+            <h2>🌍 {t('report.sustainability_report', 'Environmental Impact Analysis')}</h2>
             <div class="metrics-grid">
                 <div class="metric-card">
                     <h3>CO₂ Footprint</h3>
@@ -4499,10 +4507,10 @@ def generate_html_report(scan_results):
         </div>
         """
         
-        # Quick wins section
-        quick_wins_html = """
+        # Quick wins section with translations
+        quick_wins_html = f"""
         <div class="quick-wins">
-            <h2>⚡ Quick Wins</h2>
+            <h2>⚡ {t('technical_terms.recommendations', 'Quick Wins')}</h2>
             <ul>
                 <li>Terminate zombie VM (saves 29.8 kg CO₂e/month)</li>
                 <li>Delete orphaned snapshots (saves 5.2 kg CO₂e/month)</li>
@@ -4517,25 +4525,25 @@ def generate_html_report(scan_results):
         lines_analyzed = scan_results.get('lines_analyzed', scan_results.get('total_lines', 0))
         region = scan_results.get('region', 'Global')
         
-        # GDPR-specific content
+        # GDPR-specific content with translations
         gdpr_metrics = f"""
         <div class="gdpr-metrics">
-            <h2>⚖️ GDPR Compliance Analysis</h2>
+            <h2>⚖️ {t('report.gdpr_compliance_report', 'GDPR Compliance Analysis')}</h2>
             <div class="metrics-grid">
                 <div class="metric-card">
-                    <h3>Compliance Score</h3>
+                    <h3>{t('technical_terms.compliance_score', 'Compliance Score')}</h3>
                     <p class="metric-value">{scan_results.get('compliance_score', 0)}%</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Certification</h3>
+                    <h3>{t('report.certification', 'Certification')}</h3>
                     <p class="metric-value">{scan_results.get('certification_type', 'N/A')}</p>
                 </div>
                 <div class="metric-card">
-                    <h3>High Risk Processing</h3>
+                    <h3>{t('technical_terms.high_risk', 'High Risk Processing')}</h3>
                     <p class="metric-value">{'Yes' if scan_results.get('high_risk_processing') else 'No'}</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Breach Notification</h3>
+                    <h3>{t('technical_terms.data_breach', 'Breach Notification')}</h3>
                     <p class="metric-value">{'Required' if scan_results.get('breach_notification_required') else 'Not Required'}</p>
                 </div>
             </div>
@@ -4756,33 +4764,33 @@ def generate_html_report(scan_results):
     </head>
     <body>
         <div class="header">
-            <h1>🛡️ DataGuardian Pro Comprehensive Report</h1>
-            <p><strong>Scan Type:</strong> {scan_results['scan_type']}</p>
-            <p><strong>Scan ID:</strong> {scan_results['scan_id'][:8]}...</p>
-            <p><strong>Generated:</strong> {scan_results['timestamp']}</p>
-            <p><strong>Region:</strong> {region}</p>
+            <h1>🛡️ {t('report.dataGuardian_pro', 'DataGuardian Pro')} {t('report.gdpr_compliance_report', 'Comprehensive Report')}</h1>
+            <p><strong>{t('report.scan_type', 'Scan Type')}:</strong> {scan_results['scan_type']}</p>
+            <p><strong>{t('report.scan_id', 'Scan ID')}:</strong> {scan_results['scan_id'][:8]}...</p>
+            <p><strong>{t('report.generated_on', 'Generated')}:</strong> {scan_results['timestamp']}</p>
+            <p><strong>{t('report.region', 'Region')}:</strong> {region}</p>
         </div>
         
         <div class="summary">
-            <h2>📊 Executive Summary</h2>
-            <p><strong>{'Pages Scanned' if scan_results.get('scan_type') == 'GDPR Website Privacy Compliance Scanner' else 'Files Scanned'}:</strong> {files_scanned:,}</p>
-            <p><strong>Total Findings:</strong> {len(scan_results.get('findings', []))}</p>
-            <p><strong>{'Content Analysis' if scan_results.get('scan_type') == 'GDPR Website Privacy Compliance Scanner' else 'Lines Analyzed'}:</strong> {lines_analyzed if isinstance(lines_analyzed, str) else f"{lines_analyzed:,}"}</p>
-            <p><strong>Critical Issues:</strong> {len([f for f in scan_results.get('findings', []) if f.get('severity') == 'Critical'])}</p>
-            <p><strong>High Risk Issues:</strong> {len([f for f in scan_results.get('findings', []) if f.get('severity') == 'High'])}</p>
+            <h2>📊 {t('report.executive_summary', 'Executive Summary')}</h2>
+            <p><strong>{t('report.files_scanned', 'Pages Scanned' if scan_results.get('scan_type') == 'GDPR Website Privacy Compliance Scanner' else 'Files Scanned')}:</strong> {files_scanned:,}</p>
+            <p><strong>{t('report.total_findings', 'Total Findings')}:</strong> {len(scan_results.get('findings', []))}</p>
+            <p><strong>{t('report.lines_analyzed', 'Content Analysis' if scan_results.get('scan_type') == 'GDPR Website Privacy Compliance Scanner' else 'Lines Analyzed')}:</strong> {lines_analyzed if isinstance(lines_analyzed, str) else f"{lines_analyzed:,}"}</p>
+            <p><strong>{t('report.critical', 'Critical Issues')}:</strong> {len([f for f in scan_results.get('findings', []) if f.get('severity') == 'Critical'])}</p>
+            <p><strong>{t('technical_terms.high_risk', 'High Risk Issues')}:</strong> {len([f for f in scan_results.get('findings', []) if f.get('severity') == 'High'])}</p>
         </div>
         
         {sustainability_metrics}
         {quick_wins_html}
         
         <div class="findings">
-            <h2>🔍 Detailed Findings</h2>
+            <h2>🔍 {t('report.detailed_findings', 'Detailed Findings')}</h2>
             {generate_findings_html(scan_results.get('findings', []))}
         </div>
         
         <div class="footer">
-            <p>Generated by DataGuardian Pro - Enterprise Privacy & Sustainability Compliance Platform</p>
-            <p>Report ID: {scan_results['scan_id']} | Generated: {scan_results['timestamp']}</p>
+            <p>{t('report.generated_by', 'Generated by')} {t('report.dataGuardian_pro', 'DataGuardian Pro')} - {t('report.privacy_compliance_platform', 'Enterprise Privacy & Sustainability Compliance Platform')}</p>
+            <p>Report ID: {scan_results['scan_id']} | {t('report.generated_on', 'Generated')}: {scan_results['timestamp']}</p>
         </div>
     </body>
     </html>
@@ -4791,20 +4799,29 @@ def generate_html_report(scan_results):
 
 def generate_findings_html(findings):
     """Generate enhanced HTML for findings section with comprehensive data"""
+    
+    # Get current language for translations
+    current_lang = st.session_state.get('language', 'en')
+    
+    # Translation helper function
+    def t(key, default=""):
+        """Get translated text based on current language"""
+        return get_text(key, default) if current_lang == 'nl' else default
+    
     if not findings:
-        return "<p>✅ No issues found in the analysis.</p>"
+        return f"<p>✅ {t('report.no_issues_found', 'No issues found in the analysis.')}</p>"
     
     # Enhanced table with additional columns for comprehensive location data
-    findings_html = """
+    findings_html = f"""
     <table>
         <tr>
-            <th>Type</th>
-            <th>Severity</th>
-            <th>File/Resource</th>
-            <th>Location Details</th>
-            <th>Description</th>
-            <th>Impact</th>
-            <th>Action Required</th>
+            <th>{t('report.type', 'Type')}</th>
+            <th>{t('report.severity', 'Severity')}</th>
+            <th>{t('report.file_resource', 'File/Resource')}</th>
+            <th>{t('report.location_details', 'Location Details')}</th>
+            <th>{t('report.description_column', 'Description')}</th>
+            <th>{t('report.impact', 'Impact')}</th>
+            <th>{t('report.action_required', 'Action Required')}</th>
         </tr>
     """
     
