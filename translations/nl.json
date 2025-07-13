@@ -345,7 +345,26 @@
     "assessments_completed": "Beoordelingen Voltooid",
     "high_risk_processing": "Hoog Risico Verwerking",
     "dpia_score": "DPIA Score",
-    "recommendations": "Aanbevelingen"
+    "recommendations": "Aanbevelingen",
+    "detailed_findings": "Gedetailleerde Bevindingen",
+    "impact_not_specified": "Impact niet gespecificeerd",
+    "no_action_specified": "Geen actie gespecificeerd",
+    "immediate_action_required": "Directe actie vereist",
+    "review_and_remediate": "Controleer en herstel",
+    "monitor_and_validate": "Monitor en valideer",
+    "document_and_approve": "Documenteer en keur goed",
+    "high_privacy_risk": "Hoog privacy risico",
+    "potential_gdpr_violation": "Mogelijke GDPR overtreding",
+    "security_vulnerability": "Beveiligingskwetsbaarheid",
+    "compliance_gap": "Compliance lacune",
+    "data_exposure_risk": "Data blootstellingsrisico",
+    "regulatory_concern": "Regulatoire zorg",
+    "remove_hardcoded_credentials": "Verwijder hardgecodeerde referenties",
+    "implement_proper_encryption": "Implementeer juiste encryptie",
+    "add_access_controls": "Voeg toegangscontroles toe",
+    "update_privacy_policy": "Update privacybeleid",
+    "conduct_security_review": "Voer beveiligingsbeoordeling uit",
+    "implement_data_minimization": "Implementeer dataminimalisatie"
   },
   "admin": {
     "title": "Admin"

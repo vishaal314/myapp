@@ -5091,8 +5091,44 @@ def generate_findings_html(findings):
                 line_info = finding.get('url', 'Web Resource')
         
         description = finding.get('description', finding.get('content', 'No description'))
-        impact = finding.get('impact', finding.get('environmental_impact', 'Impact not specified'))
-        action = finding.get('action_required', finding.get('recommendation', 'No action specified'))
+        
+        # Enhanced impact analysis with translations
+        impact = finding.get('impact', finding.get('environmental_impact', ''))
+        if not impact or impact == 'Impact not specified':
+            # Generate context-appropriate impact based on finding type and severity
+            if finding_type == 'EMAIL' and severity == 'High':
+                impact = t('report.high_privacy_risk', 'High privacy risk')
+            elif finding_type == 'API_KEY' and severity == 'Critical':
+                impact = t('report.security_vulnerability', 'Security vulnerability')
+            elif finding_type == 'PHONE' and severity == 'High':
+                impact = t('report.potential_gdpr_violation', 'Potential GDPR violation')
+            elif finding_type == 'BSN' and severity == 'Critical':
+                impact = t('report.data_exposure_risk', 'Data exposure risk')
+            elif 'GDPR' in finding_type or 'Privacy' in finding_type:
+                impact = t('report.regulatory_concern', 'Regulatory concern')
+            else:
+                impact = t('report.compliance_gap', 'Compliance gap')
+        
+        # Enhanced action recommendations with translations
+        action = finding.get('action_required', finding.get('recommendation', ''))
+        if not action or action == 'No action specified':
+            # Generate context-appropriate action based on finding type and severity
+            if finding_type == 'EMAIL' and severity == 'High':
+                action = t('report.implement_data_minimization', 'Implement data minimization')
+            elif finding_type == 'API_KEY' and severity == 'Critical':
+                action = t('report.remove_hardcoded_credentials', 'Remove hardcoded credentials')
+            elif finding_type == 'PHONE' and severity == 'High':
+                action = t('report.update_privacy_policy', 'Update privacy policy')
+            elif finding_type == 'BSN' and severity == 'Critical':
+                action = t('report.implement_proper_encryption', 'Implement proper encryption')
+            elif severity == 'Critical':
+                action = t('report.immediate_action_required', 'Immediate action required')
+            elif severity == 'High':
+                action = t('report.review_and_remediate', 'Review and remediate')
+            elif severity == 'Medium':
+                action = t('report.monitor_and_validate', 'Monitor and validate')
+            else:
+                action = t('report.document_and_approve', 'Document and approve')
         
         findings_html += f"""
         <tr class="finding {severity_class}">
