@@ -172,7 +172,17 @@
     "soc2_timeframe": "Scan Tijdsbestek",
     "soc2_pdf_report": "Genereer PDF Rapport",
     "soc2_new_scan": "Nieuwe SOC2 Scan",
-    "soc2_view_dashboard": "Bekijken op Dashboard"
+    "soc2_view_dashboard": "Bekijken op Dashboard",
+    "code_description": "Scan broncode repositories voor PII, geheimen en GDPR-naleving",
+    "document_description": "Analyseer PDF, DOCX, TXT bestanden voor gevoelige informatie",
+    "image_description": "OCR-gebaseerde PII-detectie in afbeeldingen en documenten",
+    "database_description": "Scan database tabellen en kolommen voor PII-gegevens",
+    "website_description": "Privacy beleid en web compliance analyse",
+    "api_description": "REST API beveiliging en PII blootstellingsanalyse",
+    "ai_model_description": "ML model privacy risico's en bias detectie",
+    "soc2_description": "SOC2 compliance beoordeling met TSC mapping",
+    "dpia_description": "Gegevensbeschermingseffectbeoordeling workflow",
+    "sustainability_description": "Milieuimpact en groene codering analyse"
   },
   "history": {
     "title": "Geschiedenis"

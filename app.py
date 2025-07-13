@@ -389,76 +389,53 @@ def render_scanner_interface_safe():
     """Complete scanner interface with all functional scanners"""
     st.title(f"🔍 {_('scan.new_scan_title', 'New Scan')}")
     
-    # Import scanner services
-    try:
-        from services.code_scanner import CodeScanner
-        from services.blob_scanner import BlobScanner
-        from services.image_scanner import ImageScanner
-        from services.db_scanner import DBScanner
-        from services.api_scanner import APIScanner
-        from services.ai_model_scanner import AIModelScanner
-        from services.enhanced_soc2_scanner import EnhancedSOC2Scanner
-        from services.website_scanner import WebsiteScanner
-        from services.dpia_scanner import DPIAScanner
-        
-        # Report generators will be created inline
-        pass
-        
-        scanners_available = True
-    except ImportError as e:
-        st.error(f"Scanner services not available: {e}")
-        scanners_available = False
-    
-    if not scanners_available:
-        st.info("Scanner services are being loaded. Please refresh the page.")
-        return
-    
-    # Scanner type selection with descriptions
+    # Scanner type selection with Dutch translations
     scanner_options = {
-        "🔍 Code Scanner": "Scan source code repositories for PII, secrets, and GDPR compliance",
-        "📄 Document Scanner": "Analyze PDF, DOCX, TXT files for sensitive information",
-        "🖼️ Image Scanner": "OCR-based PII detection in images and documents",
-        "🗄️ Database Scanner": "Scan database tables and columns for PII data",
-        "🌐 Website Scanner": "Privacy policy and web compliance analysis",
-        "🔌 API Scanner": "REST API security and PII exposure analysis",
-        "🤖 AI Model Scanner": "ML model privacy risks and bias detection", 
-        "🛡️ SOC2 Scanner": "SOC2 compliance assessment with TSC mapping",
-        "📋 DPIA Scanner": "Data Protection Impact Assessment workflow",
-        "🌱 Sustainability Scanner": "Environmental impact and green coding analysis"
+        f"🔍 {_('scan.code', 'Code')}": _('scan.code_description', 'Scan source code repositories for PII, secrets, and GDPR compliance'),
+        f"📄 {_('scan.blob', 'Document')}": _('scan.document_description', 'Analyze PDF, DOCX, TXT files for sensitive information'),
+        f"🖼️ {_('scan.image', 'Image')}": _('scan.image_description', 'OCR-based PII detection in images and documents'),
+        f"🗄️ {_('scan.database', 'Database')}": _('scan.database_description', 'Scan database tables and columns for PII data'),
+        f"🌐 {_('scan.website', 'Website')}": _('scan.website_description', 'Privacy policy and web compliance analysis'),
+        f"🔌 {_('scan.api', 'API')}": _('scan.api_description', 'REST API security and PII exposure analysis'),
+        f"🤖 {_('scan.ai_model', 'AI Model')}": _('scan.ai_model_description', 'ML model privacy risks and bias detection'),
+        f"🛡️ {_('scan.soc2', 'SOC2')}": _('scan.soc2_description', 'SOC2 compliance assessment with TSC mapping'),
+        f"📋 {_('scan.dpia', 'DPIA')}": _('scan.dpia_description', 'Data Protection Impact Assessment workflow'),
+        f"🌱 {_('scan.sustainability', 'Sustainability')}": _('scan.sustainability_description', 'Environmental impact and green coding analysis')
     }
     
     selected_scanner = st.selectbox(
-        "Select Scanner Type",
+        _('scan.select_type', 'Select Scanner Type'),
         list(scanner_options.keys()),
         format_func=lambda x: f"{x} - {scanner_options[x]}"
     )
     
     st.markdown("---")
     
-    # Get region setting
-    region = st.selectbox("Region", ["Netherlands", "Germany", "France", "Belgium", "Europe"], index=0)
+    # Get region setting with Dutch translations
+    region_options = ["Netherlands", "Germany", "France", "Belgium", "Europe"]
+    region = st.selectbox(_('scan.select_region', 'Region'), region_options, index=0)
     username = st.session_state.get('username', 'user')
     
     # Render scanner-specific interface
-    if "Code Scanner" in selected_scanner:
+    if _('scan.code', 'Code') in selected_scanner:
         render_code_scanner_interface(region, username)
-    elif "Document Scanner" in selected_scanner:
+    elif _('scan.blob', 'Document') in selected_scanner:
         render_document_scanner_interface(region, username)
-    elif "Image Scanner" in selected_scanner:
+    elif _('scan.image', 'Image') in selected_scanner:
         render_image_scanner_interface(region, username)
-    elif "Database Scanner" in selected_scanner:
+    elif _('scan.database', 'Database') in selected_scanner:
         render_database_scanner_interface(region, username)
-    elif "API Scanner" in selected_scanner:
+    elif _('scan.api', 'API') in selected_scanner:
         render_api_scanner_interface(region, username)
-    elif "AI Model Scanner" in selected_scanner:
+    elif _('scan.ai_model', 'AI Model') in selected_scanner:
         render_ai_model_scanner_interface(region, username)
-    elif "SOC2 Scanner" in selected_scanner:
+    elif _('scan.soc2', 'SOC2') in selected_scanner:
         render_soc2_scanner_interface(region, username)
-    elif "Website Scanner" in selected_scanner:
+    elif _('scan.website', 'Website') in selected_scanner:
         render_website_scanner_interface(region, username)
-    elif "DPIA Scanner" in selected_scanner:
+    elif _('scan.dpia', 'DPIA') in selected_scanner:
         render_dpia_scanner_interface(region, username)
-    elif "Sustainability Scanner" in selected_scanner:
+    elif _('scan.sustainability', 'Sustainability') in selected_scanner:
         render_sustainability_scanner_interface(region, username)
 
 def render_code_scanner_interface(region: str, username: str):
