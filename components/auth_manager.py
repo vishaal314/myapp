@@ -197,7 +197,8 @@ def render_login_interface():
             st.session_state['_persistent_language'] = selected_language
             from utils.i18n import set_language
             set_language(selected_language)
-            st.rerun()
+            # Note: st.rerun() removed from callback to avoid no-op warning
+            # The app will automatically rerun due to session state changes
 
     # Authentication sidebar with professional colorful design
     with st.sidebar:
@@ -348,7 +349,8 @@ def render_signin_tab():
                 handle_forced_language_after_login()
             
             st.success(_("login.success", "Login successful!"))
-            st.rerun()
+            # Note: st.rerun() removed from form submission to avoid no-op warning
+            # The app will automatically rerun due to session state changes
         else:
             st.error(_("login.invalid", "Invalid username/email or password"))
     

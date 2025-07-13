@@ -1206,8 +1206,8 @@ def run_cloud_resources_scan():
         # Display a success message
         st.success(f"{provider} resources sustainability scan completed!")
         
-        # Force page refresh to show results
-        st.rerun()
+        # Note: st.rerun() removed to avoid no-op warning
+        # The app will automatically rerun due to session state changes
 
 
 def run_github_repo_scan():
@@ -1246,11 +1246,13 @@ def run_github_repo_scan():
     with col1:
         if st.button("Use TensorFlow Example"):
             st.session_state.github_repo_url = "https://github.com/tensorflow/tensorflow"
-            st.rerun()
+            # Note: st.rerun() removed from button click to avoid no-op warning
+            # The app will automatically rerun due to session state changes
     with col2:
         if st.button("Use React Example"):
             st.session_state.github_repo_url = "https://github.com/facebook/react"
-            st.rerun()
+            # Note: st.rerun() removed from button click to avoid no-op warning
+            # The app will automatically rerun due to session state changes
     
     # Branch selection
     branch = st.text_input(
@@ -1376,8 +1378,8 @@ def run_github_repo_scan():
         # Display a success message
         st.success(f"GitHub repository sustainability scan completed for {repo_url.split('/')[-1]}!")
         
-        # Force page refresh to show results
-        st.rerun()
+        # Note: st.rerun() removed to avoid no-op warning
+        # The app will automatically rerun due to session state changes
 
 
 def run_code_analysis_scan():
@@ -1453,11 +1455,13 @@ def run_code_analysis_scan():
         with col1:
             if st.button("Use Flask Example", key="flask_example"):
                 st.session_state.code_github_repo_url = "https://github.com/pallets/flask"
-                st.rerun()
+                # Note: st.rerun() removed from button click to avoid no-op warning
+                # The app will automatically rerun due to session state changes
         with col2:
             if st.button("Use React Example", key="react_example"):
                 st.session_state.code_github_repo_url = "https://github.com/facebook/react"
-                st.rerun()
+                # Note: st.rerun() removed from button click to avoid no-op warning
+                # The app will automatically rerun due to session state changes
         
         # Branch selection
         branch = st.text_input(
@@ -1861,8 +1865,8 @@ def run_code_analysis_scan():
         # Display a success message
         st.success(f"Code analysis completed! Analyzed {scan_results.get('files_analyzed', 0)} files.")
         
-        # Force page refresh to show results
-        st.rerun()
+        # Note: st.rerun() removed to avoid no-op warning
+        # The app will automatically rerun due to session state changes
 
 
 def display_carbon_footprint_overview(scan_results):
@@ -2324,8 +2328,8 @@ def display_sustainability_report(scan_results):
         else:
             current_tab = "cloud"
         
-        # Rerun to show the scan form
-        st.rerun()
+        # Note: st.rerun() removed from button click to avoid no-op warning
+        # The app will automatically rerun due to session state changes
 
 
 def display_cloud_sustainability_report(scan_results):

@@ -566,7 +566,8 @@ def display_report_options(scan_result: Dict[str, Any]):
                             if pdf_data:
                                 st.session_state.pdf_report_data = pdf_data
                                 st.success("PDF report generated! Click the download button.")
-                                st.rerun()
+                                # Note: st.rerun() removed from button click to avoid no-op warning
+                                # The app will automatically rerun due to session state changes
                             else:
                                 st.error("Failed to generate PDF report.")
                         except Exception as e:
@@ -616,7 +617,8 @@ def display_report_options(scan_result: Dict[str, Any]):
                             if html_data:
                                 st.session_state.html_report_data = html_data
                                 st.success("HTML report generated! Click the download button.")
-                                st.rerun()
+                                # Note: st.rerun() removed from button click to avoid no-op warning
+                                # The app will automatically rerun due to session state changes
                             else:
                                 st.error("Failed to generate HTML report.")
                         except Exception as e:

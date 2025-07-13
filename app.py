@@ -194,7 +194,8 @@ def render_landing_page():
                         st.session_state.username = username
                         st.session_state.user_role = "admin" if username in ["admin", "vishaal314", "vishaal314@gmail.com"] else "user"
                         st.success(_('login.success', 'Login successful!'))
-                        st.rerun()
+                        # Note: st.rerun() removed from form submission to avoid no-op warning
+                        # The app will automatically rerun due to session state changes
                     else:
                         st.error(_('login.error.invalid_credentials', 'Invalid credentials. Contact administrator for access.'))
                 else:
@@ -335,7 +336,8 @@ def render_authenticated_interface():
             for key in ['authenticated', 'username', 'user_role']:
                 if key in st.session_state:
                     del st.session_state[key]
-            st.rerun()
+            # Note: st.rerun() removed from button click to avoid no-op warning
+            # The app will automatically rerun due to session state changes
     
     # Main content based on navigation
     if "Dashboard" in selected_nav:

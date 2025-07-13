@@ -210,7 +210,8 @@ def render_soc2_action_buttons(scan_results: Dict[str, Any], key_prefix: str = "
             for key in list(st.session_state.keys()):
                 if 'soc2' in key.lower():
                     del st.session_state[key]
-            st.rerun()
+            # Note: st.rerun() removed from button click to avoid no-op warning
+            # The app will automatically rerun due to session state changes
     
     with action_col3:
         if st.button(f"📊 {_('scan.soc2_view_dashboard', 'View in Dashboard')}", 
@@ -242,4 +243,5 @@ def render_soc2_action_buttons(scan_results: Dict[str, Any], key_prefix: str = "
             }
             st.session_state.scan_history.append(history_entry)
             st.session_state.selected_nav = "Dashboard"
-            st.rerun()
+            # Note: st.rerun() removed from button click to avoid no-op warning
+            # The app will automatically rerun due to session state changes

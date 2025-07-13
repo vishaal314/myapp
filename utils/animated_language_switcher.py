@@ -280,8 +280,8 @@ def animated_language_switcher(
                     # Set a flag to redirect to login
                     st.session_state.redirect_to_login = True
                     
-                    # Force rerun of app
-                    st.rerun()
+                    # Note: st.rerun() removed from button click to avoid no-op warning
+                    # The app will automatically rerun due to session state changes
 
 def get_welcome_message_animation() -> str:
     """

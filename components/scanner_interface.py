@@ -77,7 +77,8 @@ def render_scanner_interface():
                 st.markdown(_("scan.premium_details_description"))
                 if st.button(_("scan.view_upgrade_options")):
                     st.session_state.selected_nav = _("nav.membership")
-                    st.rerun()
+                    # Note: st.rerun() removed from button click to avoid no-op warning
+                    # The app will automatically rerun due to session state changes
     else:
         scan_type = st.selectbox(_("scan.select_type"), scan_type_options)
     
