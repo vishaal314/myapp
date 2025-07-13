@@ -258,7 +258,21 @@
     "scan_metadata": "Scan Metadata",
     "generated_by": "Gegenereerd door",
     "dataGuardian_pro": "DataGuardian Pro",
-    "privacy_compliance_platform": "Privacy Nalevingsplatform"
+    "privacy_compliance_platform": "Privacy Nalevingsplatform",
+    "co2_footprint": "CO₂ Voetafdruk",
+    "energy_usage": "Energieverbruik",
+    "waste_cost": "Afvalkosten",
+    "sustainability_score": "Duurzaamheidsscore",
+    "terminate_zombie_vm": "Zombie VM beëindigen",
+    "delete_orphaned_snapshots": "Wees snapshots verwijderen",
+    "remove_unused_dependencies": "Ongebruikte dependencies verwijderen",
+    "total_quick_wins_impact": "Totale Quick Wins Impact",
+    "gdpr_principles_assessment": "GDPR Principes Beoordeling",
+    "principle": "Principe",
+    "violations_detected": "Overtredingen Gedetecteerd",
+    "status": "Status",
+    "review_required": "Beoordeling Vereist",
+    "compliant": "Conform"
   },
   "admin": {
     "title": "Admin"

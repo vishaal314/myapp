@@ -4474,7 +4474,10 @@ def generate_html_report(scan_results):
     # Translation helper function
     def t(key, default=""):
         """Get translated text based on current language"""
-        return get_text(key, default) if current_lang == 'nl' else default
+        if current_lang == 'nl':
+            return get_text(key, default)
+        else:
+            return default
     
     # Extract enhanced metrics based on scanner type
     if scan_results.get('scan_type') == 'Comprehensive Sustainability Scanner':
@@ -4488,19 +4491,19 @@ def generate_html_report(scan_results):
             <h2>🌍 {t('report.sustainability_report', 'Environmental Impact Analysis')}</h2>
             <div class="metrics-grid">
                 <div class="metric-card">
-                    <h3>CO₂ Footprint</h3>
+                    <h3>{t('report.co2_footprint', 'CO₂ Footprint')}</h3>
                     <p class="metric-value">{scan_results.get('emissions', {}).get('total_co2_kg_month', 0)} kg/month</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Energy Usage</h3>
+                    <h3>{t('report.energy_usage', 'Energy Usage')}</h3>
                     <p class="metric-value">{scan_results.get('emissions', {}).get('total_energy_kwh_month', 0)} kWh/month</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Waste Cost</h3>
+                    <h3>{t('report.waste_cost', 'Waste Cost')}</h3>
                     <p class="metric-value">${scan_results.get('resources', {}).get('total_waste_cost', 0):.2f}/month</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Sustainability Score</h3>
+                    <h3>{t('report.sustainability_score', 'Sustainability Score')}</h3>
                     <p class="metric-value">{scan_results.get('metrics', {}).get('sustainability_score', 0)}/100</p>
                 </div>
             </div>
@@ -4512,11 +4515,11 @@ def generate_html_report(scan_results):
         <div class="quick-wins">
             <h2>⚡ {t('technical_terms.recommendations', 'Quick Wins')}</h2>
             <ul>
-                <li>Terminate zombie VM (saves 29.8 kg CO₂e/month)</li>
-                <li>Delete orphaned snapshots (saves 5.2 kg CO₂e/month)</li>
-                <li>Remove unused dependencies (saves 0.6 kg CO₂e/month)</li>
+                <li>{t('report.terminate_zombie_vm', 'Terminate zombie VM')} (saves 29.8 kg CO₂e/month)</li>
+                <li>{t('report.delete_orphaned_snapshots', 'Delete orphaned snapshots')} (saves 5.2 kg CO₂e/month)</li>
+                <li>{t('report.remove_unused_dependencies', 'Remove unused dependencies')} (saves 0.6 kg CO₂e/month)</li>
             </ul>
-            <p><strong>Total Quick Wins Impact:</strong> 35.6 kg CO₂e/month + $238.82/month</p>
+            <p><strong>{t('report.total_quick_wins_impact', 'Total Quick Wins Impact')}:</strong> 35.6 kg CO₂e/month + $238.82/month</p>
         </div>
         """
         
@@ -4564,20 +4567,20 @@ def generate_html_report(scan_results):
         else:
             uavg_html = ""
         
-        # GDPR Principles breakdown
+        # GDPR Principles breakdown with translations
         principles = scan_results.get('gdpr_principles', {})
         gdpr_principles_html = f"""
         <div class="gdpr-principles">
-            <h2>📋 GDPR Principles Assessment</h2>
+            <h2>📋 {t('report.gdpr_principles_assessment', 'GDPR Principles Assessment')}</h2>
             <table>
-                <tr><th>Principle</th><th>Violations Detected</th><th>Status</th></tr>
-                <tr><td>Lawfulness, Fairness, Transparency</td><td>{principles.get('lawfulness', 0)}</td><td>{'⚠️ Review Required' if principles.get('lawfulness', 0) > 0 else '✅ Compliant'}</td></tr>
-                <tr><td>Data Minimization</td><td>{principles.get('data_minimization', 0)}</td><td>{'⚠️ Review Required' if principles.get('data_minimization', 0) > 0 else '✅ Compliant'}</td></tr>
-                <tr><td>Accuracy</td><td>{principles.get('accuracy', 0)}</td><td>{'⚠️ Review Required' if principles.get('accuracy', 0) > 0 else '✅ Compliant'}</td></tr>
-                <tr><td>Storage Limitation</td><td>{principles.get('storage_limitation', 0)}</td><td>{'⚠️ Review Required' if principles.get('storage_limitation', 0) > 0 else '✅ Compliant'}</td></tr>
-                <tr><td>Integrity & Confidentiality</td><td>{principles.get('integrity_confidentiality', 0)}</td><td>{'⚠️ Review Required' if principles.get('integrity_confidentiality', 0) > 0 else '✅ Compliant'}</td></tr>
-                <tr><td>Transparency</td><td>{principles.get('transparency', 0)}</td><td>{'⚠️ Review Required' if principles.get('transparency', 0) > 0 else '✅ Compliant'}</td></tr>
-                <tr><td>Accountability</td><td>{principles.get('accountability', 0)}</td><td>{'⚠️ Review Required' if principles.get('accountability', 0) > 0 else '✅ Compliant'}</td></tr>
+                <tr><th>{t('report.principle', 'Principle')}</th><th>{t('report.violations_detected', 'Violations Detected')}</th><th>{t('report.status', 'Status')}</th></tr>
+                <tr><td>{t('technical_terms.lawfulness', 'Lawfulness, Fairness, Transparency')}</td><td>{principles.get('lawfulness', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('lawfulness', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.data_minimization', 'Data Minimization')}</td><td>{principles.get('data_minimization', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('data_minimization', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.accuracy', 'Accuracy')}</td><td>{principles.get('accuracy', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('accuracy', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.storage_limitation', 'Storage Limitation')}</td><td>{principles.get('storage_limitation', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('storage_limitation', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.integrity_confidentiality', 'Integrity & Confidentiality')}</td><td>{principles.get('integrity_confidentiality', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('integrity_confidentiality', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.transparency', 'Transparency')}</td><td>{principles.get('transparency', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('transparency', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.accountability', 'Accountability')}</td><td>{principles.get('accountability', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('accountability', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
             </table>
         </div>
         """
@@ -4806,7 +4809,10 @@ def generate_findings_html(findings):
     # Translation helper function
     def t(key, default=""):
         """Get translated text based on current language"""
-        return get_text(key, default) if current_lang == 'nl' else default
+        if current_lang == 'nl':
+            return get_text(key, default)
+        else:
+            return default
     
     if not findings:
         return f"<p>✅ {t('report.no_issues_found', 'No issues found in the analysis.')}</p>"
