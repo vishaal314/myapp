@@ -150,10 +150,11 @@ def render_login_interface():
         if selected_language != current_language:
             st.session_state['language'] = selected_language
             st.session_state['_persistent_language'] = selected_language
-            from utils.i18n import set_language
+            from utils.i18n import set_language, initialize
             set_language(selected_language)
-            # Note: st.rerun() removed from callback to avoid no-op warning
-            # The app will automatically rerun due to session state changes
+            initialize()
+            # Force app rerun to refresh all translations
+            st.rerun()
 
     # Authentication sidebar with professional colorful design
     with st.sidebar:

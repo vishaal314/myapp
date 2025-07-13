@@ -331,8 +331,8 @@ def render_authenticated_interface():
             for key in ['authenticated', 'username', 'user_role']:
                 if key in st.session_state:
                     del st.session_state[key]
-            # Note: st.rerun() removed from button click to avoid no-op warning
-            # The app will automatically rerun due to session state changes
+            # Force app rerun to refresh after logout
+            st.rerun()
     
     # Main content based on navigation
     if "Dashboard" in selected_nav:

@@ -250,8 +250,9 @@ def language_selector(key_suffix: str = None) -> None:
             # Force complete reinitialization
             initialize()
             
-            # Note: st.rerun() removed from callback to avoid no-op warning
-            # The app will automatically rerun due to session state changes
+            # Force a complete app rerun to refresh all translations
+            # This is necessary to ensure all UI components display the new language
+            st.rerun()
     
     # Create a compact container for the language selector
     with st.container():
