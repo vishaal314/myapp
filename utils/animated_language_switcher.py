@@ -237,7 +237,7 @@ def animated_language_switcher(
                 label_visibility="collapsed"  # Hide the label but still provide it for accessibility
             )
             
-            # If language changed, update it
+            # If language changed, update it (without st.rerun() to avoid no-op warning)
             if selected_lang != current_lang:
                 # Update language in session state
                 st.session_state.language = selected_lang
@@ -249,8 +249,8 @@ def animated_language_switcher(
                 # Set a flag to redirect to login
                 st.session_state.redirect_to_login = True
                 
-                # Force rerun of app to update all UI elements
-                st.rerun()
+                # Note: st.rerun() removed to avoid no-op warning
+                # The app will automatically rerun due to session state changes
         
         # Dropdown-based selector (fallback)
         else:

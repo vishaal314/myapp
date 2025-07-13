@@ -221,7 +221,7 @@ def language_selector(key_suffix: str = None) -> None:
     current_lang = st.session_state.get('language', 'en')
     selector_key = f"lang_selector_{key_suffix}"
     
-    # Define callback for language change - with enhanced persistence
+    # Define callback for language change - without st.rerun() to avoid no-op warning
     def on_language_change():
         new_lang = st.session_state[selector_key]
         if new_lang != current_lang:
@@ -250,8 +250,8 @@ def language_selector(key_suffix: str = None) -> None:
             # Force complete reinitialization
             initialize()
             
-            # Force rerun of app to update all UI elements
-            st.rerun()  # Force immediate rerun
+            # Note: st.rerun() removed from callback to avoid no-op warning
+            # The app will automatically rerun due to session state changes
     
     # Create a compact container for the language selector
     with st.container():
@@ -265,35 +265,8 @@ def language_selector(key_suffix: str = None) -> None:
             on_change=on_language_change
         )
         
-        # Add a secondary way to change language with a button for more reliable updates
-        cols = st.columns([3, 1])
-        with cols[1]:
-            if selected_lang != current_lang:
-                if st.button("✓ Apply", key=f"apply_lang_{key_suffix}"):
-                    print(f"APPLY BUTTON - Language change: {current_lang} -> {selected_lang}")
-                    
-                    # Store language redundantly in ALL possible locations
-                    st.session_state['language'] = selected_lang
-                    st.session_state['_persistent_language'] = selected_lang
-                    st.session_state['pre_login_language'] = selected_lang
-                    st.session_state['backup_language'] = selected_lang
-                    st.session_state['force_language_after_login'] = selected_lang
-                    
-                    # Set reload translations flag to force full reinitialization
-                    st.session_state['reload_translations'] = True
-                    
-                    # Clear existing translations completely
-                    global _translations
-                    _translations = {}
-                    
-                    # Load translations directly
-                    set_language(selected_lang)
-                    
-                    # Force full reinitialization
-                    initialize()
-                    
-                    # Force rerun
-                    st.rerun()
+        # Language change will be handled automatically by the selectbox callback
+        # No additional button needed since the callback handles the state change
 
 # Initialize translations - COMPLETELY FIXED VERSION
 def detect_browser_language() -> str:
