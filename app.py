@@ -15,6 +15,12 @@ import re
 import concurrent.futures
 from datetime import datetime
 
+# Performance optimization imports
+from utils.database_optimizer import get_optimized_db
+from utils.redis_cache import get_cache, get_scan_cache, get_session_cache, get_performance_cache
+from utils.session_optimizer import get_streamlit_session, get_session_optimizer
+from utils.code_profiler import get_profiler, profile_function, monitor_performance
+
 # Configure basic logging
 logging.basicConfig(
     level=logging.INFO,
@@ -22,6 +28,45 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+# Initialize performance optimizations with fallbacks
+try:
+    # Initialize optimized database
+    db_optimizer = get_optimized_db()
+    redis_cache = get_cache()
+    scan_cache = get_scan_cache()
+    session_cache = get_session_cache()
+    performance_cache = get_performance_cache()
+    session_optimizer = get_session_optimizer()
+    streamlit_session = get_streamlit_session()
+    profiler = get_profiler()
+    
+    logger.info("Performance optimizations initialized successfully")
+    
+except Exception as e:
+    logger.warning(f"Performance optimization initialization failed: {e}")
+    # Create fallback implementations
+    class FallbackCache:
+        def get(self, key, default=None): return default
+        def set(self, key, value, ttl=None): return True
+        def delete(self, key): return True
+    
+    class FallbackSession:
+        def init_session(self, user_id, user_data): pass
+        def track_scan_activity(self, activity, data): pass
+    
+    class FallbackProfiler:
+        def track_activity(self, session_id, activity, data): pass
+    
+    # Initialize fallback objects
+    redis_cache = FallbackCache()
+    scan_cache = FallbackCache()
+    session_cache = FallbackCache()
+    performance_cache = FallbackCache()
+    streamlit_session = FallbackSession()
+    profiler = FallbackProfiler()
+    
+    logger.info("Using fallback performance implementations")
 
 def safe_import(module_name, from_list=None):
     """Safely import modules with error handling"""
@@ -51,40 +96,70 @@ def _(key, default=None):
     """Shorthand for get_text"""
     return get_text(key, default)
 
+@profile_function("main_application")
 def main():
-    """Main application entry point with comprehensive error handling"""
+    """Main application entry point with comprehensive error handling and performance optimization"""
     
-    try:
-        # Initialize internationalization and basic session state
-        from utils.i18n import initialize, detect_browser_language
-        
-        # Detect and set appropriate language
-        if 'language' not in st.session_state:
-            detected_lang = detect_browser_language()
-            st.session_state.language = detected_lang
-        
-        # Initialize i18n system
-        initialize()
-        
-        if 'authenticated' not in st.session_state:
-            st.session_state.authenticated = False
-        
-        # Check authentication status directly
-        if not st.session_state.authenticated:
-            render_landing_page()
-            return
-        
-        # Authenticated user interface
-        render_authenticated_interface()
-        
-    except Exception as e:
-        # Comprehensive error handling
-        st.error("Application encountered an issue. Loading in safe mode.")
-        st.write("**Error Details:**")
-        st.code(f"{type(e).__name__}: {str(e)}")
-        
-        # Fallback to basic interface
-        render_safe_mode()
+    with monitor_performance("main_app_initialization"):
+        try:
+            # Initialize internationalization and basic session state
+            from utils.i18n import initialize, detect_browser_language
+            
+            # Detect and set appropriate language (cached)
+            if 'language' not in st.session_state:
+                try:
+                    cached_lang = session_cache.get(f"browser_lang_{st.session_state.get('session_id', 'anonymous')}")
+                    if cached_lang:
+                        detected_lang = cached_lang
+                    else:
+                        detected_lang = detect_browser_language()
+                        session_cache.cache.set(f"browser_lang_{st.session_state.get('session_id', 'anonymous')}", detected_lang, 3600)
+                except Exception as e:
+                    logger.warning(f"Cache error, using fallback: {e}")
+                    detected_lang = detect_browser_language()
+                
+                st.session_state.language = detected_lang
+            
+            # Initialize i18n system (cached)
+            initialize()
+            
+            if 'authenticated' not in st.session_state:
+                st.session_state.authenticated = False
+            
+            # Initialize session optimization for authenticated users
+            if st.session_state.authenticated and 'session_id' not in st.session_state:
+                user_data = {
+                    'username': st.session_state.get('username', 'unknown'),
+                    'user_role': st.session_state.get('user_role', 'user'),
+                    'language': st.session_state.get('language', 'en')
+                }
+                streamlit_session.init_session(st.session_state.get('username', 'unknown'), user_data)
+            
+            # Check authentication status directly
+            if not st.session_state.authenticated:
+                render_landing_page()
+                return
+            
+            # Track page view activity
+            if 'session_id' in st.session_state:
+                streamlit_session.track_scan_activity('page_view', {'page': 'dashboard'})
+            
+            # Authenticated user interface
+            render_authenticated_interface()
+            
+        except Exception as e:
+            # Comprehensive error handling with profiling
+            profiler.track_activity(st.session_state.get('session_id', 'unknown'), 'error', {
+                'error_type': type(e).__name__,
+                'error_message': str(e)
+            })
+            
+            st.error("Application encountered an issue. Loading in safe mode.")
+            st.write("**Error Details:**")
+            st.code(f"{type(e).__name__}: {str(e)}")
+            
+            # Fallback to basic interface
+            render_safe_mode()
 
 def render_landing_page():
     """Render the beautiful landing page and login interface"""
@@ -221,8 +296,9 @@ def render_landing_page():
     </div>
     """, unsafe_allow_html=True)
 
+@profile_function("authenticated_interface")  
 def render_authenticated_interface():
-    """Render the main authenticated user interface"""
+    """Render the main authenticated user interface with performance optimization"""
     
     username = st.session_state.get('username', 'User')
     user_role = st.session_state.get('user_role', 'user')
@@ -244,7 +320,7 @@ def render_authenticated_interface():
             f"⚙️ {_('sidebar.settings', 'Settings')}"
         ]
         if user_role == "admin":
-            nav_options.append(f"👥 {_('admin.title', 'Admin')}")
+            nav_options.extend([f"👥 {_('admin.title', 'Admin')}", "📈 Performance Dashboard"])
         
         selected_nav = st.selectbox(_('sidebar.navigation', 'Navigation'), nav_options, key="navigation")
         
@@ -274,6 +350,8 @@ def render_authenticated_interface():
         render_settings_page()
     elif "Admin" in selected_nav:
         render_admin_page()
+    elif "Performance Dashboard" in selected_nav:
+        render_performance_dashboard_safe()
 
 def render_dashboard():
     """Render the main dashboard with translations"""
@@ -4917,6 +4995,15 @@ def render_settings_page():
     """Render settings page"""
     st.title("⚙️ Settings")
     st.info("User preferences, API configurations, and compliance settings.")
+
+def render_performance_dashboard_safe():
+    """Render performance dashboard with error handling"""
+    try:
+        from utils.performance_dashboard import render_performance_dashboard
+        render_performance_dashboard()
+    except Exception as e:
+        st.error(f"Performance dashboard unavailable: {e}")
+        st.info("Performance monitoring is temporarily unavailable. Please try again later.")
 
 def render_admin_page():
     """Render admin page"""
