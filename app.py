@@ -941,9 +941,6 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         
         scan_results['compliance_score'] = compliance_score
         
-        # Debug: Log compliance score calculation
-        print(f"DEBUG: Compliance score calculated: {compliance_score}% (Total findings: {total_findings}, Critical: {critical_findings}, High: {high_findings})")
-        
         # Generate certification type based on compliance
         if compliance_score >= 90:
             cert_type = "GDPR Compliant - Green Certificate"
