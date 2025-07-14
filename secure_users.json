@@ -22,5 +22,17 @@
     "last_login": null,
     "failed_attempts": 0,
     "locked_until": null
+  },
+  "vishaal314": {
+    "user_id": "vishaal314_1bfc0314036d89d7",
+    "username": "vishaal314",
+    "password_hash": "$2b$12$0kqPK/Q/PsaLpcx4GJaT6O1tibNcIBk.n6pst6gvkgtb7SLBOytNC",
+    "role": "admin",
+    "email": "vishaal314@gmail.com",
+    "active": true,
+    "created_at": "2025-07-14T20:59:05.844027",
+    "last_login": null,
+    "failed_attempts": 0,
+    "locked_until": null
   }
 }
