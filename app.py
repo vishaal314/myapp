@@ -80,9 +80,34 @@ def safe_import(module_name, from_list=None):
         logger.error(f"Failed to import {module_name}: {e}")
         return None
 
-# Simplified authentication functions
+# Enhanced authentication functions with JWT
 def is_authenticated():
-    return st.session_state.get('authenticated', False)
+    """Check if user is authenticated using JWT token"""
+    token = st.session_state.get('auth_token')
+    if not token:
+        return False
+    
+    try:
+        from utils.secure_auth_enhanced import validate_token
+        auth_result = validate_token(token)
+        if auth_result.success:
+            # Update session with validated user info
+            st.session_state['authenticated'] = True
+            st.session_state['username'] = auth_result.username
+            st.session_state['user_role'] = auth_result.role
+            st.session_state['user_id'] = auth_result.user_id
+            return True
+        else:
+            # Clear invalid session
+            st.session_state['authenticated'] = False
+            st.session_state.pop('auth_token', None)
+            st.session_state.pop('username', None)
+            st.session_state.pop('user_role', None)
+            st.session_state.pop('user_id', None)
+            return False
+    except Exception as e:
+        logger.error(f"Authentication check failed: {e}")
+        return False
 
 def get_text(key, default=None):
     """Get translated text with proper i18n support"""
@@ -141,8 +166,8 @@ def main():
                 }
                 streamlit_session.init_session(st.session_state.get('username', 'unknown'), user_data)
             
-            # Check authentication status directly
-            if not st.session_state.authenticated:
+            # Check authentication status with JWT validation
+            if not is_authenticated():
                 render_landing_page()
                 return
             
@@ -186,18 +211,21 @@ def render_landing_page():
             
             if submit:
                 if username and password:
-                    # Secure authentication system using environment variables
-                    from utils.secure_auth import validate_credentials, get_user_role
+                    # Enhanced secure authentication with JWT tokens
+                    from utils.secure_auth_enhanced import authenticate_user
+                    auth_result = authenticate_user(username, password)
                     
-                    if validate_credentials(username, password):
+                    if auth_result.success:
                         st.session_state.authenticated = True
-                        st.session_state.username = username
-                        st.session_state.user_role = get_user_role(username)
+                        st.session_state.username = auth_result.username
+                        st.session_state.user_role = auth_result.role
+                        st.session_state.user_id = auth_result.user_id
+                        st.session_state.auth_token = auth_result.token
                         st.success(_('login.success', 'Login successful!'))
                         # Note: st.rerun() removed from form submission to avoid no-op warning
                         # The app will automatically rerun due to session state changes
                     else:
-                        st.error(_('login.error.invalid_credentials', 'Invalid credentials. Contact administrator for access.'))
+                        st.error(f"{_('login.error.invalid_credentials', 'Authentication failed')}: {auth_result.message}")
                 else:
                     st.error(_('login.error.missing_fields', 'Please enter username and password'))
         

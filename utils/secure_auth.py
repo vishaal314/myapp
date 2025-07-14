@@ -18,16 +18,12 @@ def get_valid_credentials() -> Dict[str, str]:
     # Get credentials from environment variable
     auth_credentials = os.getenv('AUTH_CREDENTIALS', '')
     
-    # Fallback to default credentials if environment variable is not set
+    # Fallback to secure defaults if environment variable is not set
     if not auth_credentials:
-        logger.warning("AUTH_CREDENTIALS not set, using default credentials")
-        return {
-            "admin": "password",
-            "user": "password", 
-            "demo": "demo",
-            "vishaal314": "fim48uKu",
-            "vishaal314@gmail.com": "fim48uKu"
-        }
+        logger.error("AUTH_CREDENTIALS not set, no authentication possible")
+        logger.error("Please set AUTH_CREDENTIALS environment variable")
+        logger.error("Example: AUTH_CREDENTIALS=admin:secure_password,user:user_password")
+        return {}
     
     # Parse credentials from environment variable
     credentials = {}
@@ -52,10 +48,12 @@ def get_admin_users() -> List[str]:
     """
     admin_users = os.getenv('ADMIN_USERS', '')
     
-    # Fallback to default admin users
+    # Fallback to secure defaults if environment variable is not set
     if not admin_users:
-        logger.warning("ADMIN_USERS not set, using default admin users")
-        return ["admin", "vishaal314", "vishaal314@gmail.com"]
+        logger.error("ADMIN_USERS not set, no admin users available")
+        logger.error("Please set ADMIN_USERS environment variable")
+        logger.error("Example: ADMIN_USERS=admin,security_admin")
+        return []
     
     # Parse admin users from environment variable
     try:

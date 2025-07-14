@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "aiohttp>=3.12.13",
     "anthropic>=0.53.0",
+    "bcrypt>=4.3.0",
     "beautifulsoup4>=4.8.2",
     "cachetools>=5.5.2",
     "dnspython>=2.7.0",
@@ -18,7 +19,9 @@ dependencies = [
     "psycopg2-binary>=2.9.10",
     "psycopg2-pool>=1.2",
     "py-spy>=0.4.0",
+    "pyjwt>=2.10.1",
     "pypdf2>=3.0.1",
+    "python-jose>=3.5.0",
     "python-whois>=0.9.5",
     "pyyaml>=6.0.2",
     "redis>=6.2.0",
