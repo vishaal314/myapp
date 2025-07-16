@@ -576,6 +576,30 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         import hashlib
         import math
         import time
+        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        
+        # Get session information
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Track scan start
+        scan_start_time = datetime.now()
+        track_scan_started(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.CODE,
+            region=region,
+            details={
+                'source_type': 'uploaded_files' if uploaded_files else 'repository' if repo_url else 'directory',
+                'repo_url': repo_url,
+                'directory_path': directory_path,
+                'include_comments': include_comments,
+                'detect_secrets': detect_secrets,
+                'gdpr_compliance': gdpr_compliance,
+                'netherlands_uavg': region == "Netherlands"
+            }
+        )
         
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -1081,9 +1105,49 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
             mime="text/html"
         )
         
+        # Calculate scan metrics and track completion
+        scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+        findings_count = len(all_findings)
+        high_risk_count = sum(1 for f in all_findings if f.get('severity') in ['Critical', 'High'])
+        
+        # Track successful completion
+        track_scan_completed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.CODE,
+            findings_count=findings_count,
+            files_scanned=scan_results['files_scanned'],
+            compliance_score=compliance_score,
+            duration_ms=scan_duration,
+            region=region,
+            details={
+                'scan_id': scan_results['scan_id'],
+                'high_risk_count': high_risk_count,
+                'total_lines': scan_results['total_lines'],
+                'gdpr_compliance': gdpr_compliance,
+                'netherlands_uavg': region == "Netherlands",
+                'breach_notification_required': scan_results.get('breach_notification_required', False),
+                'bsn_detected': uavg_critical > 0 if region == "Netherlands" else False
+            }
+        )
+        
         st.success("✅ GDPR-compliant code scan completed!")
         
     except Exception as e:
+        # Track scan failure
+        track_scan_failed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.CODE,
+            error_message=str(e),
+            region=region,
+            details={
+                'gdpr_compliance': gdpr_compliance,
+                'netherlands_uavg': region == "Netherlands"
+            }
+        )
         st.error(f"GDPR scan failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
