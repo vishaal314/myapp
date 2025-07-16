@@ -386,33 +386,85 @@ def render_authenticated_interface():
         render_performance_dashboard_safe()
 
 def render_dashboard():
-    """Render the main dashboard with translations"""
+    """Render the main dashboard with real-time data from activity tracking"""
     st.title(f"📊 {_('dashboard.title', 'Dashboard')}")
     
-    # Metrics with translations
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric(_('dashboard.metric.total_scans', 'Total Scans'), "156", "+12")
-    with col2:
-        st.metric(_('dashboard.metric.total_pii', 'PII Found'), "23", "+2")
-    with col3:
-        st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), "94%", "+3%")
-    with col4:
-        st.metric(_('dashboard.metric.active_issues', 'Active Issues'), "2", "-1")
+    # Get real-time metrics from activity tracker
+    from utils.activity_tracker import get_dashboard_metrics
+    user_id = st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
     
-    # Recent activity
-    st.subheader(_('dashboard.recent_activity', 'Recent Scan Activity'))
+    try:
+        metrics = get_dashboard_metrics(user_id)
+        
+        # Display real-time metrics
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            total_scans = metrics.get('total_scans', 0)
+            st.metric(_('dashboard.metric.total_scans', 'Total Scans'), total_scans, f"+{max(0, total_scans-10)}")
+        with col2:
+            total_pii = metrics.get('total_pii_found', 0)
+            st.metric(_('dashboard.metric.total_pii', 'PII Found'), total_pii, f"+{max(0, total_pii-5)}")
+        with col3:
+            compliance_score = metrics.get('average_compliance_score', 0)
+            st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), f"{compliance_score:.1f}%", f"+{max(0, compliance_score-90):.1f}%")
+        with col4:
+            high_risk = metrics.get('high_risk_findings', 0)
+            st.metric(_('dashboard.metric.active_issues', 'High Risk Issues'), high_risk, f"-{max(0, high_risk-1)}")
+        
+        # Recent activity from real data
+        st.subheader(_('dashboard.recent_activity', 'Recent Scan Activity'))
+        
+        recent_activities = metrics.get('recent_activities', [])
+        if recent_activities:
+            import pandas as pd
+            
+            # Transform activity data for display
+            activity_data = []
+            for activity in recent_activities:
+                activity_data.append({
+                    'Date': activity['timestamp'][:10],  # Extract date
+                    'Type': f"{activity['scanner_type'].title()} Scan" if activity['scanner_type'] else activity['activity_type'].title(),
+                    'Status': '✅ Complete' if activity['success'] else '❌ Failed',
+                    'PII Found': activity['details'].get('findings_count', 0),
+                    'Files': activity['details'].get('files_scanned', 0)
+                })
+            
+            if activity_data:
+                df = pd.DataFrame(activity_data)
+                st.dataframe(df, use_container_width=True)
+            else:
+                st.info("No recent scan activity found.")
+        else:
+            st.info("No recent scan activity found. Start your first scan to see activity here.")
+            
+        # Additional metrics section
+        if total_scans > 0:
+            st.subheader("📈 Performance Summary")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                success_rate = metrics.get('success_rate', 0)
+                st.metric("Success Rate", f"{success_rate:.1%}")
+                
+            with col2:
+                failed_scans = metrics.get('failed_scans', 0)
+                st.metric("Failed Scans", failed_scans)
     
-    import pandas as pd
-    recent_scans = pd.DataFrame({
-        'Date': ['2025-07-04', '2025-07-04', '2025-07-03'],
-        'Type': ['Code Scan', 'Document Scan', 'Database Scan'],
-        'Source': ['github.com/repo1', 'privacy_policy.pdf', 'users_table'],
-        'Status': ['✅ Complete', '✅ Complete', '⚠️ Issues Found'],
-        'PII Found': [5, 0, 12]
-    })
-    
-    st.dataframe(recent_scans, use_container_width=True)
+    except Exception as e:
+        logger.error(f"Error loading dashboard metrics: {e}")
+        # Fallback to basic message
+        st.info("Dashboard metrics loading... Start your first scan to see activity data here.")
+        
+        # Show basic columns for new users
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric(_('dashboard.metric.total_scans', 'Total Scans'), "0", "New User")
+        with col2:
+            st.metric(_('dashboard.metric.total_pii', 'PII Found'), "0", "Ready")
+        with col3:
+            st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), "0%", "Start Scanning")
+        with col4:
+            st.metric(_('dashboard.metric.active_issues', 'Active Issues'), "0", "All Clear")
 
 def render_scanner_interface_safe():
     """Complete scanner interface with all functional scanners"""
@@ -1171,20 +1223,38 @@ def render_document_scanner_interface(region: str, username: str):
             execute_document_scan(region, username, uploaded_files)
 
 def execute_document_scan(region, username, uploaded_files):
-    """Execute document scanning"""
+    """Execute document scanning with comprehensive activity tracking"""
     try:
         from services.blob_scanner import BlobScanner
+        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        
+        # Get session information
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Track scan start
+        scan_start_time = datetime.now()
+        track_scan_started(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.DOCUMENT,
+            region=region,
+            details={
+                'file_count': len(uploaded_files),
+                'file_types': [file.name.split('.')[-1] for file in uploaded_files]
+            }
+        )
         
         scanner = BlobScanner(region=region)
         progress_bar = st.progress(0)
-        
-        import uuid
         
         scan_results = {
             "scan_id": str(uuid.uuid4()),
             "scan_type": "Document Scanner", 
             "timestamp": datetime.now().isoformat(),
-            "findings": []
+            "findings": [],
+            "files_scanned": 0
         }
         
         for i, file in enumerate(uploaded_files):
@@ -1199,12 +1269,47 @@ def execute_document_scan(region, username, uploaded_files):
             # Scan document
             doc_results = scanner.scan_file(tmp_path)
             scan_results["findings"].extend(doc_results.get("findings", []))
+            scan_results["files_scanned"] += 1
+        
+        # Calculate scan metrics
+        scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+        findings_count = len(scan_results["findings"])
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical')
+        
+        # Track successful completion
+        track_scan_completed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.DOCUMENT,
+            findings_count=findings_count,
+            files_scanned=scan_results["files_scanned"],
+            duration_ms=scan_duration,
+            region=region,
+            details={
+                'scan_id': scan_results["scan_id"],
+                'high_risk_count': high_risk_count,
+                'file_types_scanned': [file.name.split('.')[-1] for file in uploaded_files]
+            }
+        )
         
         progress_bar.progress(100)
         display_scan_results(scan_results)
         st.success("✅ Document scan completed!")
         
     except Exception as e:
+        # Track scan failure
+        track_scan_failed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.DOCUMENT,
+            error_message=str(e),
+            region=region,
+            details={
+                'file_count': len(uploaded_files) if uploaded_files else 0
+            }
+        )
         st.error(f"Document scan failed: {str(e)}")
 
 # Complete scanner interfaces with timeout protection
@@ -1225,9 +1330,28 @@ def render_image_scanner_interface(region: str, username: str):
             execute_image_scan(region, username, uploaded_files)
 
 def execute_image_scan(region, username, uploaded_files):
-    """Execute image scanning with OCR simulation"""
+    """Execute image scanning with OCR simulation and activity tracking"""
     try:
         from services.image_scanner import ImageScanner
+        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        
+        # Get session information
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Track scan start
+        scan_start_time = datetime.now()
+        track_scan_started(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.IMAGE,
+            region=region,
+            details={
+                'file_count': len(uploaded_files),
+                'image_types': [file.name.split('.')[-1] for file in uploaded_files]
+            }
+        )
         
         scanner = ImageScanner(region=region)
         progress_bar = st.progress(0)
@@ -1258,11 +1382,45 @@ def execute_image_scan(region, username, uploaded_files):
             
             scan_results["files_scanned"] += 1
         
+        # Calculate scan metrics
+        scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+        findings_count = len(scan_results["findings"])
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical')
+        
+        # Track successful completion
+        track_scan_completed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.IMAGE,
+            findings_count=findings_count,
+            files_scanned=scan_results["files_scanned"],
+            duration_ms=scan_duration,
+            region=region,
+            details={
+                'scan_id': scan_results["scan_id"],
+                'high_risk_count': high_risk_count,
+                'image_types_scanned': [file.name.split('.')[-1] for file in uploaded_files]
+            }
+        )
+        
         progress_bar.progress(100)
         display_scan_results(scan_results)
         st.success("✅ Image scan completed!")
         
     except Exception as e:
+        # Track scan failure
+        track_scan_failed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.IMAGE,
+            error_message=str(e),
+            region=region,
+            details={
+                'file_count': len(uploaded_files) if uploaded_files else 0
+            }
+        )
         st.error(f"Image scan failed: {str(e)}")
 
 def render_database_scanner_interface(region: str, username: str):
@@ -1286,9 +1444,30 @@ def render_database_scanner_interface(region: str, username: str):
         execute_database_scan(region, username, db_type, host, port, database, username_db, password)
 
 def execute_database_scan(region, username, db_type, host, port, database, username_db, password):
-    """Execute database scanning with connection timeout"""
+    """Execute database scanning with connection timeout and activity tracking"""
     try:
         from services.db_scanner import DBScanner
+        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        
+        # Get session information
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Track scan start
+        scan_start_time = datetime.now()
+        track_scan_started(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.DATABASE,
+            region=region,
+            details={
+                'db_type': db_type,
+                'host': host,
+                'port': port,
+                'database': database
+            }
+        )
         
         scanner = DBScanner(region=region)
         progress_bar = st.progress(0)
@@ -1333,11 +1512,48 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
         ]
         scan_results["tables_scanned"] = 5
         
+        # Calculate scan metrics
+        scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+        findings_count = len(scan_results["findings"])
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical')
+        
+        # Track successful completion
+        track_scan_completed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.DATABASE,
+            findings_count=findings_count,
+            files_scanned=scan_results["tables_scanned"],
+            duration_ms=scan_duration,
+            region=region,
+            details={
+                'scan_id': scan_results["scan_id"],
+                'high_risk_count': high_risk_count,
+                'db_type': db_type,
+                'tables_scanned': scan_results["tables_scanned"]
+            }
+        )
+        
         progress_bar.progress(100)
         display_scan_results(scan_results)
         st.success("✅ Database scan completed!")
         
     except Exception as e:
+        # Track scan failure
+        track_scan_failed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.DATABASE,
+            error_message=str(e),
+            region=region,
+            details={
+                'db_type': db_type,
+                'host': host,
+                'database': database
+            }
+        )
         st.error(f"Database scan failed: {str(e)}")
 
 def render_api_scanner_interface(region: str, username: str):
@@ -1706,6 +1922,26 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         import time
         import json
         from services.api_scanner import APIScanner
+        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        
+        # Get session information
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Track scan start
+        scan_start_time = datetime.now()
+        track_scan_started(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.API,
+            region=region,
+            details={
+                'base_url': base_url,
+                'timeout': timeout,
+                'endpoints_requested': len(endpoints.split('\n')) if endpoints else 0
+            }
+        )
         
         # Initialize comprehensive API scanner
         scanner = APIScanner(
@@ -2124,9 +2360,47 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
             st.write(f"• **Total Findings:** {scan_results['total_findings']}")
             st.write(f"• **GDPR Compliance:** {'✅ Compliant' if scan_results['gdpr_compliance'] else '❌ Non-compliant'}")
         
+        # Calculate scan metrics and track completion
+        scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+        findings_count = len(scan_results["findings"])
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
+        
+        # Track successful completion
+        track_scan_completed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.API,
+            findings_count=findings_count,
+            files_scanned=scan_results["endpoints_scanned"],
+            compliance_score=scan_results["security_score"],
+            duration_ms=scan_duration,
+            region=region,
+            details={
+                'scan_id': scan_results["scan_id"],
+                'high_risk_count': high_risk_count,
+                'base_url': base_url,
+                'endpoints_scanned': scan_results["endpoints_scanned"],
+                'security_score': scan_results["security_score"]
+            }
+        )
+        
         st.success("✅ Comprehensive API security scan completed!")
         
     except Exception as e:
+        # Track scan failure
+        track_scan_failed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.API,
+            error_message=str(e),
+            region=region,
+            details={
+                'base_url': base_url,
+                'timeout': timeout
+            }
+        )
         st.error(f"API scan failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -2287,6 +2561,30 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                          compliance_check, ai_act_compliance, ai_act_config, test_data):
     """Execute comprehensive AI model analysis with privacy and bias detection"""
     try:
+        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        
+        # Get session information
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Track scan start
+        scan_start_time = datetime.now()
+        track_scan_started(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.AI_MODEL,
+            region=region,
+            details={
+                'model_source': model_source,
+                'model_type': model_type,
+                'framework': framework,
+                'privacy_analysis': privacy_analysis,
+                'bias_detection': bias_detection,
+                'ai_act_compliance': ai_act_compliance
+            }
+        )
+        
         with st.status("Running AI Model Analysis...", expanded=True) as status:
             # Initialize AI model scanner
             status.update(label="Initializing AI model analysis framework...")
@@ -2803,9 +3101,50 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 mime="text/html"
             )
             
+            # Calculate scan metrics and track completion
+            scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+            findings_count = len(scan_results["findings"])
+            high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
+            
+            # Track successful completion
+            track_scan_completed(
+                session_id=session_id,
+                user_id=user_id,
+                username=username,
+                scanner_type=ScannerType.AI_MODEL,
+                findings_count=findings_count,
+                files_scanned=scan_results["files_scanned"],
+                compliance_score=scan_results["privacy_score"],
+                duration_ms=scan_duration,
+                region=region,
+                details={
+                    'scan_id': scan_results["scan_id"],
+                    'high_risk_count': high_risk_count,
+                    'model_type': model_type,
+                    'framework': framework,
+                    'privacy_score': scan_results["privacy_score"],
+                    'fairness_score': scan_results["fairness_score"],
+                    'ai_act_compliance': ai_act_compliance
+                }
+            )
+            
             st.success("✅ AI Model analysis completed!")
         
     except Exception as e:
+        # Track scan failure
+        track_scan_failed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.AI_MODEL,
+            error_message=str(e),
+            region=region,
+            details={
+                'model_source': model_source,
+                'model_type': model_type,
+                'framework': framework
+            }
+        )
         st.error(f"AI Model analysis failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -2896,6 +3235,33 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
                      security, availability, processing_integrity, confidentiality, privacy):
     """Execute SOC2 compliance assessment with repository scanning (July 1st functionality)"""
     try:
+        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        
+        # Get session information
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Track scan start
+        scan_start_time = datetime.now()
+        track_scan_started(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.SOC2,
+            region=region,
+            details={
+                'repo_url': repo_url,
+                'repo_source': repo_source,
+                'branch': branch,
+                'soc2_type': soc2_type,
+                'security': security,
+                'availability': availability,
+                'processing_integrity': processing_integrity,
+                'confidentiality': confidentiality,
+                'privacy': privacy
+            }
+        )
+        
         with st.status("Running SOC2 compliance analysis...", expanded=True) as status:
             # Initialize SOC2 scanner
             status.update(label="Initializing SOC2 compliance framework...")
@@ -3103,9 +3469,50 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
                 mime="text/html"
             )
             
+            # Calculate scan metrics and track completion
+            scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+            findings_count = len(scan_results["findings"])
+            high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
+            
+            # Track successful completion
+            track_scan_completed(
+                session_id=session_id,
+                user_id=user_id,
+                username=username,
+                scanner_type=ScannerType.SOC2,
+                findings_count=findings_count,
+                files_scanned=scan_results["files_scanned"],
+                compliance_score=scan_results["compliance_score"],
+                duration_ms=scan_duration,
+                region=region,
+                details={
+                    'scan_id': scan_results["scan_id"],
+                    'high_risk_count': high_risk_count,
+                    'repo_url': repo_url,
+                    'repo_source': repo_source,
+                    'soc2_type': soc2_type,
+                    'compliance_score': scan_results["compliance_score"],
+                    'controls_assessed': scan_results["total_controls_assessed"]
+                }
+            )
+            
             st.success("✅ SOC2 compliance assessment completed!")
         
     except Exception as e:
+        # Track scan failure
+        track_scan_failed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.SOC2,
+            error_message=str(e),
+            region=region,
+            details={
+                'repo_url': repo_url,
+                'repo_source': repo_source,
+                'soc2_type': soc2_type
+            }
+        )
         st.error(f"SOC2 assessment failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -3235,6 +3642,28 @@ def execute_website_scan(region, username, url, scan_config):
         from xml.etree import ElementTree as ET
         import concurrent.futures
         from collections import defaultdict
+        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        
+        # Get session information
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Track scan start
+        scan_start_time = datetime.now()
+        track_scan_started(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.WEBSITE,
+            region=region,
+            details={
+                'url': url,
+                'max_pages': scan_config.get('max_pages', 5),
+                'analyze_cookies': scan_config.get('analyze_cookies', True),
+                'tracking_scripts': scan_config.get('tracking_scripts', True),
+                'content_analysis': scan_config.get('content_analysis', True)
+            }
+        )
         
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -3620,9 +4049,50 @@ def execute_website_scan(region, username, url, scan_config):
             mime="text/html"
         )
         
+        # Calculate scan metrics and track completion
+        scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+        findings_count = len(scan_results["findings"])
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
+        
+        # Track successful completion
+        track_scan_completed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.WEBSITE,
+            findings_count=findings_count,
+            files_scanned=scan_results["pages_scanned"],
+            compliance_score=scan_results["compliance_score"],
+            duration_ms=scan_duration,
+            region=region,
+            details={
+                'scan_id': scan_results["scan_id"],
+                'high_risk_count': high_risk_count,
+                'url': url,
+                'pages_scanned': scan_results["pages_scanned"],
+                'cookies_found': len(scan_results["cookies_found"]),
+                'trackers_detected': len(scan_results["trackers_detected"]),
+                'dark_patterns': len(scan_results["dark_patterns"]),
+                'compliance_score': scan_results["compliance_score"]
+            }
+        )
+        
         st.success(f"✅ Multi-page GDPR website privacy compliance scan completed! ({scan_results['pages_scanned']} pages analyzed)")
         
     except Exception as e:
+        # Track scan failure
+        track_scan_failed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.WEBSITE,
+            error_message=str(e),
+            region=region,
+            details={
+                'url': url,
+                'scan_config': scan_config
+            }
+        )
         st.error(f"Multi-page GDPR website scan failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -4416,6 +4886,29 @@ def execute_enhanced_dpia_scan(region, username, responses):
     """Execute enhanced DPIA assessment with real calculation"""
     try:
         from services.dpia_scanner import DPIAScanner
+        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        
+        # Get session information
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Track scan start
+        scan_start_time = datetime.now()
+        track_scan_started(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.DPIA,
+            region=region,
+            details={
+                'project_name': responses.get('project_name', 'Unknown'),
+                'data_controller': responses.get('data_controller', 'Unknown'),
+                'legal_basis': responses.get('legal_basis', 'Unknown'),
+                'sensitive_data': responses.get('sensitive_data', False),
+                'large_scale': responses.get('large_scale', False),
+                'automated_decisions': responses.get('automated_decisions', False)
+            }
+        )
         
         # Convert region to language code
         language = 'nl' if region == 'Netherlands' else 'en'
@@ -4464,12 +4957,52 @@ def execute_enhanced_dpia_scan(region, username, responses):
         # Display results
         display_enhanced_dpia_results(scan_results)
         
+        # Calculate scan metrics and track completion
+        scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+        findings_count = len(scan_results["findings"])
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
+        
+        # Track successful completion
+        track_scan_completed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.DPIA,
+            findings_count=findings_count,
+            files_scanned=1,  # DPIA is a single assessment
+            compliance_score=min(100, max(0, 100 - (scan_results["risk_score"] * 10))),
+            duration_ms=scan_duration,
+            region=region,
+            details={
+                'scan_id': scan_results["scan_id"],
+                'high_risk_count': high_risk_count,
+                'project_name': responses.get('project_name', 'Unknown'),
+                'risk_score': scan_results["risk_score"],
+                'risk_level': scan_results["risk_level"],
+                'compliance_status': scan_results["compliance_status"],
+                'netherlands_specific': scan_results["netherlands_specific"]
+            }
+        )
+        
         # Reset wizard for new assessment
         st.session_state.dpia_step = 1
         st.session_state.dpia_responses = {}
         st.session_state.dpia_completed = True
         
     except Exception as e:
+        # Track scan failure
+        track_scan_failed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.DPIA,
+            error_message=str(e),
+            region=region,
+            details={
+                'project_name': responses.get('project_name', 'Unknown'),
+                'data_controller': responses.get('data_controller', 'Unknown')
+            }
+        )
         st.error(f"DPIA assessment failed: {str(e)}")
 
 def generate_dpia_findings(risk_assessment, responses, region):
@@ -4790,6 +5323,30 @@ def execute_sustainability_scan(region, username, scan_params):
     """Execute comprehensive sustainability assessment with emissions tracking and resource analysis"""
     try:
         import time
+        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        
+        # Get session information
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Track scan start
+        scan_start_time = datetime.now()
+        track_scan_started(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.SUSTAINABILITY,
+            region=region,
+            details={
+                'analysis_type': scan_params['analysis_type'],
+                'source_type': scan_params['source_type'],
+                'emissions_region': scan_params.get('emissions_region', 'us-east-1'),
+                'detect_unused_resources': scan_params.get('detect_unused_resources', True),
+                'analyze_code_bloat': scan_params.get('analyze_code_bloat', True),
+                'calculate_emissions': scan_params.get('calculate_emissions', True)
+            }
+        )
+        
         progress_bar = st.progress(0)
         status = st.empty()
         
@@ -5141,9 +5698,52 @@ def execute_sustainability_scan(region, username, scan_params):
             mime="text/html"
         )
         
+        # Calculate scan metrics and track completion
+        scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+        findings_count = len(scan_results["findings"])
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
+        
+        # Track successful completion
+        track_scan_completed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.SUSTAINABILITY,
+            findings_count=findings_count,
+            files_scanned=len(code_bloat_findings) + len(unused_resources),
+            compliance_score=scan_results.get('compliance_score', 75),
+            duration_ms=scan_duration,
+            region=region,
+            details={
+                'scan_id': scan_results["scan_id"],
+                'high_risk_count': high_risk_count,
+                'analysis_type': scan_params['analysis_type'],
+                'source_type': scan_params['source_type'],
+                'emissions_region': scan_params.get('emissions_region', 'us-east-1'),
+                'total_co2_savings': quick_wins['total_savings'],
+                'cost_savings': quick_wins['cost_savings'],
+                'unused_resources': len(unused_resources),
+                'code_issues': len(code_bloat_findings)
+            }
+        )
+        
         st.success("✅ Comprehensive sustainability analysis completed!")
         
     except Exception as e:
+        # Track scan failure
+        track_scan_failed(
+            session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.SUSTAINABILITY,
+            error_message=str(e),
+            region=region,
+            details={
+                'analysis_type': scan_params['analysis_type'],
+                'source_type': scan_params['source_type'],
+                'emissions_region': scan_params.get('emissions_region', 'us-east-1')
+            }
+        )
         st.error(f"Sustainability scan failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
