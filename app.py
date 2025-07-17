@@ -2610,6 +2610,18 @@ def render_ai_model_scanner_interface(region: str, username: str):
         "training data leakage, and compliance issues with privacy regulations like GDPR."
     )
     
+    # Create tabs for different scanner modes
+    tab1, tab2 = st.tabs(["🔍 Model Analysis", "📊 AI Act Calculator"])
+    
+    with tab1:
+        render_model_analysis_interface(region, username)
+    
+    with tab2:
+        render_ai_act_calculator_interface(region, username)
+
+def render_model_analysis_interface(region: str, username: str):
+    """Render the traditional model analysis interface"""
+    
     # Model source selection
     st.subheader("Model Source")
     model_source = st.radio("Select Model Source", ["Upload Model File", "Model Repository", "Model Path"], horizontal=True)
@@ -2745,6 +2757,23 @@ def render_ai_model_scanner_interface(region: str, username: str):
             model_type, framework, privacy_analysis, bias_detection, fairness_analysis, 
             compliance_check, ai_act_compliance, ai_act_config, test_data
         )
+
+def render_ai_act_calculator_interface(region: str, username: str):
+    """Render the AI Act compliance calculator interface"""
+    from components.ai_act_calculator_ui import render_ai_act_calculator
+    
+    st.markdown("""
+    <div style="padding: 15px; border-radius: 10px; background-color: #e8f4f8; margin: 10px 0;">
+        <h4 style="color: #1f4e79; margin-bottom: 10px;">🇪🇺 AI Act 2025 Compliance Calculator</h4>
+        <p style="margin: 0; color: #333;">
+            Interactive tool to assess your AI system's compliance with EU AI Act 2025 requirements.
+            Get risk classification, compliance score, and implementation roadmap.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Render the calculator
+    render_ai_act_calculator()
 
 def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_url, model_path, 
                          model_type, framework, privacy_analysis, bias_detection, fairness_analysis, 
