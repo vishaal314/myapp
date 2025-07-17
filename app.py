@@ -22,6 +22,13 @@ from utils.redis_cache import get_cache, get_scan_cache, get_session_cache, get_
 from utils.session_optimizer import get_streamlit_session, get_session_optimizer
 from utils.code_profiler import get_profiler, profile_function, monitor_performance
 
+# License management imports
+from services.license_integration import (
+    require_license_check, require_scanner_access, require_report_access,
+    track_scanner_usage, track_report_usage, track_download_usage,
+    show_license_sidebar, show_usage_dashboard
+)
+
 # Configure basic logging
 logging.basicConfig(
     level=logging.INFO,
@@ -171,6 +178,10 @@ def main():
             if not is_authenticated():
                 render_landing_page()
                 return
+            
+            # Initialize license check after authentication
+            if not require_license_check():
+                return  # License check will handle showing upgrade prompt
             
             # Track page view activity
             if 'session_id' in st.session_state:
@@ -357,9 +368,13 @@ def render_authenticated_interface():
         
         st.markdown("---")
         
+        # License status display
+        show_license_sidebar()
+        
+        st.markdown("---")
+        
         # User info with translations
         st.write(f"**{_('sidebar.current_role', 'Role')}:** {user_role.title()}")
-        st.write(f"**{_('sidebar.plan', 'Plan')}:** {_('sidebar.premium_member', 'Premium')}")
         
         # Logout
         if st.button(_('sidebar.sign_out', 'Logout')):
@@ -470,6 +485,11 @@ def render_scanner_interface_safe():
     """Complete scanner interface with all functional scanners"""
     st.title(f"🔍 {_('scan.new_scan_title', 'New Scan')}")
     
+    # Check scanner usage permissions
+    if not require_license_check():
+        st.error("License validation required to access scanners.")
+        return
+    
     # Scanner type selection with Dutch translations
     scanner_options = {
         f"🔍 {_('scan.code', 'Code')}": _('scan.code_description', 'Scan source code repositories for PII, secrets, and GDPR compliance'),
@@ -497,7 +517,34 @@ def render_scanner_interface_safe():
     region = st.selectbox(_('scan.select_region', 'Region'), region_options, index=0)
     username = st.session_state.get('username', 'user')
     
-    # Render scanner-specific interface
+    # Render scanner-specific interface with license checks
+    scanner_type = None
+    if _('scan.code', 'Code') in selected_scanner:
+        scanner_type = 'code'
+    elif _('scan.blob', 'Document') in selected_scanner:
+        scanner_type = 'document'
+    elif _('scan.image', 'Image') in selected_scanner:
+        scanner_type = 'image'
+    elif _('scan.database', 'Database') in selected_scanner:
+        scanner_type = 'database'
+    elif _('scan.api', 'API') in selected_scanner:
+        scanner_type = 'api'
+    elif _('scan.ai_model', 'AI Model') in selected_scanner:
+        scanner_type = 'ai_model'
+    elif _('scan.soc2', 'SOC2') in selected_scanner:
+        scanner_type = 'soc2'
+    elif _('scan.website', 'Website') in selected_scanner:
+        scanner_type = 'website'
+    elif _('scan.dpia', 'DPIA') in selected_scanner:
+        scanner_type = 'dpia'
+    elif _('scan.sustainability', 'Sustainability') in selected_scanner:
+        scanner_type = 'sustainability'
+    
+    # Check specific scanner permissions
+    if scanner_type and not require_scanner_access(scanner_type, region):
+        return
+    
+    # Render interface based on scanner type
     if _('scan.code', 'Code') in selected_scanner:
         render_code_scanner_interface(region, username)
     elif _('scan.blob', 'Document') in selected_scanner:
@@ -600,6 +647,9 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
                 'netherlands_uavg': region == "Netherlands"
             }
         )
+        
+        # Track license usage
+        track_scanner_usage('code', region, success=True, duration_ms=0)
         
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -1177,6 +1227,14 @@ def display_scan_results(scan_results):
     """Display scan results in a formatted way with rich information"""
     st.subheader("📊 Scan Results Summary")
     
+    # Check report access and track report viewing
+    if not require_report_access():
+        st.error("Report access denied. Please upgrade your license to view detailed reports.")
+        return
+    
+    # Track report viewing
+    track_report_usage('view', success=True)
+    
     # Enhanced summary metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -1268,6 +1326,62 @@ def display_scan_results(scan_results):
                 
     else:
         st.info("No issues found in the scan.")
+    
+    # Add report download section with license control
+    st.markdown("---")
+    st.subheader("📄 Download Reports")
+    
+    # Check if user has report download access
+    if require_report_access():
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📥 Download PDF Report", use_container_width=True):
+                try:
+                    # Track report download
+                    track_report_usage('pdf', success=True)
+                    track_download_usage('pdf')
+                    
+                    # Generate PDF report
+                    from services.download_reports import generate_pdf_report
+                    pdf_content = generate_pdf_report(scan_results)
+                    
+                    # Create download link
+                    st.download_button(
+                        label="📥 Download PDF Report",
+                        data=pdf_content,
+                        file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                    st.success("✅ PDF report generated successfully!")
+                except Exception as e:
+                    st.error(f"Error generating PDF report: {str(e)}")
+        
+        with col2:
+            if st.button("📥 Download HTML Report", use_container_width=True):
+                try:
+                    # Track report download
+                    track_report_usage('html', success=True)
+                    track_download_usage('html')
+                    
+                    # Generate HTML report
+                    from services.download_reports import generate_html_report
+                    html_content = generate_html_report(scan_results)
+                    
+                    # Create download link
+                    st.download_button(
+                        label="📥 Download HTML Report",
+                        data=html_content,
+                        file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                        mime="text/html",
+                        use_container_width=True
+                    )
+                    st.success("✅ HTML report generated successfully!")
+                except Exception as e:
+                    st.error(f"Error generating HTML report: {str(e)}")
+    else:
+        st.info("💎 Report downloads are available with Professional and Enterprise licenses.")
 
 # Add similar interfaces for other scanners
 def render_document_scanner_interface(region: str, username: str):
@@ -1309,6 +1423,9 @@ def execute_document_scan(region, username, uploaded_files):
                 'file_types': [file.name.split('.')[-1] for file in uploaded_files]
             }
         )
+        
+        # Track license usage
+        track_scanner_usage('document', region, success=True, duration_ms=0)
         
         scanner = BlobScanner(region=region)
         progress_bar = st.progress(0)
@@ -1416,6 +1533,9 @@ def execute_image_scan(region, username, uploaded_files):
                 'image_types': [file.name.split('.')[-1] for file in uploaded_files]
             }
         )
+        
+        # Track license usage
+        track_scanner_usage('image', region, success=True, duration_ms=0)
         
         scanner = ImageScanner(region=region)
         progress_bar = st.progress(0)
@@ -1532,6 +1652,9 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
                 'database': database
             }
         )
+        
+        # Track license usage
+        track_scanner_usage('database', region, success=True, duration_ms=0)
         
         scanner = DBScanner(region=region)
         progress_bar = st.progress(0)
@@ -2006,6 +2129,9 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
                 'endpoints_requested': len(endpoints.split('\n')) if endpoints else 0
             }
         )
+        
+        # Track license usage
+        track_scanner_usage('api', region, success=True, duration_ms=0)
         
         # Initialize comprehensive API scanner
         scanner = APIScanner(
