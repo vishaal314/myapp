@@ -2775,6 +2775,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             }
         )
         
+        # Track license usage
+        track_scanner_usage('ai_model', region, success=True, duration_ms=0)
+        
         with st.status("Running AI Model Analysis...", expanded=True) as status:
             # Initialize AI model scanner
             status.update(label="Initializing AI model analysis framework...")
@@ -3452,6 +3455,9 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
             }
         )
         
+        # Track license usage
+        track_scanner_usage('soc2', region, success=True, duration_ms=0)
+        
         with st.status("Running SOC2 compliance analysis...", expanded=True) as status:
             # Initialize SOC2 scanner
             status.update(label="Initializing SOC2 compliance framework...")
@@ -3854,6 +3860,9 @@ def execute_website_scan(region, username, url, scan_config):
                 'content_analysis': scan_config.get('content_analysis', True)
             }
         )
+        
+        # Track license usage
+        track_scanner_usage('website', region, success=True, duration_ms=0)
         
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -5100,6 +5109,9 @@ def execute_enhanced_dpia_scan(region, username, responses):
             }
         )
         
+        # Track license usage
+        track_scanner_usage('dpia', region, success=True, duration_ms=0)
+        
         # Convert region to language code
         language = 'nl' if region == 'Netherlands' else 'en'
         
@@ -5536,6 +5548,9 @@ def execute_sustainability_scan(region, username, scan_params):
                 'calculate_emissions': scan_params.get('calculate_emissions', True)
             }
         )
+        
+        # Track license usage
+        track_scanner_usage('sustainability', region, success=True, duration_ms=0)
         
         progress_bar = st.progress(0)
         status = st.empty()
