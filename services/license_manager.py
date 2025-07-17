@@ -69,15 +69,16 @@ class LicenseConfig:
 class LicenseManager:
     """Comprehensive license management system"""
     
-    def __init__(self, license_file: str = "license.json", encrypt_license: bool = True):
+    def __init__(self, license_file: str = "license.json", encrypt_license: bool = False):
         self.license_file = license_file
         self.encrypt_license = encrypt_license
         self.current_license: Optional[LicenseConfig] = None
         self.usage_tracker: Dict[str, Any] = {}
         self.session_tracker: Dict[str, datetime] = {}
         
-        # Generate or load encryption key
-        self.encryption_key = self._get_encryption_key()
+        # Generate or load encryption key only if encryption is enabled
+        if self.encrypt_license:
+            self.encryption_key = self._get_encryption_key()
         
         # Load existing license
         self.load_license()
