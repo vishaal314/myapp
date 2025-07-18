@@ -77,7 +77,128 @@ class AIModelScanner:
             "findings": [],
             "risk_score": 0,
             "region": self.region,
+            # Add required metrics that the UI expects
+            "files_scanned": 1,
+            "total_lines": 0,
+            "lines_analyzed": 0,
         }
+
+        # Process model source and collect findings
+        if model_source == "API Endpoint":
+            scan_result["api_endpoint"] = model_details.get("api_endpoint", "")
+            scan_result["repository_path"] = model_details.get("repository_path", "")
+        elif model_source == "Model Hub":
+            scan_result["model_name"] = model_details.get("hub_url", "")
+            scan_result["repository_path"] = model_details.get("repository_path", "")
+        elif model_source == "Repository URL":
+            repo_url = model_details.get("repo_url", "")
+            branch = model_details.get("branch_name", "main")
+            scan_result["repository_url"] = repo_url
+            scan_result["branch"] = branch
+
+            # Validate the repo URL and get ethical AI findings
+            repo_validation = self._validate_github_repo(repo_url)
+            
+            if not repo_validation.get("valid", False):
+                # Repository validation failed, return the validation findings
+                scan_result["findings"].extend(repo_validation.get("findings", []))
+                
+                # Calculate metrics based on validation findings
+                try:
+                    metrics = self._calculate_risk_metrics(scan_result["findings"])
+                    scan_result.update(metrics)
+                except Exception as metrics_error:
+                    logging.error(f"Error calculating risk metrics: {str(metrics_error)}")
+                    scan_result.update({
+                        "risk_score": 70,
+                        "severity_level": "high",
+                        "severity_color": "#ef4444",
+                        "risk_counts": {
+                            "low": 0,
+                            "medium": 0,
+                            "high": 1,
+                            "critical": 0
+                        },
+                        "total_findings": len(scan_result["findings"])
+                    })
+                
+                return scan_result
+            
+            # Repository is valid, add ethical findings to our scan results
+            if repo_validation.get("findings"):
+                scan_result["findings"].extend(repo_validation.get("findings", []))
+                
+            # Add repository metadata
+            scan_result["license_present"] = repo_validation.get("license_present", False)
+            scan_result["license_type"] = repo_validation.get("license_type", "Unknown")
+            scan_result["opt_out_mechanism"] = repo_validation.get("opt_out_mechanism", False)
+            scan_result["attribution_guidelines"] = repo_validation.get("attribution_guidelines", False)
+
+        total_steps = 4
+        if self.progress_callback:
+            self.progress_callback(1, total_steps, "Initializing AI model scan")
+
+        try:
+            if self.progress_callback:
+                self.progress_callback(2, total_steps, "Analyzing model architecture")
+            time.sleep(1)
+            arch_findings = self._generate_architecture_findings(model_source, model_details)
+            scan_result["findings"].extend(arch_findings)
+
+            if self.progress_callback:
+                self.progress_callback(3, total_steps, "Analyzing input/output patterns")
+            time.sleep(1)
+            io_findings = self._generate_io_findings(sample_inputs, context)
+            scan_result["findings"].extend(io_findings)
+
+            if self.progress_callback:
+                self.progress_callback(4, total_steps, "Performing compliance assessment")
+            time.sleep(1)
+            compliance_findings = self._generate_compliance_findings(leakage_types, self.region)
+            scan_result["findings"].extend(compliance_findings)
+
+            try:
+                metrics = self._calculate_risk_metrics(scan_result["findings"])
+                scan_result.update(metrics)
+            except Exception as metrics_error:
+                logging.error(f"Error calculating risk metrics: {str(metrics_error)}")
+                scan_result.update({
+                    "risk_score": 50,
+                    "severity_level": "medium",
+                    "severity_color": "#f59e0b",
+                    "risk_counts": {
+                        "low": 0,
+                        "medium": 1,
+                        "high": 0,
+                        "critical": 0
+                    },
+                    "total_findings": len(scan_result["findings"])
+                })
+
+        except Exception as e:
+            logging.error(f"AI model scan failed: {str(e)}")
+            scan_result["error"] = str(e)
+            scan_result["findings"].append({
+                "type": "Scan Error",
+                "category": "System",
+                "description": f"AI model scan failed: {str(e)}",
+                "risk_level": "high",
+                "location": "Scanner System"
+            })
+            scan_result.update({
+                "risk_score": 80,
+                "severity_level": "high",
+                "severity_color": "#ef4444",
+                "risk_counts": {
+                    "low": 0,
+                    "medium": 0,
+                    "high": 1,
+                    "critical": 0
+                },
+                "total_findings": len(scan_result["findings"])
+            })
+
+        return scan_result
         
     def scan_ai_model_enhanced(self, model_file, model_type: str, region: str, status=None):
         """Enhanced AI model scanning with ML framework support"""
@@ -105,7 +226,11 @@ class AIModelScanner:
                 'file_size': len(model_file.getbuffer()),
                 'region': region,
                 'status': 'completed',
-                'findings': []
+                'findings': [],
+                # Add required metrics that the UI expects
+                'files_scanned': 1,
+                'total_lines': 0,
+                'lines_analyzed': 0,
             }
             
             # Framework-specific analysis
@@ -424,154 +549,6 @@ class AIModelScanner:
             'transparency_level': 'High' if explainability_score > 0.7 else 'Medium' if explainability_score > 0.4 else 'Low',
             'explainability_findings': findings
         }
-
-        if model_source == "API Endpoint":
-            scan_result["api_endpoint"] = model_details.get("api_endpoint", "")
-            scan_result["repository_path"] = model_details.get(
-                "repository_path", "")
-        elif model_source == "Model Hub":
-            scan_result["model_name"] = model_details.get("hub_url", "")
-            scan_result["repository_path"] = model_details.get(
-                "repository_path", "")
-        elif model_source == "Repository URL":
-            repo_url = model_details.get("repo_url", "")
-            branch = model_details.get("branch_name", "main")
-            scan_result["repository_url"] = repo_url
-            scan_result["branch"] = branch
-
-            # ✅ Validate the repo URL and get ethical AI findings
-            repo_validation = self._validate_github_repo(repo_url)
-            
-            if not repo_validation.get("valid", False):
-                # Repository validation failed, return the validation findings
-                scan_result["findings"].extend(repo_validation.get("findings", []))
-                
-                # Calculate metrics based on validation findings
-                try:
-                    metrics = self._calculate_risk_metrics(scan_result["findings"])
-                    scan_result.update(metrics)
-                except Exception as metrics_error:
-                    logging.error(f"Error calculating risk metrics: {str(metrics_error)}")
-                    scan_result.update({
-                        "risk_score": 70,
-                        "severity_level": "high",
-                        "severity_color": "#ef4444",
-                        "risk_counts": {
-                            "low": 0,
-                            "medium": 0,
-                            "high": 1,
-                            "critical": 0
-                        },
-                        "total_findings": len(scan_result["findings"])
-                    })
-                
-                return scan_result
-            
-            # Repository is valid, add ethical findings to our scan results
-            if repo_validation.get("findings"):
-                scan_result["findings"].extend(repo_validation.get("findings", []))
-                
-            # Add repository metadata
-            scan_result["license_present"] = repo_validation.get("license_present", False)
-            scan_result["license_type"] = repo_validation.get("license_type", "Unknown")
-            scan_result["opt_out_mechanism"] = repo_validation.get("opt_out_mechanism", False)
-            scan_result["attribution_guidelines"] = repo_validation.get("attribution_guidelines", False)
-
-        total_steps = 4
-        if self.progress_callback:
-            self.progress_callback(1, total_steps,
-                                   "Initializing AI model scan")
-
-        try:
-            if self.progress_callback:
-                self.progress_callback(2, total_steps,
-                                       "Analyzing model architecture")
-            time.sleep(1)
-            arch_findings = self._generate_architecture_findings(
-                model_source, model_details)
-            scan_result["findings"].extend(arch_findings)
-
-            if self.progress_callback:
-                self.progress_callback(3, total_steps,
-                                       "Analyzing input/output patterns")
-            time.sleep(1)
-            io_findings = self._generate_io_findings(sample_inputs, context)
-            scan_result["findings"].extend(io_findings)
-
-            if self.progress_callback:
-                self.progress_callback(4, total_steps,
-                                       "Performing compliance assessment")
-            time.sleep(1)
-            compliance_findings = self._generate_compliance_findings(
-                leakage_types, self.region)
-            scan_result["findings"].extend(compliance_findings)
-
-            try:
-                metrics = self._calculate_risk_metrics(scan_result["findings"])
-                scan_result.update(metrics)
-            except Exception as metrics_error:
-                logging.error(
-                    f"Error calculating risk metrics: {str(metrics_error)}")
-                scan_result.update({
-                    "risk_score":
-                    50,
-                    "severity_level":
-                    "medium",
-                    "severity_color":
-                    "#f59e0b",
-                    "risk_counts": {
-                        "low": 0,
-                        "medium": 1,
-                        "high": 0,
-                        "critical": 0
-                    },
-                    "total_findings":
-                    len(scan_result["findings"])
-                })
-
-            return scan_result
-
-        except Exception as e:
-            logging.error(f"Error during AI model scan: {str(e)}")
-            return {
-                "scan_id":
-                scan_id,
-                "scan_type":
-                "AI Model",
-                "timestamp":
-                datetime.now().isoformat(),
-                "model_source":
-                model_source,
-                "findings": [{
-                    "id": f"AIERROR-{uuid.uuid4().hex[:6]}",
-                    "type": "Critical Error",
-                    "category": "Scan Failure",
-                    "description":
-                    f"The AI model scan encountered a critical error: {str(e)}",
-                    "risk_level": "high",
-                    "location": "AI Model Scanner"
-                }],
-                "error":
-                str(e),
-                "status":
-                "completed_with_errors",
-                "risk_score":
-                50,
-                "severity_level":
-                "medium",
-                "severity_color":
-                "#f59e0b",
-                "risk_counts": {
-                    "low": 0,
-                    "medium": 0,
-                    "high": 1,
-                    "critical": 0
-                },
-                "total_findings":
-                1,
-                "region":
-                self.region
-            }
 
     def _validate_github_repo(self, repo_url: str) -> Dict[str, Any]:
         """
