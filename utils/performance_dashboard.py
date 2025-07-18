@@ -66,11 +66,32 @@ class PerformanceDashboard:
     def _render_summary_cards(self):
         """Render performance summary cards"""
         try:
+            # Initialize default stats to prevent UnboundLocalError
+            db_stats = {'pool_stats': {'avg_query_time': 0, 'total_queries': 0}}
+            cache_stats = {'hit_rate': 0, 'total_keys': 0}
+            session_stats = {'active_sessions': 0, 'peak_concurrent': 0, 'system_resources': {'memory_percent': 0, 'cpu_percent': 0}}
+            profiler_report = {}
+            
             # Get performance data
-            db_stats = self.db_optimizer.get_performance_stats()
-            cache_stats = self.redis_cache.get_stats()
-            session_stats = self.session_optimizer.get_session_stats()
-            profiler_report = self.profiler.get_performance_report()
+            try:
+                db_stats = self.db_optimizer.get_performance_stats()
+            except Exception:
+                pass
+            
+            try:
+                cache_stats = self.redis_cache.get_stats()
+            except Exception:
+                pass
+            
+            try:
+                session_stats = self.session_optimizer.get_session_stats()
+            except Exception:
+                pass
+            
+            try:
+                profiler_report = self.profiler.get_performance_report()
+            except Exception:
+                pass
             
             col1, col2, col3, col4 = st.columns(4)
             
@@ -112,8 +133,15 @@ class PerformanceDashboard:
         st.subheader("💻 System Metrics")
         
         try:
-            session_stats = self.session_optimizer.get_session_stats()
-            system_resources = session_stats.get('system_resources', {})
+            # Initialize defaults
+            session_stats = {'system_resources': {'memory_percent': 0, 'cpu_percent': 0}}
+            system_resources = {'memory_percent': 0, 'cpu_percent': 0}
+            
+            try:
+                session_stats = self.session_optimizer.get_session_stats()
+                system_resources = session_stats.get('system_resources', {})
+            except Exception:
+                pass
             
             # Memory usage gauge
             fig_memory = go.Figure(go.Indicator(
@@ -173,8 +201,15 @@ class PerformanceDashboard:
         st.subheader("🗄️ Database Performance")
         
         try:
-            db_stats = self.db_optimizer.get_performance_stats()
-            pool_stats = db_stats['pool_stats']
+            # Initialize defaults
+            db_stats = {'pool_stats': {'total_queries': 0, 'slow_queries': 0, 'cache_hits': 0, 'cache_misses': 0, 'avg_query_time': 0}, 'top_queries': []}
+            pool_stats = {'total_queries': 0, 'slow_queries': 0, 'cache_hits': 0, 'cache_misses': 0, 'avg_query_time': 0}
+            
+            try:
+                db_stats = self.db_optimizer.get_performance_stats()
+                pool_stats = db_stats['pool_stats']
+            except Exception:
+                pass
             
             # Database metrics
             metrics_data = {
@@ -217,7 +252,13 @@ class PerformanceDashboard:
         st.subheader("⚡ Cache Performance")
         
         try:
-            cache_stats = self.redis_cache.get_stats()
+            # Initialize defaults
+            cache_stats = {'hit_rate': 0, 'connected': False, 'total_keys': 0, 'memory_used': 'N/A', 'hits': 0, 'misses': 0, 'errors': 0}
+            
+            try:
+                cache_stats = self.redis_cache.get_stats()
+            except Exception:
+                pass
             
             # Cache hit rate donut chart
             hit_rate = cache_stats.get('hit_rate', 0) * 100
@@ -255,7 +296,21 @@ class PerformanceDashboard:
         st.subheader("👥 Session Metrics")
         
         try:
-            session_stats = self.session_optimizer.get_session_stats()
+            # Initialize defaults
+            session_stats = {
+                'total_sessions': 0, 
+                'active_sessions': 0, 
+                'expired_sessions': 0, 
+                'concurrent_users': 0, 
+                'peak_concurrent': 0,
+                'session_duration_avg': 0,
+                'memory_usage': {'rss_mb': 0, 'vms_mb': 0, 'percent': 0}
+            }
+            
+            try:
+                session_stats = self.session_optimizer.get_session_stats()
+            except Exception:
+                pass
             
             # Session overview
             st.metric("Total Sessions", session_stats['total_sessions'])
