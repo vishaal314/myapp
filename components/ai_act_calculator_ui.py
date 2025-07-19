@@ -16,30 +16,38 @@ from utils.translations import _ as translate
 def render_ai_act_calculator():
     """Render the AI Act compliance calculator interface"""
     
-    st.header("🤖 AI Act 2025 Compliance Calculator")
-    
-    # Create tabs for different sections
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "📋 System Profile", 
-        "🔍 Risk Assessment", 
-        "📊 Compliance Analysis", 
-        "📄 Generate Report"
-    ])
-    
-    # Initialize calculator
-    calculator = AIActCalculator(region="Netherlands")
-    
-    with tab1:
-        render_system_profile_form()
-    
-    with tab2:
-        render_risk_assessment()
-    
-    with tab3:
-        render_compliance_analysis()
-    
-    with tab4:
-        render_report_generation()
+    try:
+        st.header("🤖 AI Act 2025 Compliance Calculator")
+        
+        # Create tabs for different sections
+        tab1, tab2, tab3, tab4 = st.tabs([
+            "📋 System Profile", 
+            "🔍 Risk Assessment", 
+            "📊 Compliance Analysis", 
+            "📄 Generate Report"
+        ])
+        
+        # Initialize calculator
+        calculator = AIActCalculator(region="Netherlands")
+        
+        with tab1:
+            render_system_profile_form()
+        
+        with tab2:
+            render_risk_assessment()
+        
+        with tab3:
+            render_compliance_analysis()
+        
+        with tab4:
+            render_report_generation()
+            
+    except Exception as e:
+        st.error("AI Act Calculator temporarily unavailable")
+        st.error(f"Error: {str(e)}")
+        with st.expander("View error details"):
+            import traceback
+            st.code(traceback.format_exc())
 
 def render_system_profile_form():
     """Render the AI system profile form"""
@@ -213,28 +221,34 @@ def render_system_profile_form():
                 st.error("Please select at least one option for data types, user groups, and geographic deployment")
                 return
             
-            # Create system profile
-            system_profile = AISystemProfile(
-                system_name=system_name,
-                purpose=purpose,
-                use_case=use_case,
-                deployment_context=deployment_context,
-                data_types=data_types,
-                user_groups=user_groups,
-                decision_impact=decision_impact,
-                automation_level=automation_level,
-                human_oversight=human_oversight,
-                data_processing_scope=data_processing_scope,
-                geographic_deployment=geographic_deployment,
-                regulatory_context=regulatory_context
-            )
-            
-            # Store in session state
-            st.session_state.ai_system_profile = system_profile
-            st.session_state.ai_calculator_step = 2
-            
-            st.success("✅ System profile created successfully! Move to Risk Assessment tab.")
-            st.rerun()
+            # Create system profile with proper error handling
+            try:
+                system_profile = AISystemProfile(
+                    system_name=system_name,
+                    purpose=purpose,
+                    use_case=use_case,
+                    deployment_context=deployment_context,
+                    data_types=data_types,
+                    user_groups=user_groups,
+                    decision_impact=decision_impact,
+                    automation_level=automation_level,
+                    human_oversight=human_oversight,
+                    data_processing_scope=data_processing_scope,
+                    geographic_deployment=geographic_deployment,
+                    regulatory_context=regulatory_context
+                )
+                
+                # Store in session state
+                st.session_state.ai_system_profile = system_profile
+                st.session_state.ai_calculator_step = 2
+                
+                st.success("✅ System profile created successfully! Move to Risk Assessment tab.")
+                st.rerun()
+                
+            except Exception as e:
+                st.error(f"Error creating system profile: {str(e)}")
+                import traceback
+                st.code(traceback.format_exc())
 
 def render_risk_assessment():
     """Render the risk assessment section"""
@@ -404,20 +418,26 @@ def render_compliance_analysis():
         analyze_compliance = st.form_submit_button("📊 Analyze Compliance", type="primary")
         
         if analyze_compliance:
-            # Perform complete assessment
-            with st.spinner("Analyzing compliance requirements..."):
-                assessment = calculator.perform_complete_assessment(
-                    system_profile=system_profile,
-                    current_compliance=current_compliance,
-                    annual_turnover=annual_turnover
-                )
-            
-            # Store assessment
-            st.session_state.ai_compliance_assessment = assessment
-            st.session_state.ai_calculator_step = 4
-            
-            # Display results
-            display_compliance_results(assessment)
+            # Perform complete assessment with error handling
+            try:
+                with st.spinner("Analyzing compliance requirements..."):
+                    assessment = calculator.perform_complete_assessment(
+                        system_profile=system_profile,
+                        current_compliance=current_compliance,
+                        annual_turnover=annual_turnover
+                    )
+                
+                # Store assessment
+                st.session_state.ai_compliance_assessment = assessment
+                st.session_state.ai_calculator_step = 4
+                
+                # Display results
+                display_compliance_results(assessment)
+                
+            except Exception as e:
+                st.error(f"Error analyzing compliance: {str(e)}")
+                import traceback
+                st.code(traceback.format_exc())
 
 def display_compliance_results(assessment: ComplianceAssessment):
     """Display comprehensive compliance results"""
