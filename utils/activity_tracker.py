@@ -292,9 +292,73 @@ def track_scan_failed(session_id: str, user_id: str, username: str, scanner_type
     )
 
 def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
-    """Get dashboard metrics for a user"""
-    tracker = get_activity_tracker()
-    return tracker.get_dashboard_metrics(user_id)
+    """Get dashboard metrics for a user from actual scan results"""
+    try:
+        # Get real scan data from database
+        from services.results_aggregator import ResultsAggregator
+        from services.compliance_score import ComplianceScoreManager
+        
+        agg = ResultsAggregator()
+        recent_scans = agg.get_recent_scans(days=30)
+        
+        # Filter scans for this user
+        user_scans = [scan for scan in recent_scans if scan.get('username', '').replace('user', '') == user_id.replace('user', '')]
+        if not user_scans:
+            # Try with exact username match
+            user_scans = [scan for scan in recent_scans if scan.get('username') == user_id]
+        
+        # Calculate actual metrics from scan results
+        total_scans = len(user_scans)
+        total_pii_found = 0
+        high_risk_findings = 0
+        
+        for scan in user_scans:
+            result = scan.get('result', {})
+            if isinstance(result, dict):
+                findings = result.get('findings', [])
+                for finding in findings:
+                    if isinstance(finding, dict):
+                        # Count actual PII found
+                        pii_count = finding.get('pii_count', 0)
+                        total_pii_found += pii_count
+                        
+                        # Count high-risk issues
+                        risk_summary = finding.get('risk_summary', {})
+                        high_risk_findings += risk_summary.get('High', 0)
+        
+        # Calculate compliance score
+        compliance_manager = ComplianceScoreManager()
+        compliance_data = compliance_manager.calculate_current_score()
+        avg_compliance_score = compliance_data.get('overall_score', 0)
+        
+        # Get activity data for recent activities display
+        tracker = get_activity_tracker()
+        activities = tracker.get_user_activities(user_id, limit=10)
+        
+        return {
+            'total_scans': total_scans,
+            'total_pii_found': total_pii_found,
+            'high_risk_findings': high_risk_findings,
+            'average_compliance_score': avg_compliance_score,
+            'success_rate': 1.0 if total_scans > 0 else 0,
+            'failed_scans': 0,
+            'recent_activities': [
+                {
+                    'timestamp': a.timestamp.isoformat(),
+                    'activity_type': a.activity_type.value,
+                    'scanner_type': a.scanner_type.value if a.scanner_type else None,
+                    'success': a.success,
+                    'details': a.details
+                }
+                for a in activities
+            ] if activities else []
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting dashboard metrics: {e}")
+        # Fallback to activity tracker
+        tracker = get_activity_tracker()
+        return tracker.get_dashboard_metrics(user_id)
 
 def get_scanner_statistics(user_id: str) -> Dict[str, Any]:
     """Get scanner statistics for a user"""
