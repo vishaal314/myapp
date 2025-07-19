@@ -566,32 +566,55 @@ class AIActCalculator:
             return recommendations
         
         if risk_level == AISystemRiskLevel.HIGH_RISK:
-            recommendations.append("🔴 HIGH PRIORITY: Implement comprehensive compliance program")
-            recommendations.append("Establish dedicated AI compliance team")
-            recommendations.append("Engage external AI Act compliance consultant")
-            
-            if compliance_score < 50:
-                recommendations.append("⚠️ URGENT: Compliance score below 50% - high fine risk")
-                recommendations.append("Implement emergency compliance measures")
+            if compliance_score >= 85:
+                # Well-managed high-risk systems get specific maintenance recommendations
+                recommendations.append("✅ MAINTAIN EXCELLENCE: Continue robust compliance monitoring")
+                recommendations.append("📋 Conduct quarterly AI Act compliance audits")
+                recommendations.append("🔄 Update risk assessment documentation annually")
+                recommendations.append("👥 Ensure AI governance team receives ongoing training")
+                recommendations.append("📊 Monitor algorithmic performance for bias or drift")
+            elif compliance_score >= 70:
+                # Good compliance systems need targeted improvements
+                recommendations.append("🟡 STRENGTHEN COMPLIANCE: Focus on remaining gaps")
+                recommendations.append("📈 Improve data governance and quality assurance")
+                recommendations.append("🛡️ Enhance cybersecurity measures for AI systems")
+                recommendations.append("📋 Complete technical documentation requirements")
+                recommendations.append("👁️ Strengthen human oversight mechanisms")
+            else:
+                # Poor compliance systems need urgent action
+                recommendations.append("🔴 URGENT: Implement comprehensive compliance program")
+                recommendations.append("⚠️ HIGH FINE RISK: Immediate remediation required")
+                recommendations.append("🏢 Establish dedicated AI compliance team")
+                recommendations.append("👨‍💼 Engage external AI Act compliance consultant")
+                recommendations.append("🚨 Implement emergency risk mitigation measures")
             
         if risk_level == AISystemRiskLevel.LIMITED_RISK:
-            recommendations.append("🟡 MEDIUM PRIORITY: Implement transparency and oversight measures")
-            recommendations.append("Focus on user transparency and human oversight")
+            recommendations.append("🟡 IMPLEMENT TRANSPARENCY: Ensure users know they're interacting with AI")
+            recommendations.append("👁️ Establish basic human oversight procedures")
+            recommendations.append("📋 Document AI system capabilities and limitations")
+            recommendations.append("🔄 Monitor for use case expansion that might increase risk")
             
         if risk_level == AISystemRiskLevel.MINIMAL_RISK:
-            recommendations.append("🟢 LOW PRIORITY: Implement basic transparency measures")
-            recommendations.append("Monitor for use case changes that might increase risk")
+            recommendations.append("🟢 BASIC TRANSPARENCY: Inform users about AI system use")
+            recommendations.append("📝 Maintain simple documentation of system purpose")
+            recommendations.append("👀 Monitor for changes in use case or data types")
+            recommendations.append("📊 Conduct annual review of risk classification")
         
         # Add specific gap-based recommendations
-        if len(gaps) > 0:
-            recommendations.append(f"Address {len(gaps)} identified compliance gaps")
-            recommendations.append("Prioritize gaps by implementation effort and deadline")
+        if len(gaps) > 5:
+            recommendations.append(f"🎯 PRIORITIZE GAPS: Address {len(gaps)} compliance gaps systematically")
+            recommendations.append("📅 Create 6-month action plan with milestone reviews")
+        elif len(gaps) > 0:
+            recommendations.append(f"🔧 CLOSE GAPS: Address remaining {len(gaps)} compliance requirements")
         
         # Netherlands-specific recommendations
         if self.region == "Netherlands":
-            recommendations.append("🇳🇱 Ensure compliance with Netherlands UAVG requirements")
-            recommendations.append("Register with Dutch Data Protection Authority if required")
-            recommendations.append("Implement BSN handling protocols if applicable")
+            recommendations.append("🇳🇱 NETHERLANDS COMPLIANCE: Align with Dutch DPA guidance on AI Act")
+            if compliance_score < 85:
+                recommendations.append("📞 Consider consultation with Dutch AI Act legal specialist")
+                recommendations.append("🏛️ Review registration requirements with Dutch Data Protection Authority")
+            recommendations.append("🆔 Implement proper BSN handling if processing Dutch citizen data")
+            recommendations.append("📋 Ensure Dutch language transparency notices where required")
         
         return recommendations
     
