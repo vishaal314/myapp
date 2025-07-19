@@ -2829,9 +2829,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 "bias_findings": [],
                 "compliance_findings": [],
                 "ai_act_findings": [],
-                "risk_score": 0,
-                "privacy_score": 0,
-                "fairness_score": 0,
+                "risk_score": 100,
+                "privacy_score": 100,
+                "fairness_score": 100,
                 "files_scanned": 0,
                 "lines_analyzed": 0,
                 "total_pii_found": 0,
@@ -2927,7 +2927,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 })
                 
                 scan_results["privacy_findings"] = privacy_findings
-                scan_results["privacy_score"] = 100 - sum(f['risk_level'] for f in privacy_findings) / len(privacy_findings)
+                scan_results["privacy_score"] = 100 - sum(f['risk_level'] for f in privacy_findings) / len(privacy_findings) if privacy_findings else 100
             
             # Bias Detection
             if bias_detection:
@@ -2984,7 +2984,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 })
                 
                 scan_results["bias_findings"] = bias_findings
-                scan_results["fairness_score"] = 100 - sum(f['bias_score'] for f in bias_findings) / len(bias_findings)
+                scan_results["fairness_score"] = 100 - sum(f['bias_score'] for f in bias_findings) / len(bias_findings) if bias_findings else 100
             
             # GDPR Compliance Check
             if compliance_check:
@@ -3336,7 +3336,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 scanner_type=ScannerType.AI_MODEL,
                 findings_count=findings_count,
                 files_scanned=scan_results["files_scanned"],
-                compliance_score=scan_results["privacy_score"],
+                compliance_score=scan_results.get("privacy_score", 100),
                 duration_ms=scan_duration,
                 region=region,
                 details={
@@ -3344,8 +3344,8 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                     'high_risk_count': high_risk_count,
                     'model_type': model_type,
                     'framework': framework,
-                    'privacy_score': scan_results["privacy_score"],
-                    'fairness_score': scan_results["fairness_score"],
+                    'privacy_score': scan_results.get("privacy_score", 100),
+                    'fairness_score': scan_results.get("fairness_score", 100),
                     'ai_act_compliance': ai_act_compliance
                 }
             )
