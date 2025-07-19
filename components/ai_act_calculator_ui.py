@@ -454,17 +454,25 @@ def display_compliance_results(assessment: ComplianceAssessment):
         )
     
     with col2:
+        risk_level_display = assessment.risk_level.value.replace("_", " ").title()
+        if assessment.compliance_score >= 85 and assessment.risk_level == AISystemRiskLevel.HIGH_RISK:
+            risk_level_display += " (Well Managed)"
+        
         st.metric(
             "Risk Level",
-            assessment.risk_level.value.replace("_", " ").title(),
-            help="AI Act risk classification"
+            risk_level_display,
+            help="AI Act risk classification based on use case"
         )
     
     with col3:
+        fine_display = f"€{assessment.fine_risk:,.0f}"
+        if assessment.fine_risk < 1000 and assessment.compliance_score >= 85:
+            fine_display = "Very Low Risk"
+        
         st.metric(
             "Fine Risk",
-            f"€{assessment.fine_risk:,.0f}",
-            help="Potential maximum fine"
+            fine_display,
+            help="Current fine risk based on compliance level"
         )
     
     with col4:
@@ -479,15 +487,36 @@ def display_compliance_results(assessment: ComplianceAssessment):
     
     if assessment.compliance_score >= 90:
         st.success(f"✅ Excellent compliance score ({assessment.compliance_score:.1f}/100)")
+        if assessment.risk_level == AISystemRiskLevel.HIGH_RISK:
+            st.info("🛡️ High-risk system with excellent compliance - fine risk significantly reduced")
     elif assessment.compliance_score >= 70:
         st.warning(f"⚠️ Good compliance score ({assessment.compliance_score:.1f}/100)")
+        if assessment.risk_level == AISystemRiskLevel.HIGH_RISK:
+            st.warning("⚠️ High-risk system with good compliance - moderate fine risk reduction")
     elif assessment.compliance_score >= 50:
         st.warning(f"🟡 Moderate compliance score ({assessment.compliance_score:.1f}/100)")
+        if assessment.risk_level == AISystemRiskLevel.HIGH_RISK:
+            st.error("🚨 High-risk system with insufficient compliance - significant fine risk")
     else:
         st.error(f"🚨 Low compliance score ({assessment.compliance_score:.1f}/100)")
+        if assessment.risk_level == AISystemRiskLevel.HIGH_RISK:
+            st.error("🚨 High-risk system with poor compliance - maximum fine risk")
     
     # Progress bar
     st.progress(assessment.compliance_score / 100)
+    
+    # Risk classification explanation
+    if assessment.risk_level == AISystemRiskLevel.HIGH_RISK and assessment.compliance_score >= 85:
+        st.markdown("### ℹ️ Risk Classification Explanation")
+        st.info("""
+        **Why is this still classified as "High Risk"?**
+        
+        • **Risk Level** is determined by your AI system's use case and characteristics (e.g., employment screening, credit scoring)
+        • **Compliance Score** shows how well you've implemented the required safeguards
+        • **Fine Risk** is significantly reduced because of your excellent compliance implementation
+        
+        Your system remains "High Risk" by definition, but with excellent compliance, the actual regulatory risk is very low.
+        """)
     
     # Compliance gaps
     if assessment.gaps:

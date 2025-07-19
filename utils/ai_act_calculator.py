@@ -439,15 +439,29 @@ class AIActCalculator:
             return min(35000000, annual_turnover * 0.07)  # Maximum fine
         
         if risk_level == AISystemRiskLevel.HIGH_RISK:
-            # High-risk systems face significant fines
-            non_compliance_factor = (100 - compliance_score) / 100
+            # High-risk systems face significant fines only if non-compliant
+            non_compliance_factor = max(0, (100 - compliance_score) / 100)
             max_fine = min(35000000, annual_turnover * 0.07)
+            
+            # Apply exponential reduction for high compliance scores
+            if compliance_score >= 85:
+                # Very low risk for high compliance scores
+                non_compliance_factor *= 0.1  # 90% reduction in fine risk
+            elif compliance_score >= 70:
+                # Moderate risk reduction
+                non_compliance_factor *= 0.3  # 70% reduction in fine risk
+            
             return max_fine * non_compliance_factor
         
         if risk_level == AISystemRiskLevel.LIMITED_RISK:
             # Limited risk systems face lower fines
-            non_compliance_factor = (100 - compliance_score) / 100
+            non_compliance_factor = max(0, (100 - compliance_score) / 100)
             max_fine = min(15000000, annual_turnover * 0.03)
+            
+            # Apply reduction for good compliance
+            if compliance_score >= 80:
+                non_compliance_factor *= 0.2  # 80% reduction
+            
             return max_fine * non_compliance_factor
         
         # Minimal risk systems have very low fine risk
