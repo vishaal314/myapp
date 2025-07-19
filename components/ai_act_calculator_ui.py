@@ -55,7 +55,7 @@ def render_system_profile_form():
     st.subheader("📋 AI System Profile")
     st.write("Provide details about your AI system for compliance assessment")
     
-    with st.form("ai_system_profile"):
+    with st.form("ai_act_system_profile_form"):
         col1, col2 = st.columns(2)
         
         with col1:
@@ -238,12 +238,11 @@ def render_system_profile_form():
                     regulatory_context=regulatory_context
                 )
                 
-                # Store in session state
-                st.session_state.ai_system_profile = system_profile
-                st.session_state.ai_calculator_step = 2
+                # Store in session state with unique key
+                st.session_state.ai_act_system_profile = system_profile
+                st.session_state.ai_act_calculator_step = 2
                 
                 st.success("✅ System profile created successfully! Move to Risk Assessment tab.")
-                st.rerun()
                 
             except Exception as e:
                 st.error(f"Error creating system profile: {str(e)}")
@@ -255,11 +254,11 @@ def render_risk_assessment():
     
     st.subheader("🔍 AI Act Risk Assessment")
     
-    if 'ai_system_profile' not in st.session_state:
+    if 'ai_act_system_profile' not in st.session_state:
         st.info("Please complete the System Profile first")
         return
     
-    system_profile = st.session_state.ai_system_profile
+    system_profile = st.session_state.ai_act_system_profile
     calculator = AIActCalculator(region="Netherlands")
     
     # Perform risk classification
@@ -353,11 +352,11 @@ def render_compliance_analysis():
     
     st.subheader("📊 AI Act Compliance Analysis")
     
-    if 'ai_system_profile' not in st.session_state or 'ai_risk_level' not in st.session_state:
+    if 'ai_act_system_profile' not in st.session_state or 'ai_risk_level' not in st.session_state:
         st.info("Please complete the System Profile and Risk Assessment first")
         return
     
-    system_profile = st.session_state.ai_system_profile
+    system_profile = st.session_state.ai_act_system_profile
     risk_level = st.session_state.ai_risk_level
     calculator = AIActCalculator(region="Netherlands")
     
@@ -365,7 +364,7 @@ def render_compliance_analysis():
     st.markdown("### 📋 Current Compliance Status")
     st.write("Please indicate your current implementation status for each requirement:")
     
-    with st.form("compliance_status"):
+    with st.form("ai_act_compliance_status_form"):
         current_compliance = {}
         
         # Get applicable articles
