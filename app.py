@@ -401,85 +401,159 @@ def render_authenticated_interface():
         render_performance_dashboard_safe()
 
 def render_dashboard():
-    """Render the main dashboard with real-time data from activity tracking"""
+    """Render the main dashboard with real-time data from scan results"""
+    from utils.translations import _
+    from services.results_aggregator import ResultsAggregator
+    import pandas as pd
+    
     st.title(f"📊 {_('dashboard.title', 'Dashboard')}")
     
-    # Get real-time metrics from activity tracker
-    from utils.activity_tracker import get_dashboard_metrics
-    user_id = st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
-    
     try:
-        metrics = get_dashboard_metrics(user_id)
+        # Get real scan data from ResultsAggregator
+        aggregator = ResultsAggregator()
+        username = st.session_state.get('username', 'anonymous')
+        recent_scans = aggregator.get_recent_scans(days=30, username=username)
+        
+        # Calculate real metrics from scan data
+        total_scans = len(recent_scans)
+        total_pii = 0
+        high_risk_issues = 0
+        compliance_scores = []
+        
+        for scan in recent_scans:
+            result = scan.get('result', {})
+            findings = result.get('findings', [])
+            
+            # Calculate actual PII count and high risk items from findings
+            for finding in findings:
+                if isinstance(finding, dict):
+                    total_pii += finding.get('pii_count', 0)
+                    risk_summary = finding.get('risk_summary', {})
+                    if isinstance(risk_summary, dict):
+                        high_risk_issues += risk_summary.get('High', 0)
+            
+            # Get compliance scores
+            compliance_score = result.get('compliance_score', 0)
+            if compliance_score > 0:
+                compliance_scores.append(compliance_score)
+        
+        # Calculate average compliance score
+        avg_compliance = sum(compliance_scores) / max(len(compliance_scores), 1) if compliance_scores else 0
         
         # Display real-time metrics
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            total_scans = metrics.get('total_scans', 0)
-            st.metric(_('dashboard.metric.total_scans', 'Total Scans'), total_scans, f"+{max(0, total_scans-10)}")
+            delta_scans = f"+{max(0, total_scans-1)}" if total_scans > 1 else "+0"
+            st.metric(_('dashboard.metric.total_scans', 'Total Scans'), total_scans, delta_scans)
         with col2:
-            total_pii = metrics.get('total_pii_found', 0)
-            st.metric(_('dashboard.metric.total_pii', 'PII Found'), total_pii, f"+{max(0, total_pii-5)}")
+            delta_pii = f"+{max(0, total_pii-5)}" if total_pii > 5 else "+0" if total_pii > 0 else "+0"
+            st.metric(_('dashboard.metric.total_pii', 'Total PII Found'), total_pii, delta_pii)
         with col3:
-            compliance_score = metrics.get('average_compliance_score', 0)
-            st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), f"{compliance_score:.1f}%", f"+{max(0, compliance_score-90):.1f}%")
+            delta_compliance = f"+{max(0, avg_compliance-85):.1f}%" if avg_compliance > 85 else "+0.0%" if avg_compliance > 0 else "+0.0%"
+            st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), f"{avg_compliance:.1f}%", delta_compliance)
         with col4:
-            high_risk = metrics.get('high_risk_findings', 0)
-            st.metric(_('dashboard.metric.active_issues', 'High Risk Issues'), high_risk, f"-{max(0, high_risk-1)}")
+            delta_risk = f"-{max(0, high_risk_issues-1)}" if high_risk_issues > 1 else "-0"
+            st.metric(_('dashboard.metric.active_issues', 'Active Issues'), high_risk_issues, delta_risk)
         
-        # Recent activity from real data
+        st.markdown("---")
+        
+        # Recent scan activity from real data
         st.subheader(_('dashboard.recent_activity', 'Recent Scan Activity'))
         
-        recent_activities = metrics.get('recent_activities', [])
-        if recent_activities:
-            import pandas as pd
-            
-            # Transform activity data for display
+        if recent_scans:
+            # Transform scan data for activity display
             activity_data = []
-            for activity in recent_activities:
+            for scan in recent_scans:
+                result = scan.get('result', {})
+                findings = result.get('findings', [])
+                
+                # Calculate PII count from findings
+                pii_count = sum(f.get('pii_count', 0) for f in findings if isinstance(f, dict))
+                
+                # Format timestamp
+                timestamp = scan.get('timestamp', '')
+                formatted_date = timestamp[:10] if timestamp else 'Unknown'
+                formatted_time = timestamp[11:16] if len(timestamp) > 11 else ''
+                
                 activity_data.append({
-                    'Date': activity['timestamp'][:10],  # Extract date
-                    'Type': f"{activity['scanner_type'].title()} Scan" if activity['scanner_type'] else activity['activity_type'].title(),
-                    'Status': '✅ Complete' if activity['success'] else '❌ Failed',
-                    'PII Found': activity['details'].get('findings_count', 0),
-                    'Files': activity['details'].get('files_scanned', 0)
+                    'Date': formatted_date,
+                    'Time': formatted_time,
+                    'Type': f"{scan.get('scan_type', 'unknown').title()} Scan",
+                    'Status': '✅ Complete',
+                    'PII Found': pii_count,
+                    'Files': scan.get('file_count', 0),
+                    'Compliance': f"{result.get('compliance_score', 0):.1f}%"
                 })
             
             if activity_data:
                 df = pd.DataFrame(activity_data)
                 st.dataframe(df, use_container_width=True)
+                
+                # Quick actions
+                st.subheader("🔗 Quick Actions")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    if st.button("📊 View Detailed Results"):
+                        st.session_state['navigation'] = _('results.title', 'Results')
+                        st.rerun()
+                
+                with col2:
+                    if st.button("📋 View History"):
+                        st.session_state['navigation'] = _('history.title', 'History')
+                        st.rerun()
+                        
+                with col3:
+                    if st.button("🔍 New Scan"):
+                        st.session_state['navigation'] = _('scan.new_scan_title', 'New Scan')
+                        st.rerun()
             else:
-                st.info("No recent scan activity found.")
+                st.info("Scan data processing... Please refresh if data doesn't appear.")
         else:
             st.info("No recent scan activity found. Start your first scan to see activity here.")
             
-        # Additional metrics section
+            # Show start scanning button for new users
+            if st.button("🚀 Start Your First Scan"):
+                st.session_state['navigation'] = _('scan.new_scan_title', 'New Scan')
+                st.rerun()
+        
+        # Performance summary for users with scans
         if total_scans > 0:
+            st.markdown("---")
             st.subheader("📈 Performance Summary")
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
-                success_rate = metrics.get('success_rate', 0)
-                st.metric("Success Rate", f"{success_rate:.1%}")
+                avg_pii_per_scan = total_pii / max(total_scans, 1)
+                st.metric("Avg PII per Scan", f"{avg_pii_per_scan:.1f}")
                 
             with col2:
-                failed_scans = metrics.get('failed_scans', 0)
-                st.metric("Failed Scans", failed_scans)
+                high_risk_percentage = (high_risk_issues / max(total_pii, 1)) * 100 if total_pii > 0 else 0
+                st.metric("High Risk %", f"{high_risk_percentage:.1f}%")
+                
+            with col3:
+                total_files = sum(scan.get('file_count', 0) for scan in recent_scans)
+                st.metric("Total Files Scanned", total_files)
     
     except Exception as e:
         logger.error(f"Error loading dashboard metrics: {e}")
-        # Fallback to basic message
-        st.info("Dashboard metrics loading... Start your first scan to see activity data here.")
+        st.error(f"Dashboard loading error: {str(e)}")
         
-        # Show basic columns for new users
+        # Fallback display
+        st.info("Dashboard metrics temporarily unavailable. Please try refreshing the page.")
+        
+        # Show basic columns for fallback
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric(_('dashboard.metric.total_scans', 'Total Scans'), "0", "New User")
+            st.metric("Total Scans", 0, "+0")
         with col2:
-            st.metric(_('dashboard.metric.total_pii', 'PII Found'), "0", "Ready")
+            st.metric("PII Found", 0, "+0") 
         with col3:
-            st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), "0%", "Start Scanning")
+            st.metric("Compliance Score", "0.0%", "+0.0%")
         with col4:
-            st.metric(_('dashboard.metric.active_issues', 'Active Issues'), "0", "All Clear")
+            st.metric("Active Issues", 0, "-0")
+            
+        st.info("Please try refreshing the dashboard or start a new scan to see your data.")
 
 def render_scanner_interface_safe():
     """Complete scanner interface with all functional scanners"""
