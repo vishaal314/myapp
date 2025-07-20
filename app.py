@@ -1438,6 +1438,7 @@ def display_scan_results(scan_results):
                 # Generate PDF report and provide download button
                 try:
                     from services.download_reports import generate_pdf_report
+                    from config.report_config import FILENAME_DATE_FORMAT
                     pdf_content = generate_pdf_report(scan_results)
                     
                     # Track report download when button is used
@@ -1447,7 +1448,7 @@ def display_scan_results(scan_results):
                     st.download_button(
                         label="📥 Download PDF Report",
                         data=pdf_content,
-                        file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                        file_name=f"gdpr_report_{datetime.now().strftime(FILENAME_DATE_FORMAT)}.pdf",
                         mime="application/pdf",
                         use_container_width=True,
                         help="Download comprehensive PDF compliance report"
@@ -1460,6 +1461,7 @@ def display_scan_results(scan_results):
                 # Generate HTML report and provide download button
                 try:
                     from services.download_reports import generate_html_report
+                    from config.report_config import FILENAME_DATE_FORMAT
                     html_content = generate_html_report(scan_results)
                     
                     # Track report download when button is used
@@ -1469,7 +1471,7 @@ def display_scan_results(scan_results):
                     st.download_button(
                         label="📥 Download HTML Report",
                         data=html_content,
-                        file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                        file_name=f"gdpr_report_{datetime.now().strftime(FILENAME_DATE_FORMAT)}.html",
                         mime="text/html",
                         use_container_width=True,
                         help="Download interactive HTML compliance report"

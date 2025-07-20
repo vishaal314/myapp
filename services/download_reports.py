@@ -6,6 +6,8 @@ from typing import Dict, Any
 import streamlit as st
 from services.gdpr_report_generator import generate_gdpr_report
 from utils.i18n import get_text
+from config.report_config import PDF_MAX_FINDINGS, FILENAME_DATE_FORMAT
+from config.translation_mappings import REPORT_TRANSLATION_MAPPINGS
 
 logger = logging.getLogger(__name__)
 
@@ -20,35 +22,11 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
             if key.startswith('report.'):
                 return get_text(key, default_text)
             else:
-                # For backwards compatibility, try to map common terms
-                term_mapping = {
-                    'GDPR Compliance Report': get_text('report.title', 'GDPR Compliance Report'),
-                    'Repository': get_text('report.repository', 'Repository'),
-                    'Branch': get_text('report.branch', 'Branch'),
-                    'Scan ID': get_text('report.scan_id', 'Scan ID'),
-                    'Executive Summary': get_text('report.executive_summary', 'Executive Summary'),
-                    'This report presents the results of a GDPR compliance scan conducted on the repository.': get_text('report.description', 'This report presents the results of a GDPR compliance scan conducted on the repository.'),
-                    'The scan analyzed': get_text('report.scan_analyzed', 'The scan analyzed'),
-                    'files out of a total of': get_text('report.files_total', 'files out of a total of'),
-                    'files in the repository.': get_text('report.files_in_repo', 'files in the repository.'),
-                    'The scan identified': get_text('report.scan_identified', 'The scan identified'),
-                    'instances of potential personal data or compliance issues': get_text('report.compliance_issues', 'instances of potential personal data or compliance issues'),
-                    'high-risk findings': get_text('technical_terms.high_risk', 'high-risk findings'),
-                    'medium-risk findings': get_text('technical_terms.medium_risk', 'medium-risk findings'),
-                    'low-risk findings': get_text('technical_terms.low_risk', 'low-risk findings'),
-                    'Overall compliance score': get_text('technical_terms.compliance_score', 'Overall compliance score'),
-                    'Detailed Findings': get_text('technical_terms.findings', 'Detailed Findings'),
-                    'High Risk Findings': get_text('report.high_risk_findings', 'High Risk Findings'),
-                    'Medium Risk Findings': get_text('report.medium_risk_findings', 'Medium Risk Findings'),
-                    'Low Risk Findings': get_text('report.low_risk_findings', 'Low Risk Findings'),
-                    'Type': get_text('report.type', 'Type'),
-                    'Location': get_text('report.location', 'Location'),
-                    'Description': get_text('report.description_column', 'Description'),
-                    'Recommendations for Compliance': get_text('technical_terms.recommendations', 'Recommendations for Compliance'),
-                    'Generated on': get_text('report.generated_on', 'Generated on'),
-                    'Error generating report': get_text('report.error', 'Error generating report')
-                }
-                return term_mapping.get(key, default_text or key)
+                # Use externalized translation mappings for maintainability
+                translation_key = REPORT_TRANSLATION_MAPPINGS.get(key)
+                if translation_key:
+                    return get_text(translation_key, default_text or key)
+                return default_text or key
 
         # Extract summary data
         summary = scan_result.get('summary', {})
@@ -222,30 +200,8 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
         return f"<h1>{error_msg}:</h1> <p>{e}</p>"
 
 
-def get_report_download_link(scan_result: Dict[str, Any],
-                             format_type: str = "pdf") -> str:
-    try:
-        if format_type == "pdf":
-            success, report_path, report_content = generate_gdpr_report(
-                scan_result)
-            if success and report_content:
-                b64_content = base64.b64encode(report_content).decode()
-                filename = f"gdpr_compliance_report_{scan_result.get('scan_id', 'scan')}.pdf"
-                href = f'<a href="data:application/pdf;base64,{b64_content}" download="{filename}">Download GDPR Compliance Report (PDF)</a>'
-                return href
-            return "Error generating PDF report"
-
-        elif format_type == "html":
-            html_report = generate_html_report(scan_result)
-            b64_content = base64.b64encode(html_report.encode()).decode()
-            filename = f"gdpr_compliance_report_{scan_result.get('scan_id', 'scan')}.html"
-            href = f'<a href="data:text/html;base64,{b64_content}" download="{filename}">Download GDPR Compliance Report (HTML)</a>'
-            return href
-        else:
-            return "Unsupported format type"
-    except Exception as e:
-        logger.error(f"Error generating download link: {str(e)}")
-        return f"Error generating report: {str(e)}"
+# Legacy function removed - replaced by direct st.download_button implementation in UI
+# This function was unused and has been deprecated in favor of streamlined download buttons
 
 
 def generate_pdf_report(scan_result: Dict[str, Any]) -> bytes:
@@ -293,7 +249,7 @@ def generate_pdf_report(scan_result: Dict[str, Any]) -> bytes:
                 story.append(Paragraph("Detailed Findings", styles['Heading2']))
                 story.append(Spacer(1, 0.1*inch))
                 
-                for i, finding in enumerate(scan_result.get('findings', [])[:10]):  # Limit to 10 findings
+                for i, finding in enumerate(scan_result.get('findings', [])[:PDF_MAX_FINDINGS]):  # Configurable findings limit
                     finding_text = f"""
                     <b>Finding {i+1}:</b> {finding.get('type', 'Unknown')}<br/>
                     <b>Severity:</b> {finding.get('severity', 'Unknown')}<br/>
