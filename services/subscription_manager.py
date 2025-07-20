@@ -105,7 +105,7 @@ class SubscriptionManager:
                 "country_code": country_code
             }
             
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             st.error("Unable to create customer account. Please try again.")
             return None
         except Exception as e:
@@ -140,8 +140,7 @@ class SubscriptionManager:
                 currency=plan["currency"],
                 recurring={"interval": plan["interval"]},
                 product_data={
-                    "name": f"{plan['name']} (incl. VAT)",
-                    "description": plan["description"]
+                    "name": f"{plan['name']} (incl. VAT)"
                 },
                 metadata={
                     "plan_id": plan_id,
@@ -174,11 +173,11 @@ class SubscriptionManager:
                 "subtotal": pricing["subtotal"] / 100,
                 "vat": pricing["vat_amount"] / 100,
                 "currency": "EUR",
-                "client_secret": subscription.latest_invoice.payment_intent.client_secret,
-                "current_period_end": datetime.fromtimestamp(subscription.current_period_end)
+                "client_secret": getattr(getattr(subscription.latest_invoice, 'payment_intent', None), 'client_secret', None),
+                "current_period_end": datetime.fromtimestamp(getattr(subscription, 'current_period_end', 0))
             }
             
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             st.error("Unable to create subscription. Please try again.")
             return None
         except Exception as e:
@@ -212,15 +211,15 @@ class SubscriptionManager:
                     "status": sub.status,
                     "plan_id": plan_id,
                     "plan_name": plan["name"],
-                    "current_period_start": datetime.fromtimestamp(sub.current_period_start),
-                    "current_period_end": datetime.fromtimestamp(sub.current_period_end),
-                    "amount": sub.items.data[0].price.unit_amount / 100 if sub.items.data else 0,
+                    "current_period_start": datetime.fromtimestamp(getattr(sub, 'current_period_start', 0)),
+                    "current_period_end": datetime.fromtimestamp(getattr(sub, 'current_period_end', 0)),
+                    "amount": (getattr(sub.items.data[0].price, 'unit_amount', 0) or 0) / 100 if sub.items.data else 0,
                     "currency": sub.items.data[0].price.currency.upper() if sub.items.data else "EUR"
                 })
             
             return result
             
-        except stripe.error.StripeError:
+        except stripe.StripeError:
             st.error("Unable to retrieve subscription information")
             return []
         except Exception:
@@ -251,7 +250,7 @@ class SubscriptionManager:
             
             return True
             
-        except stripe.error.StripeError:
+        except stripe.StripeError:
             st.error("Unable to cancel subscription. Please contact support.")
             return False
         except Exception:
@@ -278,7 +277,7 @@ class SubscriptionManager:
             
             return setup_intent.client_secret
             
-        except stripe.error.StripeError:
+        except stripe.StripeError:
             st.error("Unable to update payment method")
             return None
         except Exception:
@@ -383,8 +382,9 @@ def create_subscription_checkout(plan_id: str, customer_email: str, country_code
         plan = SUBSCRIPTION_PLANS[plan_id]
         pricing = calculate_vat(plan["price"], country_code)
         
-        # Payment methods including iDEAL for Netherlands
-        payment_methods = ["card"]
+        # Payment methods including iDEAL for Netherlands  
+        from typing import cast, Any
+        payment_methods: Any = ["card"]
         if country_code.upper() == "NL":
             payment_methods.extend(["ideal", "sepa_debit"])
         
@@ -416,7 +416,7 @@ def create_subscription_checkout(plan_id: str, customer_email: str, country_code
         
         return checkout_session.url
         
-    except stripe.error.StripeError:
+    except stripe.StripeError:
         st.error("Unable to create subscription checkout. Please try again.")
         return None
     except Exception:

@@ -12,13 +12,16 @@ import streamlit as st
 from typing import Dict, Any, Optional
 from datetime import datetime
 
-# Import database functions
-try:
-    from utils.database_manager import get_db_connection
-except ImportError:
-    # Fallback for development
-    def get_db_connection():
-        return None
+# Database connection with fallback
+def get_db_connection() -> Optional[Any]:
+    """Get database connection with proper fallback handling"""
+    try:
+        from utils.database_manager import get_db_connection as _get_db_conn
+        return _get_db_conn()
+    except ImportError:
+        # Fallback for development environment
+        import streamlit as st
+        return st.session_state.get('db_connection', None)
 
 def verify_webhook_signature(payload: bytes, signature: str) -> bool:
     """
@@ -39,7 +42,7 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
     try:
         stripe.Webhook.construct_event(payload, signature, endpoint_secret)
         return True
-    except stripe.error.SignatureVerificationError:
+    except stripe.SignatureVerificationError:
         st.error("Invalid webhook signature")
         return False
     except Exception as e:

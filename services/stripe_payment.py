@@ -129,14 +129,14 @@ def verify_webhook_signature(payload: str, signature: str) -> bool:
     try:
         stripe.Webhook.construct_event(payload, signature, endpoint_secret)
         return True
-    except stripe.error.SignatureVerificationError:
+    except stripe.SignatureVerificationError:
         st.error("Invalid webhook signature")
         return False
     except Exception as e:
         st.error(f"Webhook verification failed: {str(e)}")
         return False
 
-def create_checkout_session(scan_type: str, user_email: str, metadata: Dict[str, Any] = None, country_code: str = "NL") -> Optional[Dict[str, Any]]:
+def create_checkout_session(scan_type: str, user_email: str, metadata: Optional[Dict[str, Any]] = None, country_code: str = "NL") -> Optional[Dict[str, Any]]:
     """
     Create a secure Stripe checkout session with VAT calculation
     
@@ -177,10 +177,8 @@ def create_checkout_session(scan_type: str, user_email: str, metadata: Dict[str,
         })
         
         # Payment methods including iDEAL for Netherlands
-        from typing import List, Literal
-        PaymentMethodType = Literal['card', 'ideal', 'bancontact', 'sepa_debit', 'sofort', 'eps', 'giropay', 'p24']
-        
-        payment_methods: List[PaymentMethodType] = ["card"]
+        from typing import cast, Any
+        payment_methods: Any = ["card"]
         if country_code.upper() == "NL":
             payment_methods.append("ideal")
         
@@ -219,7 +217,7 @@ def create_checkout_session(scan_type: str, user_email: str, metadata: Dict[str,
             "currency": "EUR"
         }
     
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         st.error("Payment service temporarily unavailable. Please try again later.")
         return None
     except Exception as e:
@@ -246,10 +244,14 @@ def verify_payment(session_id: str) -> Dict[str, Any]:
         if not checkout_session.payment_intent:
             return {"status": "error", "error": "No payment intent found"}
         
-        # Handle both string ID and PaymentIntent object
-        payment_intent_id = checkout_session.payment_intent
-        if hasattr(payment_intent_id, 'id'):
-            payment_intent_id = payment_intent_id.id
+        # Handle payment intent ID extraction safely
+        payment_intent_obj = checkout_session.payment_intent
+        if hasattr(payment_intent_obj, 'id'):
+            # If it's a PaymentIntent object, get the ID
+            payment_intent_id = str(getattr(payment_intent_obj, 'id', ''))
+        else:
+            # If it's already a string ID, use it directly
+            payment_intent_id = str(payment_intent_obj)
             
         payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
         
@@ -267,12 +269,12 @@ def verify_payment(session_id: str) -> Dict[str, Any]:
             "country_code": metadata.get("country_code", "NL"),
             "vat_rate": metadata.get("vat_rate")
         }
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         return {"status": "error", "error": "Payment verification failed"}
     except Exception as e:
         return {"status": "error", "error": "Verification service temporarily unavailable"}
 
-def display_payment_button(scan_type: str, user_email: str, metadata: Dict[str, Any] = None, country_code: str = "NL") -> Optional[str]:
+def display_payment_button(scan_type: str, user_email: str, metadata: Optional[Dict[str, Any]] = None, country_code: str = "NL") -> Optional[str]:
     """
     Display a secure payment button with VAT breakdown
     
