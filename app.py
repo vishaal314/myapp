@@ -1235,6 +1235,9 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         # Display detailed findings
         display_scan_results(scan_results)
         
+        # Store scan results in session state for download access
+        st.session_state['last_scan_results'] = scan_results
+        
         # Generate enhanced HTML report
         html_report = generate_html_report(scan_results)
         st.download_button(
@@ -1293,6 +1296,9 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         
         # Generate and display results
         display_scan_results(scan_results)
+        
+        # Store scan results in session state for download access
+        st.session_state['last_scan_results'] = scan_results
         
         # Generate HTML report
         html_report = generate_html_report(scan_results)
@@ -1422,53 +1428,59 @@ def display_scan_results(scan_results):
     
     # Check if user has report download access
     if require_report_access():
-        col1, col2 = st.columns(2)
+        # Get scan results from session state
+        scan_results = st.session_state.get('last_scan_results', None)
         
-        with col1:
-            if st.button("📥 Download PDF Report", use_container_width=True):
-                try:
-                    # Track report download
-                    track_report_usage('pdf', success=True)
-                    track_download_usage('pdf')
-                    
-                    # Generate PDF report
-                    from services.download_reports import generate_pdf_report
-                    pdf_content = generate_pdf_report(scan_results)
-                    
-                    # Create download link
-                    st.download_button(
-                        label="📥 Download PDF Report",
-                        data=pdf_content,
-                        file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
-                    st.success("✅ PDF report generated successfully!")
-                except Exception as e:
-                    st.error(f"Error generating PDF report: {str(e)}")
-        
-        with col2:
-            if st.button("📥 Download HTML Report", use_container_width=True):
-                try:
-                    # Track report download
-                    track_report_usage('html', success=True)
-                    track_download_usage('html')
-                    
-                    # Generate HTML report
-                    from services.download_reports import generate_html_report
-                    html_content = generate_html_report(scan_results)
-                    
-                    # Create download link
-                    st.download_button(
-                        label="📥 Download HTML Report",
-                        data=html_content,
-                        file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                        mime="text/html",
-                        use_container_width=True
-                    )
-                    st.success("✅ HTML report generated successfully!")
-                except Exception as e:
-                    st.error(f"Error generating HTML report: {str(e)}")
+        if scan_results:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("📥 Download PDF Report", use_container_width=True):
+                    try:
+                        # Track report download
+                        track_report_usage('pdf', success=True)
+                        track_download_usage('pdf')
+                        
+                        # Generate PDF report
+                        from services.download_reports import generate_pdf_report
+                        pdf_content = generate_pdf_report(scan_results)
+                        
+                        # Create download link
+                        st.download_button(
+                            label="📥 Download PDF Report",
+                            data=pdf_content,
+                            file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                        st.success("✅ PDF report generated successfully!")
+                    except Exception as e:
+                        st.error(f"Error generating PDF report: {str(e)}")
+            
+            with col2:
+                if st.button("📥 Download HTML Report", use_container_width=True):
+                    try:
+                        # Track report download
+                        track_report_usage('html', success=True)
+                        track_download_usage('html')
+                        
+                        # Generate HTML report
+                        from services.download_reports import generate_html_report
+                        html_content = generate_html_report(scan_results)
+                        
+                        # Create download link
+                        st.download_button(
+                            label="📥 Download HTML Report",
+                            data=html_content,
+                            file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                            mime="text/html",
+                            use_container_width=True
+                        )
+                        st.success("✅ HTML report generated successfully!")
+                    except Exception as e:
+                        st.error(f"Error generating HTML report: {str(e)}")
+        else:
+            st.info("🔄 Please run a scan first to generate reports.")
     else:
         st.info("💎 Report downloads are available with Professional and Enterprise licenses.")
 
@@ -3403,6 +3415,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                     st.progress(score/100)
                     st.markdown("---")
             
+            # Store scan results in session state for download access
+            st.session_state['last_scan_results'] = scan_results
+            
             # Generate comprehensive HTML report
             html_report = generate_html_report(scan_results)
             st.download_button(
@@ -3773,6 +3788,9 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
             
             # Display findings
             display_scan_results(scan_results)
+            
+            # Store scan results in session state for download access
+            st.session_state['last_scan_results'] = scan_results
             
             # Generate and offer HTML report
             html_report = generate_html_report(scan_results)
@@ -4356,6 +4374,9 @@ def execute_website_scan(region, username, url, scan_config):
                 content_size_mb = performance_metrics.get('total_content_size', 0) / 1024 / 1024
                 st.metric("Page Size", f"{content_size_mb:.1f} MB", 
                          delta=f"{content_size_mb - 0.5:.1f} MB vs Optimal" if content_size_mb <= 0.5 else f"+{content_size_mb - 0.5:.1f} MB vs Optimal")
+        
+        # Store scan results in session state for download access
+        st.session_state['last_scan_results'] = scan_results
         
         # Generate comprehensive HTML report
         html_report = generate_html_report(scan_results)
@@ -6011,6 +6032,9 @@ def execute_sustainability_scan(region, username, scan_params):
         
         # Display detailed findings
         display_scan_results(scan_results)
+        
+        # Store scan results in session state for download access
+        st.session_state['last_scan_results'] = scan_results
         
         # Generate and offer comprehensive HTML report
         html_report = generate_html_report(scan_results)
