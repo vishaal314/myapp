@@ -246,3 +246,84 @@ def get_report_download_link(scan_result: Dict[str, Any],
     except Exception as e:
         logger.error(f"Error generating download link: {str(e)}")
         return f"Error generating report: {str(e)}"
+
+
+def generate_pdf_report(scan_result: Dict[str, Any]) -> bytes:
+    """Generate PDF report using the existing GDPR report generator"""
+    try:
+        success, report_path, report_content = generate_gdpr_report(scan_result)
+        
+        if success and report_content:
+            return report_content
+        else:
+            # Fallback: create a simple PDF using reportlab
+            from reportlab.lib.pagesizes import letter
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.lib.units import inch
+            
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            styles = getSampleStyleSheet()
+            story = []
+            
+            # Title
+            title = f"GDPR Compliance Report - {scan_result.get('scan_type', 'Scanner')}"
+            story.append(Paragraph(title, styles['Title']))
+            story.append(Spacer(1, 0.2*inch))
+            
+            # Summary
+            scan_id = scan_result.get('scan_id', 'Unknown')
+            files_scanned = scan_result.get('files_scanned', 0)
+            findings_count = len(scan_result.get('findings', []))
+            compliance_score = scan_result.get('compliance_score', 0)
+            
+            summary_text = f"""
+            <b>Scan ID:</b> {scan_id}<br/>
+            <b>Files Scanned:</b> {files_scanned}<br/>
+            <b>Findings:</b> {findings_count}<br/>
+            <b>Compliance Score:</b> {compliance_score}%<br/>
+            <b>Generated:</b> {scan_result.get('timestamp', 'Unknown')}
+            """
+            story.append(Paragraph(summary_text, styles['Normal']))
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Findings
+            if findings_count > 0:
+                story.append(Paragraph("Detailed Findings", styles['Heading2']))
+                story.append(Spacer(1, 0.1*inch))
+                
+                for i, finding in enumerate(scan_result.get('findings', [])[:10]):  # Limit to 10 findings
+                    finding_text = f"""
+                    <b>Finding {i+1}:</b> {finding.get('type', 'Unknown')}<br/>
+                    <b>Severity:</b> {finding.get('severity', 'Unknown')}<br/>
+                    <b>Location:</b> {finding.get('file', 'Unknown')} (Line {finding.get('line', 0)})<br/>
+                    <b>Description:</b> {finding.get('description', 'No description')}<br/>
+                    """
+                    story.append(Paragraph(finding_text, styles['Normal']))
+                    story.append(Spacer(1, 0.2*inch))
+            
+            # Build PDF
+            doc.build(story)
+            buffer.seek(0)
+            return buffer.getvalue()
+            
+    except Exception as e:
+        logger.error(f"Error generating PDF report: {e}")
+        # Return a minimal error PDF
+        from reportlab.lib.pagesizes import letter
+        from reportlab.platypus import SimpleDocTemplate, Paragraph
+        from reportlab.lib.styles import getSampleStyleSheet
+        
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        
+        error_content = [
+            Paragraph("PDF Report Generation Error", styles['Title']),
+            Paragraph(f"Error: {str(e)}", styles['Normal'])
+        ]
+        
+        doc.build(error_content)
+        buffer.seek(0)
+        return buffer.getvalue()
