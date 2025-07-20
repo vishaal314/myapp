@@ -7236,10 +7236,374 @@ def render_history_trends(scans_data):
     except Exception as e:
         st.warning(f"Trend visualization unavailable: {str(e)}")
 
+
+
 def render_settings_page():
-    """Render settings page"""
-    st.title("⚙️ Settings")
-    st.info("User preferences, API configurations, and compliance settings.")
+    """Comprehensive settings page with user preferences, API configurations, and compliance settings"""
+    from utils.translations import _
+    from utils.settings_manager import SettingsManager
+    import json
+    
+    st.title(f"⚙️ {_('sidebar.settings', 'Settings')}")
+    
+    # Initialize settings manager
+    settings_manager = SettingsManager()
+    username = st.session_state.get('username', 'anonymous')
+    
+    # Initialize user settings if first time
+    if f"settings_initialized_{username}" not in st.session_state:
+        settings_manager.initialize_user_settings(username)
+        st.session_state[f"settings_initialized_{username}"] = True
+    
+    # Settings categories
+    tabs = st.tabs([
+        "👤 Profile", "🔐 API Keys", "⚖️ Compliance", 
+        "🔍 Scanners", "📊 Reports", "🔒 Security"
+    ])
+    
+    # Profile Settings
+    with tabs[0]:
+        st.subheader("Profile Preferences")
+        
+        profile_settings = settings_manager.get_user_settings(username, "profile")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            language = st.selectbox(
+                "Language",
+                ["en", "nl"],
+                index=0 if profile_settings.get("language", "en") == "en" else 1,
+                format_func=lambda x: "English" if x == "en" else "Nederlands"
+            )
+            
+            region = st.selectbox(
+                "Default Region",
+                ["Netherlands", "Germany", "France", "Belgium", "Europe"],
+                index=["Netherlands", "Germany", "France", "Belgium", "Europe"].index(
+                    profile_settings.get("region", "Netherlands")
+                )
+            )
+        
+        with col2:
+            theme = st.selectbox(
+                "Theme",
+                ["light", "dark", "auto"],
+                index=["light", "dark", "auto"].index(profile_settings.get("theme", "light"))
+            )
+            
+            timezone = st.selectbox(
+                "Timezone",
+                ["Europe/Amsterdam", "Europe/Berlin", "Europe/Paris", "Europe/Brussels"],
+                index=0
+            )
+        
+        # Notification preferences
+        st.markdown("#### Notifications")
+        email_notifications = st.checkbox(
+            "Email Notifications", 
+            value=profile_settings.get("email_notifications", True)
+        )
+        desktop_notifications = st.checkbox(
+            "Desktop Notifications", 
+            value=profile_settings.get("desktop_notifications", False)
+        )
+        
+        if st.button("💾 Save Profile Settings", key="save_profile"):
+            settings_manager.save_user_setting(username, "profile", "language", language)
+            settings_manager.save_user_setting(username, "profile", "region", region)
+            settings_manager.save_user_setting(username, "profile", "theme", theme)
+            settings_manager.save_user_setting(username, "profile", "timezone", timezone)
+            settings_manager.save_user_setting(username, "profile", "email_notifications", email_notifications)
+            settings_manager.save_user_setting(username, "profile", "desktop_notifications", desktop_notifications)
+            st.success("Profile settings saved successfully!")
+            st.rerun()
+    
+    # API Keys Settings
+    with tabs[1]:
+        st.subheader("API Configuration")
+        
+        api_settings = settings_manager.get_user_settings(username, "api_keys")
+        
+        # OpenAI API Key
+        st.markdown("#### OpenAI Configuration")
+        openai_key = st.text_input(
+            "OpenAI API Key",
+            value=api_settings.get("openai_api_key", ""),
+            type="password",
+            help="Enter your OpenAI API key for AI-powered analysis"
+        )
+        
+        if st.button("🧪 Test OpenAI Connection", key="test_openai"):
+            if openai_key:
+                validation = settings_manager.validate_api_key(openai_key, "openai")
+                if validation["valid"]:
+                    st.success(f"✅ {validation['message']}")
+                    st.info(f"Models available: {validation['details'].get('models_available', 'Unknown')}")
+                else:
+                    st.error(f"❌ {validation['message']}")
+            else:
+                st.warning("Please enter an API key to test")
+        
+        # Stripe API Keys
+        st.markdown("#### Stripe Configuration")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            stripe_secret = st.text_input(
+                "Stripe Secret Key",
+                value=api_settings.get("stripe_secret_key", ""),
+                type="password",
+                help="Stripe secret key for payment processing"
+            )
+        
+        with col2:
+            stripe_publishable = st.text_input(
+                "Stripe Publishable Key",
+                value=api_settings.get("stripe_publishable_key", ""),
+                help="Stripe publishable key for frontend"
+            )
+        
+        if st.button("🧪 Test Stripe Connection", key="test_stripe"):
+            if stripe_secret:
+                validation = settings_manager.validate_api_key(stripe_secret, "stripe")
+                if validation["valid"]:
+                    st.success(f"✅ {validation['message']}")
+                    st.info(f"Account ID: {validation['details'].get('account_id', 'Unknown')}")
+                else:
+                    st.error(f"❌ {validation['message']}")
+            else:
+                st.warning("Please enter Stripe secret key to test")
+        
+        if st.button("💾 Save API Keys", key="save_apis"):
+            settings_manager.save_user_setting(username, "api_keys", "openai_api_key", openai_key, encrypted=True)
+            settings_manager.save_user_setting(username, "api_keys", "stripe_secret_key", stripe_secret, encrypted=True)
+            settings_manager.save_user_setting(username, "api_keys", "stripe_publishable_key", stripe_publishable, encrypted=True)
+            st.success("API keys saved securely!")
+    
+    # Compliance Settings
+    with tabs[2]:
+        st.subheader("GDPR & Compliance")
+        
+        compliance_settings = settings_manager.get_user_settings(username, "compliance")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            gdpr_region = st.selectbox(
+                "GDPR Region",
+                ["Netherlands", "Germany", "France", "Belgium", "General EU"],
+                index=0
+            )
+            
+            retention_days = st.number_input(
+                "Data Retention (days)",
+                min_value=30,
+                max_value=2555,  # 7 years
+                value=compliance_settings.get("retention_days", 365)
+            )
+        
+        with col2:
+            data_residency = st.selectbox(
+                "Data Residency",
+                ["EU", "Netherlands", "Germany", "France"],
+                index=0
+            )
+            
+            dpo_contact = st.text_input(
+                "DPO Contact Email",
+                value=compliance_settings.get("dpo_contact", "")
+            )
+        
+        # Compliance toggles
+        audit_logging = st.checkbox(
+            "Audit Logging", 
+            value=compliance_settings.get("audit_logging", True),
+            help="Enable comprehensive audit trail"
+        )
+        breach_notifications = st.checkbox(
+            "Breach Notifications", 
+            value=compliance_settings.get("breach_notifications", True),
+            help="Automatic breach notification alerts"
+        )
+        
+        if st.button("💾 Save Compliance Settings", key="save_compliance"):
+            settings_manager.save_user_setting(username, "compliance", "gdpr_region", gdpr_region)
+            settings_manager.save_user_setting(username, "compliance", "data_residency", data_residency)
+            settings_manager.save_user_setting(username, "compliance", "retention_days", retention_days)
+            settings_manager.save_user_setting(username, "compliance", "dpo_contact", dpo_contact)
+            settings_manager.save_user_setting(username, "compliance", "audit_logging", audit_logging)
+            settings_manager.save_user_setting(username, "compliance", "breach_notifications", breach_notifications)
+            st.success("Compliance settings saved successfully!")
+    
+    # Scanner Settings
+    with tabs[3]:
+        st.subheader("Scanner Configuration")
+        
+        scanner_settings = settings_manager.get_user_settings(username, "scanners")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            default_scanner = st.selectbox(
+                "Default Scanner Type",
+                ["code", "document", "image", "website", "database", "api", "ai_model"],
+                index=0
+            )
+            
+            max_concurrent = st.number_input(
+                "Max Concurrent Scans",
+                min_value=1,
+                max_value=10,
+                value=scanner_settings.get("max_concurrent", 3)
+            )
+        
+        with col2:
+            timeout_seconds = st.number_input(
+                "Scan Timeout (seconds)",
+                min_value=60,
+                max_value=1800,
+                value=scanner_settings.get("timeout_seconds", 300)
+            )
+            
+            file_size_limit = st.number_input(
+                "File Size Limit (MB)",
+                min_value=1,
+                max_value=500,
+                value=scanner_settings.get("file_size_limit_mb", 100)
+            )
+        
+        scan_depth = st.selectbox(
+            "Default Scan Depth",
+            ["surface", "standard", "deep", "comprehensive"],
+            index=2
+        )
+        
+        if st.button("💾 Save Scanner Settings", key="save_scanners"):
+            settings_manager.save_user_setting(username, "scanners", "default_scanner", default_scanner)
+            settings_manager.save_user_setting(username, "scanners", "max_concurrent", max_concurrent)
+            settings_manager.save_user_setting(username, "scanners", "timeout_seconds", timeout_seconds)
+            settings_manager.save_user_setting(username, "scanners", "file_size_limit_mb", file_size_limit)
+            settings_manager.save_user_setting(username, "scanners", "scan_depth", scan_depth)
+            st.success("Scanner settings saved successfully!")
+    
+    # Report Settings
+    with tabs[4]:
+        st.subheader("Report Configuration")
+        
+        report_settings = settings_manager.get_user_settings(username, "reports")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            default_format = st.selectbox(
+                "Default Report Format",
+                ["html", "pdf", "json", "csv"],
+                index=0
+            )
+            
+            template = st.selectbox(
+                "Report Template",
+                ["professional", "detailed", "executive", "technical"],
+                index=0
+            )
+        
+        with col2:
+            auto_download = st.checkbox(
+                "Auto Download Reports", 
+                value=report_settings.get("auto_download", True)
+            )
+            
+            include_remediation = st.checkbox(
+                "Include Remediation Steps", 
+                value=report_settings.get("include_remediation", True)
+            )
+        
+        if st.button("💾 Save Report Settings", key="save_reports"):
+            settings_manager.save_user_setting(username, "reports", "default_format", default_format)
+            settings_manager.save_user_setting(username, "reports", "template", template)
+            settings_manager.save_user_setting(username, "reports", "auto_download", auto_download)
+            settings_manager.save_user_setting(username, "reports", "include_remediation", include_remediation)
+            st.success("Report settings saved successfully!")
+    
+    # Security Settings
+    with tabs[5]:
+        st.subheader("Security Configuration")
+        
+        security_settings = settings_manager.get_user_settings(username, "security")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            session_timeout = st.number_input(
+                "Session Timeout (minutes)",
+                min_value=15,
+                max_value=480,
+                value=security_settings.get("session_timeout_minutes", 60)
+            )
+            
+            audit_retention = st.number_input(
+                "Audit Log Retention (days)",
+                min_value=90,
+                max_value=2555,
+                value=security_settings.get("audit_log_retention", 730)
+            )
+        
+        with col2:
+            login_alerts = st.checkbox(
+                "Login Alerts", 
+                value=security_settings.get("login_alerts", True)
+            )
+            
+            two_factor = st.checkbox(
+                "Two-Factor Authentication", 
+                value=security_settings.get("two_factor_enabled", False),
+                help="Enable 2FA for enhanced security (coming soon)"
+            )
+        
+        if st.button("💾 Save Security Settings", key="save_security"):
+            settings_manager.save_user_setting(username, "security", "session_timeout_minutes", session_timeout)
+            settings_manager.save_user_setting(username, "security", "audit_log_retention", audit_retention)
+            settings_manager.save_user_setting(username, "security", "login_alerts", login_alerts)
+            settings_manager.save_user_setting(username, "security", "two_factor_enabled", two_factor)
+            st.success("Security settings saved successfully!")
+    
+    # Settings management section
+    st.markdown("---")
+    st.subheader("🔧 Settings Management")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("📤 Export Settings"):
+            export_data = settings_manager.export_settings(username, include_sensitive=False)
+            if export_data:
+                st.download_button(
+                    label="💾 Download Settings Backup",
+                    data=json.dumps(export_data, indent=2),
+                    file_name=f"dataguardian_settings_{username}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                    mime="application/json"
+                )
+                st.success("Settings export ready for download")
+    
+    with col2:
+        uploaded_file = st.file_uploader(
+            "📥 Import Settings",
+            type="json",
+            help="Upload a previously exported settings file"
+        )
+        if uploaded_file and st.button("Import"):
+            try:
+                import_data = json.load(uploaded_file)
+                if settings_manager.import_settings(username, import_data):
+                    st.success("Settings imported successfully!")
+                    st.rerun()
+                else:
+                    st.error("Failed to import settings")
+            except Exception as e:
+                st.error(f"Invalid settings file: {e}")
+    
+    with col3:
+        if st.button("🔄 Reset to Defaults"):
+            if st.button("⚠️ Confirm Reset", key="confirm_reset"):
+                settings_manager.initialize_user_settings(username)
+                st.success("Settings reset to defaults!")
+                st.rerun()
 
 def render_performance_dashboard_safe():
     """Render performance dashboard with error handling"""
