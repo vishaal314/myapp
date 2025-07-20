@@ -54,6 +54,13 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
         summary = scan_result.get('summary', {})
         files_scanned = summary.get('scanned_files',
                                     scan_result.get('files_scanned', 0))
+        
+        # For upload files, ensure files_scanned is correct
+        source_type = scan_result.get('source_type', 'unknown')
+        if source_type in ['upload_files', 'Upload Files', 'uploaded_files'] and files_scanned == 0:
+            uploaded_files = scan_result.get('uploaded_files', [])
+            files_scanned = len(uploaded_files) if uploaded_files else 0
+        
         files_skipped = summary.get('skipped_files',
                                     scan_result.get('files_skipped', 0))
         pii_instances = summary.get('pii_instances',
@@ -70,9 +77,25 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
 
         findings = scan_result.get('formatted_findings',
                                    scan_result.get('findings', []))
-        repo_url = scan_result.get(
-            'repository_url', scan_result.get('repo_url',
-                                              'Unknown Repository'))
+        
+        # Handle different source types for repository/source display
+        source_type = scan_result.get('source_type', 'unknown')
+        if source_type in ['upload_files', 'Upload Files', 'uploaded_files']:
+            # For uploaded files, show file count instead of repository URL
+            uploaded_files = scan_result.get('uploaded_files', [])
+            if isinstance(uploaded_files, list) and len(uploaded_files) > 0:
+                if isinstance(uploaded_files[0], str):
+                    # Already converted to filenames
+                    repo_url = f"{len(uploaded_files)} uploaded files"
+                else:
+                    # File objects, extract names
+                    repo_url = f"{len(uploaded_files)} uploaded files"
+            else:
+                repo_url = "Uploaded files"
+        else:
+            repo_url = scan_result.get(
+                'repository_url', scan_result.get('repo_url',
+                                                  'Unknown Repository'))
 
         # Set language for HTML document
         html_lang = "nl" if lang == "nl" else "en"

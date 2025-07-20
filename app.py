@@ -728,11 +728,26 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         progress_bar = st.progress(0)
         status_text = st.empty()
         
+        # Determine source type and store source information
+        if uploaded_files:
+            source_type = "upload_files"
+            source_info = uploaded_files
+        elif repo_url:
+            source_type = "repository"
+            source_info = repo_url
+        else:
+            source_type = "directory"
+            source_info = directory_path or "Unknown"
+        
         scan_results = {
             "scan_id": str(uuid.uuid4()),
             "scan_type": "GDPR-Compliant Code Scanner",
             "timestamp": datetime.now().isoformat(),
             "region": region,
+            "source_type": source_type,
+            "uploaded_files": uploaded_files if uploaded_files else [],
+            "repository_url": repo_url if repo_url else None,
+            "directory_path": directory_path if directory_path else None,
             "findings": [],
             "files_scanned": 0,
             "total_lines": 0,
@@ -6057,7 +6072,7 @@ def execute_sustainability_scan(region, username, scan_params):
         st.code(traceback.format_exc())
 
 def generate_html_report(scan_results):
-    """Generate enhanced HTML report with comprehensive data for all scanner types"""
+    """Generate enhanced HTML report with comprehensive data for all scanner types and source types"""
     
     # Get current language for translations
     current_lang = st.session_state.get('language', 'en')
@@ -6069,6 +6084,29 @@ def generate_html_report(scan_results):
             return get_text(key, default)
         else:
             return default
+    
+    # Handle different source types properly
+    source_type = scan_results.get('source_type', 'unknown')
+    scan_type = scan_results.get('scan_type', 'Code Analysis')
+    
+    # For upload files source type, ensure proper data handling
+    if source_type == 'upload_files' or source_type == 'Upload Files':
+        # Handle uploaded files data structure
+        files_scanned = scan_results.get('files_scanned', len(scan_results.get('uploaded_files', [])))
+        if files_scanned == 0 and 'uploaded_files' in scan_results:
+            files_scanned = len(scan_results['uploaded_files'])
+        
+        # Use appropriate source description
+        source_description = t('report.uploaded_files', 'Uploaded Files')
+        repository_info = f"{files_scanned} uploaded files"
+    elif source_type == 'repository' or source_type == 'Repository URL':
+        repository_info = scan_results.get('repository_url', scan_results.get('repo_url', 'Unknown Repository'))
+        source_description = t('report.repository', 'Repository')
+        files_scanned = scan_results.get('files_scanned', 0)
+    else:
+        repository_info = scan_results.get('repository_url', scan_results.get('repo_url', scan_results.get('source', 'Unknown Source')))
+        source_description = t('report.source', 'Source')
+        files_scanned = scan_results.get('files_scanned', 0)
     
     # Extract enhanced metrics based on scanner type
     if scan_results.get('scan_type') == 'Comprehensive Sustainability Scanner':
