@@ -1435,50 +1435,48 @@ def display_scan_results(scan_results):
             col1, col2 = st.columns(2)
             
             with col1:
-                if st.button("📥 Download PDF Report", use_container_width=True):
-                    try:
-                        # Track report download
-                        track_report_usage('pdf', success=True)
-                        track_download_usage('pdf')
-                        
-                        # Generate PDF report
-                        from services.download_reports import generate_pdf_report
-                        pdf_content = generate_pdf_report(scan_results)
-                        
-                        # Create download link
-                        st.download_button(
-                            label="📥 Download PDF Report",
-                            data=pdf_content,
-                            file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                        st.success("✅ PDF report generated successfully!")
-                    except Exception as e:
-                        st.error(f"Error generating PDF report: {str(e)}")
+                # Generate PDF report and provide download button
+                try:
+                    from services.download_reports import generate_pdf_report
+                    pdf_content = generate_pdf_report(scan_results)
+                    
+                    # Track report download when button is used
+                    track_report_usage('pdf', success=True)
+                    track_download_usage('pdf')
+                    
+                    st.download_button(
+                        label="📥 Download PDF Report",
+                        data=pdf_content,
+                        file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                        help="Download comprehensive PDF compliance report"
+                    )
+                except Exception as e:
+                    st.error(f"Error generating PDF report: {str(e)}")
+                    st.button("📥 PDF Report (Error)", disabled=True, use_container_width=True)
             
             with col2:
-                if st.button("📥 Download HTML Report", use_container_width=True):
-                    try:
-                        # Track report download
-                        track_report_usage('html', success=True)
-                        track_download_usage('html')
-                        
-                        # Generate HTML report
-                        from services.download_reports import generate_html_report
-                        html_content = generate_html_report(scan_results)
-                        
-                        # Create download link
-                        st.download_button(
-                            label="📥 Download HTML Report",
-                            data=html_content,
-                            file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                            mime="text/html",
-                            use_container_width=True
-                        )
-                        st.success("✅ HTML report generated successfully!")
-                    except Exception as e:
-                        st.error(f"Error generating HTML report: {str(e)}")
+                # Generate HTML report and provide download button
+                try:
+                    from services.download_reports import generate_html_report
+                    html_content = generate_html_report(scan_results)
+                    
+                    # Track report download when button is used
+                    track_report_usage('html', success=True)
+                    track_download_usage('html')
+                    
+                    st.download_button(
+                        label="📥 Download HTML Report",
+                        data=html_content,
+                        file_name=f"gdpr_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                        mime="text/html",
+                        use_container_width=True,
+                        help="Download interactive HTML compliance report"
+                    )
+                except Exception as e:
+                    st.error(f"Error generating HTML report: {str(e)}")
+                    st.button("📥 HTML Report (Error)", disabled=True, use_container_width=True)
         else:
             st.info("🔄 Please run a scan first to generate reports.")
     else:
