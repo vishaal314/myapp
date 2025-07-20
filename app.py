@@ -6764,14 +6764,403 @@ def render_document_scanner_config():
         st.info(f"First file: {first_file.name} ({first_file.size} bytes)")
 
 def render_results_page():
-    """Render results page"""
-    st.title("📊 Scan Results")
-    st.info("Recent scan results will be displayed here with detailed findings and compliance analysis.")
+    """Render results page with real scan data"""
+    from utils.translations import _
+    from services.results_aggregator import ResultsAggregator
+    import pandas as pd
+    
+    st.title(f"📊 {_('results.title', 'Scan Results')}")
+    
+    # Initialize results aggregator
+    try:
+        aggregator = ResultsAggregator()
+        username = st.session_state.get('username', 'anonymous')
+        
+        # Get recent scans for the user
+        recent_scans = aggregator.get_recent_scans(days=30, username=username)
+        
+        if not recent_scans:
+            st.info(_('results.no_results', 'No scan results available. Please run a scan first.'))
+            return
+            
+        # Display summary metrics
+        col1, col2, col3, col4 = st.columns(4)
+        total_scans = len(recent_scans)
+        total_pii = sum(scan.get('total_pii_found', 0) for scan in recent_scans)
+        high_risk = sum(scan.get('high_risk_count', 0) for scan in recent_scans)
+        avg_compliance = sum(scan.get('result', {}).get('compliance_score', 0) for scan in recent_scans) / max(total_scans, 1)
+        
+        with col1:
+            st.metric("Total Scans", total_scans)
+        with col2:
+            st.metric("PII Items Found", total_pii)
+        with col3:
+            st.metric("High Risk Issues", high_risk)
+        with col4:
+            st.metric("Avg Compliance", f"{avg_compliance:.1f}%")
+        
+        st.markdown("---")
+        
+        # Scan results table
+        st.subheader("Recent Scan Results")
+        
+        # Create data for table
+        table_data = []
+        for scan in recent_scans:
+            result = scan.get('result', {})
+            findings = result.get('findings', [])
+            pii_count = 0
+            risk_high = 0
+            
+            # Calculate actual PII count from findings
+            for finding in findings:
+                if isinstance(finding, dict):
+                    pii_count += finding.get('pii_count', 0)
+                    risk_summary = finding.get('risk_summary', {})
+                    if isinstance(risk_summary, dict):
+                        risk_high += risk_summary.get('High', 0)
+            
+            table_data.append({
+                'Scan ID': scan.get('scan_id', 'N/A')[:12],
+                'Date': scan.get('timestamp', 'N/A')[:10] if scan.get('timestamp') else 'N/A',
+                'Type': scan.get('scan_type', 'N/A').title(),
+                'Files': scan.get('file_count', 0),
+                'PII Found': pii_count,
+                'High Risk': risk_high,
+                'Compliance': f"{result.get('compliance_score', 0):.1f}%"
+            })
+        
+        if table_data:
+            df = pd.DataFrame(table_data)
+            
+            # Display interactive table
+            selected_scan = st.selectbox(
+                "Select scan for detailed view:",
+                options=range(len(recent_scans)),
+                format_func=lambda x: f"{recent_scans[x].get('scan_id', 'N/A')[:12]} - {recent_scans[x].get('scan_type', 'N/A').title()} ({recent_scans[x].get('timestamp', 'N/A')[:10]})"
+            )
+            
+            st.dataframe(df, use_container_width=True)
+            
+            # Detailed scan view
+            if selected_scan is not None:
+                st.markdown("---")
+                render_detailed_scan_view(recent_scans[selected_scan])
+                
+    except Exception as e:
+        st.error(f"Error loading scan results: {str(e)}")
+        st.info("Please try refreshing the page or contact support if the issue persists.")
 
 def render_history_page():
-    """Render scan history"""
-    st.title("📋 Scan History")
-    st.info("Complete scan history with filtering and search capabilities.")
+    """Render scan history with real data and filtering"""
+    from utils.translations import _
+    from services.results_aggregator import ResultsAggregator
+    import pandas as pd
+    from datetime import datetime, timedelta
+    
+    st.title(f"📋 {_('history.title', 'Scan History')}")
+    
+    try:
+        aggregator = ResultsAggregator()
+        username = st.session_state.get('username', 'anonymous')
+        
+        # Filtering options
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            days_filter = st.selectbox(
+                "Time Period",
+                [7, 30, 90, 365],
+                index=1,
+                format_func=lambda x: f"Last {x} days"
+            )
+        
+        with col2:
+            scan_types = st.multiselect(
+                "Scan Types",
+                ["code", "document", "image", "website", "database", "ai_model", "dpia"],
+                default=[]
+            )
+        
+        with col3:
+            risk_filter = st.selectbox(
+                "Risk Level",
+                ["All", "High Risk Only", "Medium+", "Low Risk Only"],
+                index=0
+            )
+        
+        # Get historical scans
+        all_scans = aggregator.get_recent_scans(days=days_filter, username=username)
+        
+        # Apply filters
+        filtered_scans = all_scans
+        if scan_types:
+            filtered_scans = [scan for scan in filtered_scans if scan.get('scan_type') in scan_types]
+        
+        if risk_filter != "All":
+            if risk_filter == "High Risk Only":
+                filtered_scans = [scan for scan in filtered_scans if scan.get('high_risk_count', 0) > 0]
+            elif risk_filter == "Medium+":
+                filtered_scans = [scan for scan in filtered_scans if scan.get('high_risk_count', 0) > 0 or 
+                                scan.get('total_pii_found', 0) > 5]
+            elif risk_filter == "Low Risk Only":
+                filtered_scans = [scan for scan in filtered_scans if scan.get('high_risk_count', 0) == 0]
+        
+        if not filtered_scans:
+            st.info("No scan history found matching the selected filters.")
+            return
+        
+        # Display summary
+        st.subheader(f"Found {len(filtered_scans)} scans")
+        
+        # Historical trends
+        if len(filtered_scans) > 1:
+            render_history_trends(filtered_scans)
+        
+        st.markdown("---")
+        
+        # History table with more details
+        history_data = []
+        for scan in filtered_scans:
+            result = scan.get('result', {})
+            findings = result.get('findings', [])
+            
+            # Calculate metrics from actual findings
+            total_pii = sum(f.get('pii_count', 0) for f in findings if isinstance(f, dict))
+            high_risk = sum(f.get('risk_summary', {}).get('High', 0) for f in findings if isinstance(f, dict))
+            
+            # Format timestamp
+            timestamp = scan.get('timestamp', '')
+            if timestamp:
+                try:
+                    dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    formatted_time = dt.strftime("%Y-%m-%d %H:%M")
+                except:
+                    formatted_time = timestamp[:16]
+            else:
+                formatted_time = 'Unknown'
+            
+            history_data.append({
+                'Timestamp': formatted_time,
+                'Scan ID': scan.get('scan_id', 'N/A'),
+                'Type': scan.get('scan_type', 'unknown').title(),
+                'Files Scanned': scan.get('file_count', 0),
+                'PII Found': total_pii,
+                'High Risk': high_risk,
+                'Compliance Score': f"{result.get('compliance_score', 0):.1f}%",
+                'Region': scan.get('region', 'N/A')
+            })
+        
+        if history_data:
+            df = pd.DataFrame(history_data)
+            st.dataframe(df, use_container_width=True)
+            
+            # Export options
+            st.subheader("Export Options")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("📊 Export as CSV"):
+                    csv_data = df.to_csv(index=False)
+                    st.download_button(
+                        label="Download CSV",
+                        data=csv_data,
+                        file_name=f"scan_history_{username}_{datetime.now().strftime('%Y%m%d')}.csv",
+                        mime="text/csv"
+                    )
+                    
+            with col2:
+                if st.button("📋 Generate Report"):
+                    st.info("Detailed compliance report generation coming soon!")
+                    
+    except Exception as e:
+        st.error(f"Error loading scan history: {str(e)}")
+        st.info("Please try refreshing the page or contact support if the issue persists.")
+
+def render_detailed_scan_view(scan_data):
+    """Render detailed view of a specific scan"""
+    try:
+        st.subheader(f"📋 Scan Details: {scan_data.get('scan_id', 'N/A')[:12]}")
+        
+        # Scan metadata
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.write(f"**Type:** {scan_data.get('scan_type', 'N/A').title()}")
+            st.write(f"**Date:** {scan_data.get('timestamp', 'N/A')[:19]}")
+        with col2:
+            st.write(f"**Region:** {scan_data.get('region', 'Netherlands')}")
+            st.write(f"**Files Scanned:** {scan_data.get('file_count', 0)}")
+        with col3:
+            result = scan_data.get('result', {})
+            st.write(f"**Compliance Score:** {result.get('compliance_score', 0):.1f}%")
+            st.write(f"**High Risk Items:** {scan_data.get('high_risk_count', 0)}")
+        
+        # Findings details
+        findings = result.get('findings', [])
+        if findings and len(findings) > 0:
+            st.markdown("### 🔍 Detailed Findings")
+            
+            for i, finding in enumerate(findings):
+                if isinstance(finding, dict):
+                    with st.expander(f"Finding {i+1}: {finding.get('file_name', 'Unknown file')}"):
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.write(f"**File Path:** {finding.get('file_path', 'N/A')}")
+                            st.write(f"**File Size:** {finding.get('file_size', 'N/A')} bytes")
+                            st.write(f"**PII Count:** {finding.get('pii_count', 0)}")
+                            
+                        with col2:
+                            risk_summary = finding.get('risk_summary', {})
+                            if isinstance(risk_summary, dict):
+                                st.write("**Risk Breakdown:**")
+                                if risk_summary.get('High', 0) > 0:
+                                    st.write(f"• High Risk: {risk_summary.get('High', 0)} items")
+                                if risk_summary.get('Medium', 0) > 0:
+                                    st.write(f"• Medium Risk: {risk_summary.get('Medium', 0)} items")
+                                if risk_summary.get('Low', 0) > 0:
+                                    st.write(f"• Low Risk: {risk_summary.get('Low', 0)} items")
+                        
+                        # PII details
+                        pii_found = finding.get('pii_found', [])
+                        if pii_found and len(pii_found) > 0:
+                            st.write("**PII Items Found:**")
+                            for pii_item in pii_found[:10]:  # Show first 10 items
+                                if isinstance(pii_item, dict):
+                                    pii_type = pii_item.get('type', 'Unknown')
+                                    risk_level = pii_item.get('risk_level', 'Unknown')
+                                    location = pii_item.get('location', 'N/A')
+                                    
+                                    # Color coding for risk levels
+                                    if risk_level.lower() == 'high':
+                                        st.error(f"🔴 {pii_type} - {risk_level} Risk (Line: {location})")
+                                    elif risk_level.lower() == 'medium':
+                                        st.warning(f"🟡 {pii_type} - {risk_level} Risk (Line: {location})")
+                                    else:
+                                        st.info(f"🟢 {pii_type} - {risk_level} Risk (Line: {location})")
+                            
+                            if len(pii_found) > 10:
+                                st.write(f"... and {len(pii_found) - 10} more items")
+        
+        # GDPR compliance details
+        if 'gdpr_principles' in result:
+            st.markdown("### ⚖️ GDPR Compliance Analysis")
+            principles = result.get('gdpr_principles', {})
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                for principle, violations in principles.items():
+                    if violations > 0:
+                        st.warning(f"**{principle}:** {violations} violations")
+                    else:
+                        st.success(f"**{principle}:** Compliant")
+            
+            with col2:
+                breach_required = result.get('breach_notification_required', False)
+                high_risk_processing = result.get('high_risk_processing', False)
+                
+                if breach_required:
+                    st.error("⚠️ **Breach notification may be required**")
+                if high_risk_processing:
+                    st.warning("🔶 **High-risk data processing detected**")
+                if not breach_required and not high_risk_processing:
+                    st.success("✅ **No critical compliance issues**")
+        
+        # Export options for individual scan
+        st.markdown("### 📊 Export This Scan")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📄 Export as JSON", key=f"json_export_{scan_data.get('scan_id', 'unknown')}"):
+                import json
+                json_data = json.dumps(scan_data, indent=2, default=str)
+                st.download_button(
+                    label="Download JSON",
+                    data=json_data,
+                    file_name=f"scan_{scan_data.get('scan_id', 'unknown')}.json",
+                    mime="application/json",
+                    key=f"json_download_{scan_data.get('scan_id', 'unknown')}"
+                )
+                
+        with col2:
+            if st.button("📋 Generate PDF Report", key=f"pdf_export_{scan_data.get('scan_id', 'unknown')}"):
+                st.info("PDF report generation will be implemented soon!")
+                
+    except Exception as e:
+        st.error(f"Error displaying scan details: {str(e)}")
+
+def render_history_trends(scans_data):
+    """Render historical trends visualization"""
+    try:
+        import plotly.graph_objects as go
+        from datetime import datetime
+        
+        st.markdown("### 📈 Historical Trends")
+        
+        # Prepare data for visualization
+        dates = []
+        pii_counts = []
+        compliance_scores = []
+        
+        for scan in scans_data:
+            try:
+                timestamp = scan.get('timestamp', '')
+                if timestamp:
+                    dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    dates.append(dt)
+                    
+                    # Calculate actual PII from findings
+                    result = scan.get('result', {})
+                    findings = result.get('findings', [])
+                    total_pii = sum(f.get('pii_count', 0) for f in findings if isinstance(f, dict))
+                    pii_counts.append(total_pii)
+                    
+                    compliance_scores.append(result.get('compliance_score', 0))
+            except:
+                continue
+        
+        if dates and len(dates) > 1:
+            # Create timeline chart
+            fig = go.Figure()
+            
+            # Add PII trend line
+            fig.add_trace(go.Scatter(
+                x=dates,
+                y=pii_counts,
+                mode='lines+markers',
+                name='PII Items Found',
+                line=dict(color='red', width=2)
+            ))
+            
+            # Add compliance score trend
+            fig.add_trace(go.Scatter(
+                x=dates,
+                y=compliance_scores,
+                mode='lines+markers',
+                name='Compliance Score (%)',
+                yaxis='y2',
+                line=dict(color='green', width=2)
+            ))
+            
+            # Update layout
+            fig.update_layout(
+                title='Scan Results Over Time',
+                xaxis_title='Date',
+                yaxis_title='PII Items Found',
+                yaxis2=dict(
+                    title='Compliance Score (%)',
+                    overlaying='y',
+                    side='right'
+                ),
+                hovermode='x unified'
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Not enough data points for trend analysis")
+            
+    except Exception as e:
+        st.warning(f"Trend visualization unavailable: {str(e)}")
 
 def render_settings_page():
     """Render settings page"""
