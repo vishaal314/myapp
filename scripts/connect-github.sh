@@ -30,7 +30,7 @@ if [ ! -d .git ]; then
 fi
 
 # Pre-filled GitHub username
-github_username="vishaal314"
+github_username="example_user"
 echo -e "${GREEN}Using GitHub username: ${github_username}${NC}"
 
 # Prompt for GitHub repository name

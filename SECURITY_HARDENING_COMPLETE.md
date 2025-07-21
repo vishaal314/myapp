@@ -70,7 +70,7 @@ return {
     "admin": "password",
     "user": "password", 
     "demo": "demo",
-    "vishaal314": "fim48uKu"
+    "demo_user": "fim48uKu"
 }
 ```
 

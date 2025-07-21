@@ -10,7 +10,7 @@ Region Netherlands
 Date & Time 2025-04-23 21:58:05
 Model Source Repository URL
 Model Name Unknown Model
-Repository URL https://github.com/vishaal314/terrascan
+Repository URL https://github.com/demo_user/terrascan
 Repository Path Not available
 Total PII Items Found 0
 High Risk Items 0
@@ -62,7 +62,7 @@ Region Netherlands
 Timestamp 2025-04-23 21:58:05
 Model Source Repository URL
 Model Name Unknown Model
-Repository URL https://github.com/vishaal314/terrascan
+Repository URL https://github.com/demo_user/terrascan
 Repository Path Not available
 Username Unknown
 Files Scanned 0

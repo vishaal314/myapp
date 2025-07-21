@@ -19,8 +19,8 @@ valid_credentials = {
     "admin": "password",
     "user": "password", 
     "demo": "demo",
-    "vishaal314": "fim48uKu",
-    "vishaal314@gmail.com": "fim48uKu"
+    "demo_user": "fim48uKu",
+    "demo_user@gmail.com": "fim48uKu"
 }
 ```
 
@@ -56,7 +56,7 @@ if validate_credentials(username, password):
 ```bash
 # .env.example - New security settings
 AUTH_CREDENTIALS=admin:secure_admin_password,user:secure_user_password,demo:demo_password
-ADMIN_USERS=admin,vishaal314,vishaal314@gmail.com
+ADMIN_USERS=admin,demo_user,demo_user@gmail.com
 ```
 
 **Testing Results**:

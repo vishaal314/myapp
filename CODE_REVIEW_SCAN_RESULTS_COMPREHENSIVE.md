@@ -80,7 +80,7 @@ def render_history_page():
 ```python
 {
     'scan_id': '36da4108d9',
-    'username': 'vishaal314', 
+    'username': 'demo_user', 
     'scan_type': 'directory',
     'timestamp': '2025-07-19T21:23:18.824204',
     'total_pii_found': 0,  # Issue: Shows 0 but actual findings exist

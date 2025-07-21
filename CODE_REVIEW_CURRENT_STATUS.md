@@ -108,8 +108,8 @@ return {
     "admin": "password",
     "user": "password", 
     "demo": "demo",
-    "vishaal314": "fim48uKu",
-    "vishaal314@gmail.com": "fim48uKu"
+    "demo_user": "fim48uKu",
+    "demo_user@gmail.com": "fim48uKu"
 }
 ```
 
