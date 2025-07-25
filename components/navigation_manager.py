@@ -34,6 +34,7 @@ def create_modern_sidebar_nav(nav_options, icon_map=None):
             _("history.title", "History"): "📚",
             _("results.title", "Results"): "📋",
             _("report.generate", "Reports"): "📄",
+            "💳 iDEAL Payment Test": "💳",
             _("admin.title", "Admin"): "⚙️"
         }
     
@@ -64,6 +65,10 @@ def get_navigation_options(user_role):
     
     # Base navigation for all users
     nav_options = [scan_title, simple_dpia_title, dashboard_title, history_title, results_title, report_title]
+    
+    # Add iDEAL Payment Test option
+    ideal_test_title = "💳 iDEAL Payment Test"
+    nav_options.append(ideal_test_title)
     
     # Add admin navigation if user is admin
     if user_role == 'admin':
