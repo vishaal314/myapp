@@ -60,7 +60,8 @@ def run_comprehensive_test_suite() -> Dict[str, Any]:
             suite = loader.loadTestsFromModule(test_module)
             
             # Run tests with custom result collector
-            stream = unittest.StringIO()
+            import io
+            stream = io.StringIO()
             runner = unittest.TextTestRunner(stream=stream, verbosity=2)
             result = runner.run(suite)
             

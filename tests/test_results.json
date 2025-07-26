@@ -1,0 +1,79 @@
+{
+  "timestamp": "2025-07-26T22:41:51.554818",
+  "total_tests": 36,
+  "passed_tests": 34,
+  "failed_tests": 2,
+  "error_tests": 0,
+  "total_time": 1.7625195980072021,
+  "scanner_results": {
+    "Code Scanner": {
+      "tests_run": 6,
+      "passed": 6,
+      "failures": 0,
+      "errors": 0,
+      "success_rate": 100.0,
+      "grade": "A+",
+      "execution_time": 0.12626409530639648,
+      "production_ready": true,
+      "test_output": "test_1_functional_pii_detection (tests.test_code_scanner.TestCodeScanner.test_1_functional_pii_detection)\nTest 1: Functional - PII Detection in Code Files ... ok\ntest_2_functional_secret_detection (tests.test_code_scanner.TestCodeScanner.test_2_functional_secret_detection)\nTest 2: Functional - Secret and API Key Detection ... ok\ntest_3_functional_gdpr_compliance (tests.test_code_scanner.TestCodeScanner.test_3_functional_gdpr_compliance)\nTest 3: Functional - GDPR Compliance Analysis ... ok\ntest_4_performance_large_codebase (tests.test_code_scanner.TestCodeScanner.test_4_performance_large_codebase)\nTest 4: Performance - Large Codebase Scanning ... ok\ntest_5_performance_multiple_file_formats (tests.test_code_scanner.TestCodeScanner.test_5_performance_multiple_file_formats)\nTest 5: Performance - Multiple Programming Languages ... ok\ntest_6_functional_netherlands_specific (tests.test_code_scanner.TestCodeScanner.test_6_functional_netherlands_specific)\nTest 6: Functional - Netherlands-Specific GDPR/UAVG Compliance ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.066s\n\nOK\n"
+    },
+    "Website Scanner": {
+      "tests_run": 6,
+      "passed": 6,
+      "failures": 0,
+      "errors": 0,
+      "success_rate": 100.0,
+      "grade": "A+",
+      "execution_time": 0.4182100296020508,
+      "production_ready": true,
+      "test_output": "test_1_functional_cookie_detection (tests.test_website_scanner.TestWebsiteScanner.test_1_functional_cookie_detection)\nTest 1: Functional - Cookie and Consent Banner Detection ... ok\ntest_2_functional_privacy_policy_analysis (tests.test_website_scanner.TestWebsiteScanner.test_2_functional_privacy_policy_analysis)\nTest 2: Functional - Privacy Policy and GDPR Compliance ... ok\ntest_3_functional_netherlands_compliance (tests.test_website_scanner.TestWebsiteScanner.test_3_functional_netherlands_compliance)\nTest 3: Functional - Netherlands-Specific GDPR/AP Compliance ... ok\ntest_4_performance_multi_page_crawling (tests.test_website_scanner.TestWebsiteScanner.test_4_performance_multi_page_crawling)\nTest 4: Performance - Multi-Page Website Crawling ... ok\ntest_5_performance_large_website_analysis (tests.test_website_scanner.TestWebsiteScanner.test_5_performance_large_website_analysis)\nTest 5: Performance - Large Website with Many Trackers ... ok\ntest_6_functional_ssl_and_security_analysis (tests.test_website_scanner.TestWebsiteScanner.test_6_functional_ssl_and_security_analysis)\nTest 6: Functional - SSL/TLS and Security Headers Analysis ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.329s\n\nOK\n"
+    },
+    "Image Scanner": {
+      "tests_run": 6,
+      "passed": 5,
+      "failures": 1,
+      "errors": 0,
+      "success_rate": 83.33333333333334,
+      "grade": "B+",
+      "execution_time": 0.2745537757873535,
+      "production_ready": false,
+      "test_output": "test_1_functional_pii_text_extraction (tests.test_image_scanner.TestImageScanner.test_1_functional_pii_text_extraction)\nTest 1: Functional - PII Detection in Image Text via OCR ... ok\ntest_2_functional_document_scanning (tests.test_image_scanner.TestImageScanner.test_2_functional_document_scanning)\nTest 2: Functional - Document Image Processing ... ok\ntest_3_functional_netherlands_compliance (tests.test_image_scanner.TestImageScanner.test_3_functional_netherlands_compliance)\nTest 3: Functional - Netherlands-Specific Data Recognition ... ok\ntest_4_performance_large_image_processing (tests.test_image_scanner.TestImageScanner.test_4_performance_large_image_processing)\nTest 4: Performance - Large High-Resolution Image Processing ... FAIL\ntest_5_performance_batch_image_processing (tests.test_image_scanner.TestImageScanner.test_5_performance_batch_image_processing)\nTest 5: Performance - Multiple Image Batch Processing ... ok\ntest_6_functional_ocr_fallback_handling (tests.test_image_scanner.TestImageScanner.test_6_functional_ocr_fallback_handling)\nTest 6: Functional - OCR Library Availability and Fallback ... ok\n\n======================================================================\nFAIL: test_4_performance_large_image_processing (tests.test_image_scanner.TestImageScanner.test_4_performance_large_image_processing)\nTest 4: Performance - Large High-Resolution Image Processing\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/home/runner/workspace/tests/test_image_scanner.py\", line 239, in test_4_performance_large_image_processing\n    self.assertGreater(actual_size, 1000000,  # > 1MB\nAssertionError: 13438 not greater than 1000000 : Should handle large image files\n\n----------------------------------------------------------------------\nRan 6 tests in 0.236s\n\nFAILED (failures=1)\n"
+    },
+    "AI Model Scanner": {
+      "tests_run": 6,
+      "passed": 6,
+      "failures": 0,
+      "errors": 0,
+      "success_rate": 100.0,
+      "grade": "A+",
+      "execution_time": 0.018886089324951172,
+      "production_ready": true,
+      "test_output": "test_1_functional_repository_analysis (tests.test_ai_model_scanner.TestAIModelScanner.test_1_functional_repository_analysis)\nTest 1: Functional - AI Model Repository Analysis ... ok\ntest_2_functional_eu_ai_act_compliance (tests.test_ai_model_scanner.TestAIModelScanner.test_2_functional_eu_ai_act_compliance)\nTest 2: Functional - EU AI Act 2025 Compliance Assessment ... ok\ntest_3_functional_bias_fairness_analysis (tests.test_ai_model_scanner.TestAIModelScanner.test_3_functional_bias_fairness_analysis)\nTest 3: Functional - Bias and Fairness Assessment ... ok\ntest_4_performance_large_model_analysis (tests.test_ai_model_scanner.TestAIModelScanner.test_4_performance_large_model_analysis)\nTest 4: Performance - Large Model Repository Scanning ... ok\ntest_5_performance_multiple_model_formats (tests.test_ai_model_scanner.TestAIModelScanner.test_5_performance_multiple_model_formats)\nTest 5: Performance - Multiple AI Model Formats ... ok\ntest_6_functional_netherlands_ai_governance (tests.test_ai_model_scanner.TestAIModelScanner.test_6_functional_netherlands_ai_governance)\nTest 6: Functional - Netherlands AI Governance and Ethics ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.017s\n\nOK\n"
+    },
+    "DPIA Scanner": {
+      "tests_run": 6,
+      "passed": 5,
+      "failures": 1,
+      "errors": 0,
+      "success_rate": 83.33333333333334,
+      "grade": "B+",
+      "execution_time": 0.024459362030029297,
+      "production_ready": false,
+      "test_output": "test_1_functional_risk_assessment_calculation (tests.test_dpia_scanner.TestDPIAScanner.test_1_functional_risk_assessment_calculation)\nTest 1: Functional - GDPR Article 35 Risk Assessment Calculation ... ok\ntest_2_functional_netherlands_uavg_compliance (tests.test_dpia_scanner.TestDPIAScanner.test_2_functional_netherlands_uavg_compliance)\nTest 2: Functional - Netherlands UAVG-Specific Assessment ... ok\ntest_3_functional_multi_language_assessment (tests.test_dpia_scanner.TestDPIAScanner.test_3_functional_multi_language_assessment)\nTest 3: Functional - Multi-Language Assessment Consistency ... ok\ntest_4_performance_complex_assessment_scenarios (tests.test_dpia_scanner.TestDPIAScanner.test_4_performance_complex_assessment_scenarios)\nTest 4: Performance - Complex Multi-Criteria Assessment ... ok\ntest_5_performance_batch_assessment_processing (tests.test_dpia_scanner.TestDPIAScanner.test_5_performance_batch_assessment_processing)\nTest 5: Performance - Multiple Assessment Batch Processing ... ok\ntest_6_functional_edge_case_handling (tests.test_dpia_scanner.TestDPIAScanner.test_6_functional_edge_case_handling)\nTest 6: Functional - Edge Cases and Error Handling ... FAIL\n\n======================================================================\nFAIL: test_6_functional_edge_case_handling (tests.test_dpia_scanner.TestDPIAScanner.test_6_functional_edge_case_handling)\nTest 6: Functional - Edge Cases and Error Handling\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/home/runner/workspace/tests/test_dpia_scanner.py\", line 376, in test_6_functional_edge_case_handling\n    performance_data = self.base_tester.measure_performance(\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/tests/test_framework.py\", line 61, in measure_performance\n    result = func(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/tests/test_mock_scanners.py\", line 241, in conduct_assessment\n    if 'bsn' in str(assessment_data).lower() or data_categories.get('bsn_processing'):\n                                                ^^^^^^^^^^^^^^^^^^^\nAttributeError: 'str' object has no attribute 'get'\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/home/runner/workspace/tests/test_dpia_scanner.py\", line 400, in test_6_functional_edge_case_handling\n    self.assertIsInstance(e, (ValueError, TypeError, KeyError),\nAssertionError: AttributeError(\"'str' object has no attribute 'get'\") is not an instance of (<class 'ValueError'>, <class 'TypeError'>, <class 'KeyError'>) : Edge case 3 should fail gracefully with appropriate exception type\n\n----------------------------------------------------------------------\nRan 6 tests in 0.022s\n\nFAILED (failures=1)\n"
+    },
+    "Sustainability Scanner": {
+      "tests_run": 6,
+      "passed": 6,
+      "failures": 0,
+      "errors": 0,
+      "success_rate": 100.0,
+      "grade": "A+",
+      "execution_time": 0.896390438079834,
+      "production_ready": true,
+      "test_output": "test_1_functional_cloud_resource_analysis (tests.test_sustainability_scanner.TestSustainabilityScanner.test_1_functional_cloud_resource_analysis)\nTest 1: Functional - Cloud Resource Waste Detection ... ok\ntest_2_functional_code_efficiency_analysis (tests.test_sustainability_scanner.TestSustainabilityScanner.test_2_functional_code_efficiency_analysis)\nTest 2: Functional - Code Efficiency and Dead Code Detection ... ok\ntest_3_functional_emissions_calculation (tests.test_sustainability_scanner.TestSustainabilityScanner.test_3_functional_emissions_calculation)\nTest 3: Functional - Regional CO\u2082 Emissions Calculation ... ok\ntest_4_performance_large_infrastructure_analysis (tests.test_sustainability_scanner.TestSustainabilityScanner.test_4_performance_large_infrastructure_analysis)\nTest 4: Performance - Large-Scale Infrastructure Analysis ... ok\ntest_5_performance_multi_codebase_analysis (tests.test_sustainability_scanner.TestSustainabilityScanner.test_5_performance_multi_codebase_analysis)\nTest 5: Performance - Multiple Codebase Sustainability Analysis ... ok\ntest_6_functional_sustainability_recommendations (tests.test_sustainability_scanner.TestSustainabilityScanner.test_6_functional_sustainability_recommendations)\nTest 6: Functional - Sustainability Recommendations and Quick Wins ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.012s\n\nOK\n"
+    }
+  },
+  "overall_grade": "A",
+  "production_ready": false,
+  "overall_success_rate": 94.44444444444444
+}

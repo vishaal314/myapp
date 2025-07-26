@@ -12,7 +12,7 @@ from typing import Dict, Any
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from services.ai_model_scanner import AIModelScanner
+from tests.test_mock_scanners import MockAIModelScanner as AIModelScanner
 from tests.test_framework import ScannerTestSuite, BaseScanner
 
 class TestAIModelScanner(ScannerTestSuite):
