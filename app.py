@@ -6099,20 +6099,11 @@ def execute_sustainability_scan(region, username, scan_params):
         st.code(traceback.format_exc())
 
 def generate_html_report(scan_results):
-    """Generate enhanced HTML report with comprehensive data for all scanner types and source types"""
+    """Generate enhanced HTML report using unified translation system"""
     
-    # Get current language for translations
-    current_lang = st.session_state.get('language', 'en')
-    
-    # Translation helper function
-    def t(key, default=""):
-        """Get translated text based on current language"""
-        if current_lang == 'nl':
-            return get_text(key, default)
-        else:
-            return default
-    
-    # Handle different source types properly
+    # Use unified HTML report generator
+    from services.unified_html_report_generator import generate_unified_html_report
+    return generate_unified_html_report(scan_results)
     source_type = scan_results.get('source_type', 'unknown')
     scan_type = scan_results.get('scan_type', 'Code Analysis')
     

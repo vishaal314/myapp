@@ -13,23 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 def generate_html_report(scan_result: Dict[str, Any]) -> str:
-    try:
-        # Get current language from session state
-        lang = st.session_state.get('language', 'en')
-        
-        def t(key, default_text=""):
-            """Translation helper using the app's translation system"""
-            if key.startswith('report.'):
-                return get_text(key, default_text)
-            else:
-                # Use externalized translation mappings for maintainability
-                translation_key = REPORT_TRANSLATION_MAPPINGS.get(key)
-                if translation_key:
-                    return get_text(translation_key, default_text or key)
-                return default_text or key
-
-        # Extract summary data
-        summary = scan_result.get('summary', {})
+    """Generate HTML report using unified translation system"""
+    from services.unified_html_report_generator import generate_unified_html_report
+    return generate_unified_html_report(scan_result)
         files_scanned = summary.get('scanned_files',
                                     scan_result.get('files_scanned', 0))
         

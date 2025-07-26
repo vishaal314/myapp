@@ -79,7 +79,7 @@ def get_html_report_as_base64(scan_data: Dict[str, Any]) -> str:
 
 def generate_html_report(scan_data: Dict[str, Any]) -> str:
     """
-    Generate a HTML report for a scan result.
+    Generate a HTML report for a scan result using unified system.
     
     Args:
         scan_data: The scan result data
@@ -87,8 +87,8 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
     Returns:
         HTML report as a string
     """
-    # Get current language from session state
-    current_lang = st.session_state.get('language', 'en')
+    from services.unified_html_report_generator import generate_unified_html_report
+    return generate_unified_html_report(scan_data)
     
     # Extract basic scan info
     scan_id = scan_data.get('scan_id', 'Unknown')

@@ -14,6 +14,19 @@ import time
 import json
 import re
 from datetime import datetime
+import streamlit as st
+import io
+
+# OCR and Image Processing imports
+try:
+    import pytesseract
+    import cv2
+    import numpy as np
+    from PIL import Image, ImageEnhance
+    OCR_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"OCR libraries not available: {e}")
+    OCR_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -71,6 +84,76 @@ class ImageScanner:
             
         return languages
     
+    def extract_text_from_image(self, image_data: bytes) -> Dict[str, Any]:
+        """
+        Extract text from image using OCR.
+        
+        Args:
+            image_data: Image data as bytes
+            
+        Returns:
+            Dictionary with extracted text and confidence scores
+        """
+        if not OCR_AVAILABLE:
+            return {
+                'text': '',
+                'confidence': 0,
+                'error': 'OCR libraries (pytesseract, opencv-python) not installed'
+            }
+        
+        try:
+            # Convert bytes to PIL Image
+            image = Image.open(io.BytesIO(image_data))
+            
+            # Convert to RGB if necessary
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+            
+            # Enhance image for better OCR
+            enhancer = ImageEnhance.Contrast(image)
+            image = enhancer.enhance(2.0)
+            
+            # Convert PIL image to numpy array for OpenCV
+            opencv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            
+            # Convert to grayscale for better OCR
+            gray = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2GRAY)
+            
+            # Apply noise reduction
+            denoised = cv2.medianBlur(gray, 3)
+            
+            # Apply threshold to get better image
+            _, thresh = cv2.threshold(denoised, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            
+            # Configure Tesseract
+            lang_string = '+'.join(self.ocr_languages)
+            custom_config = f'--oem 3 --psm 6 -l {lang_string}'
+            
+            # Extract text with confidence
+            data = pytesseract.image_to_data(thresh, config=custom_config, output_type=pytesseract.Output.DICT)
+            
+            # Calculate average confidence
+            confidences = [int(conf) for conf in data['conf'] if int(conf) > 0]
+            avg_confidence = sum(confidences) / len(confidences) if confidences else 0
+            
+            # Extract text
+            text = pytesseract.image_to_string(thresh, config=custom_config).strip()
+            
+            return {
+                'text': text,
+                'confidence': avg_confidence,
+                'word_count': len(text.split()) if text else 0,
+                'language_detected': lang_string
+            }
+            
+        except Exception as e:
+            logger.error(f"OCR processing failed: {e}")
+            return {
+                'text': '',
+                'confidence': 0,
+                'error': f'OCR processing failed: {str(e)}'
+            }
+
     def scan_image(self, image_path: str) -> Dict[str, Any]:
         """
         Scan a single image for PII.
