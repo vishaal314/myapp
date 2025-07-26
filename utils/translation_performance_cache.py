@@ -51,7 +51,7 @@ class TranslationPerformanceCache:
         total = self.hit_count + self.miss_count
         return (self.hit_count / total * 100) if total > 0 else 0
     
-    def get_statistics(self) -> Dict[str, any]:
+    def get_statistics(self) -> Dict[str, Any]:
         """Get comprehensive cache statistics."""
         uptime = time.time() - self.start_time
         return {
@@ -100,7 +100,7 @@ class TranslationValidator:
         
         return keys
     
-    def validate_completeness(self) -> Dict[str, any]:
+    def validate_completeness(self) -> Dict[str, Any]:
         """Validate translation completeness between languages."""
         en_keys = self.get_all_keys(self.en_translations)
         nl_keys = self.get_all_keys(self.nl_translations)
@@ -119,7 +119,7 @@ class TranslationValidator:
             'translation_status': 'Complete' if not missing_in_dutch else 'Incomplete'
         }
     
-    def validate_report_translations(self) -> Dict[str, any]:
+    def validate_report_translations(self) -> Dict[str, Any]:
         """Validate report-specific translation keys."""
         required_report_keys = [
             'report.title',
@@ -156,7 +156,7 @@ class TranslationValidator:
             'completeness': f"{((len(required_report_keys) - len(missing_keys)) / len(required_report_keys) * 100):.1f}%"
         }
     
-    def validate_scanner_translations(self) -> Dict[str, any]:
+    def validate_scanner_translations(self) -> Dict[str, Any]:
         """Validate scanner-specific translation keys."""
         scanner_types = [
             'code', 'website', 'sustainability', 'document', 'image', 
@@ -204,11 +204,11 @@ def clear_cache():
     """Clear the global translation cache."""
     _performance_cache.clear()
 
-def get_cache_statistics() -> Dict[str, any]:
+def get_cache_statistics() -> Dict[str, Any]:
     """Get cache performance statistics."""
     return _performance_cache.get_statistics()
 
-def validate_all_translations() -> Dict[str, any]:
+def validate_all_translations() -> Dict[str, Any]:
     """Run comprehensive translation validation."""
     validator = get_validator()
     
@@ -270,6 +270,7 @@ def add_missing_translation_key(key: str, dutch_value: str, english_value: str =
         with open('translations/nl.json', 'r', encoding='utf-8') as f:
             nl_translations = json.load(f)
         
+        en_translations = {}
         if english_value:
             with open('translations/en.json', 'r', encoding='utf-8') as f:
                 en_translations = json.load(f)
