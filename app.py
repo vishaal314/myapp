@@ -644,8 +644,31 @@ def render_scanner_interface_safe():
         render_sustainability_scanner_interface(region, username)
 
 def render_code_scanner_interface(region: str, username: str):
-    """Code scanner interface with real functionality"""
+    """Code scanner interface with intelligent scanning capabilities"""
     st.subheader("📝 Code Scanner Configuration")
+    
+    # Intelligent scanning option
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.info("🧠 **Enhanced with Intelligent Scanning** - Automatic scalability for unlimited repository size and depth")
+    with col2:
+        use_intelligent = st.checkbox("Enable Smart Scanning", value=True, help="Automatically adapts to repository size with smart sampling and parallel processing")
+    
+    # Initialize scan mode for all cases
+    scan_mode = "smart"
+    
+    if use_intelligent:
+        # Smart scanning mode selection
+        scan_mode = st.selectbox(
+            "Scanning Strategy",
+            ["smart", "sampling", "priority", "progressive", "comprehensive"],
+            index=0,
+            help="Smart: Auto-detects best strategy | Sampling: Fast for large repos | Priority: High-risk files first | Progressive: Incremental depth | Comprehensive: Every file"
+        )
+        
+        if scan_mode != "smart":
+            from utils.strategy_descriptions import get_strategy_description
+            st.info(f"**{scan_mode.title()} Strategy**: {get_strategy_description(scan_mode)}")
     
     # Source selection
     source_type = st.radio("Source Type", ["Upload Files", "Repository URL", "Directory Path"])
@@ -686,8 +709,51 @@ def render_code_scanner_interface(region: str, username: str):
     
     # Start scan button
     if st.button("🚀 Start Code Scan", type="primary", use_container_width=True):
-        execute_code_scan(region, username, uploaded_files, repo_url, directory_path, 
-                         include_comments, detect_secrets, gdpr_compliance)
+        if use_intelligent:
+            # Use intelligent scanning wrapper
+            from components.intelligent_scanner_wrapper import intelligent_wrapper
+            
+            scan_result = None
+            if source_type == "Upload Files" and uploaded_files:
+                scan_result = intelligent_wrapper.execute_code_scan_intelligent(
+                    region, username, uploaded_files=uploaded_files, 
+                    include_comments=include_comments, detect_secrets=detect_secrets,
+                    gdpr_compliance=gdpr_compliance, scan_mode=scan_mode
+                )
+            elif source_type == "Repository URL" and repo_url:
+                scan_result = intelligent_wrapper.execute_code_scan_intelligent(
+                    region, username, repo_url=repo_url,
+                    include_comments=include_comments, detect_secrets=detect_secrets,
+                    gdpr_compliance=gdpr_compliance, scan_mode=scan_mode
+                )
+            elif source_type == "Directory Path" and directory_path:
+                scan_result = intelligent_wrapper.execute_code_scan_intelligent(
+                    region, username, directory_path=directory_path,
+                    include_comments=include_comments, detect_secrets=detect_secrets,
+                    gdpr_compliance=gdpr_compliance, scan_mode=scan_mode
+                )
+            else:
+                st.error("Please provide valid input for the selected source type.")
+                return
+            
+            if scan_result:
+                intelligent_wrapper.display_intelligent_scan_results(scan_result)
+                
+                # Generate HTML report
+                from services.unified_html_report_generator import unified_report_generator
+                html_report = unified_report_generator.generate_comprehensive_report(scan_result)
+                
+                # Offer download
+                st.download_button(
+                    label="📄 Download Intelligent Scan Report",
+                    data=html_report,
+                    file_name=f"intelligent_code_scan_report_{scan_result['scan_id'][:8]}.html",
+                    mime="text/html"
+                )
+        else:
+            # Use original scanning method
+            execute_code_scan(region, username, uploaded_files, repo_url, directory_path, 
+                             include_comments, detect_secrets, gdpr_compliance)
 
 def execute_code_scan(region, username, uploaded_files, repo_url, directory_path, 
                      include_comments, detect_secrets, gdpr_compliance):
@@ -1599,8 +1665,36 @@ def execute_document_scan(region, username, uploaded_files):
 
 # Complete scanner interfaces with timeout protection
 def render_image_scanner_interface(region: str, username: str):
-    """Image scanner interface with OCR simulation"""
+    """Image scanner interface with intelligent OCR capabilities"""
     st.subheader("🖼️ Image Scanner Configuration")
+    
+    # Intelligent scanning option
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.info("🧠 **Enhanced with Intelligent Scanning** - Smart OCR processing with parallel image analysis")
+    with col2:
+        use_intelligent = st.checkbox("Enable Smart Scanning", value=True, help="Intelligent image processing with face detection, document recognition, and parallel OCR")
+    
+    # Initialize scan mode for all cases
+    scan_mode = "smart"
+    
+    if use_intelligent:
+        # Smart scanning mode selection
+        scan_mode = st.selectbox(
+            "Processing Strategy",
+            ["smart", "priority", "comprehensive", "sampling"],
+            index=0,
+            help="Smart: Auto-adapts to content | Priority: Documents first | Comprehensive: All images | Sampling: Representative subset"
+        )
+        
+        if scan_mode != "smart":
+            from utils.strategy_descriptions import get_strategy_description
+            strategy_descriptions = {
+                "priority": "Processes high-priority images first (IDs, documents, forms). Best for mixed image collections",
+                "comprehensive": "Processes every image with full OCR analysis. Recommended for compliance audits",
+                "sampling": "Fast processing of representative image subset. Ideal for large image collections (100+ images)"
+            }
+            st.info(f"**{scan_mode.title()} Strategy**: {strategy_descriptions.get(scan_mode, get_strategy_description(scan_mode))}")
     
     uploaded_files = st.file_uploader(
         "Upload Images",
@@ -1612,7 +1706,31 @@ def render_image_scanner_interface(region: str, username: str):
         st.success(f"✅ {len(uploaded_files)} images ready for scanning")
         
         if st.button("🚀 Start Image Scan", type="primary", use_container_width=True):
-            execute_image_scan(region, username, uploaded_files)
+            if use_intelligent:
+                # Use intelligent scanning wrapper
+                from components.intelligent_scanner_wrapper import intelligent_wrapper
+                
+                scan_result = intelligent_wrapper.execute_image_scan_intelligent(
+                    region, username, uploaded_files, scan_mode=scan_mode
+                )
+                
+                if scan_result:
+                    intelligent_wrapper.display_intelligent_scan_results(scan_result)
+                    
+                    # Generate HTML report
+                    from services.unified_html_report_generator import unified_report_generator
+                    html_report = unified_report_generator.generate_comprehensive_report(scan_result)
+                    
+                    # Offer download
+                    st.download_button(
+                        label="📄 Download Intelligent Image Report",
+                        data=html_report,
+                        file_name=f"intelligent_image_scan_report_{scan_result['scan_id'][:8]}.html",
+                        mime="text/html"
+                    )
+            else:
+                # Use original scanning method
+                execute_image_scan(region, username, uploaded_files)
 
 def execute_image_scan(region, username, uploaded_files):
     """Execute image scanning with OCR simulation and activity tracking"""
@@ -3853,8 +3971,36 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
         st.code(traceback.format_exc())
 
 def render_website_scanner_interface(region: str, username: str):
-    """Enhanced Website Scanner with comprehensive GDPR cookie and tracking compliance"""
+    """Enhanced Website Scanner with intelligent scanning and comprehensive GDPR cookie and tracking compliance"""
     st.subheader("🌐 GDPR Website Privacy Compliance Scanner")
+    
+    # Intelligent scanning option
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.info("🧠 **Enhanced with Intelligent Scanning** - Smart page discovery and parallel analysis")
+    with col2:
+        use_intelligent = st.checkbox("Enable Smart Scanning", value=True, help="Intelligent website analysis with smart page discovery and content prioritization")
+    
+    # Initialize scan mode for all cases
+    scan_mode = "smart"
+    
+    if use_intelligent:
+        # Smart scanning mode selection
+        scan_mode = st.selectbox(
+            "Analysis Strategy",
+            ["smart", "priority", "comprehensive", "sampling"],
+            index=0,
+            help="Smart: Auto-detects important pages | Priority: Privacy pages first | Comprehensive: All discoverable pages | Sampling: Representative subset"
+        )
+        
+        if scan_mode != "smart":
+            from utils.strategy_descriptions import get_strategy_description
+            strategy_descriptions = {
+                "priority": "Analyzes privacy-critical pages first (privacy policy, cookies, terms). Best for compliance-focused audits",
+                "comprehensive": "Crawls and analyzes all discoverable pages up to depth limit. Recommended for thorough assessments",
+                "sampling": "Fast analysis of representative page subset. Ideal for large websites (50+ pages)"
+            }
+            st.info(f"**{scan_mode.title()} Strategy**: {strategy_descriptions.get(scan_mode, get_strategy_description(scan_mode))}")
     
     # URL input
     url = st.text_input("Website URL", placeholder="https://example.com", help="Enter the full URL including https://")
@@ -3930,41 +4076,65 @@ def render_website_scanner_interface(region: str, username: str):
             multilingual = st.checkbox("Dutch/English Detection", value=True)
     
     if st.button("🚀 Start GDPR Compliance Scan", type="primary", use_container_width=True):
-        scan_config = {
-            'analyze_cookies': analyze_cookies,
-            'cookie_categories': cookie_categories,
-            'consent_banners': consent_banners,
-            'dark_patterns': dark_patterns,
-            'tracking_scripts': tracking_scripts,
-            'privacy_policy': privacy_policy,
-            'data_collection': data_collection,
-            'external_requests': external_requests,
-            'nl_ap_rules': nl_ap_rules,
-            'reject_all_button': reject_all_button,
-            'nl_colofon': nl_colofon,
-            'gdpr_rights': gdpr_rights,
-            'max_pages': max_pages,
-            'scan_depth': scan_depth,
-            'stealth_mode': stealth_mode,
-            'user_agent': user_agent,
-            'simulate_consent': simulate_consent,
-            'check_https': check_https,
-            'multilingual': multilingual,
-            # NEW: Content Analysis & Customer Benefits
-            'content_analysis': content_analysis,
-            'readability_score': readability_score,
-            'seo_optimization': seo_optimization,
-            'mobile_friendliness': mobile_friendliness,
-            'performance_analysis': performance_analysis,
-            'accessibility_check': accessibility_check,
-            'user_journey': user_journey,
-            'conversion_optimization': conversion_optimization,
-            'competitive_analysis': competitive_analysis,
-            'trust_signals': trust_signals,
-            'engagement_metrics': engagement_metrics,
-            'lead_generation': lead_generation
-        }
-        execute_website_scan(region, username, url, scan_config)
+        if use_intelligent:
+            # Use intelligent scanning wrapper
+            from components.intelligent_scanner_wrapper import intelligent_wrapper
+            
+            scan_result = intelligent_wrapper.execute_website_scan_intelligent(
+                region, username, url, scan_mode=scan_mode, max_pages=max_pages, max_depth=3
+            )
+            
+            if scan_result:
+                intelligent_wrapper.display_intelligent_scan_results(scan_result)
+                
+                # Generate HTML report
+                from services.unified_html_report_generator import unified_report_generator
+                html_report = unified_report_generator.generate_comprehensive_report(scan_result)
+                
+                # Offer download
+                st.download_button(
+                    label="📄 Download Intelligent Website Report",
+                    data=html_report,
+                    file_name=f"intelligent_website_scan_report_{scan_result['scan_id'][:8]}.html",
+                    mime="text/html"
+                )
+        else:
+            # Use original scanning method
+            scan_config = {
+                'analyze_cookies': analyze_cookies,
+                'cookie_categories': cookie_categories,
+                'consent_banners': consent_banners,
+                'dark_patterns': dark_patterns,
+                'tracking_scripts': tracking_scripts,
+                'privacy_policy': privacy_policy,
+                'data_collection': data_collection,
+                'external_requests': external_requests,
+                'nl_ap_rules': nl_ap_rules,
+                'reject_all_button': reject_all_button,
+                'nl_colofon': nl_colofon,
+                'gdpr_rights': gdpr_rights,
+                'max_pages': max_pages,
+                'scan_depth': scan_depth,
+                'stealth_mode': stealth_mode,
+                'user_agent': user_agent,
+                'simulate_consent': simulate_consent,
+                'check_https': check_https,
+                'multilingual': multilingual,
+                # NEW: Content Analysis & Customer Benefits
+                'content_analysis': content_analysis,
+                'readability_score': readability_score,
+                'seo_optimization': seo_optimization,
+                'mobile_friendliness': mobile_friendliness,
+                'performance_analysis': performance_analysis,
+                'accessibility_check': accessibility_check,
+                'user_journey': user_journey,
+                'conversion_optimization': conversion_optimization,
+                'competitive_analysis': competitive_analysis,
+                'trust_signals': trust_signals,
+                'engagement_metrics': engagement_metrics,
+                'lead_generation': lead_generation
+            }
+            execute_website_scan(region, username, url, scan_config)
 
 def execute_website_scan(region, username, url, scan_config):
     """Execute comprehensive multi-page GDPR website privacy compliance scanning"""
