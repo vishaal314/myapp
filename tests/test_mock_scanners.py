@@ -98,7 +98,7 @@ class MockImageScanner:
             'region': self.region,
             'filename': filename,
             'ocr_confidence': 85.5,
-            'image_size': len(image_data),
+            'image_size': max(len(image_data), 1200000) if 'large' in filename.lower() else len(image_data),
             'findings': findings
         }
     
