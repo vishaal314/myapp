@@ -69,10 +69,23 @@ class FastRepoScanner:
             files_to_scan = self._collect_files_fast(repo_path)
             total_files = len(files_to_scan)
             
-            # Limit files for performance
-            if total_files > 20:
-                files_to_scan = files_to_scan[:20]
-                logger.info(f"Limited scan to first 20 files out of {total_files}")
+            # Use intelligent scanning instead of simple limiting
+            from services.intelligent_repo_scanner import IntelligentRepoScanner
+            intelligent_scanner = IntelligentRepoScanner(self.code_scanner)
+            
+            # Delegate to intelligent scanner for better results
+            intelligent_results = intelligent_scanner.scan_repository_intelligent(
+                repo_url, branch, "smart", progress_callback=progress_callback
+            )
+            
+            # Return intelligent results if successful
+            if intelligent_results['status'] == 'completed':
+                return intelligent_results
+            
+            # Fallback to basic logic if intelligent scanner fails
+            if total_files > 50:
+                files_to_scan = files_to_scan[:50]
+                logger.info(f"Fallback: Limited scan to first 50 files out of {total_files}")
             
             # Scan files with timeout
             for i, file_path in enumerate(files_to_scan):
