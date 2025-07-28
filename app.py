@@ -4472,7 +4472,9 @@ def execute_website_scan(region, username, url, scan_config):
         
         # Calculate comprehensive metrics for display
         total_content = scan_results.get('total_html_content', '')
-        scan_results['files_scanned'] = len(scan_results.get('pages_analyzed', []))
+        pages_analyzed = scan_results.get('pages_analyzed', [])
+        scan_results['files_scanned'] = len(pages_analyzed)
+        scan_results['pages_scanned'] = len(pages_analyzed)
         scan_results['lines_analyzed'] = len(total_content.split('\n')) if total_content else 0
         scan_results['total_findings'] = len(all_findings)
         scan_results['critical_findings'] = len([f for f in all_findings if f.get('severity') == 'Critical'])

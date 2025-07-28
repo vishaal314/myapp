@@ -114,6 +114,7 @@ class IntelligentWebsiteScanner:
             'scan_mode': scan_mode,
             'pages_discovered': 0,
             'pages_scanned': 0,
+            'files_scanned': 0,  # For UI compatibility
             'pages_skipped': 0,
             'findings': [],
             'crawling_strategy': {},
@@ -507,6 +508,7 @@ class IntelligentWebsiteScanner:
                     
                     completed += 1
                     scan_results['pages_scanned'] = completed
+                    scan_results['files_scanned'] = completed  # For UI compatibility
                     
                     # Progress callback
                     if progress_callback:
