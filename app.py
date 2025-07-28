@@ -1455,11 +1455,24 @@ def display_scan_results(scan_results):
                     else:
                         action = "Review and address privacy compliance requirements"
                 
+                # Smart handling for different scanner types
+                scan_type = scan_results.get("scan_type", "")
+                
+                # For website scans, use URL and location instead of file/line
+                if "website" in scan_type.lower() or finding.get('url'):
+                    file_location = finding.get('url', finding.get('file', 'Website'))
+                    line_location = finding.get('location', finding.get('element', 'Page Element'))
+                    if line_location == 'N/A':
+                        line_location = 'Page Content'
+                else:
+                    file_location = finding.get('file', 'N/A')
+                    line_location = finding.get('line', 'N/A')
+                
                 findings_data.append({
                     'Type': finding_type,
                     'Severity': severity,
-                    'File': finding.get('file', finding.get('url', 'N/A')),
-                    'Line': finding.get('line', finding.get('location', 'N/A')),
+                    'Location': file_location,
+                    'Element': line_location,
                     'Description': description,
                     'Impact': impact,
                     'Action Required': action

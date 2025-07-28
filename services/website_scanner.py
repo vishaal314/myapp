@@ -769,7 +769,8 @@ class WebsiteScanner:
                                 'type': 'tracker',
                                 'subtype': tracker_name,
                                 'url': url,
-                                'element': src,
+                                'location': f"External Script: {src}",
+                                'element': 'script[src]',
                                 'description': f"External tracker script from {tracker_name}",
                                 'severity': 'Medium',
                                 'gdpr_article': 'Art. 6(1)(a), Art. 7'
@@ -795,7 +796,8 @@ class WebsiteScanner:
                                 'type': 'tracker',
                                 'subtype': tracker_name,
                                 'url': url,
-                                'element': f"Inline script containing '{pattern}'",
+                                'location': f"Inline Script Pattern: {pattern}",
+                                'element': 'script[inline]',
                                 'description': f"Inline tracker script for {tracker_name}",
                                 'severity': 'Medium',
                                 'gdpr_article': 'Art. 6(1)(a), Art. 7'
@@ -815,6 +817,8 @@ class WebsiteScanner:
                         'type': 'consent_management',
                         'subtype': platform['name'],
                         'url': url,
+                        'location': f"CMP Pattern: {pattern}",
+                        'element': 'consent platform',
                         'description': f"Using {platform['name']} consent management platform",
                         'severity': 'Info',
                         'gdpr_article': 'Art. 7, Art. 13'
@@ -839,7 +843,8 @@ class WebsiteScanner:
                 findings.append({
                     'type': 'tracking_pixel',
                     'url': url,
-                    'element': src,
+                    'location': f"Image Element: {src}",
+                    'element': 'img[1x1]',
                     'description': f"Tracking pixel detected: {src}",
                     'severity': 'Medium',
                     'gdpr_article': 'Art. 6(1)(a), Art. 7'
