@@ -154,6 +154,32 @@ class IntelligentWebsiteScanner:
                 scan_results['pages_scanned'] / max(scan_results['pages_discovered'], 1) * 100
             )
             
+            # Calculate compliance score based on findings (same logic as regular website scanner)
+            total_findings = len(findings)
+            critical_findings = len([f for f in findings if f.get('severity') == 'Critical'])
+            high_findings = len([f for f in findings if f.get('severity') == 'High'])
+            
+            if total_findings == 0:
+                compliance_score = 100
+                risk_level = "Low"
+            else:
+                # Penalty-based scoring system (same as code scanner)
+                penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
+                compliance_score = max(0, 100 - penalty)
+                
+                # Determine risk level based on findings
+                if critical_findings > 0:
+                    risk_level = "Critical"
+                elif high_findings > 2:
+                    risk_level = "High"
+                elif total_findings > 10:
+                    risk_level = "Medium"
+                else:
+                    risk_level = "Low"
+            
+            scan_results['compliance_score'] = compliance_score
+            scan_results['risk_level'] = risk_level
+            
             logger.info(f"Intelligent website scan completed: {len(findings)} findings in {scan_results['duration_seconds']:.1f}s")
             logger.info(f"Scanned {scan_results['pages_scanned']}/{scan_results['pages_discovered']} pages ({scan_results['scan_coverage']:.1f}% coverage)")
             
