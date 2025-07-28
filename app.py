@@ -1413,17 +1413,56 @@ def display_scan_results(scan_results):
         try:
             import pandas as pd
             
-            # Prepare findings data with proper columns
+            # Prepare findings data with proper columns and intelligent fallbacks
             findings_data = []
             for finding in scan_results["findings"]:
+                # Generate meaningful impact and action based on finding type and severity
+                finding_type = finding.get('type', 'Unknown')
+                severity = finding.get('severity', 'Medium')
+                description = finding.get('description', 'No description available')
+                
+                # Smart fallbacks for impact
+                impact = finding.get('impact')
+                if not impact or impact == 'Impact not specified':
+                    if 'cookie' in finding_type.lower():
+                        impact = "Privacy compliance risk - may require user consent"
+                    elif 'tracker' in finding_type.lower():
+                        impact = "Data collection without explicit consent"
+                    elif 'form' in finding_type.lower():
+                        impact = "Personal data collection requires GDPR compliance"
+                    elif 'ssl' in finding_type.lower() or 'security' in finding_type.lower():
+                        impact = "Security vulnerability affecting data protection"
+                    elif severity == 'Critical':
+                        impact = "High privacy compliance risk requiring immediate action"
+                    elif severity == 'High':
+                        impact = "Significant privacy compliance concern"
+                    else:
+                        impact = "Potential privacy compliance issue requiring review"
+                
+                # Smart fallbacks for action required
+                action = finding.get('action_required') or finding.get('recommendation')
+                if not action or action == 'No action specified':
+                    if 'cookie' in finding_type.lower():
+                        action = "Implement cookie consent mechanism and update privacy policy"
+                    elif 'tracker' in finding_type.lower():
+                        action = "Review tracking implementation and ensure user consent"
+                    elif 'form' in finding_type.lower():
+                        action = "Add privacy notice and consent checkboxes to forms"
+                    elif 'ssl' in finding_type.lower():
+                        action = "Implement proper SSL/TLS security configuration"
+                    elif severity == 'Critical':
+                        action = "Immediate remediation required for GDPR compliance"
+                    else:
+                        action = "Review and address privacy compliance requirements"
+                
                 findings_data.append({
-                    'Type': finding.get('type', 'Unknown'),
-                    'Severity': finding.get('severity', 'Medium'),
-                    'File': finding.get('file', 'N/A'),
-                    'Line': finding.get('line', 'N/A'),
-                    'Description': finding.get('description', 'No description available'),
-                    'Impact': finding.get('impact', 'Impact not specified'),
-                    'Action Required': finding.get('action_required', finding.get('recommendation', 'No action specified'))
+                    'Type': finding_type,
+                    'Severity': severity,
+                    'File': finding.get('file', finding.get('url', 'N/A')),
+                    'Line': finding.get('line', finding.get('location', 'N/A')),
+                    'Description': description,
+                    'Impact': impact,
+                    'Action Required': action
                 })
             
             findings_df = pd.DataFrame(findings_data)
