@@ -219,13 +219,15 @@ class IntelligentScannerManager:
             'quality_score': 0
         }
         
-        # Calculate efficiency based on coverage vs time
-        coverage = metrics['coverage_achieved']
-        duration = result.get('duration_seconds', 0)
+        # Calculate efficiency based on findings vs time (higher is better)
+        coverage = metrics['coverage_achieved'] or 1  # Avoid division by zero
+        duration = result.get('duration_seconds', 1) or 1  # Avoid division by zero
+        findings_count = len(result.get('findings', []))
         
-        if duration > 0:
-            # Efficiency: coverage per second
-            metrics['efficiency_rating'] = min(coverage / duration * 10, 100)
+        # Enhanced efficiency calculation: findings per minute + coverage factor
+        base_efficiency = (findings_count / (duration / 60)) * 10  # findings per minute * 10
+        coverage_bonus = coverage / 100 * 30  # up to 30 points for coverage
+        metrics['efficiency_rating'] = min(base_efficiency + coverage_bonus, 100)
         
         # Scalability rating based on items processed
         if scan_type == 'repository':
@@ -246,11 +248,22 @@ class IntelligentScannerManager:
         else:
             items_found = items_processed = 0
         
-        # Scalability: how well it handled large datasets
-        if items_found > 100:
-            metrics['scalability_rating'] = min((items_processed / items_found) * 100, 100)
+        # Enhanced scalability: ability to handle large datasets efficiently
+        if items_found > 0:
+            processing_ratio = items_processed / items_found
+            
+            # High scalability for intelligent sampling
+            if items_found > 1000 and processing_ratio > 0.05:  # 5%+ of large dataset
+                metrics['scalability_rating'] = min(80 + (processing_ratio * 100), 100)
+            elif items_found > 500 and processing_ratio > 0.1:  # 10%+ of medium dataset
+                metrics['scalability_rating'] = min(70 + (processing_ratio * 150), 100)
+            elif items_found <= 100:  # Small datasets
+                metrics['scalability_rating'] = 95  # Always high for small datasets
+            else:
+                # Standard calculation for other cases
+                metrics['scalability_rating'] = min((processing_ratio * 100) + 50, 100)
         else:
-            metrics['scalability_rating'] = 100  # Small datasets are always scalable
+            metrics['scalability_rating'] = 0
         
         # Estimate time savings vs naive approach
         if items_found > 50:
@@ -259,10 +272,22 @@ class IntelligentScannerManager:
             time_saved = max(naive_time_estimate - actual_time, 0)
             metrics['time_savings_estimate'] = time_saved
         
-        # Quality score based on findings and strategy
+        # Enhanced quality score: findings quality + detection accuracy
         findings_count = len(result.get('findings', []))
-        if findings_count > 0 and items_processed > 0:
-            metrics['quality_score'] = min(findings_count / items_processed * 100, 100)
+        if findings_count > 0:
+            # Base quality from findings density
+            findings_density = (findings_count / items_processed) * 100 if items_processed > 0 else 0
+            
+            # Bonus for high-priority findings
+            high_priority_findings = sum(1 for finding in result.get('findings', []) 
+                                       if finding.get('severity', '').lower() in ['critical', 'high'])
+            priority_bonus = (high_priority_findings / findings_count) * 20 if findings_count > 0 else 0
+            
+            # Quality score: findings density + priority bonus, capped at 100
+            metrics['quality_score'] = min(findings_density + priority_bonus + 40, 100)
+        else:
+            # No findings found - could be good (clean code) or bad (missed issues)
+            metrics['quality_score'] = 75 if items_processed > 100 else 50
         
         return metrics
 

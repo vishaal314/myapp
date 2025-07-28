@@ -137,7 +137,9 @@ class IntelligentRepoScanner:
                 files_to_scan = self._select_files_comprehensive(repo_path, repo_analysis, strategy)
             
             scan_results['total_files_found'] = repo_analysis['total_files']
-            scan_results['scan_coverage'] = len(files_to_scan) / max(repo_analysis['total_files'], 1) * 100
+            # Improved coverage calculation
+            actual_coverage = (len(files_to_scan) / max(repo_analysis['total_files'], 1)) * 100
+            scan_results['scan_coverage'] = min(actual_coverage, 100.0)  # Cap at 100%
             
             # Step 5: Parallel scanning execution
             findings = self._execute_parallel_scanning(
@@ -432,7 +434,9 @@ class IntelligentRepoScanner:
                         all_findings.extend(findings)
                     
                     completed += 1
+                    # Update scan results with actual progress
                     scan_results['files_scanned'] = completed
+                    scan_results['files_processed'] = completed  # For metrics compatibility
                     
                     # Progress callback
                     if progress_callback:
@@ -447,6 +451,12 @@ class IntelligentRepoScanner:
                     scan_results['files_skipped'] += 1
                     logger.warning(f"File scan error: {str(e)}")
         
+        # Ensure files_scanned is set even if no files were completed
+        if 'files_scanned' not in scan_results:
+            scan_results['files_scanned'] = completed
+            scan_results['files_processed'] = completed
+        
+        logger.info(f"Intelligent scan completed: {len(all_findings)} findings from {completed} files")
         return all_findings
 
     def _scan_single_file(self, file_path: str, repo_path: str) -> List[Dict[str, Any]]:
