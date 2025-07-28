@@ -500,8 +500,14 @@ class IntelligentWebsiteScanner:
     def _scan_single_page(self, page_url: str) -> Optional[tuple]:
         """Scan a single page for privacy compliance issues."""
         try:
-            # Use the existing website scanner
-            result = self.website_scanner.scan_single_page(page_url)
+            # Import WebsiteScanner and create a temporary scanner for single page analysis
+            from services.website_scanner import WebsiteScanner
+            temp_scanner = WebsiteScanner(region=self.website_scanner.region)
+            temp_scanner.max_pages = 1
+            temp_scanner.max_depth = 1
+            
+            # Use the existing website scanner's scan_website method for single page
+            result = temp_scanner.scan_website(page_url, follow_links=False)
             
             # Extract findings and metrics from result
             findings = []
@@ -509,9 +515,19 @@ class IntelligentWebsiteScanner:
             
             if isinstance(result, dict):
                 findings = result.get('findings', [])
-                metrics['cookies'] = result.get('cookies_found', 0)
-                metrics['trackers'] = result.get('trackers_found', 0)
-                metrics['forms'] = result.get('forms_found', 0)
+                # Map result keys to metrics
+                metrics['cookies'] = len(result.get('cookies', {}))
+                metrics['trackers'] = len(result.get('trackers', []))
+                metrics['forms'] = len(result.get('forms', []))
+                
+                # Alternative key mappings
+                if 'cookies_found' in result:
+                    metrics['cookies'] = result['cookies_found']
+                if 'trackers_found' in result:
+                    metrics['trackers'] = result['trackers_found']
+                if 'forms_found' in result:
+                    metrics['forms'] = result['forms_found']
+                    
             elif isinstance(result, list):
                 findings = result
             
