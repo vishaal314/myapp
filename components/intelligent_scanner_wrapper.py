@@ -114,7 +114,21 @@ class IntelligentScannerWrapper:
             
             else:
                 st.error("Please provide files or repository URL to scan.")
-                return None
+                # Return error structure instead of None
+                return {
+                    'scan_id': f"error_{uuid.uuid4().hex[:8]}",
+                    'scan_type': 'Intelligent Code Scanner',
+                    'timestamp': datetime.now().isoformat(),
+                    'status': 'error',
+                    'error': 'No scan target provided',
+                    'findings': [],
+                    'files_scanned': 0,
+                    'intelligence_applied': False
+                }
+            
+            # Validate scan result before processing
+            if not scan_result or not isinstance(scan_result, dict):
+                raise ValueError("Scanner returned invalid or empty result")
             
             # Track successful completion
             scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
@@ -160,7 +174,17 @@ class IntelligentScannerWrapper:
             )
             
             st.error(f"Intelligent scan failed: {str(e)}")
-            return None
+            # Return error structure instead of None
+            return {
+                'scan_id': f"error_{uuid.uuid4().hex[:8]}",
+                'scan_type': 'Intelligent Code Scanner',
+                'timestamp': datetime.now().isoformat(),
+                'status': 'error',
+                'error': str(e),
+                'findings': [],
+                'files_scanned': 0,
+                'intelligence_applied': False
+            }
 
     def execute_image_scan_intelligent(self, region: str, username: str,
                                      uploaded_files: List[Any],
@@ -213,6 +237,10 @@ class IntelligentScannerWrapper:
                     progress_callback=progress_callback,
                     region=region
                 )
+                
+                # Validate scan result before processing
+                if not scan_result or not isinstance(scan_result, dict):
+                    raise ValueError("Image scanner returned invalid or empty result")
             
             # Track completion
             scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
@@ -256,7 +284,17 @@ class IntelligentScannerWrapper:
             )
             
             st.error(f"Intelligent image scan failed: {str(e)}")
-            return None
+            # Return error structure instead of None
+            return {
+                'scan_id': f"error_{uuid.uuid4().hex[:8]}",
+                'scan_type': 'Intelligent Image Scanner',
+                'timestamp': datetime.now().isoformat(),
+                'status': 'error',
+                'error': str(e),
+                'findings': [],
+                'files_scanned': 0,
+                'intelligence_applied': False
+            }
 
     def execute_website_scan_intelligent(self, region: str, username: str,
                                        base_url: str, max_pages: Optional[int] = None,
@@ -304,6 +342,10 @@ class IntelligentScannerWrapper:
                 max_depth=max_depth or 3
             )
             
+            # Validate scan result before processing
+            if not scan_result or not isinstance(scan_result, dict):
+                raise ValueError("Website scanner returned invalid or empty result")
+            
             # Track completion
             scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
             findings_count = len(scan_result.get('findings', []))
@@ -346,7 +388,17 @@ class IntelligentScannerWrapper:
             )
             
             st.error(f"Intelligent website scan failed: {str(e)}")
-            return None
+            # Return error structure instead of None
+            return {
+                'scan_id': f"error_{uuid.uuid4().hex[:8]}",
+                'scan_type': 'Intelligent Website Scanner',
+                'timestamp': datetime.now().isoformat(),
+                'status': 'error',
+                'error': str(e),
+                'findings': [],
+                'files_scanned': 0,
+                'intelligence_applied': False
+            }
 
     def execute_database_scan_intelligent(self, region: str, username: str,
                                         connection_params: Dict[str, Any],
@@ -392,6 +444,10 @@ class IntelligentScannerWrapper:
                 region=region
             )
             
+            # Validate scan result before processing
+            if not scan_result or not isinstance(scan_result, dict):
+                raise ValueError("Database scanner returned invalid or empty result")
+            
             # Track completion
             scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
             findings_count = len(scan_result.get('findings', []))
@@ -434,7 +490,17 @@ class IntelligentScannerWrapper:
             )
             
             st.error(f"Intelligent database scan failed: {str(e)}")
-            return None
+            # Return error structure instead of None
+            return {
+                'scan_id': f"error_{uuid.uuid4().hex[:8]}",
+                'scan_type': 'Intelligent Database Scanner',
+                'timestamp': datetime.now().isoformat(),
+                'status': 'error',
+                'error': str(e),
+                'findings': [],
+                'files_scanned': 0,
+                'intelligence_applied': False
+            }
 
     def display_intelligent_scan_results(self, scan_result: Dict[str, Any]):
         """Display scan results with intelligence metrics."""

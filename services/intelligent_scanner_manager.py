@@ -82,24 +82,34 @@ class IntelligentScannerManager:
             if progress_callback:
                 progress_callback(5, 100, "Initializing intelligent scanning...")
             
-            # Route to appropriate intelligent scanner
+            # Route to appropriate intelligent scanner with proper type validation
             if scan_type == 'repository':
+                if not isinstance(scan_target, str):
+                    raise ValueError(f"Repository scanner expects string URL, got {type(scan_target)}")
                 scanner_result = self._scan_repository_intelligent(
                     scan_target, scan_mode, max_items, progress_callback, **kwargs
                 )
             elif scan_type == 'documents':
+                if not isinstance(scan_target, list):
+                    raise ValueError(f"Document scanner expects list of file paths, got {type(scan_target)}")
                 scanner_result = self._scan_documents_intelligent(
                     scan_target, scan_mode, max_items, progress_callback, **kwargs
                 )
             elif scan_type == 'images':
+                if not isinstance(scan_target, list):
+                    raise ValueError(f"Image scanner expects list of image paths, got {type(scan_target)}")
                 scanner_result = self._scan_images_intelligent(
                     scan_target, scan_mode, max_items, progress_callback, **kwargs
                 )
             elif scan_type == 'website':
+                if not isinstance(scan_target, str):
+                    raise ValueError(f"Website scanner expects string URL, got {type(scan_target)}")
                 scanner_result = self._scan_website_intelligent(
                     scan_target, scan_mode, max_items, progress_callback, **kwargs
                 )
             elif scan_type == 'database':
+                if not isinstance(scan_target, dict):
+                    raise ValueError(f"Database scanner expects connection parameters dict, got {type(scan_target)}")
                 scanner_result = self._scan_database_intelligent(
                     scan_target, scan_mode, max_items, progress_callback, **kwargs
                 )
@@ -260,18 +270,18 @@ class IntelligentScannerManager:
         """Update global performance metrics."""
         self.performance_metrics['total_scans'] += 1
         
-        # Update average scan time
+        # Update average scan time (convert to int to avoid type errors)
         current_avg = self.performance_metrics['average_scan_time']
         total_scans = self.performance_metrics['total_scans']
-        self.performance_metrics['average_scan_time'] = (
+        self.performance_metrics['average_scan_time'] = int(
             (current_avg * (total_scans - 1) + scan_duration) / total_scans
         )
         
-        # Update success rate
+        # Update success rate (convert to int to avoid type errors)
         if result['status'] == 'completed':
             successful_scans = self.performance_metrics['total_scans'] * self.performance_metrics['success_rate'] / 100
             successful_scans += 1
-            self.performance_metrics['success_rate'] = (successful_scans / total_scans) * 100
+            self.performance_metrics['success_rate'] = int((successful_scans / total_scans) * 100)
         
         # Store scan for history
         self.scan_history.append({

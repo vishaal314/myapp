@@ -364,9 +364,12 @@ class IntelligentWebsiteScanner:
 
     def _crawl_for_links(self, base_url: str, max_depth: int, max_links: int) -> Set[str]:
         """Crawl website to discover additional links."""
+        from collections import deque
+        from typing import Tuple
         
         discovered = set()
-        to_crawl = deque([(base_url, 0)])  # (url, depth)
+        to_crawl: deque[Tuple[str, int]] = deque()
+        to_crawl.append((base_url, 0))  # (url, depth)
         crawled = set()
         base_domain = urlparse(base_url).netloc
         
