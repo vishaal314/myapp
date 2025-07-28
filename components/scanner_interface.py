@@ -115,8 +115,8 @@ def render_scanner_interface():
     st.session_state['region'] = region
 
 def render_code_scanner_config():
-    """Code scanner configuration - extracted from app.py lines 1638-2000"""
-    st.subheader("Code Scanner Configuration")
+    """Unified code scanner configuration with intelligent scanning options"""
+    st.subheader(_("scan.code_configuration", "Code Scanner Configuration"))
     
     # Use session state to remember the selection
     if 'repo_source' not in st.session_state:
@@ -139,7 +139,7 @@ def render_code_scanner_config():
         uploaded_files = st.file_uploader(
             _("scan.drag_files"),
             accept_multiple_files=True,
-            type=['py', 'js', 'java', 'cpp', 'c', 'cs', 'php', 'rb', 'go', 'rs', 'ts', 'jsx', 'tsx'],
+            type=['py', 'js', 'java', 'cpp', 'c', 'cs', 'php', 'rb', 'go', 'rs', 'ts', 'jsx', 'tsx', 'yaml', 'yml', 'json', 'xml', 'tf', 'tfvars', 'sh', 'ps1', 'sql', 'env'],
             key="code_files"
         )
         
@@ -167,6 +167,79 @@ def render_code_scanner_config():
             help=_("scan.repo_token_help"),
             key="repo_token"
         )
+    
+    # Advanced intelligent scanning options
+    with st.expander(_("scan.advanced_options", "Advanced Scanning Options")):
+        st.write("🧠 " + _("scan.intelligent_options", "Intelligent Scanning Configuration"))
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            scan_mode = st.selectbox(
+                _("scan.mode", "Scan Mode"),
+                ["fast", "smart", "deep", "sampling"],
+                index=1,  # Default to smart
+                key="scan_mode",
+                help=_("scan.mode_help", "Smart mode adapts to repository size automatically")
+            )
+            
+            use_entropy = st.checkbox(
+                _("scan.entropy_analysis", "Entropy Analysis"), 
+                value=True,
+                key="use_entropy",
+                help=_("scan.entropy_help", "Use entropy analysis for better secret detection")
+            )
+            
+            include_comments = st.checkbox(
+                _("scan.include_comments", "Include Comments"), 
+                value=True,
+                key="include_comments",
+                help=_("scan.comments_help", "Scan code comments for sensitive information")
+            )
+        
+        with col2:
+            use_git_metadata = st.checkbox(
+                _("scan.git_metadata", "Git Metadata Collection"), 
+                value=False,
+                key="use_git_metadata", 
+                help=_("scan.git_help", "Collect Git blame and commit information")
+            )
+            
+            detect_secrets = st.checkbox(
+                _("scan.detect_secrets", "Secret Detection"), 
+                value=True,
+                key="detect_secrets",
+                help=_("scan.secrets_help", "Detect API keys, tokens, and credentials")
+            )
+            
+            timeout = st.number_input(
+                _("scan.timeout_seconds", "Timeout (seconds)"), 
+                value=60, 
+                min_value=10, 
+                max_value=3600,
+                key="scan_timeout",
+                help=_("scan.timeout_help", "Maximum scan duration before timeout")
+            )
+        
+        # File filtering options
+        st.write("📁 " + _("scan.file_options", "File Processing Options"))
+        col3, col4 = st.columns(2)
+        with col3:
+            max_files = st.number_input(
+                _("scan.max_files", "Max Files to Scan"), 
+                value=200, 
+                min_value=10, 
+                max_value=1000,
+                key="max_files",
+                help=_("scan.max_files_help", "Maximum number of files to process")
+            )
+        with col4:
+            priority_extensions = st.multiselect(
+                _("scan.priority_extensions", "Priority Extensions"),
+                ['.py', '.js', '.java', '.php', '.cs', '.go', '.rs', '.env', '.config'],
+                default=['.env', '.config'],
+                key="priority_extensions",
+                help=_("scan.priority_help", "File types to scan with high priority")
+            )
 
 def render_document_scanner_config():
     """Document scanner configuration - extracted from app.py lines 2000-2500"""
@@ -403,21 +476,77 @@ def render_scan_submission():
             execute_manual_upload_scan(region, username)
 
 def execute_code_scan(region: str, username: str):
-    """Execute code scanning with proper result storage - FIXED using working implementation"""
+    """Execute intelligent code scanning with unified configuration"""
     try:
-        # Get scan parameters from session state
+        # Get scan parameters from unified configuration
         repo_source = st.session_state.get('repo_source', _("scan.upload_files"))
+        uploaded_files = st.session_state.get('code_files', [])
+        repo_url = st.session_state.get('repo_url', '')
         
-        # Progress tracking
-        progress_bar = st.progress(0)
-        status_text = st.empty()
+        # Advanced configuration parameters
+        scan_mode = st.session_state.get('scan_mode', 'smart')
+        use_entropy = st.session_state.get('use_entropy', True)
+        include_comments = st.session_state.get('include_comments', True)
+        use_git_metadata = st.session_state.get('use_git_metadata', False)
+        detect_secrets = st.session_state.get('detect_secrets', True)
+        timeout = st.session_state.get('scan_timeout', 60)
+        max_files = st.session_state.get('max_files', 200)
+        priority_extensions = st.session_state.get('priority_extensions', [])
         
-        # Initialize results storage
-        scan_results = []
-        import tempfile
-        import os
-        from datetime import datetime
-        from services.code_scanner import CodeScanner
+        # Use intelligent scanner wrapper
+        from components.intelligent_scanner_wrapper import IntelligentScannerWrapper
+        wrapper = IntelligentScannerWrapper()
+        
+        # Execute intelligent scan based on source type
+        if repo_source == _("scan.upload_files") and uploaded_files:
+            scan_result = wrapper.execute_code_scan_intelligent(
+                region=region,
+                username=username,
+                uploaded_files=uploaded_files,
+                include_comments=include_comments,
+                detect_secrets=detect_secrets,
+                gdpr_compliance=True,
+                scan_mode=scan_mode,
+                use_entropy=use_entropy,
+                use_git_metadata=use_git_metadata,
+                timeout=timeout,
+                max_files=max_files,
+                priority_extensions=priority_extensions
+            )
+        elif repo_source == _("scan.repository_url") and repo_url:
+            scan_result = wrapper.execute_code_scan_intelligent(
+                region=region,
+                username=username,
+                repo_url=repo_url,
+                include_comments=include_comments,
+                detect_secrets=detect_secrets,
+                gdpr_compliance=True,
+                scan_mode=scan_mode,
+                use_entropy=use_entropy,
+                use_git_metadata=use_git_metadata,
+                timeout=timeout,
+                max_files=max_files,
+                priority_extensions=priority_extensions
+            )
+        else:
+            st.error("Please provide either files to upload or a repository URL to scan.")
+            return
+        
+        # Store results for display
+        if scan_result and isinstance(scan_result, dict):
+            st.session_state['code_scan_results'] = scan_result
+            st.session_state['code_scan_complete'] = True
+            
+            # Display intelligent scan results
+            wrapper.display_intelligent_scan_results(scan_result)
+            st.success("✅ Intelligent code scan completed successfully!")
+        else:
+            st.error("❌ Scan failed to produce results")
+            
+    except Exception as e:
+        st.error(f"❌ Code scan failed: {str(e)}")
+        import logging
+        logging.error(f"Code scan error: {str(e)}", exc_info=True)
         
         with tempfile.TemporaryDirectory() as temp_dir:
             file_paths = []

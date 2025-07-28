@@ -29,7 +29,9 @@ class IntelligentScannerWrapper:
                                     uploaded_files=None, repo_url=None, 
                                     directory_path=None, include_comments=True,
                                     detect_secrets=True, gdpr_compliance=True,
-                                    scan_mode="smart") -> Dict[str, Any]:
+                                    scan_mode="smart", use_entropy=True,
+                                    use_git_metadata=False, timeout=60,
+                                    max_files=200, priority_extensions=None) -> Dict[str, Any]:
         """Execute intelligent code scanning with enhanced scalability."""
         
         # Session tracking setup
@@ -62,7 +64,11 @@ class IntelligentScannerWrapper:
                 'scan_mode': scan_mode,
                 'intelligent_scanning': True,
                 'gdpr_compliance': gdpr_compliance,
-                'netherlands_uavg': region == "Netherlands"
+                'netherlands_uavg': region == "Netherlands",
+                'use_entropy': use_entropy,
+                'use_git_metadata': use_git_metadata,
+                'timeout': timeout,
+                'max_files': max_files
             }
         )
         
@@ -106,10 +112,14 @@ class IntelligentScannerWrapper:
                     scan_type='repository',
                     scan_target=repo_url,
                     scan_mode=scan_mode,
-                    max_items=200,
+                    max_items=max_files,
                     progress_callback=progress_callback,
                     region=region,
-                    branch='main'
+                    branch='main',
+                    timeout=timeout,
+                    use_entropy=use_entropy,
+                    use_git_metadata=use_git_metadata,
+                    priority_extensions=priority_extensions or []
                 )
             
             else:
