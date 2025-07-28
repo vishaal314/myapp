@@ -776,7 +776,13 @@ def generate_report(scan_data: Dict[str, Any],
         elif 'soc2' in scan_type.lower():
             report_format = "soc2"
             logging.info("Using SOC2 compliance report format")
-        elif 'sustainability' in scan_type.lower() or 'github' in scan_type.lower() or 'code efficiency' in scan_type.lower():
+        elif 'website' in scan_type.lower():
+            report_format = "website"
+            logging.info("Using Website report format")
+        elif 'code' in scan_type.lower() or 'repository' in scan_type.lower() or 'github' in scan_type.lower():
+            report_format = "code"
+            logging.info("Using Code repository report format")
+        elif 'sustainability' in scan_type.lower() or 'code efficiency' in scan_type.lower():
             report_format = "sustainability"
             logging.info("Using Sustainability report format")
         else:
@@ -1562,13 +1568,30 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         total_cookies = stats.get('total_cookies', 0)
         total_trackers = stats.get('total_trackers', 0)
         
-        # Create summary table
+    elif report_format == "code":
+        # Code Repository Scan Report Format
+        elements.append(Paragraph("Code Repository Privacy Compliance Report", title_style))
+        elements.append(Spacer(1, 20))
+        
+        # Scan overview
+        repo_name = scan_data.get('repo_url', scan_data.get('repository', 'Code Analysis')).split('/')[-1] if '/' in scan_data.get('repo_url', '') else scan_data.get('repo_url', 'Code Analysis')
+        elements.append(Paragraph(f"Scanned Repository: {repo_name}", heading_style))
+        elements.append(Spacer(1, 15))
+        
+        # Summary metrics for code scans
+        code_stats = scan_data.get('code_stats', {})
+        files_scanned = scan_data.get('files_scanned', scan_data.get('file_count', code_stats.get('total_files', 0)))
+        total_findings = len(scan_data.get('findings', []))
+        lines_analyzed = code_stats.get('total_lines', 0)
+        languages_found = len(code_stats.get('languages', {})) if code_stats.get('languages') else 0
+        
+        # Create summary table for code scan
         summary_data = [
             ['Metric', 'Value'],
-            ['Pages Scanned', str(pages_scanned)],
+            ['Files Scanned', str(files_scanned)],
             ['Total Findings', str(total_findings)],
-            ['Cookies Found', str(total_cookies)],
-            ['Trackers Detected', str(total_trackers)],
+            ['Lines Analyzed', str(lines_analyzed)],
+            ['Languages Found', str(languages_found)],
             ['Scan Duration', f"{scan_data.get('duration_seconds', 0):.1f} seconds"]
         ]
         
@@ -1590,19 +1613,30 @@ def _generate_report_internal(scan_data: Dict[str, Any],
         elements.append(summary_table)
         elements.append(Spacer(1, 20))
         
-        # Privacy Findings Section
+        # Code Privacy Findings Section
         if 'findings' in scan_data and scan_data['findings']:
-            elements.append(Paragraph("Privacy Findings", heading_style))
+            elements.append(Paragraph("Code Privacy Findings", heading_style))
             elements.append(Spacer(1, 10))
             
-            findings_data = [['Type', 'Severity', 'Description', 'URL']]
+            findings_data = [['Type', 'Severity', 'Description', 'Location']]
             for finding in scan_data['findings'][:20]:  # Limit to first 20 findings
-                findings_data.append([
-                    finding.get('type', 'Unknown'),
-                    finding.get('severity', 'Low'),
-                    finding.get('description', '')[:100] + ('...' if len(finding.get('description', '')) > 100 else ''),
-                    finding.get('url', '')[:40] + ('...' if len(finding.get('url', '')) > 40 else '')
-                ])
+                # Handle nested findings format common in code scans
+                if isinstance(finding, dict) and 'findings' in finding:
+                    file_path = finding.get('file_path', 'Unknown')
+                    for nested_finding in finding['findings'][:5]:  # Limit nested findings
+                        findings_data.append([
+                            nested_finding.get('type', 'Unknown'),
+                            nested_finding.get('risk_level', 'Low'),
+                            nested_finding.get('description', '')[:80] + ('...' if len(nested_finding.get('description', '')) > 80 else ''),
+                            f"{file_path}:{nested_finding.get('line', '')}"[:50]
+                        ])
+                else:
+                    findings_data.append([
+                        finding.get('type', 'Unknown'),
+                        finding.get('risk_level', finding.get('severity', 'Low')),
+                        finding.get('description', '')[:80] + ('...' if len(finding.get('description', '')) > 80 else ''),
+                        finding.get('file_path', finding.get('location', ''))[:50]
+                    ])
             
             findings_table = Table(findings_data, colWidths=[1.2*inch, 0.8*inch, 2.5*inch, 1.5*inch])
             findings_table.setStyle(TableStyle([

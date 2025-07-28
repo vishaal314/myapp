@@ -21,12 +21,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_finding, get_risk_color_gradient
 
 # Set page config
-st.set_page_config(
-    page_title="DataGuardian Pro - Risk Analyzer Demo",
-    page_icon="🔒",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Note: set_page_config already called in main app.py
+# st.set_page_config(
+#     page_title="DataGuardian Pro - Risk Analyzer Demo",
+#     page_icon="🔒",
+#     layout="wide",
+#     initial_sidebar_state="expanded"
+# )
 
 # Configure the app
 st.title("Smart AI-powered Risk Severity Analysis")

@@ -283,7 +283,8 @@ def example_license_monitoring():
 def main():
     """Main function to demonstrate all examples"""
     
-    st.set_page_config(page_title="DataGuardian Pro License Examples", layout="wide")
+    # Note: set_page_config already called in main app.py
+    # st.set_page_config(page_title="DataGuardian Pro License Examples", layout="wide")
     
     st.title("DataGuardian Pro License System Examples")
     

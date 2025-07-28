@@ -12,11 +12,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from services.stripe_payment import display_payment_button, handle_payment_callback, verify_payment
 from services.results_aggregator import ResultsAggregator
 
-st.set_page_config(
-    page_title="iDEAL Payment Testing - DataGuardian Pro",
-    page_icon="💳",
-    layout="wide"
-)
+# Note: set_page_config already called in main app.py
+# st.set_page_config(
+#     page_title="iDEAL Payment Testing - DataGuardian Pro",
+#     page_icon="💳",
+#     layout="wide"
+# )
 
 # Initialize results aggregator for payment logging
 @st.cache_resource
