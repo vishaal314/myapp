@@ -566,3 +566,15 @@ def generate_unified_html_report(scan_result: Dict[str, Any]) -> str:
     """
     generator = get_unified_generator()
     return generator.generate_html_report(scan_result)
+
+def generate_comprehensive_report(scan_result: Dict[str, Any]) -> str:
+    """
+    Generate a comprehensive HTML report (alias for backward compatibility).
+    
+    Args:
+        scan_result: Scan result data
+        
+    Returns:
+        Complete HTML report as string
+    """
+    return generate_unified_html_report(scan_result)

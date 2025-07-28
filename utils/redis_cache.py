@@ -61,9 +61,9 @@ class RedisCache:
                 self.stats['hits'] += 1
                 # Try JSON first, then pickle
                 try:
-                    return json.loads(value)
+                    return json.loads(str(value))
                 except (json.JSONDecodeError, TypeError):
-                    return pickle.loads(value)
+                    return pickle.loads(bytes(value))
             else:
                 self.stats['misses'] += 1
                 return None
@@ -151,7 +151,8 @@ class RedisCache:
             
         try:
             cache_key = self._get_key(key, namespace)
-            return self.redis_client.incr(cache_key, amount)
+            result = self.redis_client.incr(cache_key, amount)
+            return int(result) if result is not None else None
         except Exception as e:
             logger.error(f"Cache increment error for key {key}: {e}")
             return None
@@ -235,6 +236,10 @@ class SessionCache:
     def get(self, key: str) -> Any:
         """Get value from session cache"""
         return self.cache.get(key, self.namespace)
+    
+    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+        """Set value in session cache"""
+        return self.cache.set(key, value, ttl or self.ttl, self.namespace)
     
     def get_session(self, session_id: str) -> Optional[Dict]:
         """Get session data from cache"""

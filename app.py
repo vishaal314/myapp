@@ -766,19 +766,22 @@ def render_code_scanner_interface(region: str, username: str):
 def execute_code_scan(region, username, uploaded_files, repo_url, directory_path, 
                      include_comments, detect_secrets, gdpr_compliance):
     """Execute comprehensive GDPR-compliant code scanning with Netherlands UAVG support"""
+    # Initialize variables at function scope to prevent UnboundLocalError
+    import tempfile
+    import os
+    import uuid
+    import re
+    import hashlib
+    import math
+    import time
+    from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+    
+    # Get session information at function scope
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+    user_id = st.session_state.get('user_id', username)
+    uavg_critical = 0  # Initialize at function scope
+    
     try:
-        import tempfile
-        import os
-        import uuid
-        import re
-        import hashlib
-        import math
-        import time
-        from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
-        
-        # Get session information
-        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
-        user_id = st.session_state.get('user_id', username)
         
         # Track scan start
         scan_start_time = datetime.now()
@@ -1371,29 +1374,7 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         import traceback
         st.code(traceback.format_exc())
         
-        # Generate and display results
-        display_scan_results(scan_results)
-        
-        # Store scan results in session state for download access
-        st.session_state['last_scan_results'] = scan_results
-        
-        # Generate HTML report
-        html_report = generate_html_report(scan_results)
-        
-        # Offer download
-        st.download_button(
-            label="📄 Download HTML Report",
-            data=html_report,
-            file_name=f"code_scan_report_{scan_results['scan_id'][:8]}.html",
-            mime="text/html"
-        )
-        
-        st.success("✅ Code scan completed successfully!")
-        
-    except Exception as e:
-        st.error(f"Scan failed: {str(e)}")
-        import traceback
-        st.code(traceback.format_exc())
+
 
 def display_scan_results(scan_results):
     """Display scan results in a formatted way with rich information"""
@@ -2974,6 +2955,16 @@ def render_model_analysis_interface(region: str, username: str):
         # Prepare AI Act configuration
         ai_act_config = None
         if ai_act_compliance:
+            # Initialize all AI Act variables to prevent unbound errors
+            critical_infrastructure = locals().get('critical_infrastructure', False)
+            education_training = locals().get('education_training', False)
+            employment = locals().get('employment', False)
+            essential_services = locals().get('essential_services', False)
+            check_risk_management = locals().get('check_risk_management', False)
+            check_data_governance = locals().get('check_data_governance', False)
+            check_human_oversight = locals().get('check_human_oversight', False)
+            check_documentation = locals().get('check_documentation', False)
+            
             ai_act_config = {
                 'critical_infrastructure': critical_infrastructure,
                 'education_training': education_training,
@@ -5839,11 +5830,11 @@ def render_sustainability_scanner_interface(region: str, username: str):
         }
         
         if source_type == "Upload Files":
-            scan_params['uploaded_files'] = uploaded_files if 'uploaded_files' in locals() else None
+            scan_params['uploaded_files'] = locals().get('uploaded_files', None)
         elif source_type == "Repository URL":
-            scan_params['repo_url'] = repo_url if 'repo_url' in locals() else None
+            scan_params['repo_url'] = locals().get('repo_url', None)
         elif source_type == "Cloud Provider Analysis":
-            scan_params['cloud_provider'] = cloud_provider if 'cloud_provider' in locals() else None
+            scan_params['cloud_provider'] = locals().get('cloud_provider', None)
             
         execute_sustainability_scan(region, username, scan_params)
 
