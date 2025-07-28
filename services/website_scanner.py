@@ -624,6 +624,8 @@ class WebsiteScanner:
                 findings.append({
                     'type': 'error',
                     'url': current_url,
+                    'location': f"Page Access Error: {current_url}",
+                    'element': 'page request',
                     'description': f"Failed to scan page: {str(e)}",
                     'severity': 'Medium'
                 })

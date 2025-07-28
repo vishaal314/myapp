@@ -1461,9 +1461,24 @@ def display_scan_results(scan_results):
                 # For website scans, use URL and location instead of file/line
                 if "website" in scan_type.lower() or finding.get('url'):
                     file_location = finding.get('url', finding.get('file', 'Website'))
-                    line_location = finding.get('location', finding.get('element', 'Page Element'))
-                    if line_location == 'N/A':
-                        line_location = 'Page Content'
+                    line_location = finding.get('location', finding.get('element', ''))
+                    if not line_location or line_location == 'N/A' or line_location == 'Unknown':
+                        # Generate meaningful location based on finding type
+                        finding_type = finding.get('type', '').lower()
+                        if 'cookie' in finding_type:
+                            line_location = 'Cookie Storage'
+                        elif 'tracker' in finding_type:
+                            line_location = 'External Script'
+                        elif 'form' in finding_type:
+                            line_location = 'Form Element'
+                        elif 'ssl' in finding_type or 'security' in finding_type:
+                            line_location = 'Security Configuration'
+                        elif 'privacy' in finding_type:
+                            line_location = 'Privacy Policy'
+                        elif 'consent' in finding_type:
+                            line_location = 'Consent Banner'
+                        else:
+                            line_location = 'Page Content'
                 else:
                     file_location = finding.get('file', 'N/A')
                     line_location = finding.get('line', 'N/A')
