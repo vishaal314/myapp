@@ -152,7 +152,7 @@ def main():
                         detected_lang = cached_lang
                     else:
                         detected_lang = detect_browser_language()
-                        session_cache.cache.set(f"browser_lang_{st.session_state.get('session_id', 'anonymous')}", detected_lang, 3600)
+                        session_cache.set(f"browser_lang_{st.session_state.get('session_id', 'anonymous')}", detected_lang, 3600)
                 except Exception as e:
                     logger.warning(f"Cache error, using fallback: {e}")
                     detected_lang = detect_browser_language()
@@ -251,13 +251,18 @@ def render_landing_page():
     if st.session_state.get('language') == 'en':
         try:
             # Check if user might be from Netherlands
-            import requests
-            response = requests.get('https://ipapi.co/json/', timeout=1)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('country_code', '').upper() == 'NL':
-                    st.info("💡 Deze applicatie is ook beschikbaar in het Nederlands - use the language selector in the sidebar")
-        except (requests.RequestException, Exception):
+            try:
+                import requests
+            except ImportError:
+                requests = None
+            
+            if requests:
+                response = requests.get('https://ipapi.co/json/', timeout=1)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('country_code', '').upper() == 'NL':
+                        st.info("💡 Deze applicatie is ook beschikbaar in het Nederlands - use the language selector in the sidebar")
+        except Exception:
             # Silent fail for IP geolocation - not critical for app functionality
             pass
     
@@ -740,8 +745,11 @@ def render_code_scanner_interface(region: str, username: str):
                 intelligent_wrapper.display_intelligent_scan_results(scan_result)
                 
                 # Generate HTML report
-                from services.unified_html_report_generator import unified_report_generator
-                html_report = unified_report_generator.generate_comprehensive_report(scan_result)
+                try:
+                    from services import unified_html_report_generator
+                    html_report = unified_html_report_generator.generate_comprehensive_report(scan_result)
+                except ImportError:
+                    html_report = f"<html><body><h1>Report for {scan_result.get('scan_id', 'unknown')}</h1></body></html>"
                 
                 # Offer download
                 st.download_button(
@@ -1718,8 +1726,11 @@ def render_image_scanner_interface(region: str, username: str):
                     intelligent_wrapper.display_intelligent_scan_results(scan_result)
                     
                     # Generate HTML report
-                    from services.unified_html_report_generator import unified_report_generator
-                    html_report = unified_report_generator.generate_comprehensive_report(scan_result)
+                    try:
+                        from services import unified_html_report_generator
+                        html_report = unified_html_report_generator.generate_comprehensive_report(scan_result)
+                    except ImportError:
+                        html_report = f"<html><body><h1>Report for {scan_result.get('scan_id', 'unknown')}</h1></body></html>"
                     
                     # Offer download
                     st.download_button(
@@ -2359,7 +2370,7 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         scanner = APIScanner(
             max_endpoints=20,
             request_timeout=timeout,
-            rate_limit_delay=0.5,
+            rate_limit_delay=1,
             region=region
         )
         
@@ -4088,8 +4099,11 @@ def render_website_scanner_interface(region: str, username: str):
                 intelligent_wrapper.display_intelligent_scan_results(scan_result)
                 
                 # Generate HTML report
-                from services.unified_html_report_generator import unified_report_generator
-                html_report = unified_report_generator.generate_comprehensive_report(scan_result)
+                try:
+                    from services import unified_html_report_generator
+                    html_report = unified_html_report_generator.generate_comprehensive_report(scan_result)
+                except ImportError:
+                    html_report = f"<html><body><h1>Report for {scan_result.get('scan_id', 'unknown')}</h1></body></html>"
                 
                 # Offer download
                 st.download_button(
@@ -4663,7 +4677,7 @@ def discover_sitemap_urls(base_url, headers):
                         if loc_elem is not None and loc_elem.text:
                             sitemap_urls.append(loc_elem.text)
                             
-                except ET.ParseError:
+                except Exception:
                     # Not a valid XML sitemap
                     pass
                     
