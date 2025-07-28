@@ -61,9 +61,9 @@ class RedisCache:
                 self.stats['hits'] += 1
                 # Try JSON first, then pickle
                 try:
-                    return json.loads(str(value))
-                except (json.JSONDecodeError, TypeError):
-                    return pickle.loads(bytes(value))
+                    return json.loads(value.decode('utf-8') if isinstance(value, bytes) else str(value))
+                except (json.JSONDecodeError, TypeError, UnicodeDecodeError):
+                    return pickle.loads(value if isinstance(value, bytes) else str(value).encode())
             else:
                 self.stats['misses'] += 1
                 return None

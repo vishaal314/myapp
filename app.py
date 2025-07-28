@@ -1,12 +1,15 @@
 import streamlit as st
 
 # Configure page FIRST - must be the very first Streamlit command
-st.set_page_config(
-    page_title="DataGuardian Pro",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Only configure if not already configured (prevents multiple calls during rerun)
+if 'page_configured' not in st.session_state:
+    st.set_page_config(
+        page_title="DataGuardian Pro",
+        page_icon="🛡️",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    st.session_state['page_configured'] = True
 
 # Core imports - keep essential imports minimal
 import logging
@@ -139,6 +142,7 @@ def main():
             # Check if we need to trigger a rerun for language change
             if st.session_state.get('_trigger_rerun', False):
                 st.session_state['_trigger_rerun'] = False
+                # Use st.rerun() but don't call set_page_config again on rerun
                 st.rerun()
             
             # Initialize internationalization and basic session state
