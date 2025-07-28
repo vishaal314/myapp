@@ -207,5 +207,6 @@ def generate_mock_compliance_data():
     st.success("Generated mock compliance history for demonstration purposes.")
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="Compliance Dashboard", layout="wide")
+    # Note: set_page_config is already called in main app.py
+    # Remove duplicate call to prevent Streamlit error
     render_compliance_dashboard()
