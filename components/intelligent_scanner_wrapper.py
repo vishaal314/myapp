@@ -556,9 +556,50 @@ class IntelligentScannerWrapper:
                 'Reasoning': strategy.get('reasoning', 'No details available')
             })
         
-        # Display regular scan results
-        from app import display_scan_results
-        display_scan_results(scan_result)
+        # Display regular scan results with error handling
+        try:
+            from app import display_scan_results
+            display_scan_results(scan_result)
+        except Exception as e:
+            st.error(f"Error displaying scan results: {str(e)}")
+            # Fallback display for critical scan data
+            st.subheader("📊 Scan Results (Safe Mode)")
+            
+            # Display basic metrics safely
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Files Scanned", scan_result.get('files_scanned', 0))
+            with col2:
+                st.metric("Findings", len(scan_result.get('findings', [])))
+            with col3:
+                st.metric("Status", scan_result.get('status', 'Completed'))
+            
+            # Display findings if available
+            findings = scan_result.get('findings', [])
+            if findings:
+                st.subheader("🔍 Findings Summary")
+                for i, finding in enumerate(findings[:10], 1):  # Show first 10 findings
+                    with st.expander(f"Finding {i}: {finding.get('type', 'Unknown')} - {finding.get('severity', 'Medium')}"):
+                        st.write(f"**File:** {finding.get('file', 'N/A')}")
+                        st.write(f"**Description:** {finding.get('description', 'No description')}")
+                        if finding.get('line'):
+                            st.write(f"**Location:** {finding.get('line')}")
+            else:
+                st.success("✅ No issues found in the scan")
+            
+            # Display HTML report download if available
+            st.subheader("📄 Download Report")
+            try:
+                from app import generate_html_report
+                html_content = generate_html_report(scan_result)
+                st.download_button(
+                    label="📥 Download HTML Report",
+                    data=html_content,
+                    file_name=f"scan_report_{scan_result.get('scan_id', 'unknown')[:8]}.html",
+                    mime="text/html"
+                )
+            except Exception as download_error:
+                st.info("Report download temporarily unavailable")
 
 # Global instance for use throughout the application
 intelligent_wrapper = IntelligentScannerWrapper()
