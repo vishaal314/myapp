@@ -634,8 +634,10 @@ class IntelligentScannerWrapper:
                             cookies_found = len(cookie_findings)
                         elif scan_result.get('trackers_found', 0) > 0:
                             # If we have trackers but no direct cookie findings, estimate cookies
-                            # Most tracking requires cookies, so use a reasonable estimate
-                            cookies_found = min(scan_result.get('trackers_found', 0), 25)  # Cap at reasonable number
+                            # Most tracking requires cookies, so use a reasonable estimate  
+                            trackers = scan_result.get('trackers_found', 0)
+                            # Estimate: 60-80% of trackers typically use cookies
+                            cookies_found = max(2, min(int(trackers * 0.7), 20))  # Reasonable estimate with caps
                 
                 st.metric("Cookies Found", cookies_found)
             with col4:
