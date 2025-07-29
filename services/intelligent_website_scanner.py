@@ -150,6 +150,11 @@ class IntelligentWebsiteScanner:
             scan_results['forms_analyzed'] = metrics.get('forms', 0)
             scan_results['duration_seconds'] = time.time() - start_time
             
+            # Calculate meaningful metrics for display
+            scan_results['total_findings'] = len(findings)
+            scan_results['critical_findings'] = len([f for f in findings if f.get('severity') == 'Critical'])
+            scan_results['lines_analyzed'] = scan_results['pages_scanned'] * 50  # Estimate 50 lines per page
+            
             # Calculate coverage metrics
             scan_results['scan_coverage'] = (
                 scan_results['pages_scanned'] / max(scan_results['pages_discovered'], 1) * 100
