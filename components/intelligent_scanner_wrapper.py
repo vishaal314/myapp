@@ -584,7 +584,19 @@ class IntelligentScannerWrapper:
                 high_risk_issues = len([f for f in scan_result.get('findings', []) if f.get('severity') == 'High'])
                 st.metric("High Risk Issues", high_risk_issues)
             with col2:
-                compliance_score = scan_result.get('compliance_score', 0)
+                # Always calculate compliance score for accurate display
+                findings = scan_result.get('findings', [])
+                total_findings = len(findings)
+                critical_findings = len([f for f in findings if f.get('severity') == 'Critical'])
+                high_findings = len([f for f in findings if f.get('severity') == 'High'])
+                
+                if total_findings == 0:
+                    compliance_score = 100
+                else:
+                    # Penalty-based scoring system (same as other scanners)
+                    penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
+                    compliance_score = max(0, 100 - penalty)
+                
                 st.metric("Compliance Score", f"{compliance_score}%")
             with col3:
                 cookies_found = scan_result.get('cookies_found', len(scan_result.get('cookies_detected', [])))
@@ -593,7 +605,7 @@ class IntelligentScannerWrapper:
                 trackers_found = scan_result.get('trackers_found', len(scan_result.get('trackers_detected', [])))
                 st.metric("Trackers Found", trackers_found)
         
-        # Debug: Display severity breakdown
+        # Debug: Display severity breakdown and scan result keys
         if findings:
             severities = {}
             for finding in findings:
@@ -601,6 +613,8 @@ class IntelligentScannerWrapper:
                 severities[sev] = severities.get(sev, 0) + 1
             
             st.info(f"🔍 Debug - Severity breakdown: {severities}")
+            st.info(f"🔍 Debug - Scan result keys: {list(scan_result.keys())}")
+            st.info(f"🔍 Debug - Cookies data: cookies_found={scan_result.get('cookies_found')}, cookies_detected={len(scan_result.get('cookies_detected', []))}")
         
         # Display findings if available
         findings = scan_result.get('findings', [])
