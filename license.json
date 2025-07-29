@@ -11,7 +11,7 @@
     {
       "limit_type": "scans_per_month",
       "limit_value": 10000,
-      "current_usage": 48,
+      "current_usage": 49,
       "reset_period": "monthly",
       "last_reset": "2025-07-17T21:46:55.592480"
     },

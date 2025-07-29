@@ -565,8 +565,60 @@ class IntelligentWebsiteScanner:
             
             if isinstance(result, dict):
                 findings = result.get('findings', [])
+                
+                # Extract cookies from multiple possible locations
                 cookies = result.get('cookies', {})
+                if not cookies:
+                    # Try to extract from page results or other sources
+                    page_results = result.get('page_results', [])
+                    for page_result in page_results:
+                        page_cookies = page_result.get('cookies', [])
+                        for cookie in page_cookies:
+                            if isinstance(cookie, dict):
+                                cookie_name = cookie.get('name', f'cookie_{len(cookies)}')
+                                cookies[cookie_name] = cookie
+                            elif isinstance(cookie, str):
+                                cookies[cookie] = {'name': cookie, 'source': page_url}
+                
+                # Extract trackers from multiple possible locations  
                 trackers = result.get('trackers', [])
+                if not trackers:
+                    page_results = result.get('page_results', [])
+                    for page_result in page_results:
+                        page_trackers = page_result.get('trackers', [])
+                        trackers.extend(page_trackers)
+                
+                # CRITICAL: Extract cookies and trackers from findings if direct extraction failed
+                # Many findings represent cookies/trackers but aren't in the cookies/trackers fields
+                for finding in findings:
+                    finding_type = finding.get('type', '').lower()
+                    
+                    # Detect cookie findings
+                    if 'cookie' in finding_type or 'cookie' in finding.get('description', '').lower():
+                        cookie_name = finding.get('location', '').replace('Cookie: ', '') or f'finding_cookie_{len(cookies)}'
+                        if cookie_name and cookie_name not in cookies:
+                            cookies[cookie_name] = {
+                                'name': cookie_name,
+                                'source': page_url,
+                                'privacy_risk': finding.get('privacy_risk', 'Medium'),
+                                'from_finding': True,
+                                'description': finding.get('description', '')
+                            }
+                    
+                    # Detect tracker findings  
+                    elif ('tracker' in finding_type or 'tracking' in finding_type or 
+                          'google' in finding_type or 'analytics' in finding_type or
+                          'facebook' in finding_type or 'pixel' in finding_type):
+                        tracker_name = finding.get('location', '') or finding.get('description', '')[:50] or 'unknown_tracker'
+                        tracker_data = {
+                            'name': tracker_name,
+                            'source': page_url,
+                            'privacy_risk': finding.get('privacy_risk', 'Medium'),
+                            'from_finding': True,
+                            'description': finding.get('description', '')
+                        }
+                        if tracker_data not in trackers:
+                            trackers.append(tracker_data)
                 
                 # Calculate metrics
                 metrics['cookies'] = len(cookies)

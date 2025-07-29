@@ -642,7 +642,22 @@ class IntelligentScannerWrapper:
             
             st.info(f"🔍 Debug - Severity breakdown: {severities}")
             st.info(f"🔍 Debug - Scan result keys: {list(scan_result.keys())}")
-            st.info(f"🔍 Debug - Cookies data: cookies_found={scan_result.get('cookies_found')}, cookies_detected={len(scan_result.get('cookies_detected', []))}")
+            # Enhanced debug output for cookies
+            cookies_found = scan_result.get('cookies_found', 0)
+            cookies_detected = scan_result.get('cookies_detected', [])
+            trackers_detected = scan_result.get('trackers_detected', [])
+            
+            st.info(f"🔍 Debug - Cookies data: cookies_found={cookies_found}, cookies_detected={len(cookies_detected)}, trackers_detected={len(trackers_detected)}")
+            
+            # Debug finding types that might be cookies/trackers
+            cookie_findings = [f for f in findings if 'cookie' in f.get('type', '').lower() or 'cookie' in f.get('description', '').lower()]
+            tracker_findings = [f for f in findings if any(term in f.get('type', '').lower() for term in ['tracker', 'tracking', 'google', 'analytics', 'facebook', 'pixel'])]
+            
+            st.info(f"🔍 Debug - Cookie-related findings: {len(cookie_findings)}, Tracker-related findings: {len(tracker_findings)}")
+            if cookie_findings:
+                st.info(f"🔍 Cookie finding types: {[f.get('type') for f in cookie_findings[:5]]}")
+            if tracker_findings:
+                st.info(f"🔍 Tracker finding types: {[f.get('type') for f in tracker_findings[:5]]}")
         
         # Display findings if available
         findings = scan_result.get('findings', [])
