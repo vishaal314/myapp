@@ -155,7 +155,12 @@ class IntelligentWebsiteScanner:
             # Calculate meaningful metrics for display
             scan_results['total_findings'] = len(findings)
             scan_results['critical_findings'] = len([f for f in findings if f.get('severity') == 'Critical'])
+            scan_results['high_risk_findings'] = len([f for f in findings if f.get('severity') == 'High'])
             scan_results['lines_analyzed'] = scan_results['pages_scanned'] * 50  # Estimate 50 lines per page
+            
+            # Ensure cookies and trackers are properly counted
+            scan_results['cookies_found'] = len(scan_results.get('cookies_detected', []))
+            scan_results['trackers_found'] = len(scan_results.get('trackers_detected', []))
             
             # Calculate coverage metrics
             scan_results['scan_coverage'] = (

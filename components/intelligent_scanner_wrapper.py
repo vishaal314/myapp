@@ -556,73 +556,69 @@ class IntelligentScannerWrapper:
                 'Reasoning': strategy.get('reasoning', 'No details available')
             })
         
-        # Display regular scan results with error handling
-        try:
-            from app import display_scan_results
-            display_scan_results(scan_result)
-        except Exception as e:
-            st.error(f"Error displaying scan results: {str(e)}")
-            # Fallback display for critical scan data
-            st.subheader("📊 Executive Summary")
-            
-            # Display comprehensive metrics matching main interface
+        # Always use our enhanced display instead of the main app display
+        # This ensures consistent metrics display regardless of the main app function
+        st.markdown("---")
+        st.subheader("📊 Executive Summary")
+        
+        # Display comprehensive metrics matching main interface
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            files_scanned = scan_result.get('files_scanned', scan_result.get('pages_scanned', 0))
+            st.metric("Files Scanned", files_scanned)
+        with col2:
+            total_findings = len(scan_result.get('findings', []))
+            st.metric("Total Findings", total_findings)
+        with col3:
+            lines_analyzed = scan_result.get('lines_analyzed', files_scanned * 50 if files_scanned else 0)
+            st.metric("Lines Analyzed", f"{lines_analyzed:,}")
+        with col4:
+            critical_issues = len([f for f in scan_result.get('findings', []) if f.get('severity') == 'Critical'])
+            st.metric("Critical Issues", critical_issues)
+        
+        # Additional website-specific metrics for website scans
+        if scan_result.get('scan_type') in ['Intelligent Website Scanner', 'GDPR Website Privacy Compliance Scanner']:
+            st.subheader("🌐 Website Privacy Analysis")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                files_scanned = scan_result.get('files_scanned', scan_result.get('pages_scanned', 0))
-                st.metric("Files Scanned", files_scanned)
+                high_risk_issues = len([f for f in scan_result.get('findings', []) if f.get('severity') == 'High'])
+                st.metric("High Risk Issues", high_risk_issues)
             with col2:
-                total_findings = len(scan_result.get('findings', []))
-                st.metric("Total Findings", total_findings)
+                compliance_score = scan_result.get('compliance_score', 0)
+                st.metric("Compliance Score", f"{compliance_score}%")
             with col3:
-                lines_analyzed = scan_result.get('lines_analyzed', files_scanned * 50 if files_scanned else 0)
-                st.metric("Lines Analyzed", f"{lines_analyzed:,}")
+                cookies_found = scan_result.get('cookies_found', len(scan_result.get('cookies_detected', [])))
+                st.metric("Cookies Found", cookies_found)
             with col4:
-                critical_issues = len([f for f in scan_result.get('findings', []) if f.get('severity') == 'Critical'])
-                st.metric("Critical Issues", critical_issues)
-            
-            # Additional website-specific metrics for website scans
-            if scan_result.get('scan_type') in ['Intelligent Website Scanner', 'GDPR Website Privacy Compliance Scanner']:
-                st.subheader("🌐 Website Privacy Analysis")
-                col1, col2, col3, col4 = st.columns(4)
-                with col1:
-                    high_risk_issues = len([f for f in scan_result.get('findings', []) if f.get('severity') == 'High'])
-                    st.metric("High Risk Issues", high_risk_issues)
-                with col2:
-                    compliance_score = scan_result.get('compliance_score', 0)
-                    st.metric("Compliance Score", f"{compliance_score}%")
-                with col3:
-                    cookies_found = scan_result.get('cookies_found', len(scan_result.get('cookies_detected', [])))
-                    st.metric("Cookies Found", cookies_found)
-                with col4:
-                    trackers_found = scan_result.get('trackers_found', len(scan_result.get('trackers_detected', [])))
-                    st.metric("Trackers Found", trackers_found)
-            
-            # Display findings if available
-            findings = scan_result.get('findings', [])
-            if findings:
-                st.subheader("🔍 Findings Summary")
-                for i, finding in enumerate(findings[:10], 1):  # Show first 10 findings
-                    with st.expander(f"Finding {i}: {finding.get('type', 'Unknown')} - {finding.get('severity', 'Medium')}"):
-                        st.write(f"**File:** {finding.get('file', 'N/A')}")
-                        st.write(f"**Description:** {finding.get('description', 'No description')}")
-                        if finding.get('line'):
-                            st.write(f"**Location:** {finding.get('line')}")
-            else:
-                st.success("✅ No issues found in the scan")
-            
-            # Display HTML report download if available
-            st.subheader("📄 Download Report")
-            try:
-                from app import generate_html_report
-                html_content = generate_html_report(scan_result)
-                st.download_button(
-                    label="📥 Download HTML Report",
-                    data=html_content,
-                    file_name=f"scan_report_{scan_result.get('scan_id', 'unknown')[:8]}.html",
-                    mime="text/html"
-                )
-            except Exception as download_error:
-                st.info("Report download temporarily unavailable")
+                trackers_found = scan_result.get('trackers_found', len(scan_result.get('trackers_detected', [])))
+                st.metric("Trackers Found", trackers_found)
+        
+        # Display findings if available
+        findings = scan_result.get('findings', [])
+        if findings:
+            st.subheader("🔍 Findings Summary")
+            for i, finding in enumerate(findings[:10], 1):  # Show first 10 findings
+                with st.expander(f"Finding {i}: {finding.get('type', 'Unknown')} - {finding.get('severity', 'Medium')}"):
+                    st.write(f"**File:** {finding.get('file', 'N/A')}")
+                    st.write(f"**Description:** {finding.get('description', 'No description')}")
+                    if finding.get('line'):
+                        st.write(f"**Location:** {finding.get('line')}")
+        else:
+            st.success("✅ No issues found in the scan")
+        
+        # Display HTML report download if available
+        st.subheader("📄 Download Report")
+        try:
+            from app import generate_html_report
+            html_content = generate_html_report(scan_result)
+            st.download_button(
+                label="📥 Download HTML Report",
+                data=html_content,
+                file_name=f"scan_report_{scan_result.get('scan_id', 'unknown')[:8]}.html",
+                mime="text/html"
+            )
+        except Exception as download_error:
+            st.info("Report download temporarily unavailable")
 
 # Global instance for use throughout the application
 intelligent_wrapper = IntelligentScannerWrapper()
