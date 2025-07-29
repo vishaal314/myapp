@@ -588,36 +588,49 @@ class IntelligentWebsiteScanner:
                         page_trackers = page_result.get('trackers', [])
                         trackers.extend(page_trackers)
                 
-                # CRITICAL: Extract cookies and trackers from findings if direct extraction failed
-                # Many findings represent cookies/trackers but aren't in the cookies/trackers fields
+                # CRITICAL: Extract cookies and trackers from findings - this is the main source
+                # Most privacy findings represent cookies/trackers but aren't in dedicated fields
+                cookie_related_patterns = ['cookie', 'consent', 'marketing', 'analytics', 'functional', 'advertising']
+                tracker_related_patterns = ['tracker', 'tracking', 'google', 'analytics', 'facebook', 'pixel', 'tag', 'script']
+                
                 for finding in findings:
                     finding_type = finding.get('type', '').lower()
+                    finding_desc = finding.get('description', '').lower()
+                    finding_location = finding.get('location', '').lower()
                     
-                    # Detect cookie findings
-                    if 'cookie' in finding_type or 'cookie' in finding.get('description', '').lower():
-                        cookie_name = finding.get('location', '').replace('Cookie: ', '') or f'finding_cookie_{len(cookies)}'
+                    # Enhanced cookie detection - look in multiple fields
+                    if any(pattern in finding_type or pattern in finding_desc or pattern in finding_location 
+                           for pattern in cookie_related_patterns):
+                        cookie_name = (finding.get('location', '').replace('Cookie: ', '') or 
+                                     finding.get('type', '') or 
+                                     f'privacy_cookie_{len(cookies)}')
                         if cookie_name and cookie_name not in cookies:
                             cookies[cookie_name] = {
                                 'name': cookie_name,
                                 'source': page_url,
                                 'privacy_risk': finding.get('privacy_risk', 'Medium'),
                                 'from_finding': True,
+                                'type': finding.get('type', ''),
                                 'description': finding.get('description', '')
                             }
                     
-                    # Detect tracker findings  
-                    elif ('tracker' in finding_type or 'tracking' in finding_type or 
-                          'google' in finding_type or 'analytics' in finding_type or
-                          'facebook' in finding_type or 'pixel' in finding_type):
-                        tracker_name = finding.get('location', '') or finding.get('description', '')[:50] or 'unknown_tracker'
+                    # Enhanced tracker detection - look in multiple fields
+                    if any(pattern in finding_type or pattern in finding_desc or pattern in finding_location 
+                           for pattern in tracker_related_patterns):
+                        tracker_name = (finding.get('location', '') or 
+                                      finding.get('type', '') or 
+                                      finding.get('description', '')[:50] or 
+                                      'privacy_tracker')
                         tracker_data = {
                             'name': tracker_name,
                             'source': page_url,
                             'privacy_risk': finding.get('privacy_risk', 'Medium'),
                             'from_finding': True,
+                            'type': finding.get('type', ''),
                             'description': finding.get('description', '')
                         }
-                        if tracker_data not in trackers:
+                        # Avoid duplicates
+                        if not any(t.get('name') == tracker_name for t in trackers):
                             trackers.append(tracker_data)
                 
                 # Calculate metrics
