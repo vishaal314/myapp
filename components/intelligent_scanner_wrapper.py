@@ -593,6 +593,15 @@ class IntelligentScannerWrapper:
                 trackers_found = scan_result.get('trackers_found', len(scan_result.get('trackers_detected', [])))
                 st.metric("Trackers Found", trackers_found)
         
+        # Debug: Display severity breakdown
+        if findings:
+            severities = {}
+            for finding in findings:
+                sev = finding.get('severity', 'Unknown')
+                severities[sev] = severities.get(sev, 0) + 1
+            
+            st.info(f"🔍 Debug - Severity breakdown: {severities}")
+        
         # Display findings if available
         findings = scan_result.get('findings', [])
         if findings:
@@ -603,6 +612,8 @@ class IntelligentScannerWrapper:
                     st.write(f"**Description:** {finding.get('description', 'No description')}")
                     if finding.get('line'):
                         st.write(f"**Location:** {finding.get('line')}")
+                    if finding.get('privacy_risk'):
+                        st.write(f"**Privacy Risk:** {finding.get('privacy_risk')}")
         else:
             st.success("✅ No issues found in the scan")
         
