@@ -142,25 +142,25 @@ class IntelligentWebsiteScanner:
             scan_results['pages_discovered'] = len(pages_to_scan)
             
             # Step 4: Scan pages in parallel
-            findings, metrics = self._scan_pages_parallel(
+            findings, metrics, all_cookies, all_trackers = self._scan_pages_parallel(
                 pages_to_scan, scan_results, progress_callback
             )
             
             scan_results['findings'] = findings
-            scan_results['cookies_found'] = metrics.get('cookies', 0)
-            scan_results['trackers_found'] = metrics.get('trackers', 0)
+            scan_results['cookies_found'] = len(all_cookies)
+            scan_results['trackers_found'] = len(all_trackers)
             scan_results['forms_analyzed'] = metrics.get('forms', 0)
             scan_results['duration_seconds'] = time.time() - start_time
+            
+            # Store actual cookies and trackers data
+            scan_results['cookies_detected'] = list(all_cookies.values())
+            scan_results['trackers_detected'] = all_trackers
             
             # Calculate meaningful metrics for display
             scan_results['total_findings'] = len(findings)
             scan_results['critical_findings'] = len([f for f in findings if f.get('severity') == 'Critical'])
             scan_results['high_risk_findings'] = len([f for f in findings if f.get('severity') == 'High'])
             scan_results['lines_analyzed'] = scan_results['pages_scanned'] * 50  # Estimate 50 lines per page
-            
-            # Ensure cookies and trackers are properly counted
-            scan_results['cookies_found'] = len(scan_results.get('cookies_detected', []))
-            scan_results['trackers_found'] = len(scan_results.get('trackers_detected', []))
             
             # Calculate coverage metrics
             scan_results['scan_coverage'] = (
@@ -486,6 +486,8 @@ class IntelligentWebsiteScanner:
         """Scan pages in parallel with progress tracking."""
         
         all_findings = []
+        all_cookies = {}
+        all_trackers = []
         metrics = {'cookies': 0, 'trackers': 0, 'forms': 0}
         
         workers = scan_results['crawling_strategy']['parallel_workers']
@@ -512,10 +514,16 @@ class IntelligentWebsiteScanner:
                     result = future.result(timeout=30)  # 30 second per page timeout
                     
                     if result:
-                        findings, page_metrics = result
+                        findings, page_metrics, page_cookies, page_trackers = result
                         all_findings.extend(findings)
-                        metrics['cookies'] += page_metrics.get('cookies', 0)
-                        metrics['trackers'] += page_metrics.get('trackers', 0)
+                        
+                        # Accumulate cookies and trackers
+                        for cookie_name, cookie_data in page_cookies.items():
+                            all_cookies[cookie_name] = cookie_data
+                        all_trackers.extend(page_trackers)
+                        
+                        metrics['cookies'] += len(page_cookies)
+                        metrics['trackers'] += len(page_trackers)
                         metrics['forms'] += page_metrics.get('forms', 0)
                     
                     completed += 1
@@ -535,7 +543,7 @@ class IntelligentWebsiteScanner:
                     scan_results['pages_skipped'] += 1
                     logger.warning(f"Page scan error: {str(e)}")
         
-        return all_findings, metrics
+        return all_findings, metrics, all_cookies, all_trackers
 
     def _scan_single_page(self, page_url: str) -> Optional[tuple]:
         """Scan a single page for privacy compliance issues."""
@@ -549,29 +557,26 @@ class IntelligentWebsiteScanner:
             # Use the existing website scanner's scan_website method for single page
             result = temp_scanner.scan_website(page_url, follow_links=False)
             
-            # Extract findings and metrics from result
+            # Extract findings, cookies, and trackers from result
             findings = []
             metrics = {'cookies': 0, 'trackers': 0, 'forms': 0}
+            cookies = {}
+            trackers = []
             
             if isinstance(result, dict):
                 findings = result.get('findings', [])
-                # Map result keys to metrics
-                metrics['cookies'] = len(result.get('cookies', {}))
-                metrics['trackers'] = len(result.get('trackers', []))
-                metrics['forms'] = len(result.get('forms', []))
+                cookies = result.get('cookies', {})
+                trackers = result.get('trackers', [])
                 
-                # Alternative key mappings
-                if 'cookies_found' in result:
-                    metrics['cookies'] = result['cookies_found']
-                if 'trackers_found' in result:
-                    metrics['trackers'] = result['trackers_found']
-                if 'forms_found' in result:
-                    metrics['forms'] = result['forms_found']
+                # Calculate metrics
+                metrics['cookies'] = len(cookies)
+                metrics['trackers'] = len(trackers)
+                metrics['forms'] = len(result.get('forms', []))
                     
             elif isinstance(result, list):
                 findings = result
             
-            return findings, metrics
+            return findings, metrics, cookies, trackers
                 
         except Exception as e:
             logger.warning(f"Error scanning page {page_url}: {str(e)}")

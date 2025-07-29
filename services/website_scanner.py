@@ -586,9 +586,14 @@ class WebsiteScanner:
                 pages_data.append(page_data)
                 
                 # Extract and analyze cookies
+                self._current_findings = []  # Temporary storage for cookie findings
                 page_cookies = self._extract_cookies(response)
                 for cookie_name, cookie_data in page_cookies.items():
                     cookies[cookie_name] = cookie_data
+                
+                # Add any cookie findings to the main findings list
+                findings.extend(self._current_findings)
+                delattr(self, '_current_findings')
                 
                 # Find trackers
                 page_trackers = page_data.get('trackers', [])
@@ -767,6 +772,11 @@ class WebsiteScanner:
                                 'data_collected': tracker_info.get('data_collected', 'User behavior data'),
                                 'gdpr_basis': tracker_info.get('gdpr_basis', 'Consent or legitimate interest required')
                             })
+                            # Map privacy_risk to severity level
+                            privacy_risk = tracker_info.get('privacy_risk', 'Medium')
+                            severity_map = {'High': 'Critical', 'Medium': 'High', 'Low': 'Medium'}
+                            severity = severity_map.get(privacy_risk, 'Medium')
+                            
                             findings.append({
                                 'type': 'tracker',
                                 'subtype': tracker_name,
@@ -774,7 +784,8 @@ class WebsiteScanner:
                                 'location': f"External Script: {src}",
                                 'element': 'script[src]',
                                 'description': f"External tracker script from {tracker_name}",
-                                'severity': 'Medium',
+                                'severity': severity,
+                                'privacy_risk': privacy_risk,
                                 'gdpr_article': 'Art. 6(1)(a), Art. 7'
                             })
                             break
@@ -794,6 +805,11 @@ class WebsiteScanner:
                                 'data_collected': tracker_info.get('data_collected', 'User behavior data'),
                                 'gdpr_basis': tracker_info.get('gdpr_basis', 'Consent or legitimate interest required')
                             })
+                            # Map privacy_risk to severity level
+                            privacy_risk = tracker_info.get('privacy_risk', 'Medium')
+                            severity_map = {'High': 'Critical', 'Medium': 'High', 'Low': 'Medium'}
+                            severity = severity_map.get(privacy_risk, 'Medium')
+                            
                             findings.append({
                                 'type': 'tracker',
                                 'subtype': tracker_name,
@@ -801,7 +817,8 @@ class WebsiteScanner:
                                 'location': f"Inline Script Pattern: {pattern}",
                                 'element': 'script[inline]',
                                 'description': f"Inline tracker script for {tracker_name}",
-                                'severity': 'Medium',
+                                'severity': severity,
+                                'privacy_risk': privacy_risk,
                                 'gdpr_article': 'Art. 6(1)(a), Art. 7'
                             })
                             break
@@ -848,7 +865,8 @@ class WebsiteScanner:
                     'location': f"Image Element: {src}",
                     'element': 'img[1x1]',
                     'description': f"Tracking pixel detected: {src}",
-                    'severity': 'Medium',
+                    'severity': 'High',  # Tracking pixels are high privacy risk
+                    'privacy_risk': 'High',
                     'gdpr_article': 'Art. 6(1)(a), Art. 7'
                 })
         
@@ -980,6 +998,32 @@ class WebsiteScanner:
                 'gdpr_basis': cookie_info.get('gdpr_basis', 'Review required'),
                 'compliance_issues': compliance_issues
             }
+            
+            # Add cookie findings based on privacy risk
+            if cookie_info.get('privacy_risk') in ['High', 'Critical']:
+                # High-risk cookies should generate findings
+                privacy_risk = cookie_info.get('privacy_risk', 'Medium')
+                severity_map = {'High': 'Critical', 'Critical': 'Critical', 'Medium': 'High', 'Low': 'Medium'}
+                severity = severity_map.get(privacy_risk, 'Medium')
+                
+                # Create finding for high-risk cookie
+                cookie_finding = {
+                    'type': 'cookie',
+                    'subtype': 'high_risk_cookie',
+                    'url': response.url,
+                    'location': f"Cookie: {cookie_name}",
+                    'element': 'http-cookie',
+                    'description': f"High-risk cookie detected: {cookie_name} - {cookie_info.get('purpose', 'Tracking/analytics')}",
+                    'severity': severity,
+                    'privacy_risk': privacy_risk,
+                    'gdpr_article': 'Art. 6(1)(a), Art. 7',
+                    'recommendation': f"Ensure explicit consent before setting {cookie_name} cookie"
+                }
+                
+                # Add to page findings if we have access to findings list
+                # This will be captured by the calling function
+                if hasattr(self, '_current_findings'):
+                    self._current_findings.append(cookie_finding)
         
         return cookies
     
