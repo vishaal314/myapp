@@ -606,6 +606,7 @@ class IntelligentScannerWrapper:
                 st.metric("Trackers Found", trackers_found)
         
         # Debug: Display severity breakdown and scan result keys
+        findings = scan_result.get('findings', [])
         if findings:
             severities = {}
             for finding in findings:
