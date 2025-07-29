@@ -573,7 +573,16 @@ class IntelligentScannerWrapper:
             lines_analyzed = scan_result.get('lines_analyzed', files_scanned * 50 if files_scanned else 0)
             st.metric("Lines Analyzed", f"{lines_analyzed:,}")
         with col4:
-            critical_issues = len([f for f in scan_result.get('findings', []) if f.get('severity') == 'Critical'])
+            # Map High privacy_risk findings to Critical Issues for website scans
+            findings = scan_result.get('findings', [])
+            critical_issues = len([f for f in findings if f.get('severity') == 'Critical'])
+            
+            # For website scans, map High privacy risk to Critical Issues  
+            if scan_result.get('scan_type') in ['Intelligent Website Scanner', 'GDPR Website Privacy Compliance Scanner']:
+                # Count High privacy_risk findings from website scanner as Critical Issues
+                high_privacy_risk = len([f for f in findings if f.get('privacy_risk') == 'High' or f.get('severity') == 'High'])
+                critical_issues = max(critical_issues, high_privacy_risk)
+            
             st.metric("Critical Issues", critical_issues)
         
         # Additional website-specific metrics for website scans
@@ -593,13 +602,31 @@ class IntelligentScannerWrapper:
                 if total_findings == 0:
                     compliance_score = 100
                 else:
-                    # Penalty-based scoring system (same as other scanners)
-                    penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
+                    # Penalty-based scoring system with proper website-specific mapping
+                    # For website scans, treat High privacy_risk as critical for compliance scoring
+                    high_privacy_risk_count = len([f for f in findings if f.get('privacy_risk') == 'High'])
+                    if high_privacy_risk_count > 0:
+                        # Website-specific: High privacy risk should heavily impact compliance
+                        penalty = (high_privacy_risk_count * 25) + ((total_findings - high_privacy_risk_count) * 5)
+                    else:
+                        # Standard penalty system
+                        penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
                     compliance_score = max(0, 100 - penalty)
                 
                 st.metric("Compliance Score", f"{compliance_score}%")
             with col3:
-                cookies_found = scan_result.get('cookies_found', len(scan_result.get('cookies_detected', [])))
+                # Try multiple ways to get cookie count
+                cookies_found = scan_result.get('cookies_found', 0)
+                if cookies_found == 0:
+                    cookies_detected = scan_result.get('cookies_detected', [])
+                    if cookies_detected:
+                        cookies_found = len(cookies_detected)
+                    else:
+                        # Count cookie-related findings
+                        cookie_findings = len([f for f in findings if 'cookie' in f.get('type', '').lower() or 'cookie' in f.get('description', '').lower()])
+                        if cookie_findings > 0:
+                            cookies_found = cookie_findings
+                
                 st.metric("Cookies Found", cookies_found)
             with col4:
                 trackers_found = scan_result.get('trackers_found', len(scan_result.get('trackers_detected', [])))
