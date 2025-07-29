@@ -120,6 +120,8 @@ class IntelligentWebsiteScanner:
             'crawling_strategy': {},
             'cookies_found': 0,
             'trackers_found': 0,
+            'trackers_detected': [],
+            'cookies_detected': [],
             'forms_analyzed': 0,
             'status': 'completed'
         }

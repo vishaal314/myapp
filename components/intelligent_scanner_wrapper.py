@@ -563,16 +563,39 @@ class IntelligentScannerWrapper:
         except Exception as e:
             st.error(f"Error displaying scan results: {str(e)}")
             # Fallback display for critical scan data
-            st.subheader("📊 Scan Results (Safe Mode)")
+            st.subheader("📊 Executive Summary")
             
-            # Display basic metrics safely
-            col1, col2, col3 = st.columns(3)
+            # Display comprehensive metrics matching main interface
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Files Scanned", scan_result.get('files_scanned', 0))
+                files_scanned = scan_result.get('files_scanned', scan_result.get('pages_scanned', 0))
+                st.metric("Files Scanned", files_scanned)
             with col2:
-                st.metric("Findings", len(scan_result.get('findings', [])))
+                total_findings = len(scan_result.get('findings', []))
+                st.metric("Total Findings", total_findings)
             with col3:
-                st.metric("Status", scan_result.get('status', 'Completed'))
+                lines_analyzed = scan_result.get('lines_analyzed', files_scanned * 50 if files_scanned else 0)
+                st.metric("Lines Analyzed", f"{lines_analyzed:,}")
+            with col4:
+                critical_issues = len([f for f in scan_result.get('findings', []) if f.get('severity') == 'Critical'])
+                st.metric("Critical Issues", critical_issues)
+            
+            # Additional website-specific metrics for website scans
+            if scan_result.get('scan_type') in ['Intelligent Website Scanner', 'GDPR Website Privacy Compliance Scanner']:
+                st.subheader("🌐 Website Privacy Analysis")
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    high_risk_issues = len([f for f in scan_result.get('findings', []) if f.get('severity') == 'High'])
+                    st.metric("High Risk Issues", high_risk_issues)
+                with col2:
+                    compliance_score = scan_result.get('compliance_score', 0)
+                    st.metric("Compliance Score", f"{compliance_score}%")
+                with col3:
+                    cookies_found = scan_result.get('cookies_found', len(scan_result.get('cookies_detected', [])))
+                    st.metric("Cookies Found", cookies_found)
+                with col4:
+                    trackers_found = scan_result.get('trackers_found', len(scan_result.get('trackers_detected', [])))
+                    st.metric("Trackers Found", trackers_found)
             
             # Display findings if available
             findings = scan_result.get('findings', [])
