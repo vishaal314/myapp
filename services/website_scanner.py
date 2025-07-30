@@ -1011,13 +1011,13 @@ class WebsiteScanner:
                     'type': 'cookie',
                     'subtype': 'high_risk_cookie',
                     'url': response.url,
-                    'location': f"Cookie: {cookie_name}",
+                    'location': f"Cookie: {cookie.name}",
                     'element': 'http-cookie',
-                    'description': f"High-risk cookie detected: {cookie_name} - {cookie_info.get('purpose', 'Tracking/analytics')}",
+                    'description': f"High-risk cookie detected: {cookie.name} - {cookie_info.get('purpose', 'Tracking/analytics')}",
                     'severity': severity,
                     'privacy_risk': privacy_risk,
                     'gdpr_article': 'Art. 6(1)(a), Art. 7',
-                    'recommendation': f"Ensure explicit consent before setting {cookie_name} cookie"
+                    'recommendation': f"Ensure explicit consent before setting {cookie.name} cookie"
                 }
                 
                 # Add to page findings if we have access to findings list
@@ -1184,14 +1184,14 @@ class WebsiteScanner:
                 # Get A records
                 try:
                     answers = dns.resolver.resolve(base_domain, 'A')
-                    domain_info['dns_records']['A'] = [answer.address for answer in answers]
+                    domain_info['dns_records']['A'] = [str(answer) for answer in answers]
                 except Exception as e:
                     logger.warning(f"Failed to get A records for {base_domain}: {str(e)}")
                 
                 # Get MX records
                 try:
                     answers = dns.resolver.resolve(base_domain, 'MX')
-                    domain_info['dns_records']['MX'] = [str(answer.exchange) for answer in answers]
+                    domain_info['dns_records']['MX'] = [str(answer) for answer in answers]
                 except Exception as e:
                     logger.warning(f"Failed to get MX records for {base_domain}: {str(e)}")
                 

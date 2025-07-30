@@ -1,0 +1,554 @@
+"""
+Enhanced Finding Generator - Provides specific, contextual analysis and actionable recommendations
+for all scanner types. This module transforms generic findings into professional, actionable insights.
+"""
+
+import re
+import json
+import hashlib
+from datetime import datetime
+from typing import Dict, List, Any, Optional, Tuple
+from dataclasses import dataclass
+
+@dataclass
+class ActionableRecommendation:
+    """Structured recommendation with implementation details"""
+    action: str
+    description: str
+    implementation: str
+    effort_estimate: str
+    priority: str  # Critical, High, Medium, Low
+    verification: str
+    business_impact: Optional[str] = None
+    compliance_requirement: Optional[str] = None
+
+@dataclass 
+class EnhancedFinding:
+    """Enhanced finding with comprehensive context and recommendations"""
+    type: str
+    subtype: str
+    title: str
+    description: str
+    location: str
+    context: str
+    risk_level: str
+    severity: str
+    business_impact: str
+    gdpr_articles: List[str]
+    compliance_requirements: List[str]
+    recommendations: List[ActionableRecommendation]
+    remediation_priority: str
+    estimated_effort: str
+    affected_systems: List[str]
+    data_classification: str
+    exposure_risk: str
+
+class EnhancedFindingGenerator:
+    """
+    Generates enhanced findings with specific, contextual analysis and actionable recommendations
+    for all scanner types in DataGuardian Pro.
+    """
+    
+    def __init__(self, region: str = "Netherlands"):
+        self.region = region
+        self.gdpr_articles = self._load_gdpr_articles()
+        self.finding_templates = self._load_finding_templates()
+        
+    def _load_gdpr_articles(self) -> Dict[str, str]:
+        """Load GDPR article references for compliance mapping"""
+        return {
+            'lawful_basis': 'Article 6 - Lawfulness of processing',
+            'consent': 'Article 7 - Conditions for consent',
+            'data_subjects_rights': 'Article 12-23 - Rights of the data subject',
+            'security': 'Article 32 - Security of processing',
+            'breach_notification': 'Article 33-34 - Personal data breach notification',
+            'dpia': 'Article 35 - Data protection impact assessment',
+            'transfers': 'Article 44-49 - Transfers of personal data to third countries',
+            'accountability': 'Article 5(2) - Principles relating to processing'
+        }
+    
+    def _load_finding_templates(self) -> Dict[str, Dict[str, Any]]:
+        """Load finding templates for different scanner types"""
+        return {
+            'code_scanner': {
+                'aws_access_key': {
+                    'title': 'AWS Access Key Exposure',
+                    'context_analyzer': self._analyze_aws_key_context,
+                    'risk_calculator': self._calculate_cloud_credential_risk,
+                    'recommendation_generator': self._generate_aws_remediation
+                },
+                'email_pii': {
+                    'title': 'Email Address Exposure',
+                    'context_analyzer': self._analyze_email_context,
+                    'risk_calculator': self._calculate_pii_risk,
+                    'recommendation_generator': self._generate_pii_remediation
+                },
+                'bsn_netherlands': {
+                    'title': 'Dutch BSN (Burgerservicenummer) Exposure',
+                    'context_analyzer': self._analyze_bsn_context,
+                    'risk_calculator': self._calculate_bsn_risk,
+                    'recommendation_generator': self._generate_bsn_remediation
+                }
+            },
+            'website_scanner': {
+                'high_risk_cookie': {
+                    'title': 'High-Risk Cookie Detected',
+                    'context_analyzer': self._analyze_cookie_context,
+                    'risk_calculator': self._calculate_cookie_risk,
+                    'recommendation_generator': self._generate_cookie_remediation
+                },
+                'dark_pattern': {
+                    'title': 'Cookie Consent Dark Pattern',
+                    'context_analyzer': self._analyze_dark_pattern_context,
+                    'risk_calculator': self._calculate_consent_risk,
+                    'recommendation_generator': self._generate_consent_remediation
+                }
+            },
+            'ai_model_scanner': {
+                'demographic_bias': {
+                    'title': 'AI Model Demographic Bias',
+                    'context_analyzer': self._analyze_bias_context,
+                    'risk_calculator': self._calculate_ai_bias_risk,
+                    'recommendation_generator': self._generate_bias_remediation
+                },
+                'pii_leakage': {
+                    'title': 'AI Model PII Leakage',
+                    'context_analyzer': self._analyze_ai_pii_context,
+                    'risk_calculator': self._calculate_ai_pii_risk,
+                    'recommendation_generator': self._generate_ai_pii_remediation
+                }
+            }
+        }
+    
+    def enhance_finding(self, scanner_type: str, finding: Dict[str, Any]) -> EnhancedFinding:
+        """
+        Transform a generic finding into an enhanced finding with specific context and recommendations.
+        
+        Args:
+            scanner_type: Type of scanner that generated the finding
+            finding: Original finding dictionary
+            
+        Returns:
+            Enhanced finding with comprehensive context and actionable recommendations
+        """
+        finding_type = finding.get('type', 'unknown')
+        subtype = finding.get('subtype', finding_type)
+        
+        # Get template for this finding type
+        template = self.finding_templates.get(scanner_type, {}).get(subtype, {})
+        
+        if not template:
+            # Fallback to generic enhancement
+            return self._create_generic_enhanced_finding(finding)
+        
+        # Analyze context using template
+        context_analysis = template['context_analyzer'](finding)
+        risk_analysis = template['risk_calculator'](finding, context_analysis)
+        recommendations = template['recommendation_generator'](finding, context_analysis, risk_analysis)
+        
+        return EnhancedFinding(
+            type=finding_type,
+            subtype=subtype,
+            title=template['title'],
+            description=context_analysis['detailed_description'],
+            location=finding.get('location', 'Unknown'),
+            context=context_analysis['business_context'],
+            risk_level=risk_analysis['risk_level'],
+            severity=risk_analysis['severity'],
+            business_impact=risk_analysis['business_impact'],
+            gdpr_articles=context_analysis['gdpr_articles'],
+            compliance_requirements=context_analysis['compliance_requirements'],
+            recommendations=recommendations,
+            remediation_priority=risk_analysis['remediation_priority'],
+            estimated_effort=risk_analysis['estimated_effort'],
+            affected_systems=context_analysis['affected_systems'],
+            data_classification=context_analysis['data_classification'],
+            exposure_risk=risk_analysis['exposure_risk']
+        )
+    
+    def _analyze_aws_key_context(self, finding: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze AWS access key exposure context"""
+        location = finding.get('location', '')
+        value = finding.get('value', '')
+        
+        # Determine context based on file location
+        context_clues = {
+            'config': 'configuration file',
+            'env': 'environment file',
+            'test': 'test file',
+            'example': 'example/template file',
+            'docker': 'Docker configuration',
+            'k8s': 'Kubernetes manifest',
+            'terraform': 'Infrastructure as Code'
+        }
+        
+        file_context = 'source code'
+        for clue, description in context_clues.items():
+            if clue in location.lower():
+                file_context = description
+                break
+        
+        # Calculate exposure level
+        exposure_level = 'High'
+        if 'test' in location.lower() or 'example' in location.lower():
+            exposure_level = 'Medium'
+        elif 'prod' in location.lower() or 'main' in location.lower():
+            exposure_level = 'Critical'
+        
+        return {
+            'detailed_description': f'AWS access key found in {file_context} at {location}. This credential provides programmatic access to AWS services and could lead to unauthorized resource access, data breaches, and significant AWS billing charges if exploited.',
+            'business_context': f'Exposed AWS credentials in {file_context} pose immediate security and financial risks. Attackers could provision expensive resources, access confidential data, or compromise your entire AWS infrastructure.',
+            'gdpr_articles': ['Article 32 - Security of processing', 'Article 33 - Personal data breach notification'],
+            'compliance_requirements': [
+                'GDPR Article 32 - Technical and organizational measures',
+                'ISO 27001 - Access control',
+                'SOC 2 Type II - Logical access controls'
+            ],
+            'affected_systems': ['AWS Infrastructure', 'Cloud Resources', 'Data Storage'],
+            'data_classification': 'Critical Security Credential',
+            'exposure_level': exposure_level
+        }
+    
+    def _calculate_cloud_credential_risk(self, finding: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate risk for cloud credential exposure"""
+        exposure_level = context['exposure_level']
+        
+        risk_mapping = {
+            'Critical': {
+                'risk_level': 'Critical',
+                'severity': 'Critical',
+                'business_impact': 'Potential AWS bill of $10,000+ per day, complete infrastructure compromise, regulatory fines up to €20M under GDPR',
+                'remediation_priority': 'Immediate - Fix within 1 hour',
+                'estimated_effort': '15-30 minutes - Rotate key and update configuration',
+                'exposure_risk': 'Public exposure in version control history'
+            },
+            'High': {
+                'risk_level': 'High', 
+                'severity': 'High',
+                'business_impact': 'Unauthorized AWS resource access, potential data breach, compliance violations',
+                'remediation_priority': 'Urgent - Fix within 4 hours',
+                'estimated_effort': '30-60 minutes - Remove from code and implement secure storage',
+                'exposure_risk': 'Accessible to development team members'
+            },
+            'Medium': {
+                'risk_level': 'Medium',
+                'severity': 'Medium',
+                'business_impact': 'Limited unauthorized access, potential service disruption',
+                'remediation_priority': 'High - Fix within 24 hours', 
+                'estimated_effort': '1-2 hours - Security review and remediation',
+                'exposure_risk': 'Limited to specific environments or contexts'
+            }
+        }
+        
+        return risk_mapping.get(exposure_level, risk_mapping['High'])
+    
+    def _generate_aws_remediation(self, finding: Dict[str, Any], context: Dict[str, Any], risk: Dict[str, Any]) -> List[ActionableRecommendation]:
+        """Generate specific AWS credential remediation steps"""
+        recommendations = []
+        
+        # Immediate action
+        recommendations.append(ActionableRecommendation(
+            action="Immediate credential rotation",
+            description="Rotate the exposed AWS access key immediately to prevent unauthorized usage",
+            implementation="1. Log into AWS Console → IAM → Users → Select user → Security credentials → Make inactive → Create new access key",
+            effort_estimate="5-10 minutes",
+            priority="Critical",
+            verification="Verify old key is deactivated and new key works in applications",
+            business_impact="Prevents immediate security breach and unauthorized AWS charges",
+            compliance_requirement="GDPR Article 32 - Security of processing"
+        ))
+        
+        # Secure storage implementation
+        recommendations.append(ActionableRecommendation(
+            action="Implement secure credential storage",
+            description="Replace hardcoded credentials with secure credential management system",
+            implementation="Options: AWS Secrets Manager, AWS Parameter Store, HashiCorp Vault, or environment variables with restricted access",
+            effort_estimate="30-60 minutes",
+            priority="High",
+            verification="Confirm no hardcoded credentials remain in codebase",
+            business_impact="Establishes secure credential management preventing future exposures"
+        ))
+        
+        # Monitoring and detection
+        recommendations.append(ActionableRecommendation(
+            action="Implement credential monitoring",
+            description="Add monitoring to detect future credential exposures",
+            implementation="Configure pre-commit hooks with TruffleHog, enable AWS CloudTrail for access monitoring, set up billing alerts",
+            effort_estimate="2-4 hours",
+            priority="Medium",
+            verification="Test with dummy credential to confirm detection works",
+            business_impact="Prevents future credential exposures and provides audit trail"
+        ))
+        
+        # Code review and training
+        recommendations.append(ActionableRecommendation(
+            action="Security training and policy update",
+            description="Update development practices to prevent credential exposure",
+            implementation="Conduct team training on secure credential handling, update code review checklist, implement security policies",
+            effort_estimate="4-8 hours",
+            priority="Medium",
+            verification="Verify team completion of security training",
+            business_impact="Reduces risk of future security incidents through improved practices"
+        ))
+        
+        return recommendations
+    
+    def _analyze_email_context(self, finding: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze email PII exposure context"""
+        location = finding.get('location', '')
+        value = finding.get('value', '')
+        
+        # Determine email type and context
+        email_domain = value.split('@')[1] if '@' in value else 'unknown'
+        
+        context_analysis = {
+            'detailed_description': f'Email address "{value}" found in source code at {location}. Email addresses are considered personal data under GDPR and require proper handling and legal basis for processing.',
+            'business_context': f'Hardcoded email addresses in source code create privacy compliance risks and maintenance challenges. This email appears to be from domain "{email_domain}".',
+            'gdpr_articles': ['Article 6 - Lawfulness of processing', 'Article 13 - Information to be provided'],
+            'compliance_requirements': [
+                'GDPR Article 6 - Establish lawful basis for processing',
+                'Dutch UAVG - Email address protection requirements',
+                'Data minimization principle compliance'
+            ],
+            'affected_systems': ['Application Code', 'Email Processing', 'User Communications'],
+            'data_classification': 'Personal Identifiable Information (PII)'
+        }
+        
+        return context_analysis
+    
+    def _calculate_pii_risk(self, finding: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate risk for PII exposure"""
+        return {
+            'risk_level': 'Medium',
+            'severity': 'Medium',
+            'business_impact': 'GDPR compliance violation, potential privacy complaint, reduced user trust',
+            'remediation_priority': 'High - Fix within 48 hours',
+            'estimated_effort': '15-30 minutes - Move to configuration management',
+            'exposure_risk': 'Personal data accessible to all developers'
+        }
+    
+    def _generate_pii_remediation(self, finding: Dict[str, Any], context: Dict[str, Any], risk: Dict[str, Any]) -> List[ActionableRecommendation]:
+        """Generate PII remediation recommendations"""
+        return [
+            ActionableRecommendation(
+                action="Remove hardcoded email from source code",
+                description="Move email address to secure configuration management",
+                implementation="Replace with environment variable or encrypted configuration file",
+                effort_estimate="15-30 minutes",
+                priority="High",
+                verification="Confirm email no longer appears in source code search",
+                compliance_requirement="GDPR Article 25 - Data protection by design"
+            ),
+            ActionableRecommendation(
+                action="Implement data handling procedures",
+                description="Establish proper procedures for handling personal data in development",
+                implementation="Create data handling guidelines, implement data discovery tools, train development team",
+                effort_estimate="4-8 hours",
+                priority="Medium", 
+                verification="Verify team understands PII handling requirements"
+            )
+        ]
+    
+    def _analyze_bsn_context(self, finding: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze Dutch BSN (Burgerservicenummer) exposure context"""
+        return {
+            'detailed_description': f'Dutch BSN (Burgerservicenummer) detected in source code. BSNs are highly sensitive personal identifiers in the Netherlands with strict processing requirements under Dutch UAVG law.',
+            'business_context': 'BSN exposure creates significant compliance risks under Dutch privacy law (UAVG) and may trigger mandatory breach notification to Dutch DPA (Autoriteit Persoonsgegevens).',
+            'gdpr_articles': ['Article 9 - Processing of special categories', 'Article 33 - Breach notification'],
+            'compliance_requirements': [
+                'Dutch UAVG - BSN processing restrictions',
+                'Autoriteit Persoonsgegevens (AP) notification requirements',
+                'BSN-specific security measures mandatory'
+            ],
+            'affected_systems': ['Identity Management', 'Government Integration', 'Citizen Services'],
+            'data_classification': 'Special Category Personal Data (Netherlands)'
+        }
+    
+    def _calculate_bsn_risk(self, finding: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate risk for BSN exposure"""
+        return {
+            'risk_level': 'Critical',
+            'severity': 'Critical', 
+            'business_impact': 'Mandatory breach notification to Dutch AP, potential €20M fine, citizen identity theft risk',
+            'remediation_priority': 'Critical - Fix immediately',
+            'estimated_effort': '1-2 hours - Immediate removal and security review',
+            'exposure_risk': 'Dutch citizen privacy violation, regulatory investigation'
+        }
+    
+    def _generate_bsn_remediation(self, finding: Dict[str, Any], context: Dict[str, Any], risk: Dict[str, Any]) -> List[ActionableRecommendation]:
+        """Generate BSN-specific remediation recommendations"""
+        return [
+            ActionableRecommendation(
+                action="Immediate BSN removal and breach assessment",
+                description="Remove BSN from code and assess if breach notification to Dutch AP is required",
+                implementation="1. Remove BSN immediately 2. Review commit history 3. Assess exposure timeline 4. Prepare breach notification if required",
+                effort_estimate="1-2 hours",
+                priority="Critical",
+                verification="Confirm no BSN data remains in codebase or version history",
+                compliance_requirement="Dutch UAVG Article 34 - 72-hour breach notification"
+            ),
+            ActionableRecommendation(
+                action="Implement BSN-specific security controls",
+                description="Establish proper BSN handling procedures compliant with Dutch law",
+                implementation="Use BSN hashing/pseudonymization, implement access controls, establish audit logging",
+                effort_estimate="8-16 hours",
+                priority="High",
+                verification="Verify BSN handling meets Dutch AP guidelines"
+            )
+        ]
+    
+    def _analyze_cookie_context(self, finding: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze cookie privacy context"""
+        cookie_name = finding.get('location', '').replace('Cookie: ', '')
+        
+        return {
+            'detailed_description': f'High-risk cookie "{cookie_name}" detected without proper consent mechanism. This cookie likely tracks user behavior and requires explicit consent under GDPR.',
+            'business_context': 'Tracking cookies without proper consent violate GDPR and Dutch cookie law, potentially resulting in regulatory action by Dutch AP.',
+            'gdpr_articles': ['Article 7 - Conditions for consent', 'Article 21 - Right to object'],
+            'compliance_requirements': [
+                'Dutch Telecommunications Act - Cookie consent requirements',
+                'GDPR consent validity requirements',
+                'Dutch AP cookie guidelines (February 2024)'
+            ],
+            'affected_systems': ['Website', 'Analytics Platform', 'Marketing Tools'],
+            'data_classification': 'Behavioral Tracking Data'
+        }
+    
+    def _calculate_cookie_risk(self, finding: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate cookie compliance risk"""
+        return {
+            'risk_level': 'High',
+            'severity': 'High',
+            'business_impact': 'Dutch AP investigation, user complaints, competitive disadvantage',
+            'remediation_priority': 'High - Fix within 7 days',
+            'estimated_effort': '2-4 hours - Implement proper consent',
+            'exposure_risk': 'Ongoing GDPR violation for all website visitors'
+        }
+    
+    def _generate_cookie_remediation(self, finding: Dict[str, Any], context: Dict[str, Any], risk: Dict[str, Any]) -> List[ActionableRecommendation]:
+        """Generate cookie compliance recommendations"""
+        return [
+            ActionableRecommendation(
+                action="Implement proper cookie consent",
+                description="Add explicit consent mechanism for tracking cookies",
+                implementation="Deploy cookie consent banner with granular controls, implement consent validation, add 'Reject All' button",
+                effort_estimate="2-4 hours",
+                priority="High",
+                verification="Test consent flow and verify cookie blocking works",
+                compliance_requirement="Dutch AP cookie guidelines compliance"
+            ),
+            ActionableRecommendation(
+                action="Cookie audit and categorization",
+                description="Conduct comprehensive audit of all website cookies",
+                implementation="Categorize all cookies (essential, functional, analytics, marketing), document purposes, implement cookie policy",
+                effort_estimate="4-8 hours",
+                priority="Medium",
+                verification="Verify cookie policy accuracy and completeness"
+            )
+        ]
+    
+    def _create_generic_enhanced_finding(self, finding: Dict[str, Any]) -> EnhancedFinding:
+        """Create generic enhanced finding for unknown types"""
+        return EnhancedFinding(
+            type=finding.get('type', 'unknown'),
+            subtype=finding.get('subtype', 'generic'),
+            title=f"Security Finding: {finding.get('type', 'Unknown').replace('_', ' ').title()}",
+            description=finding.get('description', 'Security or privacy issue detected'),
+            location=finding.get('location', 'Unknown location'),
+            context="Generic security or privacy finding requiring review",
+            risk_level=finding.get('severity', 'Medium'),
+            severity=finding.get('severity', 'Medium'),
+            business_impact="Potential security or compliance impact requiring investigation",
+            gdpr_articles=['Article 32 - Security of processing'],
+            compliance_requirements=['General security best practices'],
+            recommendations=[
+                ActionableRecommendation(
+                    action="Review and assess finding",
+                    description="Conduct detailed analysis of this security finding",
+                    implementation="Investigate the specific issue and determine appropriate remediation",
+                    effort_estimate="1-2 hours",
+                    priority="Medium",
+                    verification="Confirm issue is properly addressed"
+                )
+            ],
+            remediation_priority="Medium - Review within 7 days",
+            estimated_effort="1-2 hours - Investigation and remediation",
+            affected_systems=["Unknown"],
+            data_classification="Unknown",
+            exposure_risk="Unknown"
+        )
+    
+    # Placeholder methods for other scanner types
+    def _analyze_bias_context(self, finding): return {'detailed_description': 'AI bias detected', 'business_context': 'AI fairness issue'}
+    def _calculate_ai_bias_risk(self, finding, context): return {'risk_level': 'High', 'severity': 'High'}
+    def _generate_bias_remediation(self, finding, context, risk): return []
+    def _analyze_ai_pii_context(self, finding): return {'detailed_description': 'AI PII leak', 'business_context': 'Privacy issue'}
+    def _calculate_ai_pii_risk(self, finding, context): return {'risk_level': 'High', 'severity': 'High'}
+    def _generate_ai_pii_remediation(self, finding, context, risk): return []
+    def _analyze_dark_pattern_context(self, finding): return {'detailed_description': 'Dark pattern', 'business_context': 'UX issue'}
+    def _calculate_consent_risk(self, finding, context): return {'risk_level': 'High', 'severity': 'High'}
+    def _generate_consent_remediation(self, finding, context, risk): return []
+
+def enhance_findings_for_report(scanner_type: str, findings: List[Dict[str, Any]], region: str = "Netherlands") -> List[Dict[str, Any]]:
+    """
+    Enhance all findings in a scan result with specific context and actionable recommendations.
+    
+    Args:
+        scanner_type: Type of scanner (code_scanner, website_scanner, etc.)
+        findings: List of original findings
+        region: Region for compliance requirements
+        
+    Returns:
+        List of enhanced findings suitable for professional reporting
+    """
+    generator = EnhancedFindingGenerator(region=region)
+    enhanced_findings = []
+    
+    for finding in findings:
+        try:
+            enhanced = generator.enhance_finding(scanner_type, finding)
+            
+            # Convert to dictionary format for compatibility
+            enhanced_dict = {
+                'type': enhanced.type,
+                'subtype': enhanced.subtype,
+                'title': enhanced.title,
+                'description': enhanced.description,
+                'location': enhanced.location,
+                'context': enhanced.context,
+                'risk_level': enhanced.risk_level,
+                'severity': enhanced.severity,
+                'business_impact': enhanced.business_impact,
+                'gdpr_articles': enhanced.gdpr_articles,
+                'compliance_requirements': enhanced.compliance_requirements,
+                'recommendations': [
+                    {
+                        'action': rec.action,
+                        'description': rec.description,
+                        'implementation': rec.implementation,
+                        'effort_estimate': rec.effort_estimate,
+                        'priority': rec.priority,
+                        'verification': rec.verification,
+                        'business_impact': rec.business_impact,
+                        'compliance_requirement': rec.compliance_requirement
+                    }
+                    for rec in enhanced.recommendations
+                ],
+                'remediation_priority': enhanced.remediation_priority,
+                'estimated_effort': enhanced.estimated_effort,
+                'affected_systems': enhanced.affected_systems,
+                'data_classification': enhanced.data_classification,
+                'exposure_risk': enhanced.exposure_risk,
+                
+                # Preserve original finding data
+                'original_finding': finding
+            }
+            
+            enhanced_findings.append(enhanced_dict)
+            
+        except Exception as e:
+            # Fallback to original finding if enhancement fails
+            finding['enhancement_error'] = str(e)
+            enhanced_findings.append(finding)
+    
+    return enhanced_findings

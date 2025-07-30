@@ -8,6 +8,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 import logging
 from utils.unified_translation import t_report, t_technical, t_ui
+from services.enhanced_finding_generator import enhance_findings_for_report
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +47,16 @@ class UnifiedHTMLReportGenerator:
         # Extract metrics
         metrics = self._extract_metrics(scan_result)
         
-        # Generate findings HTML
-        findings_html = self._generate_findings_html(scan_result.get('findings', []))
+        # Enhance findings with specific context and actionable recommendations
+        original_findings = scan_result.get('findings', [])
+        enhanced_findings = enhance_findings_for_report(
+            scanner_type=scan_type.lower().replace(' ', '_'),
+            findings=original_findings,
+            region=region
+        )
+        
+        # Generate findings HTML with enhanced findings
+        findings_html = self._generate_findings_html(enhanced_findings)
         
         # Generate scanner-specific content
         scanner_content = self._generate_scanner_specific_content(scan_result)
@@ -339,6 +348,100 @@ class UnifiedHTMLReportGenerator:
         .score-good { color: #17a2b8; }
         .score-warning { color: #ffc107; }
         .score-danger { color: #dc3545; }
+        
+        /* Enhanced findings styles */
+        .enhanced-finding {
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .finding-content {
+            margin-top: 15px;
+        }
+        .finding-content > div {
+            margin: 10px 0;
+            padding: 8px 0;
+        }
+        .finding-context, .business-impact {
+            background: rgba(0,0,0,0.02);
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+        }
+        .compliance-section {
+            background: #e3f2fd;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .compliance-section h4 {
+            margin: 0 0 10px 0;
+            color: #1565c0;
+        }
+        .compliance-list {
+            list-style: none;
+            padding: 0;
+        }
+        .compliance-list li {
+            padding: 4px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        .compliance-list li::before {
+            content: "⚖️";
+            position: absolute;
+            left: 0;
+        }
+        .recommendations-section {
+            background: #f3e5f5;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .recommendations-section h4 {
+            margin: 0 0 15px 0;
+            color: #7b1fa2;
+        }
+        .recommendation {
+            background: white;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+            border-left: 4px solid #9c27b0;
+        }
+        .recommendation-header {
+            font-weight: bold;
+            color: #4a148c;
+            margin-bottom: 8px;
+        }
+        .recommendation-details {
+            font-size: 0.9em;
+            color: #666;
+            margin: 6px 0;
+        }
+        .recommendation-priority {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .priority-critical {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .priority-high {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+        .priority-medium {
+            background: #fffde7;
+            color: #f57f17;
+        }
+        .priority-low {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
     </style>
         """
     
@@ -407,25 +510,59 @@ class UnifiedHTMLReportGenerator:
         """
     
     def _generate_findings_html(self, findings: List[Dict[str, Any]]) -> str:
-        """Generate HTML for findings list."""
+        """Generate HTML for enhanced findings list with actionable recommendations."""
         if not findings:
             return f"<p>✅ {t_report('no_issues_found', 'No issues found in the analysis.')}</p>"
         
         findings_html = ""
         for finding in findings:
-            severity = finding.get('severity', 'Low').lower()
-            finding_type = finding.get('type', finding.get('category', 'Unknown'))
+            # Handle both enhanced and original findings
+            severity = finding.get('severity', finding.get('risk_level', 'Low')).lower()
+            finding_type = finding.get('title', finding.get('type', finding.get('category', 'Unknown')))
             description = finding.get('description', finding.get('message', 'No description available'))
-            location = finding.get('file', finding.get('location', 'Unknown'))
+            location = finding.get('location', 'Unknown')
             
+            # Enhanced finding fields
+            context = finding.get('context', '')
+            business_impact = finding.get('business_impact', '')
+            gdpr_articles = finding.get('gdpr_articles', [])
+            compliance_requirements = finding.get('compliance_requirements', [])
+            recommendations = finding.get('recommendations', [])
+            remediation_priority = finding.get('remediation_priority', '')
+            estimated_effort = finding.get('estimated_effort', '')
+            data_classification = finding.get('data_classification', '')
+            
+            # Build enhanced finding HTML
             findings_html += f"""
-            <div class="finding {severity}">
+            <div class="finding enhanced-finding {severity}">
                 <div class="finding-header">
                     <span class="finding-type">{finding_type}</span>
-                    <span class="finding-severity severity-{severity}">{finding.get('severity', 'Low')}</span>
+                    <span class="finding-severity severity-{severity}">{finding.get('severity', finding.get('risk_level', 'Low'))}</span>
                 </div>
-                <div class="finding-description">{description}</div>
-                <div class="finding-location"><strong>{t_report('location_details', 'Location')}:</strong> {location}</div>
+                
+                <div class="finding-content">
+                    <div class="finding-description">
+                        <strong>Description:</strong> {description}
+                    </div>
+                    
+                    {f'<div class="finding-context"><strong>Context:</strong> {context}</div>' if context else ''}
+                    
+                    <div class="finding-location">
+                        <strong>{t_report('location_details', 'Location')}:</strong> {location}
+                    </div>
+                    
+                    {f'<div class="finding-classification"><strong>Data Classification:</strong> {data_classification}</div>' if data_classification else ''}
+                    
+                    {f'<div class="business-impact"><strong>Business Impact:</strong> {business_impact}</div>' if business_impact else ''}
+                    
+                    {f'<div class="remediation-priority"><strong>Priority:</strong> {remediation_priority}</div>' if remediation_priority else ''}
+                    
+                    {f'<div class="estimated-effort"><strong>Estimated Effort:</strong> {estimated_effort}</div>' if estimated_effort else ''}
+                    
+                    {self._generate_compliance_section(gdpr_articles, compliance_requirements)}
+                    
+                    {self._generate_recommendations_section(recommendations)}
+                </div>
             </div>
             """
         
@@ -493,6 +630,69 @@ class UnifiedHTMLReportGenerator:
         </div>
         """
     
+    def _generate_compliance_section(self, gdpr_articles: List[str], compliance_requirements: List[str]) -> str:
+        """Generate compliance requirements section."""
+        if not gdpr_articles and not compliance_requirements:
+            return ""
+        
+        articles_html = ""
+        if gdpr_articles:
+            articles_html = "<ul class='compliance-list'>"
+            for article in gdpr_articles[:3]:  # Limit to first 3 for readability
+                articles_html += f"<li>{article}</li>"
+            articles_html += "</ul>"
+        
+        requirements_html = ""
+        if compliance_requirements:
+            requirements_html = "<ul class='compliance-list'>"
+            for requirement in compliance_requirements[:3]:  # Limit to first 3
+                requirements_html += f"<li>{requirement}</li>"
+            requirements_html += "</ul>"
+        
+        return f"""
+        <div class="compliance-section">
+            <h4>⚖️ Compliance Requirements</h4>
+            {articles_html}
+            {requirements_html}
+        </div>
+        """
+    
+    def _generate_recommendations_section(self, recommendations: List[Dict[str, Any]]) -> str:
+        """Generate actionable recommendations section."""
+        if not recommendations:
+            return ""
+        
+        recommendations_html = ""
+        for rec in recommendations[:3]:  # Limit to first 3 for readability
+            priority = rec.get('priority', 'Medium').lower()
+            priority_class = f"priority-{priority}"
+            
+            recommendations_html += f"""
+            <div class="recommendation">
+                <div class="recommendation-header">
+                    {rec.get('action', 'Action Required')}
+                    <span class="recommendation-priority {priority_class}">{rec.get('priority', 'Medium')}</span>
+                </div>
+                <div class="recommendation-details">
+                    <strong>Description:</strong> {rec.get('description', 'No description available')}
+                </div>
+                <div class="recommendation-details">
+                    <strong>Implementation:</strong> {rec.get('implementation', 'Implementation details not specified')}
+                </div>
+                <div class="recommendation-details">
+                    <strong>Effort:</strong> {rec.get('effort_estimate', 'Not estimated')} | 
+                    <strong>Verification:</strong> {rec.get('verification', 'Verification method not specified')}
+                </div>
+            </div>
+            """
+        
+        return f"""
+        <div class="recommendations-section">
+            <h4>💡 Actionable Recommendations</h4>
+            {recommendations_html}
+        </div>
+        """
+
     def _generate_ai_model_content(self, scan_result: Dict[str, Any]) -> str:
         """Generate AI model-specific compliance content."""
         model_framework = scan_result.get('model_framework', 'Unknown')
