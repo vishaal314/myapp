@@ -573,15 +573,13 @@ class IntelligentScannerWrapper:
             lines_analyzed = scan_result.get('lines_analyzed', files_scanned * 50 if files_scanned else 0)
             st.metric("Lines Analyzed", f"{lines_analyzed:,}")
         with col4:
-            # Map High privacy_risk findings to Critical Issues for website scans
+            # Map High privacy_risk findings to Critical Issues for all scans
             findings = scan_result.get('findings', [])
             critical_issues = len([f for f in findings if f.get('severity') == 'Critical'])
             
-            # For website scans, map High privacy risk to Critical Issues  
-            if scan_result.get('scan_type') in ['Intelligent Website Scanner', 'GDPR Website Privacy Compliance Scanner']:
-                # Count High privacy_risk findings from website scanner as Critical Issues
-                high_privacy_risk = len([f for f in findings if f.get('privacy_risk') == 'High' or f.get('severity') == 'High'])
-                critical_issues = max(critical_issues, high_privacy_risk)
+            # For ALL scans, map High privacy risk and severity to Critical Issues  
+            high_privacy_risk = len([f for f in findings if f.get('privacy_risk') == 'High' or f.get('severity') == 'High'])
+            critical_issues = max(critical_issues, high_privacy_risk)
             
             st.metric("Critical Issues", critical_issues)
         
@@ -647,25 +645,35 @@ class IntelligentScannerWrapper:
                 trackers_found = scan_result.get('trackers_found', len(scan_result.get('trackers_detected', [])))
                 st.metric("Trackers Found", trackers_found)
         
-        # CRITICAL: Ensure ALL scan types have compliance scores for proper dashboard display
-        if 'compliance_score' not in scan_result:
-            findings = scan_result.get('findings', [])
-            if findings:
-                # Calculate compliance score using standard penalty system
-                total_findings = len(findings)
-                critical_findings = len([f for f in findings if f.get('severity') == 'Critical'])
-                high_findings = len([f for f in findings if f.get('severity') == 'High' or f.get('privacy_risk') == 'High'])
-                
-                if total_findings == 0:
-                    compliance_score = 100
-                else:
-                    # Apply penalty system: Critical (-25%), High (-15%), Other (-5%)
-                    penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
-                    compliance_score = max(0, 100 - penalty)
-                
-                scan_result['compliance_score'] = compliance_score
-            else:
-                scan_result['compliance_score'] = 100  # Perfect score if no findings
+        # CRITICAL: Calculate compliance score for ALL scan types immediately after executive summary
+        findings = scan_result.get('findings', [])
+        total_findings = len(findings)
+        
+        if total_findings > 0:
+            # Calculate compliance score using standard penalty system for ALL scans
+            critical_findings = len([f for f in findings if f.get('severity') == 'Critical'])
+            high_findings = len([f for f in findings if f.get('severity') == 'High' or f.get('privacy_risk') == 'High'])
+            
+            # Apply penalty system: Critical (-25%), High (-15%), Other (-5%)
+            penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
+            compliance_score = max(0, 100 - penalty)
+        else:
+            compliance_score = 100  # Perfect score if no findings
+        
+        # Always set compliance score in scan result for dashboard display
+        scan_result['compliance_score'] = compliance_score
+        
+        # Display compliance score for ALL scan types
+        st.subheader("📊 Compliance Analysis")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Compliance Score", f"{compliance_score:.1f}%")
+        with col2:
+            compliance_status = "Excellent" if compliance_score >= 90 else "Good" if compliance_score >= 75 else "Needs Improvement" if compliance_score >= 50 else "Critical"
+            st.metric("Compliance Status", compliance_status)
+        with col3:
+            risk_level = "Low" if compliance_score >= 75 else "Medium" if compliance_score >= 50 else "High"
+            st.metric("Risk Level", risk_level)
         
         # Debug: Display severity breakdown and scan result keys
         findings = scan_result.get('findings', [])
