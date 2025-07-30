@@ -624,10 +624,18 @@ def render_dashboard():
                 total_findings += len(findings)
                 high_risk_findings += len([f for f in findings if f.get('severity') == 'High' or f.get('privacy_risk') == 'High'])
             
-            # Calculate compliance score even in fallback
+            # Calculate compliance score using centralized calculator
+            from utils.compliance_calculator import calculate_compliance_score
+            
             if total_findings > 0:
-                penalty = (high_risk_findings * 25) + ((total_findings - high_risk_findings) * 5)
-                compliance_score = max(0, 100 - penalty)
+                # Create simplified findings list for dashboard calculation
+                dashboard_findings = []
+                for scan in recent_scans:
+                    result = scan.get('result', {})
+                    findings = result.get('findings', [])
+                    dashboard_findings.extend(findings)
+                
+                compliance_score, _ = calculate_compliance_score(dashboard_findings, 'dashboard', username)
             else:
                 compliance_score = 100 if total_scans > 0 else 0
             

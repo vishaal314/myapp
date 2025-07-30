@@ -597,19 +597,13 @@ class IntelligentScannerWrapper:
                 critical_findings = len([f for f in findings if f.get('severity') == 'Critical'])
                 high_findings = len([f for f in findings if f.get('severity') == 'High'])
                 
-                if total_findings == 0:
-                    compliance_score = 100
-                else:
-                    # Penalty-based scoring system with proper website-specific mapping
-                    # For website scans, treat High privacy_risk as critical for compliance scoring
-                    high_privacy_risk_count = len([f for f in findings if f.get('privacy_risk') == 'High'])
-                    if high_privacy_risk_count > 0:
-                        # Website-specific: High privacy risk should heavily impact compliance
-                        penalty = (high_privacy_risk_count * 25) + ((total_findings - high_privacy_risk_count) * 5)
-                    else:
-                        # Standard penalty system
-                        penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
-                    compliance_score = max(0, 100 - penalty)
+                # Use centralized compliance calculator for website scans too
+                from utils.compliance_calculator import calculate_compliance_score
+                compliance_score, _ = calculate_compliance_score(
+                    findings, 
+                    scan_result.get('scan_id', 'website_scan'),
+                    st.session_state.get('username', 'anonymous')
+                )
                 
                 # CRITICAL: Add compliance score to scan result for dashboard display
                 scan_result['compliance_score'] = compliance_score
@@ -645,20 +639,15 @@ class IntelligentScannerWrapper:
                 trackers_found = scan_result.get('trackers_found', len(scan_result.get('trackers_detected', [])))
                 st.metric("Trackers Found", trackers_found)
         
-        # CRITICAL: Calculate compliance score for ALL scan types immediately after executive summary
-        findings = scan_result.get('findings', [])
-        total_findings = len(findings)
+        # CRITICAL: Calculate compliance score for ALL scan types using centralized calculator
+        from utils.compliance_calculator import calculate_compliance_score, get_compliance_status, get_risk_level
         
-        if total_findings > 0:
-            # Calculate compliance score using standard penalty system for ALL scans
-            critical_findings = len([f for f in findings if f.get('severity') == 'Critical'])
-            high_findings = len([f for f in findings if f.get('severity') == 'High' or f.get('privacy_risk') == 'High'])
-            
-            # Apply penalty system: Critical (-25%), High (-15%), Other (-5%)
-            penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
-            compliance_score = max(0, 100 - penalty)
-        else:
-            compliance_score = 100  # Perfect score if no findings
+        findings = scan_result.get('findings', [])
+        scan_id = scan_result.get('scan_id', 'unknown')
+        username = st.session_state.get('username', 'anonymous')
+        
+        # Use centralized compliance calculator with audit trail
+        compliance_score, compliance_result = calculate_compliance_score(findings, scan_id, username)
         
         # Always set compliance score in scan result for dashboard display
         scan_result['compliance_score'] = compliance_score
@@ -669,39 +658,28 @@ class IntelligentScannerWrapper:
         with col1:
             st.metric("Compliance Score", f"{compliance_score:.1f}%")
         with col2:
-            compliance_status = "Excellent" if compliance_score >= 90 else "Good" if compliance_score >= 75 else "Needs Improvement" if compliance_score >= 50 else "Critical"
+            compliance_status = get_compliance_status(compliance_score)
             st.metric("Compliance Status", compliance_status)
         with col3:
-            risk_level = "Low" if compliance_score >= 75 else "Medium" if compliance_score >= 50 else "High"
+            risk_level = get_risk_level(compliance_score)
             st.metric("Risk Level", risk_level)
         
-        # Debug: Display severity breakdown and scan result keys
+        # Production-ready findings analysis (debug code removed)
         findings = scan_result.get('findings', [])
-        if findings:
-            severities = {}
-            for finding in findings:
-                sev = finding.get('severity', 'Unknown')
-                severities[sev] = severities.get(sev, 0) + 1
-            
-            st.info(f"🔍 Debug - Severity breakdown: {severities}")
-            st.info(f"🔍 Debug - Compliance Score: {scan_result.get('compliance_score', 'Not calculated')}")
-            st.info(f"🔍 Debug - Scan result keys: {list(scan_result.keys())}")
-            # Enhanced debug output for cookies
-            cookies_found = scan_result.get('cookies_found', 0)
-            cookies_detected = scan_result.get('cookies_detected', [])
-            trackers_detected = scan_result.get('trackers_detected', [])
-            
-            st.info(f"🔍 Debug - Cookies data: cookies_found={cookies_found}, cookies_detected={len(cookies_detected)}, trackers_detected={len(trackers_detected)}")
-            
-            # Debug finding types that might be cookies/trackers
-            cookie_findings = [f for f in findings if 'cookie' in f.get('type', '').lower() or 'cookie' in f.get('description', '').lower()]
-            tracker_findings = [f for f in findings if any(term in f.get('type', '').lower() for term in ['tracker', 'tracking', 'google', 'analytics', 'facebook', 'pixel'])]
-            
-            st.info(f"🔍 Debug - Cookie-related findings: {len(cookie_findings)}, Tracker-related findings: {len(tracker_findings)}")
-            if cookie_findings:
-                st.info(f"🔍 Cookie finding types: {[f.get('type') for f in cookie_findings[:5]]}")
-            if tracker_findings:
-                st.info(f"🔍 Tracker finding types: {[f.get('type') for f in tracker_findings[:5]]}")
+        if findings and st.session_state.get('debug_mode', False):
+            # Only show debug information when explicitly enabled
+            with st.expander("🔧 Technical Details", expanded=False):
+                severities = {}
+                for finding in findings:
+                    sev = finding.get('severity', 'Unknown')
+                    severities[sev] = severities.get(sev, 0) + 1
+                
+                st.json({
+                    "severity_breakdown": severities,
+                    "compliance_score": scan_result.get('compliance_score', 'Not calculated'),
+                    "total_findings": len(findings),
+                    "scan_id": scan_result.get('scan_id', 'unknown')
+                })
         
         # Display findings if available
         findings = scan_result.get('findings', [])
