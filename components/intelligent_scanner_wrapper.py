@@ -613,6 +613,9 @@ class IntelligentScannerWrapper:
                         penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
                     compliance_score = max(0, 100 - penalty)
                 
+                # CRITICAL: Add compliance score to scan result for dashboard display
+                scan_result['compliance_score'] = compliance_score
+                
                 st.metric("Compliance Score", f"{compliance_score}%")
             with col3:
                 # ENHANCED: Try multiple ways to get cookie count with comprehensive detection
@@ -644,6 +647,26 @@ class IntelligentScannerWrapper:
                 trackers_found = scan_result.get('trackers_found', len(scan_result.get('trackers_detected', [])))
                 st.metric("Trackers Found", trackers_found)
         
+        # CRITICAL: Ensure ALL scan types have compliance scores for proper dashboard display
+        if 'compliance_score' not in scan_result:
+            findings = scan_result.get('findings', [])
+            if findings:
+                # Calculate compliance score using standard penalty system
+                total_findings = len(findings)
+                critical_findings = len([f for f in findings if f.get('severity') == 'Critical'])
+                high_findings = len([f for f in findings if f.get('severity') == 'High' or f.get('privacy_risk') == 'High'])
+                
+                if total_findings == 0:
+                    compliance_score = 100
+                else:
+                    # Apply penalty system: Critical (-25%), High (-15%), Other (-5%)
+                    penalty = (critical_findings * 25) + (high_findings * 15) + ((total_findings - critical_findings - high_findings) * 5)
+                    compliance_score = max(0, 100 - penalty)
+                
+                scan_result['compliance_score'] = compliance_score
+            else:
+                scan_result['compliance_score'] = 100  # Perfect score if no findings
+        
         # Debug: Display severity breakdown and scan result keys
         findings = scan_result.get('findings', [])
         if findings:
@@ -653,6 +676,7 @@ class IntelligentScannerWrapper:
                 severities[sev] = severities.get(sev, 0) + 1
             
             st.info(f"🔍 Debug - Severity breakdown: {severities}")
+            st.info(f"🔍 Debug - Compliance Score: {scan_result.get('compliance_score', 'Not calculated')}")
             st.info(f"🔍 Debug - Scan result keys: {list(scan_result.keys())}")
             # Enhanced debug output for cookies
             cookies_found = scan_result.get('cookies_found', 0)

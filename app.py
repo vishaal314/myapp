@@ -483,8 +483,28 @@ def render_dashboard():
             if compliance_score > 0:
                 compliance_scores.append(compliance_score)
         
-        # Calculate average compliance score
-        avg_compliance = sum(compliance_scores) / max(len(compliance_scores), 1) if compliance_scores else 0
+        # Calculate average compliance score with enhanced fallback logic
+        if compliance_scores:
+            avg_compliance = sum(compliance_scores) / len(compliance_scores)
+        else:
+            # Calculate compliance score from findings if no explicit score available
+            if recent_scans:
+                total_findings = 0
+                high_risk_findings = 0
+                for scan in recent_scans:
+                    result = scan.get('result', {})
+                    findings = result.get('findings', [])
+                    total_findings += len(findings)
+                    high_risk_findings += len([f for f in findings if f.get('severity') == 'High' or f.get('privacy_risk') == 'High'])
+                
+                if total_findings > 0:
+                    # Calculate using penalty system (same as intelligent scanner wrapper)
+                    penalty = (high_risk_findings * 25) + ((total_findings - high_risk_findings) * 5)
+                    avg_compliance = max(0, 100 - penalty)
+                else:
+                    avg_compliance = 100  # Perfect score if no findings
+            else:
+                avg_compliance = 0
         
         # Display real-time metrics
         col1, col2, col3, col4 = st.columns(4)
@@ -588,16 +608,50 @@ def render_dashboard():
         # Fallback display
         st.info("Dashboard metrics temporarily unavailable. Please try refreshing the page.")
         
-        # Show basic columns for fallback
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Total Scans", 0, "+0")
-        with col2:
-            st.metric("PII Found", 0, "+0") 
-        with col3:
-            st.metric("Compliance Score", "0.0%", "+0.0%")
-        with col4:
-            st.metric("Active Issues", 0, "-0")
+        # Try to calculate basic metrics even in error case
+        try:
+            aggregator = ResultsAggregator()
+            username = st.session_state.get('username', 'anonymous')
+            recent_scans = aggregator.get_recent_scans(days=30, username=username)
+            
+            total_scans = len(recent_scans)
+            total_findings = 0
+            high_risk_findings = 0
+            
+            for scan in recent_scans:
+                result = scan.get('result', {})
+                findings = result.get('findings', [])
+                total_findings += len(findings)
+                high_risk_findings += len([f for f in findings if f.get('severity') == 'High' or f.get('privacy_risk') == 'High'])
+            
+            # Calculate compliance score even in fallback
+            if total_findings > 0:
+                penalty = (high_risk_findings * 25) + ((total_findings - high_risk_findings) * 5)
+                compliance_score = max(0, 100 - penalty)
+            else:
+                compliance_score = 100 if total_scans > 0 else 0
+            
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Total Scans", total_scans, "+0")
+            with col2:
+                st.metric("PII Found", total_findings, "+0") 
+            with col3:
+                st.metric("Compliance Score", f"{compliance_score:.1f}%", "+0.0%")
+            with col4:
+                st.metric("Active Issues", high_risk_findings, "-0")
+                
+        except Exception as fallback_error:
+            # Ultimate fallback if even basic metrics fail
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Total Scans", 0, "+0")
+            with col2:
+                st.metric("PII Found", 0, "+0") 
+            with col3:
+                st.metric("Compliance Score", "N/A", "+0.0%")
+            with col4:
+                st.metric("Active Issues", 0, "-0")
             
         st.info("Please try refreshing the dashboard or start a new scan to see your data.")
 
