@@ -369,6 +369,7 @@ def render_authenticated_interface():
             f"📊 {_('results.title', 'Results')}", 
             f"📋 {_('history.title', 'History')}", 
             f"⚙️ {_('sidebar.settings', 'Settings')}",
+            f"🔒 {_('sidebar.privacy_rights', 'Privacy Rights')}",
             "💳 iDEAL Payment Test"
         ]
         if user_role == "admin":
@@ -405,12 +406,45 @@ def render_authenticated_interface():
         render_history_page()
     elif _('sidebar.settings', 'Settings') in selected_nav:
         render_settings_page()
+    elif _('sidebar.privacy_rights', 'Privacy Rights') in selected_nav:
+        render_privacy_rights_page()
     elif _('admin.title', 'Admin') in selected_nav:
         render_admin_page()
     elif "Performance Dashboard" in selected_nav:
         render_performance_dashboard_safe()
     elif "💳 iDEAL Payment Test" in selected_nav:
         render_ideal_payment_test()
+
+def render_privacy_rights_page():
+    """Render the privacy rights management page"""
+    try:
+        from components.privacy_rights_portal import PrivacyRightsPortal
+        
+        # Initialize privacy rights portal
+        privacy_portal = PrivacyRightsPortal()
+        privacy_portal.render_portal()
+        
+    except Exception as e:
+        logger.error(f"Privacy rights page error: {e}")
+        st.error("Privacy rights portal temporarily unavailable. Please contact support.")
+        
+        # Show basic contact information
+        st.info("""
+        **Contact Information for Privacy Requests:**
+        
+        📧 **Privacy Team**: privacy@dataguardian.pro  
+        📧 **Data Protection Officer**: dpo@dataguardian.pro  
+        📞 **Phone**: [To be provided]
+        
+        **Your Rights Under GDPR:**
+        - Right of Access (Article 15)
+        - Right to Rectification (Article 16)  
+        - Right to Erasure (Article 17)
+        - Right to Data Portability (Article 20)
+        - Right to Object (Article 21)
+        
+        Please contact us directly to exercise your privacy rights.
+        """)
 
 def render_dashboard():
     """Render the main dashboard with real-time data from scan results"""
