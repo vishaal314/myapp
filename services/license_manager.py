@@ -23,6 +23,9 @@ class LicenseType(Enum):
     BASIC = "basic"
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
+    ENTERPRISE_PLUS = "enterprise_plus"
+    CONSULTANCY = "consultancy"
+    AI_COMPLIANCE = "ai_compliance"
     STANDALONE = "standalone"
     SAAS = "saas"
     CUSTOM = "custom"
@@ -131,26 +134,44 @@ class LicenseManager:
         # Default usage limits based on license type
         default_limits = {
             LicenseType.TRIAL: {
-                UsageLimitType.SCANS_PER_MONTH: 50,
+                UsageLimitType.SCANS_PER_MONTH: 5,
+                UsageLimitType.CONCURRENT_USERS: 1,
+                UsageLimitType.EXPORT_REPORTS: 3,
+                UsageLimitType.SCANNER_TYPES: 3
+            },
+            LicenseType.BASIC: {
+                UsageLimitType.SCANS_PER_MONTH: 5,
                 UsageLimitType.CONCURRENT_USERS: 2,
                 UsageLimitType.EXPORT_REPORTS: 10,
                 UsageLimitType.SCANNER_TYPES: 5
             },
-            LicenseType.BASIC: {
-                UsageLimitType.SCANS_PER_MONTH: 500,
+            LicenseType.PROFESSIONAL: {
+                UsageLimitType.SCANS_PER_MONTH: 25,
                 UsageLimitType.CONCURRENT_USERS: 5,
                 UsageLimitType.EXPORT_REPORTS: 100,
-                UsageLimitType.SCANNER_TYPES: 10
+                UsageLimitType.SCANNER_TYPES: 8
             },
-            LicenseType.PROFESSIONAL: {
-                UsageLimitType.SCANS_PER_MONTH: 2000,
+            LicenseType.ENTERPRISE: {
+                UsageLimitType.SCANS_PER_MONTH: 200,
                 UsageLimitType.CONCURRENT_USERS: 15,
                 UsageLimitType.EXPORT_REPORTS: 500,
                 UsageLimitType.SCANNER_TYPES: 10
             },
-            LicenseType.ENTERPRISE: {
-                UsageLimitType.SCANS_PER_MONTH: 10000,
+            LicenseType.ENTERPRISE_PLUS: {
+                UsageLimitType.SCANS_PER_MONTH: 999999,
                 UsageLimitType.CONCURRENT_USERS: 50,
+                UsageLimitType.EXPORT_REPORTS: 999999,
+                UsageLimitType.SCANNER_TYPES: 10
+            },
+            LicenseType.CONSULTANCY: {
+                UsageLimitType.SCANS_PER_MONTH: 500,
+                UsageLimitType.CONCURRENT_USERS: 25,
+                UsageLimitType.EXPORT_REPORTS: 999999,
+                UsageLimitType.SCANNER_TYPES: 10
+            },
+            LicenseType.AI_COMPLIANCE: {
+                UsageLimitType.SCANS_PER_MONTH: 999999,
+                UsageLimitType.CONCURRENT_USERS: 20,
                 UsageLimitType.EXPORT_REPORTS: 999999,
                 UsageLimitType.SCANNER_TYPES: 10
             },
@@ -198,25 +219,40 @@ class LicenseManager:
         
         # Configure features based on license type
         if license_type == LicenseType.TRIAL:
-            allowed_features = all_features[:8]  # Limited features
-            allowed_scanners = all_scanners[:5]  # Limited scanners
+            allowed_features = all_features[:6]  # Very limited features for trial
+            allowed_scanners = all_scanners[:3]  # Basic scanners only
+            allowed_regions = ["Netherlands"]
+            max_concurrent = 1
+        elif license_type == LicenseType.BASIC:
+            allowed_features = all_features[:8]  # Basic compliance features
+            allowed_scanners = all_scanners[:5]  # Core scanners
             allowed_regions = ["Netherlands"]
             max_concurrent = 2
-        elif license_type == LicenseType.BASIC:
-            allowed_features = all_features[:12]
-            allowed_scanners = all_scanners
-            allowed_regions = ["Netherlands", "Germany"]
-            max_concurrent = 5
         elif license_type == LicenseType.PROFESSIONAL:
-            allowed_features = all_features[:14]
-            allowed_scanners = all_scanners
-            allowed_regions = all_regions[:4]
-            max_concurrent = 15
+            allowed_features = all_features[:12]  # Advanced features
+            allowed_scanners = all_scanners[:8]  # Most scanners
+            allowed_regions = ["Netherlands", "Germany", "Belgium"]
+            max_concurrent = 5
         elif license_type == LicenseType.ENTERPRISE:
-            allowed_features = all_features
-            allowed_scanners = all_scanners
-            allowed_regions = all_regions
+            allowed_features = all_features[:14]  # Premium features
+            allowed_scanners = all_scanners  # All scanners
+            allowed_regions = all_regions[:4]  # EU regions
+            max_concurrent = 15
+        elif license_type == LicenseType.ENTERPRISE_PLUS:
+            allowed_features = all_features  # All features including white-label
+            allowed_scanners = all_scanners  # All scanners
+            allowed_regions = all_regions  # Global access
             max_concurrent = 50
+        elif license_type == LicenseType.CONSULTANCY:
+            allowed_features = all_features  # All features for client work
+            allowed_scanners = all_scanners  # All scanners
+            allowed_regions = all_regions  # Global access for clients
+            max_concurrent = 25
+        elif license_type == LicenseType.AI_COMPLIANCE:
+            allowed_features = all_features  # All features with AI focus
+            allowed_scanners = all_scanners  # All scanners especially AI
+            allowed_regions = all_regions  # Global AI compliance
+            max_concurrent = 20
         else:  # STANDALONE
             allowed_features = all_features
             allowed_scanners = all_scanners

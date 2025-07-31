@@ -49,13 +49,64 @@ SUBSCRIPTION_PLANS = {
         "currency": "eur",
         "interval": "month",
         "features": [
-            "Unlimited scans",
+            "200 scans per month",
             "White-label reports",
             "Dedicated support",
             "Custom integrations",
             "Advanced analytics",
             "Multi-user management",
             "SLA guarantee"
+        ]
+    },
+    "enterprise_plus": {
+        "name": "Enterprise Plus",
+        "description": "For large organizations with high volume needs",
+        "price": 39999,  # €399.99/month
+        "currency": "eur",
+        "interval": "month",
+        "features": [
+            "Unlimited scans",
+            "White-label reports with custom branding",
+            "Dedicated account manager",
+            "Custom scanner development",
+            "Advanced AI compliance features",
+            "Priority API access",
+            "Custom SLA up to 99.95%",
+            "On-premise deployment option"
+        ]
+    },
+    "consultancy": {
+        "name": "Consultancy Package",
+        "description": "For privacy consultancies and law firms",
+        "price": 29999,  # €299.99/month
+        "currency": "eur",
+        "interval": "month",
+        "features": [
+            "500 scans per month",
+            "Full white-label customization",
+            "Client management portal",
+            "Bulk licensing for clients",
+            "Priority technical support",
+            "Custom compliance templates",
+            "Revenue sharing program",
+            "Marketing co-op opportunities"
+        ]
+    },
+    "ai_compliance": {
+        "name": "AI Act 2025 Specialist",
+        "description": "EU AI Act compliance for tech companies",
+        "price": 59999,  # €599.99/month
+        "currency": "eur",
+        "interval": "month",
+        "features": [
+            "Unlimited AI model scans",
+            "EU AI Act 2025 compliance automation",
+            "Bias detection and mitigation",
+            "Explainability assessments",
+            "Risk classification automation",
+            "Regulatory change monitoring",
+            "Expert AI compliance consultation",
+            "Custom AI governance frameworks"
         ]
     }
 }
