@@ -59,7 +59,7 @@ class TestLicenseManager(unittest.TestCase):
         )
         self.assertIsNotNone(scan_limit)
         if scan_limit:
-            self.assertEqual(scan_limit.limit_value, 50)
+            self.assertEqual(scan_limit.limit_value, 5)  # Updated to 5 scans for trial
     
     def test_license_generation_enterprise(self):
         """Test enterprise license generation."""
@@ -74,13 +74,14 @@ class TestLicenseManager(unittest.TestCase):
         
         self.assertEqual(license_config.license_type, LicenseType.ENTERPRISE)
         
-        # Check enterprise limits
+        # Check enterprise scan limits (updated for new pricing)
         scan_limit = next(
             (limit for limit in license_config.usage_limits 
              if limit.limit_type == UsageLimitType.SCANS_PER_MONTH), None
         )
+        self.assertIsNotNone(scan_limit)
         if scan_limit:
-            self.assertEqual(scan_limit.limit_value, 10000)
+            self.assertEqual(scan_limit.limit_value, 200)  # Updated enterprise limit
     
     def test_license_validation_valid(self):
         """Test license validation for valid license."""
@@ -140,7 +141,7 @@ class TestLicenseManager(unittest.TestCase):
         )
         self.assertTrue(allowed)
         self.assertEqual(current, 0)
-        self.assertEqual(limit, 50)  # Trial limit
+        self.assertEqual(limit, 5)  # Updated trial limit
     
     def test_usage_increment(self):
         """Test usage increment functionality."""
@@ -156,9 +157,9 @@ class TestLicenseManager(unittest.TestCase):
         
         self.license_manager.save_license(license_config)
         
-        # Increment usage
+        # Increment usage (only 1 since trial limit is now 5)
         success = self.license_manager.increment_usage(
-            UsageLimitType.SCANS_PER_MONTH, 5
+            UsageLimitType.SCANS_PER_MONTH, 1
         )
         self.assertTrue(success)
         
@@ -166,7 +167,7 @@ class TestLicenseManager(unittest.TestCase):
         allowed, current, limit = self.license_manager.check_usage_limit(
             UsageLimitType.SCANS_PER_MONTH
         )
-        self.assertEqual(current, 5)
+        self.assertEqual(current, 1)
     
     def test_feature_access_checking(self):
         """Test feature access checking."""
@@ -208,13 +209,98 @@ class TestLicenseManager(unittest.TestCase):
         success1 = self.license_manager.track_session("user1")
         self.assertTrue(success1)
         
-        # Track second user  
+        # Track second user (trial now has only 1 user limit, so this should fail)
         success2 = self.license_manager.track_session("user2")
-        self.assertTrue(success2)
+        self.assertFalse(success2)  # Trial limit is now 1 user
         
-        # Try to track third user (should fail for trial license)
+        # Try to track third user (should fail for trial license with 1 user limit)
         success3 = self.license_manager.track_session("user3")
-        self.assertFalse(success3)
+        self.assertFalse(success3)  # Trial now has 1 user limit
+    
+    def test_premium_tier_enterprise_plus(self):
+        """Test Enterprise Plus premium tier features."""
+        license_config = self.license_manager.generate_license(
+            license_type=LicenseType.ENTERPRISE_PLUS,
+            customer_id="EP001",
+            customer_name="Enterprise Plus Customer",
+            company_name="Large Corp",
+            email="ep@largecorp.com",
+            validity_days=365
+        )
+        
+        self.assertEqual(license_config.license_type, LicenseType.ENTERPRISE_PLUS)
+        
+        # Check unlimited scans
+        scan_limit = next(
+            (limit for limit in license_config.usage_limits 
+             if limit.limit_type == UsageLimitType.SCANS_PER_MONTH), None
+        )
+        self.assertIsNotNone(scan_limit)
+        if scan_limit:
+            self.assertEqual(scan_limit.limit_value, 999999)  # Unlimited
+        
+        # Check high concurrent user limit
+        self.assertEqual(license_config.max_concurrent_users, 50)
+        
+        # Check all features available
+        self.assertGreaterEqual(len(license_config.allowed_features), 16)
+        self.assertIn("white_label", license_config.allowed_features)
+        
+    def test_premium_tier_consultancy(self):
+        """Test Consultancy premium tier features."""
+        license_config = self.license_manager.generate_license(
+            license_type=LicenseType.CONSULTANCY,
+            customer_id="CONS001",
+            customer_name="Privacy Consultancy",
+            company_name="GDPR Experts BV",
+            email="contact@gdprexperts.nl",
+            validity_days=365
+        )
+        
+        self.assertEqual(license_config.license_type, LicenseType.CONSULTANCY)
+        
+        # Check 500 scans for client work
+        scan_limit = next(
+            (limit for limit in license_config.usage_limits 
+             if limit.limit_type == UsageLimitType.SCANS_PER_MONTH), None
+        )
+        self.assertIsNotNone(scan_limit)
+        if scan_limit:
+            self.assertEqual(scan_limit.limit_value, 500)
+        
+        # Check 25 concurrent users for team
+        self.assertEqual(license_config.max_concurrent_users, 25)
+        
+        # Check white-label access
+        self.assertIn("white_label", license_config.allowed_features)
+        
+    def test_premium_tier_ai_compliance(self):
+        """Test AI Compliance premium tier features."""
+        license_config = self.license_manager.generate_license(
+            license_type=LicenseType.AI_COMPLIANCE,
+            customer_id="AI001",
+            customer_name="AI Startup",
+            company_name="AI Tech Inc",
+            email="ai@techstartup.com",
+            validity_days=365
+        )
+        
+        self.assertEqual(license_config.license_type, LicenseType.AI_COMPLIANCE)
+        
+        # Check unlimited AI scans
+        scan_limit = next(
+            (limit for limit in license_config.usage_limits 
+             if limit.limit_type == UsageLimitType.SCANS_PER_MONTH), None
+        )
+        self.assertIsNotNone(scan_limit)
+        if scan_limit:
+            self.assertEqual(scan_limit.limit_value, 999999)  # Unlimited for AI
+        
+        # Check AI-focused concurrent users
+        self.assertEqual(license_config.max_concurrent_users, 20)
+        
+        # Check AI model scanner access
+        self.assertIn("ai_model", license_config.allowed_scanners)
 
 
 class TestUsageAnalytics(unittest.TestCase):
