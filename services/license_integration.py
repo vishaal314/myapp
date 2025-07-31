@@ -333,8 +333,8 @@ class LicenseIntegration:
             
             for activity in recent_activity:
                 icon = "✅" if activity.success else "❌"
-                event_type_str = activity.event_type.value if hasattr(activity, 'event_type') and activity.event_type else "unknown"
-                timestamp_str = activity.timestamp.strftime('%Y-%m-%d %H:%M:%S') if hasattr(activity, 'timestamp') and activity.timestamp else "unknown"
+                event_type_str = getattr(getattr(activity, 'event_type', None), 'value', 'unknown')
+                timestamp_str = activity.timestamp.strftime('%Y-%m-%d %H:%M:%S') if getattr(activity, 'timestamp', None) else "unknown"
                 st.write(f"{icon} {event_type_str} - {timestamp_str}")
     
     def create_license_decorator(self):
