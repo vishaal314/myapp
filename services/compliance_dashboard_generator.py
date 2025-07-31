@@ -10,6 +10,8 @@ from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import pandas as pd
+import streamlit as st
+from functools import lru_cache
 
 class ComplianceDashboardGenerator:
     """
@@ -31,6 +33,7 @@ class ComplianceDashboardGenerator:
             'danger': '#dc3545'
         }
     
+    @st.cache_data(ttl=300)  # Cache for 5 minutes
     def generate_executive_dashboard(self, scan_results: List[Dict[str, Any]], 
                                    time_period: str = "30d") -> str:
         """
@@ -101,7 +104,23 @@ class ComplianceDashboardGenerator:
         
         return dashboard_html
     
+    @lru_cache(maxsize=100)
+    def _process_scan_data_cached(self, scan_results_hash: str, scan_results_str: str) -> Dict[str, Any]:
+        """Cached version of scan data processing"""
+        import json
+        scan_results = json.loads(scan_results_str)
+        return self._process_scan_data_impl(scan_results)
+    
     def _process_scan_data(self, scan_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Process scan data with caching for performance"""
+        # Create a hash for caching
+        import hashlib
+        scan_str = json.dumps(scan_results, sort_keys=True)
+        scan_hash = hashlib.md5(scan_str.encode()).hexdigest()
+        
+        return self._process_scan_data_cached(scan_hash, scan_str)
+    
+    def _process_scan_data_impl(self, scan_results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Process scan results for dashboard visualization"""
         if not scan_results:
             return self._get_empty_dashboard_data()

@@ -45,7 +45,7 @@ class UsageLimit:
     limit_value: int
     current_usage: int = 0
     reset_period: str = "monthly"  # daily, weekly, monthly, yearly
-    last_reset: datetime = None
+    last_reset: Optional[datetime] = None
 
 @dataclass
 class LicenseConfig:
@@ -64,7 +64,7 @@ class LicenseConfig:
     allowed_regions: List[str]
     max_concurrent_users: int
     is_active: bool = True
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 class LicenseManager:
     """Comprehensive license management system"""
@@ -163,9 +163,13 @@ class LicenseManager:
         }
         
         # Create usage limits
-        limits = default_limits.get(license_type, default_limits[LicenseType.TRIAL])
+        limits = default_limits.get(license_type, default_limits[LicenseType.TRIAL]).copy()
         if custom_limits:
-            limits.update(custom_limits)
+            for limit_type, limit_value in custom_limits.items():
+                if isinstance(limit_type, str):
+                    # Convert string to UsageLimitType enum
+                    limit_type = UsageLimitType(limit_type)
+                limits[limit_type] = limit_value
         
         usage_limits = []
         for limit_type, limit_value in limits.items():
@@ -393,7 +397,7 @@ class LicenseManager:
         # Check hardware binding (for standalone licenses)
         if self.current_license.license_type == LicenseType.STANDALONE:
             current_hardware_id = self._get_hardware_id()
-            stored_hardware_id = self.current_license.metadata.get("hardware_id")
+            stored_hardware_id = (self.current_license.metadata or {}).get("hardware_id")
             if stored_hardware_id and current_hardware_id != stored_hardware_id:
                 return False, "License is bound to different hardware"
         
@@ -408,7 +412,7 @@ class LicenseManager:
         if not is_valid:
             return False
         
-        return feature in self.current_license.allowed_features
+        return feature in (self.current_license.allowed_features or [])
     
     def check_scanner_access(self, scanner_type: str) -> bool:
         """Check if scanner is allowed"""
@@ -471,7 +475,8 @@ class LicenseManager:
         if should_reset:
             limit.current_usage = 0
             limit.last_reset = now
-            self.save_license(self.current_license)
+            if self.current_license:
+                self.save_license(self.current_license)
     
     def increment_usage(self, limit_type: UsageLimitType, amount: int = 1) -> bool:
         """Increment usage counter"""
@@ -481,7 +486,8 @@ class LicenseManager:
         for limit in self.current_license.usage_limits:
             if limit.limit_type == limit_type:
                 limit.current_usage += amount
-                self.save_license(self.current_license)
+                if self.current_license:
+                    self.save_license(self.current_license)
                 return True
         
         return True  # No limit set
@@ -525,7 +531,7 @@ class LicenseManager:
             if datetime.now() - last_activity < timedelta(hours=1)  # 1 hour timeout
         ])
         
-        if current_sessions >= self.current_license.max_concurrent_users:
+        if self.current_license and current_sessions >= self.current_license.max_concurrent_users:
             return False
         
         self.session_tracker[user_id] = datetime.now()

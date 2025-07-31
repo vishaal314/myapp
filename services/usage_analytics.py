@@ -73,6 +73,54 @@ class UsageAnalytics:
         self.lock = threading.Lock()
         self.init_database()
         self.current_users: Dict[str, datetime] = {}
+    
+    def track_event(self, event_type: UsageEventType, user_id: str, session_id: str, 
+                   scanner_type: Optional[str] = None, region: Optional[str] = None,
+                   feature: Optional[str] = None, details: Optional[Dict[str, Any]] = None,
+                   duration_ms: Optional[int] = None, success: bool = True,
+                   error_message: Optional[str] = None) -> bool:
+        """Track a usage event"""
+        try:
+            event = UsageEvent(
+                event_id=str(uuid.uuid4()),
+                event_type=event_type,
+                timestamp=datetime.now(),
+                user_id=user_id,
+                session_id=session_id,
+                scanner_type=scanner_type,
+                region=region,
+                feature=feature,
+                details=details,
+                duration_ms=duration_ms,
+                success=success,
+                error_message=error_message
+            )
+            
+            with self.lock:
+                conn = sqlite3.connect(self.db_file)
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    INSERT INTO usage_events 
+                    (event_id, event_type, timestamp, user_id, session_id, scanner_type, 
+                     region, feature, details, duration_ms, success, error_message)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    event.event_id, event.event_type.value, event.timestamp.isoformat(),
+                    event.user_id, event.session_id, event.scanner_type, event.region,
+                    event.feature, json.dumps(event.details) if event.details else None,
+                    event.duration_ms, event.success, event.error_message
+                ))
+                
+                conn.commit()
+                conn.close()
+                
+                logger.info(f"Usage event tracked: {event_type.value} for user {user_id}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Failed to track usage event: {e}")
+            return False
         
     def init_database(self):
         """Initialize SQLite database for usage tracking"""
@@ -122,47 +170,20 @@ class UsageAnalytics:
         conn.commit()
         conn.close()
     
-    def track_event(self, event: UsageEvent):
-        """Track a usage event"""
-        with self.lock:
-            try:
-                conn = sqlite3.connect(self.db_file)
-                cursor = conn.cursor()
-                
-                cursor.execute("""
-                    INSERT INTO usage_events (
-                        event_id, event_type, timestamp, user_id, session_id,
-                        scanner_type, region, feature, details, duration_ms,
-                        success, error_message
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    event.event_id,
-                    event.event_type.value,
-                    event.timestamp.isoformat(),
-                    event.user_id,
-                    event.session_id,
-                    event.scanner_type,
-                    event.region,
-                    event.feature,
-                    json.dumps(event.details) if event.details else None,
-                    event.duration_ms,
-                    event.success,
-                    event.error_message
-                ))
-                
-                conn.commit()
-                conn.close()
-                
-                # Update concurrent user tracking
-                if event.event_type == UsageEventType.USER_LOGIN:
-                    self.current_users[event.user_id] = event.timestamp
-                elif event.event_type == UsageEventType.USER_LOGOUT:
-                    self.current_users.pop(event.user_id, None)
-                
-                logger.info(f"Usage event tracked: {event.event_type.value} for user {event.user_id}")
-                
-            except Exception as e:
-                logger.error(f"Failed to track usage event: {e}")
+    def track_event_object(self, event: UsageEvent):
+        """Track a usage event object (legacy method)"""
+        return self.track_event(
+            event_type=event.event_type,
+            user_id=event.user_id,
+            session_id=event.session_id,
+            scanner_type=event.scanner_type,
+            region=event.region,
+            feature=event.feature,
+            details=event.details,
+            duration_ms=event.duration_ms,
+            success=event.success,
+            error_message=event.error_message
+        )
     
     def get_usage_statistics(self, 
                            start_date: Optional[datetime] = None,
@@ -538,7 +559,7 @@ def track_usage_event(event_type: UsageEventType,
         success=success,
         error_message=error_message
     )
-    usage_analytics.track_event(event)
+    usage_analytics.track_event_object(event)
 
 def get_usage_stats(start_date: Optional[datetime] = None,
                    end_date: Optional[datetime] = None,
