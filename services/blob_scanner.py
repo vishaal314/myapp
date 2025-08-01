@@ -29,7 +29,7 @@ class BlobScanner:
             file_types: List of file types to scan (e.g., ['PDF', 'DOCX'])
             region: The region for which to apply GDPR rules
         """
-        self.file_types = file_types or [
+        self.file_types = file_types if file_types is not None else [
             "PDF", "DOCX", "TXT", "RTF", "CSV", "XLSX", "JSON", "XML", 
             "HTML", "MD", "LOG", "CONF", "INI", "ENV", "SQL", "JS", 
             "PY", "JAVA", "PHP", "RB", "C", "CPP", "CS", "GO", "TS"
@@ -920,7 +920,7 @@ class BlobScanner:
             }
         
         # Default skip patterns if none provided
-        skip_patterns = skip_patterns or [
+        skip_patterns = skip_patterns if skip_patterns is not None else [
             '.git', 'node_modules', '__pycache__', 'venv', 'env', '.pytest_cache',
             'build', 'dist', '.next', '.cache', '.yarn', '.npm', 'coverage'
         ]
