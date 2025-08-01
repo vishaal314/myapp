@@ -187,6 +187,13 @@ class EnhancedSOC2Scanner:
             recommendations = self._generate_compliance_recommendations(scan_results)
             scan_results['recommendations'] = recommendations
             
+            # Integrate cost savings analysis
+            try:
+                from services.cost_savings_calculator import integrate_cost_savings_into_report
+                scan_results = integrate_cost_savings_into_report(scan_results, 'soc2', self.region)
+            except Exception as e:
+                self.logger.warning(f"Cost savings integration failed: {e}")
+            
             return scan_results
             
         except Exception as e:

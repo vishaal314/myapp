@@ -595,6 +595,13 @@ class CodeScanner:
             except:
                 pass
         
+        # Integrate cost savings analysis
+        try:
+            from services.cost_savings_calculator import integrate_cost_savings_into_report
+            result = integrate_cost_savings_into_report(result, 'code', self.region)
+        except Exception as e:
+            logger.warning(f"Cost savings integration failed: {e}")
+        
         return result
     
     def _scan_file_wrapper(self, args):

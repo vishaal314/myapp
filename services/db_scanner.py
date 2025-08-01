@@ -796,7 +796,7 @@ class DBScanner:
         
         logger.info(f"Completed database scan. Scanned {tables_scanned} tables, found {len(all_findings)} PII instances.")
         
-        return {
+        results = {
             "scan_type": "database",
             "metadata": metadata,
             "table_results": table_results,
@@ -805,6 +805,15 @@ class DBScanner:
             "errors": errors,
             "risk_summary": risk_summary
         }
+        
+        # Integrate cost savings analysis
+        try:
+            from services.cost_savings_calculator import integrate_cost_savings_into_report
+            results = integrate_cost_savings_into_report(results, 'database', self.region)
+        except Exception as e:
+            logger.warning(f"Cost savings integration failed: {e}")
+        
+        return results
     
     def _calculate_risk_score(self, findings: List[Dict[str, Any]]) -> Dict[str, Any]:
         """

@@ -1036,6 +1036,13 @@ class BlobScanner:
                 })
                 results['files_skipped'] += 1
         
+        # Integrate cost savings analysis
+        try:
+            from services.cost_savings_calculator import integrate_cost_savings_into_report
+            results = integrate_cost_savings_into_report(results, 'document', self.region)
+        except Exception as e:
+            logger.warning(f"Cost savings integration failed: {e}")
+        
         return results
     
     def scan_multiple_documents(self, file_paths: List[str], callback_fn=None) -> Dict[str, Any]:
@@ -1116,7 +1123,7 @@ class BlobScanner:
         medium_count = len([f for f in all_findings if f.get('risk_level') == 'Medium'])
         low_count = len([f for f in all_findings if f.get('risk_level') == 'Low'])
         
-        return {
+        scan_results = {
             "scan_type": "document", 
             "scan_id": f"doc_scan_{int(datetime.now().timestamp())}",
             "timestamp": datetime.now().isoformat(),
@@ -1133,6 +1140,15 @@ class BlobScanner:
             "errors": errors,
             "risk_summary": overall_risk
         }
+        
+        # Integrate cost savings analysis
+        try:
+            from services.cost_savings_calculator import integrate_cost_savings_into_report
+            scan_results = integrate_cost_savings_into_report(scan_results, 'document', self.region)
+        except Exception as e:
+            logger.warning(f"Cost savings integration failed: {e}")
+        
+        return scan_results
 
 # Create an alias for compatibility
 def create_document_scanner(region: str = "Netherlands") -> BlobScanner:

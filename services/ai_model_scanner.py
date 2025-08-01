@@ -198,6 +198,13 @@ class AIModelScanner:
                 "total_findings": len(scan_result["findings"])
             })
 
+        # Integrate cost savings analysis
+        try:
+            from services.cost_savings_calculator import integrate_cost_savings_into_report
+            scan_result = integrate_cost_savings_into_report(scan_result, 'ai_model', self.region)
+        except Exception as e:
+            logging.warning(f"Cost savings integration failed: {e}")
+
         return scan_result
         
     def scan_ai_model_enhanced(self, model_file, model_type: str, region: str, status=None):

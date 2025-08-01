@@ -684,6 +684,13 @@ class WebsiteScanner:
             'scan_type': 'website'
         }
         
+        # Integrate cost savings analysis
+        try:
+            from services.cost_savings_calculator import integrate_cost_savings_into_report
+            scan_results = integrate_cost_savings_into_report(scan_results, 'website', 'Netherlands')
+        except Exception as e:
+            logger.warning(f"Cost savings integration failed: {e}")
+        
         return scan_results
     
     def _analyze_page(self, url: str, html_content: str, depth: int) -> Dict[str, Any]:
