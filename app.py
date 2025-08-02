@@ -467,21 +467,37 @@ def render_dashboard():
         compliance_scores = []
         
         for scan in recent_scans:
-            result = scan.get('result', {})
-            findings = result.get('findings', [])
+            # Handle both database and file storage formats
+            if 'result' in scan:
+                result = scan['result']
+            else:
+                result = scan
             
-            # Calculate actual PII count and high risk items from findings
-            for finding in findings:
-                if isinstance(finding, dict):
-                    total_pii += finding.get('pii_count', 0)
-                    risk_summary = finding.get('risk_summary', {})
-                    if isinstance(risk_summary, dict):
-                        high_risk_issues += risk_summary.get('High', 0)
+            # Get direct values from scan metadata
+            scan_pii = scan.get('total_pii_found', 0)
+            scan_high_risk = scan.get('high_risk_count', 0)
             
-            # Get compliance scores
-            compliance_score = result.get('compliance_score', 0)
-            if compliance_score > 0:
-                compliance_scores.append(compliance_score)
+            if scan_pii > 0:
+                total_pii += scan_pii
+            if scan_high_risk > 0:
+                high_risk_issues += scan_high_risk
+            
+            # Also check nested result structure if available
+            if isinstance(result, dict):
+                findings = result.get('findings', [])
+                
+                # Calculate from findings if metadata not available
+                if scan_pii == 0:
+                    for finding in findings:
+                        if isinstance(finding, dict):
+                            total_pii += finding.get('pii_count', 0)
+                            if finding.get('severity') == 'High' or finding.get('privacy_risk') == 'High':
+                                high_risk_issues += 1
+                
+                # Get compliance scores
+                compliance_score = result.get('compliance_score', 0)
+                if compliance_score > 0:
+                    compliance_scores.append(compliance_score)
         
         # Calculate average compliance score with enhanced fallback logic
         if compliance_scores:
@@ -509,16 +525,16 @@ def render_dashboard():
         # Display real-time metrics
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            delta_scans = f"+{max(0, total_scans-1)}" if total_scans > 1 else "+0"
+            delta_scans = f"+{total_scans}" if total_scans > 0 else None
             st.metric(_('dashboard.metric.total_scans', 'Total Scans'), total_scans, delta_scans)
         with col2:
-            delta_pii = f"+{max(0, total_pii-5)}" if total_pii > 5 else "+0" if total_pii > 0 else "+0"
+            delta_pii = f"+{total_pii}" if total_pii > 0 else None
             st.metric(_('dashboard.metric.total_pii', 'Total PII Found'), total_pii, delta_pii)
         with col3:
-            delta_compliance = f"+{max(0, avg_compliance-85):.1f}%" if avg_compliance > 85 else "+0.0%" if avg_compliance > 0 else "+0.0%"
+            delta_compliance = f"{avg_compliance:.1f}%" if avg_compliance > 0 else None
             st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), f"{avg_compliance:.1f}%", delta_compliance)
         with col4:
-            delta_risk = f"-{max(0, high_risk_issues-1)}" if high_risk_issues > 1 else "-0"
+            delta_risk = f"{high_risk_issues}" if high_risk_issues > 0 else None
             st.metric(_('dashboard.metric.active_issues', 'Active Issues'), high_risk_issues, delta_risk)
         
         st.markdown("---")
@@ -530,16 +546,44 @@ def render_dashboard():
             # Transform scan data for activity display
             activity_data = []
             for scan in recent_scans:
-                result = scan.get('result', {})
-                findings = result.get('findings', [])
+                # Handle both database and file storage formats
+                if 'result' in scan:
+                    result = scan['result']
+                else:
+                    result = scan
                 
-                # Calculate PII count from findings
-                pii_count = sum(f.get('pii_count', 0) for f in findings if isinstance(f, dict))
+                # Get PII count from metadata first, then from findings if needed
+                pii_count = scan.get('total_pii_found', 0)
+                if pii_count == 0 and isinstance(result, dict):
+                    findings = result.get('findings', [])
+                    pii_count = sum(f.get('pii_count', 0) for f in findings if isinstance(f, dict))
                 
                 # Format timestamp
                 timestamp = scan.get('timestamp', '')
-                formatted_date = timestamp[:10] if timestamp else 'Unknown'
-                formatted_time = timestamp[11:16] if len(timestamp) > 11 else ''
+                if timestamp:
+                    # Handle both datetime objects and ISO strings
+                    if isinstance(timestamp, str):
+                        formatted_date = timestamp[:10]
+                        formatted_time = timestamp[11:16] if len(timestamp) > 11 else ''
+                    else:
+                        formatted_date = timestamp.strftime('%Y-%m-%d')
+                        formatted_time = timestamp.strftime('%H:%M')
+                else:
+                    formatted_date = 'Unknown'
+                    formatted_time = ''
+                
+                # Get compliance score and cost savings
+                compliance_score = 0
+                cost_savings = "N/A"
+                if isinstance(result, dict):
+                    compliance_score = result.get('compliance_score', 0)
+                    
+                    # Check for cost savings data
+                    cost_data = result.get('cost_savings', {})
+                    if cost_data and isinstance(cost_data, dict):
+                        immediate_savings = cost_data.get('immediate_savings', 0)
+                        if immediate_savings > 0:
+                            cost_savings = f"€{immediate_savings:,.0f}"
                 
                 activity_data.append({
                     'Date': formatted_date,
@@ -548,7 +592,8 @@ def render_dashboard():
                     'Status': '✅ Complete',
                     'PII Found': pii_count,
                     'Files': scan.get('file_count', 0),
-                    'Compliance': f"{result.get('compliance_score', 0):.1f}%"
+                    'Compliance': f"{compliance_score:.1f}%" if compliance_score > 0 else 'N/A',
+                    'Cost Savings': cost_savings
                 })
             
             if activity_data:
@@ -583,9 +628,38 @@ def render_dashboard():
                 st.session_state['navigation'] = _('scan.new_scan_title', 'New Scan')
                 st.rerun()
         
-        # Performance summary for users with scans
+        # Performance summary and cost savings for users with scans
         if total_scans > 0:
             st.markdown("---")
+            
+            # Cost Savings Summary
+            total_cost_savings = 0
+            total_penalties_avoided = 0
+            
+            for scan in recent_scans:
+                if 'result' in scan:
+                    result = scan['result']
+                else:
+                    result = scan
+                    
+                if isinstance(result, dict):
+                    cost_data = result.get('cost_savings', {})
+                    if cost_data:
+                        total_cost_savings += cost_data.get('immediate_savings', 0)
+                        total_penalties_avoided += cost_data.get('potential_penalties_avoided', 0)
+            
+            if total_cost_savings > 0:
+                st.subheader("💰 Cost Savings Summary")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Total Cost Savings", f"€{total_cost_savings:,.0f}")
+                with col2:
+                    st.metric("Penalties Avoided", f"€{total_penalties_avoided:,.0f}")
+                with col3:
+                    avg_savings = total_cost_savings / max(total_scans, 1)
+                    st.metric("Avg Savings per Scan", f"€{avg_savings:,.0f}")
+            
             st.subheader("📈 Performance Summary")
             col1, col2, col3 = st.columns(3)
             
@@ -603,65 +677,83 @@ def render_dashboard():
     
     except Exception as e:
         logger.error(f"Error loading dashboard metrics: {e}")
-        st.error(f"Dashboard loading error: {str(e)}")
+        st.warning(f"Dashboard data refresh needed. Please try again.")
         
-        # Fallback display
-        st.info("Dashboard metrics temporarily unavailable. Please try refreshing the page.")
-        
-        # Try to calculate basic metrics even in error case
+        # Enhanced fallback display with proper error handling
         try:
             aggregator = ResultsAggregator()
-            username = st.session_state.get('username', 'anonymous')
-            recent_scans = aggregator.get_recent_scans(days=30, username=username)
+            username = st.session_state.get('username')
+            
+            # Try to get basic scan count first
+            if username:
+                recent_scans = aggregator.get_recent_scans(days=30, username=username)
+            else:
+                recent_scans = []
             
             total_scans = len(recent_scans)
-            total_findings = 0
-            high_risk_findings = 0
             
-            for scan in recent_scans:
-                result = scan.get('result', {})
-                findings = result.get('findings', [])
-                total_findings += len(findings)
-                high_risk_findings += len([f for f in findings if f.get('severity') == 'High' or f.get('privacy_risk') == 'High'])
-            
-            # Calculate compliance score using centralized calculator
-            from utils.compliance_calculator import calculate_compliance_score
-            
-            if total_findings > 0:
-                # Create simplified findings list for dashboard calculation
-                dashboard_findings = []
-                for scan in recent_scans:
-                    result = scan.get('result', {})
-                    findings = result.get('findings', [])
-                    dashboard_findings.extend(findings)
-                
-                compliance_score, _ = calculate_compliance_score(dashboard_findings, 'dashboard', username)
-            else:
-                compliance_score = 100 if total_scans > 0 else 0
-            
+            # Display basic metrics even in error case
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Total Scans", total_scans, "+0")
+                st.metric(_('dashboard.metric.total_scans', 'Total Scans'), total_scans)
             with col2:
-                st.metric("PII Found", total_findings, "+0") 
+                st.metric(_('dashboard.metric.total_pii', 'Total PII Found'), 0) 
             with col3:
-                st.metric("Compliance Score", f"{compliance_score:.1f}%", "+0.0%")
+                st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), "Loading...")
             with col4:
-                st.metric("Active Issues", high_risk_findings, "-0")
+                st.metric(_('dashboard.metric.active_issues', 'Active Issues'), 0)
+            
+            if total_scans > 0:
+                st.info(f"Found {total_scans} recent scans. Dashboard data is being processed.")
+                
+                # Show scan list in fallback mode
+                st.subheader(_('dashboard.recent_activity', 'Recent Scan Activity'))
+                fallback_data = []
+                for scan in recent_scans:
+                    timestamp = scan.get('timestamp', '')
+                    if isinstance(timestamp, str):
+                        formatted_date = timestamp[:10] if timestamp else 'Unknown'
+                    else:
+                        formatted_date = 'Processing...'
+                    
+                    fallback_data.append({
+                        'Date': formatted_date,
+                        'Type': f"{scan.get('scan_type', 'Unknown').title()} Scan",
+                        'Status': '✅ Complete',
+                        'Region': scan.get('region', 'Unknown')
+                    })
+                
+                if fallback_data:
+                    df = pd.DataFrame(fallback_data)
+                    st.dataframe(df, use_container_width=True)
+            else:
+                st.info("No recent scans found. Start your first scan to see dashboard data.")
                 
         except Exception as fallback_error:
-            # Ultimate fallback if even basic metrics fail
+            logger.error(f"Fallback dashboard failed: {fallback_error}")
+            # Ultra minimal fallback
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Total Scans", 0, "+0")
+                st.metric("Total Scans", "—")
             with col2:
-                st.metric("PII Found", 0, "+0") 
+                st.metric("PII Found", "—") 
             with col3:
-                st.metric("Compliance Score", "N/A", "+0.0%")
+                st.metric("Compliance Score", "—")
             with col4:
-                st.metric("Active Issues", 0, "-0")
+                st.metric("Active Issues", "—")
             
-        st.info("Please try refreshing the dashboard or start a new scan to see your data.")
+            st.error("Dashboard temporarily unavailable. Please contact support if this persists.")
+        
+        # Always show action buttons
+        st.markdown("---")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔍 Start New Scan"):
+                st.session_state['navigation'] = _('scan.new_scan_title', 'New Scan')
+                st.rerun()
+        with col2:
+            if st.button("🔄 Refresh Dashboard"):
+                st.rerun()
 
 def render_scanner_interface_safe():
     """Complete scanner interface with all functional scanners"""
