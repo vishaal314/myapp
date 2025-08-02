@@ -674,6 +674,69 @@ def render_dashboard():
             with col3:
                 total_files = sum(scan.get('file_count', 0) for scan in recent_scans)
                 st.metric("Total Files Scanned", total_files)
+            
+            # Sustainability Metrics section
+            st.subheader("🌱 Sustainability Metrics")
+            
+            # Calculate sustainability metrics from all scan types
+            total_co2_emissions = 0
+            total_energy_consumption = 0
+            sustainability_score = 0
+            sustainability_scan_count = 0
+            
+            for scan in recent_scans:
+                result = scan.get('result', {})
+                
+                # Check for sustainability-specific data
+                if scan.get('scan_type') == 'Comprehensive Sustainability Scanner':
+                    sustainability_scan_count += 1
+                    emissions_data = result.get('emissions_data', {})
+                    metrics = result.get('metrics', {})
+                    
+                    total_co2_emissions += emissions_data.get('total_co2_kg_month', 0)
+                    total_energy_consumption += emissions_data.get('total_energy_kwh_month', 0)
+                    sustainability_score += metrics.get('sustainability_score', 0)
+                else:
+                    # Calculate estimated sustainability impact from other scan types
+                    file_count = scan.get('file_count', 0)
+                    pii_count = scan.get('total_pii_found', 0)
+                    
+                    # Estimate environmental impact based on scan complexity
+                    if file_count > 0:
+                        # Estimate CO₂ based on processing complexity
+                        estimated_co2 = (file_count * 0.01) + (pii_count * 0.05)  # kg CO₂e
+                        estimated_energy = file_count * 0.02  # kWh
+                        
+                        total_co2_emissions += estimated_co2
+                        total_energy_consumption += estimated_energy
+            
+            # Calculate average sustainability score
+            if sustainability_scan_count > 0:
+                avg_sustainability_score = sustainability_score / sustainability_scan_count
+            else:
+                # Estimate sustainability score based on compliance and PII management
+                if total_scans > 0:
+                    avg_sustainability_score = max(0, min(100, avg_compliance - (high_risk_issues * 5)))
+                else:
+                    avg_sustainability_score = 0
+            
+            # Display sustainability metrics
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if avg_sustainability_score > 0:
+                    st.metric("Sustainability Score", f"{avg_sustainability_score:.0f}/100")
+                else:
+                    st.metric("Sustainability Score", "N/A")
+            with col2:
+                if total_co2_emissions > 0:
+                    st.metric("CO₂ Emissions/Month", f"{total_co2_emissions:.1f} kg")
+                else:
+                    st.metric("CO₂ Emissions/Month", "N/A")
+            with col3:
+                if total_energy_consumption > 0:
+                    st.metric("Energy Consumption", f"{total_energy_consumption:.1f} kWh")
+                else:
+                    st.metric("Energy Consumption", "N/A")
     
     except Exception as e:
         logger.error(f"Error loading dashboard metrics: {e}")
