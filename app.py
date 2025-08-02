@@ -1770,13 +1770,13 @@ def display_scan_results(scan_results):
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     total_waste = scan_results.get('resources', {}).get('total_waste_cost', 0)
-                    st.metric("Monthly Waste Cost", f"${total_waste:.2f}")
+                    st.metric("Monthly Waste Cost", f"€{total_waste:.2f}")
                 with col2:
                     total_co2_waste = scan_results.get('resources', {}).get('total_waste_co2', 0)
                     st.metric("CO₂ Waste", f"{total_co2_waste:.1f} kg/month")
                 with col3:
                     savings_potential = scan_results.get('metrics', {}).get('total_cost_savings_potential', 0)
-                    st.metric("Savings Potential", f"${savings_potential:.2f}/month")
+                    st.metric("Savings Potential", f"€{savings_potential:.2f}/month")
                 
         except ImportError:
             # Fallback display without pandas
@@ -6364,7 +6364,7 @@ def execute_sustainability_scan(region, username, scan_params):
                     'Remove unused npm packages (saves 0.6 kg CO₂e/month)'
                 ],
                 'total_savings': '35.6 kg CO₂e/month',
-                'cost_savings': '$238.82/month'
+                'cost_savings': '€238.82/month'
             },
             {
                 'category': 'Code Optimization',
@@ -6388,7 +6388,7 @@ def execute_sustainability_scan(region, username, scan_params):
                     'Reduce emissions factor from 0.45 to 0.02 kg CO₂e/kWh'
                 ],
                 'total_savings': '67.3 kg CO₂e/month',
-                'migration_cost': '$2,400 one-time'
+                'migration_cost': '€2,400 one-time'
             }
         ]
         
@@ -6407,10 +6407,10 @@ def execute_sustainability_scan(region, username, scan_params):
                 'severity': resource['severity'],
                 'file': f"{resource['resource_type']}: {resource['resource_id']}",
                 'line': f"Region: {resource['region']}",
-                'description': f"{resource['recommendation']} | Cost: ${resource['estimated_monthly_cost']:.2f}/month | CO₂: {resource['co2_emissions_kg_month']:.1f} kg/month",
+                'description': f"{resource['recommendation']} | Cost: €{resource['estimated_monthly_cost']:.2f}/month | CO₂: {resource['co2_emissions_kg_month']:.1f} kg/month",
                 'resource_details': resource,
                 'category': 'Resource Optimization',
-                'impact': f"${resource['estimated_monthly_cost']:.2f}/month waste",
+                'impact': f"€{resource['estimated_monthly_cost']:.2f}/month waste",
                 'action_required': resource['recommendation'],
                 'environmental_impact': f"{resource['co2_emissions_kg_month']:.1f} kg CO₂e/month"
             })
@@ -6479,7 +6479,7 @@ def execute_sustainability_scan(region, username, scan_params):
         scan_results['metrics'] = {
             'sustainability_score': 45,  # Out of 100
             'total_co2_reduction_potential': 111.7,  # kg CO₂e/month
-            'total_cost_savings_potential': 3638.82,  # $/month
+            'total_cost_savings_potential': 3638.82,  # €/month
             'quick_wins_available': 3,
             'code_bloat_index': 23  # % of codebase that's bloated
         }
@@ -6540,7 +6540,7 @@ def execute_sustainability_scan(region, username, scan_params):
         # Quick wins section
         st.subheader("⚡ Quick Wins")
         quick_wins = sustainability_recommendations[0]
-        st.success(f"**{quick_wins['total_savings']} CO₂e savings** and **${quick_wins['cost_savings']} cost savings** with low effort actions:")
+        st.success(f"**{quick_wins['total_savings']} CO₂e savings** and **{quick_wins['cost_savings']} cost savings** with low effort actions:")
         for action in quick_wins['actions']:
             st.write(f"• {action}")
         
@@ -6677,7 +6677,7 @@ def generate_html_report(scan_results):
                 <li>{t('report.delete_orphaned_snapshots', 'Delete orphaned snapshots')} (saves 5.2 kg CO₂e/month)</li>
                 <li>{t('report.remove_unused_dependencies', 'Remove unused dependencies')} (saves 0.6 kg CO₂e/month)</li>
             </ul>
-            <p><strong>{t('report.total_quick_wins_impact', 'Total Quick Wins Impact')}:</strong> 35.6 kg CO₂e/month + $238.82/month</p>
+            <p><strong>{t('report.total_quick_wins_impact', 'Total Quick Wins Impact')}:</strong> 35.6 kg CO₂e/month + €238.82/month</p>
         </div>
         """
         

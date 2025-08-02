@@ -217,7 +217,7 @@ class EnhancedFindingGenerator:
             'Critical': {
                 'risk_level': 'Critical',
                 'severity': 'Critical',
-                'business_impact': 'Potential AWS bill of $10,000+ per day, complete infrastructure compromise, regulatory fines up to €20M under GDPR',
+                'business_impact': 'Potential AWS bill of €10,000+ per day, complete infrastructure compromise, regulatory fines up to €20M under GDPR',
                 'remediation_priority': 'Immediate - Fix within 1 hour',
                 'estimated_effort': '15-30 minutes - Rotate key and update configuration',
                 'exposure_risk': 'Public exposure in version control history'

@@ -1345,7 +1345,7 @@ class CloudResourcesScanner:
                         'standard_f2s_v2': 76.65
                     }
                     
-                    # Default to $100/month if size not found
+                    # Default to €100/month if size not found
                     monthly_vm_cost = 100.0
                     for size_prefix, cost in vm_cost_map.items():
                         if vm_size.startswith(size_prefix):
