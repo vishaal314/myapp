@@ -448,9 +448,16 @@ def render_privacy_rights_page():
 
 def render_dashboard():
     """Render the main dashboard with real-time data from scan results"""
-    from utils.translations import _
     from services.results_aggregator import ResultsAggregator
     import pandas as pd
+    
+    # Check for language change trigger and handle rerun
+    if st.session_state.get('_trigger_rerun', False):
+        st.session_state['_trigger_rerun'] = False
+        st.rerun()
+    
+    # Import the correct translation function
+    from utils.i18n import get_text as _
     
     st.title(f"📊 {_('dashboard.title', 'Dashboard')}")
     
@@ -649,34 +656,34 @@ def render_dashboard():
                         total_penalties_avoided += cost_data.get('potential_penalties_avoided', 0)
             
             if total_cost_savings > 0:
-                st.subheader("💰 Cost Savings Summary")
+                st.subheader(f"💰 {_('dashboard.cost_savings_summary', 'Cost Savings Summary')}")
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
-                    st.metric("Total Cost Savings", f"€{total_cost_savings:,.0f}")
+                    st.metric(_('dashboard.metric.total_cost_savings', 'Total Cost Savings'), f"€{total_cost_savings:,.0f}")
                 with col2:
-                    st.metric("Penalties Avoided", f"€{total_penalties_avoided:,.0f}")
+                    st.metric(_('dashboard.metric.penalties_avoided', 'Penalties Avoided'), f"€{total_penalties_avoided:,.0f}")
                 with col3:
                     avg_savings = total_cost_savings / max(total_scans, 1)
-                    st.metric("Avg Savings per Scan", f"€{avg_savings:,.0f}")
+                    st.metric(_('dashboard.metric.avg_savings_per_scan', 'Avg Savings per Scan'), f"€{avg_savings:,.0f}")
             
-            st.subheader("📈 Performance Summary")
+            st.subheader(f"📈 {_('dashboard.performance_summary', 'Performance Summary')}")
             col1, col2, col3 = st.columns(3)
             
             with col1:
                 avg_pii_per_scan = total_pii / max(total_scans, 1)
-                st.metric("Avg PII per Scan", f"{avg_pii_per_scan:.1f}")
+                st.metric(_('dashboard.metric.avg_pii_per_scan', 'Avg PII per Scan'), f"{avg_pii_per_scan:.1f}")
                 
             with col2:
                 high_risk_percentage = (high_risk_issues / max(total_pii, 1)) * 100 if total_pii > 0 else 0
-                st.metric("High Risk %", f"{high_risk_percentage:.1f}%")
+                st.metric(_('dashboard.metric.high_risk_percentage', 'High Risk %'), f"{high_risk_percentage:.1f}%")
                 
             with col3:
                 total_files = sum(scan.get('file_count', 0) for scan in recent_scans)
-                st.metric("Total Files Scanned", total_files)
+                st.metric(_('dashboard.metric.total_files_scanned', 'Total Files Scanned'), total_files)
             
             # Sustainability Metrics section
-            st.subheader("🌱 Sustainability Metrics")
+            st.subheader(f"🌱 {_('dashboard.sustainability_metrics', 'Sustainability Metrics')}")
             
             # Calculate sustainability metrics from all scan types
             total_co2_emissions = 0
@@ -724,19 +731,19 @@ def render_dashboard():
             col1, col2, col3 = st.columns(3)
             with col1:
                 if avg_sustainability_score > 0:
-                    st.metric("Sustainability Score", f"{avg_sustainability_score:.0f}/100")
+                    st.metric(_('dashboard.metric.sustainability_score', 'Sustainability Score'), f"{avg_sustainability_score:.0f}/100")
                 else:
-                    st.metric("Sustainability Score", "N/A")
+                    st.metric(_('dashboard.metric.sustainability_score', 'Sustainability Score'), "N/A")
             with col2:
                 if total_co2_emissions > 0:
-                    st.metric("CO₂ Emissions/Month", f"{total_co2_emissions:.1f} kg")
+                    st.metric(_('dashboard.metric.co2_emissions_month', 'CO₂ Emissions/Month'), f"{total_co2_emissions:.1f} kg")
                 else:
-                    st.metric("CO₂ Emissions/Month", "N/A")
+                    st.metric(_('dashboard.metric.co2_emissions_month', 'CO₂ Emissions/Month'), "N/A")
             with col3:
                 if total_energy_consumption > 0:
-                    st.metric("Energy Consumption", f"{total_energy_consumption:.1f} kWh")
+                    st.metric(_('dashboard.metric.energy_consumption', 'Energy Consumption'), f"{total_energy_consumption:.1f} kWh")
                 else:
-                    st.metric("Energy Consumption", "N/A")
+                    st.metric(_('dashboard.metric.energy_consumption', 'Energy Consumption'), "N/A")
     
     except Exception as e:
         logger.error(f"Error loading dashboard metrics: {e}")

@@ -121,13 +121,25 @@
       "total_pii": "Totaal PII Gevonden",
       "high_risk": "Hoog Risico Items",
       "compliance_score": "Nalevingsscore",
-      "active_issues": "Actieve Problemen"
+      "active_issues": "Actieve Problemen",
+      "total_cost_savings": "Totale Kostenbesparingen",
+      "penalties_avoided": "Boetes Voorkomen",
+      "avg_savings_per_scan": "Gem. Besparingen per Scan",
+      "avg_pii_per_scan": "Gem. PII per Scan",
+      "high_risk_percentage": "Hoog Risico %",
+      "total_files_scanned": "Totaal Gescande Bestanden",
+      "sustainability_score": "Duurzaamheidsscore",
+      "co2_emissions_month": "CO₂ Uitstoot/Maand",
+      "energy_consumption": "Energieverbruik"
     },
     "analytics_title": "Privacy & Compliance Analyse",
     "cost_efficiency": "Kostenefficiëntie",
     "potential_savings": "Potentiële Besparingen bij AVG-boetes",
     "sustainability_score": "Duurzaamheidsscore",
-    "scan_activity_over_time": "Scanactiviteit over Tijd"
+    "scan_activity_over_time": "Scanactiviteit over Tijd",
+    "cost_savings_summary": "Kostenbesparing Samenvatting",
+    "performance_summary": "Prestatie Samenvatting",
+    "sustainability_metrics": "Duurzaamheidsstatistieken"
   },
   "scan": {
     "title": "Scan",
