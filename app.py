@@ -399,14 +399,14 @@ def render_landing_page():
             "color": "#607D8B"
         },
         {
-            "icon": "☁️", 
-            "title": _('landing.scanner.cloud_title', 'Cloud Scanner'),
-            "description": _('landing.scanner.cloud_desc', 'Azure, AWS, GCP resource scanning for sustainability and cost optimization'),
+            "icon": "🔗", 
+            "title": _('landing.scanner.api_title', 'API Scanner'),
+            "description": _('landing.scanner.api_desc', 'REST API endpoint scanning for data leakage, security vulnerabilities, and privacy compliance'),
             "features": [
-                _('landing.scanner.cloud_f1', 'Multi-cloud support'),
-                _('landing.scanner.cloud_f2', 'Zombie resource detection'),
-                _('landing.scanner.cloud_f3', 'CO₂ emission tracking'),
-                _('landing.scanner.cloud_f4', 'Cost optimization')
+                _('landing.scanner.api_f1', 'Endpoint security analysis'),
+                _('landing.scanner.api_f2', 'Data exposure detection'),
+                _('landing.scanner.api_f3', 'Authentication testing'),
+                _('landing.scanner.api_f4', 'GDPR compliance validation')
             ],
             "color": "#00BCD4"
         },
