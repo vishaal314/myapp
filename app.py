@@ -532,7 +532,7 @@ def render_landing_page():
                 box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
                 white-space: nowrap;
             ">
-                ✓ {_('landing.cta_benefit1', '90% Cost Savings vs OneTrust')}
+                ✓ {_('landing.cta_benefit1', '90% Cost Savings')}
             </div>
             <div style="
                 background: #2196F3; 
