@@ -424,9 +424,9 @@ def render_landing_page():
         }
     ]
     
-    # Display scanners in modern card grid - 2 columns for better readability
+    # Display scanners in modern card grid - 2 columns with proper spacing
     for i in range(0, len(scanners), 2):
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns([1, 1], gap="medium")
         
         # First scanner in row
         with col1:
@@ -435,22 +435,29 @@ def render_landing_page():
             <div style="
                 background: linear-gradient(135deg, {scanner['color']}15, {scanner['color']}05);
                 border: 2px solid {scanner['color']}30;
-                border-radius: 15px;
-                padding: 1.5rem;
-                margin: 1rem 0;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                transition: transform 0.3s ease;
-                height: 280px;
+                border-radius: 12px;
+                padding: 1.2rem;
+                margin: 0.8rem 0;
+                box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                height: auto;
+                min-height: 320px;
+                max-height: 350px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
             ">
-                <div style="text-align: center; margin-bottom: 1rem;">
-                    <span style="font-size: 3rem;">{scanner['icon']}</span>
-                    <h3 style="color: {scanner['color']}; margin: 0.5rem 0; font-size: 1.4rem;">{scanner['title']}</h3>
+                <div style="text-align: center; margin-bottom: 0.8rem; flex-shrink: 0;">
+                    <span style="font-size: 2.5rem; display: block; margin-bottom: 0.3rem;">{scanner['icon']}</span>
+                    <h3 style="color: {scanner['color']}; margin: 0; font-size: 1.25rem; font-weight: 600; line-height: 1.2;">{scanner['title']}</h3>
                 </div>
-                <p style="color: #555; font-size: 0.95rem; line-height: 1.4; margin-bottom: 1rem;">
-                    {scanner['description']}
-                </p>
-                <div style="font-size: 0.85rem; color: #666;">
-                    {"".join([f"• {feature}<br>" for feature in scanner['features']])}
+                <div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column;">
+                    <p style="color: #555; font-size: 0.9rem; line-height: 1.3; margin: 0 0 0.8rem 0; flex-shrink: 0;">
+                        {scanner['description']}
+                    </p>
+                    <div style="font-size: 0.8rem; color: #666; line-height: 1.4; overflow: hidden;">
+                        {"".join([f"• {feature}<br>" for feature in scanner['features'][:4]])}
+                    </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -463,22 +470,29 @@ def render_landing_page():
                 <div style="
                     background: linear-gradient(135deg, {scanner['color']}15, {scanner['color']}05);
                     border: 2px solid {scanner['color']}30;
-                    border-radius: 15px;
-                    padding: 1.5rem;
-                    margin: 1rem 0;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                    transition: transform 0.3s ease;
-                    height: 280px;
+                    border-radius: 12px;
+                    padding: 1.2rem;
+                    margin: 0.8rem 0;
+                    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                    height: auto;
+                    min-height: 320px;
+                    max-height: 350px;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
                 ">
-                    <div style="text-align: center; margin-bottom: 1rem;">
-                        <span style="font-size: 3rem;">{scanner['icon']}</span>
-                        <h3 style="color: {scanner['color']}; margin: 0.5rem 0; font-size: 1.4rem;">{scanner['title']}</h3>
+                    <div style="text-align: center; margin-bottom: 0.8rem; flex-shrink: 0;">
+                        <span style="font-size: 2.5rem; display: block; margin-bottom: 0.3rem;">{scanner['icon']}</span>
+                        <h3 style="color: {scanner['color']}; margin: 0; font-size: 1.25rem; font-weight: 600; line-height: 1.2;">{scanner['title']}</h3>
                     </div>
-                    <p style="color: #555; font-size: 0.95rem; line-height: 1.4; margin-bottom: 1rem;">
-                        {scanner['description']}
-                    </p>
-                    <div style="font-size: 0.85rem; color: #666;">
-                        {"".join([f"• {feature}<br>" for feature in scanner['features']])}
+                    <div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column;">
+                        <p style="color: #555; font-size: 0.9rem; line-height: 1.3; margin: 0 0 0.8rem 0; flex-shrink: 0;">
+                            {scanner['description']}
+                        </p>
+                        <div style="font-size: 0.8rem; color: #666; line-height: 1.4; overflow: hidden;">
+                            {"".join([f"• {feature}<br>" for feature in scanner['features'][:4]])}
+                        </div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -486,21 +500,62 @@ def render_landing_page():
     # Call to action section
     st.markdown("---")
     st.markdown(f"""
-    <div style="text-align: center; padding: 3rem 0 2rem 0; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border-radius: 15px; margin: 2rem 0;">
-        <h3 style="color: #1f77b4; font-size: 2rem; margin-bottom: 1rem;">
+    <div style="
+        text-align: center; 
+        padding: 2rem 1rem; 
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe); 
+        border-radius: 12px; 
+        margin: 1.5rem 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    ">
+        <h3 style="color: #1f77b4; font-size: 1.8rem; margin-bottom: 1rem; font-weight: 600;">
             🚀 {_('landing.cta_title', 'Ready to Secure Your Data?')}
         </h3>
-        <p style="font-size: 1.1rem; color: #555; margin-bottom: 1.5rem;">
+        <p style="font-size: 1rem; color: #555; margin-bottom: 1.5rem; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.5;">
             {_('landing.cta_subtitle', 'Login to start scanning and ensure complete GDPR compliance for your organization')}
         </p>
-        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-            <div style="background: #4CAF50; color: white; padding: 0.5rem 1rem; border-radius: 25px; font-weight: bold;">
+        <div style="
+            display: flex; 
+            justify-content: center; 
+            gap: 0.8rem; 
+            flex-wrap: wrap;
+            max-width: 100%;
+            margin: 0 auto;
+        ">
+            <div style="
+                background: #4CAF50; 
+                color: white; 
+                padding: 0.6rem 1rem; 
+                border-radius: 20px; 
+                font-weight: 600;
+                font-size: 0.9rem;
+                box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+                white-space: nowrap;
+            ">
                 ✓ {_('landing.cta_benefit1', '90% Cost Savings vs OneTrust')}
             </div>
-            <div style="background: #2196F3; color: white; padding: 0.5rem 1rem; border-radius: 25px; font-weight: bold;">
+            <div style="
+                background: #2196F3; 
+                color: white; 
+                padding: 0.6rem 1rem; 
+                border-radius: 20px; 
+                font-weight: 600;
+                font-size: 0.9rem;
+                box-shadow: 0 2px 6px rgba(33, 150, 243, 0.3);
+                white-space: nowrap;
+            ">
                 ✓ {_('landing.cta_benefit2', 'Netherlands UAVG Compliance')}
             </div>
-            <div style="background: #FF9800; color: white; padding: 0.5rem 1rem; border-radius: 25px; font-weight: bold;">
+            <div style="
+                background: #FF9800; 
+                color: white; 
+                padding: 0.6rem 1rem; 
+                border-radius: 20px; 
+                font-weight: 600;
+                font-size: 0.9rem;
+                box-shadow: 0 2px 6px rgba(255, 152, 0, 0.3);
+                white-space: nowrap;
+            ">
                 ✓ {_('landing.cta_benefit3', 'EU AI Act 2025 Ready')}
             </div>
         </div>
