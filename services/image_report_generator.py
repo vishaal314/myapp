@@ -201,7 +201,7 @@ class ImageReportGenerator:
             ['PII Findings:', str(len(findings))],
             ['Risk Level:', risk_summary.get('level', 'Unknown')],
             ['Risk Score:', f"{risk_summary.get('score', 0)}/100"],
-            ['Compliance Region:', metadata.get('region', 'Unknown')],
+            ['Compliance Region:', metadata.get('region', 'Netherlands')],
             ['Assessment Standard:', 'GDPR Article 6, 9 & Dutch UAVG']
         ]
         

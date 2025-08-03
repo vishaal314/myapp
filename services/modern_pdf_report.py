@@ -161,7 +161,7 @@ class ModernPDFReportGenerator:
         
         # Get metadata with proper fallbacks
         repo_url = scan_result.get('repo_url', scan_result.get('url', 'N/A'))
-        region = scan_result.get('region', 'Global')
+        region = scan_result.get('region', 'Netherlands')
         scan_type = scan_result.get('scan_type', 'Compliance Scan')
         
         elements.append(Paragraph("Scan Information", self.styles['Heading']))

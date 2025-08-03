@@ -293,7 +293,7 @@ class CertifiedPDFReportGenerator:
         
         # Get metadata with proper defaults
         repo_url = scan_result.get('repo_url', scan_result.get('url', 'N/A'))
-        region = scan_result.get('region', 'Global')
+        region = scan_result.get('region', 'Netherlands')
         scan_type = scan_result.get('scan_type', 'GDPR Compliance Scan')
         
         # Format metadata

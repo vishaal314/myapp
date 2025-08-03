@@ -44,7 +44,7 @@ class AIModelScanner:
     AI Model Scanner class for identifying PII risks in AI models
     """
 
-    def __init__(self, region: str = "Global"):
+    def __init__(self, region: str = "Netherlands"):
         self.region = region
         self.progress_callback: Optional[Callable[[int, int, str],
                                                   None]] = None

@@ -29,7 +29,7 @@ def generate_fallback_html_report(scan_result: Dict[str, Any]) -> str:
     scan_id = scan_result.get('scan_id', 'unknown')
     scan_type = scan_result.get('scan_type', 'Unknown Scanner')
     timestamp = scan_result.get('timestamp', 'Unknown')
-    region = scan_result.get('region', 'Global')
+    region = scan_result.get('region', 'Netherlands')
     
     # Extract findings
     findings = scan_result.get('findings', [])
@@ -245,7 +245,7 @@ def generate_fallback_pdf_report(scan_result: Dict[str, Any]) -> bytes:
         # Basic information
         info_data = [
             ['Scan ID:', scan_result.get('scan_id', 'unknown')],
-            ['Region:', scan_result.get('region', 'Global')],
+            ['Region:', scan_result.get('region', 'Netherlands')],
             ['Generated:', scan_result.get('timestamp', 'Unknown')],
         ]
         

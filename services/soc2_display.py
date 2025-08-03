@@ -269,7 +269,7 @@ def run_soc2_display_standalone():
                         'scan_id': scan_results.get('scan_id', f"soc2_{datetime.now().strftime('%Y%m%d_%H%M%S')}"),
                         'scan_type': 'SOC2',
                         'timestamp': datetime.now().isoformat(),
-                        'region': scan_results.get('region', 'Global'),
+                        'region': scan_results.get('region', 'Netherlands'),
                         'url': scan_results.get('repo_url', 'Not available'),
                         'findings': scan_results.get('findings', []),
                         'total_pii_found': len(scan_results.get('findings', [])),

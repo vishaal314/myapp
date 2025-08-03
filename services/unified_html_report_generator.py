@@ -39,7 +39,7 @@ class UnifiedHTMLReportGenerator:
         scan_type = scan_result.get('scan_type', 'Unknown')
         scan_id = scan_result.get('scan_id', 'Unknown')
         timestamp = scan_result.get('timestamp', datetime.now().isoformat())
-        region = scan_result.get('region', 'Global')
+        region = scan_result.get('region', 'Netherlands')
         
         # Format timestamp based on language
         formatted_timestamp = self._format_timestamp(timestamp)

@@ -245,7 +245,7 @@ class CertificateGenerator:
             ["Date", scan_results.get('scan_time', datetime.now().isoformat())[:10]],
             ["Status", "Fully Compliant ✓"],
             ["Items Scanned", str(scan_results.get('items_scanned', scan_results.get('file_count', 0)))],
-            ["Region", scan_results.get('region', 'Global')]
+            ["Region", scan_results.get('region', 'Netherlands')]
         ]
         
         # Translate keys if language is Dutch

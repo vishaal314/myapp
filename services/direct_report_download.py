@@ -123,7 +123,7 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
     # Get scan metadata with proper fallbacks
     scan_type = scan_result.get('scan_type', 'Code Analysis')
     scan_id = scan_result.get('scan_id', datetime.now().strftime('%Y%m%d%H%M%S'))
-    region = scan_result.get('region', 'Global') 
+    region = scan_result.get('region', 'Netherlands') 
     timestamp = scan_result.get('timestamp', datetime.now().isoformat())
     try:
         scan_date = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M:%S')

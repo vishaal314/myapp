@@ -2486,7 +2486,7 @@ def _generate_report_internal(scan_data: Dict[str, Any],
             
             # Get actual scan metadata
             scan_id_value = scan_data.get('scan_id', f"SOC2-{datetime.now().strftime('%Y%m%d')}-{scan_data.get('timestamp', '')[:8]}")
-            region_value = scan_data.get('region', 'Global')
+            region_value = scan_data.get('region', 'Netherlands')
             username_value = scan_data.get('username', st.session_state.get('username', 'System'))
             files_scanned = scan_data.get('total_files_scanned', scan_data.get('file_count', 0))
             
@@ -2750,7 +2750,7 @@ def _add_sustainability_report_content(elements, scan_data, styles, heading_styl
                           st.session_state.user_info.get('email', 'Not available')))
     
     # Get region with better fallbacks
-    region = scan_data.get('region', scan_data.get('cloud_region', 'Global'))
+    region = scan_data.get('region', scan_data.get('cloud_region', 'Netherlands'))
     
     # Get scan date with formatting
     scan_date = scan_data.get('scan_date', scan_data.get('timestamp', datetime.now().isoformat()))

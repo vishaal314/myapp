@@ -78,7 +78,7 @@ class CloudResourcesScanner:
     
     def __init__(self, 
                  provider: str = 'azure',
-                 region: str = 'global',
+                 region: str = 'netherlands',
                  subscription_id: Optional[str] = None,
                  tenant_id: Optional[str] = None,
                  client_id: Optional[str] = None,
@@ -495,12 +495,12 @@ class CloudResourcesScanner:
             session = boto3.Session(
                 aws_access_key_id=self.client_id,
                 aws_secret_access_key=self.client_secret,
-                region_name=self.region if self.region != 'global' else 'us-east-1'
+                region_name=self.region if self.region != 'netherlands' else 'westeurope'
             )
             
-            # Get list of regions if scanning globally
+            # Get list of regions if scanning in Netherlands/EU
             regions = [self.region]
-            if self.region == 'global':
+            if self.region == 'netherlands':
                 ec2 = session.client('ec2')
                 regions = [region['RegionName'] for region in ec2.describe_regions()['Regions']]
             

@@ -3,11 +3,11 @@
 ## Overview
 DataGuardian Pro is a comprehensive enterprise privacy compliance platform built with Streamlit that detects, analyzes, and reports on personally identifiable information (PII) across multiple data sources. The application provides AI-powered risk assessment, multilingual support, and comprehensive reporting capabilities for GDPR and privacy compliance, specifically targeting the Netherlands market with UAVG compliance. It aims to achieve €25K MRR from 100 customers through enhanced premium pricing strategy, offering 70-80% cost savings versus OneTrust with enterprise-grade features and Netherlands-specific compliance (UAVG, BSN detection, EU AI Act 2025).
 
-## Recent Changes (August 2, 2025)
-- **Sustainability Metrics Integration**: Added comprehensive environmental impact tracking to dashboard with real-time CO₂ emissions (0.89 kg/month) and energy consumption (1.18 kWh/month) calculations
-- **Euro Currency Conversion**: Complete standardization of all cost displays to euros (€) for Netherlands market compliance, affecting dashboard metrics, sustainability reports, and cost calculations
-- **Smart Environmental Estimation**: Implemented intelligent sustainability impact calculation from scan complexity when dedicated sustainability scans unavailable
-- **Test Coverage Enhancement**: Added comprehensive testing for sustainability metrics calculation and euro formatting validation
+## Recent Changes (August 3, 2025)
+- **Netherlands Region Localization**: Fixed all report generators to default to "Netherlands" instead of "Global" for region compliance targeting Netherlands market
+- **Language Switching Fix**: Resolved dashboard language switching issue where Dutch translations weren't loading when switching from English
+- **Enhanced Dutch Translations**: Added missing dashboard translation keys for cost savings, performance, and sustainability metrics
+- **Report Region Standardization**: Updated all PDF, HTML, and certificate generators to specify Netherlands as default compliance region
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

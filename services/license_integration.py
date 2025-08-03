@@ -260,7 +260,7 @@ class LicenseIntegration:
                 "scans": "10,000/month",
                 "users": "50",
                 "features": "All features + White-label",
-                "regions": "Global"
+                "regions": "Netherlands"
             }
         }
         
