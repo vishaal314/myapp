@@ -1,14 +1,14 @@
 # DataGuardian Pro - Enterprise Privacy Compliance Platform
 
 ## Overview
-DataGuardian Pro is a comprehensive enterprise privacy compliance platform built with Streamlit that detects, analyzes, and reports on personally identifiable information (PII) across multiple data sources. The application provides AI-powered risk assessment, multilingual support, and comprehensive reporting capabilities for GDPR and privacy compliance, specifically targeting the Netherlands market with UAVG compliance. It aims to achieve €25K MRR from 100 customers through enhanced premium pricing strategy, offering 70-80% cost savings versus OneTrust with enterprise-grade features and Netherlands-specific compliance (UAVG, BSN detection, EU AI Act 2025).
+DataGuardian Pro is a comprehensive enterprise privacy compliance platform built with Streamlit that detects, analyzes, and reports on personally identifiable information (PII) across multiple data sources. The application provides AI-powered risk assessment, multilingual support, and comprehensive reporting capabilities for GDPR and privacy compliance, specifically targeting the Netherlands market with UAVG compliance. It supports both SaaS and standalone deployment models to achieve €25K MRR: 70% from SaaS customers (€17.5K MRR from 100+ customers at €25-250/month) and 30% from standalone enterprise licenses (€7.5K MRR from 10-15 licenses at €2K-15K each), offering 90-95% cost savings versus competitors with enterprise-grade features and Netherlands-specific compliance (UAVG, BSN detection, EU AI Act 2025).
 
-## Recent Changes (August 3, 2025)
-- **ROI Calculator Enhancement**: Added comprehensive cost savings calculator section to landing page showing potential annual savings (€24K for small organizations, €180K for medium enterprises, €750K for large enterprises)
-- **Scanner Showcase Upgrade**: Enhanced landing page to display all 10 scanners in modern card design with gradient backgrounds and professional styling
-- **API Scanner Integration**: Replaced Cloud Scanner with API Scanner focusing on REST endpoint security analysis and data exposure detection
-- **Netherlands Market Focus**: Removed competitor references and optimized messaging for Netherlands UAVG compliance market
-- **UI/UX Improvements**: Fixed text overflow issues, implemented consistent card heights, and improved mobile responsiveness
+## Recent Changes (August 6, 2025)
+- **Hybrid Deployment Model**: Created comprehensive standalone deployment options alongside SaaS to maximize market coverage and achieve €25K MRR target
+- **Hetzner Cloud SaaS Infrastructure**: Deployed complete €5/month hosting solution with automated scripts, monitoring, and backup systems for Netherlands UAVG compliance
+- **Standalone Enterprise Package**: Developed Docker container, VM appliance, and native installation options targeting €2K-15K enterprise licenses
+- **Deployment Automation**: Created 6 deployment scripts and comprehensive guides for both SaaS (Hetzner) and standalone (enterprise) models
+- **Revenue Diversification**: Structured 70/30 SaaS/standalone split to reduce risk and increase market penetration across SME and enterprise segments
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
