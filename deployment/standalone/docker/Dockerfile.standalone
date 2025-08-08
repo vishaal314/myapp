@@ -1,88 +1,69 @@
-# DataGuardian Pro - Standalone Docker Container
-# Enterprise-ready container for on-premise deployment
-
 FROM python:3.11-slim
 
-LABEL name="DataGuardian Pro Standalone"
+LABEL maintainer="DataGuardian Pro Team"
 LABEL version="1.0.0"
-LABEL description="Enterprise Privacy Compliance Platform - Standalone Edition"
-LABEL vendor="DataGuardian Pro"
-LABEL maintainer="support@dataguardian-pro.com"
+LABEL description="DataGuardian Pro Standalone Enterprise Edition"
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV DEBIAN_FRONTEND=noninteractive
-ENV STANDALONE_MODE=true
-ENV DATA_RESIDENCY=on-premise
-
-# Create application user
-RUN groupadd -r dataguardian && useradd -r -g dataguardian dataguardian
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
+    build-essential \
     libpq-dev \
     tesseract-ocr \
-    tesseract-ocr-nld \
-    tesseract-ocr-deu \
-    tesseract-ocr-fra \
-    postgresql-client \
+    tesseract-ocr-all \
+    poppler-utils \
+    libmagic1 \
+    antiword \
+    unrtf \
+    libreoffice \
     curl \
-    wget \
+    sqlite3 \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
+# Create application directories
+RUN mkdir -p /app/data /app/reports /app/temp /app/licenses
 
-# Copy requirements and install Python dependencies
-COPY requirements.standalone.txt requirements.txt
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+# Copy application files
+COPY app.py .
+COPY services/ ./services/
+COPY utils/ ./utils/
+COPY translations/ ./translations/
+COPY database/ ./database/
+COPY deployment/standalone/docker/license_validator.py ./utils/
 
-# Copy application code
-COPY . .
+# Copy standalone requirements
+COPY deployment/standalone/docker/requirements-standalone.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Create necessary directories
-RUN mkdir -p \
-    /app/logs \
-    /app/reports \
-    /app/temp \
-    /app/data \
-    /app/static/uploads \
-    /app/backups \
-    /app/licenses
+# Create Streamlit config
+RUN mkdir -p /root/.streamlit
+COPY deployment/standalone/docker/config.toml /root/.streamlit/
 
-# Copy standalone configuration
-COPY deployment/standalone/config/standalone.env .env.standalone
-COPY deployment/standalone/config/streamlit.config.toml .streamlit/config.toml
+# Copy license management
+COPY deployment/standalone/docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Set proper permissions
-RUN chown -R dataguardian:dataguardian /app \
-    && chmod +x /app/deployment/standalone/scripts/*.sh
+# Create non-root user for security
+RUN groupadd -r dataguardian && useradd -r -g dataguardian dataguardian
+RUN chown -R dataguardian:dataguardian /app
+USER dataguardian
 
-# Create health check script
-COPY deployment/standalone/scripts/healthcheck.sh /healthcheck.sh
-RUN chmod +x /healthcheck.sh
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV STANDALONE_MODE=true
+ENV DATA_DIRECTORY=/app/data
+ENV REPORTS_DIRECTORY=/app/reports
+ENV LICENSE_FILE=/app/licenses/license.key
 
-# Expose ports
-EXPOSE 5000 8501
+# Expose port
+EXPOSE 8501
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD /healthcheck.sh
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8501/_stcore/health || exit 1
 
-# Volume for persistent data
-VOLUME ["/app/data", "/app/reports", "/app/logs", "/app/backups"]
-
-# Switch to non-root user
-USER dataguardian
-
-# Start script
-COPY deployment/standalone/scripts/start.sh /start.sh
-USER root
-RUN chmod +x /start.sh
-USER dataguardian
-
-# Default command
-CMD ["/start.sh"]
+# Entry point
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
