@@ -1,3 +1,0 @@
-Scan type: API
-Region: Netherlands
-Timestamp: 2025-06-14T19:31:16.593329

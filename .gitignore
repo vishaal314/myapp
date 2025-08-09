@@ -56,11 +56,20 @@ logs/
 # DataGuardian Pro specific
 temp/
 temp_*/
+scan_temp_*/
+clone_temp_*/
 reports/
 static/uploads/
 .license_key
 *.zip
 *.tar.gz
+
+# Temporary scanning files
+*.tmp
+*.temp
+scan_results_*.json
+repo_cache/
+clone_cache/
 
 # Database
 *.db

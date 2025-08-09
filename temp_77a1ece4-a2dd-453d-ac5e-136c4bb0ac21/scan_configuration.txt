@@ -1,3 +1,0 @@
-Scan type: scan.soc2
-Region: Netherlands
-Timestamp: 2025-06-08T19:44:08.330982
