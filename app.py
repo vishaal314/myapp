@@ -585,6 +585,7 @@ def render_authenticated_interface():
             f"📋 {_('history.title', 'History')}", 
             f"⚙️ {_('sidebar.settings', 'Settings')}",
             f"🔒 {_('sidebar.privacy_rights', 'Privacy Rights')}",
+            "🏢 Enterprise Repository Demo",
             "💳 iDEAL Payment Test"
         ]
         if user_role == "admin":
@@ -627,6 +628,8 @@ def render_authenticated_interface():
         render_admin_page()
     elif "Performance Dashboard" in selected_nav:
         render_performance_dashboard_safe()
+    elif "🏢 Enterprise Repository Demo" in selected_nav:
+        render_enterprise_repo_demo()
     elif "💳 iDEAL Payment Test" in selected_nav:
         render_ideal_payment_test()
 
@@ -8871,6 +8874,15 @@ def render_ideal_payment_test():
         - Rabobank
         - All other Dutch iDEAL banks
         """)
+
+def render_enterprise_repo_demo():
+    """Render the enterprise repository scanner demo page"""
+    try:
+        from pages.enterprise_repo_demo import run_enterprise_repo_demo
+        run_enterprise_repo_demo()
+    except ImportError:
+        st.error("Enterprise repository demo module not available")
+        st.info("This feature demonstrates advanced repository scanning capabilities for massive repositories (100k+ files)")
 
 if __name__ == "__main__":
     main()
