@@ -287,20 +287,55 @@ class LicenseIntegration:
         
         st.header("📊 Usage Analytics Dashboard")
         
-        # Get usage statistics
-        stats = get_usage_stats()
+        # Get real-time usage statistics from activity tracker
+        user_id = st.session_state.get('user_id', 'default_user')
+        username = st.session_state.get('username', 'default_user')
+        
+        try:
+            # Get dashboard metrics from activity tracker (includes real scan data)
+            from utils.activity_tracker import get_dashboard_metrics, get_activity_tracker
+            
+            metrics = get_dashboard_metrics(user_id)
+            tracker = get_activity_tracker()
+            user_activities = tracker.get_user_activities(user_id, limit=None)
+            
+            # Calculate real-time metrics from activity data
+            total_scans = metrics.get('total_scans', 0)
+            total_pii_found = metrics.get('total_pii_found', 0)
+            high_risk_findings = metrics.get('high_risk_findings', 0)
+            success_rate = metrics.get('success_rate', 0)
+            
+            # Add scan activities from tracker for more accurate counts
+            scan_activities = [a for a in user_activities if a.activity_type.value in ['scan_started', 'scan_completed', 'scan_failed']]
+            completed_scans = [a for a in scan_activities if a.activity_type.value == 'scan_completed']
+            failed_scans = [a for a in scan_activities if a.activity_type.value == 'scan_failed']
+            
+            # Use tracker data for overview if available
+            if scan_activities:
+                total_scans = max(total_scans, len(completed_scans))
+                success_rate = len(completed_scans) / len(scan_activities) if scan_activities else 0
+            
+        except Exception as e:
+            logger.error(f"Error getting dashboard metrics: {e}")
+            # Fallback to basic stats if available
+            stats = get_usage_stats()
+            total_scans = getattr(stats, 'total_scans', 0)
+            success_rate = max(0, 1 - getattr(stats, 'error_rate', 0))
+            total_pii_found = 0
+            high_risk_findings = 0
+        
         license_info = get_license_info()
         
-        # Overview metrics
+        # Overview metrics with real scan data
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("Total Scans", stats.total_scans)
+            st.metric("Total Scans", total_scans)
         with col2:
-            st.metric("Success Rate", f"{100 - stats.error_rate:.1f}%")
+            st.metric("Success Rate", f"{success_rate*100:.1f}%")
         with col3:
-            st.metric("Avg Duration", f"{stats.average_duration_ms/1000:.1f}s")
+            st.metric("PII Found", total_pii_found)
         with col4:
-            st.metric("Peak Users", stats.peak_concurrent_users)
+            st.metric("High Risk Issues", high_risk_findings)
         
         # License compliance
         st.subheader("License Compliance")
@@ -313,29 +348,56 @@ class LicenseIntegration:
         else:
             st.success("✅ All usage within license limits")
         
-        # Usage charts
-        st.subheader("Usage Trends")
-        
-        # Usage by day
-        if stats.usage_by_day:
-            st.line_chart(stats.usage_by_day)
-        
-        # Scanner usage
+        # Scanner usage from activity tracker
         st.subheader("Scanner Usage")
-        scanner_usage = {scanner: stats.scanners_used.count(scanner) for scanner in set(stats.scanners_used)}
-        if scanner_usage:
-            st.bar_chart(scanner_usage)
-        
-        # Recent activity
-        st.subheader("Recent Activity")
-        if 'user_id' in st.session_state:
-            recent_activity = self.usage_analytics.get_user_activity(st.session_state['user_id'], 10)
+        try:
+            scanner_stats = {}
+            for activity in user_activities:
+                if activity.activity_type.value == 'scan_completed' and activity.scanner_type:
+                    scanner_name = activity.scanner_type.value
+                    scanner_stats[scanner_name] = scanner_stats.get(scanner_name, 0) + 1
             
-            for activity in recent_activity:
-                icon = "✅" if activity.success else "❌"
-                event_type_str = getattr(getattr(activity, 'event_type', None), 'value', 'unknown')
-                timestamp_str = activity.timestamp.strftime('%Y-%m-%d %H:%M:%S') if getattr(activity, 'timestamp', None) else "unknown"
-                st.write(f"{icon} {event_type_str} - {timestamp_str}")
+            if scanner_stats:
+                st.bar_chart(scanner_stats)
+            else:
+                st.info("No scanner usage data available yet")
+        except:
+            st.info("Scanner usage data will appear after running scans")
+        
+        # Recent activity from activity tracker
+        st.subheader("Recent Activity")
+        try:
+            recent_activities = metrics.get('recent_activities', [])
+            
+            if recent_activities:
+                for activity in recent_activities[-10:]:  # Show last 10 activities
+                    icon = "✅" if activity.get('success', True) else "❌"
+                    activity_type = activity.get('activity_type', 'unknown')
+                    scanner_type = activity.get('scanner_type', '')
+                    timestamp = activity.get('timestamp', '')
+                    
+                    try:
+                        # Format timestamp
+                        if timestamp:
+                            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                            timestamp_str = dt.strftime('%Y-%m-%d %H:%M:%S')
+                        else:
+                            timestamp_str = "unknown"
+                    except:
+                        timestamp_str = str(timestamp)
+                    
+                    # Format activity description
+                    if scanner_type:
+                        activity_desc = f"{activity_type} ({scanner_type})"
+                    else:
+                        activity_desc = activity_type
+                        
+                    st.write(f"{icon} {activity_desc} - {timestamp_str}")
+            else:
+                st.info("No recent activity found. Start by running a scan.")
+        except Exception as e:
+            logger.error(f"Error displaying recent activities: {e}")
+            st.info("Recent activity will appear after using the scanners.")
     
     def create_license_decorator(self):
         """Create decorator for license-protected functions"""

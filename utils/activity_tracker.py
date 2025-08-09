@@ -316,15 +316,26 @@ def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
             result = scan.get('result', {})
             if isinstance(result, dict):
                 findings = result.get('findings', [])
-                for finding in findings:
-                    if isinstance(finding, dict):
-                        # Count actual PII found
-                        pii_count = finding.get('pii_count', 0)
-                        total_pii_found += pii_count
-                        
-                        # Count high-risk issues
-                        risk_summary = finding.get('risk_summary', {})
-                        high_risk_findings += risk_summary.get('High', 0)
+                
+                # Count total findings as PII found
+                if isinstance(findings, list):
+                    total_pii_found += len(findings)
+                    
+                    # Count high-risk findings
+                    for finding in findings:
+                        if isinstance(finding, dict):
+                            severity = finding.get('severity', '').lower()
+                            if severity in ['high', 'critical']:
+                                high_risk_findings += 1
+                            
+                            # Also try to get specific PII counts
+                            pii_count = finding.get('pii_count', 0)
+                            if pii_count > 0:
+                                total_pii_found += pii_count
+                
+                # Also check for direct PII count in results
+                total_pii_found += result.get('total_pii_found', 0)
+                high_risk_findings += result.get('high_risk_count', 0)
         
         # Calculate compliance score
         compliance_manager = ComplianceScoreManager()
