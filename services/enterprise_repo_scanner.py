@@ -30,12 +30,12 @@ class EnterpriseRepoScanner:
     Handles repositories with 100k+ files efficiently with memory streaming.
     """
     
-    def __init__(self, max_workers: int = None, memory_limit_gb: int = 4):
+    def __init__(self, max_workers: Optional[int] = None, memory_limit_gb: int = 4):
         # Optimize based on system resources
         cpu_count = psutil.cpu_count()
         available_memory_gb = psutil.virtual_memory().total / (1024**3)
         
-        self.max_workers = max_workers or min(cpu_count, 8)
+        self.max_workers = max_workers if max_workers is not None else min(cpu_count, 8)
         self.memory_limit_gb = min(memory_limit_gb, available_memory_gb * 0.7)
         self.max_scan_time = 3600  # 1 hour max
         self.file_size_limit = 50 * 1024 * 1024  # 50MB per file

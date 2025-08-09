@@ -19,6 +19,7 @@ import tempfile
 import traceback
 import threading
 import subprocess
+import stat
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable, Set, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -243,8 +244,15 @@ class ParallelRepoScanner:
             commit = repo.head.commit
             last_commit_date = commit.committed_datetime.isoformat()
             
-            # Count files
-            file_count = sum(1 for _ in repo.tree().traverse() if _.type == 'blob')
+            # Count files safely
+            file_count = 0
+            try:
+                for item in repo.tree().traverse():
+                    if hasattr(item, 'type') and item.type == 'blob':
+                        file_count += 1
+            except Exception as e:
+                logger.warning(f"Error counting files: {e}")
+                file_count = len([f for f in os.listdir(repo_path) if os.path.isfile(os.path.join(repo_path, f))])
             
             # Detect programming languages
             languages = self._detect_languages(repo_path)

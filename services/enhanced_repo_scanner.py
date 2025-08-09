@@ -18,6 +18,7 @@ import logging
 import tempfile
 import traceback
 import threading
+import stat
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable, Set, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -284,8 +285,15 @@ class EnhancedRepoScanner:
             commit = repo.head.commit
             last_commit_date = commit.committed_datetime.isoformat()
             
-            # Count files
-            file_count = sum(1 for _ in repo.tree().traverse() if _.type == 'blob')
+            # Count files safely
+            file_count = 0
+            try:
+                for item in repo.tree().traverse():
+                    if hasattr(item, 'type') and item.type == 'blob':
+                        file_count += 1
+            except Exception as e:
+                logger.warning(f"Error counting files: {e}")
+                file_count = len([f for f in os.listdir(repo_path) if os.path.isfile(os.path.join(repo_path, f))])
             
             # Detect programming languages
             languages = self._detect_languages(repo_path)
@@ -523,7 +531,7 @@ class EnhancedRepoScanner:
             else:
                 # Create standard findings when no issues are detected
                 logger.info("No findings detected, adding sample findings for demonstration")
-                sample_findings = create_sample_findings(files_to_scan, repo_path)
+                sample_findings = create_sample_findings(repo_path, len(files_to_scan))
                 if sample_findings:
                     file_results.append(sample_findings)
                 
