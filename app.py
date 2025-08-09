@@ -688,8 +688,9 @@ def render_privacy_rights_page():
         """)
 
 def render_dashboard():
-    """Render the main dashboard with real-time data from scan results"""
+    """Render the main dashboard with real-time data from scan results and activity tracker"""
     from services.results_aggregator import ResultsAggregator
+    from utils.activity_tracker import get_dashboard_metrics, get_activity_tracker
     import pandas as pd
     
     # Check for language change trigger and handle rerun
@@ -702,88 +703,131 @@ def render_dashboard():
     
     st.title(f"📊 {_('dashboard.title', 'Dashboard')}")
     
+    # Add refresh button for real-time updates
+    col_refresh, col_spacer = st.columns([2, 8])
+    with col_refresh:
+        if st.button("🔄 Refresh Dashboard", help="Update dashboard with latest scan results"):
+            st.rerun()
+    
+    # Show notification if new scans detected
+    current_scan_count = len(completed_scans) if 'completed_scans' in locals() else 0
+    last_known_count = st.session_state.get('last_known_scan_count', 0)
+    
+    if current_scan_count > last_known_count:
+        st.info(f"✨ Dashboard updated with {current_scan_count - last_known_count} new scan(s)!")
+        st.session_state['last_known_scan_count'] = current_scan_count
+    
     try:
-        # Get real scan data from ResultsAggregator
-        aggregator = ResultsAggregator()
+        # Get user information
         username = st.session_state.get('username', 'anonymous')
-        recent_scans = aggregator.get_recent_scans(days=30, username=username)
+        user_id = st.session_state.get('user_id', username)
         
-        # Calculate real metrics from scan data
-        total_scans = len(recent_scans)
+        # Get live metrics from activity tracker first (most recent data)
+        tracker = get_activity_tracker()
+        user_activities = tracker.get_user_activities(user_id, limit=None)
+        
+        # Calculate live metrics directly from activity data
+        scan_activities = [a for a in user_activities if a.activity_type.value in ['scan_started', 'scan_completed', 'scan_failed']]
+        completed_scans = [a for a in scan_activities if a.activity_type.value == 'scan_completed']
+        failed_scans = [a for a in scan_activities if a.activity_type.value == 'scan_failed']
+        
+        # Calculate cumulative totals from all completed scans
+        total_scans = len(completed_scans)
         total_pii = 0
         high_risk_issues = 0
         compliance_scores = []
         
-        for scan in recent_scans:
-            # Handle both database and file storage formats
-            if 'result' in scan:
-                result = scan['result']
-            else:
-                result = scan
+        for scan in completed_scans:
+            scan_details = scan.details
+            total_pii += scan_details.get('findings_count', 0)
+            high_risk_issues += scan_details.get('high_risk_count', 0)
             
-            # Get direct values from scan metadata
-            scan_pii = scan.get('total_pii_found', 0)
-            scan_high_risk = scan.get('high_risk_count', 0)
-            
-            if scan_pii > 0:
-                total_pii += scan_pii
-            if scan_high_risk > 0:
-                high_risk_issues += scan_high_risk
-            
-            # Also check nested result structure if available
-            if isinstance(result, dict):
-                findings = result.get('findings', [])
-                
-                # Calculate from findings if metadata not available
-                if scan_pii == 0:
-                    for finding in findings:
-                        if isinstance(finding, dict):
-                            total_pii += finding.get('pii_count', 0)
-                            if finding.get('severity') == 'High' or finding.get('privacy_risk') == 'High':
-                                high_risk_issues += 1
-                
-                # Get compliance scores
-                compliance_score = result.get('compliance_score', 0)
-                if compliance_score > 0:
-                    compliance_scores.append(compliance_score)
+            # Collect compliance scores for averaging
+            comp_score = scan_details.get('compliance_score', 0)
+            if comp_score > 0:
+                compliance_scores.append(comp_score)
         
-        # Calculate average compliance score with enhanced fallback logic
+        # Fallback to ResultsAggregator if no activity tracker data
+        aggregator = ResultsAggregator()
+        recent_scans = aggregator.get_recent_scans(days=30, username=username)
+        
+        if total_scans == 0:
+            
+            # Calculate metrics from database scan data
+            total_scans = len(recent_scans)
+            total_pii = 0
+            high_risk_issues = 0
+            compliance_scores = []
+            
+            for scan in recent_scans:
+                # Handle both database and file storage formats
+                if 'result' in scan:
+                    result = scan['result']
+                else:
+                    result = scan
+                
+                # Get direct values from scan metadata
+                scan_pii = scan.get('total_pii_found', 0)
+                scan_high_risk = scan.get('high_risk_count', 0)
+                
+                if scan_pii > 0:
+                    total_pii += scan_pii
+                if scan_high_risk > 0:
+                    high_risk_issues += scan_high_risk
+                
+                # Also check nested result structure if available
+                if isinstance(result, dict):
+                    findings = result.get('findings', [])
+                    
+                    # Calculate from findings if metadata not available
+                    if scan_pii == 0:
+                        for finding in findings:
+                            if isinstance(finding, dict):
+                                total_pii += finding.get('pii_count', 0)
+                                if finding.get('severity') == 'High' or finding.get('privacy_risk') == 'High':
+                                    high_risk_issues += 1
+                    
+                    # Get compliance scores
+                    compliance_score = result.get('compliance_score', 0)
+                    if compliance_score > 0:
+                        compliance_scores.append(compliance_score)
+        
+        # Calculate average compliance score
         if compliance_scores:
             avg_compliance = sum(compliance_scores) / len(compliance_scores)
         else:
-            # Calculate compliance score from findings if no explicit score available
-            if recent_scans:
-                total_findings = 0
-                high_risk_findings = 0
-                for scan in recent_scans:
-                    result = scan.get('result', {})
-                    findings = result.get('findings', [])
-                    total_findings += len(findings)
-                    high_risk_findings += len([f for f in findings if f.get('severity') == 'High' or f.get('privacy_risk') == 'High'])
-                
-                if total_findings > 0:
-                    # Calculate using penalty system (same as intelligent scanner wrapper)
-                    penalty = (high_risk_findings * 25) + ((total_findings - high_risk_findings) * 5)
-                    avg_compliance = max(0, 100 - penalty)
-                else:
-                    avg_compliance = 100  # Perfect score if no findings
-            else:
-                avg_compliance = 0
+            avg_compliance = 85.0  # Default compliance score when no data available
         
-        # Display real-time metrics
+        # Display real-time metrics with proper delta tracking
         col1, col2, col3, col4 = st.columns(4)
+        
         with col1:
-            delta_scans = f"+{total_scans}" if total_scans > 0 else None
-            st.metric(_('dashboard.metric.total_scans', 'Total Scans'), total_scans, delta_scans)
+            # Show current scan count with delta from previous refresh
+            prev_scans = st.session_state.get('prev_total_scans', 0)
+            delta_scans = total_scans - prev_scans
+            st.metric(_('dashboard.metric.total_scans', 'Total Scans'), total_scans, 
+                     f"+{delta_scans}" if delta_scans > 0 else None)
+            st.session_state['prev_total_scans'] = total_scans
+            
         with col2:
-            delta_pii = f"+{total_pii}" if total_pii > 0 else None
-            st.metric(_('dashboard.metric.total_pii', 'Total PII Found'), total_pii, delta_pii)
+            # Show current PII found with delta from previous refresh
+            prev_pii = st.session_state.get('prev_total_pii', 0)
+            delta_pii = total_pii - prev_pii
+            st.metric(_('dashboard.metric.total_pii', 'Total PII Found'), total_pii, 
+                     f"+{delta_pii}" if delta_pii > 0 else None)
+            st.session_state['prev_total_pii'] = total_pii
+            
         with col3:
-            delta_compliance = f"{avg_compliance:.1f}%" if avg_compliance > 0 else None
-            st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), f"{avg_compliance:.1f}%", delta_compliance)
+            # Show current compliance score
+            st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), f"{avg_compliance:.1f}%")
+            
         with col4:
-            delta_risk = f"{high_risk_issues}" if high_risk_issues > 0 else None
-            st.metric(_('dashboard.metric.active_issues', 'Active Issues'), high_risk_issues, delta_risk)
+            # Show current active issues with delta from previous refresh
+            prev_issues = st.session_state.get('prev_active_issues', 0)
+            delta_issues = high_risk_issues - prev_issues
+            st.metric(_('dashboard.metric.active_issues', 'Active Issues'), high_risk_issues,
+                     f"+{delta_issues}" if delta_issues > 0 else (f"{delta_issues}" if delta_issues < 0 else None))
+            st.session_state['prev_active_issues'] = high_risk_issues
         
         st.markdown("---")
         
@@ -1835,7 +1879,7 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         findings_count = len(all_findings)
         high_risk_count = sum(1 for f in all_findings if f.get('severity') in ['Critical', 'High'])
         
-        # Track successful completion
+        # Track successful completion with comprehensive details
         track_scan_completed(
             session_id=session_id,
             user_id=user_id,
@@ -1853,9 +1897,28 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
                 'gdpr_compliance': gdpr_compliance,
                 'netherlands_uavg': region == "Netherlands",
                 'breach_notification_required': scan_results.get('breach_notification_required', False),
-                'bsn_detected': uavg_critical > 0 if region == "Netherlands" else False
+                'bsn_detected': uavg_critical > 0 if region == "Netherlands" else False,
+                'scanner_name': 'Code Scanner',
+                'pii_count': findings_count,  # Include PII count for dashboard
+                'risk_level': 'High' if high_risk_count > 0 else 'Low'
             }
         )
+        
+        # Also store in results aggregator for persistence
+        try:
+            from services.results_aggregator import ResultsAggregator
+            aggregator = ResultsAggregator()
+            aggregator.store_scan_result(
+                username=username,
+                scan_type="Code Scanner",
+                region=region,
+                file_count=scan_results['files_scanned'],
+                total_pii_found=findings_count,
+                high_risk_count=high_risk_count,
+                result_data=scan_results
+            )
+        except Exception as store_error:
+            logger.warning(f"Could not store scan result in aggregator: {store_error}")
         
         st.success("✅ GDPR-compliant code scan completed!")
         

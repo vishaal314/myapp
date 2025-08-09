@@ -287,33 +287,64 @@ class LicenseIntegration:
         
         st.header("📊 Usage Analytics Dashboard")
         
+        # Add auto-refresh for real-time updates
+        if st.button("🔄 Refresh Dashboard", help="Refresh dashboard metrics to show latest scan results"):
+            st.rerun()
+        
         # Get real-time usage statistics from activity tracker
         user_id = st.session_state.get('user_id', 'default_user')
         username = st.session_state.get('username', 'default_user')
         
+        # Debug info for troubleshooting
+        st.caption(f"Tracking data for user: {user_id}")
+        
         try:
-            # Get dashboard metrics from activity tracker (includes real scan data)
+            # Get live dashboard metrics from activity tracker (includes real scan data)
             from utils.activity_tracker import get_dashboard_metrics, get_activity_tracker
             
-            metrics = get_dashboard_metrics(user_id)
+            # Force a fresh calculation of metrics
             tracker = get_activity_tracker()
             user_activities = tracker.get_user_activities(user_id, limit=None)
             
-            # Calculate real-time metrics from activity data
-            total_scans = metrics.get('total_scans', 0)
-            total_pii_found = metrics.get('total_pii_found', 0)
-            high_risk_findings = metrics.get('high_risk_findings', 0)
-            success_rate = metrics.get('success_rate', 0)
-            
-            # Add scan activities from tracker for more accurate counts
+            # Calculate live metrics directly from activity data
             scan_activities = [a for a in user_activities if a.activity_type.value in ['scan_started', 'scan_completed', 'scan_failed']]
             completed_scans = [a for a in scan_activities if a.activity_type.value == 'scan_completed']
             failed_scans = [a for a in scan_activities if a.activity_type.value == 'scan_failed']
             
-            # Use tracker data for overview if available
-            if scan_activities:
-                total_scans = max(total_scans, len(completed_scans))
-                success_rate = len(completed_scans) / len(scan_activities) if scan_activities else 0
+            # Calculate cumulative totals from all completed scans
+            total_scans = len(completed_scans)
+            total_pii_found = 0
+            high_risk_findings = 0
+            compliance_scores = []
+            
+            for scan in completed_scans:
+                scan_details = scan.details
+                total_pii_found += scan_details.get('findings_count', 0)
+                high_risk_findings += scan_details.get('high_risk_count', 0)
+                
+                # Collect compliance scores for averaging
+                comp_score = scan_details.get('compliance_score', 0)
+                if comp_score > 0:
+                    compliance_scores.append(comp_score)
+            
+            # Calculate average compliance score
+            avg_compliance_score = sum(compliance_scores) / len(compliance_scores) if compliance_scores else 0
+            
+            # Calculate success rate
+            success_rate = len(completed_scans) / max(len(scan_activities), 1) if scan_activities else 0
+            
+            # Also get metrics from database for additional data
+            metrics = get_dashboard_metrics(user_id)
+            
+            # Use database data if activity tracker has no data (fallback)
+            if total_scans == 0:
+                total_scans = metrics.get('total_scans', 0)
+                total_pii_found = metrics.get('total_pii_found', 0)
+                high_risk_findings = metrics.get('high_risk_findings', 0)
+                avg_compliance_score = metrics.get('average_compliance_score', 0)
+            
+            # Debug information
+            st.caption(f"Dashboard data: Scans: {total_scans}, PII: {total_pii_found}, High Risk: {high_risk_findings}, Completed Scans in Tracker: {len(completed_scans)}")
             
         except Exception as e:
             logger.error(f"Error getting dashboard metrics: {e}")
@@ -326,16 +357,20 @@ class LicenseIntegration:
         
         license_info = get_license_info()
         
-        # Overview metrics with real scan data
+        # Overview metrics with real scan data and delta calculations
         col1, col2, col3, col4 = st.columns(4)
         with col1:
+            # Show current total scans
             st.metric("Total Scans", total_scans)
         with col2:
-            st.metric("Success Rate", f"{success_rate*100:.1f}%")
+            # Show compliance score as percentage
+            st.metric("Compliance Score", f"{avg_compliance_score:.1f}%")
         with col3:
-            st.metric("PII Found", total_pii_found)
+            # Show total PII found across all scans
+            st.metric("Total PII Found", total_pii_found)
         with col4:
-            st.metric("High Risk Issues", high_risk_findings)
+            # Show active high-risk issues
+            st.metric("Active Issues", high_risk_findings)
         
         # License compliance
         st.subheader("License Compliance")

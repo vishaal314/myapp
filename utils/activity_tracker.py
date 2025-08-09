@@ -301,11 +301,21 @@ def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         agg = ResultsAggregator()
         recent_scans = agg.get_recent_scans(days=30)
         
-        # Filter scans for this user
-        user_scans = [scan for scan in recent_scans if scan.get('username', '').replace('user', '') == user_id.replace('user', '')]
+        # Filter scans for this user - try multiple matching patterns
+        user_scans = []
+        
+        # Try exact username match first
+        user_scans = [scan for scan in recent_scans if scan.get('username') == user_id]
+        
+        # Try partial match (remove prefixes like 'user')
         if not user_scans:
-            # Try with exact username match
-            user_scans = [scan for scan in recent_scans if scan.get('username') == user_id]
+            clean_user_id = user_id.replace('user', '').replace('_', '')
+            user_scans = [scan for scan in recent_scans 
+                         if scan.get('username', '').replace('user', '').replace('_', '') == clean_user_id]
+        
+        # Try any scan with similar username
+        if not user_scans:
+            user_scans = [scan for scan in recent_scans if user_id in scan.get('username', '') or scan.get('username', '') in user_id]
         
         # Calculate actual metrics from scan results
         total_scans = len(user_scans)
