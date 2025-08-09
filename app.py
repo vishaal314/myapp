@@ -4175,8 +4175,30 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                     st.progress(score/100)
                     st.markdown("---")
             
-            # Store scan results in session state for download access
+            # Store scan results in session state and results aggregator
             st.session_state['last_scan_results'] = scan_results
+            
+            # Calculate scan metrics first
+            scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
+            findings_count = len(all_findings)  # Use all_findings instead of scan_results["findings"]
+            high_risk_count = sum(1 for f in all_findings if f.get('severity') in ['Critical', 'High'])
+            
+            # Save to results aggregator for dashboard integration
+            try:
+                from services.results_aggregator import ResultsAggregator
+                aggregator = ResultsAggregator()
+                aggregator.save_scan_result({
+                    'scan_type': 'ai_model',
+                    'timestamp': scan_results['timestamp'],
+                    'username': username,
+                    'result': scan_results,
+                    'total_pii_found': findings_count,
+                    'high_risk_count': high_risk_count,
+                    'file_count': scan_results["files_scanned"],
+                    'compliance_score': scan_results.get("privacy_score", 100)
+                })
+            except Exception as save_error:
+                logger.warning(f"Failed to save AI model scan results to aggregator: {save_error}")
             
             # Generate comprehensive HTML report
             html_report = generate_html_report(scan_results)
@@ -4187,12 +4209,12 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 mime="text/html"
             )
             
-            # Calculate scan metrics and track completion
-            scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
-            findings_count = len(scan_results["findings"])
-            high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
+            # Update scan results with final metrics for proper dashboard tracking
+            scan_results["total_pii_found"] = findings_count
+            scan_results["high_risk_count"] = high_risk_count
+            scan_results["findings"] = all_findings
             
-            # Track successful completion
+            # Track successful completion with enhanced details
             track_scan_completed(
                 session_id=session_id,
                 user_id=user_id,
@@ -4206,11 +4228,15 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 details={
                     'scan_id': scan_results["scan_id"],
                     'high_risk_count': high_risk_count,
+                    'total_pii_found': findings_count,
                     'model_type': model_type,
                     'framework': framework,
                     'privacy_score': scan_results.get("privacy_score", 100),
                     'fairness_score': scan_results.get("fairness_score", 100),
-                    'ai_act_compliance': ai_act_compliance
+                    'ai_act_compliance': ai_act_compliance,
+                    'model_source': model_source,
+                    'files_analyzed': scan_results["files_scanned"],
+                    'lines_analyzed': scan_results["lines_analyzed"]
                 }
             )
             
