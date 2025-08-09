@@ -20,18 +20,22 @@ try:
     import psycopg2.extras
     POSTGRES_AVAILABLE = True
 except ImportError:
+    psycopg2 = None
     POSTGRES_AVAILABLE = False
 
 try:
     import mysql.connector
+    mysql = mysql.connector
     MYSQL_AVAILABLE = True
 except ImportError:
+    mysql = None
     MYSQL_AVAILABLE = False
 
 try:
     import sqlite3
     SQLITE_AVAILABLE = True
 except ImportError:
+    sqlite3 = None
     SQLITE_AVAILABLE = False
 
 # Configure logging

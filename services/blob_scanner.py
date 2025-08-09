@@ -21,7 +21,7 @@ class BlobScanner:
     A scanner that detects PII in document files (PDFs, Word documents, text files, etc.)
     """
     
-    def __init__(self, file_types: List[str] = None, region: str = "Netherlands"):
+    def __init__(self, file_types: Optional[List[str]] = None, region: str = "Netherlands"):
         """
         Initialize the blob scanner.
         
@@ -898,7 +898,7 @@ class BlobScanner:
             }
         
     def scan_directory(self, directory_path: str, recursive: bool = True, max_files: int = 1000, 
-                      skip_patterns: List[str] = None, callback_fn = None) -> Dict[str, Any]:
+                      skip_patterns: Optional[List[str]] = None, callback_fn = None) -> Dict[str, Any]:
         """
         Scan all files in a directory for PII.
         

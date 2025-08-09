@@ -8,10 +8,14 @@ import threading
 import multiprocessing
 import subprocess
 import signal
+import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Set
 from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
+
+# Configure logging
+logger = logging.getLogger(__name__)
 # Import Netherlands-specific detection module
 try:
     from utils.netherlands_gdpr import detect_nl_violations
