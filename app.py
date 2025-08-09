@@ -32,6 +32,29 @@ from services.license_integration import (
     show_license_sidebar, show_usage_dashboard
 )
 
+# Activity tracking imports
+try:
+    from services.activity_tracker import (
+        track_scan_completed, track_scan_failed, ScannerType,
+        get_session_id, get_user_id
+    )
+except ImportError:
+    # Fallback definitions for activity tracking
+    def track_scan_completed(**kwargs): pass
+    def track_scan_failed(**kwargs): pass
+    class ScannerType:
+        DOCUMENT = "document"
+        IMAGE = "image" 
+        WEBSITE = "website"
+        CODE = "code"
+        DATABASE = "database"
+        DPIA = "dpia"
+        AI_MODEL = "ai_model"
+        SOC2 = "soc2"
+        SUSTAINABILITY = "sustainability"
+    def get_session_id(): return "default_session"
+    def get_user_id(): return "default_user"
+
 # Configure basic logging
 logging.basicConfig(
     level=logging.INFO,
@@ -2108,6 +2131,10 @@ def render_document_scanner_interface(region: str, username: str):
 
 def execute_document_scan(region, username, uploaded_files):
     """Execute document scanning with comprehensive activity tracking"""
+    # Initialize activity tracking variables
+    session_id = get_session_id() 
+    user_id = get_user_id()
+    
     try:
         from services.blob_scanner import BlobScanner
         from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType

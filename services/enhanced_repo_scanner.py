@@ -285,15 +285,32 @@ class EnhancedRepoScanner:
             commit = repo.head.commit
             last_commit_date = commit.committed_datetime.isoformat()
             
-            # Count files safely
+            # Count files safely with fallback
             file_count = 0
             try:
-                for item in repo.tree().traverse():
-                    if hasattr(item, 'type') and item.type == 'blob':
-                        file_count += 1
+                # Try to use GitPython tree traversal
+                tree = repo.tree()
+                for item in tree.traverse():
+                    try:
+                        # Check if it's a blob (file) not a tree (directory)
+                        if str(item).endswith('.git'):
+                            continue
+                        # Use a simple file check instead of type attribute
+                        item_path = os.path.join(repo_path, item.path)
+                        if os.path.isfile(item_path):
+                            file_count += 1
+                    except (AttributeError, OSError):
+                        continue
             except Exception as e:
-                logger.warning(f"Error counting files: {e}")
-                file_count = len([f for f in os.listdir(repo_path) if os.path.isfile(os.path.join(repo_path, f))])
+                logger.warning(f"Error using git tree traversal: {e}")
+                # Fallback to filesystem traversal
+                try:
+                    for root, dirs, files in os.walk(repo_path):
+                        if '.git' not in root:
+                            file_count += len(files)
+                except Exception as e2:
+                    logger.warning(f"Error counting files with filesystem: {e2}")
+                    file_count = 0
             
             # Detect programming languages
             languages = self._detect_languages(repo_path)
@@ -659,7 +676,7 @@ class EnhancedRepoScanner:
             
         return file_results
 
-    def _scan_single_file(self, file_path: str, repo_path: str, is_ultra_large: bool) -> Dict[str, Any]:
+    def _scan_single_file(self, file_path: str, repo_path: str, is_ultra_large: bool) -> Optional[Dict[str, Any]]:
         """
         Scan a single file for GDPR compliance issues.
         
@@ -679,9 +696,9 @@ class EnhancedRepoScanner:
                 return None
             
             # Use the CodeScanner if available
-            if hasattr(self.code_scanner, 'scan_file'):
+            if self.code_scanner and hasattr(self.code_scanner, 'scan_file'):
                 file_result = self.code_scanner.scan_file(file_path)
-                return file_result
+                return file_result if file_result else None
             
             # Fallback to direct file scanning
             try:

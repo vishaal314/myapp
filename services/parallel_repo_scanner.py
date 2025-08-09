@@ -248,8 +248,14 @@ class ParallelRepoScanner:
             file_count = 0
             try:
                 for item in repo.tree().traverse():
-                    if hasattr(item, 'type') and item.type == 'blob':
-                        file_count += 1
+                    # Use GitPython's built-in type checking
+                    try:
+                        if item.type == 'blob':
+                            file_count += 1
+                    except AttributeError:
+                        # Fallback for different GitPython versions
+                        if hasattr(item, 'mode') and not item.mode & 0o040000:  # Not a directory
+                            file_count += 1
             except Exception as e:
                 logger.warning(f"Error counting files: {e}")
                 file_count = len([f for f in os.listdir(repo_path) if os.path.isfile(os.path.join(repo_path, f))])
@@ -515,7 +521,7 @@ class ParallelRepoScanner:
             
         return file_results
 
-    def _scan_single_file(self, file_path: str, repo_path: str, is_ultra_large: bool) -> Dict[str, Any]:
+    def _scan_single_file(self, file_path: str, repo_path: str, is_ultra_large: bool) -> Optional[Dict[str, Any]]:
         """
         Scan a single file for GDPR compliance issues.
         
@@ -540,7 +546,7 @@ class ParallelRepoScanner:
                 return None
             
             # Use the CodeScanner if available
-            if hasattr(self.code_scanner, 'scan_file'):
+            if self.code_scanner and hasattr(self.code_scanner, 'scan_file'):
                 # Use code scanner with timeout protection
                 start_time = time.time()
                 file_result = self.code_scanner.scan_file(file_path)
@@ -549,9 +555,9 @@ class ParallelRepoScanner:
                 if time.time() - start_time > file_timeout:
                     logger.warning(f"File scanning timeout for {file_path}. Limiting analysis.")
                     # Truncate findings if needed to prevent processing bottlenecks
-                    if "findings" in file_result and len(file_result["findings"]) > 10:
+                    if file_result and "findings" in file_result and len(file_result["findings"]) > 10:
                         file_result["findings"] = file_result["findings"][:10]
-                return file_result
+                return file_result if file_result else None
             
             # Fallback to direct file scanning
             try:
