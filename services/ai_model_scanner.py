@@ -16,12 +16,15 @@ try:
     import torch.nn as nn
     TORCH_AVAILABLE = True
 except ImportError:
+    torch = None
+    nn = None
     TORCH_AVAILABLE = False
 
 try:
     import tensorflow as tf
     TF_AVAILABLE = True
 except ImportError:
+    tf = None
     TF_AVAILABLE = False
 
 try:
@@ -29,6 +32,8 @@ try:
     import onnxruntime as ort
     ONNX_AVAILABLE = True
 except ImportError:
+    onnx = None
+    ort = None
     ONNX_AVAILABLE = False
 
 try:
@@ -36,6 +41,8 @@ try:
     import pickle
     SKLEARN_AVAILABLE = True
 except ImportError:
+    joblib = None
+    pickle = None
     SKLEARN_AVAILABLE = False
 
 
@@ -294,6 +301,19 @@ class AIModelScanner:
     
     def _analyze_pytorch_model(self, model_path: str, status=None):
         """Analyze PyTorch model for privacy risks"""
+        if not TORCH_AVAILABLE or torch is None:
+            return {
+                'framework': 'PyTorch',
+                'analysis_error': 'PyTorch not available',
+                'findings': [{
+                    'category': 'Analysis Limitation',
+                    'title': 'PyTorch Analysis Unavailable',
+                    'description': 'PyTorch is not installed, cannot perform deep model analysis',
+                    'severity': 'Low',
+                    'recommendation': 'Install PyTorch for enhanced model analysis'
+                }]
+            }
+        
         try:
             # Load model
             model = torch.load(model_path, map_location='cpu')
@@ -306,7 +326,7 @@ class AIModelScanner:
             }
             
             # Analyze model structure
-            if isinstance(model, nn.Module):
+            if nn is not None and isinstance(model, nn.Module):
                 analysis['parameters_count'] = sum(p.numel() for p in model.parameters())
                 
                 # Check for potential privacy risks
@@ -336,6 +356,19 @@ class AIModelScanner:
     
     def _analyze_tensorflow_model(self, model_path: str, status=None):
         """Analyze TensorFlow model for privacy risks"""
+        if not TF_AVAILABLE or tf is None:
+            return {
+                'framework': 'TensorFlow',
+                'analysis_error': 'TensorFlow not available',
+                'findings': [{
+                    'category': 'Analysis Limitation',
+                    'title': 'TensorFlow Analysis Unavailable', 
+                    'description': 'TensorFlow is not installed, cannot perform deep model analysis',
+                    'severity': 'Low',
+                    'recommendation': 'Install TensorFlow for enhanced model analysis'
+                }]
+            }
+        
         try:
             # Load model
             model = tf.keras.models.load_model(model_path)
@@ -375,6 +408,19 @@ class AIModelScanner:
     
     def _analyze_onnx_model(self, model_path: str, status=None):
         """Analyze ONNX model for privacy risks"""
+        if not ONNX_AVAILABLE or onnx is None or ort is None:
+            return {
+                'framework': 'ONNX',
+                'analysis_error': 'ONNX not available',
+                'findings': [{
+                    'category': 'Analysis Limitation',
+                    'title': 'ONNX Analysis Unavailable',
+                    'description': 'ONNX/ONNXRuntime is not installed, cannot perform model analysis',
+                    'severity': 'Low',
+                    'recommendation': 'Install ONNX and ONNXRuntime for enhanced model analysis'
+                }]
+            }
+        
         try:
             # Load ONNX model
             model = onnx.load(model_path)
@@ -416,6 +462,19 @@ class AIModelScanner:
     
     def _analyze_sklearn_model(self, model_path: str, status=None):
         """Analyze scikit-learn model for privacy risks"""
+        if not SKLEARN_AVAILABLE or joblib is None or pickle is None:
+            return {
+                'framework': 'scikit-learn',
+                'analysis_error': 'scikit-learn libraries not available',
+                'findings': [{
+                    'category': 'Analysis Limitation',
+                    'title': 'scikit-learn Analysis Unavailable',
+                    'description': 'joblib/pickle is not available, cannot load scikit-learn models',
+                    'severity': 'Low',
+                    'recommendation': 'Install joblib for scikit-learn model analysis'
+                }]
+            }
+        
         try:
             # Load sklearn model
             if model_path.endswith('.joblib'):
