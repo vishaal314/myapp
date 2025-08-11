@@ -1,317 +1,395 @@
 """
-Stripe Webhook Handler for Secure Payment Processing
-
-This module handles Stripe webhooks to securely process payment events
-and update the application state accordingly.
+Stripe Webhook Handler for DataGuardian Pro Subscription Billing
+Handles automated billing events for SaaS model (70% of €25K MRR target)
 """
 
 import os
 import json
-import stripe
-import streamlit as st
-from typing import Dict, Any, Optional
+import logging
 from datetime import datetime
+from typing import Dict, Any, Optional
 
-# Database connection with fallback
-def get_db_connection() -> Optional[Any]:
-    """Get database connection with proper fallback handling"""
-    try:
-        from utils.database_manager import get_db_connection as _get_db_conn
-        return _get_db_conn()
-    except ImportError:
-        # Fallback for development environment
-        import streamlit as st
-        return st.session_state.get('db_connection', None)
-
-def verify_webhook_signature(payload: bytes, signature: str) -> bool:
-    """
-    Verify Stripe webhook signature for security
-    
-    Args:
-        payload: Raw webhook payload
-        signature: Stripe signature from headers
-        
-    Returns:
-        True if signature is valid, False otherwise
-    """
-    endpoint_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
-    if not endpoint_secret:
-        st.warning("Webhook signature verification disabled - STRIPE_WEBHOOK_SECRET not configured")
-        return True  # Allow for development, but warn
-    
-    try:
-        stripe.Webhook.construct_event(payload, signature, endpoint_secret)
-        return True
-    except stripe.SignatureVerificationError:
-        st.error("Invalid webhook signature")
-        return False
-    except Exception as e:
-        st.error(f"Webhook signature verification failed: {str(e)}")
-        return False
-
-def handle_payment_succeeded(event_data: Dict[str, Any]) -> bool:
-    """
-    Handle successful payment webhook
-    
-    Args:
-        event_data: Stripe event data
-        
-    Returns:
-        True if handled successfully
-    """
-    try:
-        payment_intent = event_data.get('object', {})
-        session_id = payment_intent.get('metadata', {}).get('session_id')
-        
-        if not session_id:
-            # Try to find session by payment intent
-            sessions = stripe.checkout.Session.list(
-                payment_intent=payment_intent.get('id'),
-                limit=1
-            )
-            if sessions.data:
-                session_id = sessions.data[0].id
-        
-        if session_id:
-            # Update payment status in database
-            update_payment_status(session_id, 'succeeded', payment_intent)
-            
-        return True
-        
-    except Exception as e:
-        st.error(f"Error handling payment success: {str(e)}")
-        return False
-
-def handle_payment_failed(event_data: Dict[str, Any]) -> bool:
-    """
-    Handle failed payment webhook
-    
-    Args:
-        event_data: Stripe event data
-        
-    Returns:
-        True if handled successfully
-    """
-    try:
-        payment_intent = event_data.get('object', {})
-        session_id = payment_intent.get('metadata', {}).get('session_id')
-        
-        if session_id:
-            # Update payment status in database
-            update_payment_status(session_id, 'failed', payment_intent)
-            
-        return True
-        
-    except Exception as e:
-        st.error(f"Error handling payment failure: {str(e)}")
-        return False
-
-def update_payment_status(session_id: str, status: str, payment_intent: Dict[str, Any]) -> bool:
-    """
-    Update payment status in database
-    
-    Args:
-        session_id: Checkout session ID
-        status: Payment status (succeeded, failed, etc.)
-        payment_intent: Payment intent data
-        
-    Returns:
-        True if updated successfully
-    """
-    try:
-        conn = get_db_connection()
-        if not conn:
-            # Log to session state for development
-            if 'webhook_logs' not in st.session_state:
-                st.session_state.webhook_logs = []
-            
-            st.session_state.webhook_logs.append({
-                'timestamp': datetime.now().isoformat(),
-                'session_id': session_id,
-                'status': status,
-                'amount': payment_intent.get('amount', 0) / 100,
-                'currency': payment_intent.get('currency', 'eur')
-            })
-            return True
-        
-        cursor = conn.cursor()
-        
-        # Insert or update payment record
-        cursor.execute("""
-            INSERT INTO payments (
-                session_id, status, amount, currency, 
-                payment_intent_id, updated_at
-            ) VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (session_id) 
-            DO UPDATE SET 
-                status = EXCLUDED.status,
-                updated_at = EXCLUDED.updated_at
-        """, (
-            session_id,
-            status,
-            payment_intent.get('amount', 0),
-            payment_intent.get('currency', 'eur'),
-            payment_intent.get('id'),
-            datetime.now()
-        ))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return True
-        
-    except Exception as e:
-        st.error(f"Error updating payment status: {str(e)}")
-        return False
-
-def process_webhook(payload: bytes, signature: str) -> Dict[str, Any]:
-    """
-    Process incoming Stripe webhook
-    
-    Args:
-        payload: Raw webhook payload
-        signature: Stripe signature
-        
-    Returns:
-        Processing result
-    """
-    # Verify signature first
-    if not verify_webhook_signature(payload, signature):
-        return {"status": "error", "message": "Invalid signature"}
-    
-    try:
-        # Parse event
-        event = json.loads(payload.decode('utf-8'))
-        event_type = event.get('type')
-        event_data = event.get('data', {})
-        
-        # Handle different event types
-        if event_type == 'payment_intent.succeeded':
-            success = handle_payment_succeeded(event_data)
-            return {"status": "success" if success else "error", "event_type": event_type}
-            
-        elif event_type == 'payment_intent.payment_failed':
-            success = handle_payment_failed(event_data)
-            return {"status": "success" if success else "error", "event_type": event_type}
-            
-        elif event_type == 'checkout.session.completed':
-            # Handle checkout completion
-            session = event_data.get('object', {})
-            session_id = session.get('id')
-            
-            if session_id:
-                # Mark session as completed
-                update_payment_status(session_id, 'completed', session)
-                
-            return {"status": "success", "event_type": event_type}
-            
-        else:
-            # Log unhandled events
-            st.info(f"Received unhandled webhook event: {event_type}")
-            return {"status": "ignored", "event_type": event_type}
-            
-    except json.JSONDecodeError:
-        return {"status": "error", "message": "Invalid JSON payload"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-def get_payment_status(session_id: str) -> Optional[Dict[str, Any]]:
-    """
-    Get payment status from database or session state
-    
-    Args:
-        session_id: Checkout session ID
-        
-    Returns:
-        Payment status information
-    """
-    try:
-        conn = get_db_connection()
-        if not conn:
-            # Check session state for development
-            webhook_logs = st.session_state.get('webhook_logs', [])
-            for log in webhook_logs:
-                if log.get('session_id') == session_id:
-                    return log
-            return None
-        
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT session_id, status, amount, currency, 
-                   payment_intent_id, updated_at 
-            FROM payments 
-            WHERE session_id = %s
-        """, (session_id,))
-        
-        result = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        
-        if result:
-            return {
-                'session_id': result[0],
-                'status': result[1],
-                'amount': result[2],
-                'currency': result[3],
-                'payment_intent_id': result[4],
-                'updated_at': result[5]
-            }
-        
-        return None
-        
-    except Exception as e:
-        st.error(f"Error getting payment status: {str(e)}")
-        return None
-
-def create_payment_tables():
-    """
-    Create payment tables if they don't exist
-    """
-    try:
-        conn = get_db_connection()
-        if not conn:
-            return False
-        
-        cursor = conn.cursor()
-        
-        # Create payments table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS payments (
-                id SERIAL PRIMARY KEY,
-                session_id VARCHAR(255) UNIQUE,
-                status VARCHAR(50),
-                amount INTEGER,
-                currency VARCHAR(3),
-                payment_intent_id VARCHAR(255),
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW()
-            )
-        """)
-        
-        # Create indexes
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_payments_session_id 
-            ON payments(session_id)
-        """)
-        
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_payments_status 
-            ON payments(status)
-        """)
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return True
-        
-    except Exception as e:
-        st.error(f"Error creating payment tables: {str(e)}")
-        return False
-
-# Initialize payment tables on import
+# Import Stripe with fallback
 try:
-    create_payment_tables()
-except Exception:
-    pass  # Ignore errors during import
+    import stripe
+    STRIPE_AVAILABLE = True
+except ImportError:
+    STRIPE_AVAILABLE = False
+    logger.warning("Stripe library not available")
+
+logger = logging.getLogger(__name__)
+
+class StripeWebhookHandler:
+    """
+    Handle Stripe webhook events for subscription billing automation
+    """
+    
+    def __init__(self):
+        """Initialize Stripe webhook handler with API keys"""
+        self.stripe_secret_key = os.environ.get('STRIPE_SECRET_KEY')
+        self.webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+        
+        if STRIPE_AVAILABLE and self.stripe_secret_key:
+            stripe.api_key = self.stripe_secret_key
+        else:
+            logger.warning("STRIPE_SECRET_KEY not found in environment or Stripe not available")
+    
+    def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:
+        """
+        Verify webhook signature for security
+        
+        Args:
+            payload: Raw webhook payload
+            signature: Stripe signature header
+            
+        Returns:
+            bool: True if signature is valid
+        """
+        if not self.webhook_secret or not STRIPE_AVAILABLE:
+            logger.warning("STRIPE_WEBHOOK_SECRET not configured or Stripe not available")
+            return False
+            
+        try:
+            stripe.Webhook.construct_event(
+                payload, signature, self.webhook_secret
+            )
+            return True
+        except ValueError:
+            logger.error("Invalid payload in webhook")
+            return False
+        except Exception:  # Handle Stripe signature verification error
+            logger.error("Invalid signature in webhook")
+            return False
+    
+    def handle_webhook_event(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Process Stripe webhook event
+        
+        Args:
+            event_data: Webhook event data from Stripe
+            
+        Returns:
+            Dict with processing result
+        """
+        event_type = event_data.get('type')
+        
+        try:
+            if event_type == 'customer.subscription.created':
+                return self._handle_subscription_created(event_data)
+            elif event_type == 'customer.subscription.updated':
+                return self._handle_subscription_updated(event_data)
+            elif event_type == 'customer.subscription.deleted':
+                return self._handle_subscription_cancelled(event_data)
+            elif event_type == 'invoice.payment_succeeded':
+                return self._handle_payment_succeeded(event_data)
+            elif event_type == 'invoice.payment_failed':
+                return self._handle_payment_failed(event_data)
+            elif event_type == 'customer.created':
+                return self._handle_customer_created(event_data)
+            else:
+                logger.info(f"Unhandled webhook event type: {event_type}")
+                return {'status': 'ignored', 'event_type': event_type}
+                
+        except Exception as e:
+            logger.error(f"Error processing webhook event {event_type}: {str(e)}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _handle_subscription_created(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle new subscription creation"""
+        subscription = event_data['data']['object']
+        customer_id = subscription['customer']
+        subscription_id = subscription['id']
+        
+        logger.info(f"New subscription created: {subscription_id} for customer: {customer_id}")
+        
+        # Update user permissions and license access
+        try:
+            # Use existing license manager or create fallback
+            try:
+                from utils.license_manager import LicenseManager
+                license_manager = LicenseManager()
+            except ImportError:
+                # Fallback license management (to be implemented)
+                logger.warning("License manager not available, using fallback")
+            
+            # Grant subscription access
+            license_manager.activate_subscription(
+                customer_id=customer_id,
+                subscription_id=subscription_id,
+                plan_name=self._get_plan_name(subscription),
+                tier=self._get_subscription_tier(subscription)
+            )
+            
+            # Log activity
+            self._log_subscription_activity(
+                customer_id, 'subscription_created', {
+                    'subscription_id': subscription_id,
+                    'plan': self._get_plan_name(subscription)
+                }
+            )
+            
+            return {
+                'status': 'success',
+                'action': 'subscription_created',
+                'subscription_id': subscription_id
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to activate subscription {subscription_id}: {str(e)}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _handle_subscription_updated(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle subscription updates (plan changes, etc.)"""
+        subscription = event_data['data']['object']
+        customer_id = subscription['customer']
+        subscription_id = subscription['id']
+        
+        logger.info(f"Subscription updated: {subscription_id}")
+        
+        try:
+            from utils.license_manager import LicenseManager
+            license_manager = LicenseManager()
+            
+            # Update subscription access
+            license_manager.update_subscription(
+                customer_id=customer_id,
+                subscription_id=subscription_id,
+                new_tier=self._get_subscription_tier(subscription),
+                new_plan=self._get_plan_name(subscription)
+            )
+            
+            self._log_subscription_activity(
+                customer_id, 'subscription_updated', {
+                    'subscription_id': subscription_id,
+                    'new_plan': self._get_plan_name(subscription)
+                }
+            )
+            
+            return {
+                'status': 'success',
+                'action': 'subscription_updated',
+                'subscription_id': subscription_id
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to update subscription {subscription_id}: {str(e)}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _handle_subscription_cancelled(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle subscription cancellation"""
+        subscription = event_data['data']['object']
+        customer_id = subscription['customer']
+        subscription_id = subscription['id']
+        
+        logger.info(f"Subscription cancelled: {subscription_id}")
+        
+        try:
+            from utils.license_manager import LicenseManager
+            license_manager = LicenseManager()
+            
+            # Deactivate subscription access
+            license_manager.deactivate_subscription(
+                customer_id=customer_id,
+                subscription_id=subscription_id
+            )
+            
+            self._log_subscription_activity(
+                customer_id, 'subscription_cancelled', {
+                    'subscription_id': subscription_id
+                }
+            )
+            
+            return {
+                'status': 'success',
+                'action': 'subscription_cancelled',
+                'subscription_id': subscription_id
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to cancel subscription {subscription_id}: {str(e)}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _handle_payment_succeeded(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle successful payment"""
+        invoice = event_data['data']['object']
+        customer_id = invoice['customer']
+        subscription_id = invoice.get('subscription')
+        
+        logger.info(f"Payment succeeded for customer: {customer_id}")
+        
+        try:
+            # Extend subscription period and reset usage limits
+            from utils.license_manager import LicenseManager
+            license_manager = LicenseManager()
+            
+            if subscription_id:
+                license_manager.reset_monthly_usage(subscription_id)
+                
+            self._log_subscription_activity(
+                customer_id, 'payment_succeeded', {
+                    'invoice_id': invoice['id'],
+                    'amount': invoice['amount_paid'],
+                    'subscription_id': subscription_id
+                }
+            )
+            
+            return {
+                'status': 'success',
+                'action': 'payment_succeeded',
+                'customer_id': customer_id
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to process payment for customer {customer_id}: {str(e)}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _handle_payment_failed(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle failed payment"""
+        invoice = event_data['data']['object']
+        customer_id = invoice['customer']
+        subscription_id = invoice.get('subscription')
+        
+        logger.warning(f"Payment failed for customer: {customer_id}")
+        
+        try:
+            # Implement dunning management
+            from utils.license_manager import LicenseManager
+            license_manager = LicenseManager()
+            
+            if subscription_id:
+                # Mark subscription as past due
+                license_manager.mark_subscription_past_due(subscription_id)
+                
+            self._log_subscription_activity(
+                customer_id, 'payment_failed', {
+                    'invoice_id': invoice['id'],
+                    'subscription_id': subscription_id,
+                    'attempt_count': invoice.get('attempt_count', 1)
+                }
+            )
+            
+            return {
+                'status': 'success',
+                'action': 'payment_failed',
+                'customer_id': customer_id
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to handle payment failure for customer {customer_id}: {str(e)}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _handle_customer_created(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle new customer creation"""
+        customer = event_data['data']['object']
+        customer_id = customer['id']
+        
+        logger.info(f"New customer created: {customer_id}")
+        
+        try:
+            # Initialize customer in license system
+            from utils.license_manager import LicenseManager
+            license_manager = LicenseManager()
+            
+            license_manager.create_customer_record(
+                customer_id=customer_id,
+                email=customer.get('email'),
+                name=customer.get('name')
+            )
+            
+            self._log_subscription_activity(
+                customer_id, 'customer_created', {
+                    'email': customer.get('email'),
+                    'name': customer.get('name')
+                }
+            )
+            
+            return {
+                'status': 'success',
+                'action': 'customer_created',
+                'customer_id': customer_id
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to create customer record {customer_id}: {str(e)}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _get_plan_name(self, subscription: Dict[str, Any]) -> str:
+        """Extract plan name from subscription"""
+        try:
+            if subscription.get('items', {}).get('data'):
+                price_id = subscription['items']['data'][0]['price']['id']
+                
+                # Map price IDs to plan names (Netherlands market)
+                plan_mapping = {
+                    'price_starter_nl': 'Starter',
+                    'price_professional_nl': 'Professional', 
+                    'price_enterprise_nl': 'Enterprise',
+                    'price_compliance_plus_nl': 'Compliance Plus'
+                }
+                
+                return plan_mapping.get(price_id, 'Unknown')
+            
+            return 'Unknown'
+        except Exception:
+            return 'Unknown'
+    
+    def _get_subscription_tier(self, subscription: Dict[str, Any]) -> str:
+        """Determine subscription tier for access control"""
+        plan_name = self._get_plan_name(subscription)
+        
+        tier_mapping = {
+            'Starter': 'basic',
+            'Professional': 'professional',
+            'Enterprise': 'enterprise',
+            'Compliance Plus': 'premium'
+        }
+        
+        return tier_mapping.get(plan_name, 'basic')
+    
+    def _log_subscription_activity(self, customer_id: str, action: str, details: Dict[str, Any]):
+        """Log subscription activity for audit trail"""
+        try:
+            from utils.activity_tracker import ActivityTracker, ActivityType
+            
+            tracker = ActivityTracker()
+            tracker.track_activity(
+                session_id=f"webhook_{datetime.now().timestamp()}",
+                user_id=customer_id,
+                username=customer_id,
+                activity_type=ActivityType.SETTINGS_CHANGED,  # Use closest available type
+                details={
+                    'webhook_action': action,
+                    'timestamp': datetime.now().isoformat(),
+                    **details
+                }
+            )
+            
+        except Exception as e:
+            logger.warning(f"Failed to log subscription activity: {str(e)}")
+
+# Webhook endpoint handler function for web frameworks
+def handle_stripe_webhook(payload: bytes, signature: str) -> Dict[str, Any]:
+    """
+    Main webhook handler function for web framework integration
+    
+    Args:
+        payload: Raw webhook payload from Stripe
+        signature: Stripe signature header
+        
+    Returns:
+        Dict with processing result
+    """
+    handler = StripeWebhookHandler()
+    
+    # Verify signature
+    if not handler.verify_webhook_signature(payload, signature):
+        return {'status': 'error', 'message': 'Invalid signature'}
+    
+    # Parse event data
+    try:
+        event_data = json.loads(payload.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        return {'status': 'error', 'message': f'Invalid payload: {str(e)}'}
+    
+    # Process webhook event
+    return handler.handle_webhook_event(event_data)

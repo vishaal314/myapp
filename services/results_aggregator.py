@@ -148,6 +148,19 @@ class ResultsAggregator:
             self.use_file_storage = True
             self._init_file_storage()
     
+    def save_scan_result(self, username: str, result: Dict[str, Any]) -> str:
+        """
+        Save scan result - alias for store_scan_result for backward compatibility.
+        
+        Args:
+            username: Username who performed the scan
+            result: Scan result dictionary
+            
+        Returns:
+            str: Scan ID of the saved result
+        """
+        return self.store_scan_result(username, result)
+    
     def store_scan_result(self, username: str, result: Dict[str, Any]) -> str:
         """
         Store a scan result in the database.

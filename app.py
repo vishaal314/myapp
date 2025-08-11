@@ -32,12 +32,68 @@ from services.license_integration import (
     show_license_sidebar, show_usage_dashboard
 )
 
-# Activity tracking imports
+# Activity tracking imports - Fixed import path
 try:
-    from services.activity_tracker import (
-        track_scan_completed, track_scan_failed, ScannerType,
-        get_session_id, get_user_id
+    from utils.activity_tracker import (
+        ActivityTracker, ActivityType, ScannerType
     )
+    
+    # Initialize global activity tracker
+    activity_tracker = ActivityTracker()
+    
+    # Helper functions for backward compatibility
+    def track_scan_completed(scanner_type, user_id, session_id, scan_type, region, file_count, total_pii_found, high_risk_count, result_data):
+        return activity_tracker.track_activity(
+            session_id=session_id,
+            user_id=user_id,
+            username=user_id,  # Use user_id as username fallback
+            activity_type=ActivityType.SCAN_COMPLETED,
+            scanner_type=scanner_type,
+            region=region,
+            details={
+                'scan_type': scan_type,
+                'file_count': file_count,
+                'total_pii_found': total_pii_found,
+                'high_risk_count': high_risk_count,
+                'result_data': result_data
+            }
+        )
+    
+    def track_scan_failed(scanner_type, user_id, session_id, error_message):
+        return activity_tracker.track_activity(
+            session_id=session_id,
+            user_id=user_id,
+            username=user_id,  # Use user_id as username fallback
+            activity_type=ActivityType.SCAN_FAILED,
+            scanner_type=scanner_type,
+            success=False,
+            error_message=error_message
+        )
+    
+    def track_scan_started(scanner_type, user_id, session_id, scan_type, region, **kwargs):
+        return activity_tracker.track_activity(
+            session_id=session_id,
+            user_id=user_id,
+            username=user_id,  # Use user_id as username fallback
+            activity_type=ActivityType.SCAN_STARTED,
+            scanner_type=scanner_type,
+            region=region,
+            details={
+                'scan_type': scan_type,
+                **kwargs
+            }
+        )
+    
+    def get_session_id():
+        import streamlit as st
+        if 'session_id' not in st.session_state:
+            st.session_state.session_id = str(uuid.uuid4())
+        return st.session_state.session_id
+    
+    def get_user_id():
+        import streamlit as st
+        return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
+        
 except ImportError:
     # Fallback definitions for activity tracking
     def track_scan_completed(**kwargs): pass
@@ -1881,25 +1937,24 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         
         # Track successful completion with comprehensive details
         track_scan_completed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
             scanner_type=ScannerType.CODE,
-            findings_count=findings_count,
-            files_scanned=scan_results['files_scanned'],
-            compliance_score=compliance_score,
-            duration_ms=scan_duration,
+            user_id=user_id,
+            session_id=session_id,
+            scan_type="Code Scanner",
             region=region,
-            details={
+            file_count=scan_results['files_scanned'],
+            total_pii_found=findings_count,
+            high_risk_count=high_risk_count,
+            result_data={
                 'scan_id': scan_results['scan_id'],
-                'high_risk_count': high_risk_count,
                 'total_lines': scan_results['total_lines'],
                 'gdpr_compliance': gdpr_compliance,
                 'netherlands_uavg': region == "Netherlands",
                 'breach_notification_required': scan_results.get('breach_notification_required', False),
                 'bsn_detected': uavg_critical > 0 if region == "Netherlands" else False,
                 'scanner_name': 'Code Scanner',
-                'pii_count': findings_count,  # Include PII count for dashboard
+                'compliance_score': compliance_score,
+                'duration_ms': scan_duration,
                 'risk_level': 'High' if high_risk_count > 0 else 'Low'
             }
         )
@@ -1925,16 +1980,10 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
     except Exception as e:
         # Track scan failure
         track_scan_failed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
             scanner_type=ScannerType.CODE,
-            error_message=str(e),
-            region=region,
-            details={
-                'gdpr_compliance': gdpr_compliance,
-                'netherlands_uavg': region == "Netherlands"
-            }
+            user_id=user_id,
+            session_id=session_id,
+            error_message=str(e)
         )
         st.error(f"GDPR scan failed: {str(e)}")
         import traceback
@@ -2255,17 +2304,17 @@ def execute_document_scan(region, username, uploaded_files):
         
         # Track successful completion
         track_scan_completed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
             scanner_type=ScannerType.DOCUMENT,
-            findings_count=findings_count,
-            files_scanned=scan_results["files_scanned"],
-            duration_ms=scan_duration,
+            user_id=user_id,
+            session_id=session_id,
+            scan_type="Document Scanner",
             region=region,
-            details={
+            file_count=scan_results["files_scanned"],
+            total_pii_found=findings_count,
+            high_risk_count=high_risk_count,
+            result_data={
                 'scan_id': scan_results["scan_id"],
-                'high_risk_count': high_risk_count,
+                'duration_ms': scan_duration,
                 'file_types_scanned': [file.name.split('.')[-1] for file in uploaded_files]
             }
         )
@@ -2275,17 +2324,16 @@ def execute_document_scan(region, username, uploaded_files):
         st.success("✅ Document scan completed!")
         
     except Exception as e:
+        # Initialize variables for error handler if not already set
+        session_id = session_id if 'session_id' in locals() else str(uuid.uuid4())
+        user_id = user_id if 'user_id' in locals() else username
+        
         # Track scan failure
         track_scan_failed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
             scanner_type=ScannerType.DOCUMENT,
-            error_message=str(e),
-            region=region,
-            details={
-                'file_count': len(uploaded_files) if uploaded_files else 0
-            }
+            user_id=user_id,
+            session_id=session_id,
+            error_message=str(e)
         )
         st.error(f"Document scan failed: {str(e)}")
 
@@ -2424,17 +2472,17 @@ def execute_image_scan(region, username, uploaded_files):
         
         # Track successful completion
         track_scan_completed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
             scanner_type=ScannerType.IMAGE,
-            findings_count=findings_count,
-            files_scanned=scan_results["files_scanned"],
-            duration_ms=scan_duration,
+            user_id=user_id,
+            session_id=session_id,
+            scan_type="Image Scanner",
             region=region,
-            details={
+            file_count=scan_results["files_scanned"],
+            total_pii_found=findings_count,
+            high_risk_count=high_risk_count,
+            result_data={
                 'scan_id': scan_results["scan_id"],
-                'high_risk_count': high_risk_count,
+                'duration_ms': scan_duration,
                 'image_types_scanned': [file.name.split('.')[-1] for file in uploaded_files]
             }
         )
@@ -2444,17 +2492,16 @@ def execute_image_scan(region, username, uploaded_files):
         st.success("✅ Image scan completed!")
         
     except Exception as e:
+        # Initialize variables for error handler if not already set  
+        session_id = session_id if 'session_id' in locals() else str(uuid.uuid4())
+        user_id = user_id if 'user_id' in locals() else username
+        
         # Track scan failure
         track_scan_failed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
             scanner_type=ScannerType.IMAGE,
-            error_message=str(e),
-            region=region,
-            details={
-                'file_count': len(uploaded_files) if uploaded_files else 0
-            }
+            user_id=user_id,
+            session_id=session_id,
+            error_message=str(e)
         )
         st.error(f"Image scan failed: {str(e)}")
 
@@ -2557,17 +2604,17 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
         
         # Track successful completion
         track_scan_completed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
             scanner_type=ScannerType.DATABASE,
-            findings_count=findings_count,
-            files_scanned=scan_results["tables_scanned"],
-            duration_ms=scan_duration,
+            user_id=user_id,
+            session_id=session_id,
+            scan_type="Database Scanner",
             region=region,
-            details={
+            file_count=scan_results["tables_scanned"],
+            total_pii_found=findings_count,
+            high_risk_count=high_risk_count,
+            result_data={
                 'scan_id': scan_results["scan_id"],
-                'high_risk_count': high_risk_count,
+                'duration_ms': scan_duration,
                 'db_type': db_type,
                 'tables_scanned': scan_results["tables_scanned"]
             }
@@ -2578,19 +2625,16 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
         st.success("✅ Database scan completed!")
         
     except Exception as e:
+        # Initialize variables for error handler if not already set
+        session_id = session_id if 'session_id' in locals() else str(uuid.uuid4())
+        user_id = user_id if 'user_id' in locals() else username
+        
         # Track scan failure
         track_scan_failed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
             scanner_type=ScannerType.DATABASE,
-            error_message=str(e),
-            region=region,
-            details={
-                'db_type': db_type,
-                'host': host,
-                'database': database
-            }
+            user_id=user_id,
+            session_id=session_id,
+            error_message=str(e)
         )
         st.error(f"Database scan failed: {str(e)}")
 
@@ -3408,18 +3452,17 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         
         # Track successful completion
         track_scan_completed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
             scanner_type=ScannerType.API,
-            findings_count=findings_count,
-            files_scanned=scan_results["endpoints_scanned"],
-            compliance_score=scan_results["security_score"],
-            duration_ms=scan_duration,
+            user_id=user_id,
+            session_id=session_id,
+            scan_type="API Scanner", 
             region=region,
-            details={
+            file_count=scan_results["endpoints_scanned"],
+            total_pii_found=findings_count,
+            high_risk_count=high_risk_count,
+            result_data={
                 'scan_id': scan_results["scan_id"],
-                'high_risk_count': high_risk_count,
+                'duration_ms': scan_duration,
                 'base_url': base_url,
                 'endpoints_scanned': scan_results["endpoints_scanned"],
                 'security_score': scan_results["security_score"]
