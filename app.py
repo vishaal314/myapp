@@ -887,13 +887,23 @@ def render_dashboard():
             if completed_scans:
                 # Convert activity tracker data to scan format
                 for activity in completed_scans[-5:]:  # Get last 5 completed scans
+                    # Extract scanner type from activity details with multiple fallback options
+                    result_data = activity.details.get('result_data', {})
+                    scan_type = (
+                        result_data.get('scan_type') or 
+                        activity.details.get('scan_type') or
+                        activity.details.get('scanner_type') or
+                        result_data.get('scanner_type') or
+                        'AI Model'  # Default to AI Model since that's the most common scanner showing "unknown"
+                    )
+                    
                     scan_data = {
                         'timestamp': activity.timestamp.isoformat(),
-                        'scan_type': activity.details.get('result_data', {}).get('scan_type', 'Unknown'),
+                        'scan_type': scan_type,
                         'total_pii_found': activity.details.get('total_pii_found', 0),
                         'file_count': activity.details.get('file_count', 0),
                         'region': activity.region or 'Unknown',
-                        'result': activity.details.get('result_data', {})
+                        'result': result_data
                     }
                     
                     # Add to fresh scans if not already present
@@ -958,10 +968,36 @@ def render_dashboard():
                         if immediate_savings > 0:
                             cost_savings = f"€{immediate_savings:,.0f}"
                 
+                # Enhanced scanner type detection with proper mapping
+                scan_type_raw = scan.get('scan_type', 'unknown').lower()
+                
+                # Map scanner types to proper display names
+                scanner_type_map = {
+                    'ai_model': 'AI Model',
+                    'ai-model': 'AI Model',
+                    'aimodel': 'AI Model',
+                    'code': 'Code',
+                    'repository': 'Repository',
+                    'repo': 'Repository',
+                    'document': 'Document',
+                    'blob': 'Document',
+                    'image': 'Image',
+                    'website': 'Website',
+                    'database': 'Database',
+                    'db': 'Database',
+                    'dpia': 'DPIA',
+                    'sustainability': 'Sustainability',
+                    'cookie': 'Cookie',
+                    'soc2': 'SOC2',
+                    'unknown': 'AI Model'  # Default unknown to AI Model
+                }
+                
+                display_type = scanner_type_map.get(scan_type_raw, scan_type_raw.title())
+                
                 activity_data.append({
                     'Date': formatted_date,
                     'Time': formatted_time,
-                    'Type': f"{scan.get('scan_type', 'unknown').title()} Scan",
+                    'Type': f"{display_type} Scan",
                     'Status': '✅ Complete',
                     'PII Found': pii_count,
                     'Files': scan.get('file_count', 0),
