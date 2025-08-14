@@ -875,8 +875,45 @@ def render_dashboard():
         
         st.markdown("---")
         
-        # Recent scan activity from real data
+        # Recent scan activity from real data - refresh data to ensure latest scans appear
         st.subheader(_('dashboard.recent_activity', 'Recent Scan Activity'))
+        
+        # Force refresh recent scans to get latest data including current session
+        try:
+            # Get fresh data from results aggregator
+            fresh_scans = aggregator.get_recent_scans(days=7, username=username)
+            
+            # Also try to get activity tracker data for most recent scans
+            if completed_scans:
+                # Convert activity tracker data to scan format
+                for activity in completed_scans[-5:]:  # Get last 5 completed scans
+                    scan_data = {
+                        'timestamp': activity.timestamp.isoformat(),
+                        'scan_type': activity.details.get('result_data', {}).get('scan_type', 'Unknown'),
+                        'total_pii_found': activity.details.get('total_pii_found', 0),
+                        'file_count': activity.details.get('file_count', 0),
+                        'region': activity.region or 'Unknown',
+                        'result': activity.details.get('result_data', {})
+                    }
+                    
+                    # Add to fresh scans if not already present
+                    scan_exists = any(
+                        abs((datetime.fromisoformat(scan_data['timestamp'].replace('Z', '+00:00')) - 
+                            datetime.fromisoformat(scan.get('timestamp', '1970-01-01T00:00:00').replace('Z', '+00:00'))).total_seconds()) < 60
+                        for scan in fresh_scans
+                    )
+                    
+                    if not scan_exists:
+                        fresh_scans.append(scan_data)
+                
+                # Sort by timestamp descending (most recent first)
+                fresh_scans.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+                
+            recent_scans = fresh_scans[:10]  # Show last 10 scans
+            
+        except Exception as e:
+            logger.warning(f"Failed to refresh recent scans: {e}")
+            # Keep existing recent_scans data
         
         if recent_scans:
             # Transform scan data for activity display
@@ -933,8 +970,12 @@ def render_dashboard():
                 })
             
             if activity_data:
+                # Sort by date and time descending (most recent first)
+                activity_data.sort(key=lambda x: f"{x['Date']} {x['Time']}", reverse=True)
                 df = pd.DataFrame(activity_data)
                 st.dataframe(df, use_container_width=True)
+                
+                st.success(f"✅ Showing {len(activity_data)} recent scan(s) - Updated in real-time")
                 
                 # Quick actions
                 st.subheader("🔗 Quick Actions")
@@ -957,7 +998,23 @@ def render_dashboard():
             else:
                 st.info("Scan data processing... Please refresh if data doesn't appear.")
         else:
-            st.info("No recent scan activity found. Start your first scan to see activity here.")
+            # Show a refresh button to help user get latest data
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                if st.button("🔄 Refresh Recent Activity", help="Load latest scan results", key="refresh_activity"):
+                    st.rerun()
+            
+            with col2:
+                st.info(f"No recent scans found for user: {username}")
+            
+            # Show helpful message
+            st.markdown("""
+            <div style="padding: 2rem; text-align: center; background: #f8f9fa; border-radius: 8px; border: 1px dashed #dee2e6;">
+                <h4>🔍 Ready for Your First Scan</h4>
+                <p>Use the scanners above to start analyzing your data for GDPR compliance.</p>
+                <p><small>Recent scans will automatically appear here after completion.</small></p>
+            </div>
+            """, unsafe_allow_html=True)
             
             # Show start scanning button for new users
             if st.button("🚀 Start Your First Scan"):
