@@ -858,32 +858,20 @@ def render_dashboard():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            # Show current scan count with delta from previous refresh
-            prev_scans = st.session_state.get('prev_total_scans', 0)
-            delta_scans = total_scans - prev_scans
-            st.metric(_('dashboard.metric.total_scans', 'Total Scans'), total_scans, 
-                     f"+{delta_scans}" if delta_scans > 0 else None)
-            st.session_state['prev_total_scans'] = total_scans
+            # Show current scan count without delta to avoid "+4" display
+            st.metric(_('dashboard.metric.total_scans', 'Total Scans'), total_scans)
             
         with col2:
-            # Show current PII found with delta from previous refresh
-            prev_pii = st.session_state.get('prev_total_pii', 0)
-            delta_pii = total_pii - prev_pii
-            st.metric(_('dashboard.metric.total_pii', 'Total PII Found'), total_pii, 
-                     f"+{delta_pii}" if delta_pii > 0 else None)
-            st.session_state['prev_total_pii'] = total_pii
+            # Show current PII found without delta to avoid confusing display
+            st.metric(_('dashboard.metric.total_pii', 'Total PII Found'), total_pii)
             
         with col3:
             # Show current compliance score
             st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), f"{avg_compliance:.1f}%")
             
         with col4:
-            # Show current active issues with delta from previous refresh
-            prev_issues = st.session_state.get('prev_active_issues', 0)
-            delta_issues = high_risk_issues - prev_issues
-            st.metric(_('dashboard.metric.active_issues', 'Active Issues'), high_risk_issues,
-                     f"+{delta_issues}" if delta_issues > 0 else (f"{delta_issues}" if delta_issues < 0 else None))
-            st.session_state['prev_active_issues'] = high_risk_issues
+            # Show current active issues without delta to avoid confusing display
+            st.metric(_('dashboard.metric.active_issues', 'Active Issues'), high_risk_issues)
         
         st.markdown("---")
         
