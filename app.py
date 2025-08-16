@@ -287,6 +287,108 @@ def main():
             # Fallback to basic interface
             render_safe_mode()
 
+def render_freemium_registration():
+    """Render freemium registration form for new users"""
+    from services.subscription_manager import SubscriptionManager
+    
+    st.subheader("🚀 Start Your Free Trial")
+    st.info("Get 1 free AI Model scan (€41 value) to experience DataGuardian Pro")
+    
+    with st.form("freemium_registration"):
+        email = st.text_input("Email Address", placeholder="your@company.com")
+        name = st.text_input("Name/Company", placeholder="John Doe or Acme Corp")
+        country = st.selectbox("Country", ["Netherlands", "Germany", "France", "Belgium"], index=0)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            agree_terms = st.checkbox("I agree to Terms of Service")
+        with col2:
+            agree_gdpr = st.checkbox("I consent to GDPR-compliant processing")
+            
+        submitted = st.form_submit_button("🎯 Get My Free Scan", type="primary")
+        
+        if submitted:
+            if not email or not name:
+                st.error("Please fill in all required fields")
+            elif not agree_terms or not agree_gdpr:
+                st.error("Please accept the terms and privacy policy")
+            else:
+                # Create freemium user account
+                try:
+                    # For now, store in session state (would be database in production)
+                    st.session_state.update({
+                        'authenticated': True,
+                        'username': email,
+                        'user_role': 'freemium',
+                        'free_scans_remaining': 1,
+                        'subscription_plan': 'trial',
+                        'show_registration': False
+                    })
+                    
+                    st.success("🎉 Welcome to DataGuardian Pro! Your free AI Model scan is ready.")
+                    st.info("👉 Navigate to 'AI Model Scan' to start your complimentary analysis")
+                    st.balloons()
+                    
+                    # Track conversion for analytics
+                    try:
+                        from utils.activity_tracker import get_activity_tracker
+                        tracker = get_activity_tracker()
+                        tracker.track_activity(email, 'freemium_signup', {
+                            'name': name,
+                            'country': country,
+                            'source': 'landing_page'
+                        })
+                    except Exception:
+                        pass  # Analytics failure shouldn't block registration
+                        
+                except Exception as e:
+                    st.error(f"Registration failed: {str(e)}")
+
+def render_full_registration():
+    """Render full registration form with subscription selection"""
+    from services.subscription_manager import SUBSCRIPTION_PLANS
+    
+    st.subheader("💼 Choose Your Plan")
+    
+    # Display subscription plans in a more compact format
+    plan_options = []
+    for plan_id, plan in SUBSCRIPTION_PLANS.items():
+        plan_options.append(f"{plan['name']} - €{plan['price']/100:.2f}/month")
+        
+    with st.expander("📋 View All Plan Details"):
+        for plan_id, plan in SUBSCRIPTION_PLANS.items():
+            st.subheader(f"{plan['name']} - €{plan['price']/100:.2f}/month")
+            st.write(plan['description'])
+            for feature in plan['features']:
+                st.write(f"✓ {feature}")
+            st.markdown("---")
+                
+    # Registration form
+    with st.form("full_registration"):
+        st.subheader("Account Details")
+        email = st.text_input("Business Email", placeholder="admin@company.com")
+        company = st.text_input("Company Name", placeholder="Acme Corporation")
+        selected_plan = st.selectbox("Select Plan", list(SUBSCRIPTION_PLANS.keys()), 
+                                   format_func=lambda x: f"{SUBSCRIPTION_PLANS[x]['name']} (€{SUBSCRIPTION_PLANS[x]['price']/100:.2f}/month)")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            country = st.selectbox("Country", ["Netherlands", "Germany", "France", "Belgium"])
+        with col2:
+            vat_number = st.text_input("VAT Number (optional)", placeholder="NL123456789B01")
+            
+        agree_terms = st.checkbox("I agree to Terms of Service and Privacy Policy")
+        
+        if st.form_submit_button("Continue to Payment", type="primary"):
+            if not email or not company or not agree_terms:
+                st.error("Please complete all required fields")
+            else:
+                st.success("Redirecting to secure payment...")
+                selected_plan_info = SUBSCRIPTION_PLANS[selected_plan]
+                st.info(f"Selected: {selected_plan_info['name']} - €{selected_plan_info['price']/100:.2f}/month")
+                st.info("💳 Secure payment processing via Stripe with iDEAL support for Netherlands")
+                # Would redirect to Stripe checkout in production
+
 def render_landing_page():
     """Render the beautiful landing page and login interface"""
     
@@ -324,11 +426,23 @@ def render_landing_page():
                 else:
                     st.error(_('login.error.missing_fields', 'Please enter username and password'))
         
-        # Registration option
+        # Registration option with freemium trial
         st.markdown("---")
         st.write(f"**{_('register.new_user', 'New user?')}**")
-        if st.button(_('register.create_account', 'Create Account')):
-            st.info(_('register.info', 'Registration functionality available in full version'))
+        
+        # Freemium trial button
+        if st.button("🚀 Try Free Scan", type="primary", help="Get 1 free AI Model scan (€41 value)"):
+            st.session_state['show_registration'] = True
+            
+        # Full registration button
+        if st.button(_('register.create_account', 'Create Account'), help="Full access with subscription"):
+            st.session_state['show_full_registration'] = True
+            
+        # Show registration forms based on selection
+        if st.session_state.get('show_registration', False):
+            render_freemium_registration()
+        elif st.session_state.get('show_full_registration', False):
+            render_full_registration()
     
     # Show language hint for Dutch users
     if st.session_state.get('language') == 'en':
