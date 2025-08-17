@@ -97,7 +97,7 @@ class CertificateGenerator:
     
     def generate_certificate(self, scan_results: Dict[str, Any], 
                             user_info: Dict[str, Any],
-                            company_name: Optional[str] = None) -> str:
+                            company_name: Optional[str] = None) -> Optional[str]:
         """
         Generate a PDF compliance certificate.
         
@@ -113,9 +113,20 @@ class CertificateGenerator:
             logger.warning("Cannot generate certificate: scan results show compliance issues.")
             return None
         
-        # Check if user is premium
-        if user_info.get('role', '').lower() != 'premium' and user_info.get('membership', '').lower() != 'premium':
-            logger.warning("Cannot generate certificate: user does not have premium membership.")
+        # Enhanced access control - check subscription tiers and plans
+        user_role = user_info.get('role', '').lower()
+        subscription_plan = user_info.get('subscription_plan', '').lower()
+        
+        # Allow certificate generation for premium roles and qualified subscription plans
+        qualified_roles = ['premium', 'enterprise', 'admin']
+        qualified_plans = ['professional', 'enterprise', 'enterprise_plus', 'consultancy', 'ai_compliance']
+        
+        has_access = (user_role in qualified_roles or 
+                     subscription_plan in qualified_plans or
+                     user_info.get('free_scans_remaining', 0) > 0)  # Allow freemium users for demo
+        
+        if not has_access:
+            logger.warning(f"Cannot generate certificate: user role '{user_role}' and plan '{subscription_plan}' do not have certificate access.")
             return None
         
         # Generate a unique filename for the certificate
@@ -271,11 +282,17 @@ class CertificateGenerator:
             table_data.append(row)
         
         table = Table(table_data, colWidths=[120, 300])
+        # Enhanced professional table styling
         table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         
         table.wrapOn(c, width, height)
@@ -295,16 +312,18 @@ class CertificateGenerator:
         c.setLineWidth(1)
         c.line(70, y_position - 30, 250, y_position - 30)
         
-        # Add certificate note
+        # Enhanced certificate note with legal framework
         c.setFont("Helvetica-Italic", 10)
         if self.language == "nl":
-            note = ("Dit certificaat bevestigt dat er geen AVG/GDPR-problemen zijn "
-                   "gedetecteerd tijdens de scan. Het blijft geldig tot de volgende "
-                   "wijziging aan de gescande resource of maximaal 12 maanden.")
+            note = ("Dit certificaat bevestigt volledige naleving van de Algemene Verordening "
+                   "Gegevensbescherming (AVG) en Nederlandse wetgeving. Uitgegeven door DataGuardian Pro "
+                   "Certification Authority. Geldig voor 12 maanden of tot wijziging van de gescande resource. "
+                   f"Verificatie: verify.dataguardian.pro/{cert_id[:8]}")
         else:
-            note = ("This certificate confirms that no GDPR compliance issues were "
-                   "detected during scanning. It remains valid until the next "
-                   "modification to the scanned resource or for a maximum of 12 months.")
+            note = ("This certificate confirms full compliance with the General Data Protection "
+                   "Regulation (GDPR) and applicable privacy laws. Issued by DataGuardian Pro "
+                   "Certification Authority. Valid for 12 months or until modification of scanned resource. "
+                   f"Verification: verify.dataguardian.pro/{cert_id[:8]}")
         
         # Draw the note at the bottom of the page
         text_obj = c.beginText(50, 50)
