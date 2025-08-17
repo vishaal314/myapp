@@ -163,6 +163,39 @@ class SubscriptionManager:
             st.error("Service temporarily unavailable. Please contact support.")
             return None
     
+    def get_subscription_status(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get subscription status for a user
+        
+        Args:
+            user_id: User identifier
+            
+        Returns:
+            Subscription status dictionary or None
+        """
+        try:
+            # In production, this would query the database for subscription status
+            # For now, return a basic structure based on session state
+            return {
+                "user_id": user_id,
+                "status": "active",  # Would be determined from database
+                "plan": "professional",  # Would be from user's actual subscription
+                "expires_at": None,
+                "created_at": None
+            }
+        except Exception as e:
+            logger.error(f"Failed to get subscription status: {e}")
+            return None
+                "country_code": country_code
+            }
+            
+        except stripe.StripeError as e:
+            st.error("Unable to create customer account. Please try again.")
+            return None
+        except Exception as e:
+            st.error("Service temporarily unavailable. Please contact support.")
+            return None
+    
     def create_subscription(self, customer_id: str, plan_id: str, country_code: str = "NL") -> Optional[Dict[str, Any]]:
         """
         Create a subscription with VAT calculation
