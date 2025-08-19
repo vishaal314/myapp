@@ -88,6 +88,11 @@ class AIModelScanner:
             "files_scanned": 1,
             "total_lines": 0,
             "lines_analyzed": 0,
+            # Add AI Model compliance metrics that UI expects
+            "model_framework": "Unknown",
+            "ai_act_compliance": "Not assessed",
+            "compliance_score": 0,
+            "ai_model_compliance": 0,
         }
 
         # Process model source and collect findings
@@ -126,7 +131,12 @@ class AIModelScanner:
                             "high": 1,
                             "critical": 0
                         },
-                        "total_findings": len(scan_result["findings"])
+                        "total_findings": len(scan_result["findings"]),
+                        # Add AI compliance metrics for validation failure
+                        "model_framework": "Repository Validation Failed",
+                        "ai_act_compliance": "Cannot Assess - Invalid Source",
+                        "compliance_score": 30,
+                        "ai_model_compliance": 30,
                     })
                 
                 return scan_result
@@ -167,6 +177,11 @@ class AIModelScanner:
             try:
                 metrics = self._calculate_risk_metrics(scan_result["findings"])
                 scan_result.update(metrics)
+                
+                # Add AI Model specific compliance assessment
+                ai_compliance_metrics = self._calculate_ai_compliance_metrics(scan_result)
+                scan_result.update(ai_compliance_metrics)
+                
             except Exception as metrics_error:
                 logging.error(f"Error calculating risk metrics: {str(metrics_error)}")
                 scan_result.update({
@@ -179,7 +194,12 @@ class AIModelScanner:
                         "high": 0,
                         "critical": 0
                     },
-                    "total_findings": len(scan_result["findings"])
+                    "total_findings": len(scan_result["findings"]),
+                    # Add default AI compliance metrics
+                    "model_framework": "Framework Detection Failed",
+                    "ai_act_compliance": "Assessment Error - Requires Manual Review",
+                    "compliance_score": 45,
+                    "ai_model_compliance": 45,
                 })
 
         except Exception as e:
@@ -202,7 +222,12 @@ class AIModelScanner:
                     "high": 1,
                     "critical": 0
                 },
-                "total_findings": len(scan_result["findings"])
+                "total_findings": len(scan_result["findings"]),
+                # Add AI compliance metrics for error scenarios
+                "model_framework": "Scan Error - Framework Unknown",
+                "ai_act_compliance": "Error - Assessment Failed",
+                "compliance_score": 20,
+                "ai_model_compliance": 20,
             })
 
         # Integrate cost savings analysis
@@ -1085,4 +1110,56 @@ class AIModelScanner:
             }[severity],
             "risk_counts": risk_levels,
             "total_findings": len(findings)
+        }
+    
+    def _calculate_ai_compliance_metrics(self, scan_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate AI-specific compliance metrics for display"""
+        findings = scan_result.get("findings", [])
+        model_source = scan_result.get("model_source", "Unknown")
+        
+        # Detect model framework from findings or source
+        framework = "Unknown"
+        if any("tensorflow" in str(finding).lower() for finding in findings):
+            framework = "TensorFlow"
+        elif any("pytorch" in str(finding).lower() for finding in findings):
+            framework = "PyTorch"
+        elif any("onnx" in str(finding).lower() for finding in findings):
+            framework = "ONNX"
+        elif any("scikit" in str(finding).lower() for finding in findings):
+            framework = "scikit-learn"
+        elif model_source in ["Model Hub", "API Endpoint"]:
+            framework = "Cloud-based Model"
+        elif model_source == "Repository URL":
+            framework = "Open Source Model"
+        else:
+            framework = "Multi-Framework"
+            
+        # Calculate compliance score based on findings
+        compliance_score = 100
+        high_risk_count = sum(1 for f in findings if f.get("risk_level") == "high")
+        critical_count = sum(1 for f in findings if f.get("risk_level") == "critical")
+        medium_count = sum(1 for f in findings if f.get("risk_level") == "medium")
+        
+        # Reduce score based on findings
+        compliance_score -= (critical_count * 25)
+        compliance_score -= (high_risk_count * 15)
+        compliance_score -= (medium_count * 8)
+        compliance_score = max(compliance_score, 10)  # Minimum 10%
+        
+        # Determine AI Act 2025 status
+        ai_act_status = "Compliant"
+        if critical_count > 0:
+            ai_act_status = "High Risk - Requires Immediate Action"
+        elif high_risk_count > 2:
+            ai_act_status = "Medium Risk - Assessment Required"
+        elif medium_count > 3:
+            ai_act_status = "Low Risk - Monitoring Required"
+        elif compliance_score < 70:
+            ai_act_status = "Requires Further Assessment"
+            
+        return {
+            "model_framework": framework,
+            "ai_act_compliance": ai_act_status,
+            "compliance_score": compliance_score,
+            "ai_model_compliance": compliance_score,
         }
