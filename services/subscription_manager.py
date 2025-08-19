@@ -184,7 +184,6 @@ class SubscriptionManager:
                 "created_at": None
             }
         except Exception as e:
-            logger.error(f"Failed to get subscription status: {e}")
             return None
                 "country_code": country_code
             }

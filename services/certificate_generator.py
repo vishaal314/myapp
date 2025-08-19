@@ -153,7 +153,8 @@ class CertificateGenerator:
                 tracker.track_activity(
                     user_info.get('username', 'anonymous'),
                     'certificate_issued',
-                    'compliance_certificate'
+                    'compliance_certificate',
+                    certificate_record
                 )
             except Exception:
                 pass  # Analytics failure shouldn't block certificate generation
