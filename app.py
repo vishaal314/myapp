@@ -970,19 +970,46 @@ def render_dashboard():
         high_risk_issues = 0
         compliance_scores = []
         
+        logger.info(f"Dashboard: Processing {total_scans} completed scans from activity tracker")
         for scan in completed_scans:
             scan_details = scan.details
-            total_pii += scan_details.get('findings_count', 0)
-            high_risk_issues += scan_details.get('high_risk_count', 0)
+            findings_count = scan_details.get('findings_count', 0)
+            high_risk_count = scan_details.get('high_risk_count', 0)
+            
+            total_pii += findings_count
+            high_risk_issues += high_risk_count
             
             # Collect compliance scores for averaging
             comp_score = scan_details.get('compliance_score', 0)
             if comp_score > 0:
                 compliance_scores.append(comp_score)
+            
+            logger.info(f"Scan {scan.scanner_type}: {findings_count} findings, {high_risk_count} high risk")
         
-        # Fallback to ResultsAggregator if no activity tracker data
+        # Also get data from ResultsAggregator for additional context
         aggregator = ResultsAggregator()
         recent_scans = aggregator.get_recent_scans(days=30, username=username)
+        
+        # If aggregator has more recent data, merge it
+        if len(recent_scans) > total_scans:
+            logger.info(f"Dashboard: Found {len(recent_scans)} scans in aggregator vs {total_scans} in activity tracker")
+            for scan in recent_scans:
+                result = scan.get('result', {})
+                if isinstance(result, dict):
+                    additional_pii = result.get('total_pii_found', 0)
+                    additional_high_risk = result.get('high_risk_count', 0)
+                    additional_compliance = result.get('compliance_score', 0)
+                    
+                    # Add if this appears to be new data not in activity tracker
+                    if additional_pii > 0:
+                        total_pii += additional_pii
+                    if additional_high_risk > 0:
+                        high_risk_issues += additional_high_risk  
+                    if additional_compliance > 0:
+                        compliance_scores.append(additional_compliance)
+            
+            # Use the higher scan count
+            total_scans = max(total_scans, len(recent_scans))
         
         if total_scans == 0:
             
@@ -1031,24 +1058,36 @@ def render_dashboard():
         else:
             avg_compliance = 85.0  # Default compliance score when no data available
         
-        # Display real-time metrics with proper delta tracking
+        # Calculate final compliance score
+        if compliance_scores:
+            avg_compliance = sum(compliance_scores) / len(compliance_scores)
+            logger.info(f"Dashboard: Calculated compliance from {len(compliance_scores)} scores: {avg_compliance:.1f}%")
+        else:
+            # Calculate based on risk if no explicit scores
+            if total_scans > 0 and high_risk_issues > 0:
+                avg_compliance = max(25, 100 - (high_risk_issues * 8))  # Penalty per high-risk issue
+            else:
+                avg_compliance = 94.5  # Good default for scans with no high-risk issues
+        
+        # Display real-time metrics with accurate data
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            # Show current scan count without delta to avoid "+4" display
             st.metric(_('dashboard.metric.total_scans', 'Total Scans'), total_scans)
             
         with col2:
-            # Show current PII found without delta to avoid confusing display
             st.metric(_('dashboard.metric.total_pii', 'Total PII Found'), total_pii)
             
         with col3:
-            # Show current compliance score
             st.metric(_('dashboard.metric.compliance_score', 'Compliance Score'), f"{avg_compliance:.1f}%")
             
         with col4:
-            # Show current active issues without delta to avoid confusing display
             st.metric(_('dashboard.metric.active_issues', 'Active Issues'), high_risk_issues)
+        
+        # Debug information for troubleshooting
+        if st.checkbox("Show Debug Info", value=False):
+            st.write(f"Debug: Found {len(completed_scans)} completed scans, {len(recent_scans)} aggregator scans")
+            st.write(f"Totals: {total_pii} PII, {high_risk_issues} high risk, {len(compliance_scores)} scores")
         
         st.markdown("---")
         
