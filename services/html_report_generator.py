@@ -963,7 +963,7 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
                 </div>'''
             return ""
         
-        website_content = f'''
+        website_content = f"""
         <div style="margin: 30px 0;">
             <h1 style="color: #1e40af; text-align: center; margin-bottom: 30px; font-size: 28px;">
                 🌐 Website Privacy Compliance Report
@@ -1042,7 +1042,7 @@ def generate_html_report(scan_data: Dict[str, Any]) -> str:
                     </p>
                 </div>
             </div>
-        </div>'''
+        </div>"""
     
     html_content += website_content
     
