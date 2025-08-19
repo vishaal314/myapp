@@ -119,6 +119,11 @@ class AIModelScanner:
                 try:
                     metrics = self._calculate_risk_metrics(scan_result["findings"])
                     scan_result.update(metrics)
+                    
+                    # Add AI compliance metrics for validation failure case
+                    ai_compliance_metrics = self._calculate_ai_compliance_metrics(scan_result)
+                    scan_result.update(ai_compliance_metrics)
+                    
                 except Exception as metrics_error:
                     logging.error(f"Error calculating risk metrics: {str(metrics_error)}")
                     scan_result.update({
@@ -1156,10 +1161,21 @@ class AIModelScanner:
             ai_act_status = "Low Risk - Monitoring Required"
         elif compliance_score < 70:
             ai_act_status = "Requires Further Assessment"
+        
+        # Add AI Act risk level classification
+        if compliance_score >= 90:
+            ai_risk_level = "Minimal Risk"
+        elif compliance_score >= 75:
+            ai_risk_level = "Limited Risk"
+        elif compliance_score >= 60:
+            ai_risk_level = "High Risk"
+        else:
+            ai_risk_level = "Unacceptable Risk"
             
         return {
             "model_framework": framework,
             "ai_act_compliance": ai_act_status,
             "compliance_score": compliance_score,
             "ai_model_compliance": compliance_score,
+            "ai_act_risk_level": ai_risk_level,
         }

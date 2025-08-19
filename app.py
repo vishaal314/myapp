@@ -4308,41 +4308,18 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             # Primary analysis summary with model details
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                # Display model framework (never "Unknown")
-                detected_framework = scan_results.get("framework", framework)
-                if detected_framework == "Auto-detect":
-                    detected_framework = "TensorFlow"  # Default fallback
+                # Display actual model framework from scan results
+                detected_framework = scan_results.get("model_framework", "Multi-Framework")
+                if detected_framework in ["Unknown", "Auto-detect"]:
+                    detected_framework = "Multi-Framework"  # Professional fallback
                 st.metric("Model Framework", detected_framework)
             with col2:
-                # AI Act 2025 Status based on compliance analysis
-                ai_act_status = "Compliant"
-                if ai_act_compliance and ai_act_findings:
-                    critical_ai_act = len([f for f in ai_act_findings if f.get('severity') == 'Critical'])
-                    high_ai_act = len([f for f in ai_act_findings if f.get('severity') == 'High'])
-                    if critical_ai_act > 0:
-                        ai_act_status = "Critical Issues"
-                    elif high_ai_act > 0:
-                        ai_act_status = "Requires Action"
-                    else:
-                        ai_act_status = "Minor Issues"
-                elif not ai_act_compliance:
-                    ai_act_status = "Not Assessed"
-                
+                # AI Act 2025 Status from actual scan results
+                ai_act_status = scan_results.get("ai_act_compliance", "Assessment Required")
                 st.metric("AI Act 2025 Status", ai_act_status)
             with col3:
-                # AI Model Compliance score
-                ai_compliance_score = 85  # Default high compliance
-                if ai_act_compliance and ai_act_findings:
-                    # Calculate compliance based on findings severity
-                    compliance_scores = [f.get('compliance_score', 50) for f in ai_act_findings if 'compliance_score' in f]
-                    if compliance_scores:
-                        ai_compliance_score = int(sum(compliance_scores) / len(compliance_scores))
-                elif compliance_check and compliance_findings:
-                    # Use GDPR compliance scores as fallback
-                    gdpr_scores = [f.get('compliance_score', 50) for f in compliance_findings if 'compliance_score' in f]
-                    if gdpr_scores:
-                        ai_compliance_score = int(sum(gdpr_scores) / len(gdpr_scores))
-                
+                # AI Model Compliance score from actual scan results
+                ai_compliance_score = scan_results.get("compliance_score", 0)
                 st.metric("AI Model Compliance", f"{ai_compliance_score}%")
             with col4:
                 # Overall risk assessment
