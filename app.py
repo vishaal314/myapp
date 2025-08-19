@@ -4446,16 +4446,10 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             try:
                 from services.results_aggregator import ResultsAggregator
                 aggregator = ResultsAggregator()
-                aggregator.save_scan_result({
-                    'scan_type': 'ai_model',
-                    'timestamp': scan_results['timestamp'],
-                    'username': username,
-                    'result': scan_results,
-                    'total_pii_found': findings_count,
-                    'high_risk_count': high_risk_count,
-                    'file_count': scan_results["files_scanned"],
-                    'compliance_score': scan_results.get("privacy_score", 100)
-                })
+                aggregator.save_scan_result(
+                    username=username,
+                    result=scan_results
+                )
             except Exception as save_error:
                 logger.warning(f"Failed to save AI model scan results to aggregator: {save_error}")
             
