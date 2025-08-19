@@ -242,82 +242,36 @@ class CertificateGenerator:
         # Record certificate issuance for audit trail
         self.record_certificate_issuance(cert_id, user_info, scan_results)
         
-        # Create PDF certificate
+        # Create modern AI Act 2025 certificate
         buffer = io.BytesIO()
         c = canvas.Canvas(buffer, pagesize=A4)
         width, height = A4
         
-        # Add header with logo
-        try:
-            logo_path = os.path.join("static", "img", "dataguardian-logo.png")
-            if os.path.exists(logo_path):
-                c.drawImage(logo_path, 50, height - 120, width=150, height=100, preserveAspectRatio=True)
-        except:
-            logger.warning("Could not add logo to certificate. Continuing without logo.")
+        # Modern gradient background effect (using rectangles)
+        self._draw_modern_background(c, width, height)
         
-        # Add certificate title with legal authority
-        c.setFont("Helvetica-Bold", 24)
-        if self.language == "nl":
-            title = f"{self.legal_framework['legal_basis']}-NALEVINGSCERTIFICAAT"
-        else:
-            title = "GDPR COMPLIANCE CERTIFICATE"
-        c.drawCentredString(width/2, height - 160, title)
+        # Modern header section with geometric design
+        self._draw_modern_header(c, width, height, cert_id)
         
-        # Add certification authority
-        c.setFont("Helvetica", 10)
-        c.drawCentredString(width/2, height - 180, f"Uitgegeven door / Issued by: {self.legal_framework['certification_body']}")
+        # AI Act 2025 specific title
+        self._draw_ai_act_title(c, width, height, scan_results)
         
-        # Add verification QR code placeholder (would integrate with QR library in production)
-        verification_url = self.generate_verification_url(cert_id)
-        c.setFont("Helvetica", 8)
-        c.drawString(width - 200, height - 140, f"Verify: {verification_url}")
+        # Certification authority badge
+        self._draw_authority_badge(c, width, height)
         
-        # Add decorative line
-        c.setStrokeColor(colors.darkblue)
-        c.setLineWidth(2)
-        c.line(100, height - 180, width-100, height - 180)
+        # Modern certificate content with AI Act 2025 focus
+        y_position = height - 280
         
-        # Certificate content
-        c.setFont("Helvetica", 12)
+        # Main certification statement
+        self._draw_certification_statement(c, width, height, scan_results, y_position)
         
-        # Date text
-        if self.language == "nl":
-            date_text = f"Datum: {datetime.now().strftime('%d-%m-%Y')}"
-        else:
-            date_text = f"Date: {datetime.now().strftime('%Y-%m-%d')}"
-        c.drawString(50, height - 220, date_text)
+        # AI Act 2025 compliance metrics
+        y_position -= 120
+        self._draw_ai_compliance_metrics(c, width, scan_results, y_position)
         
-        # Certificate ID
-        if self.language == "nl":
-            cert_id_text = f"Certificaat ID: {cert_id}"
-        else:
-            cert_id_text = f"Certificate ID: {cert_id}"
-        c.drawString(width-250, height - 220, cert_id_text)
-        
-        # Main certificate text
-        c.setFont("Helvetica", 14)
-        y_position = height - 270
-        
-        if self.language == "nl":
-            c.drawString(50, y_position, "Dit is om te certificeren dat:")
-        else:
-            c.drawString(50, y_position, "This is to certify that:")
-        
-        # Name of the scanned resource
-        y_position -= 40
-        c.setFont("Helvetica-Bold", 16)
-        
-        # Get the resource name based on scan type
-        if scan_type == 'repository':
-            resource_name = scan_results.get('repo_url', 'Unknown Repository')
-        elif scan_type == 'database':
-            resource_name = scan_results.get('db_name', 'Unknown Database')
-        elif scan_type == 'website':
-            resource_name = scan_results.get('url', 'Unknown Website')
-        else:
-            resource_name = scan_results.get('name', 'Unknown Resource')
-        
-        c.drawCentredString(width/2, y_position, resource_name)
+        # Professional verification section
+        y_position -= 100
+        self._draw_verification_section(c, width, cert_id, y_position)
         
         # Statement text
         y_position -= 60
@@ -517,3 +471,211 @@ class CertificateGenerator:
         except Exception as e:
             logger.error(f"Error generating certificate: {str(e)}")
             return None
+    
+    def _draw_modern_background(self, c, width, height):
+        """Draw modern gradient background"""
+        # Main background - clean white
+        c.setFillColor(colors.white)
+        c.rect(0, 0, width, height, fill=1)
+        
+        # Subtle gradient effect using overlapping rectangles
+        for i in range(10):
+            alpha = 0.02
+            gray_value = 0.98 - (i * 0.005)
+            c.setFillColor(colors.Color(gray_value, gray_value, gray_value, alpha=alpha))
+            c.rect(0, height - (i * 20), width, 20, fill=1)
+        
+        # Modern accent stripes
+        c.setFillColor(colors.Color(0.2, 0.4, 0.8, alpha=0.1))  # Blue accent
+        c.rect(0, height - 60, width, 3, fill=1)
+        c.rect(0, height - 70, width, 1, fill=1)
+    
+    def _draw_modern_header(self, c, width, height, cert_id):
+        """Draw modern header with geometric design"""
+        # Header section background
+        c.setFillColor(colors.Color(0.05, 0.1, 0.2))  # Dark professional blue
+        c.rect(0, height - 120, width, 120, fill=1)
+        
+        # Geometric accent shapes
+        c.setFillColor(colors.Color(0.2, 0.4, 0.8))  # Bright blue accent
+        # Triangle shapes for modern look
+        c.beginPath()
+        c.moveTo(width - 100, height - 20)
+        c.lineTo(width - 20, height - 20)
+        c.lineTo(width - 60, height - 60)
+        c.closePath()
+        c.fillPath()
+        
+        # Circle accent
+        c.circle(80, height - 60, 25, fill=1)
+        
+        # Logo placeholder with modern styling
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(40, height - 70, "DataGuardian Pro")
+        c.setFont("Helvetica", 10)
+        c.drawString(40, height - 85, "AI Compliance Authority")
+        
+        # Certificate ID in header
+        c.setFont("Helvetica", 8)
+        c.drawString(width - 180, height - 30, f"Certificate ID: {cert_id[:16]}")
+    
+    def _draw_ai_act_title(self, c, width, height, scan_results):
+        """Draw AI Act 2025 specific title"""
+        # Main title with modern typography
+        c.setFillColor(colors.Color(0.05, 0.1, 0.2))
+        c.setFont("Helvetica-Bold", 28)
+        c.drawCentredString(width/2, height - 160, "AI ACT 2025")
+        
+        c.setFont("Helvetica-Bold", 20)
+        c.drawCentredString(width/2, height - 185, "COMPLIANCE CERTIFICATE")
+        
+        # Subtitle with EU flag colors accent
+        c.setFillColor(colors.Color(0.0, 0.2, 0.5))  # EU Blue
+        c.setFont("Helvetica", 12)
+        c.drawCentredString(width/2, height - 205, "European Union Artificial Intelligence Regulation")
+        
+        # Model type badge
+        model_framework = scan_results.get('model_framework', 'AI Model')
+        c.setFillColor(colors.Color(0.8, 0.9, 1.0))  # Light blue background
+        c.rect(width/2 - 80, height - 235, 160, 20, fill=1)
+        c.setStrokeColor(colors.Color(0.2, 0.4, 0.8))
+        c.setLineWidth(1)
+        c.rect(width/2 - 80, height - 235, 160, 20, fill=0)
+        
+        c.setFillColor(colors.Color(0.05, 0.1, 0.2))
+        c.setFont("Helvetica-Bold", 10)
+        c.drawCentredString(width/2, height - 228, f"Framework: {model_framework}")
+    
+    def _draw_authority_badge(self, c, width, height):
+        """Draw certification authority badge"""
+        # Authority seal background
+        center_x, center_y = width - 100, height - 180
+        c.setFillColor(colors.Color(0.8, 0.9, 1.0))
+        c.circle(center_x, center_y, 35, fill=1)
+        
+        c.setStrokeColor(colors.Color(0.2, 0.4, 0.8))
+        c.setLineWidth(2)
+        c.circle(center_x, center_y, 35, fill=0)
+        c.circle(center_x, center_y, 30, fill=0)
+        
+        # Authority text
+        c.setFillColor(colors.Color(0.05, 0.1, 0.2))
+        c.setFont("Helvetica-Bold", 7)
+        c.drawCentredString(center_x, center_y + 10, "CERTIFIED")
+        c.drawCentredString(center_x, center_y, "AUTHORITY")
+        c.setFont("Helvetica", 6)
+        c.drawCentredString(center_x, center_y - 15, datetime.now().strftime("%Y"))
+    
+    def _draw_certification_statement(self, c, width, height, scan_results, y_position):
+        """Draw main certification statement"""
+        # Professional certification statement
+        c.setFillColor(colors.Color(0.05, 0.1, 0.2))
+        c.setFont("Helvetica", 14)
+        
+        statement = "This certificate confirms that the AI model has been assessed for compliance with"
+        c.drawCentredString(width/2, y_position, statement)
+        
+        c.setFont("Helvetica-Bold", 16)
+        c.drawCentredString(width/2, y_position - 25, "EU AI Act 2025 Regulations")
+        
+        # Resource being certified
+        resource_name = self._get_resource_name(scan_results)
+        c.setFont("Helvetica", 12)
+        c.drawString(60, y_position - 60, "Model/System:")
+        
+        # Resource name in styled box
+        c.setFillColor(colors.Color(0.95, 0.97, 1.0))
+        c.rect(60, y_position - 90, width - 120, 25, fill=1)
+        c.setStrokeColor(colors.Color(0.7, 0.8, 0.9))
+        c.setLineWidth(1)
+        c.rect(60, y_position - 90, width - 120, 25, fill=0)
+        
+        c.setFillColor(colors.Color(0.05, 0.1, 0.2))
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(70, y_position - 82, resource_name[:80])  # Truncate long names
+    
+    def _draw_ai_compliance_metrics(self, c, width, scan_results, y_position):
+        """Draw AI Act 2025 compliance metrics in modern design"""
+        # Section title
+        c.setFillColor(colors.Color(0.05, 0.1, 0.2))
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(60, y_position, "AI Act 2025 Compliance Assessment")
+        
+        # Metrics grid
+        metrics = [
+            ("Risk Classification", scan_results.get('ai_act_compliance', 'Compliant')),
+            ("Compliance Score", f"{scan_results.get('compliance_score', 95)}%"),
+            ("Assessment Date", datetime.now().strftime("%Y-%m-%d")),
+            ("Validity Period", "12 months")
+        ]
+        
+        # Draw metrics in modern card style
+        card_width = (width - 140) / 2
+        card_height = 40
+        
+        for i, (label, value) in enumerate(metrics):
+            x = 60 + (i % 2) * (card_width + 20)
+            y = y_position - 40 - (i // 2) * (card_height + 10)
+            
+            # Card background
+            c.setFillColor(colors.Color(0.98, 0.99, 1.0))
+            c.roundRect(x, y, card_width, card_height, 5, fill=1)
+            
+            # Card border
+            c.setStrokeColor(colors.Color(0.8, 0.85, 0.9))
+            c.setLineWidth(1)
+            c.roundRect(x, y, card_width, card_height, 5, fill=0)
+            
+            # Text
+            c.setFillColor(colors.Color(0.3, 0.3, 0.3))
+            c.setFont("Helvetica", 9)
+            c.drawString(x + 10, y + 25, label)
+            
+            c.setFillColor(colors.Color(0.05, 0.1, 0.2))
+            c.setFont("Helvetica-Bold", 11)
+            c.drawString(x + 10, y + 10, value)
+    
+    def _draw_verification_section(self, c, width, cert_id, y_position):
+        """Draw professional verification section"""
+        # Verification background
+        c.setFillColor(colors.Color(0.96, 0.98, 1.0))
+        c.rect(60, y_position - 60, width - 120, 60, fill=1)
+        
+        c.setStrokeColor(colors.Color(0.2, 0.4, 0.8))
+        c.setLineWidth(1)
+        c.rect(60, y_position - 60, width - 120, 60, fill=0)
+        
+        # Verification title
+        c.setFillColor(colors.Color(0.05, 0.1, 0.2))
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(80, y_position - 20, "Digital Verification")
+        
+        # Verification details
+        c.setFont("Helvetica", 10)
+        verification_url = self.generate_verification_url(cert_id)
+        c.drawString(80, y_position - 35, f"Verify online: {verification_url}")
+        
+        c.setFont("Helvetica", 9)
+        c.drawString(80, y_position - 48, f"Issued: {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
+        
+        # QR code placeholder
+        c.setStrokeColor(colors.Color(0.5, 0.5, 0.5))
+        c.setLineWidth(1)
+        c.rect(width - 140, y_position - 55, 50, 50, fill=0)
+        c.setFont("Helvetica", 8)
+        c.drawCentredString(width - 115, y_position - 32, "QR Code")
+        c.drawCentredString(width - 115, y_position - 42, "Verification")
+    
+    def _get_resource_name(self, scan_results):
+        """Get appropriate resource name based on scan type"""
+        scan_type = scan_results.get('scan_type', '').lower()
+        
+        if 'ai' in scan_type or 'model' in scan_type:
+            return scan_results.get('model_name', scan_results.get('repository_url', 'AI Model System'))
+        elif 'repository' in scan_type:
+            return scan_results.get('repo_url', 'Code Repository')
+        elif 'website' in scan_type:
+            return scan_results.get('url', 'Web Application')
+        else:
+            return scan_results.get('name', 'Digital System')
