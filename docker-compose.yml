@@ -1,97 +1,48 @@
 version: '3.8'
 
 services:
-  # Traefik Reverse Proxy
-  traefik:
-    image: traefik:v2.9
-    container_name: dataguardian-traefik
-    command:
-      - "--api.insecure=false"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+  app:
+    build: .
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./letsencrypt:/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - "8501:8501"
+    environment:
+      - DATABASE_URL=postgresql://postgres:dataguardian_secure_2024@db:5432/dataguardian
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ENVIRONMENT=production
+      - STREAMLIT_SERVER_HEADLESS=true
+    depends_on:
+      - db
     restart: unless-stopped
-
-  # PostgreSQL Database
+    volumes:
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+  
   db:
     image: postgres:15-alpine
-    container_name: dataguardian-db
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dataguardian}
-      POSTGRES_USER: ${POSTGRES_USER:-dataguardian}
-      POSTGRES_DB: ${POSTGRES_DB:-dataguardian}
+      - POSTGRES_DB=dataguardian
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=dataguardian_secure_2024
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
-    expose:
-      - "5432"
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dataguardian}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - internal
-
-  # DataGuardian Pro Application
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: dataguardian-app
-    depends_on:
-      db:
-        condition: service_healthy
-    expose:
-      - "5000"
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-dataguardian}:${POSTGRES_PASSWORD:-dataguardian}@db:5432/${POSTGRES_DB:-dataguardian}
-      - PGHOST=db
-      - PGUSER=${POSTGRES_USER:-dataguardian}
-      - PGPASSWORD=${POSTGRES_PASSWORD:-dataguardian}
-      - PGDATABASE=${POSTGRES_DB:-dataguardian}
-      - PGPORT=5432
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
-      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
+    
+  # Optional: Redis for caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    command: redis-server --appendonly yes
     volumes:
-      - ./reports:/app/reports
-      - ./uploads:/app/uploads
-    restart: unless-stopped
-    networks:
-      - internal
-      - web
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dataguardian.rule=Host(`${DOMAIN_NAME:-dataguardian.local}`)"
-      - "traefik.http.routers.dataguardian.entrypoints=websecure"
-      - "traefik.http.routers.dataguardian.tls.certresolver=letsencrypt"
-      - "traefik.http.services.dataguardian.loadbalancer.server.port=5000"
-      - "traefik.http.middlewares.dataguardian-security.headers.stsSeconds=31536000"
-      - "traefik.http.middlewares.dataguardian-security.headers.contentSecurityPolicy=default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
-      - "traefik.http.middlewares.dataguardian-security.headers.framedeny=true"
-      - "traefik.http.routers.dataguardian.middlewares=dataguardian-security"
-
-networks:
-  internal:
-    internal: true
-  web:
-    external: false
+      - redis_data:/data
 
 volumes:
   postgres_data:
-  letsencrypt:
+  redis_data:
