@@ -1,5 +1,10 @@
 import streamlit as st
 
+# Health check endpoint for Railway deployment
+if st.query_params.get("health") == "check":
+    st.write("OK")
+    st.stop()
+
 # Configure page FIRST - must be the very first Streamlit command
 # Only configure if not already configured (prevents multiple calls during rerun)
 if 'page_configured' not in st.session_state:
