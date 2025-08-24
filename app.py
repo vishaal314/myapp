@@ -960,108 +960,70 @@ def render_dashboard():
         username = st.session_state.get('username', 'anonymous')
         user_id = st.session_state.get('user_id', username)
         
-        # Get live metrics from activity tracker first (most recent data)
-        tracker = get_activity_tracker()
-        user_activities = tracker.get_user_activities(user_id, limit=None)
+        # Primary data source: ResultsAggregator (database-backed scan results)
+        aggregator = ResultsAggregator()
+        recent_scans = aggregator.get_recent_scans(days=30, username=username)
         
-        # Calculate live metrics directly from activity data
-        scan_activities = [a for a in user_activities if a.activity_type.value in ['scan_started', 'scan_completed', 'scan_failed']]
-        completed_scans = [a for a in scan_activities if a.activity_type.value == 'scan_completed']
-        failed_scans = [a for a in scan_activities if a.activity_type.value == 'scan_failed']
-        
-        # Calculate cumulative totals from all completed scans
-        total_scans = len(completed_scans)
+        # Initialize totals from aggregator (primary source)
+        total_scans = len(recent_scans)
         total_pii = 0
         high_risk_issues = 0
         compliance_scores = []
         
-        logger.info(f"Dashboard: Processing {total_scans} completed scans from activity tracker")
-        for scan in completed_scans:
-            scan_details = scan.details
-            findings_count = scan_details.get('findings_count', 0)
-            high_risk_count = scan_details.get('high_risk_count', 0)
-            
-            total_pii += findings_count
-            high_risk_issues += high_risk_count
-            
-            # Collect compliance scores for averaging
-            comp_score = scan_details.get('compliance_score', 0)
-            if comp_score > 0:
-                compliance_scores.append(comp_score)
-            
-            logger.info(f"Scan {scan.scanner_type}: {findings_count} findings, {high_risk_count} high risk")
+        logger.info(f"Dashboard: Processing {total_scans} completed scans from aggregator")
         
-        # Also get data from ResultsAggregator for additional context
-        aggregator = ResultsAggregator()
-        recent_scans = aggregator.get_recent_scans(days=30, username=username)
-        
-        # If aggregator has more recent data, merge it
-        if len(recent_scans) > total_scans:
-            logger.info(f"Dashboard: Found {len(recent_scans)} scans in aggregator vs {total_scans} in activity tracker")
-            for scan in recent_scans:
-                result = scan.get('result', {})
-                if isinstance(result, dict):
-                    additional_pii = result.get('total_pii_found', 0)
-                    additional_high_risk = result.get('high_risk_count', 0)
-                    additional_compliance = result.get('compliance_score', 0)
-                    
-                    # Add if this appears to be new data not in activity tracker
-                    if additional_pii > 0:
-                        total_pii += additional_pii
-                    if additional_high_risk > 0:
-                        high_risk_issues += additional_high_risk  
-                    if additional_compliance > 0:
-                        compliance_scores.append(additional_compliance)
-            
-            # Use the higher scan count
-            total_scans = max(total_scans, len(recent_scans))
-        
-        if total_scans == 0:
-            
-            # Calculate metrics from database scan data
-            total_scans = len(recent_scans)
-            total_pii = 0
-            high_risk_issues = 0
-            compliance_scores = []
-            
-            for scan in recent_scans:
-                # Handle both database and file storage formats
-                if 'result' in scan:
-                    result = scan['result']
-                else:
-                    result = scan
+        # Calculate metrics from stored scan results
+        for scan in recent_scans:
+            result = scan.get('result', {})
+            if isinstance(result, dict):
+                # Count findings as PII instances
+                findings = result.get('findings', [])
+                if isinstance(findings, list):
+                    total_pii += len(findings)
+                    # Count high-risk findings
+                    for finding in findings:
+                        if isinstance(finding, dict) and finding.get('severity', '').lower() in ['high', 'critical']:
+                            high_risk_issues += 1
                 
-                # Get direct values from scan metadata
-                scan_pii = scan.get('total_pii_found', 0)
-                scan_high_risk = scan.get('high_risk_count', 0)
+                # Add direct counts if available
+                total_pii += result.get('total_pii_found', 0)
+                high_risk_issues += result.get('high_risk_count', 0)
                 
-                if scan_pii > 0:
-                    total_pii += scan_pii
-                if scan_high_risk > 0:
-                    high_risk_issues += scan_high_risk
-                
-                # Also check nested result structure if available
-                if isinstance(result, dict):
-                    findings = result.get('findings', [])
-                    
-                    # Calculate from findings if metadata not available
-                    if scan_pii == 0:
-                        for finding in findings:
-                            if isinstance(finding, dict):
-                                total_pii += finding.get('pii_count', 0)
-                                if finding.get('severity') == 'High' or finding.get('privacy_risk') == 'High':
-                                    high_risk_issues += 1
-                    
-                    # Get compliance scores
-                    compliance_score = result.get('compliance_score', 0)
-                    if compliance_score > 0:
-                        compliance_scores.append(compliance_score)
+                # Collect compliance scores
+                comp_score = result.get('compliance_score', 0)
+                if comp_score > 0:
+                    compliance_scores.append(comp_score)
         
-        # Calculate average compliance score
-        if compliance_scores:
-            avg_compliance = sum(compliance_scores) / len(compliance_scores)
-        else:
-            avg_compliance = 85.0  # Default compliance score when no data available
+        # Secondary data source: Activity Tracker (real-time activity logging)
+        tracker = get_activity_tracker()
+        user_activities = tracker.get_user_activities(user_id, limit=10000)  # Large limit for all activities
+        
+        # Get activity-based data for recent activities display
+        scan_activities = [a for a in user_activities if a.activity_type.value in ['scan_started', 'scan_completed', 'scan_failed']]
+        completed_activities = [a for a in scan_activities if a.activity_type.value == 'scan_completed']
+        
+        logger.info(f"Dashboard: Found {len(completed_activities)} activities in activity tracker")
+        
+        # If activity tracker has newer data not in aggregator, add it
+        activity_total_scans = len(completed_activities)
+        if activity_total_scans > total_scans:
+            logger.info(f"Dashboard: Activity tracker has {activity_total_scans} vs aggregator {total_scans}, merging recent activity data")
+            # Add the difference from recent activities
+            for activity in completed_activities:
+                scan_details = activity.details
+                activity_pii = scan_details.get('findings_count', 0)
+                activity_high_risk = scan_details.get('high_risk_count', 0)
+                activity_compliance = scan_details.get('compliance_score', 0)
+                
+                if activity_pii > 0:
+                    total_pii += activity_pii
+                if activity_high_risk > 0:
+                    high_risk_issues += activity_high_risk
+                if activity_compliance > 0:
+                    compliance_scores.append(activity_compliance)
+            
+            # Use the higher count
+            total_scans = activity_total_scans
         
         # Calculate final compliance score
         if compliance_scores:
@@ -1091,7 +1053,7 @@ def render_dashboard():
         
         # Debug information for troubleshooting
         if st.checkbox("Show Debug Info", value=False):
-            st.write(f"Debug: Found {len(completed_scans)} completed scans, {len(recent_scans)} aggregator scans")
+            st.write(f"Debug: Found {len(completed_activities)} activity scans, {len(recent_scans)} aggregator scans")
             st.write(f"Totals: {total_pii} PII, {high_risk_issues} high risk, {len(compliance_scores)} scores")
         
         st.markdown("---")
@@ -1105,9 +1067,9 @@ def render_dashboard():
             fresh_scans = aggregator.get_recent_scans(days=7, username=username)
             
             # Also try to get activity tracker data for most recent scans
-            if completed_scans:
+            if completed_activities:
                 # Convert activity tracker data to scan format
-                for activity in completed_scans[-5:]:  # Get last 5 completed scans
+                for activity in completed_activities[-5:]:  # Get last 5 completed scans
                     # Extract scanner type from activity details with multiple fallback options
                     result_data = activity.details.get('result_data', {})
                     scan_type = (

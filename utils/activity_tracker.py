@@ -127,7 +127,7 @@ class ActivityTracker:
     
     def get_scanner_statistics(self, user_id: str) -> Dict[str, Any]:
         """Get comprehensive scanner usage statistics for a user"""
-        activities = self.get_user_activities(user_id, limit=None)
+        activities = self.get_user_activities(user_id, limit=10000)  # Large limit for all activities
         scan_activities = [a for a in activities if a.activity_type in [
             ActivityType.SCAN_STARTED, ActivityType.SCAN_COMPLETED, ActivityType.SCAN_FAILED
         ]]
@@ -155,7 +155,7 @@ class ActivityTracker:
     
     def get_dashboard_metrics(self, user_id: str) -> Dict[str, Any]:
         """Get real-time dashboard metrics for a user"""
-        activities = self.get_user_activities(user_id, limit=None)
+        activities = self.get_user_activities(user_id, limit=10000)  # Large limit for all activities
         
         # Calculate scan metrics
         scan_activities = [a for a in activities if a.activity_type in [
@@ -197,7 +197,7 @@ class ActivityTracker:
     
     def get_activity_timeline(self, user_id: str, hours: int = 24) -> List[Dict[str, Any]]:
         """Get activity timeline for the last N hours"""
-        activities = self.get_user_activities(user_id, limit=None)
+        activities = self.get_user_activities(user_id, limit=10000)  # Large limit for all activities
         
         # Filter activities from last N hours
         cutoff_time = datetime.now() - timedelta(hours=hours)
@@ -240,7 +240,7 @@ def get_activity_tracker() -> ActivityTracker:
 
 # Convenience functions for common operations
 def track_scan_started(session_id: str, user_id: str, username: str, scanner_type: ScannerType, 
-                      region: str = None, details: Dict[str, Any] = None) -> str:
+                      region: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> str:
     """Track scan start activity"""
     tracker = get_activity_tracker()
     return tracker.track_activity(
@@ -255,7 +255,7 @@ def track_scan_started(session_id: str, user_id: str, username: str, scanner_typ
 
 def track_scan_completed(session_id: str, user_id: str, username: str, scanner_type: ScannerType,
                         findings_count: int, files_scanned: int = 0, compliance_score: float = 0,
-                        duration_ms: int = None, region: str = None, details: Dict[str, Any] = None) -> str:
+                        duration_ms: Optional[int] = None, region: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> str:
     """Track scan completion activity"""
     tracker = get_activity_tracker()
     scan_details = {
@@ -276,7 +276,7 @@ def track_scan_completed(session_id: str, user_id: str, username: str, scanner_t
     )
 
 def track_scan_failed(session_id: str, user_id: str, username: str, scanner_type: ScannerType,
-                     error_message: str, region: str = None, details: Dict[str, Any] = None) -> str:
+                     error_message: str, region: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> str:
     """Track scan failure activity"""
     tracker = get_activity_tracker()
     return tracker.track_activity(
