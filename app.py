@@ -995,10 +995,14 @@ def render_dashboard():
         user_activities = tracker.get_user_activities(user_id, limit=10000)  # Large limit for all activities
         
         # Get activity-based data for recent activities display
-        scan_activities = [a for a in user_activities if a.activity_type.value in ['scan_started', 'scan_completed', 'scan_failed']]
+        scan_activities = [a for a in user_activities if hasattr(a, 'activity_type') and a.activity_type.value in ['scan_started', 'scan_completed', 'scan_failed']]
         completed_activities = [a for a in scan_activities if a.activity_type.value == 'scan_completed']
         
-        logger.info(f"Dashboard: Found {len(completed_activities)} activities in activity tracker")
+        # Get today's activities specifically
+        today = datetime.now().date()
+        today_activities = [a for a in completed_activities if a.timestamp.date() == today]
+        
+        logger.info(f"Dashboard: Found {len(completed_activities)} total activities, {len(today_activities)} today in activity tracker")
         
         # If activity tracker has newer data not in aggregator, add it
         activity_total_scans = len(completed_activities)
@@ -1059,13 +1063,17 @@ def render_dashboard():
         
         # Force refresh recent scans to get latest data including current session
         try:
-            # Get fresh data from results aggregator
-            fresh_scans = aggregator.get_recent_scans(days=7, username=username)
+            # Get fresh data from results aggregator - expand to today's scans
+            fresh_scans = aggregator.get_recent_scans(days=1, username=username)  # Get today's scans first
+            if len(fresh_scans) == 0:
+                # If no scans today, get last 7 days
+                fresh_scans = aggregator.get_recent_scans(days=7, username=username)
             
-            # Also try to get activity tracker data for most recent scans
-            if completed_activities:
+            # Also try to get activity tracker data for most recent scans, prioritizing today's scans
+            activities_to_process = today_activities if today_activities else completed_activities[-5:]
+            if activities_to_process:
                 # Convert activity tracker data to scan format
-                for activity in completed_activities[-5:]:  # Get last 5 completed scans
+                for activity in activities_to_process:
                     # Extract scanner type from activity details with multiple fallback options
                     result_data = activity.details.get('result_data', {})
                     scan_type = (
@@ -1376,27 +1384,6 @@ def render_dashboard():
             
             if total_scans > 0:
                 st.info(f"Found {total_scans} recent scans. Dashboard data is being processed.")
-                
-                # Show scan list in fallback mode
-                st.subheader(_('dashboard.recent_activity', 'Recent Scan Activity'))
-                fallback_data = []
-                for scan in recent_scans:
-                    timestamp = scan.get('timestamp', '')
-                    if isinstance(timestamp, str):
-                        formatted_date = timestamp[:10] if timestamp else 'Unknown'
-                    else:
-                        formatted_date = 'Processing...'
-                    
-                    fallback_data.append({
-                        'Date': formatted_date,
-                        'Type': f"{scan.get('scan_type', 'Unknown').title()} Scan",
-                        'Status': '✅ Complete',
-                        'Region': scan.get('region', 'Unknown')
-                    })
-                
-                if fallback_data:
-                    df = pd.DataFrame(fallback_data)
-                    st.dataframe(df, use_container_width=True)
             else:
                 st.info("No recent scans found. Start your first scan to see dashboard data.")
                 
