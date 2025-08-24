@@ -123,9 +123,14 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
                 return ''
             html_block = f"<h3 class='{risk_class}'>{t(title)}</h3><table><tr><th>{t('Type')}</th><th>{t('Location')}</th><th>{t('Description')}</th></tr>"
             for f in items:
-                location = f.get('location', 'Unknown')
-                line = f.get('line', 0)
-                location_text = f"{location} (Line {line})" if line > 0 else location
+                # Standardize location field handling
+                location = f.get('location', f.get('file_path', f.get('filepath', 'Unknown')))
+                line = f.get('line', f.get('line_number', 0))
+                # Format location with line number if available
+                if line and line != 0:
+                    location_text = f"{location} (Line {line})"
+                else:
+                    location_text = location
                 html_block += f"<tr><td>{f.get('type', 'Unknown')}</td><td>{location_text}</td><td>{f.get('description', 'No description')}</td></tr>"
             html_block += "</table>"
             return html_block

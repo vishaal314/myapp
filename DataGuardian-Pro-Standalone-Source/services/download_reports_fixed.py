@@ -265,10 +265,20 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
             """
             
             for finding in high_risk_findings:
+                # Standardize location field handling
+                location = finding.get('location', finding.get('file_path', finding.get('filepath', 'Unknown')))
+                line_number = finding.get('line', finding.get('line_number', ''))
+                
+                # Format location with line number if available
+                if line_number and line_number != '' and line_number != 0:
+                    location_display = f"{location} (Line {line_number})"
+                else:
+                    location_display = location
+                
                 html += f"""
                     <tr>
                         <td class="high-risk">{finding.get('type', 'Unknown')}</td>
-                        <td>{finding.get('location', 'Unknown')} (Line {finding.get('line', 0)})</td>
+                        <td>{location_display}</td>
                         <td>{finding.get('description', 'No description')}</td>
                     </tr>
                 """
@@ -290,10 +300,20 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
             """
             
             for finding in medium_risk_findings:
+                # Standardize location field handling
+                location = finding.get('location', finding.get('file_path', finding.get('filepath', 'Unknown')))
+                line_number = finding.get('line', finding.get('line_number', ''))
+                
+                # Format location with line number if available
+                if line_number and line_number != '' and line_number != 0:
+                    location_display = f"{location} (Line {line_number})"
+                else:
+                    location_display = location
+                
                 html += f"""
                     <tr>
                         <td class="medium-risk">{finding.get('type', 'Unknown')}</td>
-                        <td>{finding.get('location', 'Unknown')} (Line {finding.get('line', 0)})</td>
+                        <td>{location_display}</td>
                         <td>{finding.get('description', 'No description')}</td>
                     </tr>
                 """
@@ -316,10 +336,20 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
             
             limited_low_risk = low_risk_findings[:5]
             for finding in limited_low_risk:
+                # Standardize location field handling
+                location = finding.get('location', finding.get('file_path', finding.get('filepath', 'Unknown')))
+                line_number = finding.get('line', finding.get('line_number', ''))
+                
+                # Format location with line number if available
+                if line_number and line_number != '' and line_number != 0:
+                    location_display = f"{location} (Line {line_number})"
+                else:
+                    location_display = location
+                
                 html += f"""
                     <tr>
                         <td class="low-risk">{finding.get('type', 'Unknown')}</td>
-                        <td>{finding.get('location', 'Unknown')} (Line {finding.get('line', 0)})</td>
+                        <td>{location_display}</td>
                         <td>{finding.get('description', 'No description')}</td>
                     </tr>
                 """

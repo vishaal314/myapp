@@ -301,7 +301,7 @@ def generate_website_report_content(scan_data: Dict[str, Any], timestamp: str) -
                 <td>{finding.get('type', 'Unknown')}</td>
                 <td><span class="{severity_class}" style="padding: 4px 8px; border-radius: 4px; font-size: 12px;">{severity}</span></td>
                 <td>{(finding.get('description', '')[:80] + '...' if len(finding.get('description', '')) > 80 else finding.get('description', ''))}</td>
-                <td style="font-size: 12px;">{(finding.get('url', '')[:30] + '...' if len(finding.get('url', '')) > 30 else finding.get('url', ''))}</td>
+                <td style="font-size: 12px;">{(finding.get('location', finding.get('url', finding.get('file_path', finding.get('filepath', ''))))[:30] + '...' if len(finding.get('location', finding.get('url', finding.get('file_path', finding.get('filepath', ''))))) > 30 else finding.get('location', finding.get('url', finding.get('file_path', finding.get('filepath', '')))))}</td>
             </tr>"""
         
         findings_html = f"""

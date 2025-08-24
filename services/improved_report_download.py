@@ -158,6 +158,16 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
             category = finding.get('category', finding.get('type', 'Unknown'))
             description = finding.get('description', finding.get('message', 'No description provided'))
             
+            # Standardize location field handling
+            location = finding.get('location', finding.get('file_path', finding.get('filepath', 'Unknown')))
+            line_number = finding.get('line', finding.get('line_number', ''))
+            
+            # Format location with line number if available
+            if line_number and line_number != '':
+                location_display = f"{location} (Line {line_number})"
+            else:
+                location_display = location
+            
             severity_color = {
                 'High': '#ef4444',
                 'Medium': '#f97316',
@@ -170,6 +180,10 @@ def generate_html_report(scan_result: Dict[str, Any]) -> str:
                 <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                     <span style="font-weight: 600; color: #4b5563;">{category}</span>
                     <span style="color: {severity_color}; font-weight: 500;">{severity}</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <strong style="color: #374151;">Location:</strong> 
+                    <span style="color: #6b7280; font-family: monospace; font-size: 0.9em;">{location_display}</span>
                 </div>
                 <p style="margin: 0; color: #1f2937;">{description}</p>
             </div>
