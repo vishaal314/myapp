@@ -100,57 +100,50 @@ except ImportError:
 </body>
 </html>"""
 
-# Activity tracking imports - Fixed import path
+# Activity tracking imports - Consolidated and Fixed
 try:
     from utils.activity_tracker import (
-        ActivityTracker, ActivityType, ScannerType
+        get_activity_tracker,
+        track_scan_completed as activity_track_completed,
+        track_scan_failed as activity_track_failed,
+        ActivityType, 
+        ScannerType
     )
     
-    # Initialize global activity tracker
-    activity_tracker = ActivityTracker()
+    # Compatibility wrapper functions with proper signatures
+    def track_scan_completed_wrapper(scanner_type, user_id, session_id, findings_count=0, files_scanned=0, compliance_score=0, **kwargs):
+        """Safe wrapper for scan completion tracking"""
+        try:
+            username = st.session_state.get('username', user_id)
+            return activity_track_completed(
+                session_id=session_id,
+                user_id=user_id,
+                username=username,
+                scanner_type=scanner_type,
+                findings_count=findings_count,
+                files_scanned=files_scanned,
+                compliance_score=compliance_score,
+                details=kwargs
+            )
+        except Exception as e:
+            logger.warning(f"Activity tracking failed: {e}")
+            return None
     
-    # Helper functions for backward compatibility
-    def track_scan_completed(scanner_type, user_id, session_id, scan_type, region, file_count, total_pii_found, high_risk_count, result_data):
-        return activity_tracker.track_activity(
-            session_id=session_id,
-            user_id=user_id,
-            username=user_id,  # Use user_id as username fallback
-            activity_type=ActivityType.SCAN_COMPLETED,
-            scanner_type=scanner_type,
-            region=region,
-            details={
-                'scan_type': scan_type,
-                'file_count': file_count,
-                'total_pii_found': total_pii_found,
-                'high_risk_count': high_risk_count,
-                'result_data': result_data
-            }
-        )
-    
-    def track_scan_failed(scanner_type, user_id, session_id, error_message):
-        return activity_tracker.track_activity(
-            session_id=session_id,
-            user_id=user_id,
-            username=user_id,  # Use user_id as username fallback
-            activity_type=ActivityType.SCAN_FAILED,
-            scanner_type=scanner_type,
-            success=False,
-            error_message=error_message
-        )
-    
-    def track_scan_started(scanner_type, user_id, session_id, scan_type, region, **kwargs):
-        return activity_tracker.track_activity(
-            session_id=session_id,
-            user_id=user_id,
-            username=user_id,  # Use user_id as username fallback
-            activity_type=ActivityType.SCAN_STARTED,
-            scanner_type=scanner_type,
-            region=region,
-            details={
-                'scan_type': scan_type,
-                **kwargs
-            }
-        )
+    def track_scan_failed_wrapper(scanner_type, user_id, session_id, error_message, **kwargs):
+        """Safe wrapper for scan failure tracking"""
+        try:
+            username = st.session_state.get('username', user_id)
+            return activity_track_failed(
+                session_id=session_id,
+                user_id=user_id,
+                username=username,
+                scanner_type=scanner_type,
+                error_message=error_message,
+                details=kwargs
+            )
+        except Exception as e:
+            logger.warning(f"Activity tracking failed: {e}")
+            return None
     
     def get_session_id():
         import streamlit as st
@@ -929,6 +922,7 @@ def render_dashboard():
     """Render the main dashboard with real-time data from scan results and activity tracker"""
     from services.results_aggregator import ResultsAggregator
     from utils.activity_tracker import get_dashboard_metrics, get_activity_tracker
+    from datetime import datetime, timedelta
     import pandas as pd
     
     # Check for language change trigger and handle rerun
@@ -947,13 +941,9 @@ def render_dashboard():
         if st.button("🔄 Refresh Dashboard", help="Update dashboard with latest scan results"):
             st.rerun()
     
-    # Show notification if new scans detected
-    current_scan_count = len(completed_scans) if 'completed_scans' in locals() else 0
+    # Initialize scan count tracking
+    current_scan_count = 0
     last_known_count = st.session_state.get('last_known_scan_count', 0)
-    
-    if current_scan_count > last_known_count:
-        st.info(f"✨ Dashboard updated with {current_scan_count - last_known_count} new scan(s)!")
-        st.session_state['last_known_scan_count'] = current_scan_count
     
     try:
         # Get user information
@@ -969,6 +959,12 @@ def render_dashboard():
         total_pii = 0
         high_risk_issues = 0
         compliance_scores = []
+        
+        # Update scan count for notifications
+        current_scan_count = total_scans
+        if current_scan_count > last_known_count:
+            st.info(f"✨ Dashboard updated with {current_scan_count - last_known_count} new scan(s)!")
+            st.session_state['last_known_scan_count'] = current_scan_count
         
         logger.info(f"Dashboard: Processing {total_scans} completed scans from aggregator")
         
