@@ -1004,26 +1004,26 @@ def render_dashboard():
         
         logger.info(f"Dashboard: Found {len(completed_activities)} total activities, {len(today_activities)} today in activity tracker")
         
-        # If activity tracker has newer data not in aggregator, add it
+        # Merge activity tracker data with aggregator data
         activity_total_scans = len(completed_activities)
-        if activity_total_scans > total_scans:
-            logger.info(f"Dashboard: Activity tracker has {activity_total_scans} vs aggregator {total_scans}, merging recent activity data")
-            # Add the difference from recent activities
-            for activity in completed_activities:
-                scan_details = activity.details
-                activity_pii = scan_details.get('findings_count', 0)
-                activity_high_risk = scan_details.get('high_risk_count', 0)
-                activity_compliance = scan_details.get('compliance_score', 0)
-                
-                if activity_pii > 0:
-                    total_pii += activity_pii
-                if activity_high_risk > 0:
-                    high_risk_issues += activity_high_risk
-                if activity_compliance > 0:
-                    compliance_scores.append(activity_compliance)
+        logger.info(f"Dashboard: Combining {total_scans} aggregator scans + {len(today_activities)} today's activities")
+        
+        # Always add today's activities from activity tracker (since they may not be in aggregator yet)
+        for activity in today_activities:
+            scan_details = activity.details
+            activity_pii = scan_details.get('findings_count', 0)
+            activity_high_risk = scan_details.get('high_risk_count', 0)
+            activity_compliance = scan_details.get('compliance_score', 0)
             
-            # Use the higher count
-            total_scans = activity_total_scans
+            if activity_pii > 0:
+                total_pii += activity_pii
+            if activity_high_risk > 0:
+                high_risk_issues += activity_high_risk
+            if activity_compliance > 0:
+                compliance_scores.append(activity_compliance)
+        
+        # Add today's new activities to total scan count
+        total_scans = total_scans + len(today_activities)
         
         # Calculate final compliance score
         if compliance_scores:
