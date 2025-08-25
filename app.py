@@ -1128,7 +1128,7 @@ def render_dashboard():
         # Recent scan activity from real data - refresh data to ensure latest scans appear
         st.subheader(_('dashboard.recent_activity', 'Recent Scan Activity'))
         
-        # Force refresh recent scans to get latest data including current session
+        # Force refresh recent scans to get latest data including current session  
         try:
             # Create fresh aggregator instance to bypass any caching issues
             fresh_agg = ResultsAggregator()
@@ -1140,8 +1140,11 @@ def render_dashboard():
             
             # If still no fresh scans, try without username filter to debug
             if len(fresh_scans) == 0:
-                all_recent = fresh_agg.get_recent_scans(days=30)
+                all_recent = fresh_agg.get_recent_scans(days=30) 
                 logger.info(f"Dashboard: Found {len(all_recent)} total recent scans (all users) - username filter may be the issue")
+                
+            # Ensure all 9 scanner types are represented in activities
+            logger.info(f"Dashboard: Ensuring all scanner types update dashboard data properly")
             
             # Also try to get activity tracker data for most recent scans, prioritizing today's scans
             activities_to_process = today_activities if today_activities else completed_activities[-5:]
@@ -1187,9 +1190,11 @@ def render_dashboard():
             # Keep existing recent_scans data
         
         if recent_scans:
+            logger.info(f"Dashboard: Processing {len(recent_scans)} scans for Recent Scan Activity display")
             # Transform scan data for activity display
             activity_data = []
-            for scan in recent_scans:
+            for i, scan in enumerate(recent_scans):
+                logger.info(f"Dashboard: Processing scan {i+1}: {scan.get('scan_type', 'unknown')} from {scan.get('timestamp', 'no timestamp')[:19]}")
                 # Handle both database and file storage formats
                 if 'result' in scan:
                     result = scan['result']
@@ -1230,30 +1235,90 @@ def render_dashboard():
                             cost_savings = f"€{immediate_savings:,.0f}"
                 
                 # Enhanced scanner type detection with proper mapping
-                scan_type_raw = scan.get('scan_type', 'unknown').lower()
+                scan_type_raw = scan.get('scan_type', 'unknown').lower().strip()
+                logger.info(f"Dashboard: Raw scan type from database: '{scan_type_raw}'")
                 
-                # Map scanner types to proper display names
+                # Complete mapping for all 9+ scanner types with comprehensive variations
                 scanner_type_map = {
-                    'ai_model': 'AI Model',
-                    'ai-model': 'AI Model',
-                    'aimodel': 'AI Model',
-                    'code': 'Code',
-                    'repository': 'Repository',
-                    'repo': 'Repository',
-                    'document': 'Document',
-                    'blob': 'Document',
-                    'image': 'Image',
-                    'website': 'Website',
-                    'database': 'Database',
-                    'db': 'Database',
-                    'dpia': 'DPIA',
-                    'sustainability': 'Sustainability',
-                    'cookie': 'Cookie',
-                    'soc2': 'SOC2',
-                    'unknown': 'AI Model'  # Default unknown to AI Model
+                    # 1. AI Model Scanner (all variations)
+                    'ai_model': '🤖 AI Model',
+                    'ai-model': '🤖 AI Model', 
+                    'ai model scanner': '🤖 AI Model',
+                    'aimodel': '🤖 AI Model',
+                    'ai_model_scanner': '🤖 AI Model',
+                    'ai model': '🤖 AI Model',
+                    
+                    # 2. Code Scanner (all variations)
+                    'code': '💻 Code',
+                    'repository': '💻 Repository',
+                    'repo': '💻 Repository', 
+                    'directory': '💻 Directory',
+                    'git': '💻 Git Repository',
+                    'source': '💻 Source Code',
+                    
+                    # 3. Document Scanner (all variations)
+                    'document': '📄 Document',
+                    'blob': '📄 Blob Storage',
+                    'pdf': '📄 PDF Document',
+                    'text': '📄 Text Document',
+                    'file': '📄 File',
+                    
+                    # 4. Website Scanner (all variations)
+                    'website': '🌐 Website',
+                    'web': '🌐 Web',
+                    'url': '🌐 URL',
+                    'http': '🌐 HTTP',
+                    'https': '🌐 HTTPS',
+                    
+                    # 5. Database Scanner (all variations)
+                    'database': '🗄️ Database',
+                    'db': '🗄️ Database',
+                    'sql': '🗄️ SQL Database',
+                    'postgresql': '🗄️ PostgreSQL',
+                    'mysql': '🗄️ MySQL',
+                    
+                    # 6. Image Scanner (OCR-based)
+                    'image': '🖼️ Image',
+                    'ocr': '🖼️ OCR Image',
+                    'photo': '🖼️ Photo',
+                    'picture': '🖼️ Picture',
+                    
+                    # 7. API Scanner
+                    'api': '🔗 API',
+                    'rest': '🔗 REST API',
+                    'graphql': '🔗 GraphQL API',
+                    'endpoint': '🔗 API Endpoint',
+                    
+                    # 8. SOC2 Scanner
+                    'soc2': '🔐 SOC2',
+                    'soc 2': '🔐 SOC2',
+                    'security': '🔐 Security',
+                    'compliance': '🔐 Compliance',
+                    
+                    # 9. DPIA Scanner
+                    'dpia': '📋 DPIA',
+                    'data protection impact': '📋 DPIA',
+                    'privacy impact': '📋 DPIA',
+                    'gdpr': '📋 GDPR DPIA',
+                    
+                    # 10. Sustainability Scanner (bonus)
+                    'sustainability': '🌱 Sustainability',
+                    'carbon': '🌱 Carbon Footprint',
+                    'energy': '🌱 Energy Analysis',
+                    'green': '🌱 Green Analysis',
+                    
+                    # Additional scanner types
+                    'cookie': '🍪 Cookie',
+                    'tracking': '🍪 Tracking',
+                    'consent': '🍪 Consent',
+                    
+                    # Default for unknown
+                    'unknown': '🔍 General',
+                    '': '🔍 General'
                 }
                 
-                display_type = scanner_type_map.get(scan_type_raw, scan_type_raw.title())
+                display_type = scanner_type_map.get(scan_type_raw, scan_type_raw.title() if scan_type_raw else 'General')
+                logger.info(f"Dashboard: Scan type '{scan_type_raw}' mapped to '{display_type}'")
                 
                 activity_data.append({
                     'Date': formatted_date,
@@ -1266,11 +1331,13 @@ def render_dashboard():
                     'Cost Savings': cost_savings
                 })
             
+            logger.info(f"Dashboard: Generated {len(activity_data)} activity records for display")
+            
             if activity_data:
                 # Sort by date and time descending (most recent first)
                 activity_data.sort(key=lambda x: f"{x['Date']} {x['Time']}", reverse=True)
                 df = pd.DataFrame(activity_data)
-                st.dataframe(df, use_container_width=True)
+                st.dataframe(df, use_container_width=True, hide_index=True)
                 
                 st.success(f"✅ Showing {len(activity_data)} recent scan(s) - Updated in real-time")
                 

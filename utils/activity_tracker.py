@@ -26,17 +26,20 @@ class ActivityType(Enum):
     REPORT_DOWNLOADED = "report_downloaded"
 
 class ScannerType(Enum):
-    """Scanner types for consistent tracking"""
-    CODE = "code"
-    DOCUMENT = "document"
-    IMAGE = "image"
-    DATABASE = "database"
-    API = "api"
-    AI_MODEL = "ai_model"
-    WEBSITE = "website"
-    SOC2 = "soc2"
-    DPIA = "dpia"
-    SUSTAINABILITY = "sustainability"
+    """Scanner types for consistent tracking - All 9 scanner types"""
+    CODE = "code"                           # 1. Code Scanner
+    DOCUMENT = "document"                   # 2. Document/Blob Scanner  
+    IMAGE = "image"                         # 3. Image Scanner (OCR-based)
+    DATABASE = "database"                   # 4. Database Scanner
+    API = "api"                            # 5. API Scanner
+    AI_MODEL = "ai_model"                  # 6. AI Model Scanner
+    WEBSITE = "website"                    # 7. Website Scanner  
+    SOC2 = "soc2"                         # 8. SOC2 Scanner
+    DPIA = "dpia"                         # 9. DPIA Scanner
+    SUSTAINABILITY = "sustainability"      # 10. Sustainability Scanner (bonus)
+    REPOSITORY = "repository"              # Git Repository Scanner
+    BLOB = "blob"                         # Blob storage scanner
+    COOKIE = "cookie"                     # Cookie compliance scanner
 
 @dataclass
 class ActivityEntry:
