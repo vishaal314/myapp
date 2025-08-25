@@ -847,6 +847,20 @@ def render_authenticated_interface():
         
         selected_nav = st.selectbox(_('sidebar.navigation', 'Navigation'), nav_options, key="navigation")
         
+        # Handle navigation requests from dashboard buttons
+        if st.session_state.get('view_detailed_results', False):
+            st.session_state['view_detailed_results'] = False
+            selected_nav = f"📊 {_('results.title', 'Results')}"
+        elif st.session_state.get('view_history', False):
+            st.session_state['view_history'] = False
+            selected_nav = f"📋 {_('history.title', 'History')}"
+        elif st.session_state.get('start_new_scan', False):
+            st.session_state['start_new_scan'] = False
+            selected_nav = f"🔍 {_('scan.new_scan_title', 'New Scan')}"
+        elif st.session_state.get('start_first_scan', False):
+            st.session_state['start_first_scan'] = False
+            selected_nav = f"🔍 {_('scan.new_scan_title', 'New Scan')}"
+        
         st.markdown("---")
         
         # License status display
@@ -1206,17 +1220,17 @@ def render_dashboard():
                 
                 with col1:
                     if st.button("📊 View Detailed Results"):
-                        st.session_state['navigation'] = _('results.title', 'Results')
+                        st.session_state['view_detailed_results'] = True
                         st.rerun()
                 
                 with col2:
                     if st.button("📋 View History"):
-                        st.session_state['navigation'] = _('history.title', 'History')
+                        st.session_state['view_history'] = True
                         st.rerun()
                         
                 with col3:
                     if st.button("🔍 New Scan"):
-                        st.session_state['navigation'] = _('scan.new_scan_title', 'New Scan')
+                        st.session_state['start_new_scan'] = True
                         st.rerun()
             else:
                 st.info("Scan data processing... Please refresh if data doesn't appear.")
@@ -1241,7 +1255,7 @@ def render_dashboard():
             
             # Show start scanning button for new users
             if st.button("🚀 Start Your First Scan"):
-                st.session_state['navigation'] = _('scan.new_scan_title', 'New Scan')
+                st.session_state['start_first_scan'] = True
                 st.rerun()
         
         # Performance summary and cost savings for users with scans
