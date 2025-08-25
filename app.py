@@ -4731,20 +4731,21 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             scan_results["findings"] = all_findings
             
             # Track successful completion with enhanced details
-            track_scan_completed(
-                session_id=session_id,
-                user_id=user_id,
-                username=username,
+            track_scan_completed_wrapper(
                 scanner_type=ScannerType.AI_MODEL,
+                user_id=user_id,
+                session_id=session_id,
                 findings_count=findings_count,
                 files_scanned=scan_results["files_scanned"],
                 compliance_score=scan_results.get("privacy_score", 100),
-                duration_ms=scan_duration,
+                scan_type="AI Model Scanner",
                 region=region,
-                details={
+                file_count=scan_results["files_scanned"],
+                total_pii_found=findings_count,
+                high_risk_count=high_risk_count,
+                result_data={
                     'scan_id': scan_results["scan_id"],
-                    'high_risk_count': high_risk_count,
-                    'total_pii_found': findings_count,
+                    'duration_ms': scan_duration,
                     'model_type': model_type,
                     'framework': framework,
                     'privacy_score': scan_results.get("privacy_score", 100),
