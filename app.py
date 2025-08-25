@@ -1323,7 +1323,7 @@ def render_dashboard():
                 activity_data.append({
                     'Date': formatted_date,
                     'Time': formatted_time,
-                    'Type': f"{display_type} Scan",
+                    'Type': display_type,  # Remove " Scan" suffix since display_type already includes scanner type
                     'Status': '✅ Complete',
                     'PII Found': pii_count,
                     'Files': scan.get('file_count', 0),
