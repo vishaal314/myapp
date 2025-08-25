@@ -1653,6 +1653,9 @@ def render_scanner_interface_safe():
 
 def render_code_scanner_interface(region: str, username: str):
     """Code scanner interface with intelligent scanning capabilities"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    
     st.subheader("📝 Code Scanner Configuration")
     
     # Intelligent scanning option
@@ -3935,6 +3938,9 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
 
 def render_ai_model_scanner_interface(region: str, username: str):
     """AI Model scanner interface with comprehensive analysis capabilities"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    
     st.subheader("🤖 AI Model Privacy & Bias Scanner")
     
     # Enhanced description
@@ -4772,6 +4778,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
 
 def render_soc2_scanner_interface(region: str, username: str):
     """SOC2 scanner interface with repository URL input (July 1st functionality)"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    
     st.subheader("🛡️ SOC2 Compliance Scanner")
     
     # Enhanced description from July 1st
@@ -5145,6 +5154,9 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
 
 def render_website_scanner_interface(region: str, username: str):
     """Enhanced Website Scanner with intelligent scanning and comprehensive GDPR cookie and tracking compliance"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    
     st.subheader("🌐 GDPR Website Privacy Compliance Scanner")
     
     # Intelligent scanning option
@@ -6163,6 +6175,9 @@ def remove_duplicates(items, key):
 
 def render_dpia_scanner_interface(region: str, username: str):
     """Enhanced DPIA scanner interface with step-by-step wizard"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    
     st.title("📋 DPIA Assessment - Step by Step")
     
     # Initialize session state for DPIA wizard
@@ -6954,6 +6969,9 @@ def generate_enhanced_dpia_report(scan_results):
 
 def render_sustainability_scanner_interface(region: str, username: str):
     """Sustainability scanner interface with comprehensive environmental impact analysis"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    
     st.subheader("🌱 Sustainability Scanner Configuration")
     
     # Analysis scope with enhanced options
