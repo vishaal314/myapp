@@ -2428,12 +2428,23 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
                 'total_pii_found': findings_count,
                 'high_risk_count': high_risk_count
             })
-            aggregator.save_scan_result(
+            
+            # Add detailed logging for debugging
+            logger.info(f"Code Scanner: About to store scan result for user {username}")
+            logger.info(f"Code Scanner: Scan data - scan_type: {complete_result.get('scan_type')}, files: {complete_result.get('files_scanned')}, PII: {complete_result.get('total_pii_found')}")
+            
+            # Attempt to store the result
+            stored_scan_id = aggregator.save_scan_result(
                 username=username,
                 result=complete_result
             )
+            logger.info(f"Code Scanner: Successfully stored scan result with ID: {stored_scan_id}")
+            
         except Exception as store_error:
-            logger.warning(f"Could not store scan result in aggregator: {store_error}")
+            logger.error(f"Code Scanner: FAILED to store scan result in aggregator: {store_error}")
+            # Also log the full exception details
+            import traceback
+            logger.error(f"Code Scanner: Full exception trace: {traceback.format_exc()}")
         
         st.success("✅ GDPR-compliant code scan completed!")
         
