@@ -146,12 +146,14 @@ try:
             return None
     
     def get_session_id():
+        """Get or create session ID"""
         import streamlit as st
         if 'session_id' not in st.session_state:
             st.session_state.session_id = str(uuid.uuid4())
         return st.session_state.session_id
     
     def get_user_id():
+        """Get current user ID"""
         import streamlit as st
         return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
         
@@ -169,8 +171,12 @@ except ImportError:
         AI_MODEL = "ai_model"
         SOC2 = "soc2"
         SUSTAINABILITY = "sustainability"
-    def get_session_id(): return "default_session"
-    def get_user_id(): return "default_user"
+    def get_session_id(): 
+        """Fallback session ID"""
+        return "default_session"
+    def get_user_id(): 
+        """Fallback user ID"""
+        return "default_user"
 
 # Configure basic logging
 logging.basicConfig(
@@ -2227,14 +2233,18 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         try:
             from services.results_aggregator import ResultsAggregator
             aggregator = ResultsAggregator()
+            # Prepare complete result dictionary for storage
+            complete_result = scan_results.copy()
+            complete_result.update({
+                'scan_type': "Code Scanner",
+                'region': region,
+                'files_scanned': scan_results['files_scanned'],
+                'total_pii_found': findings_count,
+                'high_risk_count': high_risk_count
+            })
             aggregator.store_scan_result(
                 username=username,
-                scan_type="Code Scanner",
-                region=region,
-                file_count=scan_results['files_scanned'],
-                total_pii_found=findings_count,
-                high_risk_count=high_risk_count,
-                result_data=scan_results
+                result=complete_result
             )
         except Exception as store_error:
             logger.warning(f"Could not store scan result in aggregator: {store_error}")
@@ -2607,6 +2617,10 @@ def execute_document_scan(region, username, uploaded_files):
 # Complete scanner interfaces with timeout protection
 def render_image_scanner_interface(region: str, username: str):
     """Image scanner interface with intelligent OCR capabilities"""
+    # Initialize variables at function start to avoid scope issues
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+    user_id = st.session_state.get('user_id', username)
+    
     st.subheader("🖼️ Image Scanner Configuration")
     
     # Intelligent scanning option
@@ -2777,6 +2791,10 @@ def execute_image_scan(region, username, uploaded_files):
 
 def render_database_scanner_interface(region: str, username: str):
     """Database scanner interface"""
+    # Initialize variables at function start to avoid scope issues
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+    user_id = st.session_state.get('user_id', username)
+    
     st.subheader("🗄️ Database Scanner Configuration")
     
     # Database connection options

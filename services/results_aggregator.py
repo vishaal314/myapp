@@ -12,7 +12,7 @@ class ResultsAggregator:
     Falls back to file-based storage if database is unavailable.
     """
     
-    def __init__(self, db_url: str = None):
+    def __init__(self, db_url: Optional[str] = None):
         """
         Initialize the results aggregator.
         
@@ -422,7 +422,7 @@ class ResultsAggregator:
             print(f"Error retrieving user scans from file: {str(e)}")
             return []
 
-    def get_recent_scans(self, days: int = 30, username: str = None) -> List[Dict[str, Any]]:
+    def get_recent_scans(self, days: int = 30, username: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Get recent scans within the specified number of days.
         
@@ -491,7 +491,7 @@ class ResultsAggregator:
             self.use_file_storage = True
             return self._get_recent_scans_file(days, username)
     
-    def _get_recent_scans_file(self, days: int = 30, username: str = None) -> List[Dict[str, Any]]:
+    def _get_recent_scans_file(self, days: int = 30, username: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get recent scans from file storage."""
         try:
             if not os.path.exists('data/scans.json'):
