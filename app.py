@@ -2183,10 +2183,13 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         high_risk_count = sum(1 for f in all_findings if f.get('severity') in ['Critical', 'High'])
         
         # Track successful completion with comprehensive details
-        track_scan_completed(
+        track_scan_completed_wrapper(
             scanner_type=ScannerType.CODE,
             user_id=user_id,
             session_id=session_id,
+            findings_count=findings_count,
+            files_scanned=scan_results['files_scanned'],
+            compliance_score=compliance_score,
             scan_type="Code Scanner",
             region=region,
             file_count=scan_results['files_scanned'],
@@ -2226,7 +2229,7 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed(
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.CODE,
             user_id=user_id,
             session_id=session_id,
@@ -2550,10 +2553,13 @@ def execute_document_scan(region, username, uploaded_files):
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical')
         
         # Track successful completion
-        track_scan_completed(
+        track_scan_completed_wrapper(
             scanner_type=ScannerType.DOCUMENT,
             user_id=user_id,
             session_id=session_id,
+            findings_count=findings_count,
+            files_scanned=scan_results["files_scanned"],
+            compliance_score=85,
             scan_type="Document Scanner",
             region=region,
             file_count=scan_results["files_scanned"],
@@ -2576,7 +2582,7 @@ def execute_document_scan(region, username, uploaded_files):
         user_id = user_id if 'user_id' in locals() else username
         
         # Track scan failure
-        track_scan_failed(
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.DOCUMENT,
             user_id=user_id,
             session_id=session_id,
@@ -2718,10 +2724,13 @@ def execute_image_scan(region, username, uploaded_files):
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical')
         
         # Track successful completion
-        track_scan_completed(
+        track_scan_completed_wrapper(
             scanner_type=ScannerType.IMAGE,
             user_id=user_id,
             session_id=session_id,
+            findings_count=findings_count,
+            files_scanned=scan_results["files_scanned"],
+            compliance_score=85,
             scan_type="Image Scanner",
             region=region,
             file_count=scan_results["files_scanned"],
@@ -2744,7 +2753,7 @@ def execute_image_scan(region, username, uploaded_files):
         user_id = user_id if 'user_id' in locals() else username
         
         # Track scan failure
-        track_scan_failed(
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.IMAGE,
             user_id=user_id,
             session_id=session_id,
@@ -2850,10 +2859,13 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical')
         
         # Track successful completion
-        track_scan_completed(
+        track_scan_completed_wrapper(
             scanner_type=ScannerType.DATABASE,
             user_id=user_id,
             session_id=session_id,
+            findings_count=findings_count,
+            files_scanned=scan_results["tables_scanned"],
+            compliance_score=85,
             scan_type="Database Scanner",
             region=region,
             file_count=scan_results["tables_scanned"],
@@ -2877,7 +2889,7 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
         user_id = user_id if 'user_id' in locals() else username
         
         # Track scan failure
-        track_scan_failed(
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.DATABASE,
             user_id=user_id,
             session_id=session_id,
@@ -3698,10 +3710,13 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
         
         # Track successful completion
-        track_scan_completed(
+        track_scan_completed_wrapper(
             scanner_type=ScannerType.API,
             user_id=user_id,
             session_id=session_id,
+            findings_count=findings_count,
+            files_scanned=scan_results["endpoints_scanned"],
+            compliance_score=scan_results["security_score"],
             scan_type="API Scanner", 
             region=region,
             file_count=scan_results["endpoints_scanned"],
@@ -3720,11 +3735,10 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.API,
+            user_id=user_id,
+            session_id=session_id,
             error_message=str(e),
             region=region,
             details={
@@ -4557,11 +4571,10 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.AI_MODEL,
+            user_id=user_id,
+            session_id=session_id,
             error_message=str(e),
             region=region,
             details={
@@ -4931,11 +4944,10 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.SOC2,
+            user_id=user_id,
+            session_id=session_id,
             error_message=str(e),
             region=region,
             details={
@@ -5587,11 +5599,10 @@ def execute_website_scan(region, username, url, scan_config):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.WEBSITE,
+            user_id=user_id,
+            session_id=session_id,
             error_message=str(e),
             region=region,
             details={
@@ -6500,11 +6511,10 @@ def execute_enhanced_dpia_scan(region, username, responses):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.DPIA,
+            user_id=user_id,
+            session_id=session_id,
             error_message=str(e),
             region=region,
             details={
@@ -7246,11 +7256,10 @@ def execute_sustainability_scan(region, username, scan_params):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.SUSTAINABILITY,
+            user_id=user_id,
+            session_id=session_id,
             error_message=str(e),
             region=region,
             details={
