@@ -1163,15 +1163,41 @@ def render_dashboard():
             if activities_to_process:
                 # Convert activity tracker data to scan format
                 for activity in activities_to_process:
-                    # Extract scanner type from activity details with multiple fallback options
+                    # Extract scanner type from activity details with accurate detection
                     result_data = activity.details.get('result_data', {})
-                    scan_type = (
+                    
+                    # Get scanner type from multiple sources, with proper ScannerType enum detection
+                    scanner_type_raw = (
                         result_data.get('scan_type') or 
                         activity.details.get('scan_type') or
                         activity.details.get('scanner_type') or
                         result_data.get('scanner_type') or
-                        'AI Model'  # Default to AI Model since that's the most common scanner showing "unknown"
+                        str(getattr(activity, 'scanner_type', None))  # Get from ScannerType enum if available
                     )
+                    
+                    # Convert ScannerType enum to readable string
+                    if hasattr(activity, 'scanner_type') and activity.scanner_type:
+                        scanner_enum = activity.scanner_type
+                        if hasattr(scanner_enum, 'value'):
+                            scanner_type_raw = scanner_enum.value
+                        else:
+                            scanner_type_raw = str(scanner_enum)
+                    
+                    # Map ScannerType enum values to display names
+                    enum_to_display = {
+                        'ScannerType.AI_MODEL': 'AI Model Scanner',
+                        'ScannerType.CODE': 'Code Scanner', 
+                        'ScannerType.DOCUMENT': 'Document Scanner',
+                        'ScannerType.IMAGE': 'Image Scanner',
+                        'ScannerType.DATABASE': 'Database Scanner',
+                        'ScannerType.API': 'API Scanner',
+                        'ScannerType.WEBSITE': 'Website Scanner',
+                        'ScannerType.SOC2': 'SOC2 Scanner',
+                        'ScannerType.DPIA': 'DPIA Scanner',
+                        'ScannerType.SUSTAINABILITY': 'Sustainability Scanner'
+                    }
+                    
+                    scan_type = enum_to_display.get(str(scanner_type_raw), scanner_type_raw or 'Unknown')
                     
                     scan_data = {
                         'timestamp': activity.timestamp.isoformat(),
@@ -1246,11 +1272,20 @@ def render_dashboard():
                         if immediate_savings > 0:
                             cost_savings = f"€{immediate_savings:,.0f}"
                 
-                # Enhanced scanner type detection with proper mapping
+                # Enhanced scanner type detection with proper mapping - Debug all scan data
                 scan_type_raw = scan.get('scan_type', 'unknown').lower().strip()
                 logger.info(f"Dashboard: Raw scan type from database: '{scan_type_raw}'")
+                logger.info(f"Dashboard: Full scan data keys: {list(scan.keys())}")
                 
-                # Complete mapping for all 9+ scanner types with comprehensive variations
+                # Also check result data for scan type
+                result_data = scan.get('result', {})
+                if isinstance(result_data, dict):
+                    result_scan_type = result_data.get('scan_type', '').lower().strip()
+                    if result_scan_type and result_scan_type != scan_type_raw:
+                        logger.info(f"Dashboard: Alternative scan type in result: '{result_scan_type}'")
+                        scan_type_raw = result_scan_type or scan_type_raw
+                
+                # Complete mapping for all 9+ scanner types with comprehensive variations  
                 scanner_type_map = {
                     # 1. AI Model Scanner (all variations)
                     'ai_model': '🤖 AI Model',
@@ -1260,13 +1295,15 @@ def render_dashboard():
                     'ai_model_scanner': '🤖 AI Model',
                     'ai model': '🤖 AI Model',
                     
-                    # 2. Code Scanner (all variations)
+                    # 2. Code Scanner (all variations) - Enhanced detection
                     'code': '💻 Code',
-                    'repository': '💻 Repository',
-                    'repo': '💻 Repository', 
-                    'directory': '💻 Directory',
-                    'git': '💻 Git Repository',
-                    'source': '💻 Source Code',
+                    'code scanner': '💻 Code',
+                    'repository': '💻 Code', 
+                    'repo': '💻 Code',
+                    'directory': '💻 Code',
+                    'git': '💻 Code',
+                    'source': '💻 Code',
+                    'source code': '💻 Code',
                     
                     # 3. Document Scanner (all variations)
                     'document': '📄 Document',
@@ -1329,7 +1366,20 @@ def render_dashboard():
                     '': '🔍 General'
                 }
                 
-                display_type = scanner_type_map.get(scan_type_raw, scan_type_raw.title() if scan_type_raw else 'General')
+                # First try exact match, then try variations
+                display_type = scanner_type_map.get(scan_type_raw)
+                
+                if not display_type:
+                    # Try alternative patterns for better matching
+                    for key, value in scanner_type_map.items():
+                        if key in scan_type_raw or scan_type_raw in key:
+                            display_type = value
+                            break
+                
+                # Final fallback
+                if not display_type:
+                    display_type = scan_type_raw.title() if scan_type_raw != 'unknown' else '🔍 General'
+                    
                 logger.info(f"Dashboard: Scan type '{scan_type_raw}' mapped to '{display_type}'")
                 
                 activity_data.append({
