@@ -2428,7 +2428,7 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
                 'total_pii_found': findings_count,
                 'high_risk_count': high_risk_count
             })
-            aggregator.store_scan_result(
+            aggregator.save_scan_result(
                 username=username,
                 result=complete_result
             )
