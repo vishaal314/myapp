@@ -5,7 +5,7 @@ Optimizes database performance for DataGuardian Pro
 
 import os
 import psycopg2
-from psycopg2 import pool
+import psycopg2.pool as pool  # Fix import structure
 from psycopg2.extras import RealDictCursor
 import logging
 import time
@@ -50,7 +50,7 @@ class DatabaseOptimizer:
                           '-c idle_in_transaction_session_timeout=300000'
             }
             
-            self.connection_pool = psycopg2.pool.ThreadedConnectionPool(
+            self.connection_pool = pool.ThreadedConnectionPool(
                 minconn=10,    # Increased minimum connections
                 maxconn=50,    # Increased maximum connections
                 **conn_params
@@ -153,7 +153,11 @@ class DatabaseOptimizer:
                 if not self.connection_pool:
                     self.initialize_optimized_pool()
                 
-                conn = self.connection_pool.getconn()
+                # Type-safe connection pool access
+                if self.connection_pool is not None:
+                    conn = self.connection_pool.getconn()
+                else:
+                    raise Exception("Connection pool not initialized")
                 self.stats['active_connections'] += 1
                 self.stats['total_connections'] += 1
             
@@ -163,7 +167,7 @@ class DatabaseOptimizer:
             logger.error(f"Database connection error: {e}")
             raise
         finally:
-            if conn:
+            if conn and self.connection_pool is not None:
                 with self.pool_lock:
                     self.connection_pool.putconn(conn)
                     self.stats['active_connections'] -= 1
@@ -176,7 +180,7 @@ class DatabaseOptimizer:
                 )
                 self.stats['total_queries'] += 1
     
-    def execute_cached_query(self, query: str, params: tuple = None, cache_key: str = None) -> Any:
+    def execute_cached_query(self, query: str, params: Optional[tuple] = None, cache_key: Optional[str] = None) -> Any:
         """Execute query with caching for better performance"""
         if cache_key:
             # Check cache first

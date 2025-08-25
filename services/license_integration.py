@@ -298,13 +298,21 @@ class LicenseIntegration:
         # Debug info for troubleshooting
         st.caption(f"Tracking data for user: {user_id}")
         
+        # Initialize default values to prevent unbound variables
+        total_scans = 0
+        total_pii_found = 0
+        high_risk_findings = 0
+        avg_compliance_score = 0.0
+        user_activities = []
+        metrics = {}
+        
         try:
             # Get live dashboard metrics from activity tracker (includes real scan data)
             from utils.activity_tracker import get_dashboard_metrics, get_activity_tracker
             
             # Force a fresh calculation of metrics
             tracker = get_activity_tracker()
-            user_activities = tracker.get_user_activities(user_id, limit=None)
+            user_activities = tracker.get_user_activities(user_id, limit=100)  # Use reasonable default instead of None
             
             # Calculate live metrics directly from activity data
             scan_activities = [a for a in user_activities if a.activity_type.value in ['scan_started', 'scan_completed', 'scan_failed']]
@@ -328,20 +336,20 @@ class LicenseIntegration:
                     compliance_scores.append(comp_score)
             
             # Calculate average compliance score
-            avg_compliance_score = sum(compliance_scores) / len(compliance_scores) if compliance_scores else 0
+            avg_compliance_score = sum(compliance_scores) / len(compliance_scores) if compliance_scores else 0.0
             
             # Calculate success rate
             success_rate = len(completed_scans) / max(len(scan_activities), 1) if scan_activities else 0
             
             # Also get metrics from database for additional data
-            metrics = get_dashboard_metrics(user_id)
+            metrics = get_dashboard_metrics(user_id) or {}  # Ensure metrics is not None
             
             # Use database data if activity tracker has no data (fallback)
             if total_scans == 0:
                 total_scans = metrics.get('total_scans', 0)
                 total_pii_found = metrics.get('total_pii_found', 0)
                 high_risk_findings = metrics.get('high_risk_findings', 0)
-                avg_compliance_score = metrics.get('average_compliance_score', 0)
+                avg_compliance_score = metrics.get('average_compliance_score', 0.0)
             
             # Debug information
             st.caption(f"Dashboard data: Scans: {total_scans}, PII: {total_pii_found}, High Risk: {high_risk_findings}, Completed Scans in Tracker: {len(completed_scans)}")
@@ -354,6 +362,9 @@ class LicenseIntegration:
             success_rate = max(0, 1 - getattr(stats, 'error_rate', 0))
             total_pii_found = 0
             high_risk_findings = 0
+            avg_compliance_score = 0.0
+            user_activities = []
+            metrics = {}
         
         license_info = get_license_info()
         
@@ -437,7 +448,7 @@ class LicenseIntegration:
     def create_license_decorator(self):
         """Create decorator for license-protected functions"""
         
-        def license_required(scanner_type: str = None, feature: str = None, region: str = None):
+        def license_required(scanner_type: Optional[str] = None, feature: Optional[str] = None, region: Optional[str] = None):
             def decorator(func):
                 def wrapper(*args, **kwargs):
                     # Check license

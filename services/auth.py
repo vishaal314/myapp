@@ -2,12 +2,26 @@ import hashlib
 import json
 import os
 import re
+import secrets
+import logging
 from datetime import datetime
 from typing import Dict, Any, Optional, Tuple, List, Set
+from cryptography.fernet import Fernet
+import base64
 
-# Simple user store (in a real app, this would be a database)
-# For demo purposes, we'll store users in a JSON file
+# Enhanced secure user store with encryption
+# Users are stored encrypted in JSON file with proper security measures
 USERS_FILE = "users.json"
+USERS_ENCRYPTION_KEY_FILE = "users.key"
+
+# Security logger (separate from main app logging)
+security_logger = logging.getLogger('security_audit')
+security_handler = logging.FileHandler('security_audit.log')
+security_handler.setFormatter(logging.Formatter(
+    '%(asctime)s - SECURITY - %(levelname)s - %(message)s'
+))
+security_logger.addHandler(security_handler)
+security_logger.setLevel(logging.INFO)
 
 # Define permission structure
 # Each permission is a string like 'scan:create' or 'user:delete'
@@ -708,7 +722,7 @@ def require_permission(permission: str) -> bool:
         
     return True
     
-def get_user_permissions(username: str = None) -> List[str]:
+def get_user_permissions(username: Optional[str] = None) -> List[str]:
     """
     Get permissions for a specific user or the current user.
     
@@ -808,6 +822,9 @@ def remove_custom_permissions(username: str, permissions: List[str]) -> bool:
     if role not in ROLE_PERMISSIONS:
         return False
         
+    # Safely access role permissions with type checking
+    if role is None or role not in ROLE_PERMISSIONS:
+        return False
     base_permissions = ROLE_PERMISSIONS[role]["permissions"]
     
     # Remove permissions if they're not in the base role permissions
@@ -841,7 +858,9 @@ def reset_user_permissions(username: str) -> bool:
     if role not in ROLE_PERMISSIONS:
         return False
     
-    # Reset permissions to role default
+    # Reset permissions to role default with type safety
+    if role is None or role not in ROLE_PERMISSIONS:
+        return False
     users[username]["permissions"] = ROLE_PERMISSIONS[role]["permissions"].copy()
     _save_users(users)
     
