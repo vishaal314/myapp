@@ -45,7 +45,7 @@ except ImportError:
         from services.improved_report_download import generate_html_report
     except ImportError:
         # Fallback inline HTML generator for AI Model reports
-        def generate_html_report(scan_data):
+        def generate_html_report(scan_results):
             """Simple HTML report generator for AI Model scans"""
             return f"""<!DOCTYPE html>
 <html>
@@ -65,23 +65,23 @@ except ImportError:
 <body>
     <div class="header">
         <h1>AI Model Analysis Report</h1>
-        <p>Generated on {scan_data.get('timestamp', 'Unknown')}</p>
+        <p>Generated on {scan_results.get('timestamp', 'Unknown')}</p>
     </div>
     
     <div class="section">
         <h2>Model Information</h2>
-        <div class="metric"><strong>Framework:</strong> {scan_data.get('model_framework', 'Multi-Framework')}</div>
-        <div class="metric"><strong>AI Act Status:</strong> {scan_data.get('ai_act_compliance', 'Assessment Complete')}</div>
-        <div class="metric"><strong>Compliance Score:</strong> {scan_data.get('compliance_score', 85)}/100</div>
-        <div class="metric"><strong>Files Analyzed:</strong> {scan_data.get('files_scanned', 0)}</div>
-        <div class="metric"><strong>Total Findings:</strong> {scan_data.get('total_pii_found', 0)}</div>
+        <div class="metric"><strong>Framework:</strong> {scan_results.get('model_framework', 'Multi-Framework')}</div>
+        <div class="metric"><strong>AI Act Status:</strong> {scan_results.get('ai_act_compliance', 'Assessment Complete')}</div>
+        <div class="metric"><strong>Compliance Score:</strong> {scan_results.get('compliance_score', 85)}/100</div>
+        <div class="metric"><strong>Files Analyzed:</strong> {scan_results.get('files_scanned', 0)}</div>
+        <div class="metric"><strong>Total Findings:</strong> {scan_results.get('total_pii_found', 0)}</div>
     </div>
     
     <div class="section">
         <h2>Risk Analysis</h2>
-        <div class="metric"><strong>High Risk:</strong> {scan_data.get('high_risk_count', 0)} findings</div>
-        <div class="metric"><strong>Medium Risk:</strong> {scan_data.get('medium_risk_count', 0)} findings</div>
-        <div class="metric"><strong>Low Risk:</strong> {scan_data.get('low_risk_count', 0)} findings</div>
+        <div class="metric"><strong>High Risk:</strong> {scan_results.get('high_risk_count', 0)} findings</div>
+        <div class="metric"><strong>Medium Risk:</strong> {scan_results.get('medium_risk_count', 0)} findings</div>
+        <div class="metric"><strong>Low Risk:</strong> {scan_results.get('low_risk_count', 0)} findings</div>
     </div>
     
     <div class="section">
@@ -91,7 +91,7 @@ except ImportError:
             <p><strong>Severity:</strong> {finding.get('severity', 'Unknown')}</p>
             <p><strong>Description:</strong> {finding.get('description', 'No description available')}</p>
             <p><strong>Location:</strong> {finding.get('location', 'Unknown')}</p>
-        </div>''' for finding in scan_data.get('findings', [])])}
+        </div>''' for finding in scan_results.get('findings', [])])}
     </div>
     
     <div class="section">
@@ -159,8 +159,8 @@ try:
         
 except ImportError:
     # Fallback definitions for activity tracking
-    def track_scan_completed(**kwargs): pass
-    def track_scan_failed(**kwargs): pass
+    def track_scan_completed_wrapper(**kwargs): pass
+    def track_scan_failed_wrapper(**kwargs): pass
     class ScannerType:
         DOCUMENT = "document"
         IMAGE = "image" 
@@ -171,12 +171,17 @@ except ImportError:
         AI_MODEL = "ai_model"
         SOC2 = "soc2"
         SUSTAINABILITY = "sustainability"
-    def get_session_id(): 
-        """Fallback session ID"""
-        return "default_session"
-    def get_user_id(): 
-        """Fallback user ID"""
-        return "default_user"
+    # Removed duplicate function declarations
+    if 'get_session_id' not in globals():
+        def get_session_id(): 
+            """Fallback session ID"""
+            if 'session_id' not in st.session_state:
+                st.session_state.session_id = str(uuid.uuid4())
+            return st.session_state.session_id
+    if 'get_user_id' not in globals():
+        def get_user_id(): 
+            """Fallback user ID"""
+            return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
 
 # Configure basic logging
 logging.basicConfig(
@@ -398,13 +403,20 @@ def render_freemium_registration():
                     
                     # Track conversion for analytics
                     try:
-                        from utils.activity_tracker import get_activity_tracker
+                        from utils.activity_tracker import get_activity_tracker, ActivityType
                         tracker = get_activity_tracker()
-                        tracker.track_activity(email, 'freemium_signup', {
-                            'name': name,
-                            'country': country,
-                            'source': 'landing_page'
-                        })
+                        tracker.track_activity(
+                            session_id=str(uuid.uuid4()),
+                            user_id=email,
+                            username=email,
+                            activity_type=ActivityType.LOGIN,
+                            details={
+                                'name': name,
+                                'country': country,
+                                'source': 'landing_page',
+                                'signup_type': 'freemium'
+                            }
+                        )
                     except Exception:
                         pass  # Analytics failure shouldn't block registration
                         
@@ -2622,6 +2634,9 @@ def display_scan_results(scan_results):
 # Add similar interfaces for other scanners
 def render_document_scanner_interface(region: str, username: str):
     """Document scanner interface"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    
     st.subheader("📄 Document Scanner Configuration")
     
     uploaded_files = st.file_uploader(
@@ -2723,8 +2738,10 @@ def execute_document_scan(region, username, uploaded_files):
         
     except Exception as e:
         # Initialize variables for error handler if not already set
-        session_id = session_id if 'session_id' in locals() else str(uuid.uuid4())
-        user_id = user_id if 'user_id' in locals() else username
+        if 'session_id' not in locals():
+            session_id = str(uuid.uuid4())
+        if 'user_id' not in locals():
+            user_id = username
         
         # Track scan failure
         track_scan_failed_wrapper(
@@ -2738,6 +2755,9 @@ def execute_document_scan(region, username, uploaded_files):
 # Complete scanner interfaces with timeout protection
 def render_image_scanner_interface(region: str, username: str):
     """Image scanner interface with intelligent OCR capabilities"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    
     # Initialize variables at function start to avoid scope issues
     session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     user_id = st.session_state.get('user_id', username)
@@ -2898,8 +2918,10 @@ def execute_image_scan(region, username, uploaded_files):
         
     except Exception as e:
         # Initialize variables for error handler if not already set  
-        session_id = session_id if 'session_id' in locals() else str(uuid.uuid4())
-        user_id = user_id if 'user_id' in locals() else username
+        if 'session_id' not in locals() or session_id is None:
+            session_id = str(uuid.uuid4())
+        if 'user_id' not in locals() or user_id is None:
+            user_id = username
         
         # Track scan failure
         track_scan_failed_wrapper(
@@ -2912,6 +2934,9 @@ def execute_image_scan(region, username, uploaded_files):
 
 def render_database_scanner_interface(region: str, username: str):
     """Database scanner interface"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    
     # Initialize variables at function start to avoid scope issues
     session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     user_id = st.session_state.get('user_id', username)
@@ -3038,8 +3063,10 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
         
     except Exception as e:
         # Initialize variables for error handler if not already set
-        session_id = session_id if 'session_id' in locals() else str(uuid.uuid4())
-        user_id = user_id if 'user_id' in locals() else username
+        if 'session_id' not in locals():
+            session_id = str(uuid.uuid4())
+        if 'user_id' not in locals():
+            user_id = username
         
         # Track scan failure
         track_scan_failed_wrapper(
@@ -3052,6 +3079,9 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
 
 def render_api_scanner_interface(region: str, username: str):
     """API scanner interface"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    
     st.subheader("🔌 API Scanner Configuration")
     
     # API endpoint configuration
