@@ -433,21 +433,32 @@ class ResultsAggregator:
         Returns:
             List of recent scan results
         """
+        # Always try database first, even if use_file_storage is True
+        db_scans = self._get_recent_scans_db(days, username)
+        if db_scans is not None:
+            return db_scans
+            
         if self.use_file_storage:
             return self._get_recent_scans_file(days, username)
+        
+        return []
+    
+    def _get_recent_scans_db(self, days: int = 30, username: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
+        """Get recent scans from database with enhanced error handling."""
         
         try:
             conn = self._get_connection()
             if not conn:
-                self.use_file_storage = True
-                return self._get_recent_scans_file(days, username)
+                print(f"No database connection for recent scans query")
+                return None
             
             cursor = conn.cursor()
             
-            # Calculate cutoff date
+            # Calculate cutoff date - Use current timestamp for accurate filtering
             cutoff_date = datetime.now() - timedelta(days=days)
+            print(f"Querying scans since: {cutoff_date} for user: {username}")
             
-            # Build query with optional username filter
+            # Build query with optional username filter  
             if username:
                 cursor.execute("""
                     SELECT scan_id, username, timestamp, scan_type, region, 
@@ -466,16 +477,17 @@ class ResultsAggregator:
                 """, (cutoff_date,))
             
             results = cursor.fetchall()
+            print(f"Database returned {len(results)} scan records")
             
             cursor.close()
             conn.close()
             
-            # Convert to list of dictionaries
+            # Convert to list of dictionaries with enhanced logging
             scans = []
             for result in results:
-                scans.append({
+                scan_data = {
                     'scan_id': result[0],
-                    'username': result[1],
+                    'username': result[1], 
                     'timestamp': result[2].isoformat() if result[2] else None,
                     'scan_type': result[3],
                     'region': result[4],
@@ -483,8 +495,10 @@ class ResultsAggregator:
                     'total_pii_found': result[6],
                     'high_risk_count': result[7],
                     'result': result[8]
-                })
+                }
+                scans.append(scan_data)
             
+            print(f"Formatted {len(scans)} scans for return")
             return scans
         except Exception as e:
             print(f"Error retrieving recent scans: {str(e)}")

@@ -971,8 +971,13 @@ def render_dashboard():
         user_id = st.session_state.get('user_id', username)
         
         # Primary data source: ResultsAggregator (database-backed scan results)
+        # Force fresh connection and disable file storage fallback for accurate counts
         aggregator = ResultsAggregator()
+        aggregator.use_file_storage = False  # Force database mode for real-time data
         recent_scans = aggregator.get_recent_scans(days=30, username=username)
+        
+        # Debug: Log actual scan retrieval
+        logger.info(f"Dashboard: Raw aggregator returned {len(recent_scans)} scans for user {username}")
         
         # Initialize totals from aggregator (primary source)
         total_scans = len(recent_scans)
@@ -1010,6 +1015,45 @@ def render_dashboard():
                 if comp_score > 0:
                     compliance_scores.append(comp_score)
         
+        # Force refresh: Check database directly for most accurate count
+        try:
+            from services.results_aggregator import ResultsAggregator
+            fresh_aggregator = ResultsAggregator()
+            fresh_aggregator.use_file_storage = False
+            
+            # Get absolute latest data with no caching
+            all_user_scans = fresh_aggregator.get_user_scans(username, limit=50)
+            logger.info(f"Dashboard: Direct database query found {len(all_user_scans)} total scans for user {username}")
+            
+            # Filter for recent scans (30 days) manually to ensure accuracy
+            from datetime import datetime, timedelta
+            cutoff_date = datetime.now() - timedelta(days=30)
+            
+            recent_scan_count = 0
+            for scan in all_user_scans:
+                try:
+                    if scan.get('timestamp'):
+                        scan_date = datetime.fromisoformat(scan['timestamp'].replace('Z', ''))
+                        if scan_date >= cutoff_date:
+                            recent_scan_count += 1
+                except (ValueError, AttributeError):
+                    continue
+            
+            logger.info(f"Dashboard: Manual date filtering found {recent_scan_count} scans within 30 days")
+            
+            # Update total_scans with the most accurate count
+            if recent_scan_count > total_scans:
+                logger.info(f"Dashboard: Updating scan count from {total_scans} to {recent_scan_count} (direct DB query)")
+                total_scans = recent_scan_count
+                
+                # Also refresh the recent_scans list to match
+                recent_scans = [s for s in all_user_scans if s.get('timestamp') and 
+                              datetime.fromisoformat(s['timestamp'].replace('Z', '')) >= cutoff_date]
+                recent_scans.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+                
+        except Exception as e:
+            logger.warning(f"Dashboard: Failed to get direct database count: {e}")
+        
         # Secondary data source: Activity Tracker (real-time activity logging)
         tracker = get_activity_tracker()
         user_activities = tracker.get_user_activities(user_id, limit=10000)  # Large limit for all activities
@@ -1017,6 +1061,9 @@ def render_dashboard():
         # Get activity-based data for recent activities display
         scan_activities = [a for a in user_activities if hasattr(a, 'activity_type') and a.activity_type.value in ['scan_started', 'scan_completed', 'scan_failed']]
         completed_activities = [a for a in scan_activities if a.activity_type.value == 'scan_completed']
+        
+        # Log activity tracker data for debugging
+        logger.info(f"Dashboard: Activity tracker found {len(user_activities)} total activities, {len(completed_activities)} completed scans")
         
         # Get today's activities specifically
         today = datetime.now().date()
@@ -1083,11 +1130,18 @@ def render_dashboard():
         
         # Force refresh recent scans to get latest data including current session
         try:
-            # Get fresh data from results aggregator - expand to today's scans
-            fresh_scans = aggregator.get_recent_scans(days=1, username=username)  # Get today's scans first
+            # Create fresh aggregator instance to bypass any caching issues
+            fresh_agg = ResultsAggregator()
+            fresh_agg.use_file_storage = False  # Force database mode
+            
+            # Get most recent scans with extended timeframe to ensure we capture everything
+            fresh_scans = fresh_agg.get_recent_scans(days=30, username=username)  # Use 30 days to match metrics
+            logger.info(f"Dashboard: Fresh aggregator returned {len(fresh_scans)} scans for recent activity display")
+            
+            # If still no fresh scans, try without username filter to debug
             if len(fresh_scans) == 0:
-                # If no scans today, get last 7 days
-                fresh_scans = aggregator.get_recent_scans(days=7, username=username)
+                all_recent = fresh_agg.get_recent_scans(days=30)
+                logger.info(f"Dashboard: Found {len(all_recent)} total recent scans (all users) - username filter may be the issue")
             
             # Also try to get activity tracker data for most recent scans, prioritizing today's scans
             activities_to_process = today_activities if today_activities else completed_activities[-5:]
