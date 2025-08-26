@@ -80,7 +80,7 @@ class DBScanner:
         
         logger.info(f"Initialized DBScanner with region: {region}, supported DB types: {self.supported_db_types}")
     
-    def _is_cloud_host(self, host: str) -> bool:
+    def _is_cloud_host(self, host: Optional[str]) -> bool:
         """
         Detect if a host is likely a cloud database provider.
         
@@ -90,6 +90,9 @@ class DBScanner:
         Returns:
             True if host appears to be a cloud provider
         """
+        if not host:
+            return False
+            
         cloud_patterns = [
             # AWS RDS
             '.rds.amazonaws.com',
@@ -138,7 +141,10 @@ class DBScanner:
                     logger.error("PostgreSQL driver not available")
                     return False
                 
-                self.connection = psycopg2.connect(connection_string)
+                if psycopg2:
+                    self.connection = psycopg2.connect(connection_string)
+                else:
+                    raise Exception("PostgreSQL connector not available")
                 self.db_type = 'postgres'
                 logger.info("Connected to PostgreSQL via connection string")
                 return True
@@ -158,11 +164,14 @@ class DBScanner:
                 }
                 
                 # Add SSL for cloud connections
-                if self._is_cloud_host(parsed.hostname):
+                if parsed.hostname and self._is_cloud_host(parsed.hostname):
                     params['ssl_disabled'] = False
                     params['ssl_verify_cert'] = True
                 
-                self.connection = mysql.connector.connect(**params)
+                if mysql and hasattr(mysql, 'connector'):
+                    self.connection = mysql.connector.connect(**params)
+                else:
+                    raise Exception("MySQL connector not available")
                 self.db_type = 'mysql'
                 logger.info("Connected to MySQL via connection string")
                 return True
@@ -354,7 +363,10 @@ class DBScanner:
                     **ssl_params
                 }
                 
-                self.connection = psycopg2.connect(**connection_params_final)
+                if psycopg2:
+                    self.connection = psycopg2.connect(**connection_params_final)
+                else:
+                    raise Exception("PostgreSQL connector not available")
                 logger.info(f"PostgreSQL connection established with SSL: {bool(ssl_params)}")
                 
             elif db_type == 'mysql':
@@ -400,7 +412,10 @@ class DBScanner:
                     **ssl_params
                 }
                 
-                self.connection = mysql.connector.connect(**connection_params_final)
+                if mysql and hasattr(mysql, 'connector'):
+                    self.connection = mysql.connector.connect(**connection_params_final)
+                else:
+                    raise Exception("MySQL connector not available")
                 logger.info(f"MySQL connection established with SSL: {bool(ssl_params)}")
                 
             elif db_type == 'sqlite':
@@ -417,7 +432,10 @@ class DBScanner:
                     return False
                 
                 # Connect to database
-                self.connection = sqlite3.connect(database)
+                if sqlite3:
+                    self.connection = sqlite3.connect(database)
+                else:
+                    raise Exception("SQLite connector not available")
             
             self.db_type = db_type
             logger.info(f"Successfully connected to {db_type} database")
