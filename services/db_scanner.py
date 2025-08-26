@@ -80,6 +80,101 @@ class DBScanner:
         
         logger.info(f"Initialized DBScanner with region: {region}, supported DB types: {self.supported_db_types}")
     
+    def _is_cloud_host(self, host: str) -> bool:
+        """
+        Detect if a host is likely a cloud database provider.
+        
+        Args:
+            host: Database host address
+            
+        Returns:
+            True if host appears to be a cloud provider
+        """
+        cloud_patterns = [
+            # AWS RDS
+            '.rds.amazonaws.com',
+            '.rds-aurora.amazonaws.com',
+            # Google Cloud SQL
+            '.sql.goog',
+            'googleusercontent.com',
+            # Azure Database
+            '.database.windows.net',
+            '.postgres.database.azure.com',
+            '.mysql.database.azure.com',
+            # DigitalOcean
+            '.db.ondigitalocean.com',
+            # Heroku
+            '.compute-1.amazonaws.com',
+            # PlanetScale
+            '.psdb.cloud',
+            # Neon
+            '.neon.tech',
+            # Supabase
+            '.supabase.co',
+            # Railway
+            '.railway.app'
+        ]
+        
+        return any(pattern in host.lower() for pattern in cloud_patterns)
+    
+    def _connect_via_connection_string(self, connection_string: str) -> bool:
+        """
+        Connect to database using a connection string (common for cloud databases).
+        
+        Args:
+            connection_string: Full database connection string
+            
+        Returns:
+            True if connection is successful, False otherwise
+        """
+        try:
+            import urllib.parse
+            
+            # Parse connection string
+            parsed = urllib.parse.urlparse(connection_string)
+            
+            if parsed.scheme.startswith('postgres'):
+                if not POSTGRES_AVAILABLE:
+                    logger.error("PostgreSQL driver not available")
+                    return False
+                
+                self.connection = psycopg2.connect(connection_string)
+                self.db_type = 'postgres'
+                logger.info("Connected to PostgreSQL via connection string")
+                return True
+                
+            elif parsed.scheme.startswith('mysql'):
+                if not MYSQL_AVAILABLE:
+                    logger.error("MySQL driver not available")
+                    return False
+                
+                # Convert connection string to MySQL connector format
+                params = {
+                    'host': parsed.hostname,
+                    'port': parsed.port or 3306,
+                    'user': parsed.username,
+                    'password': parsed.password,
+                    'database': parsed.path.lstrip('/') if parsed.path else '',
+                }
+                
+                # Add SSL for cloud connections
+                if self._is_cloud_host(parsed.hostname):
+                    params['ssl_disabled'] = False
+                    params['ssl_verify_cert'] = True
+                
+                self.connection = mysql.connector.connect(**params)
+                self.db_type = 'mysql'
+                logger.info("Connected to MySQL via connection string")
+                return True
+                
+            else:
+                logger.error(f"Unsupported connection string scheme: {parsed.scheme}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Connection string parsing error: {str(e)}")
+            return False
+    
     def _get_pii_patterns(self) -> Dict[str, Tuple[str, str]]:
         """
         Get patterns for detecting various types of PII in column names and data.
@@ -187,18 +282,25 @@ class DBScanner:
     
     def connect_to_database(self, connection_params: Dict[str, Any]) -> bool:
         """
-        Connect to a database.
+        Connect to a database with support for local and cloud databases.
         
         Args:
             connection_params: Parameters for database connection
                 - db_type: Type of database (postgres, mysql, sqlite)
-                - For Postgres: host, port, dbname, user, password
-                - For MySQL: host, port, database, user, password
+                - connection_string: Full connection string (optional, overrides individual params)
+                - For Postgres: host, port, dbname, user, password, sslmode, sslcert, sslkey
+                - For MySQL: host, port, database, user, password, ssl_ca, ssl_cert, ssl_key
                 - For SQLite: database (file path)
+                - For Cloud: ssl_mode, ssl_cert_path, ssl_key_path, ssl_ca_path
                 
         Returns:
             True if connection is successful, False otherwise
         """
+        # Check if connection string is provided (common for cloud databases)
+        connection_string = connection_params.get('connection_string')
+        if connection_string:
+            return self._connect_via_connection_string(connection_string)
+        
         db_type = connection_params.get('db_type', '').lower()
         
         if db_type not in self.supported_db_types:
@@ -214,18 +316,46 @@ class DBScanner:
                 # Extract connection parameters
                 host = connection_params.get('host', 'localhost')
                 port = connection_params.get('port', 5432)
-                dbname = connection_params.get('dbname', '')
-                user = connection_params.get('user', '')
+                dbname = connection_params.get('dbname', connection_params.get('database', ''))
+                user = connection_params.get('user', connection_params.get('username', ''))
                 password = connection_params.get('password', '')
                 
-                # Connect to database
-                self.connection = psycopg2.connect(
-                    host=host,
-                    port=port,
-                    dbname=dbname,
-                    user=user,
-                    password=password
-                )
+                # SSL/TLS configuration for cloud databases
+                ssl_params = {}
+                sslmode = connection_params.get('sslmode', connection_params.get('ssl_mode'))
+                if sslmode:
+                    ssl_params['sslmode'] = sslmode
+                    
+                # SSL certificate paths for cloud authentication
+                sslcert = connection_params.get('sslcert', connection_params.get('ssl_cert_path'))
+                sslkey = connection_params.get('sslkey', connection_params.get('ssl_key_path'))
+                sslrootcert = connection_params.get('sslrootcert', connection_params.get('ssl_ca_path'))
+                
+                if sslcert:
+                    ssl_params['sslcert'] = sslcert
+                if sslkey:
+                    ssl_params['sslkey'] = sslkey
+                if sslrootcert:
+                    ssl_params['sslrootcert'] = sslrootcert
+                
+                # Auto-enable SSL for cloud hosts
+                if not sslmode and self._is_cloud_host(host):
+                    ssl_params['sslmode'] = 'require'
+                    logger.info("Auto-enabled SSL for cloud database connection")
+                
+                # Connect to database with SSL support
+                connection_params_final = {
+                    'host': host,
+                    'port': port,
+                    'dbname': dbname,
+                    'user': user,
+                    'password': password,
+                    'connect_timeout': self.query_timeout_seconds,
+                    **ssl_params
+                }
+                
+                self.connection = psycopg2.connect(**connection_params_final)
+                logger.info(f"PostgreSQL connection established with SSL: {bool(ssl_params)}")
                 
             elif db_type == 'mysql':
                 if not MYSQL_AVAILABLE:
@@ -235,18 +365,43 @@ class DBScanner:
                 # Extract connection parameters
                 host = connection_params.get('host', 'localhost')
                 port = connection_params.get('port', 3306)
-                database = connection_params.get('database', '')
-                user = connection_params.get('user', '')
+                database = connection_params.get('database', connection_params.get('dbname', ''))
+                user = connection_params.get('user', connection_params.get('username', ''))
                 password = connection_params.get('password', '')
                 
-                # Connect to database
-                self.connection = mysql.connector.connect(
-                    host=host,
-                    port=port,
-                    database=database,
-                    user=user,
-                    password=password
-                )
+                # SSL configuration for MySQL cloud connections
+                ssl_params = {}
+                ssl_ca = connection_params.get('ssl_ca', connection_params.get('ssl_ca_path'))
+                ssl_cert = connection_params.get('ssl_cert', connection_params.get('ssl_cert_path'))
+                ssl_key = connection_params.get('ssl_key', connection_params.get('ssl_key_path'))
+                
+                if ssl_ca or ssl_cert or ssl_key or self._is_cloud_host(host):
+                    ssl_params['ssl_disabled'] = False
+                    if ssl_ca:
+                        ssl_params['ssl_ca'] = ssl_ca
+                    if ssl_cert:
+                        ssl_params['ssl_cert'] = ssl_cert
+                    if ssl_key:
+                        ssl_params['ssl_key'] = ssl_key
+                    
+                    # Auto-enable SSL for cloud hosts
+                    if self._is_cloud_host(host) and not any([ssl_ca, ssl_cert, ssl_key]):
+                        ssl_params['ssl_verify_cert'] = True
+                        logger.info("Auto-enabled SSL for cloud MySQL connection")
+                
+                # Connect to database with SSL support
+                connection_params_final = {
+                    'host': host,
+                    'port': port,
+                    'database': database,
+                    'user': user,
+                    'password': password,
+                    'connection_timeout': self.query_timeout_seconds,
+                    **ssl_params
+                }
+                
+                self.connection = mysql.connector.connect(**connection_params_final)
+                logger.info(f"MySQL connection established with SSL: {bool(ssl_params)}")
                 
             elif db_type == 'sqlite':
                 if not SQLITE_AVAILABLE:
