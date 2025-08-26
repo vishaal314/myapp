@@ -25,7 +25,6 @@ except ImportError:
 
 try:
     import mysql.connector
-    mysql = mysql.connector
     MYSQL_AVAILABLE = True
 except ImportError:
     mysql = None
@@ -141,7 +140,11 @@ class DBScanner:
                     logger.error("PostgreSQL driver not available")
                     return False
                 
-                if psycopg2:
+                if POSTGRES_AVAILABLE:
+                    # Add connection timeout to connection string if not present
+                    if 'connect_timeout' not in connection_string:
+                        separator = '&' if '?' in connection_string else '?'
+                        connection_string += f"{separator}connect_timeout={self.query_timeout_seconds}"
                     self.connection = psycopg2.connect(connection_string)
                 else:
                     raise Exception("PostgreSQL connector not available")
@@ -161,6 +164,8 @@ class DBScanner:
                     'user': parsed.username,
                     'password': parsed.password,
                     'database': parsed.path.lstrip('/') if parsed.path else '',
+                    'connection_timeout': self.query_timeout_seconds,
+                    'autocommit': True
                 }
                 
                 # Add SSL for cloud connections
@@ -168,7 +173,7 @@ class DBScanner:
                     params['ssl_disabled'] = False
                     params['ssl_verify_cert'] = True
                 
-                if mysql and hasattr(mysql, 'connector'):
+                if MYSQL_AVAILABLE:
                     self.connection = mysql.connector.connect(**params)
                 else:
                     raise Exception("MySQL connector not available")
@@ -322,30 +327,43 @@ class DBScanner:
                     logger.error("PostgreSQL driver not available")
                     return False
                 
-                # Extract connection parameters
+                # Extract and standardize connection parameters
                 host = connection_params.get('host', 'localhost')
                 port = connection_params.get('port', 5432)
-                dbname = connection_params.get('dbname', connection_params.get('database', ''))
-                user = connection_params.get('user', connection_params.get('username', ''))
+                # Standardize database name parameter (accept both dbname and database)
+                dbname = connection_params.get('database') or connection_params.get('dbname', '')
+                # Standardize username parameter (accept both user and username)  
+                user = connection_params.get('username') or connection_params.get('user', '')
                 password = connection_params.get('password', '')
                 
                 # SSL/TLS configuration for cloud databases
                 ssl_params = {}
-                sslmode = connection_params.get('sslmode', connection_params.get('ssl_mode'))
+                # Standardize SSL mode parameter (accept both forms)
+                sslmode = connection_params.get('ssl_mode') or connection_params.get('sslmode')
                 if sslmode:
                     ssl_params['sslmode'] = sslmode
                     
-                # SSL certificate paths for cloud authentication
-                sslcert = connection_params.get('sslcert', connection_params.get('ssl_cert_path'))
-                sslkey = connection_params.get('sslkey', connection_params.get('ssl_key_path'))
-                sslrootcert = connection_params.get('sslrootcert', connection_params.get('ssl_ca_path'))
+                # SSL certificate paths for cloud authentication (standardized parameter names)
+                sslcert = connection_params.get('ssl_cert_path') or connection_params.get('sslcert')
+                sslkey = connection_params.get('ssl_key_path') or connection_params.get('sslkey')  
+                sslrootcert = connection_params.get('ssl_ca_path') or connection_params.get('sslrootcert')
                 
+                # Validate SSL certificate paths if provided
                 if sslcert:
-                    ssl_params['sslcert'] = sslcert
+                    if os.path.exists(sslcert):
+                        ssl_params['sslcert'] = sslcert
+                    else:
+                        logger.warning(f"SSL certificate file not found: {sslcert}")
                 if sslkey:
-                    ssl_params['sslkey'] = sslkey
+                    if os.path.exists(sslkey):
+                        ssl_params['sslkey'] = sslkey
+                    else:
+                        logger.warning(f"SSL key file not found: {sslkey}")
                 if sslrootcert:
-                    ssl_params['sslrootcert'] = sslrootcert
+                    if os.path.exists(sslrootcert):
+                        ssl_params['sslrootcert'] = sslrootcert
+                    else:
+                        logger.warning(f"SSL root certificate file not found: {sslrootcert}")
                 
                 # Auto-enable SSL for cloud hosts
                 if not sslmode and self._is_cloud_host(host):
@@ -363,7 +381,7 @@ class DBScanner:
                     **ssl_params
                 }
                 
-                if psycopg2:
+                if POSTGRES_AVAILABLE:
                     self.connection = psycopg2.connect(**connection_params_final)
                 else:
                     raise Exception("PostgreSQL connector not available")
@@ -374,27 +392,40 @@ class DBScanner:
                     logger.error("MySQL driver not available")
                     return False
                 
-                # Extract connection parameters
+                # Extract and standardize connection parameters
                 host = connection_params.get('host', 'localhost')
                 port = connection_params.get('port', 3306)
-                database = connection_params.get('database', connection_params.get('dbname', ''))
-                user = connection_params.get('user', connection_params.get('username', ''))
+                # Standardize database name parameter (accept both database and dbname)
+                database = connection_params.get('database') or connection_params.get('dbname', '')
+                # Standardize username parameter (accept both username and user)
+                user = connection_params.get('username') or connection_params.get('user', '')
                 password = connection_params.get('password', '')
                 
                 # SSL configuration for MySQL cloud connections
                 ssl_params = {}
-                ssl_ca = connection_params.get('ssl_ca', connection_params.get('ssl_ca_path'))
-                ssl_cert = connection_params.get('ssl_cert', connection_params.get('ssl_cert_path'))
-                ssl_key = connection_params.get('ssl_key', connection_params.get('ssl_key_path'))
+                # Standardize SSL parameter names (accept both forms)
+                ssl_ca = connection_params.get('ssl_ca_path') or connection_params.get('ssl_ca')
+                ssl_cert = connection_params.get('ssl_cert_path') or connection_params.get('ssl_cert')
+                ssl_key = connection_params.get('ssl_key_path') or connection_params.get('ssl_key')
                 
                 if ssl_ca or ssl_cert or ssl_key or self._is_cloud_host(host):
                     ssl_params['ssl_disabled'] = False
+                    # Validate SSL certificate paths if provided
                     if ssl_ca:
-                        ssl_params['ssl_ca'] = ssl_ca
+                        if os.path.exists(ssl_ca):
+                            ssl_params['ssl_ca'] = ssl_ca
+                        else:
+                            logger.warning(f"SSL CA file not found: {ssl_ca}")
                     if ssl_cert:
-                        ssl_params['ssl_cert'] = ssl_cert
+                        if os.path.exists(ssl_cert):
+                            ssl_params['ssl_cert'] = ssl_cert
+                        else:
+                            logger.warning(f"SSL certificate file not found: {ssl_cert}")
                     if ssl_key:
-                        ssl_params['ssl_key'] = ssl_key
+                        if os.path.exists(ssl_key):
+                            ssl_params['ssl_key'] = ssl_key
+                        else:
+                            logger.warning(f"SSL key file not found: {ssl_key}")
                     
                     # Auto-enable SSL for cloud hosts
                     if self._is_cloud_host(host) and not any([ssl_ca, ssl_cert, ssl_key]):
@@ -412,7 +443,7 @@ class DBScanner:
                     **ssl_params
                 }
                 
-                if mysql and hasattr(mysql, 'connector'):
+                if MYSQL_AVAILABLE:
                     self.connection = mysql.connector.connect(**connection_params_final)
                 else:
                     raise Exception("MySQL connector not available")
@@ -423,17 +454,18 @@ class DBScanner:
                     logger.error("SQLite driver not available")
                     return False
                 
-                # Extract connection parameters
-                database = connection_params.get('database', ':memory:')
+                # Extract and standardize connection parameters
+                # For SQLite, accept both 'database' and 'dbname' parameter names
+                database = connection_params.get('database') or connection_params.get('dbname', ':memory:')
                 
                 # Check if file exists for SQLite
                 if database != ':memory:' and not os.path.exists(database):
                     logger.error(f"SQLite database file not found: {database}")
                     return False
                 
-                # Connect to database
-                if sqlite3:
-                    self.connection = sqlite3.connect(database)
+                # Connect to database with timeout
+                if SQLITE_AVAILABLE:
+                    self.connection = sqlite3.connect(database, timeout=self.query_timeout_seconds)
                 else:
                     raise Exception("SQLite connector not available")
             
