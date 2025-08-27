@@ -35,9 +35,16 @@ def identify_pii_in_text(text: str, region: str = "Netherlands") -> List[Dict[st
     # Dates of birth
     pii_items.extend(_find_dates_of_birth(text))
     
-    # BSN numbers (Dutch citizen service number)
+    # Netherlands-specific identifiers
     if region == "Netherlands":
         pii_items.extend(_find_bsn_numbers(text))
+        pii_items.extend(_find_kvk_numbers(text))
+        pii_items.extend(_find_dutch_phone_numbers(text))
+        pii_items.extend(_find_dutch_addresses(text))
+        pii_items.extend(_find_dutch_government_ids(text))
+        pii_items.extend(_find_dutch_business_identifiers(text))
+        pii_items.extend(_find_dutch_health_insurance(text))
+        pii_items.extend(_find_dutch_bank_codes(text))
     
     # Passport numbers
     pii_items.extend(_find_passport_numbers(text))
@@ -430,5 +437,236 @@ def _find_credentials(text: str) -> List[Dict[str, Any]]:
                     'type': 'Credentials',
                     'value': match.group(0)
                 })
+    
+    return found
+
+
+def _find_kvk_numbers(text: str) -> List[Dict[str, Any]]:
+    """Find Dutch Chamber of Commerce (KvK) numbers in text."""
+    # KvK numbers are 8 digits, often mentioned with "KvK" or "Chamber of Commerce"
+    patterns = [
+        r'\b(?:KvK|kvk|K\.v\.K\.|Chamber\s+of\s+Commerce|Kamer\s+van\s+Koophandel)(?:[:\s#-]+)?(\d{8})\b',
+        r'\bKvK[\s-]*nummer[\s:]*(\d{8})\b',
+        r'\bHandelsregisternummer[\s:]*(\d{8})\b',
+        # Standalone 8-digit numbers that could be KvK
+        r'\b\d{8}\b'  # This will need context validation
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            kvk = match.group(1) if match.lastindex else match.group(0)
+            kvk = re.sub(r'\D', '', kvk)
+            
+            # Validate 8-digit format and reasonable number range
+            if len(kvk) == 8 and kvk.isdigit() and int(kvk) >= 10000000:
+                found.append({
+                    'type': 'KvK Number',
+                    'value': kvk,
+                    'description': 'Dutch Chamber of Commerce number'
+                })
+    
+    return found
+
+
+def _find_dutch_phone_numbers(text: str) -> List[Dict[str, Any]]:
+    """Find Netherlands-specific phone numbers."""
+    patterns = [
+        # Netherlands international format
+        r'\+31[-\s]?(?:6[-\s]?\d{8}|\d{1,3}[-\s]?\d{3}[-\s]?\d{4})',
+        
+        # Mobile numbers (06 prefix)
+        r'\b06[-\s]?\d{4}[-\s]?\d{4}\b',
+        r'\b06[-\s]?\d{8}\b',
+        
+        # Landline numbers (2-5 digit area codes)
+        r'\b0(?:10|13|15|18|20|23|24|26|30|33|35|36|38|40|43|45|46|48|50|53|55|58|70|71|72|73|74|75|76|77|78|79)[-\s]?\d{3,4}[-\s]?\d{4}\b',
+        
+        # Service numbers
+        r'\b0800[-\s]?\d{4}[-\s]?\d{3}\b',  # Free phone
+        r'\b0900[-\s]?\d{4}[-\s]?\d{3}\b',  # Premium rate
+        r'\b088[-\s]?\d{3}[-\s]?\d{4}\b',   # Non-geographic
+        
+        # Emergency and special services
+        r'\b11[0-9]\b',  # Emergency services (112, 116, etc.)
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text)
+        for match in matches:
+            found.append({
+                'type': 'Dutch Phone Number',
+                'value': match.group(0),
+                'description': 'Netherlands phone number'
+            })
+    
+    return found
+
+
+def _find_dutch_addresses(text: str) -> List[Dict[str, Any]]:
+    """Find comprehensive Dutch address components."""
+    patterns = [
+        # Dutch postcode (4 digits + 2 letters)
+        r'\b\d{4}\s?[A-Z]{2}\b',
+        
+        # Street names with house numbers
+        r'\b[A-Za-z\s-]+(?:straat|laan|weg|plein|kade|gracht|steeg|pad|park|hof|singel|boulevard|avenue)[\s]*\d+[a-zA-Z]?\b',
+        
+        # House number with toevoeging (addition)
+        r'\b\d{1,5}[a-zA-Z]?(?:[-\s]+(?:bis|ter|quater|A|B|C|D|I|II|III|IV))?\b',
+        
+        # Dutch city names (common ones)
+        r'\b(?:Amsterdam|Rotterdam|Den\s+Haag|Utrecht|Eindhoven|Tilburg|Groningen|Almere|Breda|Nijmegen|Enschede|Haarlem|Arnhem|Zaanstad|Amersfoort|Apeldoorn|Hoofddorp|Maastricht|Leiden|Dordrecht|Zoetermeer|Zwolle|Deventer|Delft|Alkmaar|Leeuwarden|Sittard)\b',
+        
+        # Province names
+        r'\b(?:Noord-Holland|Zuid-Holland|Utrecht|Gelderland|Overijssel|Flevoland|Noord-Brabant|Zeeland|Limburg|Friesland|Drenthe|Groningen)\b',
+        
+        # PO Box (Postbus)
+        r'\bPostbus\s+\d{1,6}\b',
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            found.append({
+                'type': 'Dutch Address Component',
+                'value': match.group(0),
+                'description': 'Netherlands address information'
+            })
+    
+    return found
+
+
+def _find_dutch_government_ids(text: str) -> List[Dict[str, Any]]:
+    """Find Dutch government-issued identification numbers."""
+    patterns = [
+        # Dutch passport (2 letters + 7 digits)
+        r'\b[A-Z]{2}\d{7}\b',
+        
+        # Dutch driving license (10 digits)
+        r'\b(?:rijbewijs|driving\s+license|driver\'s\s+license)(?:[:\s#-]+)?(\d{10})\b',
+        
+        # Dutch ID card number
+        r'\b(?:identiteitskaart|ID\s+card|identity\s+card)(?:[:\s#-]+)?([A-Z]{2}\d{6}[A-Z]\d)\b',
+        
+        # Dutch vehicle license plate
+        r'\b(?:\d{2}[-\s]?[A-Z]{2}[-\s]?\d{2}|\d{1}[-\s]?[A-Z]{3}[-\s]?\d{2}|[A-Z]{2}[-\s]?\d{2}[-\s]?[A-Z]{2})\b',
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            value = match.group(1) if match.lastindex else match.group(0)
+            found.append({
+                'type': 'Dutch Government ID',
+                'value': value,
+                'description': 'Netherlands government identification'
+            })
+    
+    return found
+
+
+def _find_dutch_business_identifiers(text: str) -> List[Dict[str, Any]]:
+    """Find Dutch business-related identifiers."""
+    patterns = [
+        # Dutch VAT number (BTW-nummer)
+        r'\b(?:BTW|VAT)[-\s]*(?:nummer|number)?[\s:]*NL\d{9}B\d{2}\b',
+        
+        # RSIN (Rechtspersonen Samenwerkingsverbanden Informatie Nummer)
+        r'\b(?:RSIN|rechtspersonen)(?:[:\s#-]+)?(\d{9})\b',
+        
+        # Dutch employee number patterns
+        r'\b(?:personeelsnummer|employee\s+number|medewerker\s+nummer)(?:[:\s#-]+)?(\d{4,8})\b',
+        
+        # Dutch salary number (loon nummer)
+        r'\b(?:loonnummer|salary\s+number)(?:[:\s#-]+)?(\d{4,8})\b',
+        
+        # Dutch contract number
+        r'\b(?:contractnummer|contract\s+number)(?:[:\s#-]+)?([A-Z0-9]{6,12})\b',
+        
+        # IBAN with Dutch bank codes
+        r'\bNL\d{2}[A-Z]{4}\d{10}\b',
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            value = match.group(1) if match.lastindex else match.group(0)
+            found.append({
+                'type': 'Dutch Business Identifier',
+                'value': value,
+                'description': 'Netherlands business identification'
+            })
+    
+    return found
+
+
+def _find_dutch_health_insurance(text: str) -> List[Dict[str, Any]]:
+    """Find Dutch health insurance related identifiers."""
+    patterns = [
+        # Health insurance number
+        r'\b(?:zorgverzekeringsnummer|health\s+insurance\s+number)(?:[:\s#-]+)?(\d{8,10})\b',
+        
+        # AGB code (healthcare provider code)
+        r'\b(?:AGB|agb)[-\s]*(?:code|nummer)?[\s:]*(\d{8})\b',
+        
+        # UZI number (healthcare professional ID)
+        r'\b(?:UZI|uzi)[-\s]*(?:nummer|number)?[\s:]*(\d{8})\b',
+        
+        # DBC code (diagnosis treatment combination)
+        r'\b(?:DBC|dbc)[-\s]*(?:code|nummer)?[\s:]*(\d{6})\b',
+        
+        # Dutch medical record number
+        r'\b(?:dossier|medical\s+record)(?:[:\s#-]+)?(\d{6,10})\b',
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            value = match.group(1) if match.lastindex else match.group(0)
+            found.append({
+                'type': 'Dutch Health Insurance ID',
+                'value': value,
+                'description': 'Netherlands health insurance identifier'
+            })
+    
+    return found
+
+
+def _find_dutch_bank_codes(text: str) -> List[Dict[str, Any]]:
+    """Find Dutch bank-specific codes and identifiers."""
+    patterns = [
+        # Dutch bank account numbers (legacy format)
+        r'\b\d{3}[-\s]?\d{7}[-\s]?\d{3}\b',
+        
+        # BIC codes for Dutch banks
+        r'\b(?:ABNA|INGB|RABO|BUNQ|TRIO|KABA|BNPA|DEUT)NL2[A-Z0-9]\b',
+        
+        # Dutch bank transaction reference
+        r'\b(?:transactie|transaction)(?:[:\s#-]+)?([A-Z0-9]{10,16})\b',
+        
+        # iDEAL transaction ID
+        r'\b(?:ideal|iDEAL)(?:[:\s#-]+)?([A-Z0-9]{16})\b',
+        
+        # Dutch direct debit mandate
+        r'\b(?:incassomachtiging|mandate)(?:[:\s#-]+)?([A-Z0-9]{8,15})\b',
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            value = match.group(1) if match.lastindex else match.group(0)
+            found.append({
+                'type': 'Dutch Bank Code',
+                'value': value,
+                'description': 'Netherlands banking identifier'
+            })
     
     return found
