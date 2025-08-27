@@ -3013,23 +3013,77 @@ def render_database_scanner_interface(region: str, username: str):
                                 help="Use Connection String for cloud databases like AWS RDS, Google Cloud SQL, or Azure Database")
     
     if connection_method == "Connection String (Cloud)":
+        # Cloud provider selection for easy templates
+        st.markdown("### ☁️ Choose Your Cloud Provider")
+        cloud_provider = st.selectbox(
+            "Cloud Provider (Optional - for templates)",
+            ["Custom", "AWS RDS", "Azure Database", "Google Cloud SQL", "Supabase", "Neon", "PlanetScale"],
+            help="Select your cloud provider to get a connection string template"
+        )
+        
+        # Generate connection string templates based on provider
+        template_examples = {
+            "AWS RDS": {
+                "PostgreSQL": "postgresql://username:password@mydb.cluster-abc123.us-east-1.rds.amazonaws.com:5432/database?sslmode=require",
+                "MySQL": "mysql://username:password@mydb.cluster-abc123.us-east-1.rds.amazonaws.com:3306/database"
+            },
+            "Azure Database": {
+                "PostgreSQL": "postgresql://username@servername:password@servername.postgres.database.azure.com:5432/database?sslmode=require",
+                "MySQL": "mysql://username@servername:password@servername.mysql.database.azure.com:3306/database"
+            },
+            "Google Cloud SQL": {
+                "PostgreSQL": "postgresql://username:password@public-ip-address:5432/database?sslmode=require",
+                "MySQL": "mysql://username:password@public-ip-address:3306/database"
+            },
+            "Supabase": {
+                "PostgreSQL": "postgresql://postgres:password@db.abcdefghijklmnop.supabase.co:5432/postgres?sslmode=require"
+            },
+            "Neon": {
+                "PostgreSQL": "postgresql://username:password@ep-cool-darkness-123456.us-east-2.aws.neon.tech:5432/neondb?sslmode=require"
+            },
+            "PlanetScale": {
+                "MySQL": "mysql://username:password@connect.psdb.cloud:3306/database?sslmode=require"
+            }
+        }
+        
+        # Show examples for selected provider
+        if cloud_provider != "Custom" and cloud_provider in template_examples:
+            st.markdown(f"### 📋 {cloud_provider} Connection String Examples")
+            for db_type, example in template_examples[cloud_provider].items():
+                with st.expander(f"{db_type} Example"):
+                    st.code(example, language="text")
+                    if st.button(f"Use {db_type} Template", key=f"template_{cloud_provider}_{db_type}"):
+                        st.session_state['connection_string_template'] = example
+        
         # Cloud database connection string
+        default_template = st.session_state.get('connection_string_template', '')
         connection_string = st.text_area(
             "Database Connection String",
+            value=default_template,
             placeholder="postgresql://user:password@host:port/dbname?sslmode=require\nmysql://user:password@host:port/dbname",
-            help="Full connection string including credentials and SSL parameters"
+            help="Full connection string including credentials and SSL parameters. Use the templates above or enter your own.",
+            height=100
         )
+        
+        # Clear template button
+        if default_template and st.button("🗑️ Clear Template"):
+            st.session_state['connection_string_template'] = ''
+            st.rerun()
         
         # Cloud provider hint
         if connection_string:
             if any(cloud in connection_string.lower() for cloud in ['amazonaws.com', 'rds']):
-                st.info("🚀 **AWS RDS** detected - SSL will be automatically enabled")
+                st.success("🚀 **AWS RDS** detected - SSL will be automatically enabled")
             elif any(cloud in connection_string.lower() for cloud in ['database.windows.net', 'azure']):
-                st.info("☁️ **Azure Database** detected - SSL will be automatically enabled")
+                st.success("☁️ **Azure Database** detected - SSL will be automatically enabled")
             elif any(cloud in connection_string.lower() for cloud in ['sql.goog', 'googleusercontent']):
-                st.info("🌐 **Google Cloud SQL** detected - SSL will be automatically enabled")
-            elif any(cloud in connection_string.lower() for cloud in ['supabase.co', 'neon.tech']):
-                st.info("⚡ **Modern Cloud Database** detected - SSL will be automatically enabled")
+                st.success("🌐 **Google Cloud SQL** detected - SSL will be automatically enabled")
+            elif any(cloud in connection_string.lower() for cloud in ['supabase.co']):
+                st.success("⚡ **Supabase** detected - SSL will be automatically enabled")
+            elif any(cloud in connection_string.lower() for cloud in ['neon.tech']):
+                st.success("🔋 **Neon** detected - SSL will be automatically enabled")
+            elif any(cloud in connection_string.lower() for cloud in ['psdb.cloud']):
+                st.success("🪐 **PlanetScale** detected - SSL will be automatically enabled")
         
         db_type = None  # Will be determined from connection string
         host = port = database = username_db = password = None
