@@ -1,0 +1,77 @@
+Create: services/enterprise_connector_scanner.py
+
+Why a New Scanner is Best:
+Distinct Purpose: Enterprise data connectors are fundamentally different from existing scanner types
+Complex Authentication: OAuth2, API tokens, service accounts per platform
+Data Source Variety: APIs, file systems, databases, SaaS platforms
+Connection Management: Persistent connections, rate limiting, retry logic
+Netherlands Specialization: Exact Online, Dutch banking systems
+Architecture Design:
+class EnterpriseConnectorScanner:
+    """
+    Scanner for enterprise data source integrations:
+    - Microsoft 365 (SharePoint, OneDrive, Exchange)
+    - Exact Online (Dutch ERP)
+    - Google Workspace (Drive, Gmail)
+    - Dutch Banking APIs
+    """
+    
+    def __init__(self, connector_type: str, credentials: Dict):
+        self.connector_type = connector_type  # 'microsoft365', 'exact_online', 'google_workspace'
+        self.credentials = credentials
+        self.pii_detector = PiiDetector()
+    
+    def scan_connector(self, config: Dict) -> Dict:
+        """Main scanning method for enterprise connectors"""
+        pass
+    
+    def _authenticate_microsoft365(self) -> bool:
+        """OAuth2 authentication for Microsoft Graph API"""
+        pass
+    
+    def _scan_sharepoint_sites(self) -> List[Dict]:
+        """Scan SharePoint document libraries"""
+        pass
+    
+    def _authenticate_exact_online(self) -> bool:
+        """Exact Online API authentication"""
+        pass
+    
+    def _scan_exact_customers(self) -> List[Dict]:
+        """Scan Exact Online customer data"""
+        pass
+Implementation Priority:
+Microsoft 365 Connector (85% market penetration)
+
+SharePoint document libraries
+OneDrive personal files
+Exchange email scanning
+Teams chat history
+Exact Online Connector (60% Netherlands SME)
+
+Customer records (BSN detection)
+Employee data
+Invoice/financial data
+Project documents
+Google Workspace Connector (40% modern businesses)
+
+Google Drive files
+Gmail content
+Google Docs/Sheets
+Chat messages
+Integration with Existing System:
+Uses Existing PII Detection: Leverages utils/pii_detection.py with Netherlands patterns
+Uses Existing Reporting: Integrates with current report generators
+Uses Existing Auth: Leverages services/auth.py for user authentication
+Uses Existing License: Integrates with services/license_integration.py
+Benefits of New Scanner:
+✅ Clean Architecture - Separation of concerns from existing scanners
+✅ Focused Development - Dedicated team can work on connectors without breaking existing functionality
+✅ Easy Testing - Independent testing of connector functionality
+✅ Scalable Design - Easy to add new enterprise connectors
+✅ Netherlands Focus - Built specifically for Dutch market requirements
+
+Bottom Line:
+Create a new enterprise_connector_scanner.py that specializes in enterprise data source integrations. This keeps the existing scanners focused on their current purposes while adding the critical connectivity needed for market launch.
+
+The new scanner will be the 11th scanner type in DataGuardian Pro, specifically designed to address the enterprise connectivity gap that's blocking €25K MRR achievement in the Netherlands market.
