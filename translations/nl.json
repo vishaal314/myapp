@@ -719,5 +719,25 @@
     "processing_register": "Verwerkingsregister",
     "cookie_law": "Cookiewetgeving",
     "telecom_law": "Telecommunicatiewet"
+  },
+  "pricing": {
+    "title": "DataGuardian Pro Prijzen",
+    "subtitle": "Enterprise-grade privacynaleving tegen doorbraak prijzen",
+    "description": "Bespaar 85-90% ten opzichte van OneTrust, BigID en Varonis met Nederlandse gespecialiseerde functies",
+    "billing_monthly": "Maandelijks",
+    "billing_annual": "Jaarlijks (Bespaar 2 maanden)",
+    "most_popular": "MEEST POPULAIR",
+    "current_plan": "Huidig Abonnement",
+    "netherlands_specialization": "Nederlandse Specialisatie",
+    "bsn_detection": "BSN (Nederlandse Burgerservicenummer) detectie",
+    "kvk_validation": "KvK nummer validatie",
+    "uavg_compliance": "UAVG compliance regels",
+    "dutch_ap_integration": "Nederlandse AP autoriteit integratie",
+    "dutch_language": "Native Nederlandse taal ondersteuning",
+    "unique_features": "Unieke Functies",
+    "exact_online_connector": "Enige oplossing met Exact Online connector",
+    "exact_online_market": "60% van Nederlandse MKB gebruikt Exact Online",
+    "eu_ai_act": "EU AI Act 2025 compliance",
+    "competitive_savings": "Bespaar 85-90% vergeleken met internationale concurrenten"
   }
 }

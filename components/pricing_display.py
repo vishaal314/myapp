@@ -10,19 +10,23 @@ from services.license_integration import LicenseIntegration
 
 def show_pricing_page():
     """Display the main pricing page"""
+    # Import i18n for translations
+    from utils.i18n import _
+    
     # Header section
-    st.title("💰 DataGuardian Pro Pricing")
-    st.markdown("""
-    **Enterprise-grade privacy compliance at breakthrough prices**  
-    Save 85-90% vs OneTrust, BigID, and Varonis while getting Netherlands-specialized features
+    st.title(f"💰 {_('pricing.title', 'DataGuardian Pro Pricing')}")
+    st.markdown(f"""
+    **{_('pricing.subtitle', 'Enterprise-grade privacy compliance at breakthrough prices')}**  
+    {_('pricing.description', 'Save 85-90% vs OneTrust, BigID, and Varonis while getting Netherlands-specialized features')}
     """)
     
-    # Billing toggle
+    # Billing toggle with translations
+    from utils.i18n import _
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         billing_cycle = st.radio(
             "Select billing:",
-            ["Monthly", "Annual (Save 2 months)"],
+            [_('pricing.billing_monthly', 'Monthly'), _('pricing.billing_annual', 'Annual (Save 2 months)')],
             horizontal=True,
             key="billing_toggle"
         )
@@ -188,12 +192,12 @@ def show_competitive_comparison():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("### 🇳🇱 Netherlands Specialization")
-        st.markdown("• BSN (Dutch Social Security) detection")
-        st.markdown("• KvK number validation")
-        st.markdown("• UAVG compliance rules")
-        st.markdown("• Dutch AP authority integration")
-        st.markdown("• Native Dutch language support")
+        st.markdown(f"### 🇳🇱 {_('pricing.netherlands_specialization', 'Netherlands Specialization')}")
+        st.markdown(f"• {_('pricing.bsn_detection', 'BSN (Dutch Social Security) detection')}")
+        st.markdown(f"• {_('pricing.kvk_validation', 'KvK number validation')}")
+        st.markdown(f"• {_('pricing.uavg_compliance', 'UAVG compliance rules')}")
+        st.markdown(f"• {_('pricing.dutch_ap_integration', 'Dutch AP authority integration')}")
+        st.markdown(f"• {_('pricing.dutch_language', 'Native Dutch language support')}")
     
     with col2:
         st.markdown("### 🚀 Unique Features")
