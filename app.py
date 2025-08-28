@@ -502,8 +502,8 @@ def render_landing_page():
                         st.session_state.user_id = auth_result.user_id
                         st.session_state.auth_token = auth_result.token
                         st.success(_('login.success', 'Login successful!'))
-                        # Note: st.rerun() removed from form submission to avoid no-op warning
-                        # The app will automatically rerun due to session state changes
+                        # Force immediate rerun after successful login
+                        st.rerun()
                     else:
                         st.error(f"{_('login.error.invalid_credentials', 'Authentication failed')}: {auth_result.message}")
                 else:
