@@ -64,7 +64,9 @@ class SAPConnector:
                 'X-CSRF-Token': 'Fetch'
             }
             
-            response = requests.get(auth_url, headers=headers, verify=False)
+            # Enable SSL verification for production security
+            verify_ssl = os.getenv('SAP_SSL_VERIFY', 'true').lower() == 'true'
+            response = requests.get(auth_url, headers=headers, verify=verify_ssl, timeout=30)
             
             if response.status_code == 200:
                 self.csrf_token = response.headers.get('X-CSRF-Token')
@@ -94,10 +96,14 @@ class SAPConnector:
         }
         
         try:
+            # Enable SSL verification and timeouts for production
+            verify_ssl = os.getenv('SAP_SSL_VERIFY', 'true').lower() == 'true'
+            timeout = int(os.getenv('SAP_REQUEST_TIMEOUT', '30'))
+            
             if method == 'GET':
-                response = requests.get(url, headers=headers, cookies=self.cookies, verify=False)
+                response = requests.get(url, headers=headers, cookies=self.cookies, verify=verify_ssl, timeout=timeout)
             elif method == 'POST':
-                response = requests.post(url, headers=headers, json=data or {}, cookies=self.cookies, verify=False)
+                response = requests.post(url, headers=headers, json=data or {}, cookies=self.cookies, verify=verify_ssl, timeout=timeout)
             else:
                 return None
             

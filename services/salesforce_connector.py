@@ -60,7 +60,9 @@ class SalesforceConnector:
                 'password': self.config.password + self.config.security_token
             }
             
-            response = requests.post(auth_url, data=auth_data)
+            # Add timeout for reliability
+            timeout = int(os.getenv('SALESFORCE_TIMEOUT', '30'))
+            response = requests.post(auth_url, data=auth_data, timeout=timeout)
             
             if response.status_code == 200:
                 auth_result = response.json()
@@ -99,10 +101,13 @@ class SalesforceConnector:
         }
         
         try:
+            # Add timeout for all API requests
+            timeout = int(os.getenv('SALESFORCE_TIMEOUT', '30'))
+            
             if method == 'GET':
-                response = requests.get(url, headers=headers)
+                response = requests.get(url, headers=headers, timeout=timeout)
             elif method == 'POST':
-                response = requests.post(url, headers=headers, json=data or {})
+                response = requests.post(url, headers=headers, json=data or {}, timeout=timeout)
             else:
                 return None
             

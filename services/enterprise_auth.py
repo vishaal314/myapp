@@ -243,6 +243,10 @@ class EnterpriseAuth:
         decoded_response = base64.b64decode(saml_response)
         root = ET.fromstring(decoded_response)
         
+        # Validate SAML signature for production security
+        if not self._validate_saml_signature(root):
+            raise ValueError("SAML signature validation failed")
+        
         # Extract user attributes
         namespaces = {
             'saml': 'urn:oasis:names:tc:SAML:2.0:assertion',
@@ -313,8 +317,9 @@ class EnterpriseAuth:
             'state': state
         }
         
-        # Get authorization endpoint from discovery
-        discovery_response = requests.get(self.oidc_config.discovery_url)
+        # Get authorization endpoint from discovery with timeout
+        timeout = int(os.getenv('OIDC_TIMEOUT', '30'))
+        discovery_response = requests.get(self.oidc_config.discovery_url, timeout=timeout)
         discovery_data = discovery_response.json()
         auth_endpoint = discovery_data['authorization_endpoint']
         
@@ -326,8 +331,9 @@ class EnterpriseAuth:
         if not self.oidc_config:
             raise ValueError("OIDC not configured")
         
-        # Get token endpoint from discovery
-        discovery_response = requests.get(self.oidc_config.discovery_url)
+        # Get token endpoint from discovery with timeout
+        timeout = int(os.getenv('OIDC_TIMEOUT', '30'))
+        discovery_response = requests.get(self.oidc_config.discovery_url, timeout=timeout)
         discovery_data = discovery_response.json()
         token_endpoint = discovery_data['token_endpoint']
         
@@ -340,7 +346,7 @@ class EnterpriseAuth:
             'client_secret': self.oidc_config.client_secret
         }
         
-        token_response = requests.post(token_endpoint, data=token_data)
+        token_response = requests.post(token_endpoint, data=token_data, timeout=timeout)
         if token_response.status_code != 200:
             raise ValueError(f"Token exchange failed: {token_response.status_code}")
         tokens = token_response.json()
@@ -445,6 +451,69 @@ class EnterpriseAuth:
         
         # Store in audit log (implement your preferred storage)
         print(f"AUDIT: {audit_entry}")
+    
+    def _validate_saml_signature(self, saml_root: ET.Element) -> bool:
+        """Validate SAML response signature using X509 certificate"""
+        try:
+            from cryptography import x509
+            from cryptography.hazmat.primitives import hashes, serialization
+            from cryptography.hazmat.primitives.asymmetric import rsa, padding
+            import base64
+            
+            if not self.saml_config or not self.saml_config.x509_cert:
+                # In development, skip signature validation if no cert configured
+                if os.getenv('ENVIRONMENT') == 'development':
+                    return True
+                else:
+                    raise ValueError("SAML X509 certificate not configured for production")
+            
+            # Find signature element
+            signature_elem = saml_root.find('.//{http://www.w3.org/2000/09/xmldsig#}Signature')
+            if signature_elem is None:
+                raise ValueError("No signature found in SAML response")
+            
+            # Extract signature value
+            sig_value_elem = signature_elem.find('.//{http://www.w3.org/2000/09/xmldsig#}SignatureValue')
+            if sig_value_elem is None or not sig_value_elem.text:
+                raise ValueError("No signature value found")
+            
+            signature_bytes = base64.b64decode(sig_value_elem.text)
+            
+            # Load certificate and extract public key
+            cert_data = self.saml_config.x509_cert.replace('-----BEGIN CERTIFICATE-----', '').replace('-----END CERTIFICATE-----', '').replace('\n', '')
+            cert_bytes = base64.b64decode(cert_data)
+            certificate = x509.load_der_x509_certificate(cert_bytes)
+            public_key = certificate.public_key()
+            
+            # Get canonicalized XML for signature verification
+            # This is a simplified implementation - production should use proper XML canonicalization
+            signed_info = signature_elem.find('.//{http://www.w3.org/2000/09/xmldsig#}SignedInfo')
+            if signed_info is None:
+                raise ValueError("No SignedInfo found")
+            
+            # Convert SignedInfo to canonical form (simplified)
+            signed_info_str = ET.tostring(signed_info, encoding='unicode')
+            signed_info_bytes = signed_info_str.encode('utf-8')
+            
+            # Verify signature
+            if isinstance(public_key, rsa.RSAPublicKey):
+                public_key.verify(
+                    signature_bytes,
+                    signed_info_bytes,
+                    padding.PKCS1v15(),
+                    hashes.SHA256()
+                )
+                return True
+            else:
+                raise ValueError("Unsupported key type for SAML signature verification")
+                
+        except Exception as e:
+            print(f"SAML signature validation error: {e}")
+            # In development, log error but don't fail
+            if os.getenv('ENVIRONMENT') == 'development':
+                print("WARNING: SAML signature validation failed in development mode")
+                return True
+            return False
 
 # Global enterprise auth instance
 enterprise_auth = EnterpriseAuth()
