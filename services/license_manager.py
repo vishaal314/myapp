@@ -211,8 +211,8 @@ class LicenseManager:
         ]
         
         all_scanners = [
-            "code", "document", "image", "database", "api", "ai_model",
-            "website", "soc2", "dpia", "sustainability"
+            "code", "document", "image", "database", "api", "enterprise", 
+            "ai_model", "website", "soc2", "dpia", "sustainability"
         ]
         
         all_regions = ["Netherlands", "Germany", "France", "Belgium", "EU", "Global"]

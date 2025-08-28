@@ -4506,7 +4506,7 @@ def render_microsoft365_connector(region: str, username: str):
                 session_id = st.session_state.get('session_id', str(uuid.uuid4()))
                 
                 track_scan_completed_wrapper(
-                    scanner_type=ScannerType.API,  # Using API scanner type as closest match
+                    scanner_type=ScannerType.ENTERPRISE,
                     user_id=user_id,
                     session_id=session_id,
                     findings_count=scan_results.get('total_findings', 0),
