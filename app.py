@@ -4736,6 +4736,7 @@ def render_dutch_banking_connector(region: str, username: str):
 
 def display_enterprise_scan_results(scan_results: dict, connector_name: str):
     """Display enterprise connector scan results in a professional format"""
+    from datetime import datetime
     
     st.markdown("---")
     st.subheader(f"📊 {connector_name} Scan Results")
@@ -4813,18 +4814,56 @@ def display_enterprise_scan_results(scan_results: dict, connector_name: str):
     
     # Download options
     st.markdown("### 📥 Export Options")
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        if st.button("📄 Download PDF Report"):
+        if st.button("📄 Download PDF Report", key=f"pdf_{connector_name}"):
             st.success("PDF report generation initiated!")
     
     with col2:
-        if st.button("📊 Export to Excel"):
+        if st.button("📊 Export to Excel", key=f"excel_{connector_name}"):
             st.success("Excel export initiated!")
     
     with col3:
-        if st.button("🔗 Generate Share Link"):
+        if st.button("🌐 Download HTML Report", key=f"html_{connector_name}"):
+            try:
+                # Generate HTML report for Enterprise Connector scan
+                from services.download_reports import generate_html_report
+                
+                # Create formatted scan data for HTML report
+                formatted_results = {
+                    'scan_type': f'Enterprise Connector - {connector_name}',
+                    'total_findings': scan_results.get('total_findings', 0),
+                    'high_risk_findings': scan_results.get('high_risk_findings', 0),
+                    'total_items_scanned': scan_results.get('total_items_scanned', 0),
+                    'compliance_score': scan_results.get('compliance_score', 0),
+                    'netherlands_specific_findings': scan_results.get('netherlands_specific_findings', 0),
+                    'bsn_instances': scan_results.get('bsn_instances', 0),
+                    'kvk_instances': scan_results.get('kvk_instances', 0),
+                    'findings': scan_results.get('findings', []),
+                    'recommendations': scan_results.get('recommendations', []),
+                    'connector_type': connector_name,
+                    'scan_timestamp': scan_results.get('scan_timestamp', datetime.now().isoformat())
+                }
+                
+                html_content = generate_html_report(formatted_results)
+                
+                # Create download
+                st.download_button(
+                    label="💾 Download HTML Report",
+                    data=html_content,
+                    file_name=f"enterprise_connector_{connector_name.lower().replace(' ', '_')}_report.html",
+                    mime="text/html",
+                    key=f"download_html_{connector_name}"
+                )
+                st.success("✅ HTML report generated successfully!")
+                
+            except Exception as e:
+                st.error(f"Error generating HTML report: {e}")
+                st.info("Please try again or contact support if the issue persists.")
+    
+    with col4:
+        if st.button("🔗 Generate Share Link", key=f"share_{connector_name}"):
             st.success("Secure share link generated!")
 
 def render_ai_model_scanner_interface(region: str, username: str):
