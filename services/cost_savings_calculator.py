@@ -37,6 +37,7 @@ class CostSavingsCalculator:
         self.base_penalties = self._initialize_base_penalties()
         self.implementation_costs = self._initialize_implementation_costs()
         self.operational_costs = self._initialize_operational_costs()
+        self.pricing_tiers = self._initialize_competitive_pricing()
     
     def _initialize_base_penalties(self) -> Dict[ComplianceViolationType, Dict[str, Dict[str, float]]]:
         """Initialize base penalty amounts by region and violation type"""
@@ -132,6 +133,93 @@ class CostSavingsCalculator:
             "consultant_fees": 150000,      # Annual
             "technology_updates": 60000,     # Annual
             "incident_response": 200000      # Per incident
+        }
+    
+    def _initialize_competitive_pricing(self) -> Dict[str, Dict[str, Any]]:
+        """Initialize competitive pricing tiers based on market analysis"""
+        return {
+            "startup": {
+                "name": "Startup Essential",
+                "employees": "1-25",
+                "monthly_price": 49,
+                "annual_price": 490,  # 2 months free
+                "features": ["Basic PII scanning", "GDPR compliance reports", "Email support"],
+                "competitor_equivalent": "Basic tools (€10-50/month) + consultant fees",
+                "competitor_cost": 2500,  # €50/month + €2000 consultant setup
+                "savings_vs_competitor": 2010
+            },
+            "growth": {
+                "name": "Growth Professional", 
+                "employees": "25-100",
+                "monthly_price": 149,
+                "annual_price": 1490,  # 2 months free
+                "features": ["Full scanner suite", "Enterprise connectors", "Priority support", "Certificates"],
+                "competitor_equivalent": "Mid-range compliance tools + implementation",
+                "competitor_cost": 8500,  # €200/month + €6000 implementation
+                "savings_vs_competitor": 7010
+            },
+            "scale": {
+                "name": "Scale Enterprise",
+                "employees": "100-500", 
+                "monthly_price": 399,
+                "annual_price": 3990,  # 2 months free
+                "features": ["Advanced AI scanning", "Custom integrations", "Dedicated success manager"],
+                "competitor_equivalent": "OneTrust basic package",
+                "competitor_cost": 25000,  # OneTrust median pricing
+                "savings_vs_competitor": 21010
+            },
+            "enterprise": {
+                "name": "Enterprise Ultimate",
+                "employees": "500+",
+                "monthly_price": 899,
+                "annual_price": 8990,  # 2 months free
+                "features": ["White-label deployment", "API access", "Custom development"],
+                "competitor_equivalent": "OneTrust enterprise + BigID modules",
+                "competitor_cost": 65000,  # Full enterprise stack
+                "savings_vs_competitor": 56010
+            },
+            "standalone_gov": {
+                "name": "Government/Enterprise License",
+                "employees": "Any",
+                "one_time_price": 15000,
+                "annual_maintenance": 2500,
+                "features": ["On-premises deployment", "Government compliance", "Source code access"],
+                "competitor_equivalent": "Enterprise deployment + consulting",
+                "competitor_cost": 150000,  # Full implementation project
+                "savings_vs_competitor": 135000
+            }
+        }
+    
+    def calculate_competitive_advantage(self, company_size: str, annual_revenue: float = None) -> Dict[str, Any]:
+        """Calculate competitive advantage and ROI for different pricing tiers"""
+        
+        # Determine appropriate tier based on company size
+        if company_size.lower() in ["startup", "small"] or (annual_revenue and annual_revenue < 1000000):
+            tier = self.pricing_tiers["startup"]
+        elif company_size.lower() in ["growth", "medium"] or (annual_revenue and annual_revenue < 10000000):
+            tier = self.pricing_tiers["growth"] 
+        elif company_size.lower() in ["scale", "large"] or (annual_revenue and annual_revenue < 50000000):
+            tier = self.pricing_tiers["scale"]
+        elif company_size.lower() in ["enterprise", "very_large"]:
+            tier = self.pricing_tiers["enterprise"]
+        else:
+            tier = self.pricing_tiers["growth"]  # Default
+        
+        # Calculate ROI and competitive advantage
+        annual_cost = tier["annual_price"]
+        competitor_cost = tier["competitor_cost"]
+        savings = tier["savings_vs_competitor"]
+        roi_percentage = ((savings / annual_cost) * 100) if annual_cost > 0 else 0
+        
+        return {
+            "recommended_tier": tier["name"],
+            "annual_investment": annual_cost,
+            "competitor_equivalent_cost": competitor_cost, 
+            "immediate_savings": savings,
+            "roi_percentage": round(roi_percentage, 1),
+            "payback_period_months": max(1, round((annual_cost / (savings / 12)), 1)),
+            "cost_advantage": f"{round(((competitor_cost - annual_cost) / competitor_cost) * 100, 1)}% cheaper than competitors",
+            "value_proposition": f"Enterprise-grade compliance at {round(((competitor_cost - annual_cost) / competitor_cost) * 100, 1)}% cost savings"
         }
     
     def calculate_finding_cost_savings(self, finding: Dict[str, Any], scanner_type: str) -> Dict[str, Any]:
