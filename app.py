@@ -34,8 +34,12 @@ from utils.code_profiler import get_profiler, profile_function, monitor_performa
 from services.license_integration import (
     require_license_check, require_scanner_access, require_report_access,
     track_scanner_usage, track_report_usage, track_download_usage,
-    show_license_sidebar, show_usage_dashboard
+    show_license_sidebar, show_usage_dashboard, LicenseIntegration
 )
+
+# Pricing system imports
+from components.pricing_display import show_pricing_page, show_pricing_in_sidebar
+from config.pricing_config import get_pricing_config
 
 # Import HTML report generators
 try:
@@ -857,6 +861,7 @@ def render_authenticated_interface():
             f"📋 {_('history.title', 'History')}", 
             f"⚙️ {_('sidebar.settings', 'Settings')}",
             f"🔒 {_('sidebar.privacy_rights', 'Privacy Rights')}",
+            "💰 Pricing & Plans",
             "🏢 Enterprise Repository Demo",
             "💳 iDEAL Payment Test"
         ]
@@ -883,6 +888,9 @@ def render_authenticated_interface():
         
         # License status display
         show_license_sidebar()
+        
+        # Pricing info in sidebar
+        show_pricing_in_sidebar()
         
         st.markdown("---")
         
@@ -918,6 +926,17 @@ def render_authenticated_interface():
         render_enterprise_repo_demo()
     elif "💳 iDEAL Payment Test" in selected_nav:
         render_ideal_payment_test()
+    elif "💰 Pricing & Plans" in selected_nav:
+        render_pricing_page()
+
+def render_pricing_page():
+    """Render the pricing and plans page"""
+    try:
+        from components.pricing_display import show_pricing_page
+        show_pricing_page()
+    except Exception as e:
+        st.error(f"Error loading pricing page: {e}")
+        st.info("Please contact support for pricing information.")
 
 def render_privacy_rights_page():
     """Render the privacy rights management page"""

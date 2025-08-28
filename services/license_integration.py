@@ -12,6 +12,7 @@ from services.license_manager import (
     check_license, check_feature, check_scanner, check_region, 
     check_usage, increment_usage, get_license_info, track_user_session
 )
+from config.pricing_config import get_pricing_config, PricingTier, BillingCycle
 from services.usage_analytics import (
     UsageAnalytics, UsageEventType, track_usage_event, 
     get_usage_stats, get_compliance_report
@@ -222,6 +223,150 @@ class LicenseIntegration:
             
             if st.sidebar.button("Upgrade License"):
                 self.show_license_upgrade_prompt()
+    
+    def get_current_pricing_tier(self) -> Optional[PricingTier]:
+        """Determine current user's pricing tier based on license"""
+        try:
+            license_info = get_license_info()
+            license_type = license_info.get('license_type', 'trial')
+            
+            # Map license types to pricing tiers
+            tier_mapping = {
+                'trial': PricingTier.STARTUP,
+                'basic': PricingTier.STARTUP,
+                'professional': PricingTier.GROWTH,
+                'enterprise': PricingTier.SCALE,
+                'ultimate': PricingTier.ENTERPRISE,
+                'government': PricingTier.GOVERNMENT
+            }
+            
+            return tier_mapping.get(license_type.lower(), PricingTier.STARTUP)
+            
+        except Exception as e:
+            logger.error(f"Error determining pricing tier: {e}")
+            return PricingTier.STARTUP
+    
+    def get_tier_limits(self, tier: PricingTier) -> Dict[str, Any]:
+        """Get usage limits and features for a pricing tier"""
+        config = get_pricing_config()
+        tier_data = config.pricing_data["tiers"].get(tier.value, {})
+        
+        return {
+            "max_scans_monthly": tier_data.get("max_scans_monthly", 10),
+            "max_data_sources": tier_data.get("max_data_sources", 1),
+            "support_level": tier_data.get("support_level", "email"),
+            "sla_hours": tier_data.get("sla_hours", 48),
+            "features": config.get_features_for_tier(tier)
+        }
+    
+    def check_feature_access(self, feature_name: str) -> bool:
+        """Check if current tier has access to specific feature"""
+        current_tier = self.get_current_pricing_tier()
+        if not current_tier:
+            return False
+        
+        config = get_pricing_config()
+        available_features = config.get_features_for_tier(current_tier)
+        return feature_name in available_features
+    
+    def show_upgrade_prompt(self, required_tier: PricingTier, feature_name: str):
+        """Show upgrade prompt for accessing premium features"""
+        current_tier = self.get_current_pricing_tier()
+        config = get_pricing_config()
+        
+        # Get pricing for required tier
+        required_pricing = config.get_tier_pricing(required_tier, BillingCycle.ANNUAL)
+        current_pricing = config.get_tier_pricing(current_tier, BillingCycle.ANNUAL) if current_tier else None
+        
+        st.warning(f"**Feature Upgrade Required**")
+        st.info(f"""
+        The **{feature_name}** feature requires **{required_pricing['name']}** tier or higher.
+        
+        **Current Plan**: {current_pricing['name'] if current_pricing else 'No active plan'}
+        **Required Plan**: {required_pricing['name']} - €{required_pricing['price']}/year
+        
+        **Upgrade Benefits:**
+        • Access to {feature_name}
+        • {required_tier.value.title()} tier features
+        • Priority support
+        """)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔄 Upgrade Now", type="primary"):
+                self.redirect_to_pricing(required_tier)
+        with col2:
+            if st.button("📋 View All Plans"):
+                self.show_pricing_comparison()
+    
+    def redirect_to_pricing(self, suggested_tier: Optional[PricingTier] = None):
+        """Redirect to pricing page with suggested tier"""
+        st.session_state['show_pricing'] = True
+        if suggested_tier:
+            st.session_state['suggested_tier'] = suggested_tier.value
+        st.rerun()
+    
+    def show_pricing_comparison(self):
+        """Display comprehensive pricing comparison"""
+        config = get_pricing_config()
+        
+        st.header("💰 DataGuardian Pro Pricing")
+        st.markdown("Choose the perfect plan for your compliance needs")
+        
+        # Create pricing cards
+        cols = st.columns(4)
+        tiers = [PricingTier.STARTUP, PricingTier.GROWTH, PricingTier.SCALE, PricingTier.ENTERPRISE]
+        
+        for i, tier in enumerate(tiers):
+            with cols[i]:
+                pricing = config.get_tier_pricing(tier, BillingCycle.ANNUAL)
+                tier_data = config.pricing_data["tiers"][tier.value]
+                
+                # Highlight most popular
+                if tier_data.get("most_popular"):
+                    st.markdown("🔥 **MOST POPULAR**")
+                
+                st.markdown(f"### {pricing['name']}")
+                st.markdown(f"**€{pricing['price']}/year**")
+                st.markdown(f"*€{tier_data['monthly_price']}/month*")
+                
+                if 'savings' in pricing:
+                    st.success(f"Save €{pricing['savings']} vs monthly")
+                
+                st.markdown(f"**{tier_data['target_employees']} employees**")
+                
+                # Features
+                st.markdown("**Features:**")
+                features = config.get_features_for_tier(tier)[:5]  # Show top 5
+                for feature in features:
+                    st.markdown(f"✅ {feature.replace('_', ' ').title()}")
+                
+                if len(features) > 5:
+                    st.markdown(f"+ {len(features) - 5} more features")
+                
+                if st.button(f"Select {tier.value.title()}", key=f"select_{tier.value}"):
+                    self.handle_plan_selection(tier)
+        
+        # Government/Enterprise license
+        st.markdown("---")
+        st.markdown("### 🏛️ Government & Enterprise License")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**On-premises deployment**")
+            st.markdown("€15,000 one-time + €2,500/year maintenance")
+            st.markdown("• Full source code access")
+            st.markdown("• Custom development")
+            st.markdown("• Government compliance")
+        with col2:
+            if st.button("Contact Sales", key="contact_gov"):
+                st.session_state['contact_sales'] = True
+    
+    def handle_plan_selection(self, tier: PricingTier):
+        """Handle pricing plan selection"""
+        st.session_state['selected_tier'] = tier.value
+        st.session_state['show_checkout'] = True
+        st.success(f"Selected {tier.value.title()} plan!")
+        st.rerun()
     
     def show_license_upgrade_prompt(self):
         """Show license upgrade options"""
