@@ -10,8 +10,6 @@ from services.license_integration import LicenseIntegration
 
 def show_pricing_page():
     """Display the main pricing page"""
-    st.set_page_config(page_title="DataGuardian Pro Pricing", page_icon="💰", layout="wide")
-    
     # Header section
     st.title("💰 DataGuardian Pro Pricing")
     st.markdown("""
