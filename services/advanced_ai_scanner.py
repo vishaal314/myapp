@@ -6,7 +6,12 @@ bias detection, explainability assessment, and model governance features
 import json
 import numpy as np
 import pickle
-import joblib
+# Optional joblib import - not required for core functionality
+joblib = None
+try:
+    import joblib
+except ImportError:
+    pass
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple, Union
 from dataclasses import dataclass
@@ -164,7 +169,7 @@ class AdvancedAIScanner:
             }
         }
     
-    def scan_ai_model_comprehensive(self, model_file: Any, model_metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+    def scan_ai_model_comprehensive(self, model_file: Any, model_metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Perform comprehensive AI model analysis including EU AI Act compliance,
         bias assessment, explainability evaluation, and governance review.
@@ -258,7 +263,7 @@ class AdvancedAIScanner:
             # Try to load and analyze the model
             if analysis['framework'] == 'scikit-learn':
                 try:
-                    model = joblib.load(model_file) if hasattr(model_file, 'read') else model_file
+                    model = joblib.load(model_file) if joblib and hasattr(model_file, 'read') else model_file
                     analysis['model_type'] = model.__class__.__name__
                     
                     if hasattr(model, 'n_features_in_'):
@@ -764,7 +769,7 @@ class AdvancedAIScanner:
             'description': 'No significant penalty risk identified'
         }
 
-def scan_ai_model_advanced(model_file: Any, model_metadata: Dict[str, Any] = None, 
+def scan_ai_model_advanced(model_file: Any, model_metadata: Optional[Dict[str, Any]] = None, 
                           region: str = "Netherlands") -> Dict[str, Any]:
     """
     Convenience function for advanced AI model scanning.

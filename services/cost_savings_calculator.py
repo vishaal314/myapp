@@ -38,7 +38,7 @@ class CostSavingsCalculator:
         self.implementation_costs = self._initialize_implementation_costs()
         self.operational_costs = self._initialize_operational_costs()
     
-    def _initialize_base_penalties(self) -> Dict[ComplianceViolationType, Dict[str, float]]:
+    def _initialize_base_penalties(self) -> Dict[ComplianceViolationType, Dict[str, Dict[str, float]]]:
         """Initialize base penalty amounts by region and violation type"""
         return {
             ComplianceViolationType.GDPR_PERSONAL_DATA: {
@@ -141,7 +141,7 @@ class CostSavingsCalculator:
         severity = finding.get('severity', 'medium').lower()
         
         # Base penalty calculation
-        penalty_data = self.base_penalties.get(violation_type, {}).get(self.region, {"min": 10000, "max": 1000000, "avg": 250000})
+        penalty_data = self.base_penalties.get(violation_type, {}).get(self.region, {"min": 10000.0, "max": 1000000.0, "avg": 250000.0})
         
         # Adjust penalty based on severity
         severity_multipliers = {
@@ -152,7 +152,7 @@ class CostSavingsCalculator:
         }
         
         multiplier = severity_multipliers.get(severity, 0.4)
-        potential_penalty = penalty_data["avg"] * multiplier
+        potential_penalty = float(penalty_data["avg"]) * multiplier
         
         # Implementation cost to fix
         implementation_cost = self._calculate_implementation_cost(finding, scanner_type)

@@ -264,7 +264,7 @@ class SecureAuthManager:
             message="Token valid"
         )
     
-    def create_user(self, username: str, password: str, role: str = 'user', email: str = None) -> bool:
+    def create_user(self, username: str, password: str, role: str = 'user', email: Optional[str] = None) -> bool:
         """Create new user with secure password hashing"""
         users = self._load_users()
         
@@ -327,7 +327,7 @@ class SecureAuthManager:
     def is_admin(self, username: str) -> bool:
         """Check if user has admin role"""
         user_info = self.get_user_info(username)
-        return user_info and user_info.get('role') == 'admin'
+        return bool(user_info and user_info.get('role') == 'admin')
     
     def get_user_role(self, username: str) -> Optional[str]:
         """Get user role"""
@@ -353,7 +353,7 @@ def validate_token(token: str) -> AuthResult:
     """Validate JWT token"""
     return get_auth_manager().validate_token(token)
 
-def create_user(username: str, password: str, role: str = 'user', email: str = None) -> bool:
+def create_user(username: str, password: str, role: str = 'user', email: Optional[str] = None) -> bool:
     """Create new user"""
     return get_auth_manager().create_user(username, password, role, email)
 

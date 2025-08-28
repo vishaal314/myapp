@@ -103,7 +103,18 @@ class EnterpriseConnectorScanner:
         self.start_time = None
         self.access_token = None
         self.token_expires = None
+        self.refresh_token = None
         self.scan_summary = {}
+        
+        # Rate limiting configuration
+        self.rate_limits = {
+            'microsoft_graph': {'calls_per_minute': 10000, 'calls_per_hour': 600000},
+            'google_workspace': {'calls_per_minute': 1000, 'calls_per_hour': 100000},
+            'exact_online': {'calls_per_minute': 60, 'calls_per_hour': 5000},
+            'dutch_banking': {'calls_per_minute': 100, 'calls_per_hour': 10000}
+        }
+        self.api_call_history = []
+        self.last_api_call = None
         
         # Get GDPR rules for region
         self.region_rules = get_region_rules(region)
@@ -127,6 +138,262 @@ class EnterpriseConnectorScanner:
         }
         
         logger.info(f"Initialized Enterprise Connector Scanner for {self.CONNECTOR_TYPES[self.connector_type]}")
+    
+    def _check_rate_limits(self, api_type: str = 'default') -> bool:
+        """
+        Check if API call is within rate limits.
+        
+        Args:
+            api_type: Type of API being called for specific rate limiting
+            
+        Returns:
+            bool: True if call is allowed, False if rate limited
+        """
+        current_time = datetime.now()
+        
+        # Clean up old API call history (older than 1 hour)
+        self.api_call_history = [
+            call_time for call_time in self.api_call_history 
+            if (current_time - call_time).total_seconds() < 3600
+        ]
+        
+        # Determine rate limits based on connector type
+        rate_config = self.rate_limits.get(
+            f"{self.connector_type}_{api_type}", 
+            self.rate_limits.get(self.connector_type, {'calls_per_minute': 60, 'calls_per_hour': 1000})
+        )
+        
+        # Check calls per minute
+        recent_calls = [
+            call_time for call_time in self.api_call_history 
+            if (current_time - call_time).total_seconds() < 60
+        ]
+        
+        if len(recent_calls) >= rate_config.get('calls_per_minute', 60):
+            logger.warning(f"Rate limit exceeded (per minute): {len(recent_calls)} calls")
+            return False
+        
+        # Check calls per hour
+        if len(self.api_call_history) >= rate_config.get('calls_per_hour', 1000):
+            logger.warning(f"Rate limit exceeded (per hour): {len(self.api_call_history)} calls")
+            return False
+        
+        return True
+    
+    def _wait_for_rate_limit(self, api_type: str = 'default') -> None:
+        """Wait until API call is allowed within rate limits."""
+        while not self._check_rate_limits(api_type):
+            logger.info("Rate limit reached, waiting 60 seconds...")
+            time.sleep(60)
+    
+    def _record_api_call(self) -> None:
+        """Record an API call for rate limiting."""
+        current_time = datetime.now()
+        self.api_call_history.append(current_time)
+        self.last_api_call = current_time
+    
+    def _is_token_expired(self) -> bool:
+        """Check if the current access token has expired."""
+        if not self.token_expires:
+            return True
+        
+        # Add 5 minute buffer before actual expiration
+        buffer_time = datetime.now() + timedelta(minutes=5)
+        return buffer_time >= self.token_expires
+    
+    def _refresh_access_token(self) -> bool:
+        """
+        Refresh the access token using the refresh token.
+        
+        Returns:
+            bool: True if token was successfully refreshed, False otherwise
+        """
+        if not self.refresh_token:
+            logger.warning("No refresh token available for automatic token refresh")
+            return False
+        
+        try:
+            if self.connector_type in ['microsoft365', 'sharepoint', 'onedrive', 'exchange', 'teams']:
+                return self._refresh_microsoft365_token()
+            elif self.connector_type in ['google_workspace', 'gmail', 'google_drive', 'google_docs']:
+                return self._refresh_google_workspace_token()
+            elif self.connector_type == 'exact_online':
+                return self._refresh_exact_online_token()
+            else:
+                logger.warning(f"Token refresh not implemented for {self.connector_type}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Token refresh failed: {str(e)}")
+            return False
+    
+    def _refresh_microsoft365_token(self) -> bool:
+        """Refresh Microsoft 365 OAuth2 token."""
+        try:
+            token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+            
+            token_data = {
+                'grant_type': 'refresh_token',
+                'refresh_token': self.refresh_token,
+                'client_id': self.credentials.get('client_id'),
+                'client_secret': self.credentials.get('client_secret'),
+                'scope': 'https://graph.microsoft.com/.default'
+            }
+            
+            response = self.session.post(token_url, data=token_data)
+            response.raise_for_status()
+            
+            token_info = response.json()
+            
+            self.access_token = token_info['access_token']
+            self.refresh_token = token_info.get('refresh_token', self.refresh_token)
+            
+            # Calculate expiration time
+            expires_in = token_info.get('expires_in', 3600)
+            self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+            
+            # Update session headers
+            self.session.headers['Authorization'] = f'Bearer {self.access_token}'
+            
+            logger.info("Microsoft 365 access token refreshed successfully")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to refresh Microsoft 365 token: {str(e)}")
+            return False
+    
+    def _refresh_google_workspace_token(self) -> bool:
+        """Refresh Google Workspace OAuth2 token."""
+        try:
+            token_url = "https://oauth2.googleapis.com/token"
+            
+            token_data = {
+                'grant_type': 'refresh_token',
+                'refresh_token': self.refresh_token,
+                'client_id': self.credentials.get('client_id'),
+                'client_secret': self.credentials.get('client_secret')
+            }
+            
+            response = self.session.post(token_url, data=token_data)
+            response.raise_for_status()
+            
+            token_info = response.json()
+            
+            self.access_token = token_info['access_token']
+            # Google may not return a new refresh token
+            if 'refresh_token' in token_info:
+                self.refresh_token = token_info['refresh_token']
+            
+            # Calculate expiration time
+            expires_in = token_info.get('expires_in', 3600)
+            self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+            
+            # Update session headers
+            self.session.headers['Authorization'] = f'Bearer {self.access_token}'
+            
+            logger.info("Google Workspace access token refreshed successfully")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to refresh Google Workspace token: {str(e)}")
+            return False
+    
+    def _refresh_exact_online_token(self) -> bool:
+        """Refresh Exact Online OAuth2 token."""
+        try:
+            token_url = "https://start.exactonline.nl/api/oauth2/token"
+            
+            token_data = {
+                'grant_type': 'refresh_token',
+                'refresh_token': self.refresh_token,
+                'client_id': self.credentials.get('client_id'),
+                'client_secret': self.credentials.get('client_secret')
+            }
+            
+            response = self.session.post(token_url, data=token_data)
+            response.raise_for_status()
+            
+            token_info = response.json()
+            
+            self.access_token = token_info['access_token']
+            self.refresh_token = token_info.get('refresh_token', self.refresh_token)
+            
+            # Calculate expiration time
+            expires_in = token_info.get('expires_in', 3600)
+            self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+            
+            # Update session headers
+            self.session.headers['Authorization'] = f'Bearer {self.access_token}'
+            
+            logger.info("Exact Online access token refreshed successfully")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to refresh Exact Online token: {str(e)}")
+            return False
+    
+    def _make_api_request(self, url: str, method: str = 'GET', data: Optional[Dict] = None, 
+                         api_type: str = 'default') -> Optional[Dict]:
+        """
+        Make an API request with automatic token refresh and rate limiting.
+        
+        Args:
+            url: API endpoint URL
+            method: HTTP method (GET, POST, PUT, DELETE)
+            data: Optional request data
+            api_type: API type for specific rate limiting
+            
+        Returns:
+            Dict: API response data or None if failed
+        """
+        # Check and wait for rate limits
+        self._wait_for_rate_limit(api_type)
+        
+        # Check if token needs refresh
+        if self._is_token_expired():
+            logger.info("Access token expired, attempting refresh...")
+            if not self._refresh_access_token():
+                logger.error("Failed to refresh access token")
+                return None
+        
+        try:
+            # Record API call for rate limiting
+            self._record_api_call()
+            
+            # Make the request
+            if method.upper() == 'GET':
+                response = self.session.get(url)
+            elif method.upper() == 'POST':
+                response = self.session.post(url, json=data)
+            elif method.upper() == 'PUT':
+                response = self.session.put(url, json=data)
+            elif method.upper() == 'DELETE':
+                response = self.session.delete(url)
+            else:
+                raise ValueError(f"Unsupported HTTP method: {method}")
+            
+            # Handle rate limiting response
+            if response.status_code == 429:
+                retry_after = int(response.headers.get('Retry-After', 60))
+                logger.warning(f"Rate limited by API, waiting {retry_after} seconds...")
+                time.sleep(retry_after)
+                return self._make_api_request(url, method, data, api_type)
+            
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 401:
+                # Token might be invalid, try refresh once
+                logger.warning("Received 401 Unauthorized, attempting token refresh...")
+                if self._refresh_access_token():
+                    return self._make_api_request(url, method, data, api_type)
+            
+            logger.error(f"API request failed: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"API request error: {str(e)}")
+            return None
     
     def scan_enterprise_source(self, scan_config: Optional[Dict] = None) -> Dict[str, Any]:
         """
@@ -221,7 +488,14 @@ class EnterpriseConnectorScanner:
             elif 'access_token' in self.credentials:
                 # Use provided access token
                 self.access_token = self.credentials['access_token']
-                self.token_expires = datetime.now() + timedelta(hours=1)  # Assume 1 hour expiry
+                # Store refresh token if provided
+                self.refresh_token = self.credentials.get('refresh_token')
+                # Use provided expiry or default to 1 hour
+                expires_in = self.credentials.get('expires_in', 3600)
+                self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+                
+                # Update session headers
+                self.session.headers['Authorization'] = f'Bearer {self.access_token}'
                 return True
             else:
                 logger.error("No valid authentication method for Microsoft 365")
@@ -273,6 +547,12 @@ class EnterpriseConnectorScanner:
             if 'access_token' in self.credentials:
                 # Use provided access token
                 self.access_token = self.credentials['access_token']
+                # Store refresh token if provided
+                self.refresh_token = self.credentials.get('refresh_token')
+                # Use provided expiry or default to 1 hour
+                expires_in = self.credentials.get('expires_in', 3600)
+                self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+                
                 self.session.headers.update({
                     'Authorization': f'Bearer {self.access_token}',
                     'Accept': 'application/json'
@@ -309,6 +589,10 @@ class EnterpriseConnectorScanner:
                 
                 token_info = response.json()
                 self.access_token = token_info['access_token']
+                self.refresh_token = token_info.get('refresh_token', self.credentials['refresh_token'])
+                # Calculate expiration time
+                expires_in = token_info.get('expires_in', 3600)
+                self.token_expires = datetime.now() + timedelta(seconds=expires_in)
                 
                 self.session.headers.update({
                     'Authorization': f'Bearer {self.access_token}',
@@ -339,6 +623,12 @@ class EnterpriseConnectorScanner:
             elif 'access_token' in self.credentials:
                 # Use provided access token
                 self.access_token = self.credentials['access_token']
+                # Store refresh token if provided
+                self.refresh_token = self.credentials.get('refresh_token')
+                # Use provided expiry or default to 1 hour
+                expires_in = self.credentials.get('expires_in', 3600)
+                self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+                
                 self.session.headers.update({
                     'Authorization': f'Bearer {self.access_token}'
                 })

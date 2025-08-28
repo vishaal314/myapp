@@ -336,6 +336,7 @@ def _validate_special_categories(content: str) -> Dict[str, Any]:
                 detected_categories.append(category)
                 break
     
+    has_legal_basis = False  # Initialize variable
     if detected_categories:
         # Check for explicit consent or other Article 9 legal basis
         consent_patterns = [
@@ -385,6 +386,7 @@ def _validate_international_transfers(content: str) -> Dict[str, Any]:
         for pattern in transfer_patterns
     )
     
+    has_safeguards = False  # Initialize variable
     if has_international_transfer:
         # Check for appropriate safeguards
         safeguard_patterns = [
@@ -430,6 +432,7 @@ def _validate_breach_notification(content: str) -> Dict[str, Any]:
         for pattern in breach_patterns
     )
     
+    has_notification_procedure = False  # Initialize variable
     if has_breach_reference:
         # Check for notification procedures
         notification_patterns = [
