@@ -97,7 +97,7 @@ class SAPConnector:
             if method == 'GET':
                 response = requests.get(url, headers=headers, cookies=self.cookies, verify=False)
             elif method == 'POST':
-                response = requests.post(url, headers=headers, json=data, cookies=self.cookies, verify=False)
+                response = requests.post(url, headers=headers, json=data or {}, cookies=self.cookies, verify=False)
             else:
                 return None
             

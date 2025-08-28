@@ -267,10 +267,11 @@ class EnterpriseAuth:
             attributes[attr_name] = attr_values[0] if len(attr_values) == 1 else attr_values
         
         # Map attributes to user profile
+        safe_email = email or "unknown@unknown.com"
         user_profile = UserProfile(
-            user_id=email,
-            email=email,
-            name=attributes.get('displayName', attributes.get('cn', email.split('@')[0])),
+            user_id=safe_email,
+            email=safe_email,
+            name=attributes.get('displayName', attributes.get('cn', safe_email.split('@')[0])),
             roles=[EnterpriseRole.GUEST],  # Default role, should be mapped from SAML attributes
             permissions=[],
             organization=attributes.get('organization', ''),
@@ -340,6 +341,8 @@ class EnterpriseAuth:
         }
         
         token_response = requests.post(token_endpoint, data=token_data)
+        if token_response.status_code != 200:
+            raise ValueError(f"Token exchange failed: {token_response.status_code}")
         tokens = token_response.json()
         
         # Decode ID token

@@ -102,7 +102,7 @@ class SalesforceConnector:
             if method == 'GET':
                 response = requests.get(url, headers=headers)
             elif method == 'POST':
-                response = requests.post(url, headers=headers, json=data)
+                response = requests.post(url, headers=headers, json=data or {})
             else:
                 return None
             
