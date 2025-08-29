@@ -26,11 +26,18 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p logs reports data temp
 
-# Expose port
-EXPOSE 8501
+# Set production environment variables
+ENV ENVIRONMENT=production
+ENV SAP_SSL_VERIFY=true
+ENV SALESFORCE_TIMEOUT=30
+ENV SAP_REQUEST_TIMEOUT=30
+ENV OIDC_TIMEOUT=30
+
+# Expose port 5000 for production
+EXPOSE 5000
 
 # Health check
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+HEALTHCHECK CMD curl --fail http://localhost:5000/_stcore/health || exit 1
 
-# Run application
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+# Run application on port 5000
+CMD ["streamlit", "run", "app.py", "--server.port=5000", "--server.address=0.0.0.0", "--server.headless=true"]
