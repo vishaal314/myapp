@@ -346,7 +346,7 @@ class WebhookHandler:
         logger.info(f"Sending confirmation email to: {payment_record['customer_email']}")
         pass
     
-    def _update_payment_status(self, payment_id: str, status: str, error_message: str = None) -> None:
+    def _update_payment_status(self, payment_id: str, status: str, error_message: Optional[str] = None) -> None:
         """Update payment status in database"""
         # TODO: Implement database update
         logger.info(f"Updating payment {payment_id} status: {status}")

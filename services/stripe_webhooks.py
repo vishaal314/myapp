@@ -15,7 +15,7 @@ try:
     STRIPE_AVAILABLE = True
 except ImportError:
     STRIPE_AVAILABLE = False
-    logger.warning("Stripe library not available")
+    logging.warning("Stripe library not available")
 
 logger = logging.getLogger(__name__)
 
@@ -108,17 +108,19 @@ class StripeWebhookHandler:
             try:
                 from utils.license_manager import LicenseManager
                 license_manager = LicenseManager()
+                
+                # Grant subscription access
+                license_manager.activate_subscription(
+                    customer_id=customer_id,
+                    subscription_id=subscription_id,
+                    plan_name=self._get_plan_name(subscription),
+                    tier=self._get_subscription_tier(subscription)
+                )
             except ImportError:
                 # Fallback license management (to be implemented)
                 logger.warning("License manager not available, using fallback")
-            
-            # Grant subscription access
-            license_manager.activate_subscription(
-                customer_id=customer_id,
-                subscription_id=subscription_id,
-                plan_name=self._get_plan_name(subscription),
-                tier=self._get_subscription_tier(subscription)
-            )
+                # Continue without license manager for now
+                pass
             
             # Log activity
             self._log_subscription_activity(
@@ -157,6 +159,9 @@ class StripeWebhookHandler:
                 new_tier=self._get_subscription_tier(subscription),
                 new_plan=self._get_plan_name(subscription)
             )
+        except ImportError:
+            logger.warning("License manager not available")
+            # Continue without license manager for now
             
             self._log_subscription_activity(
                 customer_id, 'subscription_updated', {
