@@ -619,3 +619,205 @@ def get_license_info() -> Dict[str, Any]:
 def track_user_session(user_id: str) -> bool:
     """Track user session"""
     return license_manager.track_session(user_id)
+
+# Webhook integration methods for Stripe subscription management
+def activate_subscription(customer_id: str, subscription_id: str, plan_name: str, tier: str) -> bool:
+    """
+    Activate subscription access after successful payment
+    Called by webhook when subscription is created
+    """
+    logger.info(f"Activating subscription {subscription_id} for customer {customer_id}")
+    
+    # Map tier to license type
+    tier_mapping = {
+        'basic': LicenseType.BASIC,
+        'professional': LicenseType.PROFESSIONAL,
+        'enterprise': LicenseType.ENTERPRISE,
+        'premium': LicenseType.ENTERPRISE_PLUS
+    }
+    
+    license_type = tier_mapping.get(tier.lower(), LicenseType.BASIC)
+    
+    try:
+        # Generate new license for subscription
+        license_config = license_manager.generate_license(
+            license_type=license_type,
+            customer_id=customer_id,
+            customer_name=customer_id,  # Use customer_id as name initially
+            company_name="Subscription Customer",
+            email=f"{customer_id}@customer.email",
+            validity_days=365  # Annual subscription
+        )
+        
+        # Add subscription metadata
+        license_config.metadata = license_config.metadata or {}
+        license_config.metadata.update({
+            'stripe_subscription_id': subscription_id,
+            'stripe_customer_id': customer_id,
+            'subscription_plan': plan_name,
+            'subscription_tier': tier,
+            'activation_date': datetime.now().isoformat(),
+            'payment_method': 'stripe_subscription'
+        })
+        
+        # Save the license
+        success = license_manager.save_license(license_config)
+        logger.info(f"Subscription activation {'successful' if success else 'failed'}")
+        return success
+        
+    except Exception as e:
+        logger.error(f"Failed to activate subscription {subscription_id}: {e}")
+        return False
+
+def update_subscription(customer_id: str, subscription_id: str, new_tier: str, new_plan: str) -> bool:
+    """
+    Update existing subscription with new tier/plan
+    Called by webhook when subscription is modified
+    """
+    logger.info(f"Updating subscription {subscription_id} to tier {new_tier}")
+    
+    try:
+        # Load current license
+        current_license = license_manager.load_license()
+        if not current_license or not current_license.metadata or current_license.metadata.get('stripe_subscription_id') != subscription_id:
+            logger.warning(f"No matching license found for subscription {subscription_id}")
+            return False
+        
+        # Map new tier to license type
+        tier_mapping = {
+            'basic': LicenseType.BASIC,
+            'professional': LicenseType.PROFESSIONAL,
+            'enterprise': LicenseType.ENTERPRISE,
+            'premium': LicenseType.ENTERPRISE_PLUS
+        }
+        
+        new_license_type = tier_mapping.get(new_tier.lower(), LicenseType.BASIC)
+        
+        # Generate updated license
+        updated_license = license_manager.generate_license(
+            license_type=new_license_type,
+            customer_id=current_license.customer_id,
+            customer_name=current_license.customer_name,
+            company_name=current_license.company_name,
+            email=current_license.email,
+            validity_days=(current_license.expiry_date - datetime.now()).days
+        )
+        
+        # Preserve subscription metadata
+        updated_license.metadata = (current_license.metadata or {}).copy()
+        updated_license.metadata.update({
+            'subscription_plan': new_plan,
+            'subscription_tier': new_tier,
+            'last_updated': datetime.now().isoformat()
+        })
+        
+        # Save updated license
+        success = license_manager.save_license(updated_license)
+        logger.info(f"Subscription update {'successful' if success else 'failed'}")
+        return success
+        
+    except Exception as e:
+        logger.error(f"Failed to update subscription {subscription_id}: {e}")
+        return False
+
+def deactivate_subscription(customer_id: str, subscription_id: str) -> bool:
+    """
+    Deactivate subscription access after cancellation
+    Called by webhook when subscription is cancelled
+    """
+    logger.info(f"Deactivating subscription {subscription_id}")
+    
+    try:
+        # Load current license
+        current_license = license_manager.load_license()
+        if not current_license or not current_license.metadata or current_license.metadata.get('stripe_subscription_id') != subscription_id:
+            logger.warning(f"No matching license found for subscription {subscription_id}")
+            return False
+        
+        # Deactivate the license
+        current_license.is_active = False
+        if not current_license.metadata:
+            current_license.metadata = {}
+        current_license.metadata['deactivation_date'] = datetime.now().isoformat()
+        current_license.metadata['deactivation_reason'] = 'subscription_cancelled'
+        
+        # Save deactivated license
+        success = license_manager.save_license(current_license)
+        logger.info(f"Subscription deactivation {'successful' if success else 'failed'}")
+        return success
+        
+    except Exception as e:
+        logger.error(f"Failed to deactivate subscription {subscription_id}: {e}")
+        return False
+
+def reset_monthly_usage(subscription_id: str) -> bool:
+    """
+    Reset monthly usage limits after successful payment
+    Called by webhook on successful subscription renewal
+    """
+    logger.info(f"Resetting monthly usage for subscription {subscription_id}")
+    
+    try:
+        current_license = license_manager.load_license()
+        if not current_license or not current_license.metadata or current_license.metadata.get('stripe_subscription_id') != subscription_id:
+            logger.warning(f"No matching license found for subscription {subscription_id}")
+            return False
+        
+        # Reset monthly usage counters
+        for limit in current_license.usage_limits:
+            if limit.reset_period == "monthly":
+                limit.current_usage = 0
+                limit.last_reset = datetime.now()
+        
+        # Save updated license
+        success = license_manager.save_license(current_license)
+        logger.info(f"Usage reset {'successful' if success else 'failed'}")
+        return success
+        
+    except Exception as e:
+        logger.error(f"Failed to reset usage for subscription {subscription_id}: {e}")
+        return False
+
+def mark_subscription_past_due(subscription_id: str) -> bool:
+    """
+    Mark subscription as past due for failed payments
+    Called by webhook when payment fails
+    """
+    logger.info(f"Marking subscription {subscription_id} as past due")
+    
+    try:
+        current_license = license_manager.load_license()
+        if not current_license or not current_license.metadata or current_license.metadata.get('stripe_subscription_id') != subscription_id:
+            return False
+        
+        # Mark as past due but keep active for grace period
+        if not current_license.metadata:
+            current_license.metadata = {}
+        current_license.metadata['payment_status'] = 'past_due'
+        current_license.metadata['past_due_date'] = datetime.now().isoformat()
+        
+        # Save updated license
+        success = license_manager.save_license(current_license)
+        logger.info(f"Past due marking {'successful' if success else 'failed'}")
+        return success
+        
+    except Exception as e:
+        logger.error(f"Failed to mark subscription past due {subscription_id}: {e}")
+        return False
+
+def create_customer_record(customer_id: str, email: Optional[str] = None, name: Optional[str] = None) -> bool:
+    """
+    Create customer record for new Stripe customer
+    Called by webhook when customer is created
+    """
+    logger.info(f"Creating customer record for {customer_id}")
+    
+    try:
+        # For now, just log the customer creation
+        # In production, this would create a customer database record
+        logger.info(f"Customer record created: {customer_id} ({email or 'no-email'})")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to create customer record {customer_id}: {e}")
+        return False

@@ -6,6 +6,7 @@ Generate licenses for different deployment scenarios
 import json
 import argparse
 import sys
+from typing import Optional
 from datetime import datetime, timedelta
 from services.license_manager import LicenseManager, LicenseType, UsageLimitType
 
@@ -40,7 +41,7 @@ def generate_standalone_license(customer_name: str, company_name: str, email: st
     return license_config
 
 def generate_enterprise_license(customer_name: str, company_name: str, email: str, 
-                               days: int = 365, custom_limits: dict = None):
+                               days: int = 365, custom_limits: Optional[dict] = None):
     """Generate enterprise license with custom limits"""
     license_manager = LicenseManager()
     
@@ -57,7 +58,7 @@ def generate_enterprise_license(customer_name: str, company_name: str, email: st
     return license_config
 
 def generate_custom_license(customer_name: str, company_name: str, email: str,
-                           license_type: str, days: int = 365, custom_limits: dict = None):
+                           license_type: str, days: int = 365, custom_limits: Optional[dict] = None):
     """Generate custom license"""
     license_manager = LicenseManager()
     
@@ -78,7 +79,7 @@ def generate_custom_license(customer_name: str, company_name: str, email: str,
     
     return license_config
 
-def save_license_file(license_config, filename: str = None):
+def save_license_file(license_config, filename: Optional[str] = None):
     """Save license to file"""
     if not filename:
         filename = f"license_{license_config.license_type.value}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
