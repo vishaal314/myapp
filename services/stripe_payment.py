@@ -154,6 +154,11 @@ def verify_webhook_signature(payload: str, signature: str) -> bool:
         st.error(f"Webhook verification failed: {str(e)}")
         return False
 
+def get_webhook_url() -> str:
+    """Get webhook endpoint URL"""
+    base_url = get_base_url()
+    return f"{base_url}/webhook/stripe"
+
 def create_checkout_session(scan_type: str, user_email: str, metadata: Optional[Dict[str, Any]] = None, country_code: str = "NL") -> Optional[Dict[str, Any]]:
     """
     Create a secure Stripe checkout session with VAT calculation
