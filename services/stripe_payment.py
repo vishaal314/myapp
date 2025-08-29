@@ -32,6 +32,12 @@ SCAN_PRICES = {
     "Sustainability Scan": 3200,  # €32.00
     "AI Model Scan": 4100,  # €41.00
     "SOC2 Scan": 5500,  # €55.00
+    "Enterprise Scan": 8900,  # €89.00
+    "Exact Online Scan": 12500,  # €125.00
+    "SAP Integration Scan": 15000,  # €150.00
+    "Microsoft 365 Scan": 7500,  # €75.00
+    "Google Workspace Scan": 6800,  # €68.00
+    "Salesforce Scan": 9200,  # €92.00
 }
 
 # VAT rates by country
@@ -54,6 +60,12 @@ SCAN_PRODUCTS = {
     "Sustainability Scan": "DataGuardian Pro Sustainability Scanner",
     "AI Model Scan": "DataGuardian Pro AI Model Scanner",
     "SOC2 Scan": "DataGuardian Pro SOC2 Scanner",
+    "Enterprise Scan": "DataGuardian Pro Enterprise Scanner",
+    "Exact Online Scan": "DataGuardian Pro Exact Online Connector",
+    "SAP Integration Scan": "DataGuardian Pro SAP Integration Scanner",
+    "Microsoft 365 Scan": "DataGuardian Pro Microsoft 365 Scanner",
+    "Google Workspace Scan": "DataGuardian Pro Google Workspace Scanner",
+    "Salesforce Scan": "DataGuardian Pro Salesforce Scanner",
 }
 
 # Descriptions for each scan type
@@ -67,6 +79,12 @@ SCAN_DESCRIPTIONS = {
     "Sustainability Scan": "Cloud resource optimization and sustainability analysis",
     "AI Model Scan": "AI model auditing for bias and GDPR compliance",
     "SOC2 Scan": "SOC2 security and access control auditing",
+    "Enterprise Scan": "Advanced enterprise data scanning with full connector suite",
+    "Exact Online Scan": "Direct integration scanning for Exact Online accounting data",
+    "SAP Integration Scan": "SAP ERP system integration with GDPR compliance analysis",
+    "Microsoft 365 Scan": "Microsoft 365 tenant scanning for PII and compliance issues",
+    "Google Workspace Scan": "Google Workspace organization scanning for data exposure",
+    "Salesforce Scan": "Salesforce CRM data scanning for customer privacy compliance",
 }
 
 # Security and validation functions

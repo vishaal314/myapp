@@ -185,15 +185,6 @@ class SubscriptionManager:
             }
         except Exception as e:
             return None
-                "country_code": country_code
-            }
-            
-        except stripe.StripeError as e:
-            st.error("Unable to create customer account. Please try again.")
-            return None
-        except Exception as e:
-            st.error("Service temporarily unavailable. Please contact support.")
-            return None
     
     def create_subscription(self, customer_id: str, plan_id: str, country_code: str = "NL") -> Optional[Dict[str, Any]]:
         """
