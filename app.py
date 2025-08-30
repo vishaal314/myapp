@@ -4572,37 +4572,34 @@ def render_exact_online_connector(region: str, username: str):
     """Exact Online connector interface - Netherlands specialization"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     
-    st.subheader("🇳🇱 Exact Online Integration")
-    st.write("Netherlands-specialized ERP scanning with BSN validation and KvK verification.")
+    st.subheader(_('scan.exact_online_integration', '🇳🇱 Exact Online Integration'))
+    st.write(_('scan.exact_online_integration_description', 'Netherlands-specialized ERP scanning with BSN validation and KvK verification.'))
     
     # Netherlands competitive advantage highlight
-    st.success(
-        "🎯 **Unique Competitive Advantage**: Only privacy scanner with native Exact Online integration. "
-        "60% Netherlands SME market share - critical for enterprise deals."
-    )
+    st.success(_('scan.exact_online_competitive_advantage', '🎯 **Unique Competitive Advantage**: Only privacy scanner with native Exact Online integration. 60% Netherlands SME market share - critical for enterprise deals.'))
     
     # Authentication
-    st.markdown("### Exact Online Authentication")
+    st.markdown(f"### {_('scan.exact_online_authentication', 'Exact Online Authentication')}")
     
     exact_auth = st.radio(
-        "Authentication Method",
-        ["OAuth2 Integration", "Access Token", "Demo Mode (Sample Data)"],
+        _('scan.authentication_method', 'Authentication Method'),
+        [_('scan.oauth2_integration', 'OAuth2 Integration'), _('scan.access_token', 'Access Token'), _('scan.demo_mode_sample_data', 'Demo Mode (Sample Data)')],
         help="Exact Online uses OAuth2 for secure API access"
     )
     
     credentials = {}
     
-    if exact_auth == "OAuth2 Integration":
+    if exact_auth == _('scan.oauth2_integration', 'OAuth2 Integration'):
         col1, col2 = st.columns(2)
         with col1:
-            credentials['client_id'] = st.text_input("Exact Online Client ID")
-            credentials['client_secret'] = st.text_input("Client Secret", type="password")
+            credentials['client_id'] = st.text_input(_('scan.exact_online_client_id', 'Exact Online Client ID'))
+            credentials['client_secret'] = st.text_input(_('scan.client_secret', 'Client Secret'), type="password")
         with col2:
-            credentials['refresh_token'] = st.text_input("Refresh Token", type="password")
+            credentials['refresh_token'] = st.text_input(_('scan.refresh_token', 'Refresh Token'), type="password")
         
-        st.info("💡 Contact Exact Online support to register your application for API access")
+        st.info(_('scan.exact_online_api_support', '💡 Contact Exact Online support to register your application for API access'))
     
-    elif exact_auth == "Access Token":
+    elif exact_auth == _('scan.access_token', 'Access Token'):
         credentials['access_token'] = st.text_input("Exact Online API Token", type="password")
     
     else:  # Demo Mode
@@ -4610,7 +4607,7 @@ def render_exact_online_connector(region: str, username: str):
         credentials = {'access_token': 'exact_demo_token'}
     
     # Scan configuration
-    st.markdown("### Scan Configuration")
+    st.markdown(f"### {_('scan.scan_configuration', 'Scan Configuration')}")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -4621,7 +4618,7 @@ def render_exact_online_connector(region: str, username: str):
         scan_projects = st.checkbox("📋 Project Data", value=False, help="Project documentation")
     
     # Netherlands-specific options
-    st.markdown("### Netherlands Compliance Options")
+    st.markdown(f"### {_('scan.netherlands_compliance_options', 'Netherlands Compliance Options')}")
     col1, col2 = st.columns(2)
     with col1:
         validate_bsn = st.checkbox("🔍 BSN Validation (11-test)", value=True)
