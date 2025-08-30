@@ -4397,26 +4397,40 @@ def render_enterprise_connector_interface(region: str, username: str):
                 
                 if 'enterprise_scanner_title' in scan_section:
                     st.write(f"DEBUG: Found enterprise_scanner_title in scan section: {scan_section['enterprise_scanner_title']}")
-                    # Override the translation manually with the correct Dutch text
+                    # Override the translation manually with the correct Dutch text from scan section
                     title_text = scan_section['enterprise_scanner_title']
-                    desc_text = scan_section.get('enterprise_description_text', desc_text)
-                    leadership_text = scan_section.get('enterprise_market_leadership', leadership_text)
+                    desc_text = scan_section.get('enterprise_description_text', "Verbind en scan enterprise data bronnen voor geautomatiseerde PII detectie. Gespecialiseerd in Nederlandse markt met Microsoft 365, Exact Online, en Google Workspace integratie.")
+                    leadership_text = scan_section.get('enterprise_market_leadership', "🎯 **Marktleiderschap**: De enige privacy scanner met native Exact Online integratie en uitgebreide Nederlandse UAVG compliance inclusief BSN validatie en KvK nummer detectie.")
                 elif 'enterprise_scanner_title' in direct_nl:
                     st.write(f"DEBUG: Direct file has enterprise_scanner_title: {direct_nl['enterprise_scanner_title']}")
                     # Override the translation manually
                     title_text = direct_nl['enterprise_scanner_title']
-                    desc_text = direct_nl.get('enterprise_description_text', desc_text)
-                    leadership_text = direct_nl.get('enterprise_market_leadership', leadership_text)
+                    desc_text = direct_nl.get('enterprise_description_text', "Verbind en scan enterprise data bronnen voor geautomatiseerde PII detectie. Gespecialiseerd in Nederlandse markt met Microsoft 365, Exact Online, en Google Workspace integratie.")
+                    leadership_text = direct_nl.get('enterprise_market_leadership', "🎯 **Marktleiderschap**: De enige privacy scanner met native Exact Online integratie en uitgebreide Nederlandse UAVG compliance inclusief BSN validatie en KvK nummer detectie.")
                 else:
                     st.write("DEBUG: enterprise_scanner_title not found anywhere in file")
+                    # Use default values if not found
+                    title_text = "🏢 Enterprise Connector Scanner"
+                    desc_text = "Connect and scan enterprise data sources for automated PII detection. Specializes in Netherlands market with Microsoft 365, Exact Online, and Google Workspace integration."
+                    leadership_text = "🎯 **Market Leadership**: The only privacy scanner with native Exact Online integration and comprehensive Netherlands UAVG compliance including BSN validation and KvK number detection."
             except Exception as e:
                 st.write(f"DEBUG: Error direct loading: {e}")
+                # Use default values if error
+                title_text = "🏢 Enterprise Connector Scanner"
+                desc_text = "Connect and scan enterprise data sources for automated PII detection. Specializes in Netherlands market with Microsoft 365, Exact Online, and Google Workspace integration."
+                leadership_text = "🎯 **Market Leadership**: The only privacy scanner with native Exact Online integration and comprehensive Netherlands UAVG compliance including BSN validation and KvK number detection."
     else:
         st.write("DEBUG: No Dutch translations loaded")
+        # Use default values if no Dutch loaded
+        title_text = "🏢 Enterprise Connector Scanner"
+        desc_text = "Connect and scan enterprise data sources for automated PII detection. Specializes in Netherlands market with Microsoft 365, Exact Online, and Google Workspace integration."
+        leadership_text = "🎯 **Market Leadership**: The only privacy scanner with native Exact Online integration and comprehensive Netherlands UAVG compliance including BSN validation and KvK number detection."
     
-    title_text = _('enterprise_scanner_title', "🏢 Enterprise Connector Scanner")
-    desc_text = _('enterprise_description_text', "Connect and scan enterprise data sources for automated PII detection. Specializes in Netherlands market with Microsoft 365, Exact Online, and Google Workspace integration.")
-    leadership_text = _('enterprise_market_leadership', "🎯 **Market Leadership**: The only privacy scanner with native Exact Online integration and comprehensive Netherlands UAVG compliance including BSN validation and KvK number detection.")
+    # If variables still not set, try the translation system as fallback
+    if 'title_text' not in locals():
+        title_text = _('enterprise_scanner_title', "🏢 Enterprise Connector Scanner")
+        desc_text = _('enterprise_description_text', "Connect and scan enterprise data sources for automated PII detection. Specializes in Netherlands market with Microsoft 365, Exact Online, and Google Workspace integration.")
+        leadership_text = _('enterprise_market_leadership', "🎯 **Market Leadership**: The only privacy scanner with native Exact Online integration and comprehensive Netherlands UAVG compliance including BSN validation and KvK number detection.")
     
     st.write(f"DEBUG: Title translation result: {title_text}")
     
