@@ -1074,9 +1074,8 @@ def render_dashboard():
         if st.button("🔄 Refresh Dashboard", help="Update dashboard with latest scan results"):
             st.rerun()
     
-    # Initialize scan count tracking
+    # Initialize scan count tracking per user
     current_scan_count = 0
-    last_known_count = st.session_state.get('last_known_scan_count', 0)
     
     try:
         # Get user information with better fallback logic
@@ -1107,11 +1106,13 @@ def render_dashboard():
         high_risk_issues = 0
         compliance_scores = []
         
-        # Update scan count for notifications
+        # Update scan count for notifications (user-specific to avoid cross-session contamination)
+        user_scan_key = f'last_known_scan_count_{username}'
+        last_known_count = st.session_state.get(user_scan_key, 0)
         current_scan_count = total_scans
-        if current_scan_count > last_known_count:
+        if current_scan_count > last_known_count and last_known_count > 0:  # Don't show on first login
             st.info(f"✨ Dashboard updated with {current_scan_count - last_known_count} new scan(s)!")
-            st.session_state['last_known_scan_count'] = current_scan_count
+        st.session_state[user_scan_key] = current_scan_count
         
         logger.info(f"Dashboard: Processing {total_scans} completed scans from aggregator")
         
