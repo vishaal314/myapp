@@ -1,0 +1,17 @@
+This is a test file containing various types of Personal Access Tokens:
+
+GitHub PAT: ghp_1234567890abcdef1234567890abcdef12345678
+GitLab PAT: glpat-12345678901234567890
+Azure DevOps PAT: abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnop
+AWS Access Key: AKIA1234567890ABCDEF
+Slack Token: xoxb-123-456-789012345678901234567890
+JWT Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+
+Some regular content to ensure normal detection still works:
+Email: test@example.com
+Phone: +31-20-1234567
+BSN: 123456782
+
+API Key configuration:
+api_key = "ak_live_1234567890abcdef1234567890abcdef"
+secret_key = "sk_test_abcdefghijklmnopqrstuvwxyz123456"

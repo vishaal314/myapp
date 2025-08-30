@@ -6,7 +6,7 @@ REGIONS = {
         "bsn_required": True,
         "minor_age_limit": 16,
         "breach_notification_hours": 72,
-        "high_risk_pii": ["BSN", "Medical Data", "Credit Card", "Passport Number"],
+        "high_risk_pii": ["BSN", "Medical Data", "Credit Card", "Passport Number", "Personal Access Token", "GitHub Personal Access Token", "GitLab Personal Access Token", "AWS Access Key", "Slack Token", "JWT Token", "Azure DevOps PAT", "Credentials"],
         "medium_risk_pii": ["Date of Birth", "Address", "Phone", "Financial Data"],
         "low_risk_pii": ["Name", "Email", "IP Address", "Username"]
     },
@@ -14,7 +14,7 @@ REGIONS = {
         "bsn_required": False,
         "minor_age_limit": 16,
         "breach_notification_hours": 72,
-        "high_risk_pii": ["Medical Data", "Credit Card", "Passport Number"],
+        "high_risk_pii": ["Medical Data", "Credit Card", "Passport Number", "Personal Access Token", "GitHub Personal Access Token", "GitLab Personal Access Token", "AWS Access Key", "Slack Token", "JWT Token", "Azure DevOps PAT", "Credentials"],
         "medium_risk_pii": ["Date of Birth", "Address", "Phone", "Financial Data"],
         "low_risk_pii": ["Name", "Email", "IP Address", "Username"]
     },
@@ -22,7 +22,7 @@ REGIONS = {
         "bsn_required": False,
         "minor_age_limit": 15,
         "breach_notification_hours": 72,
-        "high_risk_pii": ["Medical Data", "Credit Card", "Passport Number"],
+        "high_risk_pii": ["Medical Data", "Credit Card", "Passport Number", "Personal Access Token", "GitHub Personal Access Token", "GitLab Personal Access Token", "AWS Access Key", "Slack Token", "JWT Token", "Azure DevOps PAT", "Credentials"],
         "medium_risk_pii": ["Date of Birth", "Address", "Phone", "Financial Data"],
         "low_risk_pii": ["Name", "Email", "IP Address", "Username"]
     },
@@ -30,7 +30,7 @@ REGIONS = {
         "bsn_required": False,
         "minor_age_limit": 13,
         "breach_notification_hours": 72,
-        "high_risk_pii": ["Medical Data", "Credit Card", "Passport Number"],
+        "high_risk_pii": ["Medical Data", "Credit Card", "Passport Number", "Personal Access Token", "GitHub Personal Access Token", "GitLab Personal Access Token", "AWS Access Key", "Slack Token", "JWT Token", "Azure DevOps PAT", "Credentials"],
         "medium_risk_pii": ["Date of Birth", "Address", "Phone", "Financial Data"],
         "low_risk_pii": ["Name", "Email", "IP Address", "Username"]
     }

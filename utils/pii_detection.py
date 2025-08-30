@@ -58,6 +58,9 @@ def identify_pii_in_text(text: str, region: str = "Netherlands") -> List[Dict[st
     # Usernames and passwords
     pii_items.extend(_find_credentials(text))
     
+    # Personal Access Tokens and API Keys
+    pii_items.extend(_find_personal_access_tokens(text))
+    
     return pii_items
 
 def _find_emails(text: str) -> List[Dict[str, Any]]:
@@ -437,6 +440,107 @@ def _find_credentials(text: str) -> List[Dict[str, Any]]:
                     'type': 'Credentials',
                     'value': match.group(0)
                 })
+    
+    return found
+
+def _find_personal_access_tokens(text: str) -> List[Dict[str, Any]]:
+    """Find Personal Access Tokens and API keys in text."""
+    patterns = [
+        # GitHub Personal Access Tokens
+        r'\bghp_[a-zA-Z0-9]{40}\b',  # GitHub PAT (classic)
+        r'\bgho_[a-zA-Z0-9]{40}\b',  # GitHub OAuth token
+        r'\bghu_[a-zA-Z0-9]{40}\b',  # GitHub user token
+        r'\bghs_[a-zA-Z0-9]{40}\b',  # GitHub server token
+        r'\bghr_[a-zA-Z0-9]{40}\b',  # GitHub refresh token
+        
+        # GitLab Personal Access Tokens
+        r'\bglpat-[a-zA-Z0-9_-]{20}\b',  # GitLab PAT
+        r'\bgldt-[a-zA-Z0-9_-]{20}\b',   # GitLab deploy token
+        r'\bglft-[a-zA-Z0-9_-]{20}\b',   # GitLab feed token
+        
+        # Azure DevOps Personal Access Tokens
+        r'\b[a-zA-Z0-9]{52}\b',  # Azure DevOps PAT (52 chars base64)
+        
+        # Generic API keys and tokens
+        r'\bapi[_-]?key[:\s=]*["\']?([a-zA-Z0-9_-]{20,})["\']?\b',
+        r'\baccess[_-]?token[:\s=]*["\']?([a-zA-Z0-9_.-]{20,})["\']?\b',
+        r'\bbearer[_\s]+([a-zA-Z0-9_.-]{20,})\b',
+        r'\btoken[:\s=]*["\']?([a-zA-Z0-9_.-]{20,})["\']?\b',
+        
+        # AWS Access Keys
+        r'\bAKIA[0-9A-Z]{16}\b',  # AWS Access Key ID
+        r'\b[a-zA-Z0-9+/]{40}\b', # AWS Secret Access Key
+        
+        # Azure keys
+        r'\b[a-zA-Z0-9+/]{44}==\b',  # Azure storage key
+        
+        # Common secret patterns
+        r'\bsecret[_-]?key[:\s=]*["\']?([a-zA-Z0-9_.-]{16,})["\']?\b',
+        r'\bprivate[_-]?key[:\s=]*["\']?([a-zA-Z0-9_.-]{20,})["\']?\b',
+        
+        # Slack tokens
+        r'\bxoxb-[0-9]+-[0-9]+-[0-9a-zA-Z]{24}\b',  # Slack bot token
+        r'\bxoxa-[0-9]+-[0-9]+-[0-9a-zA-Z]{24}\b',  # Slack access token
+        r'\bxoxp-[0-9]+-[0-9]+-[0-9a-zA-Z]{24}\b',  # Slack user token
+        
+        # Discord tokens
+        r'\b[MN][A-Za-z\d]{23}\.[A-Za-z\d]{6}\.[A-Za-z\d\-_]{27}\b',  # Discord bot token
+        
+        # Generic patterns for various platforms
+        r'\b[a-zA-Z0-9]{32}\b',   # 32-char hex tokens
+        r'\b[a-zA-Z0-9]{40}\b',   # 40-char tokens (common for SHA1-based)
+        r'\b[a-zA-Z0-9+/]{64}={0,2}\b',  # Base64 64-char tokens
+        
+        # JWT tokens
+        r'\beyJ[a-zA-Z0-9+/]+=*\.[a-zA-Z0-9+/]+=*\.[a-zA-Z0-9+/\-_]+=*\b',
+        
+        # Environment variable patterns for tokens
+        r'\b[A-Z_]+TOKEN[:\s=]*["\']?([a-zA-Z0-9_.-]{16,})["\']?\b',
+        r'\b[A-Z_]+KEY[:\s=]*["\']?([a-zA-Z0-9_.-]{16,})["\']?\b',
+        r'\b[A-Z_]+SECRET[:\s=]*["\']?([a-zA-Z0-9_.-]{16,})["\']?\b',
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            token_value = match.group(1) if match.lastindex else match.group(0)
+            
+            # Determine token type based on pattern
+            token_type = "Personal Access Token"
+            risk_level = "Critical"
+            description = "Personal Access Token or API key detected"
+            
+            if "ghp_" in token_value or "gho_" in token_value or "ghu_" in token_value:
+                token_type = "GitHub Personal Access Token"
+                description = "GitHub Personal Access Token - grants access to repositories and user data"
+            elif "glpat-" in token_value or "gldt-" in token_value:
+                token_type = "GitLab Personal Access Token"
+                description = "GitLab Personal Access Token - grants access to GitLab repositories and APIs"
+            elif "AKIA" in token_value:
+                token_type = "AWS Access Key"
+                description = "AWS Access Key ID - grants access to AWS services"
+            elif "xoxb-" in token_value or "xoxa-" in token_value or "xoxp-" in token_value:
+                token_type = "Slack Token"
+                description = "Slack API token - grants access to Slack workspace"
+            elif "eyJ" in token_value:
+                token_type = "JWT Token"
+                description = "JSON Web Token - may contain sensitive authentication data"
+            elif len(token_value) == 52 and token_value.isalnum():
+                token_type = "Azure DevOps PAT"
+                description = "Azure DevOps Personal Access Token - grants access to Azure DevOps services"
+            
+            # Mask the token value for security
+            masked_value = token_value[:8] + "..." + token_value[-4:] if len(token_value) > 12 else "*" * len(token_value)
+            
+            found.append({
+                'type': token_type,
+                'value': masked_value,
+                'risk_level': risk_level,
+                'description': description,
+                'gdpr_article': 'Article 32 - Security of processing',
+                'recommendation': 'Immediately revoke this token and rotate credentials. Review access logs for unauthorized usage.'
+            })
     
     return found
 
