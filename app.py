@@ -2657,7 +2657,14 @@ def display_scan_results(scan_results):
     # Enhanced summary metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        files_scanned = scan_results.get("files_scanned", scan_results.get("cloud_resources_analyzed", 0))
+        # Check multiple possible field names for files scanned
+        files_scanned = (
+            scan_results.get("files_scanned", 0) or
+            scan_results.get("images_processed", 0) or  
+            scan_results.get("cloud_resources_analyzed", 0) or
+            scan_results.get("documents_processed", 0) or
+            0
+        )
         st.metric("Files Scanned", files_scanned)
     with col2:
         st.metric("Total Findings", len(scan_results.get("findings", [])))
