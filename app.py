@@ -3213,6 +3213,9 @@ def execute_image_scan(region, username, uploaded_files):
             from services.results_aggregator import ResultsAggregator
             aggregator = ResultsAggregator()
             
+            # Ensure variables are properly defined for storage
+            user_id = st.session_state.get('user_id', username)
+            
             # Prepare complete result for storage
             complete_result = {
                 **scan_results,
