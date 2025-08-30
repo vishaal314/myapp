@@ -1087,8 +1087,22 @@ def render_dashboard():
         aggregator = ResultsAggregator()
         aggregator.use_file_storage = False  # Force database mode for real-time data
         
-        # Try to get scans for current user first
-        recent_scans = aggregator.get_recent_scans(days=30, username=username)
+        # Clear any caching to ensure fresh data
+        if hasattr(aggregator, 'clear_cache'):
+            aggregator.clear_cache()
+        
+        # Try to get scans for current user first - include more recent timeframe
+        recent_scans = aggregator.get_recent_scans(days=1, username=username)  # Get today's scans first
+        
+        # If few scans found, expand to 30 days
+        if len(recent_scans) < 5:
+            recent_scans_extended = aggregator.get_recent_scans(days=30, username=username)
+            # Merge today's scans with extended scans, avoiding duplicates
+            seen_ids = {scan.get('scan_id') for scan in recent_scans}
+            for scan in recent_scans_extended:
+                if scan.get('scan_id') not in seen_ids:
+                    recent_scans.append(scan)
+                    seen_ids.add(scan.get('scan_id'))
         
         # If no scans found for current user, get all recent scans to avoid empty dashboard
         if len(recent_scans) == 0:
@@ -2996,6 +3010,32 @@ def execute_document_scan(region, username, uploaded_files):
         # Store scan results in session state for download access
         st.session_state['last_scan_results'] = scan_results
         
+        # Store results in aggregator database (like Code Scanner does)
+        try:
+            from services.results_aggregator import ResultsAggregator
+            aggregator = ResultsAggregator()
+            
+            # Prepare complete result for storage
+            complete_result = {
+                **scan_results,
+                'scan_type': 'document',
+                'total_pii_found': findings_count,
+                'high_risk_count': high_risk_count,
+                'region': region,
+                'files_scanned': scan_results["files_scanned"],
+                'username': username,
+                'user_id': user_id
+            }
+            
+            stored_scan_id = aggregator.save_scan_result(
+                username=username,
+                result=complete_result
+            )
+            logger.info(f"Document Scanner: Successfully stored scan result with ID: {stored_scan_id}")
+            
+        except Exception as store_error:
+            logger.error(f"Document Scanner: FAILED to store scan result in aggregator: {store_error}")
+        
         display_scan_results(scan_results)
         st.success("✅ Document scan completed!")
         
@@ -3176,6 +3216,33 @@ def execute_image_scan(region, username, uploaded_files):
         )
         
         progress_bar.progress(100)
+        
+        # Store results in aggregator database (like Code Scanner does)  
+        try:
+            from services.results_aggregator import ResultsAggregator
+            aggregator = ResultsAggregator()
+            
+            # Prepare complete result for storage
+            complete_result = {
+                **scan_results,
+                'scan_type': 'image',
+                'total_pii_found': findings_count,
+                'high_risk_count': high_risk_count,
+                'region': region,
+                'files_scanned': scan_results["files_scanned"],
+                'username': username,
+                'user_id': user_id
+            }
+            
+            stored_scan_id = aggregator.save_scan_result(
+                username=username,
+                result=complete_result
+            )
+            logger.info(f"Image Scanner: Successfully stored scan result with ID: {stored_scan_id}")
+            
+        except Exception as store_error:
+            logger.error(f"Image Scanner: FAILED to store scan result in aggregator: {store_error}")
+        
         display_scan_results(scan_results)
         st.success("✅ Image scan completed!")
         
