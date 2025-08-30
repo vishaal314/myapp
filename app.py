@@ -1115,22 +1115,32 @@ def render_dashboard():
         
         logger.info(f"Dashboard: Processing {total_scans} completed scans from aggregator")
         
-        # Calculate metrics from stored scan results
+        # Calculate metrics from stored scan results - Fix double counting issue
         for scan in recent_scans:
             result = scan.get('result', {})
             if isinstance(result, dict):
-                # Count findings as PII instances
-                findings = result.get('findings', [])
-                if isinstance(findings, list):
-                    total_pii += len(findings)
-                    # Count high-risk findings
-                    for finding in findings:
-                        if isinstance(finding, dict) and finding.get('severity', '').lower() in ['high', 'critical']:
-                            high_risk_issues += 1
+                # Use direct counts from scan metadata first (more reliable)
+                scan_pii = scan.get('total_pii_found', 0)
+                scan_high_risk = scan.get('high_risk_count', 0)
                 
-                # Add direct counts if available
-                total_pii += result.get('total_pii_found', 0)
-                high_risk_issues += result.get('high_risk_count', 0)
+                # If no direct counts, fall back to analyzing findings
+                if scan_pii == 0:
+                    findings = result.get('findings', [])
+                    if isinstance(findings, list):
+                        scan_pii = len(findings)
+                        # Count high-risk findings
+                        for finding in findings:
+                            if isinstance(finding, dict) and finding.get('severity', '').lower() in ['high', 'critical']:
+                                scan_high_risk += 1
+                
+                # If still no direct counts from scan, check result level
+                if scan_pii == 0:
+                    scan_pii = result.get('total_pii_found', 0)
+                if scan_high_risk == 0:
+                    scan_high_risk = result.get('high_risk_count', 0)
+                
+                total_pii += scan_pii
+                high_risk_issues += scan_high_risk
                 
                 # Collect compliance scores
                 comp_score = result.get('compliance_score', 0)
@@ -1231,6 +1241,8 @@ def render_dashboard():
                 avg_compliance = 94.5  # Good default for scans with no high-risk issues
         
         # Display real-time metrics with accurate data
+        logger.info(f"Dashboard DISPLAY: Showing metrics - Scans: {total_scans}, PII: {total_pii}, Compliance: {avg_compliance:.1f}%, Issues: {high_risk_issues}")
+        
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -1245,10 +1257,12 @@ def render_dashboard():
         with col4:
             st.metric(_('dashboard.metric.active_issues', 'Active Issues'), high_risk_issues)
         
-        # Debug information for troubleshooting
-        if st.checkbox("Show Debug Info", value=False):
+        # Debug information for troubleshooting - Enable by default to verify calculations
+        if st.checkbox("Show Debug Info", value=True):
             st.write(f"Debug: Found {len(completed_activities)} activity scans, {len(recent_scans)} aggregator scans")
             st.write(f"Totals: {total_pii} PII, {high_risk_issues} high risk, {len(compliance_scores)} scores")
+            st.write(f"Username: {username}, Scan count: {total_scans}")
+            st.write(f"Calculated compliance: {avg_compliance:.1f}%")
         
         st.markdown("---")
         
