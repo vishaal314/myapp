@@ -4794,6 +4794,33 @@ def render_microsoft365_connector(region: str, username: str):
                 user_id = st.session_state.get('user_id', username)
                 session_id = st.session_state.get('session_id', str(uuid.uuid4()))
                 
+                # Store results in aggregator database (like Code Scanner does)
+                try:
+                    from services.results_aggregator import ResultsAggregator
+                    aggregator = ResultsAggregator()
+                    
+                    # Prepare complete result for storage
+                    complete_result = {
+                        **scan_results,
+                        'scan_type': 'enterprise connector',
+                        'total_pii_found': scan_results.get('pii_instances_found', 0),
+                        'high_risk_count': scan_results.get('high_risk_findings', 0),
+                        'region': region,
+                        'files_scanned': scan_results.get('total_items_scanned', 0),
+                        'username': username,
+                        'user_id': user_id,
+                        'connector_type': 'Microsoft 365'
+                    }
+                    
+                    stored_scan_id = aggregator.save_scan_result(
+                        username=username,
+                        result=complete_result
+                    )
+                    logger.info(f"Microsoft 365 Connector: Successfully stored scan result with ID: {stored_scan_id}")
+                    
+                except Exception as store_error:
+                    logger.error(f"Microsoft 365 Connector: FAILED to store scan result in aggregator: {store_error}")
+                
                 track_scan_completed_wrapper(
                     scanner_type=ScannerType.ENTERPRISE,
                     user_id=user_id,
@@ -4896,6 +4923,33 @@ def render_exact_online_connector(region: str, username: str):
                 scan_results = scanner.scan_enterprise_source(scan_config)
             
             if scan_results.get('success'):
+                # Store results in aggregator database (like Code Scanner does)
+                try:
+                    from services.results_aggregator import ResultsAggregator
+                    aggregator = ResultsAggregator()
+                    
+                    # Prepare complete result for storage
+                    complete_result = {
+                        **scan_results,
+                        'scan_type': 'enterprise connector',
+                        'total_pii_found': scan_results.get('pii_instances_found', 0),
+                        'high_risk_count': scan_results.get('high_risk_findings', 0),
+                        'region': region,
+                        'files_scanned': scan_results.get('total_items_scanned', 0),
+                        'username': username,
+                        'user_id': st.session_state.get('user_id', username),
+                        'connector_type': 'Exact Online'
+                    }
+                    
+                    stored_scan_id = aggregator.save_scan_result(
+                        username=username,
+                        result=complete_result
+                    )
+                    logger.info(f"Exact Online Connector: Successfully stored scan result with ID: {stored_scan_id}")
+                    
+                except Exception as store_error:
+                    logger.error(f"Exact Online Connector: FAILED to store scan result in aggregator: {store_error}")
+                
                 display_enterprise_scan_results(scan_results, 'Exact Online')
                 
                 # Highlight Netherlands-specific findings
@@ -4969,6 +5023,33 @@ def render_google_workspace_connector(region: str, username: str):
                 scan_results = scanner.scan_enterprise_source(scan_config)
             
             if scan_results.get('success'):
+                # Store results in aggregator database (like Code Scanner does)
+                try:
+                    from services.results_aggregator import ResultsAggregator
+                    aggregator = ResultsAggregator()
+                    
+                    # Prepare complete result for storage
+                    complete_result = {
+                        **scan_results,
+                        'scan_type': 'enterprise connector',
+                        'total_pii_found': scan_results.get('pii_instances_found', 0),
+                        'high_risk_count': scan_results.get('high_risk_findings', 0),
+                        'region': region,
+                        'files_scanned': scan_results.get('total_items_scanned', 0),
+                        'username': username,
+                        'user_id': st.session_state.get('user_id', username),
+                        'connector_type': 'Google Workspace'
+                    }
+                    
+                    stored_scan_id = aggregator.save_scan_result(
+                        username=username,
+                        result=complete_result
+                    )
+                    logger.info(f"Google Workspace Connector: Successfully stored scan result with ID: {stored_scan_id}")
+                    
+                except Exception as store_error:
+                    logger.error(f"Google Workspace Connector: FAILED to store scan result in aggregator: {store_error}")
+                
                 display_enterprise_scan_results(scan_results, 'Google Workspace')
             else:
                 st.error(f"Google Workspace scan failed: {scan_results.get('error')}")
