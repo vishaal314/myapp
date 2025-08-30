@@ -4380,10 +4380,27 @@ def render_enterprise_connector_interface(region: str, username: str):
     # Check if the key exists in Dutch translations
     if 'nl' in _translations:
         st.write(f"DEBUG: Dutch translations loaded: {len(_translations['nl'])} keys")
+        st.write(f"DEBUG: First few Dutch keys: {list(_translations['nl'].keys())[:10]}")
         if 'enterprise_scanner_title' in _translations['nl']:
             st.write(f"DEBUG: Found enterprise_scanner_title in Dutch: {_translations['nl']['enterprise_scanner_title']}")
         else:
             st.write("DEBUG: enterprise_scanner_title NOT found in Dutch translations")
+            # Let's try to directly get it from the file
+            import json
+            try:
+                with open('translations/nl.json', 'r', encoding='utf-8') as f:
+                    direct_nl = json.load(f)
+                st.write(f"DEBUG: Direct file load has {len(direct_nl)} keys")
+                if 'enterprise_scanner_title' in direct_nl:
+                    st.write(f"DEBUG: Direct file has enterprise_scanner_title: {direct_nl['enterprise_scanner_title']}")
+                    # Override the translation manually
+                    title_text = direct_nl['enterprise_scanner_title']
+                    desc_text = direct_nl.get('enterprise_description_text', desc_text)
+                    leadership_text = direct_nl.get('enterprise_market_leadership', leadership_text)
+                else:
+                    st.write("DEBUG: enterprise_scanner_title not even in direct file load")
+            except Exception as e:
+                st.write(f"DEBUG: Error direct loading: {e}")
     else:
         st.write("DEBUG: No Dutch translations loaded")
     
