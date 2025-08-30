@@ -13,6 +13,11 @@ from typing import Dict, Any, Optional
 import stripe
 import streamlit as st
 
+# Import new services
+from services.email_service import email_service
+from services.database_service import database_service
+from services.invoice_generator import invoice_generator
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -324,33 +329,80 @@ class WebhookHandler:
     # Helper methods for database operations (implement based on your database)
     def _store_payment_record(self, payment_record: Dict[str, Any]) -> None:
         """Store payment record in database"""
-        # TODO: Implement database storage
-        logger.info(f"Storing payment record: {payment_record['session_id']}")
-        pass
+        success = database_service.store_payment_record(payment_record)
+        if success:
+            logger.info(f"Payment record stored successfully: {payment_record['session_id']}")
+        else:
+            logger.error(f"Failed to store payment record: {payment_record['session_id']}")
     
     def _store_abandoned_checkout(self, abandoned_record: Dict[str, Any]) -> None:
         """Store abandoned checkout for analytics"""
-        # TODO: Implement analytics storage
-        logger.info(f"Storing abandoned checkout: {abandoned_record['session_id']}")
-        pass
+        success = database_service.track_analytics_event(
+            event_type='checkout_abandoned',
+            session_id=abandoned_record['session_id'],
+            event_data=abandoned_record
+        )
+        if success:
+            logger.info(f"Abandoned checkout tracked: {abandoned_record['session_id']}")
+        else:
+            logger.error(f"Failed to track abandoned checkout: {abandoned_record['session_id']}")
     
     def _trigger_scan_processing(self, payment_record: Dict[str, Any]) -> None:
         """Trigger automatic scan processing after payment"""
-        # TODO: Implement scan queue processing
-        logger.info(f"Triggering scan processing for: {payment_record['scan_type']}")
-        pass
+        # Track payment completion event
+        database_service.track_analytics_event(
+            event_type='payment_completed',
+            session_id=payment_record['session_id'],
+            event_data={
+                'scan_type': payment_record['scan_type'],
+                'amount': payment_record['amount'],
+                'country_code': payment_record.get('country_code', 'NL'),
+                'payment_method': payment_record.get('payment_method', 'unknown')
+            }
+        )
+        
+        # TODO: Implement actual scan queue processing
+        logger.info(f"Scan processing triggered for: {payment_record['scan_type']}")
+        logger.info(f"Customer: {payment_record['customer_email']}")
+        logger.info(f"Amount: €{payment_record['amount']:.2f}")
     
     def _send_payment_confirmation(self, payment_record: Dict[str, Any]) -> None:
-        """Send payment confirmation email"""
-        # TODO: Implement email service
-        logger.info(f"Sending confirmation email to: {payment_record['customer_email']}")
-        pass
+        """Send payment confirmation email with invoice"""
+        try:
+            # Generate invoice PDF
+            invoice_pdf = invoice_generator.generate_payment_invoice(payment_record)
+            
+            # Store invoice record in database
+            invoice_data = {
+                'invoice_number': f"DGP-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+                'customer_email': payment_record['customer_email'],
+                'amount_subtotal': payment_record['amount'] / 1.21,  # Assuming 21% VAT
+                'amount_tax': payment_record['amount'] - (payment_record['amount'] / 1.21),
+                'amount_total': payment_record['amount'],
+                'currency': payment_record.get('currency', 'EUR'),
+                'description': f"DataGuardian Pro - {payment_record['scan_type']}",
+                'country_code': payment_record.get('country_code', 'NL'),
+                'metadata': payment_record
+            }
+            database_service.store_invoice_record(invoice_data)
+            
+            # Send email with invoice
+            success = email_service.send_payment_confirmation(payment_record, invoice_pdf)
+            if success:
+                logger.info(f"Payment confirmation sent to: {payment_record['customer_email']}")
+            else:
+                logger.error(f"Failed to send payment confirmation to: {payment_record['customer_email']}")
+                
+        except Exception as e:
+            logger.error(f"Error sending payment confirmation: {str(e)}")
     
     def _update_payment_status(self, payment_id: str, status: str, error_message: Optional[str] = None) -> None:
         """Update payment status in database"""
-        # TODO: Implement database update
-        logger.info(f"Updating payment {payment_id} status: {status}")
-        pass
+        success = database_service.update_payment_status(payment_id, status, error_message)
+        if success:
+            logger.info(f"Payment {payment_id} status updated to: {status}")
+        else:
+            logger.error(f"Failed to update payment {payment_id} status")
     
     def _update_subscription_status(self, customer_id: str, status: str) -> None:
         """Update subscription status"""
@@ -366,15 +418,32 @@ class WebhookHandler:
     
     def _create_subscription_record(self, subscription: Dict[str, Any]) -> None:
         """Create subscription record in database"""
-        # TODO: Implement database creation
-        logger.info(f"Creating subscription record: {subscription.get('id')}")
-        pass
+        success = database_service.store_subscription_record(subscription)
+        if success:
+            logger.info(f"Subscription record created: {subscription.get('id')}")
+            
+            # Send subscription confirmation email
+            try:
+                subscription_data = {
+                    'customer_email': subscription.get('customer_email', ''),
+                    'plan_name': subscription.get('plan_name', ''),
+                    'amount': subscription.get('amount', 0) / 100,
+                    'subscription_id': subscription.get('id', ''),
+                    'interval': subscription.get('interval', 'month')
+                }
+                email_service.send_subscription_confirmation(subscription_data)
+            except Exception as e:
+                logger.error(f"Failed to send subscription confirmation: {str(e)}")
+        else:
+            logger.error(f"Failed to create subscription record: {subscription.get('id')}")
     
     def _update_subscription_record(self, subscription: Dict[str, Any]) -> None:
         """Update subscription record in database"""
-        # TODO: Implement database update
-        logger.info(f"Updating subscription record: {subscription.get('id')}")
-        pass
+        success = database_service.store_subscription_record(subscription)  # Uses UPSERT
+        if success:
+            logger.info(f"Subscription record updated: {subscription.get('id')}")
+        else:
+            logger.error(f"Failed to update subscription record: {subscription.get('id')}")
     
     def _cancel_subscription_record(self, subscription_id: str) -> None:
         """Cancel subscription record"""

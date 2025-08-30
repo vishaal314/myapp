@@ -189,20 +189,38 @@ class CertificatePaymentManager:
                 # Update user's certificate allowance (would update database in production)
                 certificates_purchased = int(metadata.get('certificates_requested', 1))
                 
-                # Track certificate payment for analytics
-                try:
-                    from utils.activity_tracker import get_activity_tracker
-                    tracker = get_activity_tracker()
-                    tracker.track_activity(
-                        metadata.get('user_id', 'anonymous'),
-                        'certificate_payment_completed',
-                        'payment_processing'
-                    )
-                except Exception:
-                    pass  # Analytics failure shouldn't block verification
-                
                 amount_total = getattr(checkout_session, 'amount_total', 0)
                 amount_paid = amount_total / 100 if amount_total else 0
+                
+                # Store certificate record and track payment
+                try:
+                    from services.database_service import database_service
+                    from services.email_service import email_service
+                    
+                    # Store certificate record
+                    certificate_data = {
+                        'certificate_id': f"CERT-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+                        'customer_email': metadata.get('user_id', 'anonymous'),
+                        'certificate_type': 'Compliance Certificate',
+                        'amount_paid': amount_paid,
+                        'currency': 'EUR',
+                        'status': 'paid'
+                    }
+                    database_service.store_certificate_record(certificate_data)
+                    
+                    # Track analytics
+                    database_service.track_analytics_event(
+                        event_type='certificate_payment_completed',
+                        user_id=metadata.get('user_id', 'anonymous'),
+                        session_id=session_id,
+                        event_data={
+                            'certificates_purchased': certificates_purchased,
+                            'amount_paid': amount_paid
+                        }
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to store certificate record: {str(e)}")
+                    pass  # Don't block verification on storage failure
                 
                 return {
                     "status": "success",
