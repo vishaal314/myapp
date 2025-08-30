@@ -4345,22 +4345,22 @@ def render_enterprise_connector_interface(region: str, username: str):
     from utils.activity_tracker import ScannerType
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     
-    st.subheader("🏢 Enterprise Connector Scanner")
+    st.subheader(_('enterprise_scanner_title', "🏢 Enterprise Connector Scanner"))
     
     # Enhanced description with Netherlands market focus
-    st.write(
+    st.write(_('enterprise_description_text', 
         "Connect and scan enterprise data sources for automated PII detection. "
         "Specializes in Netherlands market with Microsoft 365, Exact Online, and Google Workspace integration."
-    )
+    ))
     
-    st.info(
+    st.info(_('enterprise_market_leadership',
         "🎯 **Market Leadership**: The only privacy scanner with native Exact Online integration and "
         "comprehensive Netherlands UAVG compliance including BSN validation and KvK number detection."
-    )
+    ))
     
     # Competitive advantage callout
-    with st.expander("🚀 Why Enterprise Connectors Matter for Netherlands Market"):
-        st.markdown("""
+    with st.expander(_('enterprise_competitive_advantage_title', "🚀 Why Enterprise Connectors Matter for Netherlands Market")):
+        st.markdown(_('enterprise_competitive_advantage_content', """
         **Critical for €25K MRR Achievement:**
         - **Microsoft 365**: 85% of Dutch businesses use SharePoint/OneDrive
         - **Exact Online**: 60% Netherlands SME market share - unique competitive advantage
@@ -4374,14 +4374,14 @@ def render_enterprise_connector_interface(region: str, username: str):
         - KvK number verification integration
         - Dutch banking system integration (PSD2 APIs)
         - Complete UAVG compliance analysis
-        """)
+        """))
     
     # Create tabs for different connector types
     tab1, tab2, tab3, tab4 = st.tabs([
-        "🏢 Microsoft 365", 
-        "🇳🇱 Exact Online", 
-        "📊 Google Workspace",
-        "🏦 Dutch Banking"
+        _('enterprise_tab_microsoft365', "🏢 Microsoft 365"), 
+        _('enterprise_tab_exact_online', "🇳🇱 Exact Online"), 
+        _('enterprise_tab_google_workspace', "📊 Google Workspace"),
+        _('enterprise_tab_dutch_banking', "🏦 Dutch Banking")
     ])
     
     with tab1:
