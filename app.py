@@ -51,6 +51,17 @@ except ImportError:
         # Fallback inline HTML generator for AI Model reports
         def generate_html_report(scan_result):
             """Simple HTML report generator for AI Model scans"""
+            # Build the findings HTML separately to avoid f-string issues
+            findings_html = ""
+            for finding in scan_result.get('findings', []):
+                severity_class = finding.get('severity', 'low').lower()
+                findings_html += f'''<div class="finding {severity_class}">
+            <h4>{finding.get('type', 'Unknown Finding')}</h4>
+            <p><strong>Severity:</strong> {finding.get('severity', 'Unknown')}</p>
+            <p><strong>Description:</strong> {finding.get('description', 'No description available')}</p>
+            <p><strong>Location:</strong> {finding.get('location', 'Unknown')}</p>
+        </div>'''
+            
             return f"""<!DOCTYPE html>
 <html>
 <head>
@@ -90,12 +101,7 @@ except ImportError:
     
     <div class="section">
         <h2>Detailed Findings</h2>
-        {"".join([f'''<div class="finding {finding.get('severity', 'low').lower()}">
-            <h4>{finding.get('type', 'Unknown Finding')}</h4>
-            <p><strong>Severity:</strong> {finding.get('severity', 'Unknown')}</p>
-            <p><strong>Description:</strong> {finding.get('description', 'No description available')}</p>
-            <p><strong>Location:</strong> {finding.get('location', 'Unknown')}</p>
-        </div>''' for finding in scan_result.get('findings', [])])}}
+        {findings_html}
     </div>
     
     <div class="section">
