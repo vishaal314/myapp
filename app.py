@@ -905,29 +905,102 @@ def render_authenticated_interface():
             # Force app rerun to refresh after logout
             st.rerun()
     
-    # Main content based on navigation with language-aware matching
-    if _('sidebar.dashboard', 'Dashboard') in selected_nav:
+    # Language-aware navigation mapping to prevent state loss during language switching
+    # Create mapping from all possible language variants to internal keys
+    nav_mapping = {}
+    for lang_code in ['en', 'nl']:
+        try:
+            with open(f'translations/{lang_code}.json', 'r', encoding='utf-8') as f:
+                temp_translations = json.load(f)
+                
+                # Map all possible navigation texts to internal keys
+                if 'sidebar' in temp_translations:
+                    nav_mapping[temp_translations['sidebar'].get('dashboard', '')] = 'dashboard'
+                    nav_mapping[temp_translations['sidebar'].get('settings', '')] = 'settings'
+                    nav_mapping[temp_translations['sidebar'].get('privacy_rights', '')] = 'privacy_rights'
+                if 'scan' in temp_translations:
+                    nav_mapping[temp_translations['scan'].get('new_scan_title', '')] = 'scan'
+                    nav_mapping[temp_translations['scan'].get('title', '')] = 'scan'
+                if 'results' in temp_translations:
+                    nav_mapping[temp_translations['results'].get('title', '')] = 'results'
+                if 'history' in temp_translations:
+                    nav_mapping[temp_translations['history'].get('title', '')] = 'history'
+                if 'admin' in temp_translations:
+                    nav_mapping[temp_translations['admin'].get('title', '')] = 'admin'
+                    
+                # Additional common navigation terms
+                nav_mapping['Dashboard'] = 'dashboard'
+                nav_mapping['New Scan'] = 'scan'
+                nav_mapping['Nieuwe Scan'] = 'scan'
+                nav_mapping['Results'] = 'results'
+                nav_mapping['Resultaten'] = 'results'
+                nav_mapping['History'] = 'history'
+                nav_mapping['Geschiedenis'] = 'history'
+                nav_mapping['Settings'] = 'settings'
+                nav_mapping['Instellingen'] = 'settings'
+                nav_mapping['Admin'] = 'admin'
+                nav_mapping['Privacy Rights'] = 'privacy_rights'
+                nav_mapping['Privacyrechten'] = 'privacy_rights'
+                
+        except (FileNotFoundError, json.JSONDecodeError):
+            continue
+    
+    # Determine the current internal navigation key
+    current_nav_key = None
+    for nav_text, nav_key in nav_mapping.items():
+        if nav_text and nav_text in selected_nav:
+            current_nav_key = nav_key
+            break
+    
+    # Update selected_nav to current language if needed
+    if current_nav_key:
+        current_lang_nav = None
+        if current_nav_key == 'dashboard':
+            current_lang_nav = _('sidebar.dashboard', 'Dashboard')
+        elif current_nav_key == 'scan':
+            current_lang_nav = _('scan.new_scan_title', 'New Scan')
+        elif current_nav_key == 'results':
+            current_lang_nav = _('results.title', 'Results')
+        elif current_nav_key == 'history':
+            current_lang_nav = _('history.title', 'History')
+        elif current_nav_key == 'settings':
+            current_lang_nav = _('sidebar.settings', 'Settings')
+        elif current_nav_key == 'privacy_rights':
+            current_lang_nav = _('sidebar.privacy_rights', 'Privacy Rights')
+        elif current_nav_key == 'admin':
+            current_lang_nav = _('admin.title', 'Admin')
+        
+        # Update session state to current language version
+        if current_lang_nav and selected_nav != current_lang_nav:
+            st.session_state.selected_nav = current_lang_nav
+            selected_nav = current_lang_nav
+    
+    # Main content based on internal navigation keys (language-independent)
+    if current_nav_key == 'dashboard':
         render_dashboard()
-    elif _('scan.new_scan_title', 'New Scan') in selected_nav:
+    elif current_nav_key == 'scan':
         render_scanner_interface_safe()
-    elif _('results.title', 'Results') in selected_nav:
+    elif current_nav_key == 'results':
         render_results_page()
-    elif _('history.title', 'History') in selected_nav:
+    elif current_nav_key == 'history':
         render_history_page()
-    elif _('sidebar.settings', 'Settings') in selected_nav:
+    elif current_nav_key == 'settings':
         render_settings_page()
-    elif _('sidebar.privacy_rights', 'Privacy Rights') in selected_nav:
+    elif current_nav_key == 'privacy_rights':
         render_privacy_rights_page()
-    elif _('admin.title', 'Admin') in selected_nav:
+    elif current_nav_key == 'admin':
         render_admin_page()
-    elif "Performance Dashboard" in selected_nav:
+    elif selected_nav and "Performance Dashboard" in selected_nav:
         render_performance_dashboard_safe()
-    elif "🏢 Enterprise Repository Demo" in selected_nav:
+    elif selected_nav and "🏢 Enterprise Repository Demo" in selected_nav:
         render_enterprise_repo_demo()
-    elif "💳 iDEAL Payment Test" in selected_nav:
+    elif selected_nav and "💳 iDEAL Payment Test" in selected_nav:
         render_ideal_payment_test()
-    elif "💰 Pricing & Plans" in selected_nav:
+    elif selected_nav and "💰 Pricing & Plans" in selected_nav:
         render_pricing_page()
+    else:
+        # Fallback: if no navigation key is determined, default to dashboard
+        render_dashboard()
 
 def render_pricing_page():
     """Render the pricing and plans page"""
