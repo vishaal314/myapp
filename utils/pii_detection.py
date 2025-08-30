@@ -446,12 +446,12 @@ def _find_credentials(text: str) -> List[Dict[str, Any]]:
 def _find_personal_access_tokens(text: str) -> List[Dict[str, Any]]:
     """Find Personal Access Tokens and API keys in text."""
     patterns = [
-        # GitHub Personal Access Tokens
-        r'\bghp_[a-zA-Z0-9]{40}\b',  # GitHub PAT (classic)
-        r'\bgho_[a-zA-Z0-9]{40}\b',  # GitHub OAuth token
-        r'\bghu_[a-zA-Z0-9]{40}\b',  # GitHub user token
-        r'\bghs_[a-zA-Z0-9]{40}\b',  # GitHub server token
-        r'\bghr_[a-zA-Z0-9]{40}\b',  # GitHub refresh token
+        # GitHub Personal Access Tokens (flexible length 36-40 chars)
+        r'\bghp_[a-zA-Z0-9]{36,40}\b',  # GitHub PAT (classic)
+        r'\bgho_[a-zA-Z0-9]{36,40}\b',  # GitHub OAuth token
+        r'\bghu_[a-zA-Z0-9]{36,40}\b',  # GitHub user token
+        r'\bghs_[a-zA-Z0-9]{36,40}\b',  # GitHub server token
+        r'\bghr_[a-zA-Z0-9]{36,40}\b',  # GitHub refresh token
         
         # GitLab Personal Access Tokens
         r'\bglpat-[a-zA-Z0-9_-]{20}\b',  # GitLab PAT

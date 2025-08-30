@@ -246,6 +246,7 @@ class BlobScanner:
                 'file_type': file_type,
                 'file_size': os.path.getsize(file_path),
                 'pii_found': pii_items,
+                'findings': pii_items,  # Add findings field for compatibility
                 'pii_count': len(pii_items),
                 'risk_assessment': risk_assessment,
                 'risk_level': risk_assessment.get('level', 'Low'),
