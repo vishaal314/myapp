@@ -1091,18 +1091,9 @@ def render_dashboard():
         if hasattr(aggregator, 'clear_cache'):
             aggregator.clear_cache()
         
-        # Try to get scans for current user first - include more recent timeframe
-        recent_scans = aggregator.get_recent_scans(days=1, username=username)  # Get today's scans first
-        
-        # If few scans found, expand to 30 days
-        if len(recent_scans) < 5:
-            recent_scans_extended = aggregator.get_recent_scans(days=30, username=username)
-            # Merge today's scans with extended scans, avoiding duplicates
-            seen_ids = {scan.get('scan_id') for scan in recent_scans}
-            for scan in recent_scans_extended:
-                if scan.get('scan_id') not in seen_ids:
-                    recent_scans.append(scan)
-                    seen_ids.add(scan.get('scan_id'))
+        # Get all recent scans for current user (expanded timeframe to ensure we get all scans)
+        recent_scans = aggregator.get_recent_scans(days=365, username=username)  # Get all scans for user
+        logger.info(f"Dashboard: Retrieved {len(recent_scans)} total scans for user {username}")
         
         # If no scans found for current user, get all recent scans to avoid empty dashboard
         if len(recent_scans) == 0:
