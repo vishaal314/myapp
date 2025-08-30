@@ -1257,8 +1257,8 @@ def render_dashboard():
         with col4:
             st.metric(_('dashboard.metric.active_issues', 'Active Issues'), high_risk_issues)
         
-        # Debug information for troubleshooting - Enable by default to verify calculations
-        if st.checkbox("Show Debug Info", value=True):
+        # Debug information for troubleshooting
+        if st.checkbox("Show Debug Info", value=False):
             st.write(f"Debug: Found {len(completed_activities)} activity scans, {len(recent_scans)} aggregator scans")
             st.write(f"Totals: {total_pii} PII, {high_risk_issues} high risk, {len(compliance_scores)} scores")
             st.write(f"Username: {username}, Scan count: {total_scans}")
@@ -1388,6 +1388,9 @@ def render_dashboard():
                     formatted_date = 'Unknown'
                     formatted_time = ''
                 
+                # Enhanced scanner type detection with proper mapping - Debug all scan data  
+                scan_type_raw = scan.get('scan_type', 'unknown').lower().strip()
+                
                 # Get compliance score and cost savings with better fallback logic
                 compliance_score = 0
                 cost_savings = "N/A"
@@ -1442,9 +1445,6 @@ def render_dashboard():
                         # Generic scanner
                         base_savings = max(2000, pii_count * 500)  # €500 per PII item
                         cost_savings = f"€{base_savings:,.0f}"
-                
-                # Enhanced scanner type detection with proper mapping - Debug all scan data
-                scan_type_raw = scan.get('scan_type', 'unknown').lower().strip()
                 logger.info(f"Dashboard: Raw scan type from database: '{scan_type_raw}'")
                 logger.info(f"Dashboard: Full scan data keys: {list(scan.keys())}")
                 
