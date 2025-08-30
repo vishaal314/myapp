@@ -303,7 +303,7 @@
     "api_description": "REST API beveiliging en PII blootstellingsanalyse",
     "enterprise_description": "Microsoft 365, Exact Online, Google Workspace integratie voor geautomatiseerde PII scanning",
     "enterprise": "Enterprise Connector",
-    "enterprise_scanner_title": "🏢 Enterprise Connector Scanner",
+    "enterprise_scanner_title": "🏢 Enterprise Verbindingsscanner",
     "enterprise_description_text": "Verbind en scan enterprise data bronnen voor geautomatiseerde PII detectie. Gespecialiseerd in Nederlandse markt met Microsoft 365, Exact Online, en Google Workspace integratie.",
     "enterprise_market_leadership": "🎯 **Marktleiderschap**: De enige privacy scanner met native Exact Online integratie en uitgebreide Nederlandse UAVG compliance inclusief BSN validatie en KvK nummer detectie.",
     "enterprise_competitive_advantage_title": "🚀 Waarom Enterprise Connectors belangrijk zijn voor de Nederlandse Markt",
