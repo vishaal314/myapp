@@ -4349,10 +4349,22 @@ def render_enterprise_connector_interface(region: str, username: str):
     current_lang = st.session_state.get('language', 'en')
     
     # Force reinitialize i18n to ensure fresh translations
-    from utils.i18n import initialize, set_language, _translations
+    from utils.i18n import initialize, set_language, _translations, load_translations
+    import json
+    import os
     
     # Clear translations cache completely to force reload
     _translations.clear()
+    
+    # Manually load Dutch translations if the language is nl
+    if current_lang == 'nl':
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '.'))
+        nl_file = os.path.join(base_dir, 'translations', 'nl.json')
+        try:
+            with open(nl_file, 'r', encoding='utf-8') as f:
+                _translations['nl'] = json.load(f)
+        except Exception as e:
+            st.write(f"DEBUG: Error loading Dutch translations: {e}")
     
     # Explicitly set the language and reinitialize
     set_language(current_lang)
