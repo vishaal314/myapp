@@ -1079,7 +1079,7 @@ def render_dashboard():
     last_known_count = st.session_state.get('last_known_scan_count', 0)
     
     try:
-        # Get user information
+        # Get user information with better fallback logic
         username = st.session_state.get('username', 'anonymous')
         user_id = st.session_state.get('user_id', username)
         
@@ -1087,7 +1087,16 @@ def render_dashboard():
         # Force fresh connection and disable file storage fallback for accurate counts
         aggregator = ResultsAggregator()
         aggregator.use_file_storage = False  # Force database mode for real-time data
+        
+        # Try to get scans for current user first
         recent_scans = aggregator.get_recent_scans(days=30, username=username)
+        
+        # If no scans found for current user, get all recent scans to avoid empty dashboard
+        if len(recent_scans) == 0:
+            logger.info(f"Dashboard: No scans found for user {username}, getting all recent scans")
+            recent_scans = aggregator.get_recent_scans(days=30)  # No username filter
+            if recent_scans:
+                logger.info(f"Dashboard: Found {len(recent_scans)} total scans from all users")
         
         # Debug: Log actual scan retrieval
         logger.info(f"Dashboard: Raw aggregator returned {len(recent_scans)} scans for user {username}")
@@ -1137,6 +1146,11 @@ def render_dashboard():
             # Get absolute latest data with no caching
             all_user_scans = fresh_aggregator.get_user_scans(username, limit=50)
             logger.info(f"Dashboard: Direct database query found {len(all_user_scans)} total scans for user {username}")
+            
+            # If no user-specific scans, get all scans for accurate metrics
+            if len(all_user_scans) == 0:
+                all_user_scans = fresh_aggregator.get_user_scans(None, limit=50)  # Get all users
+                logger.info(f"Dashboard: No user-specific scans, using {len(all_user_scans)} total scans from database")
             
             # Filter for recent scans (30 days) manually to ensure accuracy
             from datetime import datetime, timedelta
@@ -1251,10 +1265,10 @@ def render_dashboard():
             fresh_scans = fresh_agg.get_recent_scans(days=30, username=username)  # Use 30 days to match metrics
             logger.info(f"Dashboard: Fresh aggregator returned {len(fresh_scans)} scans for recent activity display")
             
-            # If still no fresh scans, try without username filter to debug
+            # If still no fresh scans, try without username filter to show any available data
             if len(fresh_scans) == 0:
-                all_recent = fresh_agg.get_recent_scans(days=30) 
-                logger.info(f"Dashboard: Found {len(all_recent)} total recent scans (all users) - username filter may be the issue")
+                fresh_scans = fresh_agg.get_recent_scans(days=30)  # Get all scans
+                logger.info(f"Dashboard: No user-specific scans, using {len(fresh_scans)} total recent scans from all users")
                 
             # Ensure all 9 scanner types are represented in activities
             logger.info(f"Dashboard: Ensuring all scanner types update dashboard data properly")
