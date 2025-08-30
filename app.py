@@ -4345,6 +4345,13 @@ def render_enterprise_connector_interface(region: str, username: str):
     from utils.activity_tracker import ScannerType
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     
+    # Debug: Check current language and translations
+    current_lang = st.session_state.get('language', 'en')
+    
+    # Force reinitialize i18n to ensure fresh translations
+    from utils.i18n import initialize, set_language
+    initialize()
+    
     st.subheader(_('enterprise_scanner_title', "🏢 Enterprise Connector Scanner"))
     
     # Enhanced description with Netherlands market focus
