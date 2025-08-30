@@ -4352,13 +4352,28 @@ def render_enterprise_connector_interface(region: str, username: str):
     from utils.i18n import initialize, set_language
     initialize()
     
-    # Debug translation lookup
+    # Debug translation lookup with detailed debugging
+    from utils.i18n import _translations, _current_language
+    
+    st.write(f"DEBUG: Current language: {current_lang}")
+    st.write(f"DEBUG: i18n current language: {_current_language}")
+    st.write(f"DEBUG: Available translation languages: {list(_translations.keys())}")
+    
+    # Check if the key exists in Dutch translations
+    if 'nl' in _translations:
+        st.write(f"DEBUG: Dutch translations loaded: {len(_translations['nl'])} keys")
+        if 'enterprise_scanner_title' in _translations['nl']:
+            st.write(f"DEBUG: Found enterprise_scanner_title in Dutch: {_translations['nl']['enterprise_scanner_title']}")
+        else:
+            st.write("DEBUG: enterprise_scanner_title NOT found in Dutch translations")
+    else:
+        st.write("DEBUG: No Dutch translations loaded")
+    
     title_text = _('enterprise_scanner_title', "🏢 Enterprise Connector Scanner")
     desc_text = _('enterprise_description_text', "Connect and scan enterprise data sources for automated PII detection. Specializes in Netherlands market with Microsoft 365, Exact Online, and Google Workspace integration.")
     leadership_text = _('enterprise_market_leadership', "🎯 **Market Leadership**: The only privacy scanner with native Exact Online integration and comprehensive Netherlands UAVG compliance including BSN validation and KvK number detection.")
     
-    st.write(f"DEBUG: Current language: {current_lang}")
-    st.write(f"DEBUG: Title translation: {title_text}")
+    st.write(f"DEBUG: Title translation result: {title_text}")
     
     st.subheader(title_text)
     
