@@ -4668,33 +4668,33 @@ def render_google_workspace_connector(region: str, username: str):
     """Google Workspace connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     
-    st.subheader("📊 Google Workspace Integration")
-    st.write("Scan Google Drive, Gmail, and Docs for PII with enterprise-grade accuracy.")
+    st.subheader(_('scan.google_workspace_integration', '📊 Google Workspace Integration'))
+    st.write(_('scan.google_workspace_integration_description', 'Scan Google Drive, Gmail, and Docs for PII with enterprise-grade accuracy.'))
     
     # Authentication setup
-    st.markdown("### Google Workspace Authentication")
+    st.markdown(f"### {_('scan.google_workspace_authentication', 'Google Workspace Authentication')}")
     
     google_auth = st.radio(
-        "Authentication Method",
-        ["Service Account", "OAuth2", "Demo Mode"],
+        _('scan.authentication_method', 'Authentication Method'),
+        [_('scan.service_account', 'Service Account'), _('scan.oauth2', 'OAuth2'), _('scan.demo_mode', 'Demo Mode')],
         help="Choose authentication method for Google Workspace APIs"
     )
     
     credentials = {}
     
-    if google_auth == "Service Account":
+    if google_auth == _('scan.service_account', 'Service Account'):
         credentials['service_account_json'] = st.text_area(
-            "Service Account JSON",
+            _('scan.service_account_json', 'Service Account JSON'),
             help="Paste the contents of your service account JSON file"
         )
-    elif google_auth == "OAuth2":
+    elif google_auth == _('scan.oauth2', 'OAuth2'):
         credentials['access_token'] = st.text_input("Google Access Token", type="password")
     else:
         st.success("✅ Demo mode enabled")
         credentials = {'access_token': 'google_demo_token'}
     
     # Scan configuration
-    st.markdown("### Scan Configuration")
+    st.markdown(f"### {_('scan.scan_configuration', 'Scan Configuration')}")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -4734,23 +4734,20 @@ def render_dutch_banking_connector(region: str, username: str):
     """Dutch banking connector interface (PSD2 APIs)"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     
-    st.subheader("🏦 Dutch Banking Integration")
-    st.write("PSD2-compliant integration with major Dutch banks for transaction analysis.")
+    st.subheader(_('scan.dutch_banking_integration', '🏦 Dutch Banking Integration'))
+    st.write(_('scan.dutch_banking_integration_description', 'PSD2-compliant integration with major Dutch banks for transaction analysis.'))
     
     # Bank selection
     bank = st.selectbox(
-        "Select Bank",
-        ["Rabobank", "ING Bank", "ABN AMRO", "Bunq", "Triodos Bank"],
+        _('scan.select_bank', 'Select Bank'),
+        [_('scan.rabobank', 'Rabobank'), "ING Bank", "ABN AMRO", "Bunq", "Triodos Bank"],
         help="Choose your primary banking provider"
     )
     
-    st.info(
-        "🔒 **Security**: All banking authentication is handled directly by your bank. "
-        "No banking credentials are stored in DataGuardian Pro."
-    )
+    st.info(_('scan.banking_security_notice', '🔒 **Security**: All banking authentication is handled directly by your bank. No banking credentials are stored in DataGuardian Pro.'))
     
     # Demo mode for banking
-    st.warning("⚠️ Banking integration currently in demo mode pending PSD2 certification")
+    st.warning(_('scan.banking_demo_notice', '⚠️ Banking integration currently in demo mode pending PSD2 certification'))
     
     if st.button("🚀 Demo Banking Scan"):
         st.success("✅ Demo banking scan completed - PSD2 integration coming soon!")
