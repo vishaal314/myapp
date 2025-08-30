@@ -406,15 +406,57 @@ class WebhookHandler:
     
     def _update_subscription_status(self, customer_id: str, status: str) -> None:
         """Update subscription status"""
-        # TODO: Implement database update
-        logger.info(f"Updating subscription status for customer {customer_id}: {status}")
-        pass
+        try:
+            # Find subscription by customer ID
+            subscription_data = database_service.get_subscription_by_customer_id(customer_id)
+            if subscription_data:
+                # Update the subscription status
+                subscription_update = {
+                    'status': status,
+                    'updated_at': datetime.now(),
+                    'metadata': subscription_data.get('metadata', {})
+                }
+                success = database_service.update_subscription_record(subscription_data['subscription_id'], subscription_update)
+                if success:
+                    logger.info(f"Subscription status updated for customer {customer_id}: {status}")
+                else:
+                    logger.error(f"Failed to update subscription status for customer {customer_id}")
+            else:
+                logger.warning(f"No subscription found for customer {customer_id}")
+        except Exception as e:
+            logger.error(f"Error updating subscription status for customer {customer_id}: {str(e)}")
     
     def _handle_subscription_payment_failure(self, customer_id: str, invoice_id: str) -> None:
         """Handle subscription payment failure"""
-        # TODO: Implement retry logic and notifications
-        logger.warning(f"Handling subscription payment failure for customer {customer_id}")
-        pass
+        try:
+            # Track the payment failure event
+            database_service.track_analytics_event(
+                event_type='subscription_payment_failed',
+                user_id=customer_id,
+                event_data={
+                    'invoice_id': invoice_id,
+                    'failure_reason': 'payment_declined',
+                    'retry_count': 1
+                }
+            )
+            
+            # Update subscription status to indicate payment issues
+            self._update_subscription_status(customer_id, 'payment_failed')
+            
+            # Send notification email about payment failure
+            subscription_data = database_service.get_subscription_by_customer_id(customer_id)
+            if subscription_data:
+                email_service.send_payment_failure_notification({
+                    'customer_email': subscription_data['customer_email'],
+                    'subscription_id': subscription_data['subscription_id'],
+                    'invoice_id': invoice_id,
+                    'plan_name': subscription_data['plan_name']
+                })
+            
+            logger.warning(f"Subscription payment failure handled for customer {customer_id}, invoice {invoice_id}")
+            
+        except Exception as e:
+            logger.error(f"Error handling subscription payment failure for customer {customer_id}: {str(e)}")
     
     def _create_subscription_record(self, subscription: Dict[str, Any]) -> None:
         """Create subscription record in database"""
@@ -447,9 +489,32 @@ class WebhookHandler:
     
     def _cancel_subscription_record(self, subscription_id: str) -> None:
         """Cancel subscription record"""
-        # TODO: Implement database update
-        logger.info(f"Cancelling subscription record: {subscription_id}")
-        pass
+        try:
+            # Update subscription status to cancelled
+            subscription_update = {
+                'status': 'cancelled',
+                'updated_at': datetime.now(),
+                'metadata': {'cancellation_date': datetime.now().isoformat()}
+            }
+            success = database_service.update_subscription_record(subscription_id, subscription_update)
+            
+            if success:
+                logger.info(f"Subscription cancelled successfully: {subscription_id}")
+                
+                # Track cancellation event
+                database_service.track_analytics_event(
+                    event_type='subscription_cancelled',
+                    session_id=subscription_id,
+                    event_data={
+                        'subscription_id': subscription_id,
+                        'cancellation_reason': 'customer_request'
+                    }
+                )
+            else:
+                logger.error(f"Failed to cancel subscription: {subscription_id}")
+                
+        except Exception as e:
+            logger.error(f"Error cancelling subscription {subscription_id}: {str(e)}")
 
 # Global webhook handler instance
 webhook_handler = WebhookHandler()

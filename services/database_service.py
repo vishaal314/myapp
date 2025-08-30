@@ -544,6 +544,55 @@ class DatabaseService:
         except Exception as e:
             logger.error(f"Failed to get customer payment history: {str(e)}")
             return []
+    
+    def get_subscription_by_customer_id(self, customer_id: str) -> Optional[Dict[str, Any]]:
+        """Get subscription record by customer ID"""
+        if not self.enabled:
+            return None
+        
+        try:
+            with self.get_connection() as conn:
+                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+                    cursor.execute("""
+                        SELECT * FROM subscription_records 
+                        WHERE customer_id = %s 
+                        AND status IN ('active', 'trialing', 'past_due', 'payment_failed')
+                        ORDER BY created_at DESC 
+                        LIMIT 1
+                    """, (customer_id,))
+                    
+                    record = cursor.fetchone()
+                    return dict(record) if record else None
+                    
+        except Exception as e:
+            logger.error(f"Failed to get subscription by customer ID: {str(e)}")
+            return None
+    
+    def update_subscription_record(self, subscription_id: str, update_data: Dict[str, Any]) -> bool:
+        """Update subscription record"""
+        if not self.enabled:
+            return False
+        
+        try:
+            with self.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE subscription_records 
+                        SET status = %s,
+                            metadata = metadata || %s,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE subscription_id = %s
+                    """, (
+                        update_data.get('status'),
+                        json.dumps(update_data.get('metadata', {})),
+                        subscription_id
+                    ))
+                conn.commit()
+                return cursor.rowcount > 0
+                
+        except Exception as e:
+            logger.error(f"Failed to update subscription record: {str(e)}")
+            return False
 
 # Global database service instance
 database_service = DatabaseService()

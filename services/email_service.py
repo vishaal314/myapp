@@ -140,6 +140,25 @@ class EmailService:
             logger.error(f"Failed to send invoice: {str(e)}")
             return False
     
+    def send_payment_failure_notification(self, failure_data: Dict[str, Any]) -> bool:
+        """Send payment failure notification email"""
+        if not self.enabled:
+            return False
+        
+        try:
+            subject = f"Payment Issue - DataGuardian Pro ({failure_data['plan_name']})"
+            email_body = self._create_payment_failure_html(failure_data)
+            
+            return self._send_email(
+                to_email=failure_data['customer_email'],
+                subject=subject,
+                html_body=email_body
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to send payment failure notification: {str(e)}")
+            return False
+    
     def _create_payment_confirmation_html(self, payment_record: Dict[str, Any]) -> str:
         """Create HTML email for payment confirmation"""
         return f"""
@@ -354,6 +373,72 @@ class EmailService:
                     <p><strong>{self.company_info['name']}</strong></p>
                     <p>{self.company_info['address']}, {self.company_info['postal_code']} {self.company_info['city']}</p>
                     <p>VAT: {self.company_info['vat_number']} | KvK: {self.company_info['kvk_number']}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+    
+    def _create_payment_failure_html(self, failure_data: Dict[str, Any]) -> str:
+        """Create HTML email for payment failure notification"""
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #d32f2f; color: white; padding: 20px; text-align: center; }}
+                .content {{ padding: 20px; background: #f9f9f9; }}
+                .footer {{ padding: 20px; text-align: center; font-size: 12px; color: #666; }}
+                .alert {{ background: #ffebee; border-left: 4px solid #d32f2f; padding: 15px; margin: 15px 0; }}
+                .button {{ background: #d32f2f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; }}
+                .details {{ background: white; padding: 15px; margin: 15px 0; border-radius: 5px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>⚠️ Payment Issue</h1>
+                    <p>Action Required for Your DataGuardian Pro Subscription</p>
+                </div>
+                
+                <div class="content">
+                    <div class="alert">
+                        <strong>Payment Failed:</strong> We couldn't process your payment for the {failure_data['plan_name']} subscription.
+                    </div>
+                    
+                    <h2>Subscription Details</h2>
+                    <div class="details">
+                        <p><strong>Subscription:</strong> {failure_data['plan_name']}</p>
+                        <p><strong>Subscription ID:</strong> {failure_data['subscription_id']}</p>
+                        <p><strong>Failed Invoice:</strong> {failure_data['invoice_id']}</p>
+                        <p><strong>Customer Email:</strong> {failure_data['customer_email']}</p>
+                    </div>
+                    
+                    <h3>What You Can Do</h3>
+                    <ul>
+                        <li>🔄 <strong>Update Payment Method:</strong> Check if your card has expired or needs updating</li>
+                        <li>💳 <strong>Verify Billing Info:</strong> Ensure sufficient funds and correct billing address</li>
+                        <li>📞 <strong>Contact Your Bank:</strong> Some payments may be blocked by your financial institution</li>
+                        <li>🔔 <strong>Update Automatically:</strong> We'll retry the payment in 24 hours</li>
+                    </ul>
+                    
+                    <div class="alert">
+                        <strong>Important:</strong> Your subscription remains active for a grace period. Please update your payment method to avoid service interruption.
+                    </div>
+                    
+                    <p style="text-align: center; margin: 30px 0;">
+                        <a href="https://dataguardian.pro/billing" class="button">Update Payment Method</a>
+                    </p>
+                </div>
+                
+                <div class="footer">
+                    <p><strong>{self.company_info['name']}</strong></p>
+                    <p>{self.company_info['address']}, {self.company_info['postal_code']} {self.company_info['city']}</p>
+                    <p>VAT: {self.company_info['vat_number']} | KvK: {self.company_info['kvk_number']}</p>
+                    <p>Questions? Contact us at {self.company_info['email']}</p>
                 </div>
             </div>
         </body>
