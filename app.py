@@ -4352,18 +4352,20 @@ def render_enterprise_connector_interface(region: str, username: str):
     from utils.i18n import initialize, set_language
     initialize()
     
-    st.subheader(_('enterprise_scanner_title', "🏢 Enterprise Connector Scanner"))
+    # Debug translation lookup
+    title_text = _('enterprise_scanner_title', "🏢 Enterprise Connector Scanner")
+    desc_text = _('enterprise_description_text', "Connect and scan enterprise data sources for automated PII detection. Specializes in Netherlands market with Microsoft 365, Exact Online, and Google Workspace integration.")
+    leadership_text = _('enterprise_market_leadership', "🎯 **Market Leadership**: The only privacy scanner with native Exact Online integration and comprehensive Netherlands UAVG compliance including BSN validation and KvK number detection.")
+    
+    st.write(f"DEBUG: Current language: {current_lang}")
+    st.write(f"DEBUG: Title translation: {title_text}")
+    
+    st.subheader(title_text)
     
     # Enhanced description with Netherlands market focus
-    st.write(_('enterprise_description_text', 
-        "Connect and scan enterprise data sources for automated PII detection. "
-        "Specializes in Netherlands market with Microsoft 365, Exact Online, and Google Workspace integration."
-    ))
+    st.write(desc_text)
     
-    st.info(_('enterprise_market_leadership',
-        "🎯 **Market Leadership**: The only privacy scanner with native Exact Online integration and "
-        "comprehensive Netherlands UAVG compliance including BSN validation and KvK number detection."
-    ))
+    st.info(leadership_text)
     
     # Competitive advantage callout
     with st.expander(_('enterprise_competitive_advantage_title', "🚀 Why Enterprise Connectors Matter for Netherlands Market")):
