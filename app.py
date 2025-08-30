@@ -2595,7 +2595,7 @@ def display_scan_results(scan_results):
         lines_analyzed = scan_results.get("lines_analyzed", scan_results.get("total_lines", 0))
         st.metric("Lines Analyzed", f"{lines_analyzed:,}" if lines_analyzed else "0")
     with col4:
-        critical_count = len([f for f in scan_results.get("findings", []) if f.get("severity") == "Critical"])
+        critical_count = len([f for f in scan_results.get("findings", []) if f.get("severity") == "Critical" or f.get("risk_level") == "Critical"])
         st.metric("Critical Issues", critical_count)
     
     # Findings table with enhanced display
@@ -2610,7 +2610,9 @@ def display_scan_results(scan_results):
             for finding in scan_results["findings"]:
                 # Generate meaningful impact and action based on finding type and severity
                 finding_type = finding.get('type', 'Unknown')
-                severity = finding.get('severity', 'Medium')
+                # Map risk_level to severity for proper display
+                risk_level = finding.get('risk_level', 'Medium')
+                severity = finding.get('severity') or risk_level  # Use severity if available, else risk_level
                 description = finding.get('description', 'No description available')
                 
                 # Smart fallbacks for impact
@@ -2728,9 +2730,10 @@ def display_scan_results(scan_results):
                     'High': '🟠', 
                     'Medium': '🟡',
                     'Low': '🟢'
-                }.get(finding.get('severity', 'Medium'), '⚪')
+                }.get(finding.get('severity') or finding.get('risk_level', 'Medium'), '⚪')
                 
-                st.write(f"{severity_color} **{finding.get('type', 'Unknown')}** ({finding.get('severity', 'Medium')})")
+                displayed_severity = finding.get('severity') or finding.get('risk_level', 'Medium')
+                st.write(f"{severity_color} **{finding.get('type', 'Unknown')}** ({displayed_severity})")
                 st.write(f"   📁 **File:** {finding.get('file', 'N/A')}")
                 st.write(f"   📍 **Location:** {finding.get('line', 'N/A')}")
                 st.write(f"   📝 **Description:** {finding.get('description', 'No description')}")
@@ -2888,7 +2891,7 @@ def execute_document_scan(region, username, uploaded_files):
         # Calculate scan metrics
         scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
         findings_count = len(scan_results["findings"])
-        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical')
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical' or f.get('risk_level') == 'Critical')
         
         # Track successful completion
         track_scan_completed_wrapper(
@@ -2911,6 +2914,10 @@ def execute_document_scan(region, username, uploaded_files):
         )
         
         progress_bar.progress(100)
+        
+        # Store scan results in session state for download access
+        st.session_state['last_scan_results'] = scan_results
+        
         display_scan_results(scan_results)
         st.success("✅ Document scan completed!")
         
@@ -3068,7 +3075,7 @@ def execute_image_scan(region, username, uploaded_files):
         # Calculate scan metrics
         scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
         findings_count = len(scan_results["findings"])
-        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical')
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical' or f.get('risk_level') == 'Critical')
         
         # Track successful completion
         track_scan_completed_wrapper(
@@ -3384,7 +3391,7 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
         # Calculate scan metrics
         scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
         findings_count = len(scan_results["findings"])
-        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical')
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical' or f.get('risk_level') == 'Critical')
         
         # Track successful completion
         track_scan_completed_wrapper(
@@ -3530,7 +3537,7 @@ def execute_database_scan_cloud(region, username, connection_string):
         # Calculate scan metrics
         scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
         findings_count = len(scan_results["findings"])
-        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical')
+        high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical' or f.get('risk_level') == 'Critical')
         
         # Track successful completion
         track_scan_completed_wrapper(
