@@ -4425,35 +4425,35 @@ def render_microsoft365_connector(region: str, username: str):
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     from utils.activity_tracker import ScannerType
     
-    st.subheader("🏢 Microsoft 365 Integration")
-    st.write("Scan SharePoint, OneDrive, Exchange, and Teams for PII with Netherlands specialization.")
+    st.subheader(_('scan.microsoft365_integration', '🏢 Microsoft 365 Integration'))
+    st.write(_('scan.microsoft365_integration_description', 'Scan SharePoint, OneDrive, Exchange, and Teams for PII with Netherlands specialization.'))
     
     # Connection configuration
-    st.markdown("### Authentication Setup")
+    st.markdown(f"### {_('scan.authentication_setup', 'Authentication Setup')}")
     
     auth_method = st.radio(
-        "Authentication Method",
-        ["OAuth2 App Registration", "Access Token", "Demo Mode"],
+        _('scan.authentication_method', 'Authentication Method'),
+        [_('scan.oauth2_app_registration', 'OAuth2 App Registration'), _('scan.access_token', 'Access Token'), _('scan.demo_mode', 'Demo Mode')],
         help="Choose how to authenticate with Microsoft 365"
     )
     
     credentials = {}
     
-    if auth_method == "OAuth2 App Registration":
-        st.markdown("**Azure App Registration Details:**")
+    if auth_method == _('scan.oauth2_app_registration', 'OAuth2 App Registration'):
+        st.markdown(f"**{_('scan.azure_app_registration_details', 'Azure App Registration Details:')}**")
         col1, col2 = st.columns(2)
         with col1:
             credentials['tenant_id'] = st.text_input(
-                "Tenant ID",
+                _('scan.tenant_id', 'Tenant ID'),
                 help="Your Azure AD tenant identifier"
             )
             credentials['client_id'] = st.text_input(
-                "Client ID", 
+                _('scan.client_id', 'Client ID'), 
                 help="Application (client) ID from Azure portal"
             )
         with col2:
             credentials['client_secret'] = st.text_input(
-                "Client Secret",
+                _('scan.client_secret', 'Client Secret'),
                 type="password",
                 help="Client secret value from Azure portal"
             )
@@ -4469,7 +4469,7 @@ def render_microsoft365_connector(region: str, username: str):
             6. Copy Tenant ID, Client ID, and Client Secret here
             """)
     
-    elif auth_method == "Access Token":
+    elif auth_method == _('scan.access_token', 'Access Token'):
         credentials['access_token'] = st.text_input(
             "Microsoft Graph Access Token",
             type="password",
@@ -4485,7 +4485,7 @@ def render_microsoft365_connector(region: str, username: str):
         }
     
     # Scan configuration
-    st.markdown("### Scan Configuration")
+    st.markdown(f"### {_('scan.scan_configuration', 'Scan Configuration')}")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -4495,7 +4495,7 @@ def render_microsoft365_connector(region: str, username: str):
         scan_exchange = st.checkbox("📧 Exchange Email", value=True)
         scan_teams = st.checkbox("💬 Teams Messages", value=True)
     
-    max_items = st.slider("Maximum items to scan", 10, 1000, 100)
+    max_items = st.slider(_('scan.maximum_items_to_scan', 'Maximum items to scan'), 10, 1000, 100)
     
     # Scan execution
     if st.button("🚀 Start Microsoft 365 Scan", type="primary"):
