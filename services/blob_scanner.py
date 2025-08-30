@@ -436,28 +436,54 @@ class BlobScanner:
             # Use the PII detection utility
             pii_items = identify_pii_in_text(text, region=self.region)
             
+            # Enhance PII items with location information
+            enhanced_pii_items = []
+            lines = text.split('\n')
+            
+            for pii_item in pii_items:
+                pii_value = pii_item.get('value', '')
+                # Find the line number where this PII appears
+                line_number = 0
+                element_context = "Document Content"
+                
+                for i, line in enumerate(lines, 1):
+                    if pii_value in line:
+                        line_number = i
+                        # Extract some context around the PII
+                        words = line.split()
+                        pii_index = -1
+                        for j, word in enumerate(words):
+                            if pii_value in word:
+                                pii_index = j
+                                break
+                        
+                        if pii_index >= 0:
+                            # Create context with up to 3 words before and after
+                            start_idx = max(0, pii_index - 3)
+                            end_idx = min(len(words), pii_index + 4)
+                            context_words = words[start_idx:end_idx]
+                            element_context = "..." + " ".join(context_words) + "..."
+                        break
+                
+                # Create enhanced PII item with location information
+                enhanced_item = {
+                    'type': pii_item.get('type', 'Unknown'),
+                    'value': pii_value,
+                    'file': os.path.basename(file_path),
+                    'line': line_number if line_number > 0 else 'N/A',
+                    'location': f"Line {line_number}" if line_number > 0 else "Document",
+                    'element': element_context,
+                    'description': f"{pii_item.get('type', 'PII')} found in document",
+                    'severity': 'High' if pii_item.get('type') in ['BSN', 'Credit Card', 'SSN'] else 'Medium',
+                    'risk_level': 'High' if pii_item.get('type') in ['BSN', 'Credit Card', 'SSN'] else 'Medium'
+                }
+                enhanced_pii_items.append(enhanced_item)
+            
             # Enhanced violation detection for demonstration files
             demonstration_violations = self._detect_demonstration_violations(text, file_path)
             
-            # Format findings for consistency
-            formatted_findings = []
-            
-            # Add PII findings
-            for item in pii_items:
-                formatted_findings.append({
-                    'type': item.get('type', 'Unknown'),
-                    'value': item.get('value', ''),
-                    'risk_level': item.get('risk_level', 'Medium'),
-                    'location': item.get('location', f'File: {os.path.basename(file_path)}'),
-                    'description': item.get('description', f"{item.get('type', 'PII')} detected"),
-                    'gdpr_article': item.get('gdpr_article', 'Article 6'),
-                    'recommendation': item.get('recommendation', 'Review and ensure proper legal basis')
-                })
-            
-            # Add demonstration violations
-            formatted_findings.extend(demonstration_violations)
-            
-            return formatted_findings
+            # Return combined findings with enhanced location information
+            return enhanced_pii_items + demonstration_violations
             
         except Exception as e:
             print(f"Error scanning text: {str(e)}")
