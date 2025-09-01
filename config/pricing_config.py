@@ -41,51 +41,64 @@ class PricingConfig:
             "tiers": {
                 PricingTier.STARTUP.value: {
                     "name": "Startup Essential",
-                    "description": "Perfect for small businesses getting started with GDPR compliance",
+                    "description": "Complete GDPR + AI Act compliance for growing startups - 90% cost savings vs OneTrust",
                     "target_employees": "1-25",
                     "target_revenue": "< €1M",
                     "monthly_price": 49,
                     "annual_price": 490,  # 2 months free
                     "setup_fee": 0,
-                    "max_scans_monthly": 50,
-                    "max_data_sources": 5,
-                    "support_level": "email",
-                    "sla_hours": 48
+                    "max_scans_monthly": 150,  # Tripled from 50
+                    "max_data_sources": 15,    # Tripled from 5
+                    "support_level": "priority_email",
+                    "sla_hours": 24,  # Halved from 48
+                    "guaranteed_savings": 15000,  # €15K annual compliance savings
+                    "includes_ai_act": True,
+                    "netherlands_specialization": True
                 },
                 
                 PricingTier.GROWTH.value: {
                     "name": "Growth Professional",
-                    "description": "Comprehensive compliance for growing companies",
+                    "description": "Enterprise-grade compliance automation - 92% cost savings vs OneTrust (€1,490 vs €19,000)",
                     "target_employees": "25-100", 
                     "target_revenue": "€1M - €10M",
                     "monthly_price": 149,
                     "annual_price": 1490,  # 2 months free
                     "setup_fee": 0,
-                    "max_scans_monthly": 200,
-                    "max_data_sources": 25,
-                    "support_level": "priority",
-                    "sla_hours": 24,
-                    "most_popular": True
+                    "max_scans_monthly": 500,  # Increased from 200
+                    "max_data_sources": 50,    # Doubled from 25
+                    "support_level": "priority_phone",
+                    "sla_hours": 12,  # Improved from 24
+                    "most_popular": True,
+                    "guaranteed_savings": 45000,  # €45K annual savings
+                    "enterprise_connectors": True,
+                    "ai_act_compliance": True,
+                    "compliance_certificates": True,
+                    "success_manager": "monthly_check_in"
                 },
                 
                 PricingTier.SCALE.value: {
                     "name": "Scale Enterprise",
-                    "description": "Advanced compliance for scaling enterprises",
+                    "description": "Full enterprise automation + API access - 84% cost savings vs OneTrust (€3,990 vs €25,000)",
                     "target_employees": "100-500",
                     "target_revenue": "€10M - €50M", 
                     "monthly_price": 399,
                     "annual_price": 3990,  # 2 months free
                     "setup_fee": 500,
-                    "max_scans_monthly": 1000,
-                    "max_data_sources": 100,
-                    "support_level": "dedicated",
-                    "sla_hours": 8,
-                    "includes_onboarding": True
+                    "max_scans_monthly": "unlimited",  # Upgraded from 1000
+                    "max_data_sources": "unlimited",   # Upgraded from 100
+                    "support_level": "dedicated_phone",
+                    "sla_hours": 4,   # Improved from 8
+                    "includes_onboarding": True,
+                    "guaranteed_savings": 125000,  # €125K annual savings
+                    "api_access": True,
+                    "white_label_option": True,
+                    "custom_workflows": True,
+                    "success_manager": "weekly_check_in"
                 },
                 
                 PricingTier.ENTERPRISE.value: {
                     "name": "Enterprise Ultimate",
-                    "description": "Full-scale compliance for large enterprises",
+                    "description": "Complete compliance platform + source code access - 86% cost savings vs OneTrust (€8,990 vs €65,000)",
                     "target_employees": "500+",
                     "target_revenue": "€50M+",
                     "monthly_price": 899,
@@ -93,10 +106,16 @@ class PricingConfig:
                     "setup_fee": 1500,
                     "max_scans_monthly": "unlimited",
                     "max_data_sources": "unlimited", 
-                    "support_level": "white_glove",
-                    "sla_hours": 4,
+                    "support_level": "white_glove_24_7",
+                    "sla_hours": 2,  # Improved from 4
                     "includes_onboarding": True,
-                    "custom_integrations": True
+                    "custom_integrations": True,
+                    "guaranteed_savings": 300000,  # €300K annual savings
+                    "dedicated_success_team": True,
+                    "quarterly_compliance_reviews": True,
+                    "legal_consultation_hours": 20,
+                    "priority_feature_requests": True,
+                    "source_code_escrow": True
                 },
                 
                 PricingTier.GOVERNMENT.value: {
@@ -127,28 +146,33 @@ class PricingConfig:
             },
             
             "advanced_scanners": {
-                "enterprise_connectors": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "enterprise_connectors": [PricingTier.STARTUP.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
                 "microsoft365_integration": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value], 
                 "exact_online_connector": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
                 "google_workspace_integration": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "ai_model_scanning": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "advanced_ai_analysis": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value]
+                "ai_model_scanning": [PricingTier.STARTUP.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "advanced_ai_analysis": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "netherlands_bsn_detection": [PricingTier.STARTUP.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value]
             },
             
             "compliance_features": {
-                "compliance_certificates": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "dpia_automation": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "eu_ai_act_compliance": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "cost_savings_calculator": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value]
+                "compliance_certificates": [PricingTier.STARTUP.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "dpia_automation": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "eu_ai_act_compliance": [PricingTier.STARTUP.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "cost_savings_calculator": [PricingTier.STARTUP.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "guaranteed_savings": [PricingTier.STARTUP.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "netherlands_uavg_specialization": [PricingTier.STARTUP.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value]
             },
             
             "enterprise_features": {
-                "api_access": [PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "white_label_deployment": [PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "api_access": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "white_label_deployment": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
                 "custom_integrations": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "dedicated_support": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "dedicated_support": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "success_manager": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
                 "on_premises_deployment": [PricingTier.GOVERNMENT.value],
-                "source_code_access": [PricingTier.GOVERNMENT.value]
+                "source_code_access": [PricingTier.GOVERNMENT.value],
+                "legal_consultation": [PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value]
             }
         }
     
