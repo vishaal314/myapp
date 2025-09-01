@@ -18,6 +18,11 @@ def show_license_upgrade_page():
     
     st.title("🚀 Upgrade Your DataGuardian Pro License")
     
+    # Check if we should show confirmation form
+    if st.session_state.get('show_upgrade_confirmation', False):
+        show_upgrade_confirmation()
+        return
+    
     # Get current tier
     license_integration = LicenseIntegration()
     current_tier = license_integration.get_current_pricing_tier()
@@ -165,14 +170,24 @@ def handle_upgrade_selection(current_tier: PricingTier, target_tier: PricingTier
         'cost_info': cost_info
     }
     
-    # Show confirmation dialog
-    show_upgrade_confirmation()
+    # Set flag to show confirmation on next render
+    st.session_state['show_upgrade_confirmation'] = True
+    
+    # Trigger rerun to show confirmation form
+    st.rerun()
 
 def show_upgrade_confirmation():
     """Show upgrade confirmation and payment form"""
     
     if 'selected_upgrade' not in st.session_state:
         return
+    
+    # Back button
+    if st.button("← Back to Upgrade Options"):
+        st.session_state['show_upgrade_confirmation'] = False
+        if 'selected_upgrade' in st.session_state:
+            del st.session_state['selected_upgrade']
+        st.rerun()
     
     upgrade_info = st.session_state['selected_upgrade']
     current_tier = upgrade_info['current_tier']
@@ -271,6 +286,12 @@ def show_upgrade_confirmation():
                 st.error(f"Error in form processing: {str(e)}")
                 import traceback
                 st.code(traceback.format_exc())
+                
+            # Always clear the upgrade confirmation state after processing
+            if 'show_upgrade_confirmation' in st.session_state:
+                del st.session_state['show_upgrade_confirmation']
+            if 'selected_upgrade' in st.session_state:
+                del st.session_state['selected_upgrade']
 
 def process_upgrade_payment(current_tier: PricingTier, target_tier: PricingTier,
                           billing_cycle: BillingCycle, user_info: Dict[str, Any]):
