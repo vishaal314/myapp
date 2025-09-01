@@ -32,7 +32,11 @@ try:
     import torch.nn as nn
     TORCH_AVAILABLE = True
 except ImportError:
-    torch = None
+    class MockTorch:
+        nn = None
+        def load(self, *args, **kwargs):
+            raise ImportError("PyTorch not available")
+    torch = MockTorch()
     nn = None
     TORCH_AVAILABLE = False
 

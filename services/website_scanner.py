@@ -615,7 +615,7 @@ class WebsiteScanner:
                 if follow_links and depth < self.max_depth:
                     for link in page_data.get('same_domain_links', []):
                         if link not in visited_urls:
-                            queue.append((link, depth + 1))
+                            queue.append((link, 0))
                 
                 # Increment page count
                 page_count += 1

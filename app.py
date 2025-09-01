@@ -202,27 +202,32 @@ except ImportError:
     # Fallback definitions for activity tracking
     def track_scan_completed_wrapper(**kwargs): pass
     def track_scan_failed_wrapper(**kwargs): pass
-    class ScannerType:
-        DOCUMENT = "document"
-        IMAGE = "image" 
-        WEBSITE = "website"
-        CODE = "code"
-        DATABASE = "database"
-        DPIA = "dpia"
-        AI_MODEL = "ai_model"
-        SOC2 = "soc2"
-        SUSTAINABILITY = "sustainability"
-    # Removed duplicate function declarations
-    if 'get_session_id' not in globals():
-        def get_session_id(): 
-            """Fallback session ID"""
-            if 'session_id' not in st.session_state:
-                st.session_state.session_id = str(uuid.uuid4())
-            return st.session_state.session_id
-    if 'get_user_id' not in globals():
-        def get_user_id(): 
-            """Fallback user ID"""
-            return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
+    
+    # Import ScannerType from activity_tracker to avoid conflicts
+    try:
+        from utils.activity_tracker import ScannerType
+    except ImportError:
+        # Final fallback if activity_tracker is not available
+        class ScannerType:
+            DOCUMENT = "document"
+            IMAGE = "image" 
+            WEBSITE = "website"
+            CODE = "code"
+            DATABASE = "database"
+            DPIA = "dpia"
+            AI_MODEL = "ai_model"
+            SOC2 = "soc2"
+            SUSTAINABILITY = "sustainability"
+    
+    def get_session_id(): 
+        """Fallback session ID"""
+        if 'session_id' not in st.session_state:
+            st.session_state.session_id = str(uuid.uuid4())
+        return st.session_state.session_id
+        
+    def get_user_id(): 
+        """Fallback user ID"""
+        return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
 
 # Configure basic logging
 logging.basicConfig(

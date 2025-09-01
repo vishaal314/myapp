@@ -519,7 +519,7 @@ def _validate_international_transfers(content: str) -> Dict[str, Any]:
             score = 20
         elif high_violations > 0:
             score = 50
-        elif not any([has_adequacy, has_safeguards, has_bcr, has_derogation]):
+        elif not any([has_adequacy or False, has_safeguards or False, has_bcr or False, has_derogation or False]):
             score = 60
     
     return {

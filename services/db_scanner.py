@@ -27,7 +27,9 @@ try:
     import mysql.connector
     MYSQL_AVAILABLE = True
 except ImportError:
-    mysql = None
+    class MockMySQL:
+        connector = None
+    mysql = MockMySQL()
     MYSQL_AVAILABLE = False
 
 try:
@@ -173,7 +175,7 @@ class DBScanner:
                     params['ssl_disabled'] = False
                     params['ssl_verify_cert'] = True
                 
-                if MYSQL_AVAILABLE:
+                if MYSQL_AVAILABLE and mysql.connector:
                     self.connection = mysql.connector.connect(**params)
                 else:
                     raise Exception("MySQL connector not available")
@@ -443,7 +445,7 @@ class DBScanner:
                     **ssl_params
                 }
                 
-                if MYSQL_AVAILABLE:
+                if MYSQL_AVAILABLE and mysql.connector:
                     self.connection = mysql.connector.connect(**connection_params_final)
                 else:
                     raise Exception("MySQL connector not available")
