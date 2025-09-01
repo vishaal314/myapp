@@ -9,7 +9,7 @@ from typing import Dict, Any, Optional
 from config.pricing_config import get_pricing_config, PricingTier, BillingCycle
 from services.license_upgrade_payment import license_upgrade_payment_manager
 from services.license_integration import LicenseIntegration
-from utils.internationalization import get_translation as _
+from utils.i18n import get_text as _
 
 logger = logging.getLogger(__name__)
 
