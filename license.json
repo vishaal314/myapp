@@ -10,14 +10,14 @@
   "usage_limits": [
     {
       "limit_type": "scans_per_month",
-      "limit_value": 10000,
+      "limit_value": 999999,
       "current_usage": 0,
       "reset_period": "monthly",
       "last_reset": "2025-09-01T18:58:49.882811"
     },
     {
       "limit_type": "concurrent_users",
-      "limit_value": 100,
+      "limit_value": 999999,
       "current_usage": 0,
       "reset_period": "monthly",
       "last_reset": "2025-09-01T18:58:49.885948"
@@ -76,7 +76,7 @@
     "EU",
     "Global"
   ],
-  "max_concurrent_users": 100,
+  "max_concurrent_users": 999999,
   "is_active": true,
   "metadata": {
     "generated_by": "DataGuardian Pro License Manager",

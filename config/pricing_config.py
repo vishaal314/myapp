@@ -158,10 +158,13 @@ class PricingConfig:
                     "description": "On-premises deployment for government and large enterprises",
                     "target_employees": "Any",
                     "target_revenue": "Any",
+                    "monthly_price": 0,  # One-time license
                     "license_price": 15000,
                     "annual_maintenance": 2500,
                     "billing_cycle": BillingCycle.ONE_TIME.value,
                     "deployment": "on_premises",
+                    "max_scans_monthly": "unlimited",
+                    "max_data_sources": "unlimited",
                     "source_code_access": True,
                     "custom_development": True,
                     "support_level": "enterprise",
