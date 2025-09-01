@@ -899,6 +899,7 @@ def render_authenticated_interface():
             f"⚙️ {_('sidebar.settings', 'Settings')}",
             f"🔒 {_('sidebar.privacy_rights', 'Privacy Rights')}",
             "💰 Pricing & Plans",
+            "🚀 Upgrade License", 
             "🏢 Enterprise Repository Demo",
             "💳 iDEAL Payment Test"
         ]
@@ -1035,6 +1036,11 @@ def render_authenticated_interface():
         render_ideal_payment_test()
     elif selected_nav and "💰 Pricing & Plans" in selected_nav:
         render_pricing_page()
+    elif selected_nav and "🚀 Upgrade License" in selected_nav:
+        render_upgrade_page()
+    elif st.session_state.get('show_upgrade', False):
+        st.session_state['show_upgrade'] = False
+        render_upgrade_page()
     else:
         # Fallback: if no navigation key is determined, default to dashboard
         render_dashboard()
@@ -1047,6 +1053,15 @@ def render_pricing_page():
     except Exception as e:
         st.error(f"Error loading pricing page: {e}")
         st.info("Please contact support for pricing information.")
+
+def render_upgrade_page():
+    """Render the license upgrade page"""
+    try:
+        from components.license_upgrade import show_license_upgrade_page
+        show_license_upgrade_page()
+    except Exception as e:
+        st.error(f"Error loading upgrade page: {e}")
+        st.info("Please contact support for upgrade assistance.")
 
 def render_privacy_rights_page():
     """Render the privacy rights management page"""

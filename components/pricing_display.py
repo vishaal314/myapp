@@ -395,7 +395,9 @@ def show_pricing_in_sidebar():
                         st.session_state['show_pricing'] = True
                         st.rerun()
                 with col2:
-                    st.markdown(f"[Upgrade to {tier_name}]({upgrade_url})", unsafe_allow_html=True)
+                    if st.button(f"Upgrade", key="sidebar_upgrade_btn"):
+                        st.session_state['show_upgrade'] = True
+                        st.rerun()
             else:
                 if st.sidebar.button("View Pricing", key="sidebar_pricing"):
                     st.session_state['show_pricing'] = True
