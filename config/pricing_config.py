@@ -173,7 +173,7 @@ class PricingConfig:
             }
         }
     
-    def _load_features_matrix(self) -> Dict[str, Dict[str, bool]]:
+    def _load_features_matrix(self) -> Dict[str, Dict[str, List[str]]]:
         """Define features available per tier"""
         return {
             "core_features": {
@@ -298,7 +298,7 @@ class PricingConfig:
         
         for category, features in self.features_matrix.items():
             for feature, tiers in features.items():
-                if tier.value in tiers:
+                if isinstance(tiers, list) and tier.value in tiers:
                     available_features.append(feature)
         
         return available_features
