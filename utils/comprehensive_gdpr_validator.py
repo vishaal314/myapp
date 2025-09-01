@@ -180,13 +180,21 @@ def validate_comprehensive_gdpr_compliance(content: str, region: str = "Netherla
     special_data_compliance = _validate_special_categories(content)
     findings.extend(special_data_compliance['findings'])
     
-    # Validate international transfers
+    # Validate international transfers (Articles 44-49)
     transfer_compliance = _validate_international_transfers(content)
     findings.extend(transfer_compliance['findings'])
     
     # Validate breach notification requirements
     breach_compliance = _validate_breach_notification(content)
     findings.extend(breach_compliance['findings'])
+    
+    # Validate Data Protection by Design and by Default (Article 25)
+    design_compliance = _validate_data_protection_by_design(content)
+    findings.extend(design_compliance['findings'])
+    
+    # Validate Processor obligations (Article 28)
+    processor_compliance = _validate_processor_obligations(content)
+    findings.extend(processor_compliance['findings'])
     
     # Calculate overall compliance score
     compliance_score = _calculate_compliance_score(findings)
@@ -200,6 +208,8 @@ def validate_comprehensive_gdpr_compliance(content: str, region: str = "Netherla
         'special_data_compliance': special_data_compliance['score'],
         'transfer_compliance': transfer_compliance['score'],
         'breach_compliance': breach_compliance['score'],
+        'design_compliance': design_compliance['score'],
+        'processor_compliance': processor_compliance['score'],
         'overall_compliance_score': compliance_score,
         'compliance_status': _get_compliance_status(compliance_score),
         'findings': findings,
@@ -371,47 +381,146 @@ def _validate_special_categories(content: str) -> Dict[str, Any]:
     }
 
 def _validate_international_transfers(content: str) -> Dict[str, Any]:
-    """Validate international data transfers (Chapter V)."""
+    """Validate international transfer safeguards (Articles 44-49)."""
     findings = []
     
+    # Enhanced detection patterns for international transfers
     transfer_patterns = [
         r"\b(?:international\s+transfer|cross-?border\s+transfer|third\s+country\s+transfer)\b",
-        r"\b(?:adequacy\s+decision|standard\s+contractual\s+clauses|scc)\b",
-        r"\b(?:binding\s+corporate\s+rules|bcr|certification\s+mechanism)\b",
-        r"\b(?:usa|united\s+states|china|russia|india|non-?eu\s+country)\b"
+        r"\b(?:data\s+export|overseas\s+processing|global\s+processing)\b",
+        r"\b(?:us\s+cloud|american\s+server|chinese\s+server|non-?eu\s+server)\b"
     ]
     
-    has_international_transfer = any(
-        re.search(pattern, content, re.IGNORECASE) 
-        for pattern in transfer_patterns
+    # Specific third countries and regions
+    third_country_patterns = [
+        r"\b(?:usa|united\s+states|america|us\s+server)\b",
+        r"\b(?:china|chinese\s+server|hong\s+kong)\b", 
+        r"\b(?:india|singapore|australia|japan|south\s+korea)\b",
+        r"\b(?:canada|brazil|mexico|argentina)\b",
+        r"\b(?:russia|ukraine|turkey|israel)\b",
+        r"\b(?:uk|united\s+kingdom|britain|post-?brexit)\b"
+    ]
+    
+    # Cloud providers that may involve transfers
+    cloud_provider_patterns = [
+        r"\b(?:amazon\s+web\s+services|aws|s3\.amazonaws\.com)\b",
+        r"\b(?:google\s+cloud|gcp|firebase|app\s+engine)\b",
+        r"\b(?:microsoft\s+azure|azure\.com|office\s+365)\b",
+        r"\b(?:alibaba\s+cloud|tencent\s+cloud|baidu\s+cloud)\b"
+    ]
+    
+    has_international_transfer = (
+        any(re.search(pattern, content, re.IGNORECASE) for pattern in transfer_patterns) or
+        any(re.search(pattern, content, re.IGNORECASE) for pattern in third_country_patterns) or
+        any(re.search(pattern, content, re.IGNORECASE) for pattern in cloud_provider_patterns)
     )
     
-    has_safeguards = False  # Initialize variable
     if has_international_transfer:
-        # Check for appropriate safeguards
-        safeguard_patterns = [
-            r"\b(?:adequacy\s+decision|appropriate\s+safeguard|suitable\s+safeguard)\b",
-            r"\b(?:standard\s+contractual\s+clauses|binding\s+corporate\s+rules)\b",
-            r"\b(?:certification|transfer\s+impact\s+assessment|tia)\b"
+        # Article 45: Adequacy decisions
+        adequacy_patterns = [
+            r"\b(?:adequacy\s+decision|adequate\s+level\s+of\s+protection)\b",
+            r"\b(?:andorra|argentina|canada|faroe\s+islands|guernsey|isle\s+of\s+man|israel|japan|jersey|new\s+zealand|switzerland|uruguay|uk\s+gdpr)\b"
         ]
         
-        has_safeguards = any(
-            re.search(pattern, content, re.IGNORECASE) 
-            for pattern in safeguard_patterns
-        )
+        has_adequacy = any(re.search(pattern, content, re.IGNORECASE) for pattern in adequacy_patterns)
         
-        if not has_safeguards:
+        # Article 46: Appropriate safeguards  
+        safeguard_patterns = [
+            r"\b(?:standard\s+contractual\s+clauses|scc|model\s+clauses)\b",
+            r"\b(?:binding\s+corporate\s+rules|bcr|intra-?group\s+agreement)\b",
+            r"\b(?:certification\s+mechanism|approved\s+code\s+of\s+conduct)\b",
+            r"\b(?:transfer\s+impact\s+assessment|tia|supplementary\s+measures)\b"
+        ]
+        
+        has_safeguards = any(re.search(pattern, content, re.IGNORECASE) for pattern in safeguard_patterns)
+        
+        # Article 47: Binding corporate rules
+        bcr_patterns = [
+            r"\b(?:binding\s+corporate\s+rules|bcr\s+approval|supervisory\s+authority\s+approval)\b",
+            r"\b(?:multinational\s+group|corporate\s+group\s+policy|intra-?group\s+transfer)\b"
+        ]
+        
+        has_bcr = any(re.search(pattern, content, re.IGNORECASE) for pattern in bcr_patterns)
+        
+        # Article 49: Derogations for specific situations
+        derogation_patterns = [
+            r"\b(?:explicit\s+consent\s+for\s+transfer|informed\s+consent\s+to\s+transfer)\b",
+            r"\b(?:contract\s+performance|pre-?contractual\s+measures)\b",
+            r"\b(?:public\s+interest|vital\s+interest|legal\s+claim)\b",
+            r"\b(?:legitimate\s+interest.*compelling|occasional\s+transfer)\b"
+        ]
+        
+        has_derogation = any(re.search(pattern, content, re.IGNORECASE) for pattern in derogation_patterns)
+        
+        # Check for Schrems II compliance (supplementary measures)
+        schrems_patterns = [
+            r"\b(?:schrems\s+ii|surveillance\s+laws|government\s+access)\b",
+            r"\b(?:supplementary\s+measures|additional\s+safeguards|encryption\s+in\s+transit)\b",
+            r"\b(?:end-?to-?end\s+encryption|pseudonymization\s+before\s+transfer)\b"
+        ]
+        
+        has_schrems_compliance = any(re.search(pattern, content, re.IGNORECASE) for pattern in schrems_patterns)
+        
+        # Evaluate transfer compliance
+        legal_basis_found = has_adequacy or has_safeguards or has_bcr or has_derogation
+        
+        if not legal_basis_found:
             findings.append({
-                'type': 'INTERNATIONAL_TRANSFER_VIOLATION',
+                'type': 'INTERNATIONAL_TRANSFER_NO_LEGAL_BASIS',
                 'category': 'International Transfers',
-                'value': 'Transfer without adequate safeguards',
+                'value': 'Transfer without legal basis',
+                'risk_level': 'Critical',
+                'regulation': 'GDPR Articles 44-49',
+                'description': "International data transfer detected without adequate legal basis (no adequacy decision, appropriate safeguards, or valid derogation)",
+                'remediation': "Establish legal basis: adequacy decision (Art. 45), appropriate safeguards (Art. 46), BCRs (Art. 47), or valid derogation (Art. 49)"
+            })
+        
+        # Check for US transfers requiring Schrems II compliance
+        us_transfer_patterns = [r"\b(?:usa|united\s+states|us\s+server|american\s+cloud)\b"]
+        has_us_transfer = any(re.search(pattern, content, re.IGNORECASE) for pattern in us_transfer_patterns)
+        
+        if has_us_transfer and not has_schrems_compliance and not has_adequacy:
+            findings.append({
+                'type': 'SCHREMS_II_COMPLIANCE_MISSING',
+                'category': 'International Transfers', 
+                'value': 'US transfer without Schrems II compliance',
                 'risk_level': 'High',
-                'regulation': 'GDPR Chapter V',
-                'description': "International data transfer detected without appropriate safeguards",
-                'remediation': "Implement appropriate safeguards (adequacy decision, SCCs, BCRs, etc.)"
+                'regulation': 'GDPR Article 46 + Schrems II',
+                'description': "Transfer to US detected without supplementary measures required post-Schrems II",
+                'remediation': "Implement supplementary measures: end-to-end encryption, pseudonymization, contractual guarantees against surveillance"
+            })
+        
+        # Check for prohibited transfers under Article 46
+        prohibited_patterns = [
+            r"\b(?:mass\s+surveillance|government\s+backdoor|unencrypted\s+transfer)\b",
+            r"\b(?:no\s+data\s+protection|weak\s+privacy\s+laws|unrestricted\s+access)\b"
+        ]
+        
+        has_prohibited_transfer = any(re.search(pattern, content, re.IGNORECASE) for pattern in prohibited_patterns)
+        
+        if has_prohibited_transfer:
+            findings.append({
+                'type': 'PROHIBITED_TRANSFER_METHOD',
+                'category': 'International Transfers',
+                'value': 'Prohibited transfer method detected',
+                'risk_level': 'Critical', 
+                'regulation': 'GDPR Article 46',
+                'description': "Transfer using methods that do not provide adequate protection (mass surveillance, unencrypted, unrestricted government access)",
+                'remediation': "Cease prohibited transfer methods, implement appropriate safeguards with supplementary measures"
             })
     
-    score = 100 if not has_international_transfer or has_safeguards else 40
+    # Calculate comprehensive score
+    score = 100
+    if has_international_transfer:
+        critical_violations = len([f for f in findings if f.get('risk_level') == 'Critical'])
+        high_violations = len([f for f in findings if f.get('risk_level') == 'High'])
+        
+        if critical_violations > 0:
+            score = 20
+        elif high_violations > 0:
+            score = 50
+        elif not any([has_adequacy, has_safeguards, has_bcr, has_derogation]):
+            score = 60
     
     return {
         'score': score,
@@ -464,6 +573,175 @@ def _validate_breach_notification(content: str) -> Dict[str, Any]:
         'findings': findings
     }
 
+def _validate_data_protection_by_design(content: str) -> Dict[str, Any]:
+    """Validate Data Protection by Design and by Default (Article 25)."""
+    findings = []
+    
+    # Check for privacy by design indicators
+    design_patterns = [
+        r"\b(?:privacy\s+by\s+design|data\s+protection\s+by\s+design)\b",
+        r"\b(?:privacy\s+by\s+default|data\s+protection\s+by\s+default)\b",
+        r"\b(?:built-?in\s+privacy|privacy\s+engineering|privacy\s+architecture)\b",
+        r"\b(?:data\s+minimization\s+by\s+design|purpose\s+limitation\s+by\s+design)\b"
+    ]
+    
+    # Check for privacy engineering practices
+    engineering_patterns = [
+        r"\b(?:pseudonymization|anonymization|encryption\s+by\s+default)\b",
+        r"\b(?:access\s+controls?\s+by\s+design|role-?based\s+access\s+by\s+design)\b",
+        r"\b(?:audit\s+logging\s+by\s+design|monitoring\s+by\s+design)\b",
+        r"\b(?:consent\s+management\s+by\s+design|opt-?out\s+by\s+default)\b"
+    ]
+    
+    has_design_principles = any(
+        re.search(pattern, content, re.IGNORECASE) 
+        for pattern in design_patterns
+    )
+    
+    has_engineering_practices = any(
+        re.search(pattern, content, re.IGNORECASE) 
+        for pattern in engineering_patterns
+    )
+    
+    # Check for violations (systems without privacy considerations)
+    violation_patterns = [
+        r"\b(?:collect\s+all\s+data|store\s+everything|maximum\s+data\s+collection)\b",
+        r"\b(?:no\s+privacy\s+controls|privacy\s+not\s+considered|privacy\s+afterthought)\b",
+        r"\b(?:opt-?in\s+by\s+default|sharing\s+by\s+default|public\s+by\s+default)\b"
+    ]
+    
+    has_violations = any(
+        re.search(pattern, content, re.IGNORECASE) 
+        for pattern in violation_patterns
+    )
+    
+    # Evaluate compliance
+    if has_violations:
+        findings.append({
+            'type': 'DATA_PROTECTION_BY_DESIGN_VIOLATION',
+            'category': 'Privacy by Design',
+            'value': 'Privacy by design principles not implemented',
+            'risk_level': 'High',
+            'regulation': 'GDPR Article 25',
+            'description': "System design violates data protection by design and by default principles",
+            'remediation': "Implement privacy by design: data minimization, pseudonymization, privacy-friendly defaults"
+        })
+    
+    if not has_design_principles and not has_engineering_practices:
+        findings.append({
+            'type': 'DATA_PROTECTION_BY_DESIGN_MISSING',
+            'category': 'Privacy by Design',
+            'value': 'No privacy by design indicators found',
+            'risk_level': 'Medium',
+            'regulation': 'GDPR Article 25',
+            'description': "No evidence of data protection by design and by default implementation",
+            'remediation': "Integrate privacy considerations into system design and implement privacy by default settings"
+        })
+    
+    # Calculate score
+    score = 100
+    if has_violations:
+        score -= 40
+    if not has_design_principles:
+        score -= 20
+    if not has_engineering_practices:
+        score -= 15
+    
+    return {
+        'score': max(0, score),
+        'findings': findings
+    }
+
+def _validate_processor_obligations(content: str) -> Dict[str, Any]:
+    """Validate Processor obligations (Article 28)."""
+    findings = []
+    
+    # Check for processor relationship indicators
+    processor_patterns = [
+        r"\b(?:data\s+processor|processing\s+agreement|processor\s+contract)\b",
+        r"\b(?:sub-?processor|third\s+party\s+processor|service\s+provider)\b",
+        r"\b(?:cloud\s+provider|hosting\s+provider|saas\s+provider)\b"
+    ]
+    
+    has_processor_relationship = any(
+        re.search(pattern, content, re.IGNORECASE) 
+        for pattern in processor_patterns
+    )
+    
+    if has_processor_relationship:
+        # Check for required contractual elements
+        contract_patterns = [
+            r"\b(?:processing\s+instructions|written\s+authorization|documented\s+instructions)\b",
+            r"\b(?:confidentiality\s+obligation|staff\s+confidentiality|employee\s+confidentiality)\b",
+            r"\b(?:security\s+measures|technical\s+safeguards|organizational\s+measures)\b",
+            r"\b(?:sub-?processor\s+authorization|sub-?contractor\s+approval)\b",
+            r"\b(?:data\s+subject\s+rights|assist\s+controller|support\s+controller)\b",
+            r"\b(?:data\s+return|data\s+deletion|end\s+of\s+processing)\b",
+            r"\b(?:audit\s+rights|inspection\s+rights|compliance\s+monitoring)\b"
+        ]
+        
+        missing_elements = []
+        contract_element_names = [
+            "processing instructions",
+            "confidentiality obligations", 
+            "security measures",
+            "sub-processor authorization",
+            "data subject rights assistance",
+            "data return/deletion",
+            "audit rights"
+        ]
+        
+        for i, pattern in enumerate(contract_patterns):
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_elements.append(contract_element_names[i])
+        
+        if missing_elements:
+            findings.append({
+                'type': 'PROCESSOR_CONTRACT_INCOMPLETE',
+                'category': 'Processor Obligations',
+                'value': f'Missing contract elements: {", ".join(missing_elements[:3])}...' if len(missing_elements) > 3 else f'Missing: {", ".join(missing_elements)}',
+                'risk_level': 'High',
+                'regulation': 'GDPR Article 28',
+                'description': f"Data processing agreement missing required elements: {', '.join(missing_elements)}",
+                'remediation': "Update processor contracts to include all Article 28 requirements: instructions, confidentiality, security, sub-processors, rights assistance, data return, audits"
+            })
+        
+        # Check for prohibited processing
+        prohibited_patterns = [
+            r"\b(?:unauthorized\s+processing|processing\s+without\s+instructions)\b",
+            r"\b(?:use\s+data\s+for\s+own\s+purposes|secondary\s+use\s+of\s+data)\b",
+            r"\b(?:retain\s+data\s+after\s+contract|keep\s+data\s+permanently)\b"
+        ]
+        
+        has_prohibited_activities = any(
+            re.search(pattern, content, re.IGNORECASE) 
+            for pattern in prohibited_patterns
+        )
+        
+        if has_prohibited_activities:
+            findings.append({
+                'type': 'PROCESSOR_PROHIBITED_ACTIVITY',
+                'category': 'Processor Obligations',
+                'value': 'Prohibited processor activities detected',
+                'risk_level': 'Critical',
+                'regulation': 'GDPR Article 28',
+                'description': "Processor engaging in prohibited activities (unauthorized processing, secondary use, retention)",
+                'remediation': "Cease unauthorized processing, implement strict instruction compliance, ensure data deletion after contract termination"
+            })
+    
+    # Calculate score
+    score = 100
+    if has_processor_relationship:
+        if any(f.get('risk_level') == 'Critical' for f in findings):
+            score = 20
+        elif any(f.get('risk_level') == 'High' for f in findings):
+            score = 60
+    
+    return {
+        'score': score,
+        'findings': findings
+    }
+
 def _calculate_compliance_score(findings: List[Dict[str, Any]]) -> int:
     """Calculate overall GDPR compliance score."""
     if not findings:
@@ -504,17 +782,28 @@ def _generate_comprehensive_recommendations(findings: List[Dict[str, Any]]) -> L
         recommendations.add("Establish explicit consent mechanisms for special categories of personal data")
     
     if any('INTERNATIONAL_TRANSFER' in ft for ft in finding_types):
-        recommendations.add("Implement appropriate safeguards for international data transfers")
+        recommendations.add("Implement appropriate safeguards for international data transfers including Schrems II compliance")
     
     if any('BREACH_NOTIFICATION' in ft for ft in finding_types):
         recommendations.add("Develop and test incident response and breach notification procedures")
+    
+    if any('DATA_PROTECTION_BY_DESIGN' in ft for ft in finding_types):
+        recommendations.add("Integrate privacy by design and by default into all system development processes")
+    
+    if any('PROCESSOR' in ft for ft in finding_types):
+        recommendations.add("Review and update all data processing agreements to ensure Article 28 compliance")
+    
+    if any('SCHREMS_II' in ft for ft in finding_types):
+        recommendations.add("Implement supplementary measures for US data transfers post-Schrems II ruling")
     
     # Always include these general recommendations
     recommendations.update([
         "Conduct regular GDPR compliance assessments",
         "Provide ongoing GDPR training for all staff",
         "Maintain comprehensive records of processing activities",
-        "Implement privacy by design and default principles"
+        "Implement privacy by design and default principles",
+        "Review all third-party processor contracts annually",
+        "Conduct Transfer Impact Assessments for international data flows"
     ])
     
     return list(recommendations)
