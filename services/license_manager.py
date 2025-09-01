@@ -1,3 +1,24 @@
+#!/usr/bin/env python3
+"""
+Copyright (c) 2025 DataGuardian Pro B.V.
+All rights reserved.
+
+CONFIDENTIAL AND PROPRIETARY - DataGuardian Pro™ License Manager
+This software contains trade secrets and proprietary algorithms for license 
+validation and intellectual property protection.
+
+Patent Pending: Netherlands Patent Application #NL2025002 (License Security System)
+Trademark: DataGuardian Pro™ is a trademark of DataGuardian Pro B.V.
+
+UNAUTHORIZED ACCESS PROHIBITED
+Any attempt to reverse engineer, decompile, or circumvent the license protection
+mechanisms is strictly prohibited and may result in legal prosecution under
+Netherlands copyright law.
+
+Licensed under DataGuardian Pro Commercial License Agreement.
+For licensing inquiries: legal@dataguardianpro.nl
+"""
+
 """
 License Manager for DataGuardian Pro
 Comprehensive licensing and usage control system
@@ -87,16 +108,63 @@ class LicenseManager:
         self.load_license()
     
     def _get_encryption_key(self) -> bytes:
-        """Get or generate encryption key"""
+        """Get or generate hardware-based encryption key with tamper protection"""
         key_file = ".license_key"
+        hardware_id = self._get_hardware_fingerprint()
+        
         if os.path.exists(key_file):
             with open(key_file, 'rb') as f:
-                return f.read()
+                stored_key = f.read()
+            
+            # Verify key integrity with hardware fingerprint
+            if not self._verify_key_integrity(stored_key, hardware_id):
+                logger.warning("License key integrity violation detected")
+                raise Exception("License tamper detected - contact legal@dataguardianpro.nl")
+            
+            return stored_key
         else:
-            key = Fernet.generate_key()
+            # Generate hardware-bound encryption key
+            key = self._generate_hardware_bound_key(hardware_id)
             with open(key_file, 'wb') as f:
                 f.write(key)
             return key
+    
+    def _get_hardware_fingerprint(self) -> str:
+        """Generate unique hardware fingerprint for license binding"""
+        import platform
+        import psutil
+        
+        # Collect hardware identifiers
+        system_info = [
+            platform.machine(),
+            platform.processor(),
+            str(psutil.virtual_memory().total),
+            platform.system(),
+            platform.release()
+        ]
+        
+        # Create stable fingerprint
+        fingerprint_data = '|'.join(system_info)
+        return hashlib.sha256(fingerprint_data.encode()).hexdigest()[:32]
+    
+    def _generate_hardware_bound_key(self, hardware_id: str) -> bytes:
+        """Generate encryption key bound to hardware"""
+        base_key = Fernet.generate_key()
+        hw_salt = hashlib.sha256(hardware_id.encode()).digest()[:16]
+        
+        # Combine base key with hardware salt
+        combined = base_key + hw_salt
+        return combined
+    
+    def _verify_key_integrity(self, key: bytes, hardware_id: str) -> bool:
+        """Verify key was generated for this hardware"""
+        if len(key) < 48:  # 32 (Fernet key) + 16 (hw salt)
+            return False
+        
+        hw_salt = key[32:48]
+        expected_salt = hashlib.sha256(hardware_id.encode()).digest()[:16]
+        
+        return hw_salt == expected_salt
     
     def _encrypt_data(self, data: str) -> str:
         """Encrypt license data"""

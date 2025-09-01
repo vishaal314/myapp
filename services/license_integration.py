@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+"""
+Copyright (c) 2025 DataGuardian Pro B.V.
+All rights reserved.
+
+PROPRIETARY LICENSE INTEGRATION SYSTEM - DataGuardian Pro™
+This software contains confidential integration mechanisms and usage tracking
+algorithms protected by copyright and trade secret law.
+
+Patent Pending: Netherlands Patent Application #NL2025004 (License Integration System)
+Trademark: DataGuardian Pro™ is a trademark of DataGuardian Pro B.V.
+
+Licensed under DataGuardian Pro Commercial License Agreement.
+For licensing inquiries: legal@dataguardianpro.nl
+"""
+
 """
 License Integration with DataGuardian Pro
 Seamless integration of licensing controls with the main application

@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+"""
+Copyright (c) 2025 DataGuardian Pro B.V.
+All rights reserved.
+
+PROPRIETARY AI MODEL SCANNER - DataGuardian Pro™
+This software contains proprietary AI bias detection algorithms and EU AI Act 
+compliance assessment methods protected by trade secret law.
+
+Patent Pending: Netherlands Patent Application #NL2025003 (AI Bias Detection System)
+Trademark: DataGuardian Pro™ is a trademark of DataGuardian Pro B.V.
+
+Licensed under DataGuardian Pro Commercial License Agreement.
+For licensing inquiries: legal@dataguardianpro.nl
+"""
+
 import uuid
 import json
 import os

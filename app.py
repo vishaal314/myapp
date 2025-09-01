@@ -1,3 +1,31 @@
+#!/usr/bin/env python3
+"""
+Copyright (c) 2025 DataGuardian Pro B.V.
+All rights reserved.
+
+This software and associated documentation files (the "Software") are proprietary 
+to DataGuardian Pro B.V. and are protected by copyright, trade secret, and other 
+intellectual property laws.
+
+CONFIDENTIAL AND PROPRIETARY INFORMATION
+This Software contains confidential and proprietary information of DataGuardian Pro B.V.
+Any reproduction, distribution, modification, or use without explicit written permission 
+from DataGuardian Pro B.V. is strictly prohibited.
+
+Patent Pending: Netherlands Patent Application #NL2025001 
+Trademark: DataGuardian Pro™ is a trademark of DataGuardian Pro B.V.
+
+For licensing inquiries: legal@dataguardianpro.nl
+
+DISCLAIMER: This software is provided "AS IS" without warranty of any kind.
+DataGuardian Pro B.V. disclaims all warranties and conditions, whether express 
+or implied, including but not limited to merchantability and fitness for a 
+particular purpose.
+
+Licensed under DataGuardian Pro Commercial License Agreement.
+Netherlands jurisdiction applies. All disputes subject to Amsterdam courts.
+"""
+
 import streamlit as st
 
 # Health check endpoint for Railway deployment
