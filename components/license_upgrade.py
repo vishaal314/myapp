@@ -245,18 +245,7 @@ def show_upgrade_confirmation():
         # Payment button
         submitted = st.form_submit_button("💳 Proceed to Payment", type="primary")
         
-        # Debug the form state
         if submitted:
-            st.write("🔍 FORM DEBUG INFO:")
-            st.write(f"Form submitted: {submitted}")
-            st.write(f"Email: '{email}'")
-            st.write(f"First name: '{first_name}'") 
-            st.write(f"Terms accepted: {terms_accepted}")
-            st.write(f"Session state keys: {list(st.session_state.keys())}")
-        
-        if submitted:
-            st.info("Processing your request...")
-            
             if not email or not first_name:
                 st.error("Please fill in all required fields")
                 return
@@ -264,10 +253,6 @@ def show_upgrade_confirmation():
             if not terms_accepted:
                 st.error("Please accept the Terms of Service to continue")
                 return
-            
-            # Debug info
-            st.success(f"✅ Form validation passed!")
-            st.info(f"Creating payment session for {email}...")
             
             # Create payment session
             try:
@@ -297,20 +282,14 @@ def process_upgrade_payment(current_tier: PricingTier, target_tier: PricingTier,
                           billing_cycle: BillingCycle, user_info: Dict[str, Any]):
     """Process the upgrade payment"""
     
-    st.info("Starting payment processing...")
-    
     with st.spinner("Creating secure payment session..."):
         try:
-            st.info(f"Calling create_upgrade_checkout_session with: {current_tier.value} → {target_tier.value}")
-            
             result = license_upgrade_payment_manager.create_upgrade_checkout_session(
                 current_tier=current_tier,
                 target_tier=target_tier,
                 billing_cycle=billing_cycle,
                 user_info=user_info
             )
-            
-            st.info(f"Payment manager returned: {result}")
             
             if result.get("success"):
                 st.success("✅ Payment session created successfully!")
