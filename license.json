@@ -11,30 +11,30 @@
     {
       "limit_type": "scans_per_month",
       "limit_value": 10000,
-      "current_usage": 47,
+      "current_usage": 0,
       "reset_period": "monthly",
-      "last_reset": "2025-08-02T17:27:21.959946"
+      "last_reset": "2025-09-01T18:58:49.882811"
     },
     {
       "limit_type": "concurrent_users",
       "limit_value": 100,
       "current_usage": 0,
       "reset_period": "monthly",
-      "last_reset": "2025-08-02T17:27:21.965023"
+      "last_reset": "2025-09-01T18:58:49.885948"
     },
     {
       "limit_type": "export_reports",
       "limit_value": 999999,
-      "current_usage": 21,
+      "current_usage": 0,
       "reset_period": "monthly",
-      "last_reset": "2025-08-02T17:27:21.966366"
+      "last_reset": "2025-09-01T18:58:49.886298"
     },
     {
       "limit_type": "scanner_types",
       "limit_value": 10,
       "current_usage": 0,
       "reset_period": "monthly",
-      "last_reset": "2025-08-02T17:27:21.967848"
+      "last_reset": "2025-09-01T18:58:49.887425"
     }
   ],
   "allowed_features": [
