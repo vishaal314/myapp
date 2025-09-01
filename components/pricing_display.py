@@ -378,6 +378,25 @@ def show_pricing_in_sidebar():
         
         if current_tier != PricingTier.ENTERPRISE:
             st.sidebar.markdown("Upgrade for more features:")
-            if st.sidebar.button("View Pricing", key="sidebar_pricing"):
-                st.session_state['show_pricing'] = True
-                st.rerun()
+            
+            # Show upgrade URLs based on current tier
+            upgrade_options = {
+                PricingTier.STARTUP: ("Professional", "https://dataguardianpro.nl/pricing?upgrade=professional"),
+                PricingTier.PROFESSIONAL: ("Growth", "https://dataguardianpro.nl/pricing?upgrade=growth"), 
+                PricingTier.GROWTH: ("Scale", "https://dataguardianpro.nl/pricing?upgrade=scale"),
+                PricingTier.SCALE: ("Enterprise", "https://dataguardianpro.nl/pricing?upgrade=enterprise")
+            }
+            
+            if current_tier in upgrade_options:
+                tier_name, upgrade_url = upgrade_options[current_tier]
+                col1, col2 = st.sidebar.columns(2)
+                with col1:
+                    if st.button("View Pricing", key="sidebar_pricing"):
+                        st.session_state['show_pricing'] = True
+                        st.rerun()
+                with col2:
+                    st.markdown(f"[Upgrade to {tier_name}]({upgrade_url})", unsafe_allow_html=True)
+            else:
+                if st.sidebar.button("View Pricing", key="sidebar_pricing"):
+                    st.session_state['show_pricing'] = True
+                    st.rerun()

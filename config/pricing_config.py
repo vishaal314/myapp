@@ -105,8 +105,8 @@ class PricingConfig:
                 },
                 
                 PricingTier.SCALE.value: {
-                    "name": "Scale Enterprise",
-                    "description": "Full enterprise automation + dedicated team - 83% cost savings vs OneTrust (€4,990 vs €29,000)",
+                    "name": "Scale Professional",
+                    "description": "Enterprise automation + dedicated support team - 83% cost savings vs OneTrust (€4,990 vs €29,000)",
                     "target_employees": "100-500",
                     "target_revenue": "€10M - €50M", 
                     "monthly_price": 499,  # Premium positioning for maximum value

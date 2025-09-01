@@ -159,7 +159,7 @@ class CostSavingsCalculator:
                 "savings_vs_competitor": 7010
             },
             "scale": {
-                "name": "Scale Enterprise",
+                "name": "Scale Professional",
                 "employees": "100-500", 
                 "monthly_price": 399,
                 "annual_price": 3990,  # 2 months free
