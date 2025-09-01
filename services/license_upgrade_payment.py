@@ -48,11 +48,20 @@ class LicenseUpgradePaymentManager:
         
         for tier in tier_hierarchy[current_index + 1:]:
             tier_data = self.pricing_config.pricing_data["tiers"][tier.value]
+            
+            # Handle Government tier which has license_price instead of annual_price
+            if tier == PricingTier.GOVERNMENT:
+                monthly_price = tier_data.get("monthly_price", 0)
+                annual_price = tier_data.get("license_price", 15000)  # One-time license fee
+            else:
+                monthly_price = tier_data["monthly_price"]
+                annual_price = tier_data["annual_price"]
+            
             upgrade_tiers.append({
                 "tier": tier,
                 "name": tier_data["name"],
-                "monthly_price": tier_data["monthly_price"],
-                "annual_price": tier_data["annual_price"],
+                "monthly_price": monthly_price,
+                "annual_price": annual_price,
                 "description": tier_data["description"],
                 "features": self.pricing_config.get_features_for_tier(tier)[:5]
             })
