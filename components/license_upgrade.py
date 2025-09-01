@@ -208,22 +208,36 @@ def show_upgrade_confirmation():
     # Customer information form
     st.markdown("#### 📝 Billing Information")
     
-    with st.form("upgrade_payment_form"):
+    # Use a unique form key to avoid conflicts
+    form_key = f"upgrade_payment_form_{current_tier.value}_{target_tier.value}_{billing_cycle.value}"
+    
+    with st.form(form_key):
+        st.info("Please fill in your billing information below")
+        
         col1, col2 = st.columns(2)
         
         with col1:
-            email = st.text_input("Email Address", value=st.session_state.get('user_email', ''))
-            first_name = st.text_input("First Name")
+            email = st.text_input("Email Address", value=st.session_state.get('user_email', ''), key=f"email_{form_key}")
+            first_name = st.text_input("First Name", key=f"fname_{form_key}")
         
         with col2:
-            company = st.text_input("Company Name (Optional)")
-            country = st.selectbox("Country", ["NL", "DE", "FR", "BE"], index=0)
+            company = st.text_input("Company Name (Optional)", key=f"company_{form_key}")
+            country = st.selectbox("Country", ["NL", "DE", "FR", "BE"], index=0, key=f"country_{form_key}")
         
         # Terms acceptance
-        terms_accepted = st.checkbox("I accept the Terms of Service and Privacy Policy")
+        terms_accepted = st.checkbox("I accept the Terms of Service and Privacy Policy", key=f"terms_{form_key}")
         
         # Payment button
         submitted = st.form_submit_button("💳 Proceed to Payment", type="primary")
+        
+        # Debug the form state
+        if submitted:
+            st.write("🔍 FORM DEBUG INFO:")
+            st.write(f"Form submitted: {submitted}")
+            st.write(f"Email: '{email}'")
+            st.write(f"First name: '{first_name}'") 
+            st.write(f"Terms accepted: {terms_accepted}")
+            st.write(f"Session state keys: {list(st.session_state.keys())}")
         
         if submitted:
             st.info("Processing your request...")
