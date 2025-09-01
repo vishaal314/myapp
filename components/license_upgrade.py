@@ -226,6 +226,8 @@ def show_upgrade_confirmation():
         submitted = st.form_submit_button("💳 Proceed to Payment", type="primary")
         
         if submitted:
+            st.info("Processing your request...")
+            
             if not email or not first_name:
                 st.error("Please fill in all required fields")
                 return
@@ -234,31 +236,46 @@ def show_upgrade_confirmation():
                 st.error("Please accept the Terms of Service to continue")
                 return
             
+            # Debug info
+            st.success(f"✅ Form validation passed!")
+            st.info(f"Creating payment session for {email}...")
+            
             # Create payment session
-            process_upgrade_payment(
-                current_tier, target_tier, billing_cycle,
-                {
-                    'email': email,
-                    'first_name': first_name,
-                    'company': company,
-                    'country': country,
-                    'user_id': st.session_state.get('user_id', ''),
-                    'license_id': st.session_state.get('license_id', '')
-                }
-            )
+            try:
+                process_upgrade_payment(
+                    current_tier, target_tier, billing_cycle,
+                    {
+                        'email': email,
+                        'first_name': first_name,
+                        'company': company,
+                        'country': country,
+                        'user_id': st.session_state.get('user_id', ''),
+                        'license_id': st.session_state.get('license_id', '')
+                    }
+                )
+            except Exception as e:
+                st.error(f"Error in form processing: {str(e)}")
+                import traceback
+                st.code(traceback.format_exc())
 
 def process_upgrade_payment(current_tier: PricingTier, target_tier: PricingTier,
                           billing_cycle: BillingCycle, user_info: Dict[str, Any]):
     """Process the upgrade payment"""
     
+    st.info("Starting payment processing...")
+    
     with st.spinner("Creating secure payment session..."):
         try:
+            st.info(f"Calling create_upgrade_checkout_session with: {current_tier.value} → {target_tier.value}")
+            
             result = license_upgrade_payment_manager.create_upgrade_checkout_session(
                 current_tier=current_tier,
                 target_tier=target_tier,
                 billing_cycle=billing_cycle,
                 user_info=user_info
             )
+            
+            st.info(f"Payment manager returned: {result}")
             
             if result.get("success"):
                 st.success("✅ Payment session created successfully!")
