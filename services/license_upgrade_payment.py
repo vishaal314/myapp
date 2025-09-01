@@ -139,8 +139,8 @@ class LicenseUpgradePaymentManager:
                     'quantity': 1,
                 }],
                 mode='payment',
-                success_url=success_url or f'{os.getenv("REPLIT_DOMAINS", "https://dataguardianpro.nl")}/upgrade-success?session_id={{CHECKOUT_SESSION_ID}}',
-                cancel_url=cancel_url or f'{os.getenv("REPLIT_DOMAINS", "https://dataguardianpro.nl")}/pricing',
+                success_url=success_url or 'https://dataguardianpro.nl/upgrade-success?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=cancel_url or 'https://dataguardianpro.nl/pricing',
                 customer_email=user_info.get('email'),
                 metadata=sanitize_metadata({
                     'upgrade_type': 'license_tier',
