@@ -270,19 +270,35 @@ def process_upgrade_payment(current_tier: PricingTier, target_tier: PricingTier,
                 
                 # Payment button with external link
                 checkout_url = result["checkout_url"]
-                st.markdown(f"""
-                <div style="text-align: center; margin: 20px 0;">
-                    <a href="{checkout_url}" target="_blank" style="
-                        background-color: #ff6b6b;
-                        color: white;
-                        padding: 15px 30px;
-                        text-decoration: none;
-                        border-radius: 5px;
-                        font-weight: bold;
-                        display: inline-block;
-                    ">🚀 Complete Upgrade Payment</a>
-                </div>
-                """, unsafe_allow_html=True)
+                
+                # Create two buttons - one for new tab, one for redirect
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown(f"""
+                    <div style="text-align: center; margin: 20px 0;">
+                        <a href="{checkout_url}" target="_blank" style="
+                            background-color: #ff6b6b;
+                            color: white;
+                            padding: 15px 30px;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            font-weight: bold;
+                            display: inline-block;
+                        ">🚀 Pay in New Tab</a>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    # JavaScript redirect button
+                    if st.button("💳 Pay Now (Redirect)", type="primary", help="Redirect to secure payment"):
+                        st.markdown(f"""
+                        <script>
+                        window.open('{checkout_url}', '_self');
+                        </script>
+                        """, unsafe_allow_html=True)
+                        st.success("Redirecting to secure payment...")
+                        st.rerun()
                 
                 st.info("""
                 **What happens next:**

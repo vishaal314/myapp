@@ -281,10 +281,16 @@ class PricingConfig:
             pricing["price"] = tier_data["monthly_price"]
             pricing["billing_frequency"] = "monthly"
         elif billing_cycle == BillingCycle.ANNUAL:
-            pricing["price"] = tier_data["annual_price"]
-            pricing["billing_frequency"] = "annual"
-            pricing["savings"] = (tier_data["monthly_price"] * 12) - tier_data["annual_price"]
-            pricing["discount_percentage"] = round((pricing["savings"] / (tier_data["monthly_price"] * 12)) * 100)
+            # Handle Government tier which uses license_price instead of annual_price
+            if tier == PricingTier.GOVERNMENT:
+                pricing["price"] = tier_data.get("license_price", 15000)
+                pricing["billing_frequency"] = "one_time"
+                pricing["maintenance_fee"] = tier_data.get("annual_maintenance", 2500)
+            else:
+                pricing["price"] = tier_data["annual_price"]
+                pricing["billing_frequency"] = "annual"
+                pricing["savings"] = (tier_data["monthly_price"] * 12) - tier_data["annual_price"]
+                pricing["discount_percentage"] = round((pricing["savings"] / (tier_data["monthly_price"] * 12)) * 100)
         elif billing_cycle == BillingCycle.ONE_TIME and tier == PricingTier.GOVERNMENT:
             pricing["price"] = tier_data["license_price"]
             pricing["maintenance_fee"] = tier_data["annual_maintenance"]

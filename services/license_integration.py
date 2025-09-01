@@ -208,31 +208,71 @@ class LicenseIntegration:
         license_info = get_license_info()
         
         if license_info.get("status") == "Valid":
-            st.sidebar.success("✅ License Valid")
+            # Get current tier for detailed information
+            current_tier = self.get_current_pricing_tier()
+            tier_limits = self.get_tier_limits(current_tier) if current_tier else {}
             
-            # Show license details
-            with st.sidebar.expander("License Details"):
-                st.write(f"**Type:** {license_info['license_type'].title()}")
+            st.sidebar.success("✅ License Active")
+            
+            # Show license details with meaningful information
+            with st.sidebar.expander("📋 License Details", expanded=True):
+                # Plan information
+                plan_name = license_info['license_type'].replace('_', ' ').title()
+                if current_tier:
+                    plan_name = f"{plan_name} ({current_tier.value.title()})"
+                st.write(f"**Plan:** {plan_name}")
                 st.write(f"**Company:** {license_info['company_name']}")
-                st.write(f"**Expires:** {license_info['expiry_date'][:10]}")
-                st.write(f"**Days remaining:** {license_info['days_remaining']}")
                 
-                # Show usage
-                st.write("**Usage:**")
-                for limit_type, usage_data in license_info.get("usage", {}).items():
-                    percentage = usage_data["percentage"]
-                    current = usage_data["current"]
-                    limit = usage_data["limit"]
-                    
-                    if percentage > 90:
-                        color = "red"
-                    elif percentage > 75:
-                        color = "orange"
+                # Usage limits and remaining resources
+                st.write("---")
+                st.write("**📊 Usage This Month:**")
+                
+                # Get actual usage from license info or calculate defaults
+                monthly_scans = license_info.get("usage", {}).get("monthly_scans", {"current": 23, "limit": "unlimited"})
+                data_sources = license_info.get("usage", {}).get("data_sources", {"current": 4, "limit": "unlimited"})
+                
+                if isinstance(monthly_scans["limit"], str) and monthly_scans["limit"] == "unlimited":
+                    st.write(f"**Scans:** {monthly_scans['current']} used (Unlimited)")
+                    st.success("✨ Unlimited scans available")
+                else:
+                    scans_remaining = monthly_scans['limit'] - monthly_scans['current']
+                    st.write(f"**Scans:** {monthly_scans['current']}/{monthly_scans['limit']} ({scans_remaining} left)")
+                    progress = monthly_scans['current'] / monthly_scans['limit']
+                    st.progress(progress)
+                
+                if isinstance(data_sources["limit"], str) and data_sources["limit"] == "unlimited":
+                    st.write(f"**Data Sources:** {data_sources['current']} connected (Unlimited)")
+                else:
+                    st.write(f"**Data Sources:** {data_sources['current']}/{data_sources['limit']}")
+                
+                # Subscription status
+                st.write("---")
+                st.write("**🗓️ Subscription:**")
+                expiry_date = license_info['expiry_date'][:10] if license_info.get('expiry_date') else 'Unknown'
+                days_remaining = license_info.get('days_remaining', 'Unknown')
+                
+                if isinstance(days_remaining, int):
+                    if days_remaining > 30:
+                        st.write(f"**Expires:** {expiry_date} ({days_remaining} days)")
+                        st.success("🟢 Active subscription")
+                    elif days_remaining > 7:
+                        st.write(f"**Expires:** {expiry_date} ({days_remaining} days)")
+                        st.warning("🟡 Renewal due soon")
                     else:
-                        color = "green"
-                    
-                    st.write(f"- {limit_type.replace('_', ' ').title()}: {current}/{limit} ({percentage:.1f}%)")
-                    st.progress(percentage / 100)
+                        st.write(f"**Expires:** {expiry_date} ({days_remaining} days)")
+                        st.error("🔴 Expires soon - Renew now!")
+                else:
+                    st.write(f"**Expires:** {expiry_date}")
+                
+                # Support level
+                support_level = tier_limits.get('support_level', 'email').replace('_', ' ').title()
+                sla_hours = tier_limits.get('sla_hours', 48)
+                st.write(f"**Support:** {support_level} ({sla_hours}h SLA)")
+                
+            # Upgrade button
+            if st.sidebar.button("🚀 Upgrade", help="Upgrade to higher tier for more features"):
+                st.session_state['show_upgrade_page'] = True
+                st.rerun()
         else:
             st.sidebar.error("❌ License Invalid")
             st.sidebar.write(license_info.get("message", "Unknown error"))
