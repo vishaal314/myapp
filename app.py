@@ -5512,70 +5512,54 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             
             progress_bar = st.progress(0)
             
-            # Create comprehensive scan results with metrics
-            scan_results = {
-                "scan_id": str(uuid.uuid4()),
-                "scan_type": "AI Model Scanner",
-                "timestamp": datetime.now().isoformat(),
-                "model_source": model_source,
-                "model_type": model_type,
-                "framework": framework if framework != "Auto-detect" else "TensorFlow",
-                "findings": [],
-                "privacy_findings": [],
-                "bias_findings": [],
-                "compliance_findings": [],
-                "ai_act_findings": [],
-                "risk_score": 100,
-                "privacy_score": 100,
-                "fairness_score": 100,
-                "files_scanned": 0,
-                "lines_analyzed": 0,
-                "total_pii_found": 0,
-                "high_risk_count": 0,
-                "medium_risk_count": 0,
-                "low_risk_count": 0,
-                "critical_count": 0
+            # Use the actual AI Model Scanner to get proper results
+            model_details = {
+                "type": model_type,
+                "framework": framework if framework != "Auto-detect" else "General AI Model"
             }
+            
+            # Add source-specific details
+            if uploaded_model:
+                model_details["file_name"] = uploaded_model.name
+                model_details["file_size"] = uploaded_model.size
+            elif repo_url:
+                model_details["repository_url"] = repo_url
+            elif model_path:
+                model_details["model_path"] = model_path
+            
+            # Call the actual scanner method with proper parameters
+            scan_results = scanner.scan_model(
+                model_source=model_source,
+                model_details=model_details,
+                leakage_types=["All"],
+                context=["General"],
+                sample_inputs=[]
+            )
             
             # Model loading and analysis
             status.update(label="Loading and analyzing model...")
             progress_bar.progress(20)
             
-            # Calculate realistic metrics based on model analysis
+            # Add source-specific metadata to scan results
             if uploaded_model:
                 scan_results["model_file"] = uploaded_model.name
                 scan_results["model_size"] = f"{uploaded_model.size/1024/1024:.1f} MB"
-                file_ext = uploaded_model.name.lower().split('.')[-1]
-                scan_results["detected_format"] = file_ext
-                # Simulate file analysis metrics
-                scan_results["files_scanned"] = 1
-                scan_results["lines_analyzed"] = max(1000, int(uploaded_model.size / 100))  # Estimate based on file size
+                scan_results["detected_format"] = uploaded_model.name.lower().split('.')[-1]
             elif repo_url:
                 scan_results["repository_url"] = repo_url
                 scan_results["model_file"] = "Hugging Face Model"
-                # Simulate repository analysis metrics
-                scan_results["files_scanned"] = 15  # Typical model repo has config, weights, tokenizer files
-                scan_results["lines_analyzed"] = 2500  # Estimated lines for model config and code
             elif model_path:
                 scan_results["model_path"] = model_path
                 scan_results["model_file"] = model_path.split('/')[-1]
-                # Simulate path analysis metrics
-                scan_results["files_scanned"] = 3  # Model file, config, metadata
-                scan_results["lines_analyzed"] = 1200  # Estimated configuration lines
-            else:
-                # Default metrics for basic analysis
-                scan_results["files_scanned"] = 1
-                scan_results["lines_analyzed"] = 500
             
-            # Initialize findings lists
-            privacy_findings = []
-            bias_findings = []
-            compliance_findings = []
+            # Update progress to show analysis is complete
+            progress_bar.progress(60)
+            status.update(label="Analysis complete - processing results...")
             
-            # Privacy Analysis
-            if privacy_analysis:
-                status.update(label="Analyzing privacy risks and data leakage...")
-                progress_bar.progress(40)
+            # The scanner has already done all the analysis, just add conditional processing
+            if privacy_analysis and scan_results.get("findings"):
+                status.update(label="Privacy analysis complete...")
+                progress_bar.progress(70)
                 
                 # PII Exposure Analysis
                 privacy_findings.append({
@@ -5849,28 +5833,22 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 
                 scan_results["ai_act_findings"] = ai_act_findings
             
-            # Combine all findings
-            all_findings = []
-            if privacy_analysis:
-                all_findings.extend(privacy_findings)
-            if bias_detection:
-                all_findings.extend(bias_findings)
-            if compliance_check:
-                all_findings.extend(compliance_findings)
-            if ai_act_compliance:
-                all_findings.extend(ai_act_findings)
+            # The scanner has already generated all findings, just update UI progress
+            progress_bar.progress(95)
+            status.update(label="Finalizing analysis results...")
             
-            scan_results["findings"] = all_findings
-            scan_results["total_findings"] = len(all_findings)
+            # Scanner results already contain all necessary findings and metrics
+            all_findings = scan_results.get("findings", [])
             
-            # Calculate comprehensive risk metrics
-            critical_count = len([f for f in all_findings if f.get('severity') == 'Critical'])
-            high_risk_count = len([f for f in all_findings if f.get('severity') == 'High'])
-            medium_risk_count = len([f for f in all_findings if f.get('severity') == 'Medium'])
-            low_risk_count = len([f for f in all_findings if f.get('severity') == 'Low'])
+            # Use the scanner's risk metrics (already properly calculated)
+            risk_counts = scan_results.get("risk_counts", {"critical": 0, "high": 0, "medium": 0, "low": 0})
+            critical_count = risk_counts.get("critical", 0)
+            high_risk_count = risk_counts.get("high", 0)
+            medium_risk_count = risk_counts.get("medium", 0)
+            low_risk_count = risk_counts.get("low", 0)
             
-            # Update scan results with counts
-            scan_results["total_pii_found"] = len(all_findings)
+            # Ensure compatibility with UI expectations
+            scan_results["total_pii_found"] = scan_results.get("total_findings", len(all_findings))
             scan_results["critical_count"] = critical_count
             scan_results["high_risk_count"] = high_risk_count
             scan_results["medium_risk_count"] = medium_risk_count
