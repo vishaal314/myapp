@@ -5674,18 +5674,21 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             with col4:
                 st.metric("Low Risk Issues", low_risk_count)
             
-            # Display detailed findings (outside of status context to avoid nested expanders)
+            # Display detailed findings from scanner results (outside of status context to avoid nested expanders)
+            privacy_findings = [f for f in all_findings if f.get('category') == 'Privacy']
             if privacy_analysis and privacy_findings:
                 st.subheader("🔒 Privacy Analysis")
                 for finding in privacy_findings:
                     st.markdown(f"### 🚨 {finding['type']} - {finding['severity']} Severity")
                     st.write(f"**Description:** {finding['description']}")
-                    st.write(f"**Location:** {finding['location']}")
-                    st.write(f"**GDPR Impact:** {finding['gdpr_impact']}")
-                    st.write(f"**Recommendation:** {finding['recommendation']}")
-                    st.progress(finding['risk_level']/100)
+                    st.write(f"**Location:** {finding.get('location', 'AI Model')}")
+                    st.write(f"**GDPR Impact:** {finding.get('gdpr_impact', 'Privacy regulation compliance')}")
+                    st.write(f"**Recommendation:** {finding.get('recommendation', 'Review and implement privacy safeguards')}")
+                    risk_level = finding.get('risk_level', finding.get('compliance_score', 50))
+                    st.progress(risk_level/100)
                     st.markdown("---")
             
+            bias_findings = [f for f in all_findings if f.get('category') == 'Fairness']
             if bias_detection and bias_findings:
                 st.subheader("⚖️ Bias & Fairness Analysis")
                 for finding in bias_findings:
@@ -5695,21 +5698,25 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                         st.write(f"**Metrics:** {finding['metrics']}")
                     if 'affected_groups' in finding:
                         st.write(f"**Affected Groups:** {', '.join(finding['affected_groups'])}")
-                    st.write(f"**Recommendation:** {finding['recommendation']}")
-                    st.progress(finding['bias_score']/100)
+                    st.write(f"**Recommendation:** {finding.get('recommendation', 'Implement fairness constraints')}")
+                    bias_score = finding.get('bias_score', finding.get('compliance_score', 50))
+                    st.progress(bias_score/100)
                     st.markdown("---")
             
+            compliance_findings = [f for f in all_findings if f.get('category') == 'Compliance']
             if compliance_check and compliance_findings:
                 st.subheader("📋 GDPR Compliance")
                 for finding in compliance_findings:
                     st.markdown(f"### ⚖️ {finding['type']} - {finding['severity']} Severity")
                     st.write(f"**Description:** {finding['description']}")
-                    st.write(f"**Regulation:** {finding['regulation']}")
-                    st.write(f"**Requirement:** {finding['requirement']}")
-                    st.write(f"**Recommendation:** {finding['recommendation']}")
-                    st.progress(finding['compliance_score']/100)
+                    st.write(f"**Regulation:** {finding.get('regulation', 'GDPR Article')}")
+                    st.write(f"**Requirement:** {finding.get('requirement', 'Privacy compliance requirement')}")
+                    st.write(f"**Recommendation:** {finding.get('recommendation', 'Implement GDPR compliance measures')}")
+                    compliance_score = finding.get('compliance_score', 50)
+                    st.progress(compliance_score/100)
                     st.markdown("---")
             
+            ai_act_findings = [f for f in all_findings if f.get('category') == 'AI Act 2025' or 'ai_act_article' in f]
             if ai_act_compliance and ai_act_findings:
                 st.subheader("🇪🇺 AI Act 2025 Compliance")
                 
