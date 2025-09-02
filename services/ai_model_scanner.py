@@ -1278,29 +1278,49 @@ class AIModelScanner:
         ai_act_violations = sum(1 for f in findings if 'AI_ACT' in f.get('type', ''))
         prohibited_practices = sum(1 for f in findings if f.get('type') == 'AI_ACT_PROHIBITED')
         
-        # Enhanced scoring logic
-        if prohibited_practices > 0:
-            compliance_score = 15  # Prohibited practices = severe non-compliance
-        elif critical_count > 2:
-            compliance_score = 25  # Multiple critical issues
-        elif critical_count > 0:
-            compliance_score = 45  # Some critical issues
-        elif high_risk_count > 3:
-            compliance_score = 55  # Multiple high-risk issues
-        elif high_risk_count > 0:
-            compliance_score = 75  # Some high-risk issues
-        elif medium_count > 5:
-            compliance_score = 80  # Many medium issues
-        elif medium_count > 2:
-            compliance_score = 85  # Some medium issues
-        elif medium_count > 0 or low_count > 0:
-            compliance_score = 90  # Minor issues only
-        else:
-            compliance_score = 95  # Very few or no issues
+        # ENHANCED COMPLIANCE SCORING: Immediate Improvements (85-90%) + Advanced (95%+) + Enterprise (98%+)
+        base_score = 100
         
-        # Adjust for AI Act violations
+        # 1. IMMEDIATE IMPROVEMENTS ASSESSMENT (Can boost to 85-90%)
+        documentation_score = self._assess_model_documentation(findings, model_details)
+        privacy_safeguards_score = self._assess_privacy_safeguards(findings, model_details)  
+        explainability_score = self._assess_explainability_features(findings, model_details)
+        
+        # 2. ADVANCED ENHANCEMENTS ASSESSMENT (Can reach 95%+ compliance)
+        human_oversight_score = self._assess_human_oversight_mechanisms(findings, model_details)
+        bias_mitigation_score = self._assess_bias_mitigation_measures(findings, model_details)
+        data_governance_score = self._assess_data_governance_processes(findings, model_details)
+        
+        # 3. ENTERPRISE-GRADE FEATURES ASSESSMENT (Reach 98%+ compliance)
+        risk_management_score = self._assess_risk_management_system(findings, model_details)
+        regulatory_compliance_score = self._assess_regulatory_compliance_measures(findings, model_details)
+        
+        # Calculate weighted compliance score (higher potential for compliance)
+        compliance_score = (
+            documentation_score * 0.15 +        # 15% - Model Documentation
+            privacy_safeguards_score * 0.15 +   # 15% - Privacy Safeguards  
+            explainability_score * 0.15 +       # 15% - Explainability
+            human_oversight_score * 0.15 +      # 15% - Human Oversight
+            bias_mitigation_score * 0.15 +      # 15% - Bias Mitigation
+            data_governance_score * 0.10 +      # 10% - Data Governance
+            risk_management_score * 0.10 +      # 10% - Risk Management
+            regulatory_compliance_score * 0.05  #  5% - Regulatory Compliance
+        )
+        
+        # Apply penalties for critical violations
+        if prohibited_practices > 0:
+            compliance_score = max(compliance_score * 0.2, 15)  # Severe penalty for prohibited practices
+        elif critical_count > 2:
+            compliance_score = max(compliance_score * 0.4, 25)  # Major penalty for multiple critical issues
+        elif critical_count > 0:
+            compliance_score = max(compliance_score * 0.7, 45)  # Penalty for critical issues
+        
+        # Adjust for AI Act violations with more nuanced approach
         if ai_act_violations > 0:
-            compliance_score = max(compliance_score - (ai_act_violations * 10), 15)
+            violation_penalty = min(ai_act_violations * 5, 20)  # Max 20% penalty for violations
+            compliance_score = max(compliance_score - violation_penalty, 15)
+        
+        # Remove duplicate adjustment - already handled above
         
         compliance_score = max(min(compliance_score, 100), 15)  # Keep between 15-100%
         
@@ -1333,16 +1353,203 @@ class AIModelScanner:
         return {
             "model_framework": framework,
             "ai_act_compliance": ai_act_status,
-            "compliance_score": compliance_score,
-            "ai_model_compliance": compliance_score,
+            "compliance_score": int(compliance_score),
+            "ai_model_compliance": int(compliance_score),
             "ai_act_risk_level": ai_risk_level,
-            "compliance_metrics": {
-                "model_framework": framework,
-                "ai_act_compliance": ai_act_status,
-                "compliance_score": compliance_score,
-                "ai_act_risk_level": ai_risk_level
+            # Enhanced compliance breakdown for transparency
+            "compliance_breakdown": {
+                "documentation": int(documentation_score),
+                "privacy_safeguards": int(privacy_safeguards_score),
+                "explainability": int(explainability_score),
+                "human_oversight": int(human_oversight_score),
+                "bias_mitigation": int(bias_mitigation_score),
+                "data_governance": int(data_governance_score),
+                "risk_management": int(risk_management_score),
+                "regulatory_compliance": int(regulatory_compliance_score)
             }
         }
+    
+    # ASSESSMENT METHODS FOR ENHANCED COMPLIANCE SCORING
+    
+    def _assess_model_documentation(self, findings: List[Dict[str, Any]], model_details: Dict[str, Any]) -> float:
+        """Assess model documentation per EU AI Act Article 11 - Can boost to 85-90%"""
+        score = 60  # Base score
+        
+        # Check for technical documentation
+        if model_details.get('documentation_url') or model_details.get('readme_content'):
+            score += 15  # +15 for having documentation
+        
+        # Check for training data documentation
+        if any(f.get('type') == 'TRAINING_DATA_DOCUMENTED' for f in findings):
+            score += 10  # +10 for training data docs
+        
+        # Check for model architecture documentation
+        if any('architecture' in f.get('description', '').lower() for f in findings):
+            score += 10  # +10 for architecture docs
+        
+        # Penalty for missing documentation findings
+        missing_docs = sum(1 for f in findings if 'documentation' in f.get('type', '').lower() and f.get('risk_level') in ['high', 'critical'])
+        score -= missing_docs * 10
+        
+        return max(min(score, 100), 30)
+    
+    def _assess_privacy_safeguards(self, findings: List[Dict[str, Any]], model_details: Dict[str, Any]) -> float:
+        """Assess privacy safeguards - differential privacy, anonymization - Can boost to 85-90%"""
+        score = 55  # Base score
+        
+        # Check for differential privacy implementation
+        if any('differential' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for differential privacy
+        
+        # Check for data anonymization
+        if any('anonymiz' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for anonymization
+        
+        # Check for PII removal
+        pii_violations = sum(1 for f in findings if f.get('category') == 'Privacy' and f.get('risk_level') in ['high', 'critical'])
+        if pii_violations == 0:
+            score += 20  # +20 for no PII violations
+        elif pii_violations <= 2:
+            score += 10  # +10 for minimal PII violations
+        
+        # Penalty for privacy violations
+        score -= pii_violations * 8
+        
+        return max(min(score, 100), 25)
+    
+    def _assess_explainability_features(self, findings: List[Dict[str, Any]], model_details: Dict[str, Any]) -> float:
+        """Assess explainability features - LIME, SHAP, GDPR Article 22 - Can boost to 85-90%"""
+        score = 50  # Base score
+        
+        # Check for explainability tools (LIME, SHAP)
+        explainability_tools = ['lime', 'shap', 'explain', 'interpret']
+        has_explainability = any(tool in str(model_details).lower() for tool in explainability_tools)
+        if has_explainability:
+            score += 25  # +25 for explainability tools
+        
+        # Check for GDPR Article 22 compliance
+        if any('article 22' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for Article 22 compliance
+        
+        # Check for decision-making logic documentation
+        if any('decision' in f.get('type', '').lower() for f in findings):
+            score += 10  # +10 for decision logic docs
+        
+        # Penalty for explainability violations
+        explainability_violations = sum(1 for f in findings if 'explainability' in f.get('type', '').lower())
+        score -= explainability_violations * 12
+        
+        return max(min(score, 100), 20)
+    
+    def _assess_human_oversight_mechanisms(self, findings: List[Dict[str, Any]], model_details: Dict[str, Any]) -> float:
+        """Assess human oversight mechanisms per AI Act Article 14 - Can reach 95%+ compliance"""
+        score = 45  # Base score
+        
+        # Check for human-in-the-loop processes
+        if any('human' in f.get('description', '').lower() and 'oversight' in f.get('description', '').lower() for f in findings):
+            score += 20  # +20 for human oversight
+        
+        # Check for intervention protocols
+        if any('intervention' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for intervention protocols
+        
+        # Check for monitoring dashboards
+        if any('monitor' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for monitoring
+        
+        # Penalty for lack of human oversight
+        oversight_violations = sum(1 for f in findings if 'oversight' in f.get('type', '').lower() and f.get('risk_level') in ['high', 'critical'])
+        score -= oversight_violations * 15
+        
+        return max(min(score, 100), 15)
+    
+    def _assess_bias_mitigation_measures(self, findings: List[Dict[str, Any]], model_details: Dict[str, Any]) -> float:
+        """Assess bias mitigation measures - demographic parity, fairness metrics - Can reach 95%+ compliance"""
+        score = 40  # Base score
+        
+        # Check for bias testing
+        if any('bias' in f.get('type', '').lower() and 'test' in f.get('description', '').lower() for f in findings):
+            score += 20  # +20 for bias testing
+        
+        # Check for fairness metrics
+        if any('fairness' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for fairness metrics
+        
+        # Check for demographic parity
+        if any('demographic' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for demographic considerations
+        
+        # Penalty for bias violations
+        bias_violations = sum(1 for f in findings if f.get('category') == 'Fairness' and f.get('risk_level') in ['high', 'critical'])
+        score -= bias_violations * 10
+        
+        return max(min(score, 100), 10)
+    
+    def _assess_data_governance_processes(self, findings: List[Dict[str, Any]], model_details: Dict[str, Any]) -> float:
+        """Assess data governance per AI Act Article 10 - Can reach 95%+ compliance"""
+        score = 35  # Base score
+        
+        # Check for data lineage tracking
+        if any('lineage' in f.get('description', '').lower() for f in findings):
+            score += 20  # +20 for data lineage
+        
+        # Check for data versioning
+        if any('version' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for versioning
+        
+        # Check for error detection
+        if any('error detection' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for error detection
+        
+        # Check for data quality assurance
+        if any('quality' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for quality assurance
+        
+        # Penalty for data governance violations
+        governance_violations = sum(1 for f in findings if 'governance' in f.get('type', '').lower())
+        score -= governance_violations * 12
+        
+        return max(min(score, 100), 10)
+    
+    def _assess_risk_management_system(self, findings: List[Dict[str, Any]], model_details: Dict[str, Any]) -> float:
+        """Assess risk management system per AI Act Article 9 - Reach 98%+ compliance"""
+        score = 30  # Base score
+        
+        # Check for risk assessment framework
+        if any('risk assessment' in f.get('description', '').lower() for f in findings):
+            score += 25  # +25 for risk assessment
+        
+        # Check for continuous monitoring
+        if any('continuous' in f.get('description', '').lower() and 'monitor' in f.get('description', '').lower() for f in findings):
+            score += 20  # +20 for continuous monitoring
+        
+        # Check for risk mitigation processes
+        if any('mitigation' in f.get('description', '').lower() for f in findings):
+            score += 15  # +15 for mitigation
+        
+        # Check for lifecycle risk management
+        if any('lifecycle' in f.get('description', '').lower() for f in findings):
+            score += 10  # +10 for lifecycle management
+        
+        return max(min(score, 100), 10)
+    
+    def _assess_regulatory_compliance_measures(self, findings: List[Dict[str, Any]], model_details: Dict[str, Any]) -> float:
+        """Assess regulatory compliance - CE marking, conformity assessment - Reach 98%+ compliance"""
+        score = 25  # Base score
+        
+        # Check for CE marking
+        if any('ce marking' in f.get('description', '').lower() for f in findings):
+            score += 30  # +30 for CE marking
+        
+        # Check for conformity assessment
+        if any('conformity' in f.get('description', '').lower() for f in findings):
+            score += 25  # +25 for conformity assessment
+        
+        # Check for transparency obligations
+        if any('transparency' in f.get('description', '').lower() for f in findings):
+            score += 20  # +20 for transparency
+        
+        return max(min(score, 100), 10)
     
     def _generate_uuid(self) -> str:
         """Generate a short UUID for finding IDs"""
