@@ -261,6 +261,13 @@ class AIModelScanner:
             scan_result = integrate_cost_savings_into_report(scan_result, 'ai_model', self.region)
         except Exception as e:
             logging.warning(f"Cost savings integration failed: {e}")
+        
+        # Generate EU AI Act 2025 HTML report for AI model scans
+        try:
+            from services.eu_ai_act_html_reporter import generate_eu_ai_act_html_report
+            scan_result['ai_act_html_report'] = generate_eu_ai_act_html_report(scan_result)
+        except Exception as e:
+            logging.warning(f"EU AI Act HTML report generation failed: {e}")
 
         return scan_result
         
@@ -1198,4 +1205,10 @@ class AIModelScanner:
             "compliance_score": compliance_score,
             "ai_model_compliance": compliance_score,
             "ai_act_risk_level": ai_risk_level,
+            "compliance_metrics": {
+                "model_framework": framework,
+                "ai_act_compliance": ai_act_status,
+                "compliance_score": compliance_score,
+                "ai_act_risk_level": ai_risk_level
+            }
         }
