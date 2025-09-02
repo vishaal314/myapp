@@ -6,7 +6,7 @@ including high-risk AI systems, prohibited practices, and transparency obligatio
 """
 
 import re
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 # EU AI Act Risk Categories
@@ -38,7 +38,7 @@ AI_RISK_CATEGORIES = {
     ]
 }
 
-def detect_ai_act_violations(content: str, document_metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def detect_ai_act_violations(content: str, document_metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """
     Detect EU AI Act compliance violations in document content.
     
@@ -203,7 +203,7 @@ def _detect_algorithmic_accountability(content: str) -> List[Dict[str, Any]]:
         "explainability": r"\b(?:explainable\s+ai|interpretable|model\s+explanation)\b"
     }
     
-    has_decision_making = any(re.search(accountability_patterns["decision_making"], content, re.IGNORECASE))
+    has_decision_making = bool(re.search(accountability_patterns["decision_making"], content, re.IGNORECASE))
     has_governance = any(re.search(pattern, content, re.IGNORECASE) 
                         for pattern in list(accountability_patterns.values())[1:])
     
