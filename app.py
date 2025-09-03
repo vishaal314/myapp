@@ -5528,9 +5528,10 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 model_details["model_path"] = model_path
             
             # Call the appropriate scanner method based on source type
+            import logging
+            logging.info(f"SCANNER DEBUG: uploaded_model={uploaded_model is not None}, model_source='{model_source}'")
             if uploaded_model:
                 # For uploaded files, use the enhanced scanner that properly analyzes file content
-                import logging
                 logging.info(f"CALLING ENHANCED SCANNER: {uploaded_model.name}")
                 scan_results = scanner.scan_ai_model_enhanced(
                     model_file=uploaded_model,
@@ -5541,6 +5542,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 logging.info(f"ENHANCED SCANNER RETURNED: lines_analyzed={scan_results.get('lines_analyzed')}, total_lines={scan_results.get('total_lines')}")
             else:
                 # For other sources (URLs, repos), use the standard scanner
+                logging.info(f"CALLING STANDARD SCANNER: model_source={model_source}")
                 scan_results = scanner.scan_model(
                     model_source=model_source,
                     model_details=model_details,
@@ -5548,6 +5550,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                     context=["General"],
                     sample_inputs=[]
                 )
+                logging.info(f"STANDARD SCANNER RETURNED: scan_type={scan_results.get('scan_type')}")
             
             # Model loading and analysis
             status.update(label="Loading and analyzing model...")

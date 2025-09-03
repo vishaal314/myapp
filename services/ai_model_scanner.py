@@ -312,9 +312,7 @@ class AIModelScanner:
                 status.update(label="Analyzing file content for compliance assessment...")
             
             content_analysis = self._analyze_file_content(model_path, model_file)
-            logging.info(f"Content analysis returned: total_lines={content_analysis.get('total_lines')}, lines_analyzed={content_analysis.get('lines_analyzed')}")
             results.update(content_analysis)
-            logging.info(f"Results after content update: total_lines={results.get('total_lines')}, lines_analyzed={results.get('lines_analyzed')}")
             
             # Framework-specific analysis
             if file_extension in ['pt', 'pth'] and TORCH_AVAILABLE:
@@ -332,9 +330,7 @@ class AIModelScanner:
             else:
                 # Generic analysis for unsupported formats
                 analysis = self._analyze_generic_model(model_path, model_file, status)
-                logging.info(f"Generic analysis keys: {list(analysis.keys())}")
                 results.update(analysis)
-                logging.info(f"Results after generic update: total_lines={results.get('total_lines')}, lines_analyzed={results.get('lines_analyzed')}")
             
             # Perform bias and fairness analysis
             if status:
