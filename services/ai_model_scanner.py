@@ -293,7 +293,7 @@ class AIModelScanner:
             
             results = {
                 'scan_id': str(uuid.uuid4()),
-                'scan_type': 'ai_model',
+                'scan_type': 'AI Model Scanner',
                 'timestamp': datetime.now().isoformat(),
                 'model_type': model_type,
                 'model_file': model_file.name,
