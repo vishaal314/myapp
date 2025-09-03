@@ -5619,7 +5619,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             
             # Display comprehensive results
             st.markdown("---")
-            st.subheader("🤖 AI Model Analysis Results")
+            st.subheader(f"🤖 {_('interface.ai_model_analysis_results', 'AI Model Analysis Results')}")
             
             # Primary analysis summary with model details
             col1, col2, col3, col4 = st.columns(4)
@@ -5628,40 +5628,40 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 detected_framework = scan_results.get("model_framework", "Multi-Framework")
                 if detected_framework in ["Unknown", "Auto-detect"]:
                     detected_framework = "Multi-Framework"  # Professional fallback
-                st.metric("Model Framework", detected_framework)
+                st.metric(_('interface.model_framework', 'Model Framework'), detected_framework)
             with col2:
                 # AI Act 2025 Status from actual scan results
                 ai_act_status = scan_results.get("ai_act_compliance", "Assessment Required")
-                st.metric("AI Act 2025 Status", ai_act_status)
+                st.metric(_('interface.ai_act_2025_status', 'AI Act 2025 Status'), ai_act_status)
             with col3:
                 # AI Model Compliance score from actual scan results
                 ai_compliance_score = scan_results.get("compliance_score", 0)
-                st.metric("AI Model Compliance", f"{ai_compliance_score}%")
+                st.metric(_('interface.ai_model_compliance', 'AI Model Compliance'), f"{ai_compliance_score}%")
             with col4:
                 # Overall risk assessment
                 baseline_score = 60  # Industry baseline
                 delta_value = risk_score - baseline_score
                 if delta_value > 0:
-                    delta_display = f"+{delta_value}% vs Industry"
+                    delta_display = f"+{delta_value}% {_('interface.vs_industry', 'vs Industry')}"
                 elif delta_value < 0:
-                    delta_display = f"{delta_value}% vs Industry"
+                    delta_display = f"{delta_value}% {_('interface.vs_industry', 'vs Industry')}"
                 else:
-                    delta_display = "At Industry Average"
+                    delta_display = _('interface.at_industry_average', 'At Industry Average')
                     
-                st.metric("Risk Score", f"{risk_score}%", delta=delta_display)
+                st.metric(_('interface.risk_score', 'Risk Score'), f"{risk_score}%", delta=delta_display)
             
             # Additional model information
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Files Scanned", scan_results.get("files_scanned", 0))
+                st.metric(_('interface.files_scanned', 'Files Scanned'), scan_results.get("files_scanned", 0))
             with col2:
-                st.metric("Lines Analyzed", scan_results.get("lines_analyzed", 0))
+                st.metric(_('interface.lines_analyzed', 'Lines Analyzed'), scan_results.get("lines_analyzed", 0))
             with col3:
-                st.metric("Total Findings", len(all_findings))
+                st.metric(_('interface.total_findings', 'Total Findings'), len(all_findings))
             with col4:
                 # AI Act Risk Classification
                 ai_risk_level = scan_results.get("ai_act_risk_level", "Minimal Risk")
-                st.metric("AI Risk Level", ai_risk_level)
+                st.metric(_('interface.ai_risk_level', 'AI Risk Level'), ai_risk_level)
             
             # Risk breakdown
             col1, col2, col3, col4 = st.columns(4)

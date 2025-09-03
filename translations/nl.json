@@ -871,5 +871,22 @@
       "medium_risk_assessment": "Middelmatig Risico - Beoordeling Vereist",
       "assessment_required": "Beoordeling Vereist"
     }
+  },
+  "interface": {
+    "ai_model_analysis_results": "AI Model Analyse Resultaten",
+    "model_framework": "Model Framework",
+    "ai_act_2025_status": "AI Act 2025 Status",
+    "ai_model_compliance": "AI Model Naleving",
+    "risk_score": "Risicoscore",
+    "files_scanned": "Bestanden Gescand",
+    "lines_analyzed": "Regels Geanalyseerd", 
+    "total_findings": "Totaal Bevindingen",
+    "ai_risk_level": "AI Risiconiveau",
+    "critical_issues": "Kritieke Problemen",
+    "high_risk_issues": "Hoog Risico Problemen",
+    "medium_risk_issues": "Medium Risico Problemen",
+    "low_risk_issues": "Laag Risico Problemen",
+    "vs_industry": "vs Industrie",
+    "at_industry_average": "Op Industrie Gemiddelde"
   }
 }
