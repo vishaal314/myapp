@@ -12,16 +12,47 @@ import json
 from datetime import datetime
 from typing import Dict, Any, List
 
-def generate_eu_ai_act_html_report(scan_data: Dict[str, Any]) -> str:
+def generate_eu_ai_act_html_report(scan_data: Dict[str, Any], language: str = 'en') -> str:
     """
     Generate a comprehensive HTML report for EU AI Act 2025 compliance assessment.
     
     Args:
         scan_data: Dictionary containing AI model scan results with EU AI Act findings
+        language: Language code for translations ('en' or 'nl')
         
     Returns:
         HTML report as string with complete EU AI Act 2025 coverage
     """
+    
+    # Load translations for the selected language
+    def get_translation(key: str, default: str = '') -> str:
+        """Get translation for the given key"""
+        try:
+            # Load translations file
+            base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+            translation_file = os.path.join(base_dir, 'translations', f'{language}.json')
+            
+            if os.path.exists(translation_file):
+                with open(translation_file, 'r', encoding='utf-8') as f:
+                    translations = json.load(f)
+                
+                # Navigate nested keys (e.g., 'eu_ai_act_report.title')
+                keys = key.split('.')
+                value = translations
+                for k in keys:
+                    if isinstance(value, dict) and k in value:
+                        value = value[k]
+                    else:
+                        return default
+                return value if isinstance(value, str) else default
+            else:
+                return default
+        except Exception:
+            return default
+    
+    # Translation helper function
+    def _(key: str, default: str = '') -> str:
+        return get_translation(key, default)
     
     # Extract key AI Act compliance data
     ai_model_info = scan_data.get('ai_model_info', {})
@@ -54,21 +85,21 @@ def generate_eu_ai_act_html_report(scan_data: Dict[str, Any]) -> str:
     fundamental_rights_violations = len([f for f in ai_act_findings if f.get('type') == 'AI_ACT_FUNDAMENTAL_RIGHTS'])
     accountability_violations = len([f for f in ai_act_findings if f.get('type') == 'AI_ACT_ACCOUNTABILITY'])
     
-    # Determine overall AI Act risk level
+    # Determine overall AI Act risk level with translations
     if prohibited_practices > 0:
-        overall_risk = "Prohibited - Immediate Action Required"
+        overall_risk = _('eu_ai_act_report.risk_classifications.prohibited_immediate', 'Prohibited - Immediate Action Required')
         risk_color = "#7f1d1d"
         risk_bg = "#fef2f2"
     elif high_risk_violations > 2 or fundamental_rights_violations > 1:
-        overall_risk = "High Risk - Compliance Required"
+        overall_risk = _('eu_ai_act_report.risk_classifications.high_risk_compliance', 'High Risk - Compliance Required')
         risk_color = "#dc2626"
         risk_bg = "#fef2f2"
     elif high_risk_violations > 0 or transparency_violations > 1:
-        overall_risk = "Medium Risk - Assessment Required"
+        overall_risk = _('eu_ai_act_report.risk_classifications.medium_risk_assessment', 'Medium Risk - Assessment Required')
         risk_color = "#ea580c"
         risk_bg = "#fff7ed"
     else:
-        overall_risk = "Limited Risk - Monitoring Required"
+        overall_risk = _('eu_ai_act_report.risk_classifications.limited_risk_monitoring', 'Limited Risk - Monitoring Required')
         risk_color = "#16a34a"
         risk_bg = "#f0fdf4"
     
@@ -76,52 +107,49 @@ def generate_eu_ai_act_html_report(scan_data: Dict[str, Any]) -> str:
     ai_act_requirements_html = f"""
     <div style="background: white; border-radius: 15px; padding: 30px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
         <h2 style="color: #1e40af; margin-bottom: 25px; display: flex; align-items: center;">
-            🇪🇺 EU AI Act 2025 Requirements Coverage
+            🇪🇺 {_('eu_ai_act_report.eu_ai_act_requirements', 'EU AI Act 2025 Requirements Coverage')}
         </h2>
         <div style="background: #f0f9ff; padding: 20px; border-radius: 10px; border-left: 4px solid #0ea5e9; margin-bottom: 25px;">
-            <h3 style="color: #0c4a6e; margin: 0 0 10px 0;">Regulatory Status</h3>
+            <h3 style="color: #0c4a6e; margin: 0 0 10px 0;">{_('eu_ai_act_report.regulatory_status', 'Regulatory Status')}</h3>
             <p style="color: #075985; margin: 0; line-height: 1.6;">
-                <strong>EU Artificial Intelligence Act (Regulation 2024/1689)</strong><br>
-                • Entered into force: August 1, 2024<br>
-                • Full enforcement: February 2, 2025<br>
-                • Enforcement Authority: National supervisory authorities in each EU Member State
+                {_('eu_ai_act_report.regulatory_status_text', '<strong>EU Artificial Intelligence Act (Regulation 2024/1689)</strong><br>• Entered into force: August 1, 2024<br>• Full enforcement: February 2, 2025<br>• Enforcement Authority: National supervisory authorities in each EU Member State')}
             </p>
         </div>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
             <div style="background: {'#fef2f2' if prohibited_practices > 0 else '#f0fdf4'}; padding: 20px; border-radius: 10px; border-left: 4px solid {'#dc2626' if prohibited_practices > 0 else '#16a34a'};">
-                <h4 style="color: {'#dc2626' if prohibited_practices > 0 else '#16a34a'}; margin: 0 0 10px 0;">🚫 Article 5 - Prohibited Practices</h4>
+                <h4 style="color: {'#dc2626' if prohibited_practices > 0 else '#16a34a'}; margin: 0 0 10px 0;">🚫 {_('eu_ai_act_report.article_5_prohibited', 'Article 5 - Prohibited Practices')}</h4>
                 <div style="font-size: 24px; font-weight: bold; color: {'#dc2626' if prohibited_practices > 0 else '#16a34a'};">{prohibited_practices}</div>
-                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0;">Violations Detected</p>
-                <p style="color: #4b5563; font-size: 11px; margin: 10px 0 0 0;">Subliminal techniques, social scoring, mass surveillance</p>
+                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0;">{_('eu_ai_act_report.violations_detected', 'Violations Detected')}</p>
+                <p style="color: #4b5563; font-size: 11px; margin: 10px 0 0 0;">{_('eu_ai_act_report.prohibited_practices_desc', 'Subliminal techniques, social scoring, mass surveillance')}</p>
             </div>
             
             <div style="background: {'#fef2f2' if high_risk_violations > 0 else '#f0fdf4'}; padding: 20px; border-radius: 10px; border-left: 4px solid {'#ea580c' if high_risk_violations > 0 else '#16a34a'};">
-                <h4 style="color: {'#ea580c' if high_risk_violations > 0 else '#16a34a'}; margin: 0 0 10px 0;">⚠️ Annex III - High-Risk Systems</h4>
+                <h4 style="color: {'#ea580c' if high_risk_violations > 0 else '#16a34a'}; margin: 0 0 10px 0;">⚠️ {_('eu_ai_act_report.annex_iii_high_risk', 'Annex III - High-Risk Systems')}</h4>
                 <div style="font-size: 24px; font-weight: bold; color: {'#ea580c' if high_risk_violations > 0 else '#16a34a'};">{high_risk_violations}</div>
-                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0;">Issues Identified</p>
-                <p style="color: #4b5563; font-size: 11px; margin: 10px 0 0 0;">Biometric ID, employment, education, healthcare AI</p>
+                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0;">{_('eu_ai_act_report.issues_identified', 'Issues Identified')}</p>
+                <p style="color: #4b5563; font-size: 11px; margin: 10px 0 0 0;">{_('eu_ai_act_report.high_risk_desc', 'Biometric ID, employment, education, healthcare AI')}</p>
             </div>
             
             <div style="background: {'#fff7ed' if transparency_violations > 0 else '#f0fdf4'}; padding: 20px; border-radius: 10px; border-left: 4px solid {'#d97706' if transparency_violations > 0 else '#16a34a'};">
-                <h4 style="color: {'#d97706' if transparency_violations > 0 else '#16a34a'}; margin: 0 0 10px 0;">👁️ Article 13 - Transparency</h4>
+                <h4 style="color: {'#d97706' if transparency_violations > 0 else '#16a34a'}; margin: 0 0 10px 0;">👁️ {_('eu_ai_act_report.article_13_transparency', 'Article 13 - Transparency')}</h4>
                 <div style="font-size: 24px; font-weight: bold; color: {'#d97706' if transparency_violations > 0 else '#16a34a'};">{transparency_violations}</div>
-                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0;">Disclosure Issues</p>
-                <p style="color: #4b5563; font-size: 11px; margin: 10px 0 0 0;">Human-AI interaction disclosure requirements</p>
+                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0;">{_('eu_ai_act_report.disclosure_issues', 'Disclosure Issues')}</p>
+                <p style="color: #4b5563; font-size: 11px; margin: 10px 0 0 0;">{_('eu_ai_act_report.transparency_desc', 'Human-AI interaction disclosure requirements')}</p>
             </div>
             
             <div style="background: {'#fef2f2' if fundamental_rights_violations > 0 else '#f0fdf4'}; padding: 20px; border-radius: 10px; border-left: 4px solid {'#dc2626' if fundamental_rights_violations > 0 else '#16a34a'};">
-                <h4 style="color: {'#dc2626' if fundamental_rights_violations > 0 else '#16a34a'}; margin: 0 0 10px 0;">⚖️ Article 29 - Fundamental Rights</h4>
+                <h4 style="color: {'#dc2626' if fundamental_rights_violations > 0 else '#16a34a'}; margin: 0 0 10px 0;">⚖️ {_('eu_ai_act_report.article_29_fundamental_rights', 'Article 29 - Fundamental Rights')}</h4>
                 <div style="font-size: 24px; font-weight: bold; color: {'#dc2626' if fundamental_rights_violations > 0 else '#16a34a'};">{fundamental_rights_violations}</div>
-                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0;">Rights Impact</p>
-                <p style="color: #4b5563; font-size: 11px; margin: 10px 0 0 0;">Privacy, non-discrimination, freedom of expression</p>
+                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0;">{_('eu_ai_act_report.rights_impact', 'Rights Impact')}</p>
+                <p style="color: #4b5563; font-size: 11px; margin: 10px 0 0 0;">{_('eu_ai_act_report.fundamental_rights_desc', 'Privacy, non-discrimination, freedom of expression')}</p>
             </div>
             
             <div style="background: {'#fff7ed' if accountability_violations > 0 else '#f0fdf4'}; padding: 20px; border-radius: 10px; border-left: 4px solid {'#d97706' if accountability_violations > 0 else '#16a34a'};">
-                <h4 style="color: {'#d97706' if accountability_violations > 0 else '#16a34a'}; margin: 0 0 10px 0;">📊 Articles 14-15 - Accountability</h4>
+                <h4 style="color: {'#d97706' if accountability_violations > 0 else '#16a34a'}; margin: 0 0 10px 0;">📊 {_('eu_ai_act_report.articles_14_15_accountability', 'Articles 14-15 - Accountability')}</h4>
                 <div style="font-size: 24px; font-weight: bold; color: {'#d97706' if accountability_violations > 0 else '#16a34a'};">{accountability_violations}</div>
-                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0;">Governance Issues</p>
-                <p style="color: #4b5563; font-size: 11px; margin: 10px 0 0 0;">Algorithmic governance, audit trails, explainability</p>
+                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0;">{_('eu_ai_act_report.governance_issues', 'Governance Issues')}</p>
+                <p style="color: #4b5563; font-size: 11px; margin: 10px 0 0 0;">{_('eu_ai_act_report.accountability_desc', 'Algorithmic governance, audit trails, explainability')}</p>
             </div>
         </div>
     </div>"""
@@ -268,12 +296,13 @@ def generate_eu_ai_act_html_report(scan_data: Dict[str, Any]) -> str:
     </div>"""
     
     # Generate complete HTML report
+    lang_attr = 'nl' if language == 'nl' else 'en'
     return f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="{lang_attr}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EU AI Act 2025 Compliance Assessment - {ai_system_name}</title>
+    <title>{_('eu_ai_act_report.title', 'EU AI Act 2025 Compliance Assessment')} - {ai_system_name}</title>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; color: #1f2937; line-height: 1.6; }}
@@ -305,22 +334,22 @@ def generate_eu_ai_act_html_report(scan_data: Dict[str, Any]) -> str:
         <!-- Header Section -->
         <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); color: white; padding: 40px; border-radius: 15px; margin-bottom: 30px; position: relative; overflow: hidden;">
             <div class="certification-seal">
-                🇪🇺<br>AI ACT<br>2025
+                🇪🇺<br>{_('eu_ai_act_report.certification_seal', 'AI ACT 2025')}
             </div>
-            <h1 style="font-size: 32px; margin-bottom: 10px; font-weight: 700;">EU AI Act 2025 Compliance Assessment</h1>
-            <p style="font-size: 18px; opacity: 0.9; margin-bottom: 20px;">Comprehensive regulatory compliance analysis for {ai_system_name}</p>
+            <h1 style="font-size: 32px; margin-bottom: 10px; font-weight: 700;">{_('eu_ai_act_report.title', 'EU AI Act 2025 Compliance Assessment')}</h1>
+            <p style="font-size: 18px; opacity: 0.9; margin-bottom: 20px;">{_('eu_ai_act_report.subtitle', 'Comprehensive regulatory compliance analysis for')} {ai_system_name}</p>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
                 <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; text-align: center; backdrop-filter: blur(10px);">
                     <div style="font-size: 24px; font-weight: bold;">{len(ai_act_findings)}</div>
-                    <div style="font-size: 14px; opacity: 0.8;">AI Act Findings</div>
+                    <div style="font-size: 14px; opacity: 0.8;">{_('eu_ai_act_report.ai_act_findings', 'AI Act Findings')}</div>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; text-align: center; backdrop-filter: blur(10px);">
                     <div style="font-size: 24px; font-weight: bold;">{compliance_score}%</div>
-                    <div style="font-size: 14px; opacity: 0.8;">Compliance Score</div>
+                    <div style="font-size: 14px; opacity: 0.8;">{_('eu_ai_act_report.compliance_score', 'Compliance Score')}</div>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; text-align: center; backdrop-filter: blur(10px);">
                     <div style="font-size: 18px; font-weight: bold; color: {risk_color};">{ai_risk_level}</div>
-                    <div style="font-size: 14px; opacity: 0.8;">AI Act Risk Level</div>
+                    <div style="font-size: 14px; opacity: 0.8;">{_('eu_ai_act_report.ai_act_risk_level', 'AI Act Risk Level')}</div>
                 </div>
             </div>
         </div>

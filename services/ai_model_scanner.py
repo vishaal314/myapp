@@ -265,7 +265,10 @@ class AIModelScanner:
         # Generate EU AI Act 2025 HTML report for AI model scans
         try:
             from services.eu_ai_act_html_reporter import generate_eu_ai_act_html_report
-            scan_result['ai_act_html_report'] = generate_eu_ai_act_html_report(scan_result)
+            # Get current language from Streamlit session state
+            import streamlit as st
+            current_language = st.session_state.get('language', 'en')
+            scan_result['ai_act_html_report'] = generate_eu_ai_act_html_report(scan_result, language=current_language)
         except Exception as e:
             logging.warning(f"EU AI Act HTML report generation failed: {e}")
 
