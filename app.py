@@ -5530,12 +5530,15 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             # Call the appropriate scanner method based on source type
             if uploaded_model:
                 # For uploaded files, use the enhanced scanner that properly analyzes file content
+                import logging
+                logging.info(f"CALLING ENHANCED SCANNER: {uploaded_model.name}")
                 scan_results = scanner.scan_ai_model_enhanced(
                     model_file=uploaded_model,
                     model_type=model_type,
                     region=region,
                     status=status
                 )
+                logging.info(f"ENHANCED SCANNER RETURNED: lines_analyzed={scan_results.get('lines_analyzed')}, total_lines={scan_results.get('total_lines')}")
             else:
                 # For other sources (URLs, repos), use the standard scanner
                 scan_results = scanner.scan_model(
@@ -5666,6 +5669,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 st.metric(_('interface.files_scanned', 'Files Scanned'), scan_results.get("files_scanned", 0))
             with col2:
                 lines_analyzed = scan_results.get("lines_analyzed", scan_results.get("total_lines", 0))
+                st.write(f"FINAL DEBUG: scan_type='{scan_results.get('scan_type')}', lines_analyzed={lines_analyzed}, total_lines={scan_results.get('total_lines')}")
                 # Debug error status
                 if scan_results.get('status') == 'failed':
                     st.error(f"Scanner error: {scan_results.get('error', 'Unknown error')}")
