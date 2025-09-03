@@ -5529,14 +5529,18 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             
             # Call the appropriate scanner method based on source type
             # PRIORITY: Always use enhanced scanner for uploaded files, regardless of radio button
+            import logging
+            logging.info(f"ROUTING DEBUG: uploaded_model={uploaded_model is not None}, repo_url='{repo_url}', model_path='{model_path}'")
             if uploaded_model is not None:
                 # For uploaded files, use the enhanced scanner that properly analyzes file content
+                logging.info(f"USING ENHANCED SCANNER for file: {uploaded_model.name}")
                 scan_results = scanner.scan_ai_model_enhanced(
                     model_file=uploaded_model,
                     model_type=model_type,
                     region=region,
                     status=status
                 )
+                logging.info(f"ENHANCED RESULT: scan_type={scan_results.get('scan_type')}, lines_analyzed={scan_results.get('lines_analyzed')}, total_lines={scan_results.get('total_lines')}")
             elif repo_url and repo_url.strip():
                 # For repository URLs, use the standard scanner
                 scan_results = scanner.scan_model(
@@ -5685,6 +5689,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 st.metric(_('interface.files_scanned', 'Files Scanned'), scan_results.get("files_scanned", 0))
             with col2:
                 lines_analyzed = scan_results.get("lines_analyzed", scan_results.get("total_lines", 0))
+                st.write(f"🔧 DEBUG: scan_type='{scan_results.get('scan_type')}', lines={lines_analyzed}, total={scan_results.get('total_lines')}, source check: uploaded_model={uploaded_model is not None}")
                 # Debug error status
                 if scan_results.get('status') == 'failed':
                     st.error(f"Scanner error: {scan_results.get('error', 'Unknown error')}")
