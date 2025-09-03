@@ -5665,7 +5665,8 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             with col1:
                 st.metric(_('interface.files_scanned', 'Files Scanned'), scan_results.get("files_scanned", 0))
             with col2:
-                st.metric(_('interface.lines_analyzed', 'Lines Analyzed'), scan_results.get("lines_analyzed", 0))
+                lines_analyzed = scan_results.get("lines_analyzed", scan_results.get("total_lines", 0))
+                st.metric(_('interface.lines_analyzed', 'Lines Analyzed'), f"{lines_analyzed:,}" if lines_analyzed else "0")
             with col3:
                 st.metric(_('interface.total_findings', 'Total Findings'), len(all_findings))
             with col4:
@@ -8980,8 +8981,8 @@ def generate_html_report(scan_results):
         quick_wins_html = ""
         
     elif scan_results.get('scan_type') == 'AI Model Scanner':
-        files_scanned = scan_results.get('model_files_scanned', 1)
-        lines_analyzed = scan_results.get('model_parameters', 0)
+        files_scanned = scan_results.get('files_scanned', 1)
+        lines_analyzed = scan_results.get('lines_analyzed', scan_results.get('total_lines', 0))
         region = scan_results.get('region', 'Global')
         
         # AI Model scanner specific content
