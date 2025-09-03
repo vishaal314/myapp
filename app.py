@@ -5312,32 +5312,34 @@ def render_model_analysis_interface(region: str, username: str):
     st.subheader("Model Source")
     model_source = st.radio("Select Model Source", ["Upload Model File", "Model Repository", "Model Path"], horizontal=True)
     
-    uploaded_model = None
+    # Always show file uploader to catch uploaded files regardless of radio selection
+    uploaded_model = st.file_uploader(
+        "Upload AI Model (Optional - overrides other selections)",
+        type=['pkl', 'joblib', 'h5', 'pb', 'onnx', 'pt', 'pth', 'bin', 'safetensors'],
+        help="Supported formats: Pickle, JobLib, HDF5, Protocol Buffers, ONNX, PyTorch, SafeTensors"
+    )
+    
+    if uploaded_model:
+        st.success(f"✅ Model uploaded: {uploaded_model.name} ({uploaded_model.size/1024/1024:.1f} MB)")
+        st.info("📁 Uploaded file will be used instead of repository/path selections below")
+    
     model_path = None
     repo_url = None
     
-    if model_source == "Upload Model File":
-        uploaded_model = st.file_uploader(
-            "Upload AI Model",
-            type=['pkl', 'joblib', 'h5', 'pb', 'onnx', 'pt', 'pth', 'bin', 'safetensors'],
-            help="Supported formats: Pickle, JobLib, HDF5, Protocol Buffers, ONNX, PyTorch, SafeTensors"
-        )
-        
-        if uploaded_model:
-            st.success(f"✅ Model uploaded: {uploaded_model.name} ({uploaded_model.size/1024/1024:.1f} MB)")
-            
-    elif model_source == "Model Repository":
+    if model_source == "Model Repository":
         repo_url = st.text_input(
             "Hugging Face Model Repository",
             placeholder="https://huggingface.co/username/model-name",
-            help="Enter Hugging Face model repository URL"
+            help="Enter Hugging Face model repository URL",
+            disabled=uploaded_model is not None
         )
         
-    else:  # Model Path
+    elif model_source == "Model Path":
         model_path = st.text_input(
             "Local Model Path",
             placeholder="/path/to/model.pkl",
-            help="Enter local path to model file"
+            help="Enter local path to model file",
+            disabled=uploaded_model is not None
         )
     
     # Model configuration
