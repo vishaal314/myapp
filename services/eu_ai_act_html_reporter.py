@@ -112,7 +112,7 @@ def generate_eu_ai_act_html_report(scan_data: Dict[str, Any], language: str = 'e
         <div style="background: #f0f9ff; padding: 20px; border-radius: 10px; border-left: 4px solid #0ea5e9; margin-bottom: 25px;">
             <h3 style="color: #0c4a6e; margin: 0 0 10px 0;">{_('eu_ai_act_report.regulatory_status', 'Regulatory Status')}</h3>
             <p style="color: #075985; margin: 0; line-height: 1.6;">
-                {_('eu_ai_act_report.regulatory_status_text', '<strong>EU Artificial Intelligence Act (Regulation 2024/1689)</strong><br>• Entered into force: August 1, 2024<br>• Full enforcement: February 2, 2025<br>• Enforcement Authority: National supervisory authorities in each EU Member State')}
+                {_('eu_ai_act_report.regulatory_status_text', '<strong>EU Artificial Intelligence Act (Regulation 2024/1689)</strong><br>• Prohibited practices: Enforced since February 2, 2025<br>• GPAI model rules: Enforced since August 2, 2025<br>• High-risk systems: Full enforcement by August 2, 2027<br>• Maximum penalties: €35M or 7% global turnover<br>• Enforcement Authority: National supervisory authorities in each EU Member State')}
             </p>
         </div>
         

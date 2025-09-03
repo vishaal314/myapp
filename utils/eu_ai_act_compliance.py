@@ -1,8 +1,14 @@
 """
-EU AI Act Compliance Module
+EU AI Act 2025 Compliance Module
 
 This module provides detection and validation for EU AI Act compliance requirements
-including high-risk AI systems, prohibited practices, and transparency obligations.
+including high-risk AI systems, prohibited practices, GPAI model obligations, and transparency requirements.
+
+Timeline Compliance:
+- Prohibited practices: Enforced since February 2, 2025
+- GPAI model rules: Enforced since August 2, 2025  
+- High-risk systems: Full enforcement by August 2, 2027
+- Maximum penalties: €35M or 7% of global turnover
 """
 
 import re
@@ -13,11 +19,22 @@ from datetime import datetime
 AI_RISK_CATEGORIES = {
     "prohibited": [
         "subliminal techniques",
-        "social scoring",
+        "social scoring", 
         "real-time biometric identification",
         "emotion recognition in workplace",
-        "biometric categorisation",
-        "indiscriminate facial recognition"
+        "biometric categorisation", 
+        "indiscriminate facial recognition",
+        "manipulative ai targeting vulnerable groups",
+        "deceptive ai practices",
+        "exploitative ai systems"
+    ],
+    "gpai_models": [
+        "general purpose ai models",
+        "foundation models",
+        "large language models", 
+        "multimodal ai systems",
+        "systemic risk models",
+        "computational threshold models"
     ],
     "high_risk": [
         "biometric identification",
@@ -65,6 +82,9 @@ def detect_ai_act_violations(content: str, document_metadata: Optional[Dict[str,
     
     # Check for algorithmic accountability
     findings.extend(_detect_algorithmic_accountability(content))
+    
+    # Check for GPAI model compliance (August 2025 requirements)
+    findings.extend(_detect_gpai_compliance(content))
     
     return findings
 
@@ -276,3 +296,35 @@ def generate_ai_act_compliance_report(findings: List[Dict[str, Any]]) -> Dict[st
         'recommendations': recommendations,
         'next_assessment_due': (datetime.now().replace(day=1, month=datetime.now().month + 3 if datetime.now().month <= 9 else datetime.now().month - 9, year=datetime.now().year + 1 if datetime.now().month > 9 else datetime.now().year)).isoformat()
     }
+
+def _detect_gpai_compliance(content: str) -> List[Dict[str, Any]]:
+    """Detect General-Purpose AI model compliance issues (August 2025 requirements)."""
+    findings = []
+    
+    gpai_patterns = {
+        "foundation_model": r"foundation\s+model|general\s+purpose|large\s+language\s+model|llm|gpt|bert|transformer",
+        "computational_threshold": r"flops|compute|training\s+cost|parameter\s+count|model\s+size",
+        "systemic_risk": r"systemic\s+risk|high\s+impact|widespread\s+deployment|capability\s+evaluation",
+        "copyright_disclosure": r"training\s+data|copyrighted\s+content|intellectual\s+property|data\s+sources",
+        "transparency_requirements": r"model\s+documentation|technical\s+specification|capability\s+assessment|risk\s+evaluation"
+    }
+    
+    for pattern_name, pattern in gpai_patterns.items():
+        matches = re.finditer(pattern, content, re.IGNORECASE | re.MULTILINE)
+        for match in matches:
+            finding = {
+                'type': 'AI_ACT_GPAI_COMPLIANCE',
+                'category': 'GPAI Model Requirements',
+                'severity': 'High',
+                'title': f'GPAI Model Compliance Assessment Required',
+                'description': f'General-Purpose AI model detected requiring compliance with August 2025 requirements: {pattern_name.replace("_", " ").title()}',
+                'location': f'Position {match.start()}-{match.end()}',
+                'matched_text': match.group(),
+                'article_reference': 'EU AI Act Articles 51-55 (GPAI Models)',
+                'compliance_deadline': 'August 2, 2025 (Effective)',
+                'penalty_risk': 'Up to €15M or 3% global turnover',
+                'remediation': 'Implement GPAI transparency, documentation, and risk assessment requirements'
+            }
+            findings.append(finding)
+    
+    return findings

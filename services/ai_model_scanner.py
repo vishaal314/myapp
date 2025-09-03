@@ -262,7 +262,7 @@ class AIModelScanner:
         except Exception as e:
             logging.warning(f"Cost savings integration failed: {e}")
         
-        # Generate EU AI Act 2025 HTML report for AI model scans
+        # Generate EU AI Act 2025 HTML report for AI model scans (Updated for 2025 enforcement)
         try:
             from services.eu_ai_act_html_reporter import generate_eu_ai_act_html_report
             # Get current language from Streamlit session state
@@ -1332,7 +1332,7 @@ class AIModelScanner:
         
         compliance_score = max(min(compliance_score, 100), 15)  # Keep between 15-100%
         
-        # Determine AI Act 2025 status with improved logic
+        # Determine AI Act 2025 status with updated enforcement timeline
         if prohibited_practices > 0:
             ai_act_status = "Non-Compliant - Prohibited Practices Detected"
             ai_risk_level = "Unacceptable Risk"
