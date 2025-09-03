@@ -5528,21 +5528,35 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 model_details["model_path"] = model_path
             
             # Call the appropriate scanner method based on source type
-            import logging
-            logging.info(f"SCANNER DEBUG: uploaded_model={uploaded_model is not None}, model_source='{model_source}'")
-            if uploaded_model:
+            # PRIORITY: Always use enhanced scanner for uploaded files, regardless of radio button
+            if uploaded_model is not None:
                 # For uploaded files, use the enhanced scanner that properly analyzes file content
-                logging.info(f"CALLING ENHANCED SCANNER: {uploaded_model.name}")
                 scan_results = scanner.scan_ai_model_enhanced(
                     model_file=uploaded_model,
                     model_type=model_type,
                     region=region,
                     status=status
                 )
-                logging.info(f"ENHANCED SCANNER RETURNED: lines_analyzed={scan_results.get('lines_analyzed')}, total_lines={scan_results.get('total_lines')}")
+            elif repo_url and repo_url.strip():
+                # For repository URLs, use the standard scanner
+                scan_results = scanner.scan_model(
+                    model_source="Model Repository",
+                    model_details=model_details,
+                    leakage_types=["All"],
+                    context=["General"],
+                    sample_inputs=[]
+                )
+            elif model_path and model_path.strip():
+                # For local model paths, use the standard scanner
+                scan_results = scanner.scan_model(
+                    model_source="Model Path",
+                    model_details=model_details,
+                    leakage_types=["All"],
+                    context=["General"],
+                    sample_inputs=[]
+                )
             else:
-                # For other sources (URLs, repos), use the standard scanner
-                logging.info(f"CALLING STANDARD SCANNER: model_source={model_source}")
+                # Fallback to standard scanner
                 scan_results = scanner.scan_model(
                     model_source=model_source,
                     model_details=model_details,
@@ -5550,7 +5564,6 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                     context=["General"],
                     sample_inputs=[]
                 )
-                logging.info(f"STANDARD SCANNER RETURNED: scan_type={scan_results.get('scan_type')}")
             
             # Model loading and analysis
             status.update(label="Loading and analyzing model...")
@@ -5672,7 +5685,6 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 st.metric(_('interface.files_scanned', 'Files Scanned'), scan_results.get("files_scanned", 0))
             with col2:
                 lines_analyzed = scan_results.get("lines_analyzed", scan_results.get("total_lines", 0))
-                st.write(f"FINAL DEBUG: scan_type='{scan_results.get('scan_type')}', lines_analyzed={lines_analyzed}, total_lines={scan_results.get('total_lines')}")
                 # Debug error status
                 if scan_results.get('status') == 'failed':
                     st.error(f"Scanner error: {scan_results.get('error', 'Unknown error')}")
