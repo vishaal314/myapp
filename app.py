@@ -5319,8 +5319,15 @@ def render_model_analysis_interface(region: str, username: str):
         help="Supported formats: Pickle, JobLib, HDF5, Protocol Buffers, ONNX, PyTorch, SafeTensors"
     )
     
-    if uploaded_model:
+    # Store uploaded file in session state to persist across reruns
+    if uploaded_model is not None:
+        st.session_state['ai_model_upload'] = uploaded_model
         st.success(f"✅ Model uploaded: {uploaded_model.name} ({uploaded_model.size/1024/1024:.1f} MB)")
+        st.info("📁 Uploaded file will be used instead of repository/path selections below")
+    elif 'ai_model_upload' in st.session_state:
+        # Use stored file if available
+        uploaded_model = st.session_state['ai_model_upload']
+        st.success(f"✅ Model ready: {uploaded_model.name} ({uploaded_model.size/1024/1024:.1f} MB)")
         st.info("📁 Uploaded file will be used instead of repository/path selections below")
     
     model_path = None
@@ -5530,14 +5537,19 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 model_details["model_path"] = model_path
             
             # Call the appropriate scanner method based on source type
-            # PRIORITY: Always use enhanced scanner for uploaded files, regardless of radio button
+            # Check for uploaded file in session state first, then current upload
+            final_uploaded_model = uploaded_model or st.session_state.get('ai_model_upload')
+            
             import logging
-            logging.info(f"ROUTING DEBUG: uploaded_model={uploaded_model is not None}, repo_url='{repo_url}', model_path='{model_path}'")
-            if uploaded_model is not None:
+            logging.info(f"ROUTING DEBUG: current_upload={uploaded_model is not None}, session_upload={st.session_state.get('ai_model_upload') is not None}, final={final_uploaded_model is not None}")
+            logging.info(f"ROUTING DEBUG: repo_url='{repo_url}', model_path='{model_path}'")
+            
+            # PRIORITY: Always use enhanced scanner for uploaded files, regardless of radio button
+            if final_uploaded_model is not None:
                 # For uploaded files, use the enhanced scanner that properly analyzes file content
-                logging.info(f"USING ENHANCED SCANNER for file: {uploaded_model.name}")
+                logging.info(f"USING ENHANCED SCANNER for file: {final_uploaded_model.name}")
                 scan_results = scanner.scan_ai_model_enhanced(
-                    model_file=uploaded_model,
+                    model_file=final_uploaded_model,
                     model_type=model_type,
                     region=region,
                     status=status
@@ -5691,7 +5703,8 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 st.metric(_('interface.files_scanned', 'Files Scanned'), scan_results.get("files_scanned", 0))
             with col2:
                 lines_analyzed = scan_results.get("lines_analyzed", scan_results.get("total_lines", 0))
-                st.write(f"🔧 DEBUG: scan_type='{scan_results.get('scan_type')}', lines={lines_analyzed}, total={scan_results.get('total_lines')}, source check: uploaded_model={uploaded_model is not None}")
+                final_uploaded_model = uploaded_model or st.session_state.get('ai_model_upload')
+                st.write(f"🔧 DEBUG: scan_type='{scan_results.get('scan_type')}', lines={lines_analyzed}, total={scan_results.get('total_lines')}, source check: uploaded_model={final_uploaded_model is not None}")
                 # Debug error status
                 if scan_results.get('status') == 'failed':
                     st.error(f"Scanner error: {scan_results.get('error', 'Unknown error')}")
