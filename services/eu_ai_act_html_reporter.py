@@ -52,7 +52,9 @@ def generate_eu_ai_act_html_report(scan_data: Dict[str, Any], language: str = 'e
     
     # Translation helper function
     def _(key: str, default: str = '') -> str:
-        return get_translation(key, default)
+        result = get_translation(key, default)
+        print(f"DEBUG: Translation for '{key}' (lang: {language}): '{result}'")
+        return result
     
     # Extract key AI Act compliance data
     ai_model_info = scan_data.get('ai_model_info', {})
