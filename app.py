@@ -5710,8 +5710,22 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 if lines_analyzed > 0:
                     st.metric(_('interface.lines_analyzed', 'Lines Analyzed'), f"{lines_analyzed:,}")
                 else:
-                    # Show AI Act compliance status instead when no lines analyzed
-                    st.metric("🇪🇺 AI Act 2025", "Compliant" if scan_results.get('ai_act_compliance_score', 0) >= 70 else "Review Needed")
+                    # Show intelligent AI Act compliance status
+                    compliance_score = scan_results.get('ai_act_compliance_score', 0)
+                    critical_count = len([f for f in all_findings if f.get('severity') == 'Critical'])
+                    high_count = len([f for f in all_findings if f.get('severity') == 'High'])
+                    
+                    # Intelligent status based on risk profile
+                    if critical_count == 0 and high_count <= 2:
+                        ai_status = "✅ Compliant"
+                    elif critical_count == 0 and compliance_score >= 50:
+                        ai_status = "🟡 Low Risk"
+                    elif critical_count == 0:
+                        ai_status = "🔄 Monitoring"
+                    else:
+                        ai_status = "⚠️ Review Needed"
+                    
+                    st.metric("🇪🇺 AI Act 2025", ai_status)
             with col3:
                 st.metric(_('interface.total_findings', 'Total Findings'), len(all_findings))
             with col4:
