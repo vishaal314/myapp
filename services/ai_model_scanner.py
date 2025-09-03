@@ -366,11 +366,14 @@ class AIModelScanner:
             logging.error(f"Enhanced AI model analysis error: {e}")
             return {
                 'scan_id': str(uuid.uuid4()),
-                'scan_type': 'ai_model',
+                'scan_type': 'AI Model Scanner',
                 'timestamp': datetime.now().isoformat(),
                 'status': 'failed',
                 'error': str(e),
-                'findings': []
+                'findings': [],
+                'files_scanned': 1,
+                'lines_analyzed': 0,
+                'total_lines': 0
             }
     
     def _analyze_pytorch_model(self, model_path: str, status=None):

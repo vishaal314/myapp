@@ -5666,7 +5666,9 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 st.metric(_('interface.files_scanned', 'Files Scanned'), scan_results.get("files_scanned", 0))
             with col2:
                 lines_analyzed = scan_results.get("lines_analyzed", scan_results.get("total_lines", 0))
-                st.write(f"DEBUG: lines_analyzed={lines_analyzed}, total_lines={scan_results.get('total_lines')}, scan_type={scan_results.get('scan_type')}")
+                # Debug error status
+                if scan_results.get('status') == 'failed':
+                    st.error(f"Scanner error: {scan_results.get('error', 'Unknown error')}")
                 st.metric(_('interface.lines_analyzed', 'Lines Analyzed'), f"{lines_analyzed:,}" if lines_analyzed else "0")
             with col3:
                 st.metric(_('interface.total_findings', 'Total Findings'), len(all_findings))
