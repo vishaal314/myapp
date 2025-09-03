@@ -5527,14 +5527,24 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             elif model_path:
                 model_details["model_path"] = model_path
             
-            # Call the actual scanner method with proper parameters
-            scan_results = scanner.scan_model(
-                model_source=model_source,
-                model_details=model_details,
-                leakage_types=["All"],
-                context=["General"],
-                sample_inputs=[]
-            )
+            # Call the appropriate scanner method based on source type
+            if uploaded_model:
+                # For uploaded files, use the enhanced scanner that properly analyzes file content
+                scan_results = scanner.scan_ai_model_enhanced(
+                    model_file=uploaded_model,
+                    model_type=model_type,
+                    region=region,
+                    status=status
+                )
+            else:
+                # For other sources (URLs, repos), use the standard scanner
+                scan_results = scanner.scan_model(
+                    model_source=model_source,
+                    model_details=model_details,
+                    leakage_types=["All"],
+                    context=["General"],
+                    sample_inputs=[]
+                )
             
             # Model loading and analysis
             status.update(label="Loading and analyzing model...")
