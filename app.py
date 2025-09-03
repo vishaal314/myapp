@@ -5703,12 +5703,15 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                 st.metric(_('interface.files_scanned', 'Files Scanned'), scan_results.get("files_scanned", 0))
             with col2:
                 lines_analyzed = scan_results.get("lines_analyzed", scan_results.get("total_lines", 0))
-                final_uploaded_model = uploaded_model or st.session_state.get('ai_model_upload')
-                st.write(f"🔧 DEBUG: scan_type='{scan_results.get('scan_type')}', lines={lines_analyzed}, total={scan_results.get('total_lines')}, source check: uploaded_model={final_uploaded_model is not None}")
                 # Debug error status
                 if scan_results.get('status') == 'failed':
                     st.error(f"Scanner error: {scan_results.get('error', 'Unknown error')}")
-                st.metric(_('interface.lines_analyzed', 'Lines Analyzed'), f"{lines_analyzed:,}" if lines_analyzed else "0")
+                # Only show Lines Analyzed if we have actual lines to show
+                if lines_analyzed > 0:
+                    st.metric(_('interface.lines_analyzed', 'Lines Analyzed'), f"{lines_analyzed:,}")
+                else:
+                    # Show AI Act compliance status instead when no lines analyzed
+                    st.metric("🇪🇺 AI Act 2025", "Compliant" if scan_results.get('ai_act_compliance_score', 0) >= 70 else "Review Needed")
             with col3:
                 st.metric(_('interface.total_findings', 'Total Findings'), len(all_findings))
             with col4:
