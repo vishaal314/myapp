@@ -42,6 +42,9 @@ class DPIAScanner:
             'low': 0
         }
         
+        # NEW: Enhanced real-time monitoring integration
+        self.enhanced_monitoring = True
+        
     def _get_assessment_categories(self) -> Dict[str, Dict[str, Any]]:
         """Get the DPIA assessment categories based on current language."""
         # These are the standard categories defined in Article 35 of GDPR and 
@@ -163,7 +166,7 @@ class DPIAScanner:
                 }
             }
 
-    def perform_assessment(self, answers: Dict[str, List[int]], **kwargs) -> Dict[str, Any]:
+    def perform_assessment(self, answers: Dict[str, List[int]], file_content: str = "", **kwargs) -> Dict[str, Any]:
         """
         Perform a DPIA assessment based on provided answers and optional file/repository analysis.
         
@@ -273,6 +276,17 @@ class DPIAScanner:
             file_recommendations = self._generate_file_recommendations(file_findings)
             recommendations.extend(file_recommendations)
         
+        # NEW: Enhanced real-time monitoring integration
+        if self.enhanced_monitoring:
+            enhanced_findings = self._perform_enhanced_compliance_check(file_content or "")
+            recommendations.extend(enhanced_findings.get('recommendations', []))
+            # Adjust risk level based on enhanced findings
+            if enhanced_findings.get('critical_violations', 0) > 0:
+                overall_risk = "High"
+            elif enhanced_findings.get('high_priority_items', 0) > 2:
+                if overall_risk != "High":
+                    overall_risk = "High"
+        
         # Count findings by risk level
         file_high_risk = sum(1 for finding in file_findings if finding.get('risk_level') == 'High')
         file_medium_risk = sum(1 for finding in file_findings if finding.get('risk_level') == 'Medium')
@@ -306,6 +320,76 @@ class DPIAScanner:
         }
         
         return results
+    
+    def _perform_enhanced_compliance_check(self, content: str) -> Dict[str, Any]:
+        """Perform enhanced compliance checking using new real-time monitoring."""
+        findings = {
+            'recommendations': [],
+            'critical_violations': 0,
+            'high_priority_items': 0
+        }
+        
+        try:
+            # Import and use real-time compliance monitoring
+            from utils.real_time_compliance_monitor import RealTimeComplianceMonitor
+            from utils.comprehensive_gdpr_validator import validate_comprehensive_gdpr_compliance
+            from utils.eu_ai_act_compliance import detect_ai_act_violations
+            from utils.netherlands_uavg_compliance import detect_uavg_compliance_gaps
+            
+            # Real-time monitoring assessment
+            monitor = RealTimeComplianceMonitor()
+            rt_results = monitor.perform_real_time_assessment(content)
+            
+            findings['critical_violations'] = rt_results.get('critical_violations', 0)
+            findings['high_priority_items'] = rt_results.get('high_priority_items', 0)
+            
+            # Enhanced GDPR compliance check
+            gdpr_results = validate_comprehensive_gdpr_compliance(content)
+            
+            # EU AI Act compliance check
+            ai_act_results = detect_ai_act_violations(content)
+            
+            # Netherlands UAVG compliance check  
+            uavg_results = detect_uavg_compliance_gaps(content)
+            
+            # Generate enhanced recommendations
+            if rt_results.get('total_findings', 0) > 0:
+                findings['recommendations'].append({
+                    "category": "Real-Time Monitoring",
+                    "severity": "High",
+                    "description": f"Real-time monitoring detected {rt_results['total_findings']} compliance issues requiring immediate attention"
+                })
+            
+            if gdpr_results.get('total_findings', 0) > 5:
+                findings['recommendations'].append({
+                    "category": "Enhanced GDPR",
+                    "severity": "High", 
+                    "description": f"Enhanced GDPR analysis found {gdpr_results['total_findings']} violations including Articles 25, 30, 35, 37, and 44-49"
+                })
+            
+            if len(ai_act_results) > 0:
+                findings['recommendations'].append({
+                    "category": "EU AI Act 2025",
+                    "severity": "Critical",
+                    "description": f"EU AI Act violations detected: {len(ai_act_results)} non-compliance issues including Articles 6, 16, 17, 26, 29"
+                })
+            
+            if len(uavg_results) > 0:
+                findings['recommendations'].append({
+                    "category": "Netherlands UAVG",
+                    "severity": "High",
+                    "description": f"Netherlands UAVG compliance gaps: {len(uavg_results)} issues including AP Guidelines 2024-2025 and BSN processing"
+                })
+                
+        except ImportError as e:
+            # Fallback if enhanced modules not available
+            findings['recommendations'].append({
+                "category": "Enhanced Monitoring",
+                "severity": "Medium",
+                "description": "Enhanced compliance monitoring modules not fully integrated"
+            })
+        
+        return findings
         
     def _generate_recommendations(self, category_scores: Dict[str, Dict[str, Any]]) -> List[Dict[str, str]]:
         """Generate recommendations based on risk scores for each category."""
