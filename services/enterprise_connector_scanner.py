@@ -250,7 +250,8 @@ class EnterpriseConnectorScanner:
             
             # Calculate expiration time
             expires_in = token_info.get('expires_in', 3600)
-            self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+            expires_seconds = int(expires_in) if isinstance(expires_in, (str, int)) else 3600
+            self.token_expires = datetime.now() + timedelta(seconds=expires_seconds)
             
             # Update session headers
             self.session.headers['Authorization'] = f'Bearer {self.access_token}'
@@ -286,7 +287,8 @@ class EnterpriseConnectorScanner:
             
             # Calculate expiration time
             expires_in = token_info.get('expires_in', 3600)
-            self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+            expires_seconds = int(expires_in) if isinstance(expires_in, (str, int)) else 3600
+            self.token_expires = datetime.now() + timedelta(seconds=expires_seconds)
             
             # Update session headers
             self.session.headers['Authorization'] = f'Bearer {self.access_token}'
@@ -320,7 +322,8 @@ class EnterpriseConnectorScanner:
             
             # Calculate expiration time
             expires_in = token_info.get('expires_in', 3600)
-            self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+            expires_seconds = int(expires_in) if isinstance(expires_in, (str, int)) else 3600
+            self.token_expires = datetime.now() + timedelta(seconds=expires_seconds)
             
             # Update session headers
             self.session.headers['Authorization'] = f'Bearer {self.access_token}'
@@ -492,7 +495,8 @@ class EnterpriseConnectorScanner:
                 self.refresh_token = self.credentials.get('refresh_token')
                 # Use provided expiry or default to 1 hour
                 expires_in = self.credentials.get('expires_in', 3600)
-                self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+                expires_seconds = int(expires_in) if isinstance(expires_in, (str, int)) else 3600
+                self.token_expires = datetime.now() + timedelta(seconds=expires_seconds)
                 
                 # Update session headers
                 self.session.headers['Authorization'] = f'Bearer {self.access_token}'
@@ -523,7 +527,8 @@ class EnterpriseConnectorScanner:
             token_info = response.json()
             self.access_token = token_info['access_token']
             expires_in = token_info.get('expires_in', 3600)
-            self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+            expires_seconds = int(expires_in) if isinstance(expires_in, (str, int)) else 3600
+            self.token_expires = datetime.now() + timedelta(seconds=expires_seconds)
             
             # Update session headers
             self.session.headers.update({
@@ -551,7 +556,8 @@ class EnterpriseConnectorScanner:
                 self.refresh_token = self.credentials.get('refresh_token')
                 # Use provided expiry or default to 1 hour
                 expires_in = self.credentials.get('expires_in', 3600)
-                self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+                expires_seconds = int(expires_in) if isinstance(expires_in, (str, int)) else 3600
+                self.token_expires = datetime.now() + timedelta(seconds=expires_seconds)
                 
                 self.session.headers.update({
                     'Authorization': f'Bearer {self.access_token}',
@@ -627,7 +633,8 @@ class EnterpriseConnectorScanner:
                 self.refresh_token = self.credentials.get('refresh_token')
                 # Use provided expiry or default to 1 hour
                 expires_in = self.credentials.get('expires_in', 3600)
-                self.token_expires = datetime.now() + timedelta(seconds=expires_in)
+                expires_seconds = int(expires_in) if isinstance(expires_in, (str, int)) else 3600
+                self.token_expires = datetime.now() + timedelta(seconds=expires_seconds)
                 
                 self.session.headers.update({
                     'Authorization': f'Bearer {self.access_token}'
