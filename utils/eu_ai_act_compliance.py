@@ -86,6 +86,15 @@ def detect_ai_act_violations(content: str, document_metadata: Optional[Dict[str,
     # Check for GPAI model compliance (August 2025 requirements)
     findings.extend(_detect_gpai_compliance(content))
     
+    # Check for conformity assessment requirements (Articles 19-24)
+    findings.extend(_detect_conformity_assessment_violations(content))
+    
+    # Check for post-market monitoring requirements (Articles 61-68)
+    findings.extend(_detect_post_market_monitoring(content))
+    
+    # Check for deepfake and AI-generated content (Article 52)
+    findings.extend(_detect_deepfake_content_violations(content))
+    
     return findings
 
 def _detect_prohibited_practices(content: str) -> List[Dict[str, Any]]:
@@ -93,10 +102,14 @@ def _detect_prohibited_practices(content: str) -> List[Dict[str, Any]]:
     findings = []
     
     prohibited_patterns = {
-        "subliminal_techniques": r"\b(?:subliminal|subconscious|unconscious)\s+(?:influence|manipulation|techniques)\b",
-        "social_scoring": r"\b(?:social\s+scor|citizen\s+scor|behavioral\s+scor|reputation\s+system)\b",
-        "biometric_mass_surveillance": r"\b(?:mass\s+surveillance|indiscriminate\s+monitoring|bulk\s+biometric)\b",
-        "emotion_manipulation": r"\b(?:emotion(?:al)?\s+(?:manipulation|exploit|influence)|psychological\s+manipulation)\b"
+        "subliminal_techniques": r"\b(?:subliminal|subconscious|unconscious)\s+(?:influence|manipulation|techniques|suggestion|conditioning)\b",
+        "social_scoring": r"\b(?:social\s+scor|citizen\s+scor|behavioral\s+scor|reputation\s+system|social\s+credit|civic\s+rating)\b",
+        "biometric_mass_surveillance": r"\b(?:mass\s+surveillance|indiscriminate\s+monitoring|bulk\s+biometric|real.?time\s+biometric|live\s+facial\s+recognition)\b",
+        "emotion_manipulation": r"\b(?:emotion(?:al)?\s+(?:manipulation|exploit|influence)|psychological\s+manipulation|emotional\s+profiling)\b",
+        "workplace_emotion_recognition": r"\b(?:workplace\s+emotion|employee\s+emotion|staff\s+emotion|worker\s+sentiment)\s+(?:recognition|detection|monitoring)\b",
+        "biometric_categorisation": r"\b(?:biometric\s+categoris|race\s+classification|ethnic\s+profiling|gender\s+classification)(?:ation|ing)\b",
+        "manipulative_ai_vulnerable": r"\b(?:manipulat|exploit|target)(?:e|ing)\s+(?:vulnerable|children|elderly|disabled|minors)\s+(?:group|population|user)s?\b",
+        "deceptive_ai_practices": r"\b(?:deceptive\s+ai|misleading\s+ai|fake\s+human|deepfake\s+interaction|artificial\s+personality)\b"
     }
     
     for violation_type, pattern in prohibited_patterns.items():
@@ -120,11 +133,16 @@ def _detect_high_risk_systems(content: str) -> List[Dict[str, Any]]:
     findings = []
     
     high_risk_patterns = {
-        "biometric_identification": r"\b(?:facial\s+recognition|biometric\s+identification|fingerprint\s+matching)\b",
-        "employment_ai": r"\b(?:recruitment\s+ai|hiring\s+algorithm|cv\s+screening|employee\s+monitoring)\b",
-        "education_ai": r"\b(?:educational\s+ai|student\s+assessment|learning\s+analytics|academic\s+scoring)\b",
-        "credit_scoring": r"\b(?:credit\s+scoring|loan\s+assessment|financial\s+risk\s+model)\b",
-        "healthcare_ai": r"\b(?:medical\s+diagnosis|healthcare\s+ai|clinical\s+decision|patient\s+risk)\b"
+        "biometric_identification": r"\b(?:facial\s+recognition|biometric\s+identification|fingerprint\s+matching|iris\s+scanning|voice\s+recognition)\b",
+        "critical_infrastructure": r"\b(?:critical\s+infrastructure|power\s+grid|water\s+supply|transport\s+control|energy\s+management)\s+(?:ai|system|control)\b",
+        "employment_ai": r"\b(?:recruitment\s+ai|hiring\s+algorithm|cv\s+screening|employee\s+monitoring|performance\s+evaluation|workforce\s+management)\b",
+        "education_ai": r"\b(?:educational\s+ai|student\s+assessment|learning\s+analytics|academic\s+scoring|admission\s+algorithm)\b",
+        "essential_services": r"\b(?:healthcare\s+access|social\s+benefit|public\s+service|essential\s+service)\s+(?:ai|algorithm|system)\b",
+        "law_enforcement": r"\b(?:law\s+enforcement|police\s+ai|criminal\s+justice|predictive\s+policing|crime\s+prediction)\b",
+        "migration_border_control": r"\b(?:border\s+control|immigration\s+ai|asylum\s+decision|visa\s+processing|migration\s+management)\b",
+        "justice_democratic": r"\b(?:judicial\s+ai|court\s+decision|legal\s+algorithm|democratic\s+process|voting\s+system)\s+(?:ai|algorithm)\b",
+        "credit_scoring": r"\b(?:credit\s+scoring|loan\s+assessment|financial\s+risk\s+model|creditworthiness\s+ai)\b",
+        "healthcare_ai": r"\b(?:medical\s+diagnosis|healthcare\s+ai|clinical\s+decision|patient\s+risk|medical\s+device\s+ai)\b"
     }
     
     for system_type, pattern in high_risk_patterns.items():
@@ -240,6 +258,100 @@ def _detect_algorithmic_accountability(content: str) -> List[Dict[str, Any]]:
                 "Implement decision audit trails",
                 "Ensure explainability mechanisms",
                 "Regular algorithmic impact assessments"
+            ]
+        })
+    
+    return findings
+
+def _detect_conformity_assessment_violations(content: str) -> List[Dict[str, Any]]:
+    """Detect conformity assessment requirement violations (Articles 19-24)."""
+    findings = []
+    
+    conformity_patterns = {
+        "ce_marking_missing": r"\b(?:product|system|device)\b.*(?:market|sale|deploy)(?!.*(?:ce\\s+mark|conformity|declaration|notified\\s+body))",
+        "notified_body_missing": r"\b(?:high.?risk\\s+ai|biometric|critical\\s+infrastructure)(?!.*(?:notified\\s+body|third.?party\\s+assessment|independent\\s+audit))",
+        "eu_declaration_missing": r"\b(?:ai\\s+system|product).*(?:market|commercial)(?!.*(?:eu\\s+declaration|declaration\\s+of\\s+conformity|conformity\\s+statement))"
+    }
+    
+    for violation_type, pattern in conformity_patterns.items():
+        if re.search(pattern, content, re.IGNORECASE):
+            findings.append({
+                'type': 'AI_ACT_CONFORMITY',
+                'category': violation_type.replace('_', ' ').title(),
+                'value': 'Conformity assessment requirement',
+                'risk_level': 'High',
+                'regulation': 'EU AI Act Articles 19-24',
+                'description': f"Missing conformity assessment requirement: {violation_type.replace('_', ' ')}",
+                'requirements': [
+                    "CE marking required for market placement",
+                    "Notified body assessment for high-risk systems",
+                    "EU Declaration of Conformity mandatory",
+                    "Technical documentation must be maintained"
+                ]
+            })
+    
+    return findings
+
+def _detect_post_market_monitoring(content: str) -> List[Dict[str, Any]]:
+    """Detect post-market monitoring requirement violations (Articles 61-68)."""
+    findings = []
+    
+    monitoring_patterns = {
+        "incident_reporting_missing": r"\b(?:malfunction|error|failure|incident)(?!.*(?:report|notif|alert|surveillance))",
+        "market_surveillance_missing": r"\b(?:ai\\s+system|product).*(?:market|commercial)(?!.*(?:surveillance|monitor|oversight|compliance\\s+check))",
+        "penalty_framework_missing": r"\b(?:non.?compliance|violation|breach)(?!.*(?:penalty|fine|sanction|enforcement))"
+    }
+    
+    for violation_type, pattern in monitoring_patterns.items():
+        if re.search(pattern, content, re.IGNORECASE):
+            findings.append({
+                'type': 'AI_ACT_POST_MARKET',
+                'category': violation_type.replace('_', ' ').title(),
+                'value': 'Post-market monitoring requirement',
+                'risk_level': 'Medium',
+                'regulation': 'EU AI Act Articles 61-68',
+                'description': f"Missing post-market monitoring: {violation_type.replace('_', ' ')}",
+                'requirements': [
+                    "Serious incident reporting system required",
+                    "Market surveillance cooperation mandatory",
+                    "Non-compliance penalty framework needed",
+                    "Corrective action procedures required"
+                ]
+            })
+    
+    return findings
+
+def _detect_deepfake_content_violations(content: str) -> List[Dict[str, Any]]:
+    """Detect deepfake and AI-generated content disclosure violations (Article 52)."""
+    findings = []
+    
+    deepfake_patterns = {
+        "deepfake_creation": r"\b(?:deepfake|deep\\s+fake|synthetic\\s+media|face\\s+swap|voice\\s+cloning)\\b",
+        "ai_generated_content": r"\b(?:ai.?generated|synthetic|artificial)\\s+(?:content|image|video|audio|text)\\b",
+        "manipulated_media": r"\b(?:manipulated|altered|synthetic)\\s+(?:media|content|video|image|audio)\\b"
+    }
+    
+    disclosure_patterns = [
+        r"\b(?:ai.?generated|synthetic|artificial|deepfake)\\s+(?:content|warning|notice|disclaimer)\\b",
+        r"\b(?:this\\s+content\\s+was\\s+generated|created\\s+using\\s+ai|artificial\\s+content)\\b"
+    ]
+    
+    has_deepfake_content = any(re.search(pattern, content, re.IGNORECASE) for pattern in deepfake_patterns.values())
+    has_disclosure = any(re.search(pattern, content, re.IGNORECASE) for pattern in disclosure_patterns)
+    
+    if has_deepfake_content and not has_disclosure:
+        findings.append({
+            'type': 'AI_ACT_DEEPFAKE',
+            'category': 'Deepfake Content Disclosure',
+            'value': 'AI-generated content without disclosure',
+            'risk_level': 'High',
+            'regulation': 'EU AI Act Article 52',
+            'description': "AI-generated or deepfake content detected without proper disclosure",
+            'requirements': [
+                "Clear labeling of AI-generated content required",
+                "Deepfake detection and disclosure mandatory",
+                "Synthetic media marking required",
+                "User notification about artificial content"
             ]
         })
     
