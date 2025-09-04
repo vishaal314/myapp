@@ -192,6 +192,23 @@ def validate_comprehensive_gdpr_compliance(content: str, region: str = "Netherla
     design_compliance = _validate_data_protection_by_design(content)
     findings.extend(design_compliance['findings'])
     
+    # NEW: Enhanced GDPR Article gap fixes
+    enhanced_findings = []
+    enhanced_findings.extend(_check_privacy_by_design_technical(content, {}))
+    enhanced_findings.extend(_check_records_of_processing_automation(content, {}))
+    enhanced_findings.extend(_check_enhanced_dpia_requirements(content, {}))
+    enhanced_findings.extend(_check_dpo_appointment_requirements(content, {}))
+    enhanced_findings.extend(_check_enhanced_international_transfers(content, {}))
+    findings.extend(enhanced_findings)
+    
+    # NEW: Integrate Netherlands UAVG compliance
+    try:
+        from utils.netherlands_uavg_compliance import detect_uavg_compliance_gaps
+        uavg_findings = detect_uavg_compliance_gaps(content, {})
+        findings.extend(uavg_findings)
+    except ImportError:
+        pass  # Module not available
+    
     # Validate Processor obligations (Article 28)
     processor_compliance = _validate_processor_obligations(content)
     findings.extend(processor_compliance['findings'])
@@ -807,3 +824,302 @@ def _generate_comprehensive_recommendations(findings: List[Dict[str, Any]]) -> L
     ])
     
     return list(recommendations)
+
+# NEW: Enhanced GDPR Article Detection Functions
+
+def _check_privacy_by_design_technical(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    """Enhanced technical validation for GDPR Article 25 - Privacy by Design and Default."""
+    findings = []
+    
+    # Technical implementation patterns for privacy by design
+    privacy_by_design_indicators = {
+        "encryption_at_rest": r"\b(?:encryption|encrypt|aes|rsa|tls|ssl|crypto)\b.*(?:storage|database|disk|file)",
+        "encryption_in_transit": r"\b(?:https|tls|ssl|secure.*transport|encrypted.*connection)\b",
+        "access_controls": r"\b(?:authentication|authorization|rbac|access.*control|permission|role)\b",
+        "data_minimization_code": r"\b(?:filter|select|limit|where|minimal.*data|necessary.*fields)\b",
+        "pseudonymization": r"\b(?:pseudonym|anonymiz|hash|tokeniz|mask|obfuscat)\b",
+        "audit_logging": r"\b(?:audit|log|trace|monitor|track.*access)\b",
+        "privacy_settings": r"\b(?:privacy.*setting|default.*private|opt.*in|consent)\b"
+    }
+    
+    violations = {
+        "no_encryption": r"\b(?:plain.*text|unencrypted|no.*ssl|http:\/\/|clear.*text)\b",
+        "open_access": r"\b(?:public.*access|no.*auth|anonymous|unrestricted)\b",
+        "excessive_logging": r"\b(?:log.*everything|full.*data.*log|complete.*record)\b",
+        "default_public": r"\b(?:default.*public|opt.*out|automatically.*share)\b"
+    }
+    
+    # Check for privacy by design implementations
+    implementations_found = []
+    for impl_type, pattern in privacy_by_design_indicators.items():
+        matches = re.findall(pattern, content, re.IGNORECASE)
+        if matches:
+            implementations_found.append(impl_type)
+    
+    # Check for violations
+    violations_found = []
+    for violation_type, pattern in violations.items():
+        matches = re.finditer(pattern, content, re.IGNORECASE)
+        for match in matches:
+            violations_found.append({
+                'type': violation_type,
+                'location': f"Position {match.start()}-{match.end()}",
+                'matched_text': match.group()
+            })
+    
+    # Generate findings based on analysis
+    if len(implementations_found) < 3:
+        findings.append({
+            'type': 'PRIVACY_BY_DESIGN_INSUFFICIENT',
+            'category': 'Article 25 - Privacy by Design',
+            'severity': 'High',
+            'title': 'Insufficient Privacy by Design Implementation',
+            'description': f'Only {len(implementations_found)} privacy by design measures detected. Minimum 3 required.',
+            'article_reference': 'GDPR Article 25',
+            'implemented_measures': implementations_found,
+            'recommendation': 'Implement comprehensive privacy by design measures including encryption, access controls, and data minimization'
+        })
+    
+    for violation in violations_found:
+        findings.append({
+            'type': 'PRIVACY_BY_DESIGN_VIOLATION',
+            'category': 'Article 25 - Privacy by Design',
+            'severity': 'High',
+            'title': f'Privacy by Design Violation: {violation["type"].replace("_", " ").title()}',
+            'description': f'Technical implementation violates privacy by design principles',
+            'location': violation['location'],
+            'matched_text': violation['matched_text'],
+            'article_reference': 'GDPR Article 25',
+            'recommendation': 'Remediate technical implementation to ensure privacy by design compliance'
+        })
+    
+    return findings
+
+def _check_records_of_processing_automation(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    """Enhanced automation for GDPR Article 30 - Records of Processing Activities."""
+    findings = []
+    
+    # Required Article 30 elements
+    required_elements = {
+        "controller_details": r"\b(?:data.*controller|controller.*contact|responsible.*person)\b",
+        "processing_purposes": r"\b(?:processing.*purpose|purpose.*statement|legitimate.*interest)\b",
+        "data_categories": r"\b(?:personal.*data.*categor|data.*type|special.*categor)\b",
+        "data_subjects": r"\b(?:data.*subject|individual|person.*affect)\b",
+        "recipients": r"\b(?:recipient|third.*party|processor|sharing)\b",
+        "international_transfers": r"\b(?:international.*transfer|third.*country|adequacy)\b",
+        "retention_periods": r"\b(?:retention.*period|storage.*duration|deletion.*schedule)\b",
+        "security_measures": r"\b(?:security.*measure|safeguard|technical.*organizational)\b"
+    }
+    
+    found_elements = []
+    missing_elements = []
+    
+    for element, pattern in required_elements.items():
+        if re.search(pattern, content, re.IGNORECASE):
+            found_elements.append(element)
+        else:
+            missing_elements.append(element)
+    
+    # Check for documentation structure
+    documentation_patterns = [
+        r"\b(?:record.*of.*processing|ropa|processing.*register)\b",
+        r"\b(?:data.*inventory|privacy.*register|processing.*log)\b"
+    ]
+    
+    has_documentation = any(re.search(pattern, content, re.IGNORECASE) for pattern in documentation_patterns)
+    
+    if len(missing_elements) > 2:
+        findings.append({
+            'type': 'RECORDS_OF_PROCESSING_INCOMPLETE',
+            'category': 'Article 30 - Records of Processing',
+            'severity': 'Medium',
+            'title': 'Incomplete Records of Processing Activities',
+            'description': f'Missing {len(missing_elements)} required elements for Article 30 compliance',
+            'article_reference': 'GDPR Article 30',
+            'found_elements': found_elements,
+            'missing_elements': missing_elements,
+            'recommendation': 'Complete records of processing activities with all required Article 30 elements'
+        })
+    
+    if not has_documentation:
+        findings.append({
+            'type': 'RECORDS_OF_PROCESSING_MISSING',
+            'category': 'Article 30 - Records of Processing',
+            'severity': 'High',
+            'title': 'Records of Processing Activities Not Found',
+            'description': 'No evidence of maintained records of processing activities',
+            'article_reference': 'GDPR Article 30',
+            'recommendation': 'Establish comprehensive records of processing activities (ROPA) documentation'
+        })
+    
+    return findings
+
+def _check_enhanced_dpia_requirements(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    """Enhanced threshold detection for GDPR Article 35 - Data Protection Impact Assessment."""
+    findings = []
+    
+    # DPIA triggering criteria (automatic threshold detection)
+    dpia_triggers = {
+        "systematic_monitoring": r"\b(?:systematic.*monitor|surveillance|tracking|behavioral.*analysis)\b",
+        "large_scale_processing": r"\b(?:large.*scale|mass.*processing|bulk.*data|thousands|millions)\b",
+        "special_categories": r"\b(?:health.*data|biometric|genetic|racial|ethnic|political|religious|sexual)\b",
+        "automated_decision_making": r"\b(?:automated.*decision|algorithmic|profiling|ai.*decision|machine.*learning)\b",
+        "public_area_monitoring": r"\b(?:cctv|video.*surveillance|public.*monitoring|facial.*recognition)\b",
+        "vulnerable_subjects": r"\b(?:children|minors|elderly|disabled|vulnerable.*group)\b",
+        "innovative_technology": r"\b(?:new.*technology|innovative|experimental|pilot|beta|ai|machine.*learning)\b",
+        "cross_border_transfer": r"\b(?:cross.*border|international.*transfer|third.*country|us.*transfer)\b",
+        "data_matching": r"\b(?:data.*matching|cross.*reference|data.*linking|merge.*dataset)\b"
+    }
+    
+    triggered_criteria = []
+    for criterion, pattern in dpia_triggers.items():
+        if re.search(pattern, content, re.IGNORECASE):
+            triggered_criteria.append(criterion)
+    
+    # Check for existing DPIA documentation
+    dpia_documentation = [
+        r"\b(?:dpia|data.*protection.*impact.*assessment|privacy.*impact.*assessment)\b",
+        r"\b(?:impact.*assessment|risk.*assessment|pia)\b"
+    ]
+    
+    has_dpia = any(re.search(pattern, content, re.IGNORECASE) for pattern in dpia_documentation)
+    
+    # Enhanced threshold logic: 2+ triggers require DPIA
+    if len(triggered_criteria) >= 2 and not has_dpia:
+        findings.append({
+            'type': 'DPIA_REQUIRED_MISSING',
+            'category': 'Article 35 - DPIA Requirements',
+            'severity': 'High',
+            'title': 'Data Protection Impact Assessment Required',
+            'description': f'DPIA required due to {len(triggered_criteria)} triggering criteria but not found',
+            'article_reference': 'GDPR Article 35',
+            'triggered_criteria': triggered_criteria,
+            'recommendation': 'Conduct comprehensive Data Protection Impact Assessment before processing'
+        })
+    elif len(triggered_criteria) >= 1 and not has_dpia:
+        findings.append({
+            'type': 'DPIA_RECOMMENDED',
+            'category': 'Article 35 - DPIA Requirements',
+            'severity': 'Medium',
+            'title': 'Data Protection Impact Assessment Recommended',
+            'description': f'DPIA recommended due to triggering criteria: {", ".join(triggered_criteria)}',
+            'article_reference': 'GDPR Article 35',
+            'triggered_criteria': triggered_criteria,
+            'recommendation': 'Consider conducting Data Protection Impact Assessment'
+        })
+    
+    return findings
+
+def _check_dpo_appointment_requirements(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    """Automated assessment for GDPR Article 37 - Data Protection Officer requirements."""
+    findings = []
+    
+    # DPO appointment criteria
+    dpo_required_criteria = {
+        "public_authority": r"\b(?:public.*authority|government|municipal|state|federal|council)\b",
+        "large_scale_monitoring": r"\b(?:large.*scale.*monitor|systematic.*monitor|surveillance.*program)\b",
+        "special_categories_large": r"\b(?:large.*scale.*special|bulk.*health|mass.*biometric|extensive.*sensitive)\b",
+        "core_activities_monitoring": r"\b(?:core.*activit.*monitor|primary.*business.*track|main.*operation.*surveillance)\b",
+        "law_enforcement": r"\b(?:law.*enforcement|police|criminal.*justice|investigation)\b"
+    }
+    
+    triggered_dpo_criteria = []
+    for criterion, pattern in dpo_required_criteria.items():
+        if re.search(pattern, content, re.IGNORECASE):
+            triggered_dpo_criteria.append(criterion)
+    
+    # Check for DPO appointment evidence
+    dpo_indicators = [
+        r"\b(?:data.*protection.*officer|dpo|privacy.*officer)\b",
+        r"\b(?:dpo.*contact|dpo.*email|privacy.*contact)\b"
+    ]
+    
+    has_dpo = any(re.search(pattern, content, re.IGNORECASE) for pattern in dpo_indicators)
+    
+    # DPO size threshold indicators (250+ employees)
+    size_indicators = [
+        r"\b(?:\d{3,}.*employ|\d{3,}.*staff|large.*organization|enterprise|multinational)\b",
+        r"\b(?:250.*employ|500.*employ|1000.*employ|10000.*employ)\b"
+    ]
+    
+    large_organization = any(re.search(pattern, content, re.IGNORECASE) for pattern in size_indicators)
+    
+    if (len(triggered_dpo_criteria) >= 1 or large_organization) and not has_dpo:
+        findings.append({
+            'type': 'DPO_APPOINTMENT_REQUIRED',
+            'category': 'Article 37 - Data Protection Officer',
+            'severity': 'High',
+            'title': 'Data Protection Officer Appointment Required',
+            'description': 'DPO appointment mandatory based on organizational criteria',
+            'article_reference': 'GDPR Article 37',
+            'triggered_criteria': triggered_dpo_criteria,
+            'large_organization': large_organization,
+            'recommendation': 'Appoint qualified Data Protection Officer and publish contact details'
+        })
+    
+    return findings
+
+def _check_enhanced_international_transfers(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    """Enhanced Schrems II compliance for GDPR Articles 44-49 - International Transfers."""
+    findings = []
+    
+    # International transfer detection
+    transfer_indicators = {
+        "us_transfers": r"\b(?:united.*states|usa|us.*server|american.*company|\.com|aws|azure|google.*cloud)\b",
+        "china_transfers": r"\b(?:china|chinese.*server|\.cn|alibaba|tencent)\b",
+        "third_countries": r"\b(?:third.*country|non.*eu|outside.*europe|international.*transfer)\b",
+        "cloud_services": r"\b(?:cloud.*service|saas|paas|iaas|aws|azure|google.*cloud|dropbox)\b"
+    }
+    
+    detected_transfers = []
+    for transfer_type, pattern in transfer_indicators.items():
+        matches = re.finditer(pattern, content, re.IGNORECASE)
+        for match in matches:
+            detected_transfers.append({
+                'type': transfer_type,
+                'location': f"Position {match.start()}-{match.end()}",
+                'matched_text': match.group()
+            })
+    
+    # Safeguards detection
+    safeguards = {
+        "adequacy_decision": r"\b(?:adequacy.*decision|adequate.*protection|eu.*approved)\b",
+        "standard_contractual_clauses": r"\b(?:standard.*contractual.*clauses|scc|model.*clauses)\b",
+        "binding_corporate_rules": r"\b(?:binding.*corporate.*rules|bcr)\b",
+        "certification": r"\b(?:certification|approved.*code.*conduct|binding.*enforceable)\b",
+        "schrems_ii_measures": r"\b(?:schrems.*ii|supplementary.*measures|additional.*safeguards)\b"
+    }
+    
+    found_safeguards = []
+    for safeguard_type, pattern in safeguards.items():
+        if re.search(pattern, content, re.IGNORECASE):
+            found_safeguards.append(safeguard_type)
+    
+    # Enhanced Schrems II analysis
+    if detected_transfers and len(found_safeguards) == 0:
+        findings.append({
+            'type': 'INTERNATIONAL_TRANSFER_NO_SAFEGUARDS',
+            'category': 'Articles 44-49 - International Transfers',
+            'severity': 'Critical',
+            'title': 'International Data Transfer Without Adequate Safeguards',
+            'description': f'International transfers detected without GDPR Chapter V safeguards',
+            'article_reference': 'GDPR Articles 44-49',
+            'detected_transfers': [t['type'] for t in detected_transfers],
+            'recommendation': 'Implement adequate safeguards (adequacy decisions, SCCs, BCRs) or cease transfers'
+        })
+    
+    # Specific US transfer analysis post-Schrems II
+    us_transfers = [t for t in detected_transfers if t['type'] == 'us_transfers']
+    if us_transfers and 'schrems_ii_measures' not in found_safeguards:
+        findings.append({
+            'type': 'US_TRANSFER_SCHREMS_II_VIOLATION',
+            'category': 'Articles 44-49 - International Transfers',
+            'severity': 'High',
+            'title': 'US Data Transfer Lacks Schrems II Compliance',
+            'description': 'US data transfers require supplementary measures post-Schrems II ruling',
+            'article_reference': 'GDPR Articles 44-49, Schrems II Decision',
+            'us_transfers_detected': len(us_transfers),
+            'recommendation': 'Implement Schrems II supplementary measures or use EU-based alternatives'
+        })
+    
+    return findings

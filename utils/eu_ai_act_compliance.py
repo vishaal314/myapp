@@ -95,6 +95,22 @@ def detect_ai_act_violations(content: str, document_metadata: Optional[Dict[str,
     # Check for deepfake and AI-generated content (Article 52)
     findings.extend(_detect_deepfake_content_violations(content))
     
+    # NEW: Enhanced EU AI Act 2025 gap fixes
+    findings.extend(_detect_automated_risk_classification(content))
+    findings.extend(_detect_quality_management_gaps(content))
+    findings.extend(_detect_automatic_logging_gaps(content))
+    findings.extend(_detect_human_oversight_gaps(content))
+    findings.extend(_detect_fundamental_rights_gaps(content))
+    
+    # NEW: Integrate real-time compliance monitoring
+    try:
+        from utils.real_time_compliance_monitor import RealTimeComplianceMonitor
+        monitor = RealTimeComplianceMonitor()
+        monitoring_results = monitor.perform_real_time_assessment(content, document_metadata or {})
+        findings.extend(monitoring_results.get('findings', []))
+    except ImportError:
+        pass  # Module not available
+    
     return findings
 
 def _detect_prohibited_practices(content: str) -> List[Dict[str, Any]]:
@@ -438,5 +454,183 @@ def _detect_gpai_compliance(content: str) -> List[Dict[str, Any]]:
                 'remediation': 'Implement GPAI transparency, documentation, and risk assessment requirements'
             }
             findings.append(finding)
+    
+    return findings
+
+# NEW: Enhanced EU AI Act 2025 Article Detection Functions
+
+def _detect_automated_risk_classification(content: str) -> List[Dict[str, Any]]:
+    """Enhanced Article 6 - Automated Risk Classification Rules."""
+    findings = []
+    
+    risk_classification_patterns = {
+        "foundation_models_high_risk": r"\b(?:foundation.*model|general.*purpose.*ai|systemic.*risk)\b.*(?:high.*risk|critical.*system)",
+        "biometric_identification": r"\b(?:biometric.*identification|facial.*recognition|voice.*print|fingerprint)\b",
+        "critical_infrastructure": r"\b(?:critical.*infrastructure|essential.*service|public.*safety|energy.*grid)\b",
+        "education_vocational": r"\b(?:education.*system|vocational.*training|student.*assessment|academic.*evaluation)\b",
+        "employment_management": r"\b(?:recruitment|hr.*system|employment.*decision|worker.*evaluation)\b",
+        "essential_services": r"\b(?:essential.*service|public.*service|healthcare.*access|social.*benefit)\b",
+        "law_enforcement": r"\b(?:law.*enforcement|criminal.*justice|predictive.*policing|risk.*assessment)\b",
+        "migration_border": r"\b(?:migration|border.*control|asylum|visa.*application)\b",
+        "democratic_processes": r"\b(?:democratic.*process|election|voting.*system|political.*campaign)\b"
+    }
+    
+    detected_categories = []
+    for category, pattern in risk_classification_patterns.items():
+        if re.search(pattern, content, re.IGNORECASE):
+            detected_categories.append(category)
+    
+    if detected_categories:
+        findings.append({
+            'type': 'AI_ACT_RISK_CLASSIFICATION_REQUIRED',
+            'category': 'Article 6 - Classification Rules',
+            'severity': 'High',
+            'title': 'AI System Risk Classification Required',
+            'description': f'AI system detected in {len(detected_categories)} high-risk categories requiring Article 6 compliance',
+            'article_reference': 'EU AI Act Article 6',
+            'detected_categories': detected_categories,
+            'compliance_deadline': 'August 2, 2026',
+            'penalty_risk': 'Up to €35M or 7% global turnover',
+            'remediation': 'Implement automated risk classification system per Article 6 requirements'
+        })
+    
+    return findings
+
+def _detect_quality_management_gaps(content: str) -> List[Dict[str, Any]]:
+    """Enhanced Article 16 - Quality Management System Detection."""
+    findings = []
+    
+    quality_management_indicators = {
+        "quality_policy": r"\b(?:quality.*policy|quality.*management|qms|iso.*9001)\b",
+        "risk_management": r"\b(?:risk.*management|risk.*assessment|risk.*mitigation)\b",
+        "data_governance": r"\b(?:data.*governance|data.*quality|data.*validation)\b",
+        "model_validation": r"\b(?:model.*validation|testing.*procedure|validation.*protocol)\b",
+        "change_control": r"\b(?:change.*control|version.*control|configuration.*management)\b",
+        "documentation": r"\b(?:technical.*documentation|system.*specification|user.*manual)\b",
+        "performance_monitoring": r"\b(?:performance.*monitor|system.*monitoring|continuous.*assessment)\b"
+    }
+    
+    missing_elements = []
+    for element, pattern in quality_management_indicators.items():
+        if not re.search(pattern, content, re.IGNORECASE):
+            missing_elements.append(element)
+    
+    if len(missing_elements) >= 4:
+        findings.append({
+            'type': 'AI_ACT_QUALITY_MANAGEMENT_INSUFFICIENT',
+            'category': 'Article 16 - Quality Management',
+            'severity': 'High',
+            'title': 'Quality Management System Insufficient',
+            'description': f'Missing {len(missing_elements)} required quality management elements',
+            'article_reference': 'EU AI Act Article 16',
+            'missing_elements': missing_elements,
+            'compliance_deadline': 'August 2, 2026',
+            'penalty_risk': 'Up to €15M or 3% global turnover',
+            'remediation': 'Implement comprehensive quality management system per Article 16'
+        })
+    
+    return findings
+
+def _detect_automatic_logging_gaps(content: str) -> List[Dict[str, Any]]:
+    """Enhanced Article 17 - Automatic Logging Requirements."""
+    findings = []
+    
+    logging_requirements = {
+        "event_logging": r"\b(?:event.*log|audit.*log|system.*log|activity.*log)\b",
+        "data_logging": r"\b(?:input.*data.*log|output.*log|prediction.*log)\b",
+        "user_interaction": r"\b(?:user.*interaction|user.*session|interaction.*log)\b",
+        "system_performance": r"\b(?:performance.*log|latency.*log|throughput.*log)\b",
+        "error_logging": r"\b(?:error.*log|exception.*log|failure.*log)\b",
+        "security_events": r"\b(?:security.*event|access.*log|authentication.*log)\b",
+        "retention_policy": r"\b(?:log.*retention|retention.*policy|log.*archival)\b"
+    }
+    
+    missing_logging = []
+    for log_type, pattern in logging_requirements.items():
+        if not re.search(pattern, content, re.IGNORECASE):
+            missing_logging.append(log_type)
+    
+    if len(missing_logging) >= 3:
+        findings.append({
+            'type': 'AI_ACT_AUTOMATIC_LOGGING_INSUFFICIENT',
+            'category': 'Article 17 - Automatic Logging',
+            'severity': 'Medium',
+            'title': 'Automatic Logging Requirements Not Met',
+            'description': f'Missing {len(missing_logging)} required logging capabilities',
+            'article_reference': 'EU AI Act Article 17',
+            'missing_logging': missing_logging,
+            'compliance_deadline': 'August 2, 2026',
+            'penalty_risk': 'Up to €15M or 3% global turnover',
+            'remediation': 'Implement comprehensive automatic logging system per Article 17'
+        })
+    
+    return findings
+
+def _detect_human_oversight_gaps(content: str) -> List[Dict[str, Any]]:
+    """Enhanced Article 26 - Human Oversight Requirements."""
+    findings = []
+    
+    human_oversight_patterns = {
+        "human_in_the_loop": r"\b(?:human.*in.*loop|human.*intervention|manual.*review)\b",
+        "human_on_the_loop": r"\b(?:human.*on.*loop|human.*supervision|human.*monitoring)\b",
+        "human_override": r"\b(?:human.*override|manual.*override|stop.*button|emergency.*stop)\b",
+        "competent_persons": r"\b(?:competent.*person|qualified.*operator|trained.*staff)\b",
+        "monitoring_capability": r"\b(?:monitoring.*capability|oversight.*system|supervision.*system)\b",
+        "risk_interpretation": r"\b(?:risk.*interpretation|result.*interpretation|decision.*explanation)\b"
+    }
+    
+    oversight_gaps = []
+    for oversight_type, pattern in human_oversight_patterns.items():
+        if not re.search(pattern, content, re.IGNORECASE):
+            oversight_gaps.append(oversight_type)
+    
+    if len(oversight_gaps) >= 3:
+        findings.append({
+            'type': 'AI_ACT_HUMAN_OVERSIGHT_INSUFFICIENT',
+            'category': 'Article 26 - Human Oversight',
+            'severity': 'High',
+            'title': 'Human Oversight Requirements Insufficient',
+            'description': f'Missing {len(oversight_gaps)} required human oversight capabilities',
+            'article_reference': 'EU AI Act Article 26',
+            'missing_oversight': oversight_gaps,
+            'compliance_deadline': 'August 2, 2026',
+            'penalty_risk': 'Up to €15M or 3% global turnover',
+            'remediation': 'Implement comprehensive human oversight mechanisms per Article 26'
+        })
+    
+    return findings
+
+def _detect_fundamental_rights_gaps(content: str) -> List[Dict[str, Any]]:
+    """Enhanced Article 29 - Fundamental Rights Impact Assessment."""
+    findings = []
+    
+    fundamental_rights_patterns = {
+        "rights_impact_assessment": r"\b(?:fundamental.*rights.*impact|rights.*assessment|human.*rights.*impact)\b",
+        "non_discrimination": r"\b(?:non.*discrimination|bias.*assessment|fairness.*evaluation)\b",
+        "privacy_protection": r"\b(?:privacy.*protection|data.*protection|personal.*data)\b",
+        "freedom_of_expression": r"\b(?:freedom.*expression|speech.*rights|communication.*rights)\b",
+        "human_dignity": r"\b(?:human.*dignity|dignity.*respect|individual.*autonomy)\b",
+        "equality_assessment": r"\b(?:equality.*assessment|equal.*treatment|gender.*equality)\b",
+        "vulnerable_groups": r"\b(?:vulnerable.*group|minority.*rights|children.*rights)\b"
+    }
+    
+    rights_gaps = []
+    for rights_area, pattern in fundamental_rights_patterns.items():
+        if not re.search(pattern, content, re.IGNORECASE):
+            rights_gaps.append(rights_area)
+    
+    if len(rights_gaps) >= 4:
+        findings.append({
+            'type': 'AI_ACT_FUNDAMENTAL_RIGHTS_INSUFFICIENT',
+            'category': 'Article 29 - Fundamental Rights',
+            'severity': 'High',
+            'title': 'Fundamental Rights Impact Assessment Insufficient',
+            'description': f'Missing {len(rights_gaps)} fundamental rights considerations',
+            'article_reference': 'EU AI Act Article 29',
+            'missing_rights_areas': rights_gaps,
+            'compliance_deadline': 'August 2, 2026',
+            'penalty_risk': 'Up to €15M or 3% global turnover',
+            'remediation': 'Conduct comprehensive fundamental rights impact assessment per Article 29'
+        })
     
     return findings
