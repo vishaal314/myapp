@@ -1275,7 +1275,8 @@ class EnterpriseConnectorScanner:
         return False
     
     def _analyze_compliance(self) -> Dict[str, Any]:
-        """Analyze findings for GDPR and Netherlands UAVG compliance."""
+        """Analyze findings for comprehensive GDPR and Netherlands UAVG compliance beyond PII detection."""
+        # Enhanced compliance analysis covering all GDPR requirements
         compliance_analysis = {
             'total_findings': len(self.findings),
             'high_risk_findings': 0,
@@ -1283,7 +1284,18 @@ class EnterpriseConnectorScanner:
             'gdpr_violations': [],
             'uavg_violations': [],
             'compliance_score': 0,
-            'recommendations': []
+            'recommendations': [],
+            
+            # Extended GDPR compliance areas
+            'data_minimization_violations': [],
+            'purpose_limitation_violations': [],
+            'storage_limitation_violations': [],
+            'transparency_violations': [],
+            'consent_violations': [],
+            'data_subject_rights_violations': [],
+            'data_protection_impact_violations': [],
+            'technical_organizational_measures': [],
+            'cross_border_transfer_violations': []
         }
         
         try:
@@ -1312,21 +1324,284 @@ class EnterpriseConnectorScanner:
             violation_rate = len(self.findings) / total_items
             compliance_analysis['compliance_score'] = max(0, 100 - (violation_rate * 100))
             
-            # Generate recommendations
-            if compliance_analysis['high_risk_findings'] > 0:
-                compliance_analysis['recommendations'].append(
-                    'Immediate action required: High-risk PII found in accessible locations'
-                )
+            # Perform comprehensive GDPR compliance analysis
+            self._analyze_data_minimization_compliance(compliance_analysis)
+            self._analyze_purpose_limitation_compliance(compliance_analysis)
+            self._analyze_storage_limitation_compliance(compliance_analysis)
+            self._analyze_transparency_compliance(compliance_analysis)
+            self._analyze_consent_compliance(compliance_analysis)
+            self._analyze_data_subject_rights_compliance(compliance_analysis)
+            self._analyze_cross_border_transfers(compliance_analysis)
             
-            if compliance_analysis['netherlands_specific_findings'] > 0:
-                compliance_analysis['recommendations'].append(
-                    'Netherlands UAVG compliance review needed for BSN and KvK data'
-                )
+            # Generate comprehensive recommendations
+            self._generate_comprehensive_recommendations(compliance_analysis)
             
         except Exception as e:
             logger.error(f"Compliance analysis failed: {str(e)}")
         
         return compliance_analysis
+    
+    def _analyze_data_minimization_compliance(self, compliance_analysis: Dict[str, Any]) -> None:
+        """Analyze compliance with GDPR Article 5(1)(c) - Data Minimization."""
+        violations = []
+        
+        # Check for excessive data collection in findings
+        for finding in self.findings:
+            content = finding.get('content', '')
+            location = finding.get('location', 'Unknown')
+            
+            # Detect potential data minimization violations
+            if self._contains_excessive_data_collection(content):
+                violations.append({
+                    'violation': 'Excessive personal data collection detected',
+                    'location': location,
+                    'severity': 'Medium',
+                    'article': 'GDPR Article 5(1)(c)',
+                    'recommendation': 'Review data collection practices and implement data minimization'
+                })
+        
+        compliance_analysis['data_minimization_violations'] = violations
+    
+    def _analyze_purpose_limitation_compliance(self, compliance_analysis: Dict[str, Any]) -> None:
+        """Analyze compliance with GDPR Article 5(1)(b) - Purpose Limitation."""
+        violations = []
+        
+        for finding in self.findings:
+            content = finding.get('content', '')
+            location = finding.get('location', 'Unknown')
+            
+            # Check for purpose limitation violations
+            if self._indicates_purpose_misuse(content):
+                violations.append({
+                    'violation': 'Personal data processing beyond original purpose',
+                    'location': location,
+                    'severity': 'High',
+                    'article': 'GDPR Article 5(1)(b)',
+                    'recommendation': 'Ensure data processing aligns with original collection purpose'
+                })
+        
+        compliance_analysis['purpose_limitation_violations'] = violations
+    
+    def _analyze_storage_limitation_compliance(self, compliance_analysis: Dict[str, Any]) -> None:
+        """Analyze compliance with GDPR Article 5(1)(e) - Storage Limitation."""
+        violations = []
+        
+        for finding in self.findings:
+            # Check for potential long-term storage violations
+            created_date = finding.get('created_date')
+            modified_date = finding.get('modified_date')
+            location = finding.get('location', 'Unknown')
+            
+            if self._indicates_excessive_retention(created_date, modified_date):
+                violations.append({
+                    'violation': 'Personal data stored beyond necessary retention period',
+                    'location': location,
+                    'severity': 'Medium',
+                    'article': 'GDPR Article 5(1)(e)',
+                    'recommendation': 'Implement data retention policies and automated deletion'
+                })
+        
+        compliance_analysis['storage_limitation_violations'] = violations
+    
+    def _analyze_transparency_compliance(self, compliance_analysis: Dict[str, Any]) -> None:
+        """Analyze compliance with GDPR Articles 12-14 - Transparency."""
+        violations = []
+        
+        # Check for missing privacy notices or unclear data processing information
+        for finding in self.findings:
+            content = finding.get('content', '')
+            location = finding.get('location', 'Unknown')
+            
+            if self._lacks_transparency_information(content):
+                violations.append({
+                    'violation': 'Insufficient transparency about data processing',
+                    'location': location,
+                    'severity': 'Medium',
+                    'article': 'GDPR Articles 12-14',
+                    'recommendation': 'Provide clear privacy notices and data processing information'
+                })
+        
+        compliance_analysis['transparency_violations'] = violations
+    
+    def _analyze_consent_compliance(self, compliance_analysis: Dict[str, Any]) -> None:
+        """Analyze compliance with GDPR Article 7 - Consent."""
+        violations = []
+        
+        for finding in self.findings:
+            content = finding.get('content', '')
+            location = finding.get('location', 'Unknown')
+            
+            if self._indicates_consent_violations(content):
+                violations.append({
+                    'violation': 'Invalid or missing consent for data processing',
+                    'location': location,
+                    'severity': 'High',
+                    'article': 'GDPR Article 7',
+                    'recommendation': 'Implement valid consent mechanisms and consent management'
+                })
+        
+        compliance_analysis['consent_violations'] = violations
+    
+    def _analyze_data_subject_rights_compliance(self, compliance_analysis: Dict[str, Any]) -> None:
+        """Analyze compliance with GDPR Articles 15-22 - Data Subject Rights."""
+        violations = []
+        
+        # Check for potential violations of data subject rights
+        for finding in self.findings:
+            content = finding.get('content', '')
+            location = finding.get('location', 'Unknown')
+            
+            if self._indicates_rights_violations(content):
+                violations.append({
+                    'violation': 'Insufficient data subject rights implementation',
+                    'location': location,
+                    'severity': 'Medium',
+                    'article': 'GDPR Articles 15-22',
+                    'recommendation': 'Implement data subject rights procedures (access, rectification, erasure, portability)'
+                })
+        
+        compliance_analysis['data_subject_rights_violations'] = violations
+    
+    def _analyze_cross_border_transfers(self, compliance_analysis: Dict[str, Any]) -> None:
+        """Analyze compliance with GDPR Chapter V - Cross-border data transfers."""
+        violations = []
+        
+        for finding in self.findings:
+            location = finding.get('location', 'Unknown')
+            
+            # Check for potential international data transfers without safeguards
+            if self._indicates_unsafe_transfer(finding):
+                violations.append({
+                    'violation': 'International data transfer without adequate safeguards',
+                    'location': location,
+                    'severity': 'High',
+                    'article': 'GDPR Chapter V (Articles 44-49)',
+                    'recommendation': 'Implement adequate safeguards for international transfers (adequacy decisions, SCCs, BCRs)'
+                })
+        
+        compliance_analysis['cross_border_transfer_violations'] = violations
+    
+    def _generate_comprehensive_recommendations(self, compliance_analysis: Dict[str, Any]) -> None:
+        """Generate comprehensive GDPR compliance recommendations."""
+        recommendations = []
+        
+        # High-priority recommendations
+        if compliance_analysis['high_risk_findings'] > 0:
+            recommendations.append({
+                'priority': 'Critical',
+                'category': 'Data Security',
+                'recommendation': 'Immediate action required: High-risk PII found in accessible locations',
+                'implementation_time': '1-2 weeks'
+            })
+        
+        if compliance_analysis['netherlands_specific_findings'] > 0:
+            recommendations.append({
+                'priority': 'High',
+                'category': 'Netherlands UAVG',
+                'recommendation': 'Netherlands UAVG compliance review needed for BSN and KvK data',
+                'implementation_time': '2-4 weeks'
+            })
+        
+        # GDPR Article-specific recommendations
+        violation_categories = [
+            ('data_minimization_violations', 'Data Minimization', 'Implement data minimization principles'),
+            ('purpose_limitation_violations', 'Purpose Limitation', 'Ensure purpose limitation compliance'),
+            ('storage_limitation_violations', 'Storage Limitation', 'Implement retention policies'),
+            ('transparency_violations', 'Transparency', 'Enhance privacy notices and transparency'),
+            ('consent_violations', 'Consent Management', 'Implement valid consent mechanisms'),
+            ('data_subject_rights_violations', 'Data Subject Rights', 'Enable data subject rights procedures'),
+            ('cross_border_transfer_violations', 'International Transfers', 'Implement transfer safeguards')
+        ]
+        
+        for violation_key, category, action in violation_categories:
+            if compliance_analysis.get(violation_key, []):
+                recommendations.append({
+                    'priority': 'Medium',
+                    'category': category,
+                    'recommendation': action,
+                    'implementation_time': '4-8 weeks'
+                })
+        
+        compliance_analysis['recommendations'] = recommendations
+    
+    # Helper methods for violation detection
+    def _contains_excessive_data_collection(self, content: str) -> bool:
+        """Check if content indicates excessive data collection."""
+        excessive_indicators = [
+            'collect all available data', 'maximum data extraction', 
+            'comprehensive user profiling', 'full data harvest'
+        ]
+        return any(indicator in content.lower() for indicator in excessive_indicators)
+    
+    def _indicates_purpose_misuse(self, content: str) -> bool:
+        """Check if content indicates purpose limitation violations."""
+        purpose_violations = [
+            'repurpose data', 'secondary use', 'data repurposing',
+            'alternative data usage', 'expanded data use'
+        ]
+        return any(violation in content.lower() for violation in purpose_violations)
+    
+    def _indicates_excessive_retention(self, created_date: str, modified_date: str) -> bool:
+        """Check if data retention appears excessive."""
+        if not created_date:
+            return False
+        
+        try:
+            from datetime import datetime
+            created = datetime.fromisoformat(created_date)
+            now = datetime.now()
+            retention_years = (now - created).days / 365.25
+            
+            # Flag data older than 7 years as potentially excessive
+            return retention_years > 7
+        except:
+            return False
+    
+    def _lacks_transparency_information(self, content: str) -> bool:
+        """Check if content lacks transparency information."""
+        transparency_indicators = [
+            'privacy policy', 'data processing notice', 'privacy notice',
+            'data usage', 'processing purpose', 'data controller'
+        ]
+        return not any(indicator in content.lower() for indicator in transparency_indicators)
+    
+    def _indicates_consent_violations(self, content: str) -> bool:
+        """Check if content indicates consent violations."""
+        consent_violations = [
+            'automatic consent', 'implied consent', 'pre-checked boxes',
+            'mandatory consent', 'forced agreement'
+        ]
+        return any(violation in content.lower() for violation in consent_violations)
+    
+    def _indicates_rights_violations(self, content: str) -> bool:
+        """Check if content indicates data subject rights violations."""
+        rights_violations = [
+            'no data access', 'cannot delete data', 'no data portability',
+            'restriction not available', 'rights not implemented'
+        ]
+        return any(violation in content.lower() for violation in rights_violations)
+    
+    def _indicates_unsafe_transfer(self, finding: Dict[str, Any]) -> bool:
+        """Check if finding indicates unsafe international data transfer."""
+        location = finding.get('location', '').lower()
+        content = finding.get('content', '').lower()
+        
+        # Check for indicators of international transfers
+        transfer_indicators = [
+            'us server', 'china server', 'third country', 'non-eu server',
+            'international transfer', 'cross-border', 'overseas processing'
+        ]
+        
+        safeguard_indicators = [
+            'adequacy decision', 'standard contractual clauses', 'scc',
+            'binding corporate rules', 'bcr', 'transfer safeguards'
+        ]
+        
+        has_transfer = any(indicator in location or indicator in content 
+                          for indicator in transfer_indicators)
+        has_safeguards = any(indicator in content for indicator in safeguard_indicators)
+        
+        return has_transfer and not has_safeguards
     
     def _generate_scan_summary(self, scan_results: Dict, compliance_analysis: Dict) -> Dict[str, Any]:
         """Generate final scan summary with all results."""
