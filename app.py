@@ -1136,8 +1136,7 @@ def render_dashboard():
         aggregator.use_file_storage = False  # Force database mode for real-time data
         
         # Clear any caching to ensure fresh data
-        if hasattr(aggregator, 'clear_cache'):
-            aggregator.clear_cache()
+        # Note: clear_cache method not available in current ResultsAggregator
         
         # Get all recent scans for current user (expanded timeframe to ensure we get all scans)
         recent_scans = aggregator.get_recent_scans(days=365, username=username)  # Get all scans for user
@@ -1208,12 +1207,12 @@ def render_dashboard():
             fresh_aggregator.use_file_storage = False
             
             # Get absolute latest data with no caching
-            all_user_scans = fresh_aggregator.get_user_scans(username, limit=50)
+            all_user_scans = fresh_aggregator.get_user_scans(username or 'anonymous', limit=50)
             logger.info(f"Dashboard: Direct database query found {len(all_user_scans)} total scans for user {username}")
             
             # If no user-specific scans, get all scans for accurate metrics
             if len(all_user_scans) == 0:
-                all_user_scans = fresh_aggregator.get_user_scans(None, limit=50)  # Get all users
+                all_user_scans = fresh_aggregator.get_user_scans('all_users', limit=50)  # Get all users
                 logger.info(f"Dashboard: No user-specific scans, using {len(all_user_scans)} total scans from database")
             
             # Filter for recent scans (30 days) manually to ensure accuracy

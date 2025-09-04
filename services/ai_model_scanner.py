@@ -58,6 +58,12 @@ except ImportError:
 
 try:
     import joblib
+    JOBLIB_AVAILABLE = True
+except ImportError:
+    joblib = None
+    JOBLIB_AVAILABLE = False
+
+try:
     import pickle
     SKLEARN_AVAILABLE = True
 except ImportError:
@@ -174,8 +180,9 @@ class AIModelScanner:
             try:
                 owner = repo_validation.get("owner")
                 repo = repo_validation.get("repo")
-                logging.info(f"Getting file count for repository: {owner}/{repo}")
-                file_count = self._get_repo_file_count(owner, repo)
+                if owner and repo:
+                    logging.info(f"Getting file count for repository: {owner}/{repo}")
+                    file_count = self._get_repo_file_count(owner, repo)
                 logging.info(f"Repository {owner}/{repo} has {file_count} files")
                 scan_result["files_scanned"] = file_count
                 # Estimate lines based on typical files in ML repos
@@ -373,11 +380,11 @@ class AIModelScanner:
             
         except Exception as e:
             # Ensure cleanup on error
-            if 'model_path' in locals() and os.path.exists(model_path):
-                try:
+            try:
+                if model_path and os.path.exists(model_path):
                     os.unlink(model_path)
-                except OSError:
-                    pass
+            except (OSError, NameError):
+                pass
             
             logging.error(f"Enhanced AI model analysis error: {e}")
             return {
@@ -592,7 +599,7 @@ class AIModelScanner:
                             return getattr(__import__(module, fromlist=[name]), name)
                         elif module == 'builtins' and name in safe_builtins:
                             return getattr(builtins, name)
-                        raise pickle.UnpicklingError(f"Forbidden class {module}.{name}")
+                        raise ValueError(f"Forbidden class {module}.{name}")
                 
                 with open(model_path, 'rb') as f:
                     model = RestrictedUnpickler(f).load()
