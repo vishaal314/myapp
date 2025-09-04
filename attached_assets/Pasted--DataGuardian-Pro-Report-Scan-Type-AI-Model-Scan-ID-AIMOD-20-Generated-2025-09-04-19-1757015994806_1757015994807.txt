@@ -1,0 +1,402 @@
+🛡️ DataGuardian Pro Report
+Scan Type: AI Model
+
+Scan ID: AIMOD-20...
+
+Generated: 2025-09-04 19:57:33
+
+Region: Netherlands
+
+📊 Executive Summary
+439
+Files Scanned
+22
+Total Findings
+0
+Critical Issues
+4
+High Risk Issues
+Compliance Score: 53%
+🤖 AI Model Compliance
+General AI Model
+Model Framework
+Low Risk - Monitoring Required
+AI Act 2025 Status
+🔍 Detailed Findings
+Security Finding: License Detection
+Medium
+Description: Repository has a Apache License 2.0 license
+Context: Generic security or privacy finding requiring review
+Location: License File
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Opt-Out Mechanism
+Medium
+Description: Repository has a .gitignore file for excluding content
+Context: Generic security or privacy finding requiring review
+Location: .gitignore
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Documentation
+Medium
+Description: Repository has documentation files that may contain attribution guidelines
+Context: Generic security or privacy finding requiring review
+Location: Repository Documentation
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Model Architecture
+Medium
+Description: Model architecture review completed
+Context: Generic security or privacy finding requiring review
+Location: Model Repository
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Ai Act Fundamental Rights
+Medium
+Description: Potential fundamental rights impact: due process
+Context: Generic security or privacy finding requiring review
+Location: Position 544-562
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Ai Act Accountability
+Medium
+Description: Algorithmic decision-making detected without adequate governance framework
+Context: Generic security or privacy finding requiring review
+Location: Unknown location
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Ai Act Gpai Compliance
+High
+Description: General-Purpose AI model detected requiring compliance with August 2025 requirements: Copyright Disclosure
+Context: Generic security or privacy finding requiring review
+Location: Position 426-439
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Training Data Documented
+Medium
+Description: Comprehensive training data documentation implemented per EU AI Act Article 11
+Context: Generic security or privacy finding requiring review
+Location: Model Documentation
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Differential Privacy Implementation
+Medium
+Description: Differential privacy and data anonymization implemented
+Context: Generic security or privacy finding requiring review
+Location: Privacy Framework
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Explainability Framework
+Medium
+Description: LIME/SHAP explainability tools integrated for GDPR Article 22 compliance
+Context: Generic security or privacy finding requiring review
+Location: Explainability System
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Human Oversight System
+Medium
+Description: Human oversight mechanisms implemented per AI Act Article 14
+Context: Generic security or privacy finding requiring review
+Location: Oversight Framework
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Bias Mitigation Framework
+Medium
+Description: Demographic parity and fairness metrics implemented
+Context: Generic security or privacy finding requiring review
+Location: Fairness System
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Data Governance System
+Medium
+Description: Data lineage tracking and versioning implemented per AI Act Article 10
+Context: Generic security or privacy finding requiring review
+Location: Governance Framework
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Risk Management System
+Medium
+Description: Comprehensive risk assessment framework per AI Act Article 9
+Context: Generic security or privacy finding requiring review
+Location: Risk Management
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Regulatory Compliance System
+Medium
+Description: CE marking and conformity assessment implemented
+Context: Generic security or privacy finding requiring review
+Location: Regulatory Framework
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Compliance Assessment
+Medium
+Description: Model requires GDPR compliance assessment for Netherlands
+Context: Generic security or privacy finding requiring review
+Location: Compliance Analysis
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Training Data Assessment
+Medium
+Description: Potential PII exposure in training data
+Context: Generic security or privacy finding requiring review
+Location: Training Data
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Scraping Practices
+Medium
+Description: Assessment of code scraping practices for Copilot-style tools
+Context: Generic security or privacy finding requiring review
+Location: Data Collection
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Consent Mechanisms
+Medium
+Description: Verification of consent mechanisms for using open-source contributions in training
+Context: Generic security or privacy finding requiring review
+Location: Training Data
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Developer Opt-Out Rights
+Medium
+Description: Compliance with developer rights to exclude their data from model training
+Context: Generic security or privacy finding requiring review
+Location: Data Management
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Explainability Requirements
+Medium
+Description: Assessment of explainability when AI tools suggest or generate code
+Context: Generic security or privacy finding requiring review
+Location: Model Output
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Security Finding: Audit Trail Verification
+Medium
+Description: Verification of audit trails for models trained with publicly available code
+Context: Generic security or privacy finding requiring review
+Location: Training Process
+Data Classification: Unknown
+Business Impact: Potential security or compliance impact requiring investigation
+Priority: Medium - Review within 7 days
+Estimated Effort: 1-2 hours - Investigation and remediation
+⚖️ Compliance Requirements
+Article 32 - Security of processing
+General security best practices
+💡 Actionable Recommendations
+Review and assess finding Medium
+Description: Conduct detailed analysis of this security finding
+Implementation: Investigate the specific issue and determine appropriate remediation
+Effort: 1-2 hours | Verification: Confirm issue is properly addressed
+Generated by DataGuardian Pro - Enterprise Privacy & Sustainability Compliance Platform
+
+Report ID: AIMOD-20250904-d56f32 | Generated: 2025-09-04 19:57:33
