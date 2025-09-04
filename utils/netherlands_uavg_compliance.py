@@ -32,7 +32,7 @@ def detect_uavg_compliance_gaps(content: str, metadata: Optional[Dict[str, Any]]
     
     return findings
 
-def _check_ap_guidelines_2024_2025(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def _check_ap_guidelines_2024_2025(content: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """Check compliance with latest Netherlands AP (Autoriteit Persoonsgegevens) guidelines."""
     findings = []
     
@@ -78,7 +78,7 @@ def _check_ap_guidelines_2024_2025(content: str, metadata: Dict[str, Any] = None
     
     return findings
 
-def _check_enhanced_bsn_processing(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def _check_enhanced_bsn_processing(content: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """Enhanced validation for BSN (Burgerservicenummer) processing rules."""
     findings = []
     
@@ -143,7 +143,7 @@ def _check_enhanced_bsn_processing(content: str, metadata: Dict[str, Any] = None
     
     return findings
 
-def _check_real_time_cookie_consent(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def _check_real_time_cookie_consent(content: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """Real-time cookie consent validation per Netherlands AP requirements."""
     findings = []
     
@@ -207,7 +207,7 @@ def _check_real_time_cookie_consent(content: str, metadata: Dict[str, Any] = Non
     
     return findings
 
-def _check_breach_notification_timeline(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def _check_breach_notification_timeline(content: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """72-hour timeline validation for data breach notifications."""
     findings = []
     
@@ -272,7 +272,7 @@ def _check_breach_notification_timeline(content: str, metadata: Dict[str, Any] =
     
     return findings
 
-def _check_netherlands_privacy_requirements(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def _check_netherlands_privacy_requirements(content: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """Check Netherlands-specific privacy law requirements beyond GDPR."""
     findings = []
     

@@ -116,7 +116,7 @@ class RealTimeComplianceMonitor:
         
         return {'findings': findings}
     
-    def _trigger_automated_dpia_assessment(self, content: str, metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _trigger_automated_dpia_assessment(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Smart threshold detection for automated DPIA triggering."""
         findings = []
         
@@ -217,7 +217,7 @@ class RealTimeComplianceMonitor:
         
         return {'findings': findings}
     
-    def _assess_dpo_requirements_automated(self, content: str, metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _assess_dpo_requirements_automated(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Automated assessment of Data Protection Officer appointment requirements."""
         findings = []
         

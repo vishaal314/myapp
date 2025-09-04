@@ -6,7 +6,7 @@ the core principles, rights, and obligations under the regulation.
 """
 
 import re
-from typing import Dict, List, Any, Set
+from typing import Dict, List, Any, Set, Optional
 from datetime import datetime, timedelta
 
 # GDPR Core Principles (Article 5)
@@ -536,7 +536,7 @@ def _validate_international_transfers(content: str) -> Dict[str, Any]:
             score = 20
         elif high_violations > 0:
             score = 50
-        elif not any([has_adequacy or False, has_safeguards or False, has_bcr or False, has_derogation or False]):
+        elif not any([has_adequacy, has_safeguards, has_bcr, has_derogation]):
             score = 60
     
     return {
@@ -827,7 +827,7 @@ def _generate_comprehensive_recommendations(findings: List[Dict[str, Any]]) -> L
 
 # NEW: Enhanced GDPR Article Detection Functions
 
-def _check_privacy_by_design_technical(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def _check_privacy_by_design_technical(content: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """Enhanced technical validation for GDPR Article 25 - Privacy by Design and Default."""
     findings = []
     
@@ -895,7 +895,7 @@ def _check_privacy_by_design_technical(content: str, metadata: Dict[str, Any] = 
     
     return findings
 
-def _check_records_of_processing_automation(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def _check_records_of_processing_automation(content: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """Enhanced automation for GDPR Article 30 - Records of Processing Activities."""
     findings = []
     
@@ -954,7 +954,7 @@ def _check_records_of_processing_automation(content: str, metadata: Dict[str, An
     
     return findings
 
-def _check_enhanced_dpia_requirements(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def _check_enhanced_dpia_requirements(content: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """Enhanced threshold detection for GDPR Article 35 - Data Protection Impact Assessment."""
     findings = []
     
@@ -1010,7 +1010,7 @@ def _check_enhanced_dpia_requirements(content: str, metadata: Dict[str, Any] = N
     
     return findings
 
-def _check_dpo_appointment_requirements(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def _check_dpo_appointment_requirements(content: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """Automated assessment for GDPR Article 37 - Data Protection Officer requirements."""
     findings = []
     
@@ -1059,7 +1059,7 @@ def _check_dpo_appointment_requirements(content: str, metadata: Dict[str, Any] =
     
     return findings
 
-def _check_enhanced_international_transfers(content: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def _check_enhanced_international_transfers(content: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """Enhanced Schrems II compliance for GDPR Articles 44-49 - International Transfers."""
     findings = []
     
