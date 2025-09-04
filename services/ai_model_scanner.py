@@ -1674,8 +1674,8 @@ class AIModelScanner:
         # Enhanced Documentation Finding
         improvement_findings.append({
             'id': f"IMPROVE-DOC-{self._generate_uuid()}",
-            'type': 'TRAINING_DATA_DOCUMENTED',
-            'category': 'Model Documentation',
+            'type': 'EU AI Act - Training Data Documented',
+            'category': 'AI Act 2025 Enhancement',
             'description': 'Comprehensive training data documentation implemented per EU AI Act Article 11',
             'risk_level': 'low',
             'location': 'Model Documentation',
@@ -1689,8 +1689,8 @@ class AIModelScanner:
         # Privacy Safeguards Finding
         improvement_findings.append({
             'id': f"IMPROVE-PRIV-{self._generate_uuid()}",
-            'type': 'differential_privacy_implementation',
-            'category': 'Privacy Safeguards',
+            'type': 'EU AI Act - Differential Privacy',
+            'category': 'AI Act 2025 Enhancement',
             'description': 'Differential privacy and data anonymization implemented',
             'risk_level': 'low',
             'location': 'Privacy Framework',
@@ -1704,8 +1704,8 @@ class AIModelScanner:
         # Explainability Finding
         improvement_findings.append({
             'id': f"IMPROVE-EXPL-{self._generate_uuid()}",
-            'type': 'explainability_framework',
-            'category': 'Explainability',
+            'type': 'EU AI Act - Explainability Framework',
+            'category': 'AI Act 2025 Enhancement',
             'description': 'LIME/SHAP explainability tools integrated for GDPR Article 22 compliance',
             'risk_level': 'low',
             'location': 'Explainability System',
@@ -1721,7 +1721,7 @@ class AIModelScanner:
         # Human Oversight Finding
         improvement_findings.append({
             'id': f"IMPROVE-OVERSIGHT-{self._generate_uuid()}",
-            'type': 'human_oversight_system',
+            'type': 'EU AI Act - Human Oversight System',
             'category': 'Human Oversight',
             'description': 'Human oversight mechanisms implemented per AI Act Article 14',
             'risk_level': 'low',
@@ -1736,8 +1736,8 @@ class AIModelScanner:
         # Bias Mitigation Finding
         improvement_findings.append({
             'id': f"IMPROVE-BIAS-{self._generate_uuid()}",
-            'type': 'bias_mitigation_framework',
-            'category': 'Bias Mitigation',
+            'type': 'EU AI Act - Bias Mitigation Framework',
+            'category': 'AI Act 2025 Enhancement',
             'description': 'Demographic parity and fairness metrics implemented',
             'risk_level': 'low',
             'location': 'Fairness System',
@@ -1751,8 +1751,8 @@ class AIModelScanner:
         # Data Governance Finding
         improvement_findings.append({
             'id': f"IMPROVE-GOVERN-{self._generate_uuid()}",
-            'type': 'data_governance_system',
-            'category': 'Data Governance',
+            'type': 'EU AI Act - Data Governance System',
+            'category': 'AI Act 2025 Enhancement',
             'description': 'Data lineage tracking and versioning implemented per AI Act Article 10',
             'risk_level': 'low',
             'location': 'Governance Framework',
@@ -1768,8 +1768,8 @@ class AIModelScanner:
         # Risk Management Finding
         improvement_findings.append({
             'id': f"IMPROVE-RISK-{self._generate_uuid()}",
-            'type': 'risk_management_system',
-            'category': 'Risk Management',
+            'type': 'EU AI Act - Risk Management System',
+            'category': 'AI Act 2025 Enhancement',
             'description': 'Comprehensive risk assessment framework per AI Act Article 9',
             'risk_level': 'low',
             'location': 'Risk Management',
@@ -1783,8 +1783,8 @@ class AIModelScanner:
         # Regulatory Compliance Finding
         improvement_findings.append({
             'id': f"IMPROVE-REG-{self._generate_uuid()}",
-            'type': 'regulatory_compliance_system',
-            'category': 'Regulatory Compliance',
+            'type': 'EU AI Act - Regulatory Compliance System',
+            'category': 'AI Act 2025 Enhancement',
             'description': 'CE marking and conformity assessment implemented',
             'risk_level': 'low',
             'location': 'Regulatory Framework',
@@ -1877,13 +1877,30 @@ class AIModelScanner:
         # Get EU AI Act violations using our comprehensive compliance system
         eu_violations = detect_ai_act_violations(model_content)
         
-        # Convert to scanner findings format
+        # Convert to scanner findings format with proper AI Act categorization
         for violation in eu_violations:
+            # Enhanced categorization based on violation type
+            violation_type = violation.get('type', 'AI_ACT_VIOLATION')
+            
+            # Map to user-friendly category names
+            category_mapping = {
+                'AI_ACT_PROHIBITED': 'EU AI Act - Prohibited Practice',
+                'AI_ACT_HIGH_RISK': 'EU AI Act - High-Risk System',
+                'AI_ACT_GPAI_COMPLIANCE': 'EU AI Act - GPAI Model',
+                'AI_ACT_TRANSPARENCY': 'EU AI Act - Transparency',
+                'AI_ACT_FUNDAMENTAL_RIGHTS': 'EU AI Act - Fundamental Rights',
+                'AI_ACT_ACCOUNTABILITY': 'EU AI Act - Accountability',
+                'AI_ACT_CONFORMITY': 'EU AI Act - Conformity Assessment',
+                'AI_ACT_POST_MARKET': 'EU AI Act - Post-Market Monitoring'
+            }
+            
+            display_category = category_mapping.get(violation_type, 'EU AI Act Compliance')
+            
             finding = {
                 "id": f"EU-AI-ACT-{uuid.uuid4().hex[:8]}",
-                "type": violation.get('type', 'AI_ACT_VIOLATION'),
-                "category": violation.get('category', 'EU AI Act Compliance'),
-                "title": f"AI Act {violation.get('category', 'Compliance Issue')}",
+                "type": display_category,
+                "category": violation.get('category', 'AI Act 2025 Assessment'),
+                "title": f"{display_category}: {violation.get('category', 'Compliance Issue')}",
                 "description": violation.get('description', 'EU AI Act compliance requirement'),
                 "severity": self._map_risk_level_to_severity(violation.get('risk_level', 'Medium')),
                 "risk_level": violation.get('risk_level', 'Medium'),
@@ -1891,7 +1908,8 @@ class AIModelScanner:
                 "regulation": violation.get('regulation', 'EU AI Act 2025'),
                 "remediation": violation.get('remediation', 'Address compliance requirement'),
                 "requirements": violation.get('requirements', []),
-                "compliance_status": "requires_action"
+                "compliance_status": "requires_action",
+                "ai_act_type": violation_type
             }
             findings.append(finding)
         
@@ -1918,8 +1936,8 @@ class AIModelScanner:
         """Add prohibited practices compliance findings."""
         findings.append({
             "id": f"EU-PROHIBITED-{uuid.uuid4().hex[:8]}",
-            "type": "AI_ACT_PROHIBITED_ASSESSMENT",
-            "category": "Prohibited Practices Assessment",
+            "type": "EU AI Act - Prohibited Practices Assessment",
+            "category": "AI Act 2025 Compliance",
             "title": "Prohibited AI Practices Compliance Check",
             "description": "Assessment of compliance with EU AI Act Article 5 prohibited practices",
             "severity": "High",
@@ -1941,8 +1959,8 @@ class AIModelScanner:
         """Add high-risk AI systems compliance findings."""
         findings.append({
             "id": f"EU-HIGH-RISK-{uuid.uuid4().hex[:8]}",
-            "type": "AI_ACT_HIGH_RISK_ASSESSMENT",
-            "category": "High-Risk Systems Assessment", 
+            "type": "EU AI Act - High-Risk Systems Assessment",
+            "category": "AI Act 2025 Compliance", 
             "title": "High-Risk AI Systems Compliance",
             "description": "Assessment for high-risk AI system classification and requirements",
             "severity": "High",
@@ -1965,8 +1983,8 @@ class AIModelScanner:
         """Add transparency obligations compliance findings."""
         findings.append({
             "id": f"EU-TRANSPARENCY-{uuid.uuid4().hex[:8]}",
-            "type": "AI_ACT_TRANSPARENCY_ASSESSMENT",
-            "category": "Transparency Obligations",
+            "type": "EU AI Act - Transparency Obligations",
+            "category": "AI Act 2025 Compliance",
             "title": "AI System Transparency Requirements",
             "description": "Assessment of transparency and disclosure obligations under EU AI Act Article 52",
             "severity": "Medium",
@@ -1987,8 +2005,8 @@ class AIModelScanner:
         """Add conformity assessment compliance findings."""
         findings.append({
             "id": f"EU-CONFORMITY-{uuid.uuid4().hex[:8]}",
-            "type": "AI_ACT_CONFORMITY_ASSESSMENT",
-            "category": "Conformity Assessment",
+            "type": "EU AI Act - Conformity Assessment",
+            "category": "AI Act 2025 Compliance",
             "title": "CE Marking and Conformity Requirements",
             "description": "Assessment of conformity assessment procedures for market placement",
             "severity": "High",
@@ -2010,8 +2028,8 @@ class AIModelScanner:
         """Add post-market monitoring compliance findings."""
         findings.append({
             "id": f"EU-POST-MARKET-{uuid.uuid4().hex[:8]}",
-            "type": "AI_ACT_POST_MARKET_MONITORING",
-            "category": "Post-Market Monitoring",
+            "type": "EU AI Act - Post-Market Monitoring",
+            "category": "AI Act 2025 Compliance",
             "title": "Post-Market Surveillance Requirements",
             "description": "Assessment of post-market monitoring and surveillance obligations",
             "severity": "Medium",
