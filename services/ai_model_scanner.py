@@ -180,6 +180,7 @@ class AIModelScanner:
             try:
                 owner = repo_validation.get("owner")
                 repo = repo_validation.get("repo")
+                file_count = 1  # Default value
                 if owner and repo:
                     logging.info(f"Getting file count for repository: {owner}/{repo}")
                     file_count = self._get_repo_file_count(owner, repo)
@@ -384,10 +385,11 @@ class AIModelScanner:
             
         except Exception as e:
             # Ensure cleanup on error
+            model_path = None  # Initialize to avoid unbound variable
             try:
-                if model_path and os.path.exists(model_path):
+                if hasattr(locals(), 'model_path') and model_path and os.path.exists(model_path):
                     os.unlink(model_path)
-            except (OSError, NameError):
+            except (OSError, AttributeError):
                 pass
             
             logging.error(f"Enhanced AI model analysis error: {e}")

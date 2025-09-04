@@ -151,8 +151,11 @@ try:
     # Define local ScannerType for app-wide consistency
     ScannerType = ActivityScannerType
     
+    # Create compatibility aliases
+    from utils.activity_tracker import ScannerType as AppScannerType
+    
     # Compatibility wrapper functions with proper signatures
-    def track_scan_completed_wrapper(scanner_type, user_id, session_id, findings_count=0, files_scanned=0, compliance_score=0, **kwargs):
+    def track_scan_completed_wrapper_safe(scanner_type, user_id, session_id, findings_count=0, files_scanned=0, compliance_score=0, **kwargs):
         """Safe wrapper for scan completion tracking"""
         try:
             username = st.session_state.get('username', user_id)
@@ -170,7 +173,7 @@ try:
             logger.warning(f"Activity tracking failed: {e}")
             return None
     
-    def track_scan_failed_wrapper(scanner_type, user_id, session_id, error_message, **kwargs):
+    def track_scan_failed_wrapper_safe(scanner_type, user_id, session_id, error_message, **kwargs):
         """Safe wrapper for scan failure tracking"""
         try:
             username = st.session_state.get('username', user_id)
@@ -2643,7 +2646,7 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         high_risk_count = sum(1 for f in all_findings if f.get('severity') in ['Critical', 'High'])
         
         # Track successful completion with comprehensive details
-        track_scan_completed_wrapper(
+        track_scan_completed_wrapper_safe(
             scanner_type=ScannerType.CODE,
             user_id=user_id,
             session_id=session_id,
@@ -3045,7 +3048,7 @@ def execute_document_scan(region, username, uploaded_files):
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical' or f.get('risk_level') == 'Critical')
         
         # Track successful completion
-        track_scan_completed_wrapper(
+        track_scan_completed_wrapper_safe(
             scanner_type=ScannerType.DOCUMENT,
             user_id=user_id,
             session_id=session_id,
@@ -3100,13 +3103,14 @@ def execute_document_scan(region, username, uploaded_files):
         
     except Exception as e:
         # Initialize variables for error handler if not already set
-        if 'session_id' not in locals():
-            session_id = str(uuid.uuid4())
-        if 'user_id' not in locals():
-            user_id = username
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username or 'anonymous')
+        
+        # Import scanner type locally to avoid unbound variable
+        from utils.activity_tracker import ScannerType
         
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.DOCUMENT,
             user_id=user_id,
             session_id=session_id,
@@ -3255,7 +3259,7 @@ def execute_image_scan(region, username, uploaded_files):
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical' or f.get('risk_level') == 'Critical')
         
         # Track successful completion
-        track_scan_completed_wrapper(
+        track_scan_completed_wrapper_safe(
             scanner_type=ScannerType.IMAGE,
             user_id=user_id,
             session_id=session_id,
@@ -3601,7 +3605,7 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical' or f.get('risk_level') == 'Critical')
         
         # Track successful completion
-        track_scan_completed_wrapper(
+        track_scan_completed_wrapper_safe(
             scanner_type=ScannerType.DATABASE,
             user_id=user_id,
             session_id=session_id,
@@ -3747,7 +3751,7 @@ def execute_database_scan_cloud(region, username, connection_string):
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') == 'Critical' or f.get('risk_level') == 'Critical')
         
         # Track successful completion
-        track_scan_completed_wrapper(
+        track_scan_completed_wrapper_safe(
             scanner_type=ScannerType.DATABASE,
             user_id=user_id,
             session_id=session_id,
@@ -4607,7 +4611,7 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
         
         # Track successful completion
-        track_scan_completed_wrapper(
+        track_scan_completed_wrapper_safe(
             scanner_type=ScannerType.API,
             user_id=user_id,
             session_id=session_id,
@@ -4883,7 +4887,7 @@ def render_microsoft365_connector(region: str, username: str):
                 except Exception as store_error:
                     logger.error(f"Microsoft 365 Connector: FAILED to store scan result in aggregator: {store_error}")
                 
-                track_scan_completed_wrapper(
+                track_scan_completed_wrapper_safe(
                     scanner_type=ScannerType.ENTERPRISE,
                     user_id=user_id,
                     session_id=session_id,
@@ -5863,7 +5867,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             scan_results["findings"] = all_findings
             
             # Track successful completion with enhanced details
-            track_scan_completed_wrapper(
+            track_scan_completed_wrapper_safe(
                 scanner_type=ScannerType.AI_MODEL,
                 user_id=user_id,
                 session_id=session_id,
