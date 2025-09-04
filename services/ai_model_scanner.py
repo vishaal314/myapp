@@ -122,8 +122,8 @@ class AIModelScanner:
         elif model_source == "Model Hub":
             scan_result["model_name"] = model_details.get("hub_url", "")
             scan_result["repository_path"] = model_details.get("repository_path", "")
-        elif model_source == "Repository URL":
-            repo_url = model_details.get("repo_url", "")
+        elif model_source in ["Repository URL", "Model Repository"]:
+            repo_url = model_details.get("repository_url", model_details.get("repo_url", ""))
             branch = model_details.get("branch_name", "main")
             scan_result["repository_url"] = repo_url
             scan_result["branch"] = branch
@@ -172,7 +172,11 @@ class AIModelScanner:
                 
             # Get actual file count from repository
             try:
-                file_count = self._get_repo_file_count(repo_validation.get("owner"), repo_validation.get("repo"))
+                owner = repo_validation.get("owner")
+                repo = repo_validation.get("repo")
+                logging.info(f"Getting file count for repository: {owner}/{repo}")
+                file_count = self._get_repo_file_count(owner, repo)
+                logging.info(f"Repository {owner}/{repo} has {file_count} files")
                 scan_result["files_scanned"] = file_count
                 # Estimate lines based on typical files in ML repos
                 estimated_lines = file_count * 50  # Conservative estimate
