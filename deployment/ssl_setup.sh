@@ -2,7 +2,7 @@
 # SSL Certificate Setup for DataGuardian Pro
 # Domain: vishaalnoord7.retzor.com
 
-echo "🔒 Setting up SSL certificate for vishaalnoord7.retzor.com..."
+echo "🔒 Setting up SSL certificate for dataguardianpro.nl..."
 
 # Install Certbot if not already installed
 if ! command -v certbot &> /dev/null; then
@@ -13,7 +13,7 @@ fi
 
 # Obtain SSL certificate
 echo "📜 Obtaining SSL certificate..."
-certbot --nginx -d vishaalnoord7.retzor.com --non-interactive --agree-tos --email vishaalnoord7@gmail.com
+certbot --nginx -d dataguardianpro.nl -d www.dataguardianpro.nl --non-interactive --agree-tos --email info@dataguardianpro.nl
 
 # Set up automatic renewal
 echo "🔄 Setting up automatic renewal..."
@@ -29,17 +29,17 @@ echo "🔧 Updating Nginx security configuration..."
 cat > /etc/nginx/sites-available/dataguardian-pro << 'EOF'
 server {
     listen 80;
-    server_name vishaalnoord7.retzor.com;
+    server_name dataguardianpro.nl www.dataguardianpro.nl;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name vishaalnoord7.retzor.com;
+    server_name dataguardianpro.nl www.dataguardianpro.nl;
     
     # SSL Configuration
-    ssl_certificate /etc/letsencrypt/live/vishaalnoord7.retzor.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/vishaalnoord7.retzor.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/dataguardianpro.nl/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dataguardianpro.nl/privkey.pem;
     
     # SSL Security Settings
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -135,14 +135,14 @@ EOF
 nginx -t && systemctl reload nginx
 
 echo "✅ SSL setup completed!"
-echo "🌐 Your site is now available at: https://vishaalnoord7.retzor.com"
+echo "🌐 Your site is now available at: https://dataguardianpro.nl"
 echo "🔒 SSL certificate will auto-renew every 60 days"
 echo ""
 echo "📋 SSL STATUS:"
-echo "Certificate: /etc/letsencrypt/live/vishaalnoord7.retzor.com/"
+echo "Certificate: /etc/letsencrypt/live/dataguardianpro.nl/"
 echo "Auto-renewal: Enabled (certbot.timer)"
 echo "Security: A+ grade SSL configuration"
 echo ""
 echo "🔧 VERIFY INSTALLATION:"
-echo "curl -I https://vishaalnoord7.retzor.com"
-echo "openssl s_client -connect vishaalnoord7.retzor.com:443 -servername vishaalnoord7.retzor.com"
+echo "curl -I https://dataguardianpro.nl"
+echo "openssl s_client -connect dataguardianpro.nl:443 -servername dataguardianpro.nl"

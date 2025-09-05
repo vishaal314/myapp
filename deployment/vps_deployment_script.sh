@@ -96,7 +96,7 @@ echo "🌐 Configuring Nginx..."
 cat > /etc/nginx/sites-available/dataguardian-pro << 'EOF'
 server {
     listen 80;
-    server_name vishaalnoord7.retzor.com;
+    server_name dataguardianpro.nl www.dataguardianpro.nl;
     
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
