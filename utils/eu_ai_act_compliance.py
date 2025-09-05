@@ -510,34 +510,7 @@ def _detect_algorithmic_accountability(content: str) -> List[Dict[str, Any]]:
     
     return findings
 
-def _detect_conformity_assessment_violations(content: str) -> List[Dict[str, Any]]:
-    """Detect conformity assessment requirement violations (Articles 19-24)."""
-    findings = []
-    
-    conformity_patterns = {
-        "ce_marking_missing": r"\b(?:product|system|device)\b.*(?:market|sale|deploy)(?!.*(?:ce\\s+mark|conformity|declaration|notified\\s+body))",
-        "notified_body_missing": r"\b(?:high.?risk\\s+ai|biometric|critical\\s+infrastructure)(?!.*(?:notified\\s+body|third.?party\\s+assessment|independent\\s+audit))",
-        "eu_declaration_missing": r"\b(?:ai\\s+system|product).*(?:market|commercial)(?!.*(?:eu\\s+declaration|declaration\\s+of\\s+conformity|conformity\\s+statement))"
-    }
-    
-    for violation_type, pattern in conformity_patterns.items():
-        if re.search(pattern, content, re.IGNORECASE):
-            findings.append({
-                'type': 'AI_ACT_CONFORMITY',
-                'category': violation_type.replace('_', ' ').title(),
-                'value': 'Conformity assessment requirement',
-                'risk_level': 'High',
-                'regulation': 'EU AI Act Articles 19-24',
-                'description': f"Missing conformity assessment requirement: {violation_type.replace('_', ' ')}",
-                'requirements': [
-                    "CE marking required for market placement",
-                    "Notified body assessment for high-risk systems",
-                    "EU Declaration of Conformity mandatory",
-                    "Technical documentation must be maintained"
-                ]
-            })
-    
-    return findings
+# DUPLICATE FUNCTION REMOVED - Using enhanced version at line 198
 
 def _detect_post_market_monitoring(content: str) -> List[Dict[str, Any]]:
     """Detect post-market monitoring requirement violations (Articles 61-68)."""
