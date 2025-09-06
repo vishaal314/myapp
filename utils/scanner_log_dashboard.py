@@ -181,7 +181,10 @@ class ScannerLogAnalyzer:
                             try:
                                 entry = json.loads(line)
                                 if entry.get('category') == 'scanner' and entry.get('scanner_type'):
-                                    scanner_types.add(entry['scanner_type'])
+                                    scanner_type = entry['scanner_type']
+                                    # Only include valid scanner types, exclude 'unknown'
+                                    if scanner_type != 'unknown':
+                                        scanner_types.add(scanner_type)
                             except (json.JSONDecodeError, AttributeError):
                                 continue
                 except Exception:
