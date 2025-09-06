@@ -988,7 +988,9 @@ def render_authenticated_interface():
                 nav_mapping['Privacy Rights'] = 'privacy_rights'
                 nav_mapping['Privacyrechten'] = 'privacy_rights'
                 nav_mapping['Scanner Logs'] = 'scanner_logs'
+                nav_mapping['🔍 Scanner Logs'] = 'scanner_logs'
                 nav_mapping['Performance Dashboard'] = 'performance_dashboard'
+                nav_mapping['📈 Performance Dashboard'] = 'performance_dashboard'
                 
         except (FileNotFoundError, json.JSONDecodeError):
             continue
@@ -999,6 +1001,10 @@ def render_authenticated_interface():
         if nav_text and nav_text in selected_nav:
             current_nav_key = nav_key
             break
+    
+    # Debug: Log navigation selection for troubleshooting
+    if selected_nav and "Scanner Logs" in selected_nav:
+        logger.info(f"Navigation: selected_nav='{selected_nav}', current_nav_key='{current_nav_key}'")
     
     # Update selected_nav to current language if needed
     if current_nav_key:
@@ -1018,9 +1024,9 @@ def render_authenticated_interface():
         elif current_nav_key == 'admin':
             current_lang_nav = _('admin.title', 'Admin')
         elif current_nav_key == 'scanner_logs':
-            current_lang_nav = 'Scanner Logs'
+            current_lang_nav = '🔍 Scanner Logs'
         elif current_nav_key == 'performance_dashboard':
-            current_lang_nav = 'Performance Dashboard'
+            current_lang_nav = '📈 Performance Dashboard'
         
         # Update session state to current language version
         if current_lang_nav and selected_nav != current_lang_nav:
