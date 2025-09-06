@@ -269,10 +269,7 @@ class LicenseIntegration:
                 sla_hours = tier_limits.get('sla_hours', 48)
                 st.write(f"**Support:** {support_level} ({sla_hours}h SLA)")
                 
-            # Upgrade button
-            if st.sidebar.button("🚀 Upgrade", help="Upgrade to higher tier for more features"):
-                st.session_state['show_upgrade_page'] = True
-                st.rerun()
+            # Enterprise license active - no upgrade needed
         else:
             st.sidebar.error("❌ License Invalid")
             st.sidebar.write(license_info.get("message", "Unknown error"))

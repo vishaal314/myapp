@@ -392,13 +392,4 @@ def show_upgrade_in_sidebar(current_tier: PricingTier):
             {price}
             """)
             
-            col1, col2 = st.sidebar.columns(2)
-            with col1:
-                if st.button("View Pricing", key="sidebar_pricing"):
-                    st.session_state['show_pricing'] = True
-                    st.rerun()
-            
-            with col2:
-                if st.button("Upgrade Now", key="sidebar_upgrade"):
-                    st.session_state['show_upgrade'] = True
-                    st.rerun()
+            # Enterprise license active - upgrade options disabled
