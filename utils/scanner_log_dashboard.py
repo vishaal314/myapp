@@ -41,10 +41,10 @@ class ScannerLogAnalyzer:
         entries = []
         cutoff_time = datetime.utcnow() - timedelta(hours=hours)
         
-        for log_file_name in self.scanner_log_files:
-            log_file = self.logs_dir / log_file_name
-            if log_file.exists():
-                entries.extend(self._parse_scanner_log_file(log_file, cutoff_time, scanner_type, level))
+        # Check all .log files in the directory, not just the predefined ones
+        for log_file_path in self.logs_dir.glob("*.log"):
+            if log_file_path.exists():
+                entries.extend(self._parse_scanner_log_file(log_file_path, cutoff_time, scanner_type, level))
         
         # Sort by timestamp descending
         entries.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
@@ -100,15 +100,17 @@ class ScannerLogAnalyzer:
         """Get list of scanner types that actually have logs available"""
         scanner_types = set()
         
-        # Only get scanner types from actual log files
-        for log_file_name in self.scanner_log_files:
-            log_file = self.logs_dir / log_file_name
-            if log_file.exists():
+        # Check all .log files in the directory for scanner types
+        for log_file_path in self.logs_dir.glob("*.log"):
+            if log_file_path.exists():
                 try:
-                    with open(log_file, 'r', encoding='utf-8') as f:
+                    with open(log_file_path, 'r', encoding='utf-8') as f:
                         for line in f:
+                            line = line.strip()
+                            if not line:
+                                continue
                             try:
-                                entry = json.loads(line.strip())
+                                entry = json.loads(line)
                                 if entry.get('category') == 'scanner' and entry.get('scanner_type'):
                                     scanner_types.add(entry['scanner_type'])
                             except (json.JSONDecodeError, AttributeError):
