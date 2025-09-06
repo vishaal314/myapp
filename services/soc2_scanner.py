@@ -610,12 +610,8 @@ def scan_iac_file(file_path: str, tech: Optional[str] = None) -> List[Dict[str, 
                 
                 findings.append(finding)
     except Exception as e:
-        # Use centralized logging if available, fallback to standard logging
-        if hasattr(logger, 'scan_failed'):
-            logger.scan_failed("soc2", f"Error scanning file {file_path}", exception=e)
-        else:
-            logger.error(f"Error scanning file {file_path}: {str(e)}")
-            traceback.print_exc()
+        logger.error(f"Error scanning file {file_path}: {str(e)}")
+        traceback.print_exc()
         
     return findings
 
