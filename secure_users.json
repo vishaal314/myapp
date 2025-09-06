@@ -2,19 +2,19 @@
   "admin": {
     "user_id": "admin_001",
     "username": "admin",
-    "password_hash": "$2b$12$o3bSu6wCdAtic89ib/ViXeO53eD63M3DB4p4w5cN2P2gBFv9nrG2a",
+    "password_hash": "$2b$12$3GapITdv0EUEhbFx6meQ8u4L5NdkQzJMXwsfbkjdxTTAz/Bh6Bzdu",
     "role": "admin",
     "email": "admin@dataguardian.pro",
     "active": true,
     "created_at": "2025-07-14T18:21:11.699873",
     "last_login": null,
-    "failed_attempts": 1,
+    "failed_attempts": 0,
     "locked_until": null
   },
   "demo": {
     "user_id": "demo_001",
     "username": "demo",
-    "password_hash": "$2b$12$T8e/CUvhIl2T17V2RLEfA.J3pxlUj.17q1Zay2FqYz1DyMXWgIyn.",
+    "password_hash": "$2b$12$Cxd9hlfBbtwQV2Kkbtuwp.XhAmkH9u6.F53PhD7lwtfh6VdEf/sy.",
     "role": "viewer",
     "email": "demo@dataguardian.pro",
     "active": true,
