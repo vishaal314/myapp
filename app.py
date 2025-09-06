@@ -987,6 +987,8 @@ def render_authenticated_interface():
                 nav_mapping['Admin'] = 'admin'
                 nav_mapping['Privacy Rights'] = 'privacy_rights'
                 nav_mapping['Privacyrechten'] = 'privacy_rights'
+                nav_mapping['Scanner Logs'] = 'scanner_logs'
+                nav_mapping['Performance Dashboard'] = 'performance_dashboard'
                 
         except (FileNotFoundError, json.JSONDecodeError):
             continue
@@ -1015,6 +1017,10 @@ def render_authenticated_interface():
             current_lang_nav = _('sidebar.privacy_rights', 'Privacy Rights')
         elif current_nav_key == 'admin':
             current_lang_nav = _('admin.title', 'Admin')
+        elif current_nav_key == 'scanner_logs':
+            current_lang_nav = 'Scanner Logs'
+        elif current_nav_key == 'performance_dashboard':
+            current_lang_nav = 'Performance Dashboard'
         
         # Update session state to current language version
         if current_lang_nav and selected_nav != current_lang_nav:
@@ -1036,10 +1042,10 @@ def render_authenticated_interface():
         render_privacy_rights_page()
     elif current_nav_key == 'admin':
         render_admin_page()
-    elif selected_nav and "Performance Dashboard" in selected_nav:
-        render_performance_dashboard_safe()
-    elif selected_nav and "Scanner Logs" in selected_nav:
+    elif current_nav_key == 'scanner_logs':
         render_log_dashboard()
+    elif current_nav_key == 'performance_dashboard':
+        render_performance_dashboard_safe()
     elif selected_nav and "🏢 Enterprise Repository Demo" in selected_nav:
         render_enterprise_repo_demo()
     elif selected_nav and "💳 iDEAL Payment Test" in selected_nav:
