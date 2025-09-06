@@ -63,17 +63,72 @@ class ScannerLogAnalyzer:
                         continue
                     
                     try:
+                        # Try to parse as JSON first (new format)
                         entry = json.loads(line)
                         
                         # Only include scanner-related logs
                         if entry.get('category') != 'scanner':
                             continue
+                            
+                    except json.JSONDecodeError:
+                        # Handle old format logs (timestamp - logger - level - message)
+                        # Example: "2025-05-13 16:10:12,963 - services.enhanced_ai_model_scanner - INFO - Starting scan"
+                        if ' - ' in line and any(keyword in line.lower() for keyword in ['scanner', 'scan', 'model', 'pii', 'compliance']):
+                            parts = line.split(' - ', 3)
+                            if len(parts) >= 4:
+                                timestamp_str = parts[0]
+                                logger_name = parts[1]
+                                level = parts[2]
+                                message = parts[3]
+                                
+                                # Extract scanner type from logger name or message
+                                scanner_type = 'unknown'
+                                if 'ai_model' in logger_name.lower() or 'ai_model' in message.lower():
+                                    scanner_type = 'ai_model_scanner'
+                                elif 'code' in logger_name.lower() or 'code' in message.lower():
+                                    scanner_type = 'code_scanner'
+                                elif 'blob' in logger_name.lower() or 'blob' in message.lower():
+                                    scanner_type = 'blob_scanner'
+                                elif 'website' in logger_name.lower() or 'website' in message.lower():
+                                    scanner_type = 'website_scanner'
+                                elif 'database' in logger_name.lower() or 'database' in message.lower():
+                                    scanner_type = 'db_scanner'
+                                elif 'repo' in logger_name.lower() or 'repository' in message.lower():
+                                    scanner_type = 'repo_scanner'
+                                
+                                # Convert to standardized format
+                                entry = {
+                                    'timestamp': timestamp_str,
+                                    'level': level,
+                                    'category': 'scanner',
+                                    'scanner_type': scanner_type,
+                                    'message': message,
+                                    'logger': logger_name
+                                }
+                            else:
+                                continue
+                        else:
+                            continue
                         
                         # Parse timestamp
                         timestamp_str = entry.get('timestamp', '')
                         if timestamp_str:
-                            log_time = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-                            if log_time.replace(tzinfo=None) < cutoff_time:
+                            try:
+                                # Handle different timestamp formats
+                                if 'T' in timestamp_str and ('Z' in timestamp_str or '+' in timestamp_str):
+                                    # ISO format: "2025-09-06T18:22:17.193090Z"
+                                    log_time = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                                elif ',' in timestamp_str and '-' in timestamp_str:
+                                    # Old format: "2025-05-13 16:10:12,963"
+                                    log_time = datetime.strptime(timestamp_str.split(',')[0], '%Y-%m-%d %H:%M:%S')
+                                else:
+                                    # Default parsing attempt
+                                    log_time = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                                
+                                if log_time.replace(tzinfo=None) < cutoff_time:
+                                    continue
+                            except (ValueError, TypeError):
+                                # Skip logs with unparseable timestamps
                                 continue
                         
                         # Filter by scanner type if specified
