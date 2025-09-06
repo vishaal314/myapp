@@ -512,7 +512,7 @@ class IntelligentRepoScanner:
         """Clone repository with minimal depth for faster cloning."""
         try:
             # Validate and fix repository URL
-            if repo_url.endswith('/') and repo_url.count('/') < 4:
+            if repo_url.endswith('/') and repo_url.count('/') == 4:
                 # Incomplete URL like "https://github.com/big-data-europe/"
                 suggested_repos = [
                     "docker-hadoop", "docker-spark", "docker-hive", 
