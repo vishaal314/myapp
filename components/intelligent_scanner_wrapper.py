@@ -94,10 +94,10 @@ class IntelligentScannerWrapper:
                             f.write(uploaded_file.getbuffer())
                         file_paths.append(file_path)
                     
-                    # Use intelligent document scanner for uploaded files
+                    # Use intelligent code scanner for uploaded files
                     scan_result = self.scanner_manager.scan_intelligent(
-                        scan_type='documents',
-                        scan_target=file_paths,
+                        scan_type='code',
+                        scan_target=temp_dir,  # Scan the directory containing uploaded files
                         scan_mode=scan_mode,
                         max_items=100,
                         progress_callback=progress_callback,
@@ -122,8 +122,24 @@ class IntelligentScannerWrapper:
                     priority_extensions=priority_extensions or []
                 )
             
+            elif directory_path:
+                # Use intelligent code scanner for directory
+                scan_result = self.scanner_manager.scan_intelligent(
+                    scan_type='code',
+                    scan_target=directory_path,
+                    scan_mode=scan_mode,
+                    max_items=max_files,
+                    progress_callback=progress_callback,
+                    region=region,
+                    timeout=timeout,
+                    include_comments=include_comments,
+                    detect_secrets=detect_secrets,
+                    use_entropy=use_entropy,
+                    use_git_metadata=use_git_metadata,
+                    priority_extensions=priority_extensions or []
+                )
             else:
-                st.error("Please provide files or repository URL to scan.")
+                st.error("Please provide files, repository URL, or directory path to scan.")
                 # Return error structure instead of None
                 return {
                     'scan_id': f"error_{uuid.uuid4().hex[:8]}",
