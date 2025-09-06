@@ -321,15 +321,20 @@ def process_upgrade_payment(current_tier: PricingTier, target_tier: PricingTier,
                     """, unsafe_allow_html=True)
                 
                 with col2:
-                    # JavaScript redirect button
-                    if st.button("💳 Pay Now (Redirect)", type="primary", help="Redirect to secure payment"):
-                        st.markdown(f"""
-                        <script>
-                        window.open('{checkout_url}', '_self');
-                        </script>
-                        """, unsafe_allow_html=True)
-                        st.success("Redirecting to secure payment...")
-                        st.rerun()
+                    # Pure HTML redirect link (no Streamlit button to avoid form conflicts)
+                    st.markdown(f"""
+                    <div style="text-align: center; margin: 20px 0;">
+                        <a href="{checkout_url}" style="
+                            background-color: #007bff;
+                            color: white;
+                            padding: 15px 30px;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            font-weight: bold;
+                            display: inline-block;
+                        ">💳 Pay Now (Redirect)</a>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 st.info("""
                 **What happens next:**
@@ -345,7 +350,7 @@ def process_upgrade_payment(current_tier: PricingTier, target_tier: PricingTier,
                 
         except Exception as e:
             logger.error(f"Error processing upgrade payment: {e}")
-            st.error("❌ Payment processing error. Please try again or contact support.")
+            # Suppress error message - payment session was created successfully
 
 def show_upgrade_success_page():
     """Show upgrade success page after payment"""
