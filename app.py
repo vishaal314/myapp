@@ -28,6 +28,12 @@ Netherlands jurisdiction applies. All disputes subject to Amsterdam courts.
 
 import streamlit as st
 
+# Import repository cache for cache management
+try:
+    from utils.repository_cache import repository_cache
+except ImportError:
+    repository_cache = None
+
 # Health check endpoint for Railway deployment
 if st.query_params.get("health") == "check":
     st.write("OK")

@@ -32,6 +32,13 @@ from pathlib import Path
 import random
 from collections import Counter
 
+# Import repository caching system
+try:
+    from utils.repository_cache import repository_cache
+except ImportError:
+    # Fallback if cache module not available
+    repository_cache = None
+
 logger = logging.getLogger("services.intelligent_repo_scanner")
 
 class IntelligentRepoScanner:
@@ -118,25 +125,47 @@ class IntelligentRepoScanner:
         }
         
         try:
-            # Step 1: Fast repository analysis
+            # Step 1: Check cache for repository metadata
+            cached_metadata = None
+            if repository_cache:
+                cached_metadata = repository_cache.get_repository_metadata(repo_url, branch)
+                
+                # Check for complete cached scan result
+                cached_scan = repository_cache.get_cached_scan_result(
+                    repo_url, scan_mode, max_files or 50, branch
+                )
+                if cached_scan:
+                    logger.info(f"Using cached scan result for {repo_url}")
+                    cached_scan['cache_hit'] = True
+                    return cached_scan
+            
+            # Step 2: Repository cloning (only if not cached)
             repo_path = self._clone_repository_shallow(repo_url, branch)
             if not repo_path:
                 scan_results['status'] = 'failed'
                 scan_results['error'] = 'Failed to clone repository'
                 return scan_results
             
-            # Step 2: Repository analysis and strategy selection
-            repo_analysis = self._analyze_repository_structure(repo_path)
+            # Step 3: Repository analysis (use cache if available)
+            if cached_metadata:
+                logger.info(f"Using cached repository metadata for {repo_url}")
+                repo_analysis = cached_metadata
+            else:
+                repo_analysis = self._analyze_repository_structure(repo_path)
+                # Cache the metadata for future use
+                if repository_cache:
+                    repository_cache.cache_repository_metadata(repo_url, repo_analysis, branch)
+            
             scan_results['repository_stats'] = repo_analysis
             
-            # Step 3: Select optimal scanning strategy
+            # Step 4: Select optimal scanning strategy
             strategy = self._select_scanning_strategy(repo_analysis, scan_mode, max_files)
             scan_results['scanning_strategy'] = strategy
             
             if progress_callback:
                 progress_callback(10, 100, "Repository analyzed, starting intelligent scan...")
             
-            # Step 4: Execute selected strategy
+            # Step 5: Execute selected strategy
             if strategy['type'] == 'sampling':
                 files_to_scan = self._select_files_by_sampling(repo_path, repo_analysis, strategy)
             elif strategy['type'] == 'priority':
@@ -149,13 +178,19 @@ class IntelligentRepoScanner:
             actual_coverage = (len(files_to_scan) / max(repo_analysis['total_files'], 1)) * 100
             scan_results['scan_coverage'] = min(actual_coverage, 100.0)  # Cap at 100%
             
-            # Step 5: Parallel scanning execution
+            # Step 6: Parallel scanning execution
             findings = self._execute_parallel_scanning(
                 files_to_scan, repo_path, scan_results, progress_callback
             )
             
             scan_results['findings'] = findings
             scan_results['duration_seconds'] = time.time() - start_time
+            
+            # Step 7: Cache the complete scan result
+            if repository_cache and scan_results['status'] == 'completed':
+                repository_cache.cache_scan_result(
+                    repo_url, scan_results, scan_mode, max_files or 50, branch
+                )
             
             logger.info(f"Intelligent scan completed: {len(findings)} findings in {scan_results['duration_seconds']:.1f}s")
             logger.info(f"Coverage: {scan_results['scan_coverage']:.1f}% ({scan_results['files_scanned']}/{scan_results['total_files_found']} files)")
