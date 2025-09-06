@@ -176,18 +176,21 @@ class ScannerLogAnalyzer:
             if not stats['last_activity'] or log.get('timestamp', '') > stats['last_activity']:
                 stats['last_activity'] = log.get('timestamp')
         
-        # Calculate averages
+        # Calculate averages - ensure no division by zero
         for scanner, stats in scanner_stats.items():
-            if stats['operations_count'] > 0:
-                stats['avg_execution_time'] = stats['total_execution_time'] / stats['operations_count']
-                stats['avg_memory_usage'] = stats['memory_usage_total'] / stats['operations_count']
+            operations_count = stats.get('operations_count', 0) or 0
+            total_ops = stats.get('total_operations', 0) or 0
+            
+            if operations_count > 0:
+                stats['avg_execution_time'] = (stats.get('total_execution_time', 0) or 0) / operations_count
+                stats['avg_memory_usage'] = (stats.get('memory_usage_total', 0) or 0) / operations_count
             else:
                 stats['avg_execution_time'] = 0
                 stats['avg_memory_usage'] = 0
             
             # Calculate success rate
-            if stats['total_operations'] > 0:
-                stats['success_rate'] = (stats['successful_operations'] / stats['total_operations']) * 100
+            if total_ops > 0:
+                stats['success_rate'] = ((stats.get('successful_operations', 0) or 0) / total_ops) * 100
             else:
                 stats['success_rate'] = 0
         
@@ -334,7 +337,7 @@ class ScannerLogDashboard:
             })
         
         if perf_data:
-            if CHARTS_AVAILABLE:
+            if CHARTS_AVAILABLE and pd is not None:
                 df = pd.DataFrame(perf_data)
                 st.dataframe(
                     df, 
@@ -366,7 +369,7 @@ class ScannerLogDashboard:
                     st.divider()
             
             # Performance charts
-            if len(perf_data) > 1 and CHARTS_AVAILABLE:
+            if len(perf_data) > 1 and CHARTS_AVAILABLE and px is not None and 'df' in locals():
                 col1, col2 = st.columns(2)
                 
                 with col1:
@@ -393,8 +396,9 @@ class ScannerLogDashboard:
                             'Success': stats['successful_operations']
                         })
                     
-                    error_df = pd.DataFrame(error_data)
-                    fig_errors = px.bar(
+                    if pd is not None:
+                        error_df = pd.DataFrame(error_data)
+                        fig_errors = px.bar(
                         error_df, 
                         x='Scanner', 
                         y=['Errors', 'Warnings', 'Success'],
@@ -404,9 +408,9 @@ class ScannerLogDashboard:
                             'Warnings': '#ffaa00', 
                             'Success': '#44ff44'
                         }
-                    )
-                    fig_errors.update_layout(height=400)
-                    st.plotly_chart(fig_errors, use_container_width=True)
+                        )
+                        fig_errors.update_layout(height=400)
+                        st.plotly_chart(fig_errors, use_container_width=True)
     
     def _show_activity_timeline(self, hours: int, scanner_filter: str, level_filter: str):
         """Show scanner activity timeline"""
