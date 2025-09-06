@@ -66,8 +66,13 @@ class ScannerLogAnalyzer:
                         # Try to parse as JSON first (new format)
                         entry = json.loads(line)
                         
-                        # Only include scanner-related logs
+                        # Only include scanner-related logs, but exclude profiler/performance logs
                         if entry.get('category') != 'scanner':
+                            continue
+                        
+                        # Exclude performance monitoring and profiler logs
+                        logger_name = entry.get('logger', '')
+                        if 'profiler' in logger_name.lower() or 'performance' in entry.get('message', '').lower():
                             continue
                             
                     except json.JSONDecodeError:
@@ -85,7 +90,7 @@ class ScannerLogAnalyzer:
                                 scanner_type = 'unknown'
                                 if 'ai_model' in logger_name.lower() or 'ai_model' in message.lower():
                                     scanner_type = 'ai_model_scanner'
-                                elif 'code' in logger_name.lower() or 'code' in message.lower():
+                                elif 'code_scanner' in logger_name.lower() or 'code scan' in message.lower():
                                     scanner_type = 'code_scanner'
                                 elif 'blob' in logger_name.lower() or 'blob' in message.lower():
                                     scanner_type = 'blob_scanner'
@@ -95,6 +100,10 @@ class ScannerLogAnalyzer:
                                     scanner_type = 'db_scanner'
                                 elif 'repo' in logger_name.lower() or 'repository' in message.lower():
                                     scanner_type = 'repo_scanner'
+                                
+                                # Skip profiler and performance monitoring logs
+                                if 'profiler' in logger_name.lower() or 'performance' in message.lower():
+                                    continue
                                 
                                 # Convert to standardized format
                                 entry = {
@@ -131,9 +140,17 @@ class ScannerLogAnalyzer:
                             # Skip logs with unparseable timestamps
                             continue
                     
+                    # Skip entries with unknown scanner type unless it's a legitimate scanner activity
+                    scanner_type = entry.get('scanner_type', 'unknown')
+                    if scanner_type == 'unknown':
+                        # Only keep unknown types if they contain actual scanner keywords
+                        message = entry.get('message', '').lower()
+                        if not any(keyword in message for keyword in ['scan started', 'scan completed', 'scan failed', 'pii detected', 'compliance']):
+                            continue
+                    
                     # Filter by scanner type if specified
                     if scanner_filter and scanner_filter != "All":
-                        if entry.get('scanner_type', '').lower() != scanner_filter.lower():
+                        if scanner_type.lower() != scanner_filter.lower():
                             continue
                     
                     # Filter by level if specified
