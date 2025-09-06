@@ -916,6 +916,10 @@ def render_authenticated_interface():
         
         selected_nav = st.selectbox(_('sidebar.navigation', 'Navigation'), nav_options, key="navigation")
         
+        # Debug: Show what was selected
+        if selected_nav:
+            st.sidebar.write(f"DEBUG: Selected: {repr(selected_nav)}")
+        
         # Handle navigation requests from dashboard buttons
         if st.session_state.get('view_detailed_results', False):
             st.session_state['view_detailed_results'] = False
@@ -1005,6 +1009,8 @@ def render_authenticated_interface():
     # Debug: Log navigation selection for troubleshooting
     if selected_nav and "Scanner Logs" in selected_nav:
         logger.info(f"Navigation: selected_nav='{selected_nav}', current_nav_key='{current_nav_key}'")
+        st.error(f"DEBUG: selected_nav='{selected_nav}', current_nav_key='{current_nav_key}'")
+        st.error(f"DEBUG: Available mappings with Scanner Logs: {[k for k in nav_mapping.keys() if 'Scanner' in k]}")
     
     # Update selected_nav to current language if needed
     if current_nav_key:
