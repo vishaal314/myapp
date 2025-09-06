@@ -16,6 +16,15 @@ from typing import Dict, Any, List, Optional, Tuple
 # Disable pandas to resolve numpy conflicts
 # import pandas as pd
 pd = None
+import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("dpia_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 
 # Import internal dependencies
 from utils.i18n import get_text, _

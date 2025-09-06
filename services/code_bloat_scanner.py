@@ -12,6 +12,15 @@ import importlib
 import time
 from collections import defaultdict
 from typing import Dict, List, Any, Set, Tuple
+import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("code_bloat_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 
 # Threshold for large file size in bytes
 LARGE_FILE_THRESHOLD_BYTES = 100 * 1024  # 100 KB
