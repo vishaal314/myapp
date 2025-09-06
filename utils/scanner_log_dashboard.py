@@ -97,43 +97,10 @@ class ScannerLogAnalyzer:
         return entries
     
     def get_scanner_types(self) -> List[str]:
-        """Get list of available scanner types"""
-        # Comprehensive list of all DataGuardian Pro scanner types
-        all_scanner_types = [
-            'advanced_ai_scanner',
-            'ai_model_scanner', 
-            'api_scanner',
-            'blob_scanner',
-            'cloud_resources_scanner',
-            'code_bloat_scanner',
-            'code_scanner',
-            'db_scanner',
-            'domain_scanner',
-            'dpia_scanner',
-            'enhanced_repo_scanner',
-            'enhanced_soc2_scanner',
-            'enterprise_connector_scanner',
-            'enterprise_repo_scanner',
-            'fast_repo_scanner',
-            'github_repo_scanner',
-            'image_scanner',
-            'intelligent_blob_scanner',
-            'intelligent_db_scanner',
-            'intelligent_image_scanner',
-            'intelligent_repo_scanner',
-            'intelligent_scanner_manager',
-            'intelligent_website_scanner',
-            'optimized_scanner',
-            'parallel_repo_scanner',
-            'repo_scanner',
-            'simple_repo_scanner',
-            'soc2_scanner',
-            'website_scanner',
-            'unknown'
-        ]
+        """Get list of scanner types that actually have logs available"""
+        scanner_types = set()
         
-        # Also get scanner types from log files
-        dynamic_scanner_types = set()
+        # Only get scanner types from actual log files
         for log_file_name in self.scanner_log_files:
             log_file = self.logs_dir / log_file_name
             if log_file.exists():
@@ -143,15 +110,13 @@ class ScannerLogAnalyzer:
                             try:
                                 entry = json.loads(line.strip())
                                 if entry.get('category') == 'scanner' and entry.get('scanner_type'):
-                                    dynamic_scanner_types.add(entry['scanner_type'])
+                                    scanner_types.add(entry['scanner_type'])
                             except (json.JSONDecodeError, AttributeError):
                                 continue
                 except Exception:
                     continue
         
-        # Combine both lists and remove duplicates
-        combined_types = set(all_scanner_types) | dynamic_scanner_types
-        return sorted(list(combined_types))
+        return sorted(list(scanner_types))
     
     def get_scanner_activity_summary(self, hours: int = 24) -> Dict[str, Any]:
         """Get scanner activity summary with metrics"""
