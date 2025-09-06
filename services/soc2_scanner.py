@@ -18,7 +18,13 @@ import subprocess
 from datetime import datetime
 import traceback
 
-logger = logging.getLogger(__name__)
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("soc2_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 
 # SOC2 Compliance categories
 SOC2_CATEGORIES = {
@@ -604,8 +610,12 @@ def scan_iac_file(file_path: str, tech: Optional[str] = None) -> List[Dict[str, 
                 
                 findings.append(finding)
     except Exception as e:
-        logger.error(f"Error scanning file {file_path}: {str(e)}")
-        traceback.print_exc()
+        # Use centralized logging if available, fallback to standard logging
+        if hasattr(logger, 'scan_failed'):
+            logger.scan_failed("soc2", f"Error scanning file {file_path}", exception=e)
+        else:
+            logger.error(f"Error scanning file {file_path}: {str(e)}")
+            traceback.print_exc()
         
     return findings
 
