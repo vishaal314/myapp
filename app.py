@@ -77,7 +77,7 @@ except ImportError:
         from services.improved_report_download import generate_html_report
     except ImportError:
         # Fallback inline HTML generator for AI Model reports
-        def generate_html_report(scan_result):
+        def generate_html_report(scan_result: Dict[str, Any]) -> str:
             """Simple HTML report generator for AI Model scans"""
             # Build the findings HTML separately to avoid f-string issues
             findings_html = ""
@@ -150,6 +150,7 @@ try:
     
     # Define local ScannerType for app-wide consistency
     ScannerType = ActivityScannerType
+    from typing import Dict, Any
     
     # Create compatibility aliases
     from utils.activity_tracker import ScannerType as AppScannerType
@@ -3332,10 +3333,11 @@ def execute_image_scan(region, username, uploaded_files):
         
     except Exception as e:
         # Initialize variables for error handler if not already set  
-        if 'session_id' not in locals() or session_id is None:
-            session_id = str(uuid.uuid4())
-        if 'user_id' not in locals() or user_id is None:
-            user_id = username
+        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+        user_id = st.session_state.get('user_id', username)
+        
+        # Import ScannerType to avoid unbound variable
+        from utils.activity_tracker import ScannerType
         
         # Track scan failure
         track_scan_failed_wrapper(
