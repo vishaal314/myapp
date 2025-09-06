@@ -555,9 +555,12 @@ class IntelligentRepoScanner:
                 
         except subprocess.TimeoutExpired:
             logger.error("Repository clone timed out")
-            return None
+            raise Exception("Repository clone timed out after 45 seconds")
         except Exception as e:
             logger.error(f"Clone error: {str(e)}")
+            # Only return None for non-critical errors, re-raise for important ones
+            if "Repository not found" in str(e) or "not found" in str(e).lower():
+                raise e
             return None
 
     def _cleanup(self):
