@@ -1,0 +1,30 @@
+__pycache__/ scanners/
+root@vishaalnoord7:/opt/dataguardian-pro/utils# ./
+__pycache__/ scanners/
+root@vishaalnoord7:/opt/dataguardian-pro/utils# ./ls
+-bash: ./ls: No such file or directory
+root@vishaalnoord7:/opt/dataguardian-pro/utils# LS
+-bash: LS: command not found
+root@vishaalnoord7:/opt/dataguardian-pro/utils# ls
+__init__.py                    code_profiler.py                 error_handler.py                pii_detection.py                 secure_session_manager.py         translation_validator.py
+__pycache__                    common.py                        eu_ai_act_compliance.py         real_time_compliance_monitor.py  security_hardening.py             translations.py
+activity_tracker.py            compliance_calculator.py         gdpr_rules.py                   redis_cache.py                   session_manager.py                unified_translation.py
+ai_act_calculator.py           compliance_score.py              i18n.py                         risk_analyzer.py                 session_optimizer.py              validation_helpers.py
+ai_act_report_display.py       comprehensive_gdpr_validator.py  landing_page.py                 scanner_data_synchronizer.py     session_security.py
+animated_language_switcher.py  create_admin_user.py             license_generator.py            scanners                         settings_manager.py
+async_network_optimizer.py     create_admin_user.sh             netherlands_gdpr.py             secure_auth.py                   strategy_descriptions.py
+async_scan_manager.py          database_manager.py              netherlands_uavg_compliance.py  secure_auth_enhanced.py          sustainability_analyzer.py
+capacity_monitor.py            database_optimizer.py            performance_dashboard.py        secure_error_handler.py          translation_performance_cache.py
+root@vishaalnoord7:/opt/dataguardian-pro/utils# python3 create_admin_user.py
+Traceback (most recent call last):
+  File "/opt/dataguardian-pro/utils/create_admin_user.py", line 2, in <module>
+    import bcrypt
+ModuleNotFoundError: No module named 'bcrypt'
+root@vishaalnoord7:/opt/dataguardian-pro/utils# sudo -u dataguardian bash -c "source venv/bin/activate && python3 create_admin_user.py"
+bash: line 1: venv/bin/activate: No such file or directory
+root@vishaalnoord7:/opt/dataguardian-pro/utils# cd ..
+root@vishaalnoord7:/opt/dataguardian-pro# sudo -u dataguardian bash -c "source venv/bin/activate && python3 create_admin_user.py"
+python3: can't open file '/opt/dataguardian-pro/create_admin_user.py': [Errno 2] No such file or directory
+root@vishaalnoord7:/opt/dataguardian-pro# ls
+app.py         components  dataguardian-complete.tar.gz  deployment     patent_proofs     secure_users.json   services      usage_analytics.db  venv
+app.py.backup  config      deploy.sh                     deployment.sh  requirements.txt  security_audit.log  translations  utils
