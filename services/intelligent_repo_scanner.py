@@ -511,6 +511,15 @@ class IntelligentRepoScanner:
     def _clone_repository_shallow(self, repo_url: str, branch: Optional[str] = None) -> Optional[str]:
         """Clone repository with minimal depth for faster cloning."""
         try:
+            # Validate and fix repository URL
+            if repo_url.endswith('/') and repo_url.count('/') < 4:
+                # Incomplete URL like "https://github.com/big-data-europe/"
+                suggested_repos = [
+                    "docker-hadoop", "docker-spark", "docker-hive", 
+                    "docker-hadoop-spark-workbench", "docker-flink", "README"
+                ]
+                raise Exception(f"❌ Incomplete repository URL '{repo_url}'. Please specify a repository name.\n\n✅ Popular big-data-europe repos to try:\n• {repo_url}docker-hadoop\n• {repo_url}docker-spark\n• {repo_url}docker-hive")
+            
             temp_dir = tempfile.mkdtemp(prefix="intelligent_repo_")
             self.temp_dirs.append(temp_dir)
             
@@ -531,8 +540,12 @@ class IntelligentRepoScanner:
                 logger.info(f"Successfully cloned repository to {temp_dir}")
                 return temp_dir
             else:
-                logger.error(f"Clone failed: {result.stderr}")
-                return None
+                error_msg = result.stderr
+                if "not found" in error_msg.lower():
+                    if "big-data-europe" in repo_url:
+                        raise Exception(f"❌ Repository not found.\n\n✅ Try one of these popular big-data-europe repos:\n• https://github.com/big-data-europe/docker-hadoop\n• https://github.com/big-data-europe/docker-spark\n• https://github.com/big-data-europe/docker-hive\n• https://github.com/big-data-europe/docker-hadoop-spark-workbench")
+                logger.error(f"Clone failed: {error_msg}")
+                raise Exception(f"Clone failed: {error_msg}")
                 
         except subprocess.TimeoutExpired:
             logger.error("Repository clone timed out")
