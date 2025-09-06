@@ -33,8 +33,19 @@ class RepositoryCache:
         self.cache_dir = Path(cache_dir)
         self.cache_ttl = timedelta(hours=cache_ttl_hours)
         
-        # Create cache directory if it doesn't exist
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        # Create cache directory if it doesn't exist (with proper error handling)
+        try:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        except (OSError, PermissionError) as e:
+            # Fallback to user's home directory if system temp fails
+            fallback_dir = Path.home() / ".dataguardian_cache"
+            logger.warning(f"Cannot create cache dir {cache_dir}: {e}. Using fallback: {fallback_dir}")
+            self.cache_dir = fallback_dir
+            try:
+                self.cache_dir.mkdir(parents=True, exist_ok=True)
+            except Exception as fallback_error:
+                logger.error(f"Cannot create fallback cache dir: {fallback_error}. Cache disabled.")
+                self.cache_dir = None
         
         # Cache statistics
         self.stats = {
@@ -79,24 +90,39 @@ class RepositoryCache:
         Returns:
             Cached metadata dict or None if not found/expired
         """
-        repo_hash = self._get_repo_hash(repo_url, branch)
-        cache_file = self._get_cache_path(repo_hash)
-        
-        if not self._is_cache_valid(cache_file):
+        # Return None if cache is disabled
+        if self.cache_dir is None:
             self.stats['misses'] += 1
             return None
-        
+            
         try:
-            with open(cache_file, 'r') as f:
+            repo_hash = self._get_repo_hash(repo_url, branch)
+            cache_file = self._get_cache_path(repo_hash)
+            
+            if not self._is_cache_valid(cache_file):
+                self.stats['misses'] += 1
+                return None
+            
+            with open(cache_file, 'r', encoding='utf-8') as f:
                 cached_data = json.load(f)
+            
+            # Validate cached data structure
+            if not isinstance(cached_data, dict) or 'metadata' not in cached_data:
+                logger.warning(f"Invalid cache data structure in {cache_file}")
+                self.stats['misses'] += 1
+                return None
             
             self.stats['hits'] += 1
             logger.info(f"Cache HIT for {repo_url} (saved clone operation)")
             
             return cached_data.get('metadata')
             
+        except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
+            logger.warning(f"Cache file corrupted or missing {cache_file}: {e}")
+            self.stats['misses'] += 1
+            return None
         except Exception as e:
-            logger.warning(f"Error reading cache file {cache_file}: {e}")
+            logger.error(f"Unexpected error reading cache file {cache_file}: {e}")
             self.stats['misses'] += 1
             return None
     
