@@ -115,6 +115,13 @@ class IntelligentScannerManager:
                 scanner_result = self._scan_website_intelligent(
                     scan_target, scan_mode, max_items, progress_callback, **kwargs
                 )
+            elif scan_type == 'code':
+                # Code scanning for local directories and files
+                if not isinstance(scan_target, str):
+                    raise ValueError(f"Code scanner expects string directory path, got {type(scan_target)}")
+                scanner_result = self._scan_code_intelligent(
+                    scan_target, scan_mode, max_items, progress_callback, **kwargs
+                )
             elif scan_type == 'database':
                 if not isinstance(scan_target, dict):
                     raise ValueError(f"Database scanner expects connection parameters dict, got {type(scan_target)}")
@@ -143,6 +150,68 @@ class IntelligentScannerManager:
             logger.error(f"Intelligent scan failed: {str(e)}")
             result['status'] = 'failed'
             result['error'] = str(e)
+        
+        return result
+
+    def _scan_code_intelligent(self, directory_path: str, scan_mode: str,
+                                 max_files: Optional[int],
+                                 progress_callback: Optional[Callable],
+                                 **kwargs) -> Dict[str, Any]:
+        """Intelligent code directory scanning."""
+        from services.code_scanner import CodeScanner
+        
+        if progress_callback:
+            progress_callback(20, 100, "Initializing code scanner...")
+        
+        # Initialize code scanner with intelligent parameters
+        scanner = CodeScanner(
+            region=kwargs.get('region', 'Netherlands'),
+            include_comments=kwargs.get('include_comments', True),
+            use_entropy=kwargs.get('use_entropy', True),
+            use_git_metadata=kwargs.get('use_git_metadata', False)
+        )
+        
+        # Determine scan parameters based on mode
+        scan_params = {
+            'max_files_to_scan': max_files or 1000,
+            'smart_sampling': True,
+            'max_file_size_mb': kwargs.get('max_file_size_mb', 50)
+        }
+        
+        if scan_mode == "fast":
+            scan_params.update({
+                'max_files_to_scan': min(100, scan_params['max_files_to_scan']),
+                'max_file_size_mb': 10
+            })
+        elif scan_mode == "deep":
+            scan_params.update({
+                'max_files_to_scan': max_files or 5000,
+                'max_file_size_mb': 100
+            })
+        
+        if progress_callback:
+            progress_callback(30, 100, f"Scanning directory with {scan_mode} mode...")
+        
+        # Execute the scan
+        result = scanner.scan_directory(
+            directory_path=directory_path,
+            progress_callback=progress_callback,
+            **scan_params
+        )
+        
+        if progress_callback:
+            progress_callback(90, 100, "Processing scan results...")
+        
+        # Add intelligence metrics
+        result.update({
+            'scan_coverage': min(100.0, (result.get('files_scanned', 0) / max(1, result.get('files_scanned', 0) + result.get('files_skipped', 0))) * 100),
+            'scanning_strategy': {
+                'type': f'Intelligent {scan_mode.title()} Scanning',
+                'target_files': result.get('files_scanned', 0),
+                'parallel_workers': 4,
+                'reasoning': f'Optimized for {scan_mode} scanning with smart file prioritization'
+            }
+        })
         
         return result
 
