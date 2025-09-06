@@ -520,6 +520,12 @@ class IntelligentRepoScanner:
                 ]
                 raise Exception(f"❌ Incomplete repository URL '{repo_url}'. Please specify a repository name.\n\n✅ Popular big-data-europe repos to try:\n• {repo_url}docker-hadoop\n• {repo_url}docker-spark\n• {repo_url}docker-hive")
             
+            # Handle directory-specific URLs (like /tree/master/data)
+            if '/tree/' in repo_url:
+                base_repo = repo_url.split('/tree/')[0]
+                logger.info(f"Converting directory URL to repository URL: {repo_url} -> {base_repo}")
+                repo_url = base_repo
+            
             temp_dir = tempfile.mkdtemp(prefix="intelligent_repo_")
             self.temp_dirs.append(temp_dir)
             
