@@ -109,42 +109,39 @@ class ScannerLogAnalyzer:
                                 continue
                         else:
                             continue
-                        
-                        # Parse timestamp
-                        timestamp_str = entry.get('timestamp', '')
-                        if timestamp_str:
-                            try:
-                                # Handle different timestamp formats
-                                if 'T' in timestamp_str and ('Z' in timestamp_str or '+' in timestamp_str):
-                                    # ISO format: "2025-09-06T18:22:17.193090Z"
-                                    log_time = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-                                elif ',' in timestamp_str and '-' in timestamp_str:
-                                    # Old format: "2025-05-13 16:10:12,963"
-                                    log_time = datetime.strptime(timestamp_str.split(',')[0], '%Y-%m-%d %H:%M:%S')
-                                else:
-                                    # Default parsing attempt
-                                    log_time = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-                                
-                                if log_time.replace(tzinfo=None) < cutoff_time:
-                                    continue
-                            except (ValueError, TypeError):
-                                # Skip logs with unparseable timestamps
+                    
+                    # Parse timestamp (common for both JSON and legacy formats)
+                    timestamp_str = entry.get('timestamp', '')
+                    if timestamp_str:
+                        try:
+                            # Handle different timestamp formats
+                            if 'T' in timestamp_str and ('Z' in timestamp_str or '+' in timestamp_str):
+                                # ISO format: "2025-09-06T18:22:17.193090Z"
+                                log_time = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                            elif ',' in timestamp_str and '-' in timestamp_str:
+                                # Old format: "2025-05-13 16:10:12,963"
+                                log_time = datetime.strptime(timestamp_str.split(',')[0], '%Y-%m-%d %H:%M:%S')
+                            else:
+                                # Default parsing attempt
+                                log_time = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                            
+                            if log_time.replace(tzinfo=None) < cutoff_time:
                                 continue
-                        
-                        # Filter by scanner type if specified
-                        if scanner_filter and scanner_filter != "All":
-                            if entry.get('scanner_type', '').lower() != scanner_filter.lower():
-                                continue
-                        
-                        # Filter by level if specified
-                        if level_filter and level_filter != "All":
-                            if entry.get('level', '').upper() != level_filter.upper():
-                                continue
-                        
-                        entries.append(entry)
-                        
-                    except json.JSONDecodeError:
-                        continue
+                        except (ValueError, TypeError):
+                            # Skip logs with unparseable timestamps
+                            continue
+                    
+                    # Filter by scanner type if specified
+                    if scanner_filter and scanner_filter != "All":
+                        if entry.get('scanner_type', '').lower() != scanner_filter.lower():
+                            continue
+                    
+                    # Filter by level if specified
+                    if level_filter and level_filter != "All":
+                        if entry.get('level', '').upper() != level_filter.upper():
+                            continue
+                    
+                    entries.append(entry)
                         
         except Exception as e:
             st.error(f"Error reading scanner log file {log_file}: {e}")
