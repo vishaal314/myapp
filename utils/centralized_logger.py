@@ -67,7 +67,7 @@ class CustomJSONFormatter(logging.Formatter):
             log_entry['request_id'] = record.request_id
         
         # Add exception info if present
-        if record.exc_info:
+        if record.exc_info and record.exc_info[0] is not None:
             log_entry['exception'] = {
                 "type": record.exc_info[0].__name__,
                 "message": str(record.exc_info[1]),
@@ -158,14 +158,14 @@ class DataGuardianLogger:
     def error(self, message: str, exception: Optional[Exception] = None, **kwargs):
         """Log error message"""
         if exception:
-            self.logger.error(message, exc_info=exception, extra=self._add_context(kwargs))
+            self.logger.error(message, exc_info=True, extra=self._add_context(kwargs))
         else:
             self.logger.error(message, extra=self._add_context(kwargs))
     
     def critical(self, message: str, exception: Optional[Exception] = None, **kwargs):
         """Log critical message"""
         if exception:
-            self.logger.critical(message, exc_info=exception, extra=self._add_context(kwargs))
+            self.logger.critical(message, exc_info=True, extra=self._add_context(kwargs))
         else:
             self.logger.critical(message, extra=self._add_context(kwargs))
 
@@ -175,13 +175,13 @@ class ScannerLogger(DataGuardianLogger):
     def __init__(self, scanner_name: str):
         super().__init__(f"scanner.{scanner_name}", LogCategory.SCANNER)
     
-    def scan_started(self, scan_type: str, target: str, user_id: str = None, **kwargs):
+    def scan_started(self, scan_type: str, target: str, user_id: Optional[str] = None, **kwargs):
         """Log scan start"""
         self.info(
             f"Scan started: {scan_type} on {target}",
             scanner_type=scan_type,
             target=target,
-            user_id=user_id,
+            user_id=user_id or "unknown",
             **kwargs
         )
     
@@ -204,7 +204,7 @@ class ScannerLogger(DataGuardianLogger):
             **kwargs
         )
     
-    def scan_failed(self, scan_type: str, error_message: str, exception: Exception = None, **kwargs):
+    def scan_failed(self, scan_type: str, error_message: str, exception: Optional[Exception] = None, **kwargs):
         """Log scan failure"""
         self.error(
             f"Scan failed: {scan_type} - {error_message}",
@@ -229,20 +229,20 @@ class LicenseLogger(DataGuardianLogger):
     def __init__(self):
         super().__init__("license", LogCategory.LICENSE)
     
-    def license_loaded(self, license_id: str, license_type: str, user_id: str = None):
+    def license_loaded(self, license_id: str, license_type: str, user_id: Optional[str] = None):
         """Log license loading"""
         self.info(
             f"License loaded: {license_id} (type: {license_type})",
             license_id=license_id,
             license_type=license_type,
-            user_id=user_id
+            user_id=user_id or "unknown"
         )
     
-    def license_validation_failed(self, reason: str, user_id: str = None):
+    def license_validation_failed(self, reason: str, user_id: Optional[str] = None):
         """Log license validation failure"""
         self.error(
             f"License validation failed: {reason}",
-            user_id=user_id,
+            user_id=user_id or "unknown",
             validation_failure=True
         )
     
@@ -294,31 +294,31 @@ class SecurityLogger(DataGuardianLogger):
     def __init__(self):
         super().__init__("security", LogCategory.SECURITY)
     
-    def login_attempt(self, user_id: str, success: bool, ip_address: str = None):
+    def login_attempt(self, user_id: str, success: bool, ip_address: Optional[str] = None):
         """Log login attempt"""
         if success:
             self.info(
                 f"Successful login: {user_id}",
                 user_id=user_id,
                 login_success=True,
-                ip_address=ip_address
+                ip_address=ip_address or "unknown"
             )
         else:
             self.warning(
                 f"Failed login attempt: {user_id}",
                 user_id=user_id,
                 login_failure=True,
-                ip_address=ip_address
+                ip_address=ip_address or "unknown"
             )
     
-    def unauthorized_access(self, user_id: str, resource: str, ip_address: str = None):
+    def unauthorized_access(self, user_id: str, resource: str, ip_address: Optional[str] = None):
         """Log unauthorized access attempt"""
         self.error(
             f"Unauthorized access attempt: {user_id} tried to access {resource}",
             user_id=user_id,
             resource=resource,
             unauthorized_access=True,
-            ip_address=ip_address
+            ip_address=ip_address or "unknown"
         )
 
 # Convenience functions for getting loggers
