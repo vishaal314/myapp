@@ -477,14 +477,37 @@ class IntelligentRepoScanner:
             findings = []
             rel_path = os.path.relpath(file_path, repo_path)
             
-            # Simple pattern matching for demonstration
+            # Enhanced PII patterns for Python algorithms and code repositories
             patterns = [
+                # Email patterns
                 (r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', 'Email Address'),
+                # Phone patterns  
                 (r'\b(?:\+31|0031|0)\s*[1-9](?:\s*\d){8}\b', 'Dutch Phone Number'),
+                (r'\b\d{3}-\d{3}-\d{4}\b', 'US Phone Number'),
+                (r'\b\+\d{1,3}\s?\d{1,4}\s?\d{1,4}\s?\d{1,9}\b', 'International Phone'),
+                # ID patterns
                 (r'\b\d{9}\b', 'Potential BSN'),
+                (r'\b\d{3}-\d{2}-\d{4}\b', 'SSN'),
+                (r'\b\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\b', 'Credit Card'),
+                # Credential patterns
                 (r'password\s*[:=]\s*["\']([^"\']+)["\']', 'Hardcoded Password'),
                 (r'api[_-]?key\s*[:=]\s*["\']([^"\']+)["\']', 'API Key'),
                 (r'secret\s*[:=]\s*["\']([^"\']+)["\']', 'Secret'),
+                (r'token\s*[:=]\s*["\']([^"\']+)["\']', 'Access Token'),
+                # AWS and cloud patterns
+                (r'AKIA[0-9A-Z]{16}', 'AWS Access Key'),
+                (r'aws[_-]?secret\s*[:=]\s*["\']([^"\']+)["\']', 'AWS Secret'),
+                # Database patterns
+                (r'db[_-]?password\s*[:=]\s*["\']([^"\']+)["\']', 'Database Password'),
+                (r'mongodb://[^"\'\\s]+', 'MongoDB Connection String'),
+                (r'mysql://[^"\'\\s]+', 'MySQL Connection String'),
+                # Private key patterns
+                (r'-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----', 'Private Key'),
+                (r'-----BEGIN\s+CERTIFICATE-----', 'Certificate'),
+                # Personal info in comments (common in algorithm repos)
+                (r'#\s*Author:\s*([A-Za-z\s]+)', 'Author Name'),
+                (r'#\s*Email:\s*([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})', 'Author Email'),
+                (r'#\s*Contact:\s*(.+)', 'Contact Information'),
             ]
             
             lines = content.split('\n')
@@ -529,10 +552,10 @@ class IntelligentRepoScanner:
             temp_dir = tempfile.mkdtemp(prefix="intelligent_repo_")
             self.temp_dirs.append(temp_dir)
             
-            # Shallow clone with single branch
-            clone_args = ['git', 'clone', '--depth', '1', '--single-branch']
+            # Shallow clone with single branch - try without specifying branch first
+            clone_args = ['git', 'clone', '--depth', '1']
             if branch:
-                clone_args.extend(['--branch', branch])
+                clone_args.extend(['--branch', branch, '--single-branch'])
             clone_args.extend([repo_url, temp_dir])
             
             result = subprocess.run(
