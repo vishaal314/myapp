@@ -2,6 +2,14 @@ import os
 import tempfile
 import re
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("blob_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable
 import PyPDF2
@@ -14,7 +22,7 @@ from utils.eu_ai_act_compliance import detect_ai_act_violations, generate_ai_act
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+
 
 class BlobScanner:
     """

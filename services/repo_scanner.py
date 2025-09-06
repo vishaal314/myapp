@@ -11,6 +11,14 @@ import shutil
 import tempfile
 import subprocess
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("repo_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import time
 from typing import Dict, List, Any, Optional, Callable
 from datetime import datetime
@@ -20,7 +28,7 @@ from services.code_scanner import CodeScanner
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+
 
 class RepoScanner:
     """

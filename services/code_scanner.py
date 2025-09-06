@@ -9,13 +9,21 @@ import multiprocessing
 import subprocess
 import signal
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("code_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Set
 from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
 
 # Configure logging
-logger = logging.getLogger(__name__)
+
 # Import Netherlands-specific detection module
 try:
     from utils.netherlands_gdpr import detect_nl_violations
@@ -655,6 +663,10 @@ class CodeScanner:
         
         def scan_target():
             nonlocal result
+    # Log scan start
+    if hasattr(logger, 'scan_started'):
+        logger.scan_started('code_scanner', 'scan_target')
+
             try:
                 result = self.scan_file(file_path)
             except Exception as e:

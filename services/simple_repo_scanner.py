@@ -14,6 +14,14 @@ import time
 import shutil
 import fnmatch
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("simple_repo_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import tempfile
 import traceback
 import subprocess

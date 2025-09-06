@@ -5,6 +5,14 @@ Handles payment records, subscription management, and analytics storage
 
 import os
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("database_service")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import psycopg2
 import psycopg2.extras
 from datetime import datetime, timedelta
@@ -12,7 +20,7 @@ from typing import Dict, Any, List, Optional, Union
 import json
 from contextlib import contextmanager
 
-logger = logging.getLogger(__name__)
+
 
 class DatabaseService:
     """Professional database service for payment and subscription management"""

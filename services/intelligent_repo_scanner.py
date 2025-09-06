@@ -16,6 +16,14 @@ import time
 import shutil
 import tempfile
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("intelligent_repo_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import subprocess
 import concurrent.futures
 from datetime import datetime

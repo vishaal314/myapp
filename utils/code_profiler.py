@@ -6,6 +6,14 @@ Identifies performance bottlenecks and provides optimization recommendations
 import time
 import functools
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("code_profiler")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import traceback
 import sys
 import threading
@@ -16,7 +24,7 @@ import os
 from collections import defaultdict, deque
 import json
 
-logger = logging.getLogger(__name__)
+
 
 class PerformanceProfiler:
     """Performance profiler for identifying bottlenecks"""

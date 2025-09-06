@@ -4,11 +4,19 @@ Ensures all 9 scanner types properly update dashboard data
 """
 
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("scanner_data_synchronizer")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from utils.activity_tracker import get_activity_tracker, ScannerType, ActivityType
 
-logger = logging.getLogger(__name__)
+
 
 class ScannerDataSynchronizer:
     """Synchronize all scanner types with dashboard data"""

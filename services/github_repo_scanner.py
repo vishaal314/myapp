@@ -9,6 +9,14 @@ multiprocessing issues that were causing scans to fail.
 import os
 import time
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("github_repo_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 from typing import Dict, Any, Optional, Callable
 from datetime import datetime
 

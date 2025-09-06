@@ -15,6 +15,14 @@ import json
 import shutil
 import fnmatch
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("enhanced_repo_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import tempfile
 import traceback
 import threading
@@ -25,7 +33,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from services._create_sample_findings import create_sample_findings
 
 # Configure logging
-logger = logging.getLogger(__name__)
+
 
 class EnhancedRepoScanner:
     """

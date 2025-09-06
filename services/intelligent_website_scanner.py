@@ -10,6 +10,14 @@ Implements smart page selection and parallel crawling:
 
 import os
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("intelligent_website_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import concurrent.futures
 import time
 from datetime import datetime

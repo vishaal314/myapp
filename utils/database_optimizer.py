@@ -8,12 +8,20 @@ import psycopg2
 import psycopg2.pool as pool  # Fix import structure
 from psycopg2.extras import RealDictCursor
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("database_optimizer")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import time
 from contextlib import contextmanager
 from typing import Dict, Any, Optional
 import threading
 
-logger = logging.getLogger(__name__)
+
 
 class DatabaseOptimizer:
     """Optimized database connection manager with performance tuning"""

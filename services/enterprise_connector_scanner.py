@@ -15,6 +15,14 @@ import os
 import json
 import time
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("enterprise_connector_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import requests
 import base64
 import hashlib
@@ -32,7 +40,7 @@ from utils.comprehensive_gdpr_validator import validate_comprehensive_gdpr_compl
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+
 
 
 class EnterpriseConnectorScanner:

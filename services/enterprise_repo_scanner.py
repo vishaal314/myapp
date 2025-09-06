@@ -11,6 +11,14 @@ import subprocess
 import shutil
 import mmap
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("enterprise_repo_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import traceback
 import uuid
 import hashlib
@@ -22,7 +30,7 @@ from pathlib import Path
 import fnmatch
 import git
 
-logger = logging.getLogger(__name__)
+
 
 class EnterpriseRepoScanner:
     """

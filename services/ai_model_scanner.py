@@ -19,6 +19,14 @@ import json
 import os
 import time
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("ai_model_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import requests  
 import numpy as np
 import tempfile
@@ -304,6 +312,10 @@ class AIModelScanner:
         
     def scan_ai_model_enhanced(self, model_file, model_type: str, region: str, status=None):
         """Enhanced AI model scanning with ML framework support"""
+    # Log scan start
+    if hasattr(logger, 'scan_started'):
+        logger.scan_started('ai_model_scanner', 'scan_target')
+
         try:
             if status:
                 status.update(label="Analyzing model file format...")

@@ -912,7 +912,7 @@ def render_authenticated_interface():
             "💳 iDEAL Payment Test"
         ]
         if user_role == "admin":
-            nav_options.extend([f"👥 {_('admin.title', 'Admin')}", "📈 Performance Dashboard"])
+            nav_options.extend([f"👥 {_('admin.title', 'Admin')}", "📈 Performance Dashboard", "📊 Log Dashboard"])
         
         selected_nav = st.selectbox(_('sidebar.navigation', 'Navigation'), nav_options, key="navigation")
         
@@ -1038,6 +1038,8 @@ def render_authenticated_interface():
         render_admin_page()
     elif selected_nav and "Performance Dashboard" in selected_nav:
         render_performance_dashboard_safe()
+    elif selected_nav and "Log Dashboard" in selected_nav:
+        render_log_dashboard()
     elif selected_nav and "🏢 Enterprise Repository Demo" in selected_nav:
         render_enterprise_repo_demo()
     elif selected_nav and "💳 iDEAL Payment Test" in selected_nav:
@@ -10197,6 +10199,15 @@ def render_performance_dashboard_safe():
     except Exception as e:
         st.error(f"Performance dashboard unavailable: {e}")
         st.info("Performance monitoring is temporarily unavailable. Please try again later.")
+
+def render_log_dashboard():
+    """Render log monitoring dashboard"""
+    try:
+        from utils.log_monitor import show_log_dashboard
+        show_log_dashboard()
+    except Exception as e:
+        st.error(f"Error loading log dashboard: {str(e)}")
+        st.write("Please check if the log monitoring system is available.")
 
 def render_admin_page():
     """Render admin page"""

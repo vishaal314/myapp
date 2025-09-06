@@ -10,7 +10,15 @@ from typing import Dict, List, Optional, Tuple
 import streamlit as st
 import logging
 
-logger = logging.getLogger(__name__)
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("scan_limit_manager")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
+
+
 
 
 class ScanLimitManager:

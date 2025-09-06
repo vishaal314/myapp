@@ -9,6 +9,14 @@ and provide cost and sustainability recommendations.
 import os
 import json
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("cloud_resources_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import time
 from typing import Dict, List, Any, Optional, Callable, Tuple
 from datetime import datetime, timedelta
@@ -18,7 +26,7 @@ import importlib.util
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+
 
 # Carbon intensity data - average CO2e (grams) per kWh by region
 # Source: Various cloud provider sustainability reports and IEA data
@@ -2126,6 +2134,10 @@ class GithubRepoSustainabilityScanner:
         # Define a function to analyze a single file with pyflakes
         def analyze_file(file_path):
             try:
+    # Log scan start
+    if hasattr(logger, 'scan_started'):
+        logger.scan_started('cloud_resources_scanner', 'scan_target')
+
                 result = subprocess.run(['pyflakes', file_path], capture_output=True, text=True, timeout=5)
                 file_results = []
                 

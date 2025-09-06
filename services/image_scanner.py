@@ -10,6 +10,14 @@ from typing import Dict, List, Any, Optional, Tuple
 import os
 import base64
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("image_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import time
 import json
 import re
@@ -30,7 +38,7 @@ except ImportError as e:
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+
 
 class ImageScanner:
     """
