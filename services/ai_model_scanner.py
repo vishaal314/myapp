@@ -312,9 +312,9 @@ class AIModelScanner:
         
     def scan_ai_model_enhanced(self, model_file, model_type: str, region: str, status=None):
         """Enhanced AI model scanning with ML framework support"""
-    # Log scan start
-    if hasattr(logger, 'scan_started'):
-        logger.scan_started('ai_model_scanner', 'scan_target')
+        # Log scan start
+        if hasattr(logger, 'scan_started'):
+            logger.scan_started('ai_model_scanner', getattr(model_file, 'name', 'model_file'))
 
         try:
             if status:

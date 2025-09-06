@@ -663,9 +663,9 @@ class CodeScanner:
         
         def scan_target():
             nonlocal result
-    # Log scan start
-    if hasattr(logger, 'scan_started'):
-        logger.scan_started('code_scanner', 'scan_target')
+            # Log scan start
+            if hasattr(logger, 'scan_started'):
+                logger.scan_started('code_scanner', file_path)
 
             try:
                 result = self.scan_file(file_path)
