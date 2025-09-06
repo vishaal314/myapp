@@ -287,8 +287,11 @@ class LicenseIntegration:
             tier_mapping = {
                 'trial': PricingTier.STARTUP,
                 'basic': PricingTier.STARTUP,
-                'professional': PricingTier.GROWTH,
-                'enterprise': PricingTier.SCALE,
+                'startup': PricingTier.STARTUP,
+                'professional': PricingTier.PROFESSIONAL,
+                'growth': PricingTier.GROWTH,
+                'scale': PricingTier.SCALE,
+                'enterprise': PricingTier.ENTERPRISE,
                 'ultimate': PricingTier.ENTERPRISE,
                 'government': PricingTier.GOVERNMENT
             }
