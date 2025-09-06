@@ -379,8 +379,9 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     
     # Add test cases
-    suite.addTest(unittest.makeSuite(TestScannerLogAnalyzer))
-    suite.addTest(unittest.makeSuite(TestScannerLogDashboard))
+    loader = unittest.TestLoader()
+    suite.addTest(loader.loadTestsFromTestCase(TestScannerLogAnalyzer))
+    suite.addTest(loader.loadTestsFromTestCase(TestScannerLogDashboard))
     
     # Run tests
     runner = unittest.TextTestRunner(verbosity=2)
