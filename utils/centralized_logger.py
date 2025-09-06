@@ -53,18 +53,12 @@ class CustomJSONFormatter(logging.Formatter):
         }
         
         # Add extra fields if present
-        if hasattr(record, 'category'):
-            log_entry['category'] = record.category
-        if hasattr(record, 'user_id'):
-            log_entry['user_id'] = record.user_id
-        if hasattr(record, 'scanner_type'):
-            log_entry['scanner_type'] = record.scanner_type
-        if hasattr(record, 'execution_time'):
-            log_entry['execution_time'] = record.execution_time
-        if hasattr(record, 'memory_usage'):
-            log_entry['memory_usage'] = record.memory_usage
-        if hasattr(record, 'request_id'):
-            log_entry['request_id'] = record.request_id
+        log_entry['category'] = getattr(record, 'category', 'general')
+        log_entry['user_id'] = getattr(record, 'user_id', 'system')
+        log_entry['scanner_type'] = getattr(record, 'scanner_type', 'unknown')
+        log_entry['execution_time'] = getattr(record, 'execution_time', 0.0)
+        log_entry['memory_usage'] = getattr(record, 'memory_usage', 0.0)
+        log_entry['request_id'] = getattr(record, 'request_id', 'N/A')
         
         # Add exception info if present
         if record.exc_info and record.exc_info[0] is not None:

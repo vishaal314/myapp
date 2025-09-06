@@ -7,11 +7,10 @@ import json
 import numpy as np
 import pickle
 # Optional joblib import - not required for core functionality
-joblib = None
 try:
     import joblib
 except ImportError:
-    pass
+    joblib = None
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple, Union
 from dataclasses import dataclass
