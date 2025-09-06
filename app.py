@@ -981,6 +981,7 @@ def render_authenticated_interface():
                 # Additional common navigation terms
                 nav_mapping['Dashboard'] = 'dashboard'
                 nav_mapping['New Scan'] = 'scan'
+                nav_mapping['🔍 New Scan'] = 'scan'
                 nav_mapping['Nieuwe Scan'] = 'scan'
                 nav_mapping['Results'] = 'results'
                 nav_mapping['Resultaten'] = 'results'
@@ -991,18 +992,21 @@ def render_authenticated_interface():
                 nav_mapping['Admin'] = 'admin'
                 nav_mapping['Privacy Rights'] = 'privacy_rights'
                 nav_mapping['Privacyrechten'] = 'privacy_rights'
-                nav_mapping['Scanner Logs'] = 'scanner_logs'
+                # Scanner Logs should be mapped before generic scan terms
                 nav_mapping['🔍 Scanner Logs'] = 'scanner_logs'
-                nav_mapping['Performance Dashboard'] = 'performance_dashboard'
+                nav_mapping['Scanner Logs'] = 'scanner_logs'
                 nav_mapping['📈 Performance Dashboard'] = 'performance_dashboard'
+                nav_mapping['Performance Dashboard'] = 'performance_dashboard'
                 
         except (FileNotFoundError, json.JSONDecodeError):
             continue
     
     # Determine the current internal navigation key
     current_nav_key = None
-    for nav_text, nav_key in nav_mapping.items():
-        if nav_text and nav_text in selected_nav:
+    # Sort mapping by length (descending) to match more specific terms first
+    sorted_mapping = sorted(nav_mapping.items(), key=lambda x: len(x[0]), reverse=True)
+    for nav_text, nav_key in sorted_mapping:
+        if nav_text and nav_text == selected_nav:  # Use exact match instead of 'in'
             current_nav_key = nav_key
             break
     
