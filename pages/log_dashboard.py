@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """
-DataGuardian Pro - Log Dashboard Page
-Real-time log monitoring and analysis dashboard
+DataGuardian Pro - Scanner Log Dashboard Page
+Redesigned scanner-focused log monitoring and analysis dashboard
 """
 
 import streamlit as st
-from utils.log_monitor import show_log_dashboard
+from utils.scanner_log_dashboard import show_scanner_log_dashboard
 from utils.centralized_logger import get_logger, LogCategory
 
 # Initialize logger for this page
-logger = get_logger("log_dashboard", LogCategory.SYSTEM)
+logger = get_logger("scanner_log_dashboard", LogCategory.SYSTEM)
 
 def main():
-    """Main log dashboard page"""
+    """Main scanner log dashboard page"""
     st.set_page_config(
-        page_title="DataGuardian Pro - Log Dashboard",
-        page_icon="📊",
+        page_title="DataGuardian Pro - Scanner Logs",
+        page_icon="🔍",
         layout="wide"
     )
     
-    logger.info("Log dashboard page accessed", user_id=st.session_state.get('username', 'anonymous'))
+    logger.info("Scanner log dashboard accessed", user_id=st.session_state.get('username', 'anonymous'))
     
-    # Show the log monitoring dashboard
-    show_log_dashboard()
+    # Show the redesigned scanner log dashboard
+    show_scanner_log_dashboard()
 
 if __name__ == "__main__":
     main()

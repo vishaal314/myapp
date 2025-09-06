@@ -912,7 +912,7 @@ def render_authenticated_interface():
             "💳 iDEAL Payment Test"
         ]
         if user_role == "admin":
-            nav_options.extend([f"👥 {_('admin.title', 'Admin')}", "📈 Performance Dashboard", "📊 Log Dashboard"])
+            nav_options.extend([f"👥 {_('admin.title', 'Admin')}", "📈 Performance Dashboard", "🔍 Scanner Logs"])
         
         selected_nav = st.selectbox(_('sidebar.navigation', 'Navigation'), nav_options, key="navigation")
         
@@ -1038,7 +1038,7 @@ def render_authenticated_interface():
         render_admin_page()
     elif selected_nav and "Performance Dashboard" in selected_nav:
         render_performance_dashboard_safe()
-    elif selected_nav and "Log Dashboard" in selected_nav:
+    elif selected_nav and "Scanner Logs" in selected_nav:
         render_log_dashboard()
     elif selected_nav and "🏢 Enterprise Repository Demo" in selected_nav:
         render_enterprise_repo_demo()
@@ -10201,13 +10201,13 @@ def render_performance_dashboard_safe():
         st.info("Performance monitoring is temporarily unavailable. Please try again later.")
 
 def render_log_dashboard():
-    """Render log monitoring dashboard"""
+    """Render the redesigned scanner log dashboard"""
     try:
-        from utils.log_monitor import show_log_dashboard
-        show_log_dashboard()
+        from utils.scanner_log_dashboard import show_scanner_log_dashboard
+        show_scanner_log_dashboard()
     except Exception as e:
-        st.error(f"Error loading log dashboard: {str(e)}")
-        st.write("Please check if the log monitoring system is available.")
+        st.error(f"Error loading scanner log dashboard: {str(e)}")
+        st.write("Scanner log dashboard is temporarily unavailable.")
 
 def render_admin_page():
     """Render admin page"""
