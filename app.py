@@ -3387,7 +3387,8 @@ def render_database_scanner_interface(region: str, username: str):
             },
             "Azure Database": {
                 "PostgreSQL": "postgresql://username@servername:password@servername.postgres.database.azure.com:5432/database?sslmode=require",
-                "MySQL": "mysql://username@servername:password@servername.mysql.database.azure.com:3306/database"
+                "MySQL (URL Style)": "mysql://username@servername:password@servername.mysql.database.azure.com:3306/database",
+                "MySQL (Azure Style)": "Server=testdbserver.mysql.database.azure.com;\nPort=3306;\nDatabase=sakila;\nUid=testuser@testdbserver;\nPwd=MyTestPass123!;\nSslMode=Required;"
             },
             "Google Cloud SQL": {
                 "PostgreSQL": "postgresql://username:password@public-ip-address:5432/database?sslmode=require",

@@ -132,6 +132,7 @@ class DBScanner:
     def _connect_via_connection_string(self, connection_string: str) -> bool:
         """
         Connect to database using a connection string (common for cloud databases).
+        Supports both URL format (mysql://user:pass@host/db) and Azure format (Server=host;Database=db;...)
         
         Args:
             connection_string: Full database connection string
@@ -140,9 +141,13 @@ class DBScanner:
             True if connection is successful, False otherwise
         """
         try:
+            # Check if it's Azure/SQL Server style connection string (key=value; format)
+            if '=' in connection_string and ';' in connection_string and not connection_string.startswith(('postgresql://', 'mysql://', 'sqlite://')):
+                return self._parse_azure_style_connection_string(connection_string)
+            
             import urllib.parse
             
-            # Parse connection string
+            # Parse standard URL-style connection string
             parsed = urllib.parse.urlparse(connection_string)
             
             if parsed.scheme.startswith('postgres'):
@@ -197,6 +202,131 @@ class DBScanner:
                 
         except Exception as e:
             logger.error(f"Connection string parsing error: {str(e)}")
+            return False
+    
+    def _parse_azure_style_connection_string(self, connection_string: str) -> bool:
+        """
+        Parse Azure/SQL Server style connection string format:
+        Server=host;Port=3306;Database=dbname;Uid=username;Pwd=password;SslMode=Required;
+        
+        Args:
+            connection_string: Azure-style connection string
+            
+        Returns:
+            True if connection is successful, False otherwise
+        """
+        try:
+            # Parse key=value; format
+            params = {}
+            for pair in connection_string.split(';'):
+                pair = pair.strip()
+                if '=' in pair:
+                    key, value = pair.split('=', 1)
+                    params[key.strip().lower()] = value.strip()
+            
+            logger.info(f"Parsed Azure-style connection string with keys: {list(params.keys())}")
+            
+            # Extract connection parameters
+            server = params.get('server', params.get('host', params.get('data source', '')))
+            port = int(params.get('port', '3306'))
+            database = params.get('database', params.get('initial catalog', ''))
+            username = params.get('uid', params.get('user id', params.get('username', '')))
+            password = params.get('pwd', params.get('password', ''))
+            ssl_mode = params.get('sslmode', params.get('ssl mode', 'required')).lower()
+            
+            # Validate required parameters
+            if not server or not database or not username:
+                missing = []
+                if not server: missing.append('Server')
+                if not database: missing.append('Database')  
+                if not username: missing.append('Username')
+                logger.error(f"Missing required connection parameters: {', '.join(missing)}")
+                return False
+            
+            # Determine database type from server name or port
+            if 'mysql' in server.lower() or port == 3306:
+                return self._connect_mysql_azure_style(server, port, database, username, password, ssl_mode)
+            elif 'postgres' in server.lower() or port == 5432:
+                return self._connect_postgres_azure_style(server, port, database, username, password, ssl_mode)
+            else:
+                # Default to MySQL for Azure Database for MySQL
+                logger.info("Defaulting to MySQL connector for Azure-style connection")
+                return self._connect_mysql_azure_style(server, port, database, username, password, ssl_mode)
+                
+        except Exception as e:
+            logger.error(f"Error parsing Azure-style connection string: {str(e)}")
+            return False
+    
+    def _connect_mysql_azure_style(self, server: str, port: int, database: str, username: str, password: str, ssl_mode: str) -> bool:
+        """Connect to MySQL using Azure-style parameters."""
+        if not MYSQL_AVAILABLE:
+            logger.error("MySQL driver not available")
+            return False
+        
+        try:
+            # Prepare MySQL connection parameters
+            mysql_params = {
+                'host': server,
+                'port': port,
+                'database': database,
+                'user': username,
+                'password': password,
+                'connection_timeout': self.query_timeout_seconds,
+                'autocommit': True
+            }
+            
+            # Configure SSL based on mode
+            if ssl_mode in ['required', 'require', 'true', '1']:
+                mysql_params['ssl_disabled'] = False
+                mysql_params['ssl_verify_cert'] = True
+                mysql_params['ssl_verify_identity'] = True
+                logger.info("SSL enabled for Azure MySQL connection")
+            else:
+                mysql_params['ssl_disabled'] = True
+                logger.info("SSL disabled for MySQL connection")
+            
+            # Connect to MySQL
+            self.connection = mysql.connector.connect(**mysql_params)
+            self.db_type = 'mysql'
+            logger.info(f"Successfully connected to Azure MySQL: {server}:{port}/{database}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Azure MySQL connection failed: {str(e)}")
+            return False
+    
+    def _connect_postgres_azure_style(self, server: str, port: int, database: str, username: str, password: str, ssl_mode: str) -> bool:
+        """Connect to PostgreSQL using Azure-style parameters."""
+        if not POSTGRES_AVAILABLE:
+            logger.error("PostgreSQL driver not available")
+            return False
+        
+        try:
+            # Build PostgreSQL connection string
+            connection_params = {
+                'host': server,
+                'port': port,
+                'dbname': database,
+                'user': username,
+                'password': password,
+                'connect_timeout': self.query_timeout_seconds
+            }
+            
+            # Configure SSL based on mode
+            if ssl_mode in ['required', 'require', 'true', '1']:
+                connection_params['sslmode'] = 'require'
+                logger.info("SSL enabled for Azure PostgreSQL connection")
+            else:
+                connection_params['sslmode'] = 'prefer'
+            
+            # Connect to PostgreSQL
+            self.connection = psycopg2.connect(**connection_params)
+            self.db_type = 'postgres'
+            logger.info(f"Successfully connected to Azure PostgreSQL: {server}:{port}/{database}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Azure PostgreSQL connection failed: {str(e)}")
             return False
     
     def _get_pii_patterns(self) -> Dict[str, Tuple[str, str]]:
