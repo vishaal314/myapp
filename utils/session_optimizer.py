@@ -179,7 +179,7 @@ class SessionOptimizer:
             
             return user_session_data
     
-    def track_activity(self, session_id: str, activity: str, details: Dict = None) -> bool:
+    def track_activity(self, session_id: str, activity: str, details: Optional[Dict] = None) -> bool:
         """Track user activity in session"""
         with self.session_lock:
             if session_id not in self.sessions:

@@ -124,11 +124,13 @@ class RepositoryCache:
             return cached_data.get('metadata')
             
         except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
-            logger.warning(f"Cache file corrupted or missing {cache_file}: {e}")
+            cache_file_str = str(cache_file) if cache_file else "unknown"
+            logger.warning(f"Cache file corrupted or missing {cache_file_str}: {e}")
             self.stats['misses'] += 1
             return None
         except Exception as e:
-            logger.error(f"Unexpected error reading cache file {cache_file}: {e}")
+            cache_file_str = str(cache_file) if cache_file else "unknown"
+            logger.error(f"Unexpected error reading cache file {cache_file_str}: {e}")
             self.stats['misses'] += 1
             return None
     
@@ -305,8 +307,9 @@ class RepositoryCache:
         # Calculate cache directory size
         cache_size_mb = 0
         try:
-            for cache_file in self.cache_dir.glob("*.json"):
-                cache_size_mb += cache_file.stat().st_size / (1024 * 1024)
+            if self.cache_dir is not None:
+                for cache_file in self.cache_dir.glob("*.json"):
+                    cache_size_mb += cache_file.stat().st_size / (1024 * 1024)
         except:
             cache_size_mb = 0
         
