@@ -988,104 +988,190 @@ class CodeScanner:
         
         # Create final result
         return self._create_scan_result(file_path, all_pii, file_metadata)
-                        
-                        # Add regulatory references if enabled
-                        reg_refs = {}
-                        if self.include_article_refs:
-                            reg_refs = self._get_regulation_references("Secret")
-                        
-                        # Add to PII findings with enriched metadata
-                        finding = {
-                            'type': f'Secret ({secret_type})',
-                            'value': f'{var_name}: {value[:3]}***{value[-3:]}',  # Mask the actual value
-                            'location': f'Line {line_no}',
-                            'risk_level': 'High',
-                            'reason': f'Hardcoded {secret_type} found'
-                        }
-                        
-                        # Add additional metadata if available
-                        if provider:
-                            finding['provider'] = provider
-                        if entropy_score is not None:
-                            finding['entropy'] = str(round(entropy_score, 2))
-                        if reg_refs:
-                            finding['regulatory_references'] = json.dumps(reg_refs)
-                        if file_metadata.get('git'):
-                            finding['git_metadata'] = json.dumps(file_metadata['git'])
-                        
-                        all_pii.append(finding)
+    
+    def _scan_large_file_streaming(self, file_path: str, file_metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Scan large files using streaming to reduce memory usage.
+        
+        Args:
+            file_path: Path to the file
+            file_metadata: File metadata
             
-            # Use entropy analysis for additional secret detection
-            if self.use_entropy:
-                entropy_findings = self._detect_high_entropy_strings(content, file_path)
-                all_pii.extend(entropy_findings)
-            
-            # Add Netherlands-specific GDPR detection if region is Netherlands
-            if self.region == "Netherlands":
-                try:
-                    # Run Netherlands-specific detection without disrupting existing flow
-                    nl_findings = detect_nl_violations(content)
+        Returns:
+            Scan results dictionary
+        """
+        _, ext = os.path.splitext(file_path)
+        all_pii = []
+        chunk_size = 8192  # 8KB chunks
+        line_number = 1
+        buffer = ""
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                while True:
+                    chunk = f.read(chunk_size)
+                    if not chunk:
+                        break
                     
-                    # Add file metadata to findings
-                    for finding in nl_findings:
-                        finding['location'] = f'File: {os.path.basename(file_path)}'
-                        if 'description' not in finding:
-                            finding['description'] = f"Netherlands GDPR compliance issue: {finding.get('type')}"
+                    # Add chunk to buffer
+                    buffer += chunk
                     
-                    # Add to existing findings
-                    all_pii.extend(nl_findings)
-                except Exception as e:
-                    # Log but don't disrupt existing scanner
-                    print(f"Netherlands detection warning: {str(e)}")
-            
-            # Create results with detailed metadata
-            result = {
-                'file_name': os.path.basename(file_path),
-                'file_path': file_path,
-                'status': 'scanned',
-                'file_size': os.path.getsize(file_path),
-                'file_type': ext.lower(),
-                'scan_timestamp': datetime.now().isoformat(),
-                'pii_found': all_pii,
-                'pii_count': len(all_pii),
-                'metadata': file_metadata
-            }
-            
-            # Group findings by type for easier reporting
-            risk_levels = {'High': 0, 'Medium': 0, 'Low': 0}
-            pii_types = {}
-            
-            for pii in all_pii:
-                # Count risk levels
-                if 'risk_level' in pii and pii['risk_level'] in risk_levels:
-                    risk_levels[pii['risk_level']] += 1
+                    # Process complete lines to avoid cutting PII patterns in half
+                    lines = buffer.split('\n')
+                    buffer = lines[-1]  # Keep incomplete line in buffer
+                    
+                    for line in lines[:-1]:
+                        # Scan each line for PII
+                        line_pii = self._scan_content(line, "code", file_path)
+                        for pii in line_pii:
+                            pii['location'] = f'Line {line_number} (code)'
+                        all_pii.extend(line_pii)
+                        
+                        # Scan for secrets in the line
+                        for secret_type, compiled_pattern in self.compiled_patterns.items():
+                            for match in compiled_pattern.finditer(line):
+                                if len(match.groups()) >= 2:
+                                    var_name = match.group(1)
+                                    value = match.group(2)
+                                    provider = self._identify_provider(var_name, value)
+                                    
+                                    entropy_score = None
+                                    if self.use_entropy:
+                                        entropy_score = self._calculate_entropy(value)
+                                    
+                                    secret_finding = {
+                                        'type': f'Secret:{secret_type.replace("_", " ").title()}',
+                                        'value': f'{value[:3]}***{value[-3:]}' if len(value) > 6 else '***',
+                                        'location': f'Line {line_number}',
+                                        'risk_level': 'High',
+                                        'reason': f'Potential secret detected: {secret_type}',
+                                        'provider': provider,
+                                        'entropy': entropy_score
+                                    }
+                                    
+                                    if self.include_article_refs:
+                                        secret_finding['regulatory_refs'] = self._get_regulation_references(secret_type)
+                                    
+                                    all_pii.append(secret_finding)
+                        
+                        line_number += 1
                 
-                # Count PII types
-                pii_type = pii['type']
-                if pii_type in pii_types:
-                    pii_types[pii_type] += 1
-                else:
-                    pii_types[pii_type] = 1
+                # Process any remaining buffer content
+                if buffer.strip():
+                    line_pii = self._scan_content(buffer, "code", file_path)
+                    for pii in line_pii:
+                        pii['location'] = f'Line {line_number} (code)'
+                    all_pii.extend(line_pii)
+        
+        except (OSError, PermissionError) as e:
+            raise FileProcessingError(f"Cannot stream file {file_path}: {e}")
+        
+        # Apply high entropy detection if enabled
+        if self.use_entropy:
+            entropy_findings = self._detect_high_entropy_strings_streaming(file_path)
+            all_pii.extend(entropy_findings)
+        
+        # Combine with file metadata
+        return self._create_scan_result(file_path, all_pii, file_metadata, "streaming")
+    
+    def _detect_high_entropy_strings_streaming(self, file_path: str) -> List[Dict[str, Any]]:
+        """
+        Detect high entropy strings in large files using streaming.
+        
+        Args:
+            file_path: Path to the file
             
-            result['risk_summary'] = risk_levels
-            result['pii_types_summary'] = pii_types
+        Returns:
+            List of high entropy findings
+        """
+        findings = []
+        chunk_size = 8192
+        line_number = 1
+        buffer = ""
+        
+        # String patterns for detecting potential secrets
+        string_patterns = [
+            re.compile(r'"([^"\\]*(\\.[^"\\]*)*)"'),    # Double-quoted strings
+            re.compile(r"'([^'\\]*(\\.[^'\\]*)*)'"),    # Single-quoted strings
+            re.compile(r"`([^`\\]*(\\.[^`\\]*)*)`")     # Backtick strings
+        ]
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                while True:
+                    chunk = f.read(chunk_size)
+                    if not chunk:
+                        break
+                    
+                    buffer += chunk
+                    lines = buffer.split('\n')
+                    buffer = lines[-1]
+                    
+                    for line in lines[:-1]:
+                        for pattern in string_patterns:
+                            for match in pattern.finditer(line):
+                                string_value = match.group(1)
+                                
+                                # Only analyze strings that might be secrets
+                                if len(string_value) >= 8 and re.search(r'[A-Za-z0-9]', string_value) and re.search(r'[^A-Za-z0-9]', string_value):
+                                    entropy = self._calculate_entropy(string_value)
+                                    
+                                    if entropy > 4.0:
+                                        findings.append({
+                                            'type': 'High Entropy String',
+                                            'value': f'{string_value[:3]}***{string_value[-3:]}',
+                                            'location': f'Line {line_number}',
+                                            'risk_level': 'Medium',
+                                            'reason': f'String with high entropy (randomness) detected. Entropy: {entropy:.2f}',
+                                            'entropy': f"{entropy:.2f}"
+                                        })
+                        line_number += 1
+        
+        except (OSError, PermissionError) as e:
+            logger.warning(f"Cannot analyze entropy for {file_path}: {e}")
+        
+        return findings
+    
+    def _create_scan_result(self, file_path: str, all_pii: List[Dict[str, Any]], 
+                           file_metadata: Dict[str, Any], scan_method: str = "in-memory") -> Dict[str, Any]:
+        """
+        Create standardized scan result dictionary.
+        
+        Args:
+            file_path: Path to the scanned file
+            all_pii: List of PII findings
+            file_metadata: File metadata
+            scan_method: Method used for scanning (in-memory or streaming)
             
-            # Add CI/CD compatibility fields
-            result['ci_cd'] = {
-                'has_critical_findings': risk_levels['High'] > 0,
-                'exit_code': 1 if risk_levels['High'] > 0 else 0,
-                'scan_id': hashlib.md5(f"{file_path}:{datetime.now().isoformat()}".encode()).hexdigest()[:10]
-            }
-            
-            return result
-            
+        Returns:
+            Standardized scan result dictionary
+        """
+        # Add Netherlands-specific violations if available
+        try:
+            nl_violations = detect_nl_violations('\n'.join([str(pii) for pii in all_pii]))
+            all_pii.extend(nl_violations)
         except Exception as e:
-            return {
-                'file_name': os.path.basename(file_path),
-                'status': 'error',
-                'error': str(e),
-                'pii_found': []
-            }
+            logger.warning(f"Netherlands violation detection failed: {e}")
+        
+        # Calculate risk metrics
+        risk_counts = {'Low': 0, 'Medium': 0, 'High': 0, 'Critical': 0}
+        for finding in all_pii:
+            risk_level = finding.get('risk_level', 'Medium')
+            risk_counts[risk_level] = risk_counts.get(risk_level, 0) + 1
+        
+        return {
+            'file_name': os.path.basename(file_path),
+            'file_path': file_path,
+            'scan_method': scan_method,
+            'status': 'completed',
+            'pii_found': all_pii,
+            'pii_count': len(all_pii),
+            'risk_summary': risk_counts,
+            'file_size_bytes': file_metadata.get('size_bytes', 0),
+            'scan_timestamp': datetime.now().isoformat(),
+            'region': self.region,
+            **file_metadata
+        }
     
     def _get_file_metadata(self, file_path: str) -> Dict[str, Any]:
         """
