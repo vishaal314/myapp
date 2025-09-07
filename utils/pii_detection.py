@@ -645,7 +645,7 @@ def _find_dutch_addresses(text: str) -> List[Dict[str, Any]]:
 
 
 def _find_dutch_government_ids(text: str) -> List[Dict[str, Any]]:
-    """Find Dutch government-issued identification numbers."""
+    """Find comprehensive Dutch government-issued identification numbers."""
     patterns = [
         # Dutch passport (2 letters + 7 digits)
         r'\b[A-Z]{2}\d{7}\b',
@@ -656,8 +656,125 @@ def _find_dutch_government_ids(text: str) -> List[Dict[str, Any]]:
         # Dutch ID card number
         r'\b(?:identiteitskaart|ID\s+card|identity\s+card)(?:[:\s#-]+)?([A-Z]{2}\d{6}[A-Z]\d)\b',
         
-        # Dutch vehicle license plate
+        # Dutch vehicle license plate (all formats)
         r'\b(?:\d{2}[-\s]?[A-Z]{2}[-\s]?\d{2}|\d{1}[-\s]?[A-Z]{3}[-\s]?\d{2}|[A-Z]{2}[-\s]?\d{2}[-\s]?[A-Z]{2})\b',
+        
+        # Municipality codes (CBS codes) - 342 Dutch municipalities
+        r'\bGM\d{4}\b',
+        
+        # Province codes (12 Dutch provinces)  
+        r'\bPV\d{2}\b',
+        
+        # Water authority codes (21 water boards)
+        r'\bWS\d{3}\b',
+        
+        # Security region codes (25 regions)
+        r'\bVR\d{2}\b',
+        
+        # Court district codes
+        r'\bRECHT\d{3}\b',
+        
+        # Police region codes
+        r'\bPOL\d{3}\b',
+        
+        # Fire department codes
+        r'\bBRAND\d{3}\b',
+        
+        # Ambulance service codes
+        r'\bAMBU\d{3}\b',
+        
+        # Educational institution codes (BRIN)
+        r'\bBRIN\d{2}[A-Z]{2}\b',
+        
+        # Higher education program codes (CROHO)
+        r'\bCROHO\d{5}\b',
+        
+        # Professional certification numbers
+        r'\bVCA\d{8}\b',     # Safety certification
+        r'\bNVCB\d{6}\b',    # Construction certification  
+        r'\bSCC\d{7}\b',     # Safety certificate contractors
+        
+        # Social security numbers
+        r'\bAOW\d{9}\b',     # State pension number
+        r'\bWW\d{8}\b',      # Unemployment benefits
+        r'\bWAO\d{8}\b',     # Disability benefits
+        r'\bWIA\d{8}\b',     # Work and Income Act
+        r'\bZVW\d{9}\b',     # Health Insurance Law
+        r'\bWLZ\d{8}\b',     # Long-term Care Act
+        
+        # Immigration and residence
+        r'\bV\d{7}\b',       # V-number (alien registration)
+        r'\bVAR\d{6}\b',     # Residence document number
+        r'\bTVV\d{8}\b',     # Temporary residence permit
+        r'\bVVR\d{8}\b',     # Return visa number
+        
+        # Court and legal identifiers
+        r'\bLJN[A-Z]{2}\d{4}\b',  # Legal case numbers
+        r'\bECLI:NL:[A-Z]{2,4}:\d{4}:\d+\b',  # European case law identifier
+        r'\bPARKET\d{6}\b',  # Public prosecutor number
+        
+        # Professional licenses
+        r'\bADV\d{6}\b',     # Lawyer license (Advocaat)
+        r'\bNOT\d{6}\b',     # Notary license
+        r'\bDEUR\d{6}\b',    # Bailiff license (Deurwaarder)
+        r'\bCURATOR\d{6}\b', # Bankruptcy trustee
+        
+        # Healthcare professional IDs
+        r'\bBIG\d{8}\b',     # Healthcare professional registration
+        r'\bUZI\d{8}\b',     # Healthcare professional card
+        r'\bAGB\d{8}\b',     # Healthcare provider codes
+        r'\bGGZ\d{6}\b',     # Mental health registration
+        r'\bZORG\d{8}\b',    # Care provider registration
+        
+        # Environment and permits
+        r'\bWM\d{8}\b',      # Waste management permit
+        r'\bWVO\d{7}\b',     # Water pollution permit
+        r'\bWET\d{6}\b',     # Environmental permit
+        r'\bEMISSIE\d{8}\b', # Emission permit
+        r'\bNATUUR\d{6}\b',  # Nature permit
+        
+        # Energy sector identifiers
+        r'\bEAN\d{18}\b',    # Energy connection code
+        r'\bGTS\d{8}\b',     # Gas transport services
+        r'\bTSO\d{6}\b',     # Transmission system operator
+        r'\bDSO\d{6}\b',     # Distribution system operator
+        r'\bENERGIE\d{8}\b', # Energy permit
+        
+        # Telecommunications
+        r'\bACM\d{6}\b',     # Consumer and market authority
+        r'\bTELECOM\d{8}\b', # Telecom permit
+        r'\bFREQ\d{6}\b',    # Frequency allocation
+        
+        # Agriculture and food safety
+        r'\bGGN\d{13}\b',    # GlobalGAP number
+        r'\bNEVA\d{6}\b',    # Food safety inspection
+        r'\bDIER\d{8}\b',    # Animal identification
+        r'\bVEE\d{6}\b',     # Livestock registration
+        r'\bLANDB\d{8}\b',   # Agricultural permit
+        
+        # Cultural heritage
+        r'\bRCE\d{7}\b',     # Cultural heritage agency
+        r'\bMONU\d{6}\b',    # Monument registration
+        r'\bARCHEO\d{6}\b',  # Archeological permit
+        
+        # Transport and infrastructure
+        r'\bCEMT\d{6}\b',    # Transport permit
+        r'\bNIWO\d{8}\b',    # Road transport organization
+        r'\bTLN\d{7}\b',     # Transport and logistics Nederland
+        r'\bVOGELS\d{6}\b',  # Aviation permit
+        r'\bWATER\d{8}\b',   # Waterway permit
+        
+        # Housing and construction
+        r'\bBAG\d{16}\b',    # Address registration (BAG-ID)
+        r'\bWOZ\d{12}\b',    # Property valuation number
+        r'\bBOUW\d{8}\b',    # Building permit
+        r'\bPLAN\d{6}\b',    # Zoning plan number
+        
+        # Financial supervision
+        r'\bWFT\d{8}\b',     # Financial Supervision Act license
+        r'\bDNB\d{6}\b',     # Central bank registration
+        r'\bAFM\d{8}\b',     # Financial Markets Authority
+        r'\bPENSIOEN\d{8}\b', # Pension fund registration
     ]
     
     found = []
@@ -665,10 +782,50 @@ def _find_dutch_government_ids(text: str) -> List[Dict[str, Any]]:
         matches = re.finditer(pattern, text, re.IGNORECASE)
         for match in matches:
             value = match.group(1) if match.lastindex else match.group(0)
+            
+            # Determine specific ID type for better classification
+            id_type = "Dutch Government ID"
+            description = "Netherlands government identification"
+            risk_level = "Medium"
+            
+            if "BSN" in pattern or "Burgerservice" in pattern:
+                id_type = "BSN Number"
+                description = "Dutch Citizen Service Number"
+                risk_level = "High"
+            elif "rijbewijs" in pattern or "driving" in pattern:
+                id_type = "Driver's License"
+                description = "Netherlands driving license number"
+            elif "identiteitskaart" in pattern or "ID" in pattern:
+                id_type = "National ID Card"
+                description = "Dutch identity card number"
+                risk_level = "High"
+            elif "GM" in value:
+                id_type = "Municipality Code"
+                description = "Dutch municipality identifier"
+            elif "V" in value and len(value) == 8:
+                id_type = "Alien Number"
+                description = "Immigration registration number (V-number)"
+                risk_level = "High"
+            elif "BIG" in value:
+                id_type = "Healthcare Professional ID"
+                description = "Dutch healthcare professional registration"
+                risk_level = "High"
+            elif "AOW" in value or "WW" in value or "WIA" in value:
+                id_type = "Social Security Number"
+                description = "Dutch social benefits identifier"
+                risk_level = "High"
+            elif "BAG" in value:
+                id_type = "Address Registration ID"
+                description = "Dutch address database identifier"
+            elif "WOZ" in value:
+                id_type = "Property Valuation ID"
+                description = "Netherlands property tax identifier"
+            
             found.append({
-                'type': 'Dutch Government ID',
+                'type': id_type,
                 'value': value,
-                'description': 'Netherlands government identification'
+                'description': description,
+                'risk_level': risk_level
             })
     
     return found
