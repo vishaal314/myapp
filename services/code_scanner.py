@@ -436,109 +436,16 @@ class CodeScanner:
         # Prepare checkpoint file path
         checkpoint_path = f"scan_checkpoint_{scan_id}.json"
         
-        # Try to restore from checkpoint if requested
-        if continue_from_checkpoint and os.path.exists(checkpoint_path):
-            try:
-                with open(checkpoint_path, 'r') as f:
-                    self.scan_checkpoint_data = json.load(f)
-                print(f"Restored scan from checkpoint, {len(self.scan_checkpoint_data.get('completed_files', []))} files already processed")
-            except Exception as e:
-                print(f"Failed to load checkpoint: {str(e)}")
-                self.scan_checkpoint_data = {
-                    'scan_id': scan_id,
-                    'start_time': self.start_time.isoformat(),
-                    'directory': directory_path,
-                    'completed_files': [],
-                    'findings': [],
-                    'stats': {'files_scanned': 0, 'files_skipped': 0, 'total_findings': 0}
-                }
-        else:
-            # Initialize checkpoint data
-            self.scan_checkpoint_data = {
-                'scan_id': scan_id,
-                'start_time': self.start_time.isoformat(),
-                'directory': directory_path,
-                'completed_files': [],
-                'findings': [],
-                'stats': {'files_scanned': 0, 'files_skipped': 0, 'total_findings': 0}
-            }
+        # Initialize or restore checkpoint data
+        self._setup_checkpoint(continue_from_checkpoint, checkpoint_path, scan_id, directory_path)
         
         # Compile ignore patterns
-        ignore_regexes = []
-        if ignore_patterns:
-            for pattern in ignore_patterns:
-                # Convert glob pattern to regex
-                regex_pattern = pattern.replace('.', '\\.').replace('*', '.*').replace('?', '.?')
-                if '/' in pattern:
-                    # Path pattern
-                    ignore_regexes.append(re.compile(regex_pattern))
-                else:
-                    # File pattern
-                    ignore_regexes.append(re.compile(f".*{regex_pattern}$"))
+        ignore_regexes = self._compile_ignore_patterns(ignore_patterns)
         
-        # Walk directory and get all files
-        all_files = []
-        total_file_count = 0
-        
-        # Skip certain file types and patterns that are unlikely to contain PII
-        skip_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.woff', '.ttf', '.eot', '.mp3', '.mp4', '.avi', '.pdf', 
-                          '.zip', '.tar', '.gz', '.lock', '.pyc', '.mo', '.class', '.jar', '.bin', '.exe', '.dll', '.so', '.o']
-        skip_dirs = ['node_modules', 'vendor', 'dist', 'build', '.git', '.idea', '.vscode', '__pycache__', 'venv', 
-                     'env', 'lib', 'bin', 'obj', 'assets', 'images', 'fonts', 'locales', 'i18n', 'docs']
-        
-        # Priority extensions - scan these first and thoroughly (more likely to contain important data)
-        priority_extensions = ['.py', '.js', '.ts', '.java', '.cs', '.php', '.rb', '.go', '.sql', '.env', '.json', '.yaml', '.yml', '.xml', '.csv', '.md']
-        
-        for root, dirs, files in os.walk(directory_path):
-            # Skip entire directories that match skip patterns
-            dirs_to_remove = []
-            for d in dirs:
-                if d in skip_dirs or any(pattern in os.path.join(root, d) for pattern in skip_dirs):
-                    dirs_to_remove.append(d)
-                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
-            
-            # Remove directories from the walk
-            for d in dirs_to_remove:
-                dirs.remove(d)
-            
-            for file in files:
-                total_file_count += 1
-                file_path = os.path.join(root, file)
-                rel_path = os.path.relpath(file_path, directory_path)
-                
-                # Skip already processed files
-                if rel_path in self.scan_checkpoint_data['completed_files']:
-                    continue
-                
-                # Check extensions to skip
-                _, ext = os.path.splitext(file.lower())
-                if ext in skip_extensions:
-                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
-                    continue
-                
-                # Check if should ignore
-                skip = False
-                for ignore_regex in ignore_regexes:
-                    if ignore_regex.match(rel_path):
-                        skip = True
-                        break
-                
-                if skip:
-                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
-                    continue
-                
-                # Check file size
-                try:
-                    if os.path.getsize(file_path) > max_file_size_mb * 1024 * 1024:
-                        self.scan_checkpoint_data['stats']['files_skipped'] += 1
-                        continue
-                except:
-                    # If we can't get file size, skip
-                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
-                    continue
-                
-                # Add to scan list
-                all_files.append((file_path, ext in priority_extensions))
+        # Discover and filter files
+        all_files, total_file_count = self._discover_files(
+            directory_path, ignore_regexes, max_file_size_mb
+        )
         
         # Set up multiprocessing pool for parallel scanning - use more workers for performance
         num_workers = max(2, multiprocessing.cpu_count())  # Use all available CPUs for faster scanning
@@ -546,95 +453,18 @@ class CodeScanner:
         # Use better batch size for faster scanning
         batch_size = 100  # Increased batch size for better performance
         
-        # Implement smart sampling for very large repositories
-        if smart_sampling and len(all_files) > max_files_to_scan:
-            print(f"Repository is very large ({len(all_files)} files). Using smart sampling to scan ~{max_files_to_scan} files.")
-            
-            # First, sort files by priority flag (True/False)
-            all_files.sort(key=lambda x: not x[1])  # Priority files first (True comes before False)
-            
-            # Calculate how many files to keep from each priority group
-            priority_files = [f for f in all_files if f[1]]
-            non_priority_files = [f for f in all_files if not f[1]]
-            
-            # Always keep all priority files up to a reasonable limit
-            priority_limit = min(len(priority_files), int(max_files_to_scan * 0.7))
-            non_priority_limit = max_files_to_scan - priority_limit
-            
-            # Sample files intelligently
-            sampled_files = []
-            
-            # Take all or sample priority files
-            if len(priority_files) <= priority_limit:
-                sampled_files.extend(priority_files)
-            else:
-                # Systematic sampling to get representative subset
-                step = len(priority_files) / priority_limit
-                indices = [int(i * step) for i in range(priority_limit)]
-                sampled_files.extend([priority_files[i] for i in indices])
-            
-            # Sample non-priority files if needed
-            if non_priority_limit > 0 and non_priority_files:
-                step = len(non_priority_files) / non_priority_limit
-                indices = [int(i * step) for i in range(non_priority_limit)]
-                sampled_files.extend([non_priority_files[i] for i in indices])
-            
-            # Update skip count
-            self.scan_checkpoint_data['stats']['files_skipped'] += len(all_files) - len(sampled_files)
-            
-            # Just keep the file paths
-            filtered_files = [f[0] for f in sampled_files]
-            print(f"Smart sampling selected {len(filtered_files)} files out of {len(all_files)} total files.")
-        else:
-            # Just keep the file paths for all files
-            filtered_files = [f[0] for f in all_files]
+        # Apply smart sampling if needed
+        filtered_files = self._apply_smart_sampling(
+            all_files, smart_sampling, max_files_to_scan
+        )
             
         # Total file stats for logging
         print(f"Total files found: {total_file_count}, files to scan: {len(filtered_files)}, files skipped: {self.scan_checkpoint_data['stats']['files_skipped']}")
         
-        # Use multiprocessing for faster scanning
-        with multiprocessing.Pool(processes=num_workers) as pool:
-            # Map function for scanning files in parallel
-            scan_tasks = [(i, file_path) for i, file_path in enumerate(filtered_files)]
-            
-            # Process files in parallel batches
-            for batch_start in range(0, len(filtered_files), batch_size):
-                # Check if timeout reached
-                elapsed_time = (datetime.now() - self.start_time).total_seconds()
-                if elapsed_time >= self.max_timeout:
-                    print(f"Scan timeout reached after {elapsed_time:.1f} seconds. Saving checkpoint.")
-                    break
-                
-                # Get current batch
-                batch_end = min(batch_start + batch_size, len(filtered_files))
-                current_batch = scan_tasks[batch_start:batch_end]
-                
-                # Submit work to process pool for parallel processing
-                batch_results = pool.map_async(self._scan_file_wrapper, 
-                                              [(file_path, directory_path, self.progress_callback, i, len(filtered_files)) 
-                                               for i, file_path in current_batch])
-                
-                # Process results as they complete
-                for result in batch_results.get():
-                    if result and 'file_path' in result:
-                        # Mark as completed
-                        rel_path = os.path.relpath(result['file_path'], directory_path)
-                        self.scan_checkpoint_data['completed_files'].append(rel_path)
-                        
-                        # Update stats
-                        self.scan_checkpoint_data['stats']['files_scanned'] += 1
-                        if result.get('pii_count', 0) > 0:
-                            self.scan_checkpoint_data['findings'].append(result)
-                            self.scan_checkpoint_data['stats']['total_findings'] += result.get('pii_count', 0)
-                
-                # Save checkpoint after each batch
-                if (datetime.now() - self.start_time).total_seconds() % self.checkpoint_interval < batch_size:
-                    try:
-                        with open(checkpoint_path, 'w') as f:
-                            json.dump(self.scan_checkpoint_data, f)
-                        print(f"Saved checkpoint at {datetime.now().isoformat()}")
-                    except Exception as e:
-                        print(f"Failed to save checkpoint: {str(e)}")
+        # Execute parallel scanning
+        self._execute_parallel_scan(
+            filtered_files, directory_path, checkpoint_path, num_workers, batch_size
+        )
         
         # Mark scan as complete
         self.is_running = False
@@ -670,6 +500,273 @@ class CodeScanner:
             logger.warning(f"Cost savings integration failed: {e}")
         
         return result
+    
+    def _setup_checkpoint(self, continue_from_checkpoint: bool, checkpoint_path: str, 
+                         scan_id: str, directory_path: str) -> None:
+        """
+        Setup or restore checkpoint data for resumable scans.
+        
+        Args:
+            continue_from_checkpoint: Whether to continue from existing checkpoint
+            checkpoint_path: Path to the checkpoint file
+            scan_id: Unique scan identifier
+            directory_path: Directory being scanned
+        """
+        if continue_from_checkpoint and os.path.exists(checkpoint_path):
+            try:
+                with open(checkpoint_path, 'r') as f:
+                    self.scan_checkpoint_data = json.load(f)
+                logger.info(f"Restored scan from checkpoint, {len(self.scan_checkpoint_data.get('completed_files', []))} files already processed")
+            except (FileNotFoundError, json.JSONDecodeError, PermissionError) as e:
+                raise CheckpointError(f"Failed to load checkpoint: {e}")
+            except Exception as e:
+                logger.warning(f"Unexpected error loading checkpoint: {e}")
+                self._initialize_checkpoint_data(scan_id, directory_path)
+        else:
+            self._initialize_checkpoint_data(scan_id, directory_path)
+    
+    def _initialize_checkpoint_data(self, scan_id: str, directory_path: str) -> None:
+        """Initialize fresh checkpoint data."""
+        if self.start_time is None:
+            raise InvalidConfigurationError("Start time must be set before initializing checkpoint data")
+            
+        self.scan_checkpoint_data = {
+            'scan_id': scan_id,
+            'start_time': self.start_time.isoformat(),
+            'directory': directory_path,
+            'completed_files': [],
+            'findings': [],
+            'stats': {'files_scanned': 0, 'files_skipped': 0, 'total_findings': 0}
+        }
+    
+    def _compile_ignore_patterns(self, ignore_patterns: Optional[List[str]]) -> List[re.Pattern]:
+        """
+        Compile ignore patterns into regex objects.
+        
+        Args:
+            ignore_patterns: List of glob patterns to ignore
+            
+        Returns:
+            List of compiled regex patterns
+        """
+        ignore_regexes = []
+        if ignore_patterns:
+            for pattern in ignore_patterns:
+                try:
+                    # Convert glob pattern to regex - simplified to prevent ReDoS
+                    regex_pattern = pattern.replace('.', '\\.').replace('*', '[^/]*').replace('?', '[^/]')
+                    if '/' in pattern:
+                        # Path pattern
+                        ignore_regexes.append(re.compile(regex_pattern))
+                    else:
+                        # File pattern
+                        ignore_regexes.append(re.compile(f".*{regex_pattern}$"))
+                except re.error as e:
+                    logger.warning(f"Invalid ignore pattern '{pattern}': {e}")
+        return ignore_regexes
+    
+    def _discover_files(self, directory_path: str, ignore_regexes: List[re.Pattern], 
+                       max_file_size_mb: int) -> Tuple[List[Tuple[str, bool]], int]:
+        """
+        Discover and filter files for scanning.
+        
+        Args:
+            directory_path: Directory to scan
+            ignore_regexes: Compiled ignore patterns
+            max_file_size_mb: Maximum file size in MB
+            
+        Returns:
+            Tuple of (filtered files with priority flags, total file count)
+        """
+        all_files = []
+        total_file_count = 0
+        
+        # Skip certain file types and patterns that are unlikely to contain PII
+        skip_extensions = {
+            '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.woff', '.ttf', '.eot', 
+            '.mp3', '.mp4', '.avi', '.pdf', '.zip', '.tar', '.gz', '.lock', '.pyc', 
+            '.mo', '.class', '.jar', '.bin', '.exe', '.dll', '.so', '.o'
+        }
+        skip_dirs = {
+            'node_modules', 'vendor', 'dist', 'build', '.git', '.idea', '.vscode', 
+            '__pycache__', 'venv', 'env', 'lib', 'bin', 'obj', 'assets', 'images', 
+            'fonts', 'locales', 'i18n', 'docs'
+        }
+        
+        # Priority extensions - scan these first and thoroughly
+        priority_extensions = {
+            '.py', '.js', '.ts', '.java', '.cs', '.php', '.rb', '.go', '.sql', 
+            '.env', '.json', '.yaml', '.yml', '.xml', '.csv', '.md'
+        }
+        
+        max_file_size_bytes = max_file_size_mb * 1024 * 1024
+        
+        for root, dirs, files in os.walk(directory_path):
+            # Skip entire directories that match skip patterns
+            dirs[:] = [d for d in dirs if d not in skip_dirs]
+            
+            for file in files:
+                total_file_count += 1
+                file_path = os.path.join(root, file)
+                rel_path = os.path.relpath(file_path, directory_path)
+                
+                # Skip already processed files
+                if rel_path in self.scan_checkpoint_data['completed_files']:
+                    continue
+                
+                # Check extensions to skip
+                _, ext = os.path.splitext(file.lower())
+                if ext in skip_extensions:
+                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
+                    continue
+                
+                # Check if should ignore
+                if any(ignore_regex.match(rel_path) for ignore_regex in ignore_regexes):
+                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
+                    continue
+                
+                # Check file size
+                try:
+                    file_size = os.path.getsize(file_path)
+                    if file_size > max_file_size_bytes:
+                        self.scan_checkpoint_data['stats']['files_skipped'] += 1
+                        continue
+                except (OSError, PermissionError):
+                    # If we can't get file size, skip
+                    self.scan_checkpoint_data['stats']['files_skipped'] += 1
+                    continue
+                
+                # Add to scan list with priority flag
+                is_priority = ext in priority_extensions
+                all_files.append((file_path, is_priority))
+        
+        return all_files, total_file_count
+    
+    def _apply_smart_sampling(self, all_files: List[Tuple[str, bool]], 
+                            smart_sampling: bool, max_files_to_scan: int) -> List[str]:
+        """
+        Apply smart sampling to reduce file count for large repositories.
+        
+        Args:
+            all_files: List of (file_path, is_priority) tuples
+            smart_sampling: Whether to use smart sampling
+            max_files_to_scan: Maximum number of files to scan
+            
+        Returns:
+            List of file paths to scan
+        """
+        if not smart_sampling or len(all_files) <= max_files_to_scan:
+            return [f[0] for f in all_files]
+        
+        logger.info(f"Repository is very large ({len(all_files)} files). Using smart sampling to scan ~{max_files_to_scan} files.")
+        
+        # Sort files by priority flag (True/False)
+        all_files.sort(key=lambda x: not x[1])  # Priority files first
+        
+        # Calculate how many files to keep from each priority group
+        priority_files = [f for f in all_files if f[1]]
+        non_priority_files = [f for f in all_files if not f[1]]
+        
+        # Always keep all priority files up to a reasonable limit
+        priority_limit = min(len(priority_files), int(max_files_to_scan * 0.7))
+        non_priority_limit = max_files_to_scan - priority_limit
+        
+        # Sample files intelligently
+        sampled_files = []
+        
+        # Take all or sample priority files
+        if len(priority_files) <= priority_limit:
+            sampled_files.extend(priority_files)
+        else:
+            # Systematic sampling to get representative subset
+            step = len(priority_files) / priority_limit
+            indices = [int(i * step) for i in range(priority_limit)]
+            sampled_files.extend([priority_files[i] for i in indices])
+        
+        # Sample non-priority files if needed
+        if non_priority_limit > 0 and non_priority_files:
+            step = len(non_priority_files) / non_priority_limit
+            indices = [int(i * step) for i in range(non_priority_limit)]
+            sampled_files.extend([non_priority_files[i] for i in indices])
+        
+        # Update skip count
+        self.scan_checkpoint_data['stats']['files_skipped'] += len(all_files) - len(sampled_files)
+        
+        # Extract file paths
+        filtered_files = [f[0] for f in sampled_files]
+        logger.info(f"Smart sampling selected {len(filtered_files)} files out of {len(all_files)} total files.")
+        
+        return filtered_files
+    
+    def _execute_parallel_scan(self, filtered_files: List[str], directory_path: str, 
+                             checkpoint_path: str, num_workers: int, batch_size: int) -> None:
+        """
+        Execute parallel scanning of files with checkpointing.
+        
+        Args:
+            filtered_files: List of file paths to scan
+            directory_path: Base directory path
+            checkpoint_path: Path to save checkpoints
+            num_workers: Number of worker processes
+            batch_size: Batch size for processing
+        """
+        try:
+            with multiprocessing.Pool(processes=num_workers) as pool:
+                # Map function for scanning files in parallel
+                scan_tasks = [(i, file_path) for i, file_path in enumerate(filtered_files)]
+                
+                # Process files in parallel batches
+                for batch_start in range(0, len(filtered_files), batch_size):
+                    # Check if timeout reached
+                    if self.start_time is not None:
+                        elapsed_time = (datetime.now() - self.start_time).total_seconds()
+                        if elapsed_time >= self.max_timeout:
+                            raise TimeoutError(f"Scan timeout reached after {elapsed_time:.1f} seconds")
+                    
+                    # Get current batch
+                    batch_end = min(batch_start + batch_size, len(filtered_files))
+                    current_batch = scan_tasks[batch_start:batch_end]
+                    
+                    # Submit work to process pool for parallel processing
+                    batch_results = pool.map_async(
+                        self._scan_file_wrapper, 
+                        [(file_path, directory_path, self.progress_callback, i, len(filtered_files)) 
+                         for i, file_path in current_batch]
+                    )
+                    
+                    # Process results as they complete
+                    for result in batch_results.get():
+                        if result and 'file_path' in result:
+                            # Mark as completed
+                            rel_path = os.path.relpath(result['file_path'], directory_path)
+                            self.scan_checkpoint_data['completed_files'].append(rel_path)
+                            
+                            # Update stats
+                            self.scan_checkpoint_data['stats']['files_scanned'] += 1
+                            if result.get('pii_count', 0) > 0:
+                                self.scan_checkpoint_data['findings'].append(result)
+                                self.scan_checkpoint_data['stats']['total_findings'] += result.get('pii_count', 0)
+                    
+                    # Save checkpoint after each batch
+                    self._save_checkpoint_if_needed(checkpoint_path)
+                    
+        except (multiprocessing.ProcessError, OSError) as e:
+            raise FileProcessingError(f"Parallel processing failed: {e}")
+    
+    def _save_checkpoint_if_needed(self, checkpoint_path: str) -> None:
+        """
+        Save checkpoint if the interval has passed.
+        
+        Args:
+            checkpoint_path: Path to save the checkpoint
+        """
+        if self.start_time is not None and (datetime.now() - self.start_time).total_seconds() % self.checkpoint_interval < 1:
+            try:
+                with open(checkpoint_path, 'w') as f:
+                    json.dump(self.scan_checkpoint_data, f, indent=2)
+                logger.info(f"Saved checkpoint at {datetime.now().isoformat()}")
+            except (OSError, PermissionError) as e:
+                logger.warning(f"Failed to save checkpoint: {e}")
     
     def _scan_file_wrapper(self, args):
         """
@@ -779,60 +876,118 @@ class CodeScanner:
             # Get file metadata including Git info if available
             file_metadata = self._get_file_metadata(file_path)
             
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
+            # Check file size for streaming vs in-memory processing
+            file_size = os.path.getsize(file_path)
+            large_file_threshold = 10 * 1024 * 1024  # 10MB threshold
+            
+            if file_size > large_file_threshold:
+                # Use streaming for large files to reduce memory usage
+                return self._scan_large_file_streaming(file_path, file_metadata)
+            else:
+                # Use in-memory processing for smaller files (faster)
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
                 
-            # First, extract code and comments separately
-            code_content = content
-            comments = []
+                return self._scan_file_content(file_path, content, file_metadata)
             
-            if not self.include_comments:
-                # Remove comments from code if not including them
-                for ext_pattern in self.comment_patterns.keys():
-                    if ext.lower().endswith(ext_pattern):
-                        for pattern in self.comment_patterns[ext_pattern]:
-                            # Extract comments before removing them
-                            if ext_pattern in self.comment_patterns:
-                                # For languages with multiline comments
-                                comment_matches = re.finditer(pattern, code_content, re.DOTALL | re.MULTILINE)
-                                for match in comment_matches:
-                                    comments.append(match.group(0))
-                            
-                            # Remove comments from code content
-                            code_content = re.sub(pattern, '', code_content, flags=re.DOTALL | re.MULTILINE)
+        except (OSError, PermissionError) as e:
+            raise FileProcessingError(f"Cannot access file {file_path}: {e}")
+        except UnicodeDecodeError as e:
+            logger.warning(f"Unicode decode error in {file_path}: {e}")
+            return {
+                'file_name': os.path.basename(file_path),
+                'status': 'skipped',
+                'reason': 'Unicode decode error',
+                'pii_found': []
+            }
+        except Exception as e:
+            raise FileProcessingError(f"Error processing file {file_path}: {e}")
+    
+    def _scan_file_content(self, file_path: str, content: str, file_metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Scan file content for PII and secrets (in-memory processing).
+        
+        Args:
+            file_path: Path to the file
+            content: File content to scan
+            file_metadata: File metadata
             
-            # Find PII in code
-            pii_in_code = self._scan_content(code_content, "code", file_path)
-            
-            # Find PII in comments if included
-            pii_in_comments = []
-            if self.include_comments and comments:
-                comments_text = '\n'.join(comments)
-                pii_in_comments = self._scan_content(comments_text, "comment", file_path)
-            
-            # Combine results
-            all_pii = pii_in_code + pii_in_comments
-            
-            # Scan for secrets using regex patterns
-            for secret_type, pattern in self.secret_patterns.items():
-                for match in re.finditer(pattern, content, re.MULTILINE | re.DOTALL):
-                    if len(match.groups()) >= 2:
-                        # Variable name is in group 1, value in group 2
-                        var_name = match.group(1)
-                        value = match.group(2)
-                        
-                        # Find line number
-                        line_no = content[:match.start()].count('\n') + 1
-                        
-                        # Identify provider if possible
-                        provider = self._identify_provider(var_name, value)
-                        
-                        # Calculate entropy if enabled
-                        entropy_score = None
-                        if self.use_entropy:
-                            entropy_score = self._calculate_entropy(value)
-                            if len(value) < 8 or entropy_score < 3.5:  # Low entropy threshold
-                                continue  # Skip if entropy is too low (likely not a secret)
+        Returns:
+            Scan results dictionary
+        """
+        _, ext = os.path.splitext(file_path)
+        
+        # First, extract code and comments separately
+        code_content = content
+        comments = []
+        
+        if not self.include_comments:
+            # Remove comments from code if not including them
+            if ext.lower() in self.compiled_comment_patterns:
+                for compiled_pattern in self.compiled_comment_patterns[ext.lower()]:
+                    # Extract comments before removing them
+                    for match in compiled_pattern.finditer(code_content):
+                        comments.append(match.group(0))
+                    
+                    # Remove comments from code content
+                    code_content = compiled_pattern.sub('', code_content)
+        
+        # Find PII in code
+        pii_in_code = self._scan_content(code_content, "code", file_path)
+        
+        # Find PII in comments if included
+        pii_in_comments = []
+        if self.include_comments and comments:
+            comments_text = '\n'.join(comments)
+            pii_in_comments = self._scan_content(comments_text, "comment", file_path)
+        
+        # Combine results
+        all_pii = pii_in_code + pii_in_comments
+        
+        # Scan for secrets using compiled regex patterns
+        for secret_type, compiled_pattern in self.compiled_patterns.items():
+            for match in compiled_pattern.finditer(content):
+                if len(match.groups()) >= 2:
+                    # Variable name is in group 1, value in group 2
+                    var_name = match.group(1)
+                    value = match.group(2)
+                    
+                    # Find line number
+                    line_no = content[:match.start()].count('\n') + 1
+                    
+                    # Identify provider if possible
+                    provider = self._identify_provider(var_name, value)
+                    
+                    # Calculate entropy if enabled
+                    entropy_score = None
+                    if self.use_entropy:
+                        entropy_score = self._calculate_entropy(value)
+                        if len(value) < 8 or entropy_score < 3.5:  # Low entropy threshold
+                            continue  # Skip if entropy is too low (likely not a secret)
+                    
+                    # Create secret finding
+                    secret_finding = {
+                        'type': f'Secret:{secret_type.replace("_", " ").title()}',
+                        'value': f'{value[:3]}***{value[-3:]}' if len(value) > 6 else '***',
+                        'location': f'Line {line_no}',
+                        'risk_level': 'High',
+                        'reason': f'Potential secret detected: {secret_type}',
+                        'provider': provider,
+                        'entropy': entropy_score
+                    }
+                    
+                    if self.include_article_refs:
+                        secret_finding['regulatory_refs'] = self._get_regulation_references(secret_type)
+                    
+                    all_pii.append(secret_finding)
+        
+        # Apply high entropy detection if enabled
+        if self.use_entropy:
+            entropy_findings = self._detect_high_entropy_strings(content, file_path)
+            all_pii.extend(entropy_findings)
+        
+        # Create final result
+        return self._create_scan_result(file_path, all_pii, file_metadata)
                         
                         # Add regulatory references if enabled
                         reg_refs = {}
