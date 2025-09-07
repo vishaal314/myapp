@@ -832,25 +832,140 @@ def _find_dutch_government_ids(text: str) -> List[Dict[str, Any]]:
 
 
 def _find_dutch_business_identifiers(text: str) -> List[Dict[str, Any]]:
-    """Find Dutch business-related identifiers."""
+    """Find comprehensive Dutch business and commercial identifiers."""
     patterns = [
-        # Dutch VAT number (BTW-nummer)
+        # Dutch VAT number (BTW-nummer) - comprehensive patterns
         r'\b(?:BTW|VAT)[-\s]*(?:nummer|number)?[\s:]*NL\d{9}B\d{2}\b',
+        r'\bNL\d{9}B\d{2}\b',  # Direct VAT format
+        r'\b(?:Omzetbelasting|Sales\s+tax)[-\s]*(?:nummer|number)?[\s:]*NL\d{9}B\d{2}\b',
         
         # RSIN (Rechtspersonen Samenwerkingsverbanden Informatie Nummer)
         r'\b(?:RSIN|rechtspersonen)(?:[:\s#-]+)?(\d{9})\b',
+        r'\bRechtspersonen\s+nummer[\s:]*(\d{9})\b',
         
-        # Dutch employee number patterns
-        r'\b(?:personeelsnummer|employee\s+number|medewerker\s+nummer)(?:[:\s#-]+)?(\d{4,8})\b',
+        # Chamber of Commerce (KvK) extended patterns
+        r'\bKvK[-\s]*nummer[\s:]*(\d{8})\b',
+        r'\bHandelsregister[-\s]*nummer[\s:]*(\d{8})\b',
+        r'\bChamber\s+of\s+Commerce[\s:#]*(\d{8})\b',
+        r'\bKamer\s+van\s+Koophandel[\s:#]*(\d{8})\b',
+        r'\bCOC[-\s]*number[\s:]*(\d{8})\b',
         
-        # Dutch salary number (loon nummer)
-        r'\b(?:loonnummer|salary\s+number)(?:[:\s#-]+)?(\d{4,8})\b',
+        # Corporate entity identifiers
+        r'\bBV[-\s]*nummer[\s:]*(\d{8})\b',      # Private limited company
+        r'\bNV[-\s]*nummer[\s:]*(\d{8})\b',      # Public limited company
+        r'\bEENMANSZAAK[-\s]*nummer[\s:]*(\d{8})\b',  # Sole proprietorship
+        r'\bVOF[-\s]*nummer[\s:]*(\d{8})\b',     # General partnership
+        r'\bCV[-\s]*nummer[\s:]*(\d{8})\b',      # Limited partnership
+        r'\bMAATSCHAP[-\s]*nummer[\s:]*(\d{8})\b', # Professional partnership
+        r'\bSTICHTING[-\s]*nummer[\s:]*(\d{8})\b', # Foundation
+        r'\bVERENIGING[-\s]*nummer[\s:]*(\d{8})\b', # Association
+        r'\bCOOPERATIE[-\s]*nummer[\s:]*(\d{8})\b', # Cooperative
         
-        # Dutch contract number
-        r'\b(?:contractnummer|contract\s+number)(?:[:\s#-]+)?([A-Z0-9]{6,12})\b',
-        
-        # IBAN with Dutch bank codes
+        # IBAN with all Dutch bank codes
         r'\bNL\d{2}[A-Z]{4}\d{10}\b',
+        r'\bIBAN[\s:]*NL\d{2}[A-Z]{4}\d{10}\b',
+        
+        # Dutch bank account numbers (legacy format)
+        r'\b\d{1,7}\.\d{2}\.\d{3}\b',  # Old format: 1234567.12.345
+        r'\bRekeningnummer[\s:]*\d{1,7}\.\d{2}\.\d{3}\b',
+        
+        # Industry classification codes
+        r'\bSBI[-\s]*code[\s:]*(\d{5})\b',       # Standard Business Industry
+        r'\bNACE[-\s]*code[\s:]*(\d{4}\.\d{2})\b', # European industry classification
+        r'\bIsic[-\s]*code[\s:]*(\d{4})\b',      # International Standard Industrial Classification
+        
+        # Professional services registrations
+        r'\bNOVA[-\s]*nummer[\s:]*(\d{6})\b',    # Dutch Bar Association (lawyers)
+        r'\bNRO[-\s]*nummer[\s:]*(\d{7})\b',     # Public accountant registration
+        r'\bNIVRA[-\s]*nummer[\s:]*(\d{6})\b',   # Accountant association
+        r'\bREA[-\s]*nummer[\s:]*(\d{8})\b',     # Tax advisor registration
+        r'\bNOB[-\s]*nummer[\s:]*(\d{6})\b',     # Notary association
+        
+        # Financial licenses and permits
+        r'\bAFM[-\s]*vergunning[\s:]*(\d{8})\b', # Financial Markets Authority license
+        r'\bDNB[-\s]*vergunning[\s:]*(\d{8})\b', # Dutch National Bank license
+        r'\bWFT[-\s]*vergunning[\s:]*(\d{8})\b', # Financial Supervision Act license
+        r'\bPENSIOEN[-\s]*nummer[\s:]*(\d{8})\b', # Pension fund registration
+        r'\bVEROPS[-\s]*nummer[\s:]*(\d{6})\b',  # Insurance intermediary
+        
+        # Construction and building licenses
+        r'\bBRL[-\s]*certificaat[\s:]*(\d{6})\b', # Building regulation certificate
+        r'\bKVK[-\s]*bouw[\s:]*(\d{8})\b',       # Construction company registration
+        r'\bSNEL[-\s]*certificaat[\s:]*(\d{7})\b', # Construction certification
+        r'\bBOUW[-\s]*vergunning[\s:]*(\d{8})\b', # Building permit
+        r'\bVCA[-\s]*certificaat[\s:]*(\d{8})\b', # Safety certification
+        
+        # Transport and logistics
+        r'\bCEMT[-\s]*vergunning[\s:]*(\d{6})\b', # European transport permit
+        r'\bNIWO[-\s]*nummer[\s:]*(\d{8})\b',    # Road transport organization
+        r'\bTLN[-\s]*nummer[\s:]*(\d{7})\b',     # Transport and logistics Nederland
+        r'\bVERVOER[-\s]*vergunning[\s:]*(\d{8})\b', # Transport permit
+        r'\bTAXI[-\s]*vergunning[\s:]*(\d{6})\b', # Taxi permit
+        
+        # Healthcare and medical
+        r'\bAGB[-\s]*code[\s:]*(\d{8})\b',       # Healthcare provider code
+        r'\bUZI[-\s]*nummer[\s:]*(\d{8})\b',     # Healthcare professional card
+        r'\bBIG[-\s]*nummer[\s:]*(\d{8})\b',     # Healthcare professional registration
+        r'\bGGZ[-\s]*nummer[\s:]*(\d{6})\b',     # Mental health care registration
+        r'\bZORG[-\s]*nummer[\s:]*(\d{8})\b',    # Care provider registration
+        r'\bFARMA[-\s]*nummer[\s:]*(\d{6})\b',   # Pharmacy registration
+        
+        # Agriculture and food safety
+        r'\bKDV[-\s]*nummer[\s:]*(\d{6})\b',     # Animal health service
+        r'\bGGN[-\s]*nummer[\s:]*(\d{13})\b',    # GlobalGAP number
+        r'\bNEVA[-\s]*nummer[\s:]*(\d{8})\b',    # Food safety authority
+        r'\bBIO[-\s]*certificaat[\s:]*(\d{6})\b', # Organic certification
+        r'\bHACCP[-\s]*certificaat[\s:]*(\d{8})\b', # Food safety certification
+        
+        # Environmental and energy permits
+        r'\bETS[-\s]*nummer[\s:]*(\d{8})\b',     # Emission trading system
+        r'\bEMISSIE[-\s]*vergunning[\s:]*(\d{8})\b', # Emission permit
+        r'\bAFVAL[-\s]*vergunning[\s:]*(\d{8})\b', # Waste management permit
+        r'\bENERGIE[-\s]*vergunning[\s:]*(\d{8})\b', # Energy permit
+        r'\bMILIEU[-\s]*vergunning[\s:]*(\d{8})\b', # Environmental permit
+        
+        # Telecommunications and digital
+        r'\bACM[-\s]*vergunning[\s:]*(\d{8})\b', # Consumer and market authority telecom
+        r'\bTELECOM[-\s]*vergunning[\s:]*(\d{8})\b', # Telecommunications permit
+        r'\bFREQUENTIE[-\s]*vergunning[\s:]*(\d{6})\b', # Frequency allocation
+        r'\bINTERNET[-\s]*provider[\s:]*(\d{6})\b', # Internet service provider
+        
+        # Customs and international trade
+        r'\bEORI[-\s]*nummer[\s:]*([A-Z]{2}\d{12})\b', # Economic Operator Registration
+        r'\bAEO[-\s]*certificaat[\s:]*(\d{8})\b',   # Authorized Economic Operator
+        r'\bINTRAST[-\s]*nummer[\s:]*(\d{8})\b',    # Intrastat declaration number
+        r'\bDOUANE[-\s]*nummer[\s:]*(\d{8})\b',     # Customs registration
+        
+        # Intellectual property
+        r'\bBIE[-\s]*nummer[\s:]*(\d{8})\b',        # Patent office registration (Benelux)
+        r'\bMERK[-\s]*nummer[\s:]*(\d{6})\b',       # Trademark registration
+        r'\bOCTROOI[-\s]*nummer[\s:]*(\d{8})\b',    # Patent number
+        r'\bAUTEURS[-\s]*recht[\s:]*(\d{6})\b',     # Copyright registration
+        
+        # Social enterprises and charities
+        r'\bANBI[-\s]*nummer[\s:]*(\d{8})\b',       # Public benefit organization
+        r'\bSBBI[-\s]*nummer[\s:]*(\d{8})\b',       # Social benefit organization  
+        r'\bCBF[-\s]*keur[\s:]*(\d{6})\b',          # Charity certification
+        r'\bGOEDE[-\s]*doelen[\s:]*(\d{6})\b',      # Charitable organization
+        
+        # Employee and HR identifiers
+        r'\b(?:personeelsnummer|employee\s+number|medewerker\s+nummer)(?:[:\s#-]+)?(\d{4,8})\b',
+        r'\b(?:loonnummer|salary\s+number)(?:[:\s#-]+)?(\d{4,8})\b',
+        r'\b(?:contractnummer|contract\s+number)(?:[:\s#-]+)?([A-Z0-9]{6,12})\b',
+        r'\bWERKNEMER[-\s]*nummer[\s:]*(\d{6,8})\b',
+        r'\bBANK[-\s]*machtiging[\s:]*([A-Z0-9]{8,15})\b', # Direct debit authorization
+        
+        # Project and tender identifiers
+        r'\bAANBESTEDING[-\s]*nummer[\s:]*([A-Z0-9]{8,12})\b', # Tender number
+        r'\bPROJECT[-\s]*nummer[\s:]*([A-Z0-9]{6,10})\b',      # Project number
+        r'\bOFFERTE[-\s]*nummer[\s:]*([A-Z0-9]{6,12})\b',      # Quote number
+        r'\bFACTUUR[-\s]*nummer[\s:]*([A-Z0-9]{6,12})\b',      # Invoice number
+        
+        # Quality and compliance certifications
+        r'\bISO[-\s]*certificaat[\s:]*(\d{4,5})\b',    # ISO certification
+        r'\bKWALITEIT[-\s]*certificaat[\s:]*(\d{6})\b', # Quality certificate
+        r'\bVEILIGHEID[-\s]*certificaat[\s:]*(\d{8})\b', # Safety certificate
+        r'\bMVO[-\s]*certificaat[\s:]*(\d{6})\b',      # CSR certificate
     ]
     
     found = []
@@ -858,10 +973,68 @@ def _find_dutch_business_identifiers(text: str) -> List[Dict[str, Any]]:
         matches = re.finditer(pattern, text, re.IGNORECASE)
         for match in matches:
             value = match.group(1) if match.lastindex else match.group(0)
+            
+            # Determine business identifier type for precise classification
+            business_type = "Dutch Business Identifier"
+            description = "Netherlands business identification"
+            risk_level = "Medium"
+            
+            if "BTW" in match.group(0) or "VAT" in match.group(0) or ("NL" in value and "B" in value):
+                business_type = "VAT Number"
+                description = "Netherlands tax identification number"
+                risk_level = "High"
+            elif "RSIN" in match.group(0):
+                business_type = "RSIN Number"
+                description = "Legal Entity Identification Number"
+                risk_level = "High"
+            elif "KvK" in match.group(0) or "Handelsregister" in match.group(0) or "Chamber" in match.group(0):
+                business_type = "Chamber of Commerce Number"
+                description = "Official Dutch business registration"
+                risk_level = "High"
+            elif "IBAN" in match.group(0) or (len(value) == 18 and value.startswith("NL")):
+                business_type = "Dutch IBAN"
+                description = "Netherlands bank account number"
+                risk_level = "High"
+            elif "BV" in match.group(0) or "NV" in match.group(0) or "EENMANSZAAK" in match.group(0):
+                business_type = "Corporate Entity Number"
+                description = "Dutch corporation identifier"
+                risk_level = "High"
+            elif "AFM" in match.group(0) or "DNB" in match.group(0) or "WFT" in match.group(0):
+                business_type = "Financial License"
+                description = "Financial services authorization"
+                risk_level = "High"
+            elif "AGB" in match.group(0) or "BIG" in match.group(0) or "UZI" in match.group(0):
+                business_type = "Healthcare Provider ID"
+                description = "Healthcare professional registration"
+                risk_level = "High"
+            elif "NOVA" in match.group(0) or "NRO" in match.group(0) or "REA" in match.group(0):
+                business_type = "Professional License"
+                description = "Professional services registration"
+                risk_level = "High"
+            elif "SBI" in match.group(0) or "NACE" in match.group(0):
+                business_type = "Industry Code"
+                description = "Business industry classification"
+            elif "EORI" in match.group(0):
+                business_type = "EU Trade Number"
+                description = "European customs identifier"
+                risk_level = "High"
+            elif "ANBI" in match.group(0) or "CBF" in match.group(0):
+                business_type = "Charity Registration"
+                description = "Non-profit organization identifier"
+            elif "personeelsnummer" in match.group(0) or "employee" in match.group(0):
+                business_type = "Employee Number"
+                description = "Staff identification number"
+                risk_level = "High"
+            elif "loonnummer" in match.group(0) or "salary" in match.group(0):
+                business_type = "Payroll Number"
+                description = "Salary administration identifier"
+                risk_level = "High"
+            
             found.append({
-                'type': 'Dutch Business Identifier',
+                'type': business_type,
                 'value': value,
-                'description': 'Netherlands business identification'
+                'description': description,
+                'risk_level': risk_level
             })
     
     return found
