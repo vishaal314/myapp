@@ -218,7 +218,26 @@ deploy_application() {
     chown -R "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_HOME"
     
     # Create necessary directories
-    sudo -u "$DEPLOY_USER" mkdir -p "$DEPLOY_HOME"/{logs,uploads,cache,backups,certificates}
+    sudo -u "$DEPLOY_USER" mkdir -p "$DEPLOY_HOME"/{logs,uploads,cache,backups,certificates,.streamlit}
+    
+    # Create Streamlit config for HTTPS
+    cat > "$DEPLOY_HOME/.streamlit/config.toml" << EOF
+[server]
+headless = true
+address = "127.0.0.1"
+port = 5000
+enableCORS = false
+enableXsrfProtection = true
+maxUploadSize = 100
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+EOF
+
+    chown -R "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_HOME/.streamlit"
     
     # Set proper permissions
     chmod +x "$DEPLOY_HOME"/*.sh 2>/dev/null || true
@@ -228,6 +247,13 @@ deploy_application() {
 setup_environment() {
     log "Configuring environment variables..."
     
+    # Determine protocol based on domain
+    if [[ "$DOMAIN" != "localhost" && "$DOMAIN" != "127.0.0.1" ]]; then
+        PROTOCOL="https"
+    else
+        PROTOCOL="http"
+    fi
+    
     cat >> "$DEPLOY_HOME/.env" << EOF
 # Application Configuration
 ENVIRONMENT=production
@@ -235,8 +261,8 @@ DEBUG=false
 LOG_LEVEL=INFO
 
 # Application URLs
-APP_URL=https://$DOMAIN
-API_URL=https://$DOMAIN/api
+APP_URL=$PROTOCOL://$DOMAIN
+API_URL=$PROTOCOL://$DOMAIN/api
 
 # Security Settings
 SECRET_KEY=$(openssl rand -base64 64)
@@ -244,6 +270,21 @@ JWT_SECRET=$(openssl rand -base64 64)
 SECURE_SSL_REDIRECT=true
 SESSION_COOKIE_SECURE=true
 CSRF_COOKIE_SECURE=true
+HTTPS=1
+FORCE_HTTPS=true
+
+# SSL/TLS Configuration
+SSL_VERIFY=true
+SSL_CIPHERS=ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20:!aNULL:!MD5:!DSS
+SSL_PROTOCOLS=TLSv1.2,TLSv1.3
+
+# Security Headers
+HSTS_MAX_AGE=31536000
+HSTS_INCLUDE_SUBDOMAINS=true
+HSTS_PRELOAD=true
+X_FRAME_OPTIONS=DENY
+X_CONTENT_TYPE_OPTIONS=nosniff
+CSP_ENABLED=true
 
 # Performance Settings
 WORKERS=4
@@ -278,28 +319,83 @@ EOF
 
 # Setup Nginx
 setup_nginx() {
-    log "Configuring Nginx..."
+    log "Configuring Nginx with HTTPS security..."
     
     cat > /etc/nginx/sites-available/dataguardian << EOF
+# HTTP to HTTPS redirect
 server {
     listen 80;
     server_name $DOMAIN;
     
-    # Security headers
-    add_header X-Frame-Options DENY;
+    # Security headers for HTTP (minimal)
     add_header X-Content-Type-Options nosniff;
-    add_header X-XSS-Protection "1; mode=block";
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+    add_header X-Frame-Options DENY;
+    
+    # Health check (accessible via HTTP for monitoring)
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+    
+    # Let's Encrypt ACME challenge
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+    
+    # Redirect all other HTTP traffic to HTTPS
+    location / {
+        return 301 https://\$server_name\$request_uri;
+    }
+}
+
+# HTTPS server (will be configured by certbot)
+server {
+    listen 443 ssl http2;
+    server_name $DOMAIN;
+    
+    # SSL Configuration (enhanced by certbot)
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_session_tickets off;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    
+    # Enhanced Security Headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    add_header X-Frame-Options DENY always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' wss: https:; frame-ancestors 'none';" always;
     
     # Rate limiting
-    limit_req_zone \$binary_remote_addr zone=api:10m rate=10r/s;
-    limit_req zone=api burst=20 nodelay;
+    limit_req_zone \$binary_remote_addr zone=api:10m rate=20r/s;
+    limit_req_zone \$binary_remote_addr zone=login:10m rate=5r/m;
+    limit_req zone=api burst=40 nodelay;
     
     # File upload size
     client_max_body_size 100M;
+    client_body_timeout 60s;
+    client_header_timeout 60s;
+    
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
     
     # Proxy to Streamlit
     location / {
+        # Additional rate limiting for login pages
+        if (\$request_uri ~* "/(login|auth|signin)") {
+            limit_req zone=login burst=10 nodelay;
+        }
+        
         proxy_pass http://127.0.0.1:5000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
@@ -307,23 +403,48 @@ server {
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Port 443;
         proxy_cache_bypass \$http_upgrade;
         proxy_read_timeout 86400;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        
+        # Security headers for proxied content
+        proxy_hide_header X-Powered-By;
+        proxy_hide_header Server;
     }
     
-    # Static files
+    # Static files with security
     location /static/ {
         alias $DEPLOY_HOME/static/;
         expires 1y;
         add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options nosniff;
+        
+        # Deny access to sensitive files
+        location ~* \.(htaccess|htpasswd|ini|log|sh|inc|bak|env)$ {
+            deny all;
+        }
     }
     
-    # Health check
+    # Health check (HTTPS)
     location /health {
         access_log off;
         return 200 "healthy\n";
         add_header Content-Type text/plain;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+    
+    # Security: Deny access to sensitive locations
+    location ~ /\.(ht|git|env) {
+        deny all;
+        return 404;
+    }
+    
+    location ~* \.(log|bak|backup|old)$ {
+        deny all;
+        return 404;
     }
 }
 EOF
@@ -331,6 +452,10 @@ EOF
     # Enable site
     ln -sf /etc/nginx/sites-available/dataguardian /etc/nginx/sites-enabled/
     rm -f /etc/nginx/sites-enabled/default
+    
+    # Create Let's Encrypt webroot
+    mkdir -p /var/www/html/.well-known/acme-challenge
+    chown -R www-data:www-data /var/www/html
     
     # Test nginx configuration
     nginx -t
@@ -355,7 +480,7 @@ setup_supervisor() {
     
     cat > /etc/supervisor/conf.d/dataguardian.conf << EOF
 [program:dataguardian]
-command=$DEPLOY_HOME/venv/bin/streamlit run app.py --server.port 5000 --server.address 127.0.0.1 --server.headless true
+command=$DEPLOY_HOME/venv/bin/streamlit run app.py --server.port 5000 --server.address 127.0.0.1 --server.headless true --server.enableCORS false --server.enableXsrfProtection true
 directory=$DEPLOY_HOME
 user=$DEPLOY_USER
 autostart=true
@@ -364,7 +489,7 @@ redirect_stderr=true
 stdout_logfile=$DEPLOY_HOME/logs/app.log
 stdout_logfile_maxbytes=50MB
 stdout_logfile_backups=10
-environment=PATH="$DEPLOY_HOME/venv/bin"
+environment=PATH="$DEPLOY_HOME/venv/bin",STREAMLIT_SERVER_ENABLE_CORS=false,STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=true,HTTPS=1,NODE_ENV=production
 
 [program:dataguardian-worker]
 command=$DEPLOY_HOME/venv/bin/python worker.py
@@ -376,7 +501,7 @@ redirect_stderr=true
 stdout_logfile=$DEPLOY_HOME/logs/worker.log
 stdout_logfile_maxbytes=50MB
 stdout_logfile_backups=10
-environment=PATH="$DEPLOY_HOME/venv/bin"
+environment=PATH="$DEPLOY_HOME/venv/bin",HTTPS=1,NODE_ENV=production
 EOF
 
     systemctl enable supervisor
@@ -486,9 +611,26 @@ run_health_checks() {
     # Check application
     sleep 10  # Give app time to start
     if curl -f http://localhost:5000/health > /dev/null 2>&1; then
-        log "✓ Application health check passed"
+        log "✓ Application health check passed (HTTP)"
     else
         warn "Application health check failed - check logs"
+    fi
+    
+    # Check HTTPS if domain is not localhost
+    if [[ "$DOMAIN" != "localhost" && "$DOMAIN" != "127.0.0.1" ]]; then
+        sleep 5  # Additional time for SSL setup
+        if curl -f -k https://"$DOMAIN"/health > /dev/null 2>&1; then
+            log "✓ HTTPS health check passed"
+        else
+            warn "HTTPS health check failed - SSL may still be setting up"
+        fi
+        
+        # Test HTTP to HTTPS redirect
+        if curl -s -I http://"$DOMAIN" | grep -q "301\|302"; then
+            log "✓ HTTP to HTTPS redirect working"
+        else
+            warn "HTTP to HTTPS redirect may not be working correctly"
+        fi
     fi
     
     # Check database connection
@@ -504,23 +646,51 @@ EOF
 show_summary() {
     log "Deployment Summary"
     echo "===================="
-    echo "✓ DataGuardian Pro deployed successfully!"
+    echo "✓ DataGuardian Pro deployed successfully with HTTPS security!"
     echo ""
-    echo "Application URL: http://$DOMAIN"
-    [[ "$DOMAIN" != "localhost" && "$DOMAIN" != "127.0.0.1" ]] && echo "SSL URL: https://$DOMAIN"
-    echo "Deploy Directory: $DEPLOY_HOME"
-    echo "Deploy User: $DEPLOY_USER"
-    echo "Database: PostgreSQL (dataguardian)"
-    echo "Cache: Redis"
-    echo "Web Server: Nginx"
-    echo "Process Manager: Supervisor"
+    
+    # Show appropriate URLs
+    if [[ "$DOMAIN" != "localhost" && "$DOMAIN" != "127.0.0.1" ]]; then
+        echo "🔒 Secure Application URL: https://$DOMAIN"
+        echo "   (HTTP automatically redirects to HTTPS)"
+    else
+        echo "Application URL: http://$DOMAIN"
+        echo "   (HTTPS available when deployed with a real domain)"
+    fi
+    
     echo ""
-    echo "Logs:"
+    echo "Infrastructure:"
+    echo "  Deploy Directory: $DEPLOY_HOME"
+    echo "  Deploy User: $DEPLOY_USER"
+    echo "  Database: PostgreSQL (dataguardian)"
+    echo "  Cache: Redis with persistent storage"
+    echo "  Web Server: Nginx with SSL/TLS termination"
+    echo "  Process Manager: Supervisor"
+    echo ""
+    
+    echo "Security Features:"
+    if [[ "$DOMAIN" != "localhost" && "$DOMAIN" != "127.0.0.1" ]]; then
+        echo "  ✓ SSL/TLS encryption (Let's Encrypt)"
+        echo "  ✓ HTTP to HTTPS automatic redirect"
+        echo "  ✓ HSTS headers (31536000 seconds)"
+        echo "  ✓ Content Security Policy (CSP)"
+    fi
+    echo "  ✓ Rate limiting (API & login protection)"
+    echo "  ✓ Security headers (XSS, CSRF, Clickjacking)"
+    echo "  ✓ Fail2ban intrusion prevention"
+    echo "  ✓ Firewall configured (UFW/firewalld)"
+    echo "  ✓ File upload restrictions"
+    echo ""
+    
+    echo "Logs & Monitoring:"
     echo "  Application: $DEPLOY_HOME/logs/app.log"
     echo "  Worker: $DEPLOY_HOME/logs/worker.log"
-    echo "  Nginx: /var/log/nginx/"
-    echo "  Deploy: $LOG_FILE"
+    echo "  Nginx Access: /var/log/nginx/access.log"
+    echo "  Nginx Error: /var/log/nginx/error.log"
+    echo "  Deployment: $LOG_FILE"
+    echo "  SSL Certificate: /var/log/letsencrypt/"
     echo ""
+    
     echo "Management Commands:"
     echo "  Start: supervisorctl start dataguardian"
     echo "  Stop: supervisorctl stop dataguardian"
@@ -528,15 +698,22 @@ show_summary() {
     echo "  Status: supervisorctl status"
     echo "  Logs: tail -f $DEPLOY_HOME/logs/app.log"
     echo "  Backup: $DEPLOY_HOME/backup.sh"
+    echo "  SSL Renewal: certbot renew (automatic via cron)"
     echo ""
+    
     echo "Next Steps:"
     echo "1. Configure API keys in $DEPLOY_HOME/.env"
-    echo "2. Set up DNS to point to this server"
-    echo "3. Configure email settings"
-    echo "4. Review security settings"
-    echo "5. Set up monitoring alerts"
+    if [[ "$DOMAIN" != "localhost" && "$DOMAIN" != "127.0.0.1" ]]; then
+        echo "2. Verify DNS points to this server"
+        echo "3. Test HTTPS certificate and security headers"
+    else
+        echo "2. Deploy with real domain for full HTTPS security"
+    fi
+    echo "4. Configure email settings for notifications"
+    echo "5. Set up monitoring alerts and backups"
+    echo "6. Review and customize security policies"
     echo ""
-    echo "🎉 DataGuardian Pro is ready for production!"
+    echo "🎉 DataGuardian Pro is ready for secure production deployment!"
 }
 
 # Main deployment function
