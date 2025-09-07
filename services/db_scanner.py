@@ -371,11 +371,14 @@ class DBScanner:
                 f"Connection Timeout=30;"
             )
             
-            # Try ODBC Driver 17, fallback to 18 if available
+            # Try ODBC Driver 17, fallback to 18 if available - with proper import guards
             try:
-                self.connection = pyodbc.connect(connection_string)
-            except pyodbc.Error as e:
-                if "ODBC Driver 17" in str(e):
+                if pyodbc is not None:
+                    self.connection = pyodbc.connect(connection_string)
+                else:
+                    raise Exception("pyodbc driver not available")
+            except Exception as e:
+                if pyodbc is not None and "ODBC Driver 17" in str(e):
                     # Try ODBC Driver 18
                     connection_string_18 = connection_string.replace(
                         "ODBC Driver 17 for SQL Server", 
@@ -869,11 +872,15 @@ class DBScanner:
             # Fetch all rows
             rows = cursor.fetchall()
             
-            # Convert to list of dictionaries
+            # Convert to list of dictionaries with proper type safety
             for row in rows:
                 row_dict = {}
                 for i, col in enumerate(columns):
-                    row_dict[col] = row[i]
+                    # Safely access row data with bounds checking
+                    if i < len(row):
+                        row_dict[col] = row[i]
+                    else:
+                        row_dict[col] = None  # Handle missing columns
                 sample_data.append(row_dict)
                 
             cursor.close()

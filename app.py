@@ -3442,39 +3442,95 @@ def render_database_scanner_interface(region: str, username: str):
             }
         }
         
-        # AWS RDS-specific templates based on service selection
-        if cloud_provider == "AWS RDS Services" and aws_service:
-            if aws_service == "Amazon RDS for MySQL":
-                template_examples["AWS RDS Services"] = {
+        # Connection string template caching for better performance
+        @st.cache_data(ttl=3600)  # Cache templates for 1 hour
+        def get_cloud_templates(provider: str, service: str) -> dict:
+            """Get cached connection string templates for cloud providers."""
+            return _generate_cloud_templates(provider, service)
+        
+        def _generate_cloud_templates(provider: str, service: str) -> dict:
+            """Generate connection string templates for specific cloud service."""
+            if provider == "AWS RDS Services":
+                return _get_aws_templates(service)
+            elif provider == "Google Cloud SQL Services":
+                return _get_gcp_templates(service)  
+            elif provider == "Azure Database Services":
+                return _get_azure_templates(service)
+            return {}
+        
+        def _get_aws_templates(service: str) -> dict:
+            """Get AWS RDS connection templates."""
+            if service == "Amazon RDS for MySQL":
+                return {
                     "URL Format": "mysql://username:password@your-instance.cluster-abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED",
                     "Individual Instance": "mysql://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED"
                 }
-            elif aws_service == "Amazon RDS for PostgreSQL":
-                template_examples["AWS RDS Services"] = {
-                    "URL Format": "postgresql://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:5432/your-database?sslmode=require"
-                }
-            elif aws_service == "Amazon RDS for MariaDB":
-                template_examples["AWS RDS Services"] = {
-                    "URL Format": "mysql://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED"
-                }
-            elif aws_service == "Amazon RDS for SQL Server":
-                template_examples["AWS RDS Services"] = {
-                    "ODBC Format": "DRIVER={ODBC Driver 17 for SQL Server};SERVER=your-instance.abc123.us-east-1.rds.amazonaws.com,1433;DATABASE=your-database;UID=username;PWD=password;Encrypt=yes;TrustServerCertificate=no;"
-                }
-            elif aws_service == "Amazon RDS for Oracle":
-                template_examples["AWS RDS Services"] = {
-                    "Oracle Format": "oracle://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:1521/XE"
-                }
-            elif aws_service == "Amazon Aurora MySQL-Compatible":
-                template_examples["AWS RDS Services"] = {
+            elif service == "Amazon RDS for PostgreSQL":
+                return {"URL Format": "postgresql://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:5432/your-database?sslmode=require"}
+            elif service == "Amazon RDS for MariaDB":
+                return {"URL Format": "mysql://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED"}
+            elif service == "Amazon RDS for SQL Server":
+                return {"ODBC Format": "DRIVER={ODBC Driver 17 for SQL Server};SERVER=your-instance.abc123.us-east-1.rds.amazonaws.com,1433;DATABASE=your-database;UID=username;PWD=password;Encrypt=yes;TrustServerCertificate=no;"}
+            elif service == "Amazon RDS for Oracle":
+                return {"Oracle Format": "oracle://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:1521/XE"}
+            elif service == "Amazon Aurora MySQL-Compatible":
+                return {
                     "Cluster Endpoint": "mysql://username:password@your-cluster.cluster-abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED",
                     "Reader Endpoint": "mysql://username:password@your-cluster.cluster-ro-abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED"
                 }
-            elif aws_service == "Amazon Aurora PostgreSQL-Compatible":
-                template_examples["AWS RDS Services"] = {
+            elif service == "Amazon Aurora PostgreSQL-Compatible":
+                return {
                     "Cluster Endpoint": "postgresql://username:password@your-cluster.cluster-abc123.us-east-1.rds.amazonaws.com:5432/your-database?sslmode=require",
                     "Reader Endpoint": "postgresql://username:password@your-cluster.cluster-ro-abc123.us-east-1.rds.amazonaws.com:5432/your-database?sslmode=require"
                 }
+            return {}
+        
+        def _get_gcp_templates(service: str) -> dict:
+            """Get Google Cloud SQL connection templates."""
+            if service == "Cloud SQL for MySQL":
+                return {
+                    "Public IP": "mysql://username:password@your-public-ip:3306/your-database?ssl-mode=REQUIRED",
+                    "Private IP": "mysql://username:password@your-private-ip:3306/your-database?ssl-mode=REQUIRED",
+                    "Connection Name": "mysql://username:password@localhost:3306/your-database?unix_socket=/cloudsql/your-project:region:instance"
+                }
+            elif service == "Cloud SQL for PostgreSQL":
+                return {
+                    "Public IP": "postgresql://username:password@your-public-ip:5432/your-database?sslmode=require",
+                    "Private IP": "postgresql://username:password@your-private-ip:5432/your-database?sslmode=require", 
+                    "Connection Name": "postgresql://username:password@localhost:5432/your-database?host=/cloudsql/your-project:region:instance"
+                }
+            elif service == "Cloud SQL for SQL Server":
+                return {
+                    "Public IP": "DRIVER={ODBC Driver 17 for SQL Server};SERVER=your-public-ip,1433;DATABASE=your-database;UID=username;PWD=password;Encrypt=yes;",
+                    "Private IP": "DRIVER={ODBC Driver 17 for SQL Server};SERVER=your-private-ip,1433;DATABASE=your-database;UID=username;PWD=password;Encrypt=yes;"
+                }
+            return {}
+        
+        def _get_azure_templates(service: str) -> dict:
+            """Get Azure Database connection templates."""
+            if service == "Azure Database for MySQL (Flexible Server)":
+                return {
+                    "Azure Format": "Server=your-server.mysql.database.azure.com;\nPort=3306;\nDatabase=your-database;\nUid=your-username;\nPwd=your-password;\nSslMode=Required;",
+                    "URL Format": "mysql://your-username:your-password@your-server.mysql.database.azure.com:3306/your-database?ssl-mode=REQUIRED"
+                }
+            elif service == "Azure Database for MySQL (Single Server - Legacy)":
+                return {
+                    "Azure Format": "Server=your-server.mysql.database.azure.com;\nPort=3306;\nDatabase=your-database;\nUid=your-username@your-server;\nPwd=your-password;\nSslMode=Required;",
+                    "URL Format": "mysql://your-username%40your-server:your-password@your-server.mysql.database.azure.com:3306/your-database?ssl-mode=REQUIRED"
+                }
+            elif service == "Azure Database for PostgreSQL (Flexible Server)":
+                return {"URL Format": "postgresql://your-username:your-password@your-server.postgres.database.azure.com:5432/your-database?sslmode=require"}
+            elif service == "Azure Database for PostgreSQL (Single Server - Legacy)":
+                return {"URL Format": "postgresql://your-username@your-server:your-password@your-server.postgres.database.azure.com:5432/your-database?sslmode=require"}
+            elif service == "Azure SQL Database":
+                return {"Azure Format": "Server=tcp:your-server.database.windows.net,1433;\nInitial Catalog=your-database;\nPersist Security Info=False;\nUser ID=your-username;\nPassword=your-password;\nMultipleActiveResultSets=False;\nEncrypt=True;\nTrustServerCertificate=False;"}
+            return {}
+
+        # Use cached templates for better performance
+        if cloud_provider in ["AWS RDS Services", "Google Cloud SQL Services", "Azure Database Services"]:
+            selected_service = aws_service or gcp_service or azure_service
+            if selected_service:
+                template_examples[cloud_provider] = get_cloud_templates(cloud_provider, selected_service)
         
         # Google Cloud SQL-specific templates based on service selection
         elif cloud_provider == "Google Cloud SQL Services" and gcp_service:
@@ -3603,17 +3659,18 @@ def render_database_scanner_interface(region: str, username: str):
         
         password = st.text_input("Password", type="password")
         
-        # SSL/TLS Configuration (Advanced) - Initialize variables first to avoid scope issues
-        ssl_mode = None
-        ssl_cert_path = None
-        ssl_key_path = None
-        ssl_ca_path = None
+        # SSL/TLS Configuration (Advanced) - Initialize variables at function start to avoid scope issues
+        ssl_mode = "Auto-detect"  # Default value
+        ssl_cert_path = ""
+        ssl_key_path = ""
+        ssl_ca_path = ""
         
         with st.expander("🔒 SSL/TLS Configuration (Cloud Databases)", expanded=False):
             col1, col2 = st.columns(2)
             with col1:
                 ssl_mode = st.selectbox("SSL Mode", 
                                       ["Auto-detect", "disable", "require", "verify-ca", "verify-full"],
+                                      index=0,  # Default to Auto-detect
                                       help="Auto-detect enables SSL for cloud databases")
                 ssl_cert_path = st.text_input("SSL Certificate Path (optional)")
             with col2:
