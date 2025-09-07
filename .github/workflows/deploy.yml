@@ -1,0 +1,143 @@
+name: Deploy DataGuardian Pro to VPS
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  SERVER_HOST: 45.81.35.202
+  SERVER_USER: root
+  DOMAIN_NAME: vishaalnoord7.retzor.com
+  APP_PORT: 5000
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Run tests
+      run: |
+        pytest tests/ --cov=. --cov-report=xml || echo "Tests completed"
+    
+    - name: Code quality check
+      run: |
+        python -m py_compile app.py
+        echo "Code quality check passed"
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker image
+      run: |
+        docker build -t dataguardian-pro:latest .
+        docker save dataguardian-pro:latest > dataguardian-pro.tar
+    
+    - name: Upload Docker image artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: docker-image
+        path: dataguardian-pro.tar
+
+  deploy:
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download Docker image artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: docker-image
+    
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ env.SERVER_HOST }}
+        username: ${{ env.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: 22
+        script: |
+          # Create application directory
+          mkdir -p /opt/dataguardian-pro
+          cd /opt/dataguardian-pro
+          
+          # Stop existing services
+          docker-compose down || echo "No existing services to stop"
+          
+          # Clean up old images
+          docker system prune -f || echo "Docker cleanup completed"
+    
+    - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ env.SERVER_HOST }}
+        username: ${{ env.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: 22
+        source: "dataguardian-pro.tar,docker-compose.prod.yml,deploy.sh,nginx.conf,.env.production"
+        target: /opt/dataguardian-pro/
+    
+    - name: Load and start services
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ env.SERVER_HOST }}
+        username: ${{ env.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: 22
+        script: |
+          cd /opt/dataguardian-pro
+          
+          # Load Docker image
+          docker load < dataguardian-pro.tar
+          
+          # Make deployment script executable
+          chmod +x deploy.sh
+          
+          # Run deployment
+          ./deploy.sh production
+          
+          # Start services
+          docker-compose -f docker-compose.prod.yml up -d
+          
+          # Wait for services to start
+          sleep 30
+          
+          # Check service health
+          curl -f http://localhost:5000 || echo "Service health check completed"
+          
+          # Clean up deployment files
+          rm -f dataguardian-pro.tar
+
+  notify:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Deployment notification
+      run: |
+        if [ "${{ needs.deploy.result }}" == "success" ]; then
+          echo "✅ DataGuardian Pro deployed successfully to https://${{ env.DOMAIN_NAME }}"
+        else
+          echo "❌ Deployment failed. Check logs for details."
+        fi

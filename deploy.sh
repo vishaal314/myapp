@@ -1,113 +1,260 @@
 #!/bin/bash
 
-# DataGuardian Pro Deployment Script
-# This script helps to deploy the DataGuardian Pro application using Docker Compose
+# DataGuardian Pro Production Deployment Script
+# Usage: ./deploy.sh [environment]
+
+set -e
+
+ENVIRONMENT=${1:-production}
+PROJECT_DIR="/opt/dataguardian-pro"
+BACKUP_DIR="/opt/dataguardian-pro/backups"
+LOG_FILE="/opt/dataguardian-pro/logs/deployment.log"
 
 # Colors for output
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Print banner
-echo -e "${BLUE}"
-echo "======================================================"
-echo "            DataGuardian Pro Deployment               "
-echo "======================================================"
-echo -e "${NC}"
+# Logging function
+log() {
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1" | tee -a "$LOG_FILE"
+}
 
-# Check if docker is installed
-if ! command -v docker &> /dev/null; then
-    echo -e "${RED}Error: Docker is not installed.${NC}"
-    echo "Please install Docker before running this script."
-    echo "Visit https://docs.docker.com/get-docker/ for installation instructions."
+error() {
+    echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE"
     exit 1
-fi
+}
 
-# Check if docker-compose is installed
-if ! command -v docker-compose &> /dev/null; then
-    echo -e "${RED}Error: Docker Compose is not installed.${NC}"
-    echo "Please install Docker Compose before running this script."
-    echo "Visit https://docs.docker.com/compose/install/ for installation instructions."
-    exit 1
-fi
+warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE"
+}
 
-# Check if .env file exists, if not create it from example
-if [ ! -f .env ]; then
-    echo -e "${YELLOW}No .env file found. Creating from .env.example...${NC}"
-    if [ -f .env.example ]; then
-        cp .env.example .env
-        echo -e "${GREEN}Created .env file. Please edit it with your configuration.${NC}"
-        echo -e "${YELLOW}Do you want to edit the .env file now? [y/N]${NC}"
-        read -r edit_env
-        if [[ "$edit_env" =~ ^[Yy]$ ]]; then
-            ${EDITOR:-nano} .env
+# Create necessary directories
+create_directories() {
+    log "Creating necessary directories..."
+    mkdir -p "$PROJECT_DIR"/{data,logs,cache,reports,backups,ssl}
+    mkdir -p "$BACKUP_DIR/database"
+    mkdir -p "$BACKUP_DIR/files"
+}
+
+# Install Docker if not present
+install_docker() {
+    if ! command -v docker &> /dev/null; then
+        log "Installing Docker..."
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sh get-docker.sh
+        systemctl enable docker
+        systemctl start docker
+        rm get-docker.sh
+    else
+        log "Docker already installed"
+    fi
+
+    if ! command -v docker-compose &> /dev/null; then
+        log "Installing Docker Compose..."
+        curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+    else
+        log "Docker Compose already installed"
+    fi
+}
+
+# Setup firewall
+setup_firewall() {
+    log "Configuring firewall..."
+    ufw --force reset
+    ufw default deny incoming
+    ufw default allow outgoing
+    ufw allow ssh
+    ufw allow 80/tcp
+    ufw allow 443/tcp
+    ufw --force enable
+}
+
+# Create SSL certificates
+setup_ssl() {
+    log "Setting up SSL certificates..."
+    
+    # Create temporary nginx config for initial certificate
+    cat > /tmp/nginx-ssl-setup.conf << 'EOF'
+events {}
+http {
+    server {
+        listen 80;
+        server_name vishaalnoord7.retzor.com;
+        
+        location /.well-known/acme-challenge/ {
+            root /var/www/html;
+        }
+        
+        location / {
+            return 301 https://$server_name$request_uri;
+        }
+    }
+}
+EOF
+
+    # Start temporary nginx for certificate generation
+    mkdir -p /var/www/html
+    docker run -d --name temp-nginx -p 80:80 -v /tmp/nginx-ssl-setup.conf:/etc/nginx/nginx.conf -v /var/www/html:/var/www/html nginx:alpine
+
+    # Generate certificates
+    docker run --rm -v "$PROJECT_DIR/ssl":/etc/letsencrypt -v "$PROJECT_DIR/certbot-var":/var/lib/letsencrypt -v /var/www/html:/var/www/html certbot/certbot certonly --webroot --webroot-path=/var/www/html --email vishaal314@gmail.com --agree-tos --no-eff-email -d vishaalnoord7.retzor.com
+
+    # Stop temporary nginx
+    docker stop temp-nginx && docker rm temp-nginx
+}
+
+# Backup database
+backup_database() {
+    if docker ps -q -f name=dataguardian-postgres; then
+        log "Creating database backup..."
+        timestamp=$(date +%Y%m%d_%H%M%S)
+        docker exec dataguardian-postgres pg_dump -U dataguardian_pro dataguardian_pro > "$BACKUP_DIR/database/backup_$timestamp.sql"
+        
+        # Keep only last 7 days of backups
+        find "$BACKUP_DIR/database" -name "backup_*.sql" -mtime +7 -delete
+    else
+        warning "PostgreSQL container not running, skipping database backup"
+    fi
+}
+
+# Load environment variables
+create_env_file() {
+    log "Creating production environment file..."
+    
+    cat > "$PROJECT_DIR/.env" << EOF
+# Database Configuration
+DATABASE_URL=postgresql://dataguardian_pro:dataguardian_secure_pass_2025@postgres:5432/dataguardian_pro
+DB_USER=dataguardian_pro
+DB_PASSWORD=dataguardian_secure_pass_2025
+
+# Redis Configuration
+REDIS_URL=redis://redis:6379/0
+
+# Application Configuration
+ENVIRONMENT=production
+DEBUG=false
+SECRET_KEY=$(openssl rand -hex 32)
+
+# Domain Configuration
+DOMAIN=vishaalnoord7.retzor.com
+ALLOWED_HOSTS=vishaalnoord7.retzor.com,localhost,127.0.0.1
+
+# Performance Configuration
+REDIS_CACHE_TTL=3600
+SESSION_TIMEOUT=7200
+MAX_UPLOAD_SIZE=100MB
+
+# Security Configuration
+SSL_ENABLED=true
+FORCE_HTTPS=true
+SESSION_SECURE=true
+EOF
+}
+
+# Update system packages
+update_system() {
+    log "Updating system packages..."
+    apt-get update
+    apt-get upgrade -y
+    apt-get install -y curl wget git htop nano ufw fail2ban openssl
+}
+
+# Configure fail2ban
+setup_fail2ban() {
+    log "Configuring fail2ban..."
+    cat > /etc/fail2ban/jail.local << 'EOF'
+[DEFAULT]
+bantime = 1h
+findtime = 10m
+maxretry = 5
+
+[sshd]
+enabled = true
+port = ssh
+logpath = /var/log/auth.log
+
+[nginx-http-auth]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/error.log
+EOF
+
+    systemctl enable fail2ban
+    systemctl restart fail2ban
+}
+
+# Main deployment function
+deploy() {
+    log "Starting DataGuardian Pro deployment..."
+    
+    cd "$PROJECT_DIR"
+    
+    # Backup before deployment
+    backup_database
+    
+    # Create environment file
+    create_env_file
+    
+    # Pull latest images and restart services
+    log "Starting services..."
+    docker-compose -f docker-compose.prod.yml up -d --build
+    
+    # Wait for services to be ready
+    log "Waiting for services to start..."
+    sleep 60
+    
+    # Health check
+    log "Performing health check..."
+    for i in {1..10}; do
+        if curl -f http://localhost:5000 >/dev/null 2>&1; then
+            log "✅ Application is healthy!"
+            break
         fi
-    else
-        echo -e "${RED}Error: .env.example not found.${NC}"
-        exit 1
-    fi
-fi
-
-# Make sure directories exist
-mkdir -p reports uploads letsencrypt
-
-# Offer to pull latest changes
-echo -e "${YELLOW}Do you want to pull the latest changes from the repository? [y/N]${NC}"
-read -r pull_latest
-if [[ "$pull_latest" =~ ^[Yy]$ ]]; then
-    git pull
-    echo -e "${GREEN}Repository updated to the latest version.${NC}"
-fi
-
-# Run docker-compose build and up
-echo -e "${BLUE}Building and starting DataGuardian Pro services...${NC}"
-docker-compose build
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: Docker build failed. See above for details.${NC}"
-    exit 1
-fi
-
-# Start the services
-echo -e "${BLUE}Starting services...${NC}"
-docker-compose up -d
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: Failed to start services. See above for details.${NC}"
-    exit 1
-fi
-
-# Check if services are running
-echo -e "${BLUE}Checking service status...${NC}"
-sleep 5
-if docker-compose ps | grep -q "Up"; then
-    echo -e "${GREEN}Services are running!${NC}"
+        log "Waiting for application to start... ($i/10)"
+        sleep 10
+    done
     
-    # Get host IP and domain
-    HOST_IP=$(hostname -I | awk '{print $1}')
-    APP_PORT=$(grep APP_PORT .env 2>/dev/null | cut -d '=' -f2 || echo 5000)
-    DOMAIN_NAME=$(grep DOMAIN_NAME .env 2>/dev/null | cut -d '=' -f2)
+    # Setup log rotation
+    cat > /etc/logrotate.d/dataguardian-pro << 'EOF'
+/opt/dataguardian-pro/logs/*.log {
+    daily
+    missingok
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    create 0644 root root
+    postrotate
+        docker-compose -f /opt/dataguardian-pro/docker-compose.prod.yml restart dataguardian-pro
+    endscript
+}
+EOF
     
-    echo -e "${GREEN}======================================================${NC}"
-    echo -e "${GREEN}DataGuardian Pro is now running!${NC}"
-    echo -e "${GREEN}Access the application at:${NC}"
+    log "✅ DataGuardian Pro deployment completed successfully!"
+    log "🌐 Application available at: https://vishaalnoord7.retzor.com"
+}
+
+# Main execution
+main() {
+    log "=== DataGuardian Pro Deployment Started ==="
     
-    # If using domain with Traefik
-    if [ -n "$DOMAIN_NAME" ] && docker-compose ps | grep -q "traefik"; then
-        echo -e "${BLUE}https://${DOMAIN_NAME}${NC} (Domain access with SSL)"
-    else
-        echo -e "${BLUE}http://localhost:${APP_PORT}${NC} (Local access)"
-        echo -e "${BLUE}http://${HOST_IP}:${APP_PORT}${NC} (Network access)"
+    create_directories
+    update_system
+    install_docker
+    setup_firewall
+    setup_fail2ban
+    
+    if [ "$ENVIRONMENT" = "production" ]; then
+        setup_ssl
     fi
     
-    echo -e "${GREEN}======================================================${NC}"
-    echo ""
-    echo -e "${YELLOW}To stop the application:${NC} docker-compose down"
-    echo -e "${YELLOW}To view logs:${NC} docker-compose logs -f"
-else
-    echo -e "${RED}Error: Services failed to start properly.${NC}"
-    echo "Check the logs with: docker-compose logs"
-    exit 1
-fi
+    deploy
+    
+    log "=== Deployment Process Complete ==="
+}
 
-exit 0
+# Run main function
+main "$@"
