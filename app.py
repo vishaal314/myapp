@@ -3419,9 +3419,9 @@ def render_database_scanner_interface(region: str, username: str):
         connection_string = st.text_area(
             "Database Connection String",
             value=default_template,
-            placeholder="postgresql://user:password@host:port/dbname?sslmode=require\nmysql://user:password@host:port/dbname",
-            help="Full connection string including credentials and SSL parameters. Use the templates above or enter your own.",
-            height=100
+            placeholder="Server=testdbserver.mysql.database.azure.com;\nPort=3306;\nDatabase=sakila;\nUid=testuser@testdbserver;\nPwd=MyTestPass123!;\nSslMode=Required;",
+            help="Full connection string including credentials and SSL parameters. Use the templates above or enter your own. Supports both URL format and Azure key=value; format.",
+            height=120
         )
         
         # Clear template button with callback to avoid page reload
