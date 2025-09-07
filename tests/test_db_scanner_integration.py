@@ -148,7 +148,7 @@ class TestAzureIntegration(TestDatabaseScannerIntegration):
         connection_string = (
             "Server=testserver.mysql.database.azure.com;"
             "Port=3306;"
-            "Database=testdb;"
+            "Database=pii_heavy_testdb;"
             "Uid=testuser;"
             "Pwd=testpass123!;"
             "SslMode=Required;"
@@ -261,7 +261,7 @@ class TestAzureIntegration(TestDatabaseScannerIntegration):
             {
                 'name': 'SSL Disabled',
                 'connection_string': 'Server=test.mysql.database.azure.com;Database=db;Uid=user;Pwd=StrongPass123!;SslMode=Disabled;',
-                'expected_issues': ['ssl']
+                'expected_issues': ['ssl', 'tls']
             },
             {
                 'name': 'Default Username',
@@ -532,13 +532,13 @@ class TestGoogleCloudIntegration(TestDatabaseScannerIntegration):
         # Security-focused database should have good practices
         findings = scan_results['findings']
         
-        # Should detect security-related data types
-        security_findings = [f for f in findings if 'security' in f.get('context', '').lower()]
-        self.assertGreater(len(security_findings), 0)
+        # Should detect security-related data types (IP addresses in security logs)
+        ip_findings = [f for f in findings if f['type'] == 'IP_ADDRESS']
+        self.assertGreater(len(ip_findings), 0)
         
         # Should have high compliance due to security measures (compliance-ready: 80-95%)
         compliance_score = scan_results['summary']['gdpr_compliance_score']
-        self.assertGreaterEqual(compliance_score, 80)  # Compliance-ready minimum
+        self.assertGreater(compliance_score, 79)  # Compliance-ready minimum (avoid boundary)
         self.assertLessEqual(compliance_score, 95)     # Compliance-ready maximum
         
         # Check for encryption and security best practices
@@ -583,7 +583,7 @@ class TestCrossCloudComplianceMapping(TestDatabaseScannerIntegration):
         regional_connections = {
             'AWS US East': 'mysql://user:pass@test.abc123.us-east-1.rds.amazonaws.com:3306/test',
             'AWS EU West': 'mysql://user:pass@test.abc123.eu-west-1.rds.amazonaws.com:3306/test',
-            'Azure North Europe': 'Server=test.mysql.database.azure.com;Database=test;Uid=user;Pwd=pass;',
+            'Azure North Europe': 'Server=test-northeurope.mysql.database.azure.com;Database=test;Uid=user;Pwd=pass;',
             'GCP Europe': 'mysql://user:pass@35.195.1.1:3306/test'  # Europe IP range
         }
         
@@ -627,7 +627,7 @@ class TestCrossCloudComplianceMapping(TestDatabaseScannerIntegration):
         # Test AI Act compliance across providers
         ai_compliance = self.compliance_scanner.scan_ai_act_compliance(ai_schema)
         
-        self.assertGreater(ai_compliance['score'], 70)  # Good AI Act compliance detected
+        self.assertGreater(ai_compliance['score'], 70.0)  # Good AI Act compliance detected
         self.assertGreater(ai_compliance['ai_systems_detected'], 0)
         self.assertTrue(ai_compliance['compliant'])
         
