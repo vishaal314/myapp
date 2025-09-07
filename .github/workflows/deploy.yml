@@ -95,7 +95,7 @@ jobs:
         username: ${{ env.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         port: 22
-        source: "dataguardian-pro.tar,docker-compose.prod.yml,deploy.sh,nginx.conf,.env.production"
+        source: "dataguardian-pro.tar,docker-compose.prod.yml,deploy.sh,nginx.conf"
         target: /opt/dataguardian-pro/
     
     - name: Load and start services
