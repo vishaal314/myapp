@@ -435,7 +435,7 @@ class EnterpriseAuth:
         # Implementation depends on your multi-tenant setup
         return [user_profile.organization] if user_profile.organization else []
     
-    def audit_log(self, user_profile: UserProfile, action: str, resource: str, details: Dict[str, Any] = None):
+    def audit_log(self, user_profile: UserProfile, action: str, resource: str, details: Optional[Dict[str, Any]] = None):
         """Log audit events for compliance"""
         audit_entry = {
             'timestamp': datetime.utcnow().isoformat(),

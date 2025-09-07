@@ -304,11 +304,6 @@ class DBScanner:
         sanitized = re.sub(r'://([^:]+):([^@]+)@', r'://\1:***@', sanitized)
         return sanitized
     
-    def _escape_identifier(self, identifier: str) -> str:
-        """Escape SQL identifier to prevent injection."""
-        # Remove dangerous characters
-        safe_identifier = ''.join(c for c in identifier if c.isalnum() or c in '_')
-        return f'"{safe_identifier}"'
     
     def _create_ssl_context(self, verify_cert: bool = True):
         """Create SSL context for secure connections."""
@@ -577,7 +572,7 @@ class DBScanner:
                     logger.error("PostgreSQL driver not available")
                     return False
                 
-                if POSTGRES_AVAILABLE:
+                if POSTGRES_AVAILABLE and psycopg2:
                     # Add connection timeout to connection string if not present
                     if 'connect_timeout' not in connection_string:
                         separator = '&' if '?' in connection_string else '?'
@@ -612,7 +607,7 @@ class DBScanner:
                     params['ssl_verify_identity'] = True
                     logger.info("SSL/TLS encryption enabled for cloud MySQL connection")
                 
-                if MYSQL_AVAILABLE and mysql.connector:
+                if MYSQL_AVAILABLE and mysql and mysql.connector:
                     self.connection = mysql.connector.connect(**params)
                 else:
                     raise Exception("MySQL connector not available")
@@ -712,7 +707,10 @@ class DBScanner:
                 logger.info("SSL disabled for MySQL connection")
             
             # Connect to MySQL
-            self.connection = mysql.connector.connect(**mysql_params)
+            if MYSQL_AVAILABLE and mysql and mysql.connector:
+                self.connection = mysql.connector.connect(**mysql_params)
+            else:
+                raise Exception("MySQL connector not available")
             self.db_type = 'mysql'
             logger.info(f"Successfully connected to Azure MySQL: {server}:{port}/{database}")
             return True
@@ -746,7 +744,10 @@ class DBScanner:
                 connection_params['sslmode'] = 'prefer'
             
             # Connect to PostgreSQL
-            self.connection = psycopg2.connect(**connection_params)
+            if POSTGRES_AVAILABLE and psycopg2:
+                self.connection = psycopg2.connect(**connection_params)
+            else:
+                raise Exception("PostgreSQL connector not available")
             self.db_type = 'postgres'
             logger.info(f"Successfully connected to Azure PostgreSQL: {server}:{port}/{database}")
             return True
@@ -999,7 +1000,7 @@ class DBScanner:
                     **ssl_params
                 }
                 
-                if POSTGRES_AVAILABLE:
+                if POSTGRES_AVAILABLE and psycopg2:
                     self.connection = psycopg2.connect(**connection_params_final)
                 else:
                     raise Exception("PostgreSQL connector not available")
@@ -1061,7 +1062,7 @@ class DBScanner:
                     **ssl_params
                 }
                 
-                if MYSQL_AVAILABLE and mysql.connector:
+                if MYSQL_AVAILABLE and mysql and mysql.connector:
                     self.connection = mysql.connector.connect(**connection_params_final)
                 else:
                     raise Exception("MySQL connector not available")
@@ -1082,7 +1083,7 @@ class DBScanner:
                     return False
                 
                 # Connect to database with timeout
-                if SQLITE_AVAILABLE:
+                if SQLITE_AVAILABLE and sqlite3:
                     self.connection = sqlite3.connect(database, timeout=self.query_timeout_seconds)
                 else:
                     raise Exception("SQLite connector not available")
@@ -1102,8 +1103,9 @@ class DBScanner:
         """
         if self.connection:
             try:
-                self.connection.close()
-                logger.info("Disconnected from database")
+                if hasattr(self.connection, 'close'):
+                    self.connection.close()
+                    logger.info("Disconnected from database")
             except Exception as e:
                 logger.error(f"Error disconnecting from database: {str(e)}")
             finally:
@@ -1122,7 +1124,10 @@ class DBScanner:
         
         tables = []
         try:
-            cursor = self.connection.cursor()
+            if hasattr(self.connection, 'cursor'):
+                cursor = self.connection.cursor()
+            else:
+                return []
             
             if self.db_type == 'postgres':
                 # Query to get all tables in PostgreSQL
@@ -1151,8 +1156,17 @@ class DBScanner:
                     ORDER BY name
                 """)
             
-            # Fetch all table names
-            tables = [row[0] for row in cursor.fetchall()]
+            # Fetch all table names with type safety
+            rows = cursor.fetchall()
+            tables = []
+            for row in rows:
+                if isinstance(row, (list, tuple)) and len(row) > 0:
+                    tables.append(str(row[0]))
+                elif hasattr(row, '__getitem__'):
+                    try:
+                        tables.append(str(row[0]))
+                    except (IndexError, TypeError):
+                        continue
             
             # Limit the number of tables to scan
             if len(tables) > self.max_table_count:
@@ -1181,7 +1195,10 @@ class DBScanner:
         
         columns = []
         try:
-            cursor = self.connection.cursor()
+            if hasattr(self.connection, 'cursor'):
+                cursor = self.connection.cursor()
+            else:
+                return []
             
             if self.db_type == 'postgres':
                 # Query to get all columns for a table in PostgreSQL
@@ -1206,12 +1223,30 @@ class DBScanner:
                 # Use escaped identifier to prevent SQL injection
                 escaped_table = self._escape_identifier(table_name)
                 cursor.execute(f"PRAGMA table_info({escaped_table})")
-                columns = [row[1] for row in cursor.fetchall()]
+                rows = cursor.fetchall()
+                columns = []
+                for row in rows:
+                    if isinstance(row, (list, tuple)) and len(row) > 1:
+                        columns.append(str(row[1]))
+                    elif hasattr(row, '__getitem__'):
+                        try:
+                            columns.append(str(row[1]))
+                        except (IndexError, TypeError):
+                            continue
                 cursor.close()
                 return columns
             
-            # Fetch all column names (for PostgreSQL and MySQL)
-            columns = [row[0] for row in cursor.fetchall()]
+            # Fetch all column names (for PostgreSQL and MySQL) with type safety
+            rows = cursor.fetchall()
+            columns = []
+            for row in rows:
+                if isinstance(row, (list, tuple)) and len(row) > 0:
+                    columns.append(str(row[0]))
+                elif hasattr(row, '__getitem__'):
+                    try:
+                        columns.append(str(row[0]))
+                    except (IndexError, TypeError):
+                        continue
             
             # Limit the number of columns to scan
             if len(columns) > self.max_columns_to_scan:
@@ -1236,7 +1271,7 @@ class DBScanner:
             Safely escaped identifier
         """
         # Remove any existing quotes and escape internal quotes
-        cleaned = identifier.replace('"', '""').replace('`', '``')
+        cleaned = str(identifier).replace('"', '""').replace('`', '``')
         
         # Apply appropriate quoting based on database type
         if self.db_type == 'mysql':
@@ -1260,7 +1295,10 @@ class DBScanner:
         
         sample_data = []
         try:
-            cursor = self.connection.cursor()
+            if hasattr(self.connection, 'cursor'):
+                cursor = self.connection.cursor()
+            else:
+                return []
             
             # Safely escape identifiers to prevent SQL injection
             escaped_columns = [self._escape_identifier(col) for col in columns]
@@ -1287,7 +1325,7 @@ class DBScanner:
                 row_dict = {}
                 for i, col in enumerate(columns):
                     # Safely access row data with bounds checking
-                    if i < len(row):
+                    if isinstance(row, (list, tuple)) and i < len(row):
                         row_dict[col] = row[i]
                     else:
                         row_dict[col] = None  # Handle missing columns

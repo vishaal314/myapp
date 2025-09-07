@@ -43,6 +43,10 @@ def set_cookie(response):
     response.headers["Set-Cookie"] = "session=123456; Path=/"  # INTENTIONAL VULNERABILITY: Missing Secure and HttpOnly flags
 
 # Test Case 9: CSRF vulnerability
+def csrf_exempt(func):
+    """Mock CSRF exempt decorator for testing"""
+    return func
+
 @csrf_exempt  # INTENTIONAL VULNERABILITY: CSRF protection disabled
 def update_profile(request):
     # Process the form...

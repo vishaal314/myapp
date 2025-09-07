@@ -154,7 +154,7 @@ try:
         ScannerType as ActivityScannerType
     )
     
-    # Define local ScannerType for app-wide consistency
+    # Define local ScannerType for app-wide consistency  
     ScannerType = ActivityScannerType
     from typing import Dict, Any
     
@@ -215,7 +215,8 @@ except ImportError:
     
     # Import ScannerType from activity_tracker to avoid conflicts
     try:
-        from utils.activity_tracker import ScannerType
+        from utils.activity_tracker import ScannerType as FallbackScannerType
+        ScannerType = FallbackScannerType
     except ImportError:
         # Final fallback if activity_tracker is not available
         class ScannerType:
@@ -3709,6 +3710,10 @@ def render_database_scanner_interface(region: str, username: str):
 
 def execute_database_scan(region, username, db_type, host, port, database, username_db, password, ssl_params=None):
     """Execute database scanning with connection timeout and activity tracking"""
+    # Initialize variables to avoid unbound variable errors
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+    user_id = st.session_state.get('user_id', username)
+    
     try:
         from services.db_scanner import DBScanner
         from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
@@ -3851,23 +3856,25 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
         st.success("✅ Database scan completed!")
         
     except Exception as e:
-        # Initialize variables for error handler if not already set
-        if 'session_id' not in locals():
-            session_id = str(uuid.uuid4())
-        if 'user_id' not in locals():
-            user_id = username
-        
-        # Track scan failure
-        track_scan_failed_wrapper(
-            scanner_type=ScannerType.DATABASE,
-            user_id=user_id,
-            session_id=session_id,
-            error_message=str(e)
-        )
+        # Track scan failure with safe error handling
+        try:
+            track_scan_failed_wrapper(
+                scanner_type=ScannerType.DATABASE,
+                user_id=user_id,
+                session_id=session_id,
+                error_message=str(e)
+            )
+        except (NameError, AttributeError):
+            # Fallback if tracking variables are not available
+            logger.warning(f"Activity tracking failed: {e}")
         st.error(f"Database scan failed: {str(e)}")
 
 def execute_database_scan_cloud(region, username, connection_string):
     """Execute database scanning using connection string for cloud databases"""
+    # Initialize variables to avoid unbound variable errors
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+    user_id = st.session_state.get('user_id', username)
+    
     try:
         from services.db_scanner import DBScanner
         from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
@@ -3997,19 +4004,17 @@ def execute_database_scan_cloud(region, username, connection_string):
         st.success("✅ Cloud database scan completed with SSL/TLS security!")
         
     except Exception as e:
-        # Initialize variables for error handler if not already set
-        if 'session_id' not in locals():
-            session_id = str(uuid.uuid4())
-        if 'user_id' not in locals():
-            user_id = username
-        
-        # Track scan failure
-        track_scan_failed_wrapper(
-            scanner_type=ScannerType.DATABASE,
-            user_id=user_id,
-            session_id=session_id,
-            error_message=str(e)
-        )
+        # Track scan failure with safe error handling
+        try:
+            track_scan_failed_wrapper(
+                scanner_type=ScannerType.DATABASE,
+                user_id=user_id,
+                session_id=session_id,
+                error_message=str(e)
+            )
+        except (NameError, AttributeError):
+            # Fallback if tracking variables are not available
+            logger.warning(f"Activity tracking failed: {e}")
         st.error(f"Cloud database scan failed: {str(e)}")
 
 def render_api_scanner_interface(region: str, username: str):
