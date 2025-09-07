@@ -3375,9 +3375,25 @@ def render_database_scanner_interface(region: str, username: str):
         st.markdown("### ☁️ Choose Your Cloud Provider")
         cloud_provider = st.selectbox(
             "Cloud Provider (Optional - for templates)",
-            ["Custom", "AWS RDS", "Azure Database", "Google Cloud SQL", "Supabase", "Neon", "PlanetScale"],
+            ["Custom", "AWS RDS", "Azure Database Services", "Google Cloud SQL", "Supabase", "Neon", "PlanetScale"],
             help="Select your cloud provider to get a connection string template"
         )
+        
+        # Azure-specific database service selection
+        azure_service = None
+        if cloud_provider == "Azure Database Services":
+            st.markdown("#### 🎯 Select Your Azure Database Service")
+            azure_service = st.selectbox(
+                "Azure Database Service",
+                [
+                    "Azure Database for MySQL (Flexible Server)",
+                    "Azure Database for MySQL (Single Server - Legacy)", 
+                    "Azure Database for PostgreSQL (Flexible Server)",
+                    "Azure Database for PostgreSQL (Single Server - Legacy)",
+                    "Azure SQL Database"
+                ],
+                help="Select the specific Azure database service you're using"
+            )
         
         # Generate connection string templates based on provider
         template_examples = {
@@ -3385,11 +3401,7 @@ def render_database_scanner_interface(region: str, username: str):
                 "PostgreSQL": "postgresql://username:password@mydb.cluster-abc123.us-east-1.rds.amazonaws.com:5432/database?sslmode=require",
                 "MySQL": "mysql://username:password@mydb.cluster-abc123.us-east-1.rds.amazonaws.com:3306/database"
             },
-            "Azure Database": {
-                "PostgreSQL": "postgresql://username@servername:password@servername.postgres.database.azure.com:5432/database?sslmode=require",
-                "MySQL (URL Style)": "mysql://username@servername:password@servername.mysql.database.azure.com:3306/database",
-                "MySQL (Azure Style)": "Server=testdbserver.mysql.database.azure.com;\nPort=3306;\nDatabase=sakila;\nUid=testuser@testdbserver;\nPwd=MyTestPass123!;\nSslMode=Required;"
-            },
+            "Azure Database Services": {},  # Will be populated dynamically based on service selection
             "Google Cloud SQL": {
                 "PostgreSQL": "postgresql://username:password@public-ip-address:5432/database?sslmode=require",
                 "MySQL": "mysql://username:password@public-ip-address:3306/database"
@@ -3405,13 +3417,39 @@ def render_database_scanner_interface(region: str, username: str):
             }
         }
         
+        # Azure-specific templates based on service selection
+        if cloud_provider == "Azure Database Services" and azure_service:
+            if azure_service == "Azure Database for MySQL (Flexible Server)":
+                template_examples["Azure Database Services"] = {
+                    "Azure Format": "Server=your-server.mysql.database.azure.com;\nPort=3306;\nDatabase=your-database;\nUid=your-username;\nPwd=your-password;\nSslMode=Required;",
+                    "URL Format": "mysql://your-username:your-password@your-server.mysql.database.azure.com:3306/your-database?ssl-mode=REQUIRED"
+                }
+            elif azure_service == "Azure Database for MySQL (Single Server - Legacy)":
+                template_examples["Azure Database Services"] = {
+                    "Azure Format": "Server=your-server.mysql.database.azure.com;\nPort=3306;\nDatabase=your-database;\nUid=your-username@your-server;\nPwd=your-password;\nSslMode=Required;",
+                    "URL Format": "mysql://your-username%40your-server:your-password@your-server.mysql.database.azure.com:3306/your-database?ssl-mode=REQUIRED"
+                }
+            elif azure_service == "Azure Database for PostgreSQL (Flexible Server)":
+                template_examples["Azure Database Services"] = {
+                    "URL Format": "postgresql://your-username:your-password@your-server.postgres.database.azure.com:5432/your-database?sslmode=require"
+                }
+            elif azure_service == "Azure Database for PostgreSQL (Single Server - Legacy)":
+                template_examples["Azure Database Services"] = {
+                    "URL Format": "postgresql://your-username@your-server:your-password@your-server.postgres.database.azure.com:5432/your-database?sslmode=require"
+                }
+            elif azure_service == "Azure SQL Database":
+                template_examples["Azure Database Services"] = {
+                    "Azure Format": "Server=tcp:your-server.database.windows.net,1433;\nInitial Catalog=your-database;\nPersist Security Info=False;\nUser ID=your-username;\nPassword=your-password;\nMultipleActiveResultSets=False;\nEncrypt=True;\nTrustServerCertificate=False;"
+                }
+        
         # Show examples for selected provider
-        if cloud_provider != "Custom" and cloud_provider in template_examples:
-            st.markdown(f"### 📋 {cloud_provider} Connection String Examples")
+        if cloud_provider != "Custom" and cloud_provider in template_examples and template_examples[cloud_provider]:
+            service_name = azure_service if cloud_provider == "Azure Database Services" else cloud_provider
+            st.markdown(f"### 📋 {service_name} Connection String Examples")
             for db_type, example in template_examples[cloud_provider].items():
-                with st.expander(f"{db_type} Example"):
+                with st.expander(f"{db_type} Template"):
                     st.code(example, language="text")
-                    if st.button(f"Use {db_type} Template", key=f"template_{cloud_provider}_{db_type}"):
+                    if st.button(f"Use {db_type} Template", key=f"template_{cloud_provider}_{azure_service}_{db_type}"):
                         st.session_state['connection_string_template'] = example
         
         # Cloud database connection string
@@ -3431,12 +3469,16 @@ def render_database_scanner_interface(region: str, username: str):
         if default_template:
             st.button("🗑️ Clear Template", on_click=clear_template_callback)
         
-        # Cloud provider hint
+        # Enhanced cloud provider detection
         if connection_string:
             if any(cloud in connection_string.lower() for cloud in ['amazonaws.com', 'rds']):
                 st.success("🚀 **AWS RDS** detected - SSL will be automatically enabled")
-            elif any(cloud in connection_string.lower() for cloud in ['database.windows.net', 'azure']):
-                st.success("☁️ **Azure Database** detected - SSL will be automatically enabled")
+            elif any(cloud in connection_string.lower() for cloud in ['mysql.database.azure.com']):
+                st.success("🔵 **Azure Database for MySQL** detected - SSL will be automatically enabled")
+            elif any(cloud in connection_string.lower() for cloud in ['postgres.database.azure.com']):
+                st.success("🔵 **Azure Database for PostgreSQL** detected - SSL will be automatically enabled")  
+            elif any(cloud in connection_string.lower() for cloud in ['database.windows.net']):
+                st.success("🔵 **Azure SQL Database** detected - SSL will be automatically enabled")
             elif any(cloud in connection_string.lower() for cloud in ['sql.goog', 'googleusercontent']):
                 st.success("🌐 **Google Cloud SQL** detected - SSL will be automatically enabled")
             elif any(cloud in connection_string.lower() for cloud in ['supabase.co']):
@@ -3445,6 +3487,8 @@ def render_database_scanner_interface(region: str, username: str):
                 st.success("🔋 **Neon** detected - SSL will be automatically enabled")
             elif any(cloud in connection_string.lower() for cloud in ['psdb.cloud']):
                 st.success("🪐 **PlanetScale** detected - SSL will be automatically enabled")
+            elif 'server=' in connection_string.lower() and ';' in connection_string:
+                st.success("🔵 **Azure-style connection** detected - SSL will be automatically enabled")
         
         db_type = None  # Will be determined from connection string
         host = port = database = username_db = password = None

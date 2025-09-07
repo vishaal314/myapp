@@ -47,6 +47,13 @@ except ImportError:
     sqlite3 = None
     SQLITE_AVAILABLE = False
 
+try:
+    import pyodbc
+    PYODBC_AVAILABLE = True
+except ImportError:
+    pyodbc = None
+    PYODBC_AVAILABLE = False
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -75,6 +82,8 @@ class DBScanner:
             self.supported_db_types.append("mysql")
         if SQLITE_AVAILABLE:
             self.supported_db_types.append("sqlite")
+        if PYODBC_AVAILABLE:
+            self.supported_db_types.append("sqlserver")
             
         # PII detection patterns
         self.pii_patterns = self._get_pii_patterns()
@@ -248,6 +257,8 @@ class DBScanner:
                 return self._connect_mysql_azure_style(server, port, database, username, password, ssl_mode)
             elif 'postgres' in server.lower() or port == 5432:
                 return self._connect_postgres_azure_style(server, port, database, username, password, ssl_mode)
+            elif 'database.windows.net' in server.lower() or port == 1433:
+                return self._connect_azure_sql_database_style(server, port, database, username, password, ssl_mode)
             else:
                 # Default to MySQL for Azure Database for MySQL
                 logger.info("Defaulting to MySQL connector for Azure-style connection")
@@ -327,6 +338,55 @@ class DBScanner:
             
         except Exception as e:
             logger.error(f"Azure PostgreSQL connection failed: {str(e)}")
+            return False
+    
+    def _connect_azure_sql_database_style(self, server: str, port: int, database: str, username: str, password: str, ssl_mode: str) -> bool:
+        """Connect to Azure SQL Database using Azure-style parameters."""
+        if not PYODBC_AVAILABLE:
+            logger.error("pyodbc driver not available for Azure SQL Database")
+            return False
+        
+        try:
+            # Build Azure SQL Database connection string
+            # Handle different server formats
+            if not server.startswith('tcp:'):
+                server = f"tcp:{server}"
+            if not server.endswith('.database.windows.net') and 'database.windows.net' not in server:
+                server = f"{server}.database.windows.net"
+            
+            # Azure SQL Database connection string format
+            connection_string = (
+                f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+                f"SERVER={server},{port};"
+                f"DATABASE={database};"
+                f"UID={username};"
+                f"PWD={password};"
+                f"Encrypt=yes;"
+                f"TrustServerCertificate=no;"
+                f"Connection Timeout=30;"
+            )
+            
+            # Try ODBC Driver 17, fallback to 18 if available
+            try:
+                self.connection = pyodbc.connect(connection_string)
+            except pyodbc.Error as e:
+                if "ODBC Driver 17" in str(e):
+                    # Try ODBC Driver 18
+                    connection_string_18 = connection_string.replace(
+                        "ODBC Driver 17 for SQL Server", 
+                        "ODBC Driver 18 for SQL Server"
+                    )
+                    self.connection = pyodbc.connect(connection_string_18)
+                else:
+                    raise e
+            
+            self.db_type = 'sqlserver'
+            logger.info(f"Successfully connected to Azure SQL Database: {server}/{database}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Azure SQL Database connection failed: {str(e)}")
+            logger.info("Note: Azure SQL Database requires ODBC Driver 17 or 18 for SQL Server")
             return False
     
     def _get_pii_patterns(self) -> Dict[str, Tuple[str, str]]:

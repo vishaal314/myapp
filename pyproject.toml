@@ -40,4 +40,5 @@ dependencies = [
     "trafilatura>=2.0.0",
     "flask>=3.1.2",
     "mysql-connector-python>=9.4.0",
+    "pyodbc>=5.2.0",
 ]
