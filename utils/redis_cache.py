@@ -186,7 +186,9 @@ class RedisCache:
             keys = self.redis_client.keys(pattern)
             
             if keys:
-                deleted = self.redis_client.delete(*keys)
+                # Convert keys to list if needed for proper unpacking
+                key_list = list(keys) if keys else []
+                deleted = self.redis_client.delete(*key_list)
                 deleted_count = int(deleted) if deleted is not None else 0
                 logger.info(f"Cleared {deleted_count} keys from namespace {namespace}")
                 return deleted_count
