@@ -190,7 +190,7 @@ class SessionOptimizer:
             activity_entry = {
                 'timestamp': datetime.now().isoformat(),
                 'activity': activity,
-                'details': details or {}
+                'details': details if details is not None else {}
             }
             
             # Add to activity log

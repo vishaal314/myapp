@@ -62,8 +62,10 @@ class RepositoryCache:
         cache_key = f"{repo_url}#{branch or 'default'}"
         return hashlib.sha256(cache_key.encode()).hexdigest()[:16]
     
-    def _get_cache_path(self, repo_hash: str) -> Path:
+    def _get_cache_path(self, repo_hash: str) -> Optional[Path]:
         """Get cache file path for repository hash."""
+        if self.cache_dir is None:
+            return None
         return self.cache_dir / f"{repo_hash}.json"
     
     def _is_cache_valid(self, cache_file: Path) -> bool:
@@ -98,6 +100,10 @@ class RepositoryCache:
         try:
             repo_hash = self._get_repo_hash(repo_url, branch)
             cache_file = self._get_cache_path(repo_hash)
+            
+            if cache_file is None:
+                self.stats['misses'] += 1
+                return None
             
             if not self._is_cache_valid(cache_file):
                 self.stats['misses'] += 1
@@ -139,6 +145,9 @@ class RepositoryCache:
         repo_hash = self._get_repo_hash(repo_url, branch)
         cache_file = self._get_cache_path(repo_hash)
         
+        if cache_file is None:
+            return
+        
         try:
             cache_data = {
                 'repo_url': repo_url,
@@ -174,6 +183,9 @@ class RepositoryCache:
         Returns:
             Cached scan result or None
         """
+        if self.cache_dir is None:
+            return None
+            
         repo_hash = self._get_repo_hash(repo_url, branch)
         scan_key = f"{scan_mode}_{max_files}"
         cache_file = self.cache_dir / f"{repo_hash}_scan_{hashlib.md5(scan_key.encode()).hexdigest()[:8]}.json"
@@ -206,6 +218,9 @@ class RepositoryCache:
             max_files: Maximum files scanned
             branch: Git branch
         """
+        if self.cache_dir is None:
+            return
+            
         repo_hash = self._get_repo_hash(repo_url, branch)
         scan_key = f"{scan_mode}_{max_files}"
         cache_file = self.cache_dir / f"{repo_hash}_scan_{hashlib.md5(scan_key.encode()).hexdigest()[:8]}.json"
@@ -244,6 +259,9 @@ class RepositoryCache:
         removed_count = 0
         
         try:
+            if self.cache_dir is None:
+                return
+                
             for cache_file in self.cache_dir.glob(pattern):
                 cache_file.unlink()
                 removed_count += 1
@@ -264,6 +282,9 @@ class RepositoryCache:
         removed_count = 0
         
         try:
+            if self.cache_dir is None:
+                return removed_count
+                
             for cache_file in self.cache_dir.glob("*.json"):
                 if not self._is_cache_valid(cache_file):
                     cache_file.unlink()
@@ -309,6 +330,9 @@ class RepositoryCache:
         removed_count = 0
         
         try:
+            if self.cache_dir is None:
+                return removed_count
+                
             for cache_file in self.cache_dir.glob("*.json"):
                 cache_file.unlink()
                 removed_count += 1

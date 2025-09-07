@@ -152,7 +152,7 @@ class RedisCache:
         try:
             cache_key = self._get_key(key, namespace)
             result = self.redis_client.incr(cache_key, amount)
-            return int(result) if result is not None else None
+            return int(result) if isinstance(result, (int, str)) else None
         except Exception as e:
             logger.error(f"Cache increment error for key {key}: {e}")
             return None
@@ -164,11 +164,12 @@ class RedisCache:
             
         try:
             info = self.redis_client.info()
+            db_info = info.get('db0', {}) if isinstance(info, dict) else {}
             return {
                 **self.stats,
                 'connected': True,
-                'memory_used': info.get('used_memory_human', 'N/A'),
-                'total_keys': info.get('db0', {}).get('keys', 0) if 'db0' in info else 0,
+                'memory_used': info.get('used_memory_human', 'N/A') if isinstance(info, dict) else 'N/A',
+                'total_keys': db_info.get('keys', 0) if isinstance(db_info, dict) else 0,
                 'hit_rate': self.stats['hits'] / (self.stats['hits'] + self.stats['misses']) if (self.stats['hits'] + self.stats['misses']) > 0 else 0
             }
         except Exception as e:
@@ -186,8 +187,9 @@ class RedisCache:
             
             if keys:
                 deleted = self.redis_client.delete(*keys)
-                logger.info(f"Cleared {deleted} keys from namespace {namespace}")
-                return deleted
+                deleted_count = deleted if isinstance(deleted, int) else 0
+                logger.info(f"Cleared {deleted_count} keys from namespace {namespace}")
+                return deleted_count
             else:
                 return 0
                 
