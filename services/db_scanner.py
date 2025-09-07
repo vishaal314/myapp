@@ -112,12 +112,15 @@ class DBScanner:
             return False
             
         cloud_patterns = [
-            # AWS RDS
+            # AWS RDS & Aurora
             '.rds.amazonaws.com',
-            '.rds-aurora.amazonaws.com',
+            '.rds-aurora.amazonaws.com', 
+            'cluster-',  # Aurora cluster identifier
+            'cluster-ro-',  # Aurora reader endpoint
             # Google Cloud SQL
             '.sql.goog',
             'googleusercontent.com',
+            '/cloudsql/',  # Unix socket connection
             # Azure Database
             '.database.windows.net',
             '.postgres.database.azure.com',
@@ -192,10 +195,12 @@ class DBScanner:
                     'autocommit': True
                 }
                 
-                # Add SSL for cloud connections
-                if parsed.hostname and self._is_cloud_host(parsed.hostname):
+                # Add SSL for cloud connections with enhanced detection
+                if parsed.hostname and (self._is_cloud_host(parsed.hostname) or 'rds.amazonaws.com' in parsed.hostname):
                     params['ssl_disabled'] = False
                     params['ssl_verify_cert'] = True
+                    params['ssl_verify_identity'] = True
+                    logger.info("SSL/TLS encryption enabled for cloud MySQL connection")
                 
                 if MYSQL_AVAILABLE and mysql.connector:
                     self.connection = mysql.connector.connect(**params)

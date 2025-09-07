@@ -3375,12 +3375,15 @@ def render_database_scanner_interface(region: str, username: str):
         st.markdown("### ☁️ Choose Your Cloud Provider")
         cloud_provider = st.selectbox(
             "Cloud Provider (Optional - for templates)",
-            ["Custom", "AWS RDS", "Azure Database Services", "Google Cloud SQL", "Supabase", "Neon", "PlanetScale"],
+            ["Custom", "AWS RDS Services", "Azure Database Services", "Google Cloud SQL Services", "Supabase", "Neon", "PlanetScale"],
             help="Select your cloud provider to get a connection string template"
         )
         
-        # Azure-specific database service selection
+        # Cloud-specific service selections
         azure_service = None
+        aws_service = None
+        gcp_service = None
+        
         if cloud_provider == "Azure Database Services":
             st.markdown("#### 🎯 Select Your Azure Database Service")
             azure_service = st.selectbox(
@@ -3395,17 +3398,39 @@ def render_database_scanner_interface(region: str, username: str):
                 help="Select the specific Azure database service you're using"
             )
         
+        elif cloud_provider == "AWS RDS Services":
+            st.markdown("#### 🚀 Select Your AWS RDS Service")
+            aws_service = st.selectbox(
+                "AWS RDS Database Engine",
+                [
+                    "Amazon RDS for MySQL",
+                    "Amazon RDS for PostgreSQL", 
+                    "Amazon RDS for MariaDB",
+                    "Amazon RDS for SQL Server",
+                    "Amazon RDS for Oracle",
+                    "Amazon Aurora MySQL-Compatible",
+                    "Amazon Aurora PostgreSQL-Compatible"
+                ],
+                help="Select the specific AWS RDS database engine you're using"
+            )
+            
+        elif cloud_provider == "Google Cloud SQL Services":
+            st.markdown("#### 🌐 Select Your Google Cloud SQL Service")
+            gcp_service = st.selectbox(
+                "Google Cloud SQL Database Engine",
+                [
+                    "Cloud SQL for MySQL",
+                    "Cloud SQL for PostgreSQL",
+                    "Cloud SQL for SQL Server"
+                ],
+                help="Select the specific Google Cloud SQL database engine you're using"
+            )
+        
         # Generate connection string templates based on provider
         template_examples = {
-            "AWS RDS": {
-                "PostgreSQL": "postgresql://username:password@mydb.cluster-abc123.us-east-1.rds.amazonaws.com:5432/database?sslmode=require",
-                "MySQL": "mysql://username:password@mydb.cluster-abc123.us-east-1.rds.amazonaws.com:3306/database"
-            },
+            "AWS RDS Services": {},  # Will be populated dynamically based on service selection
             "Azure Database Services": {},  # Will be populated dynamically based on service selection
-            "Google Cloud SQL": {
-                "PostgreSQL": "postgresql://username:password@public-ip-address:5432/database?sslmode=require",
-                "MySQL": "mysql://username:password@public-ip-address:3306/database"
-            },
+            "Google Cloud SQL Services": {},  # Will be populated dynamically based on service selection
             "Supabase": {
                 "PostgreSQL": "postgresql://postgres:password@db.abcdefghijklmnop.supabase.co:5432/postgres?sslmode=require"
             },
@@ -3417,8 +3442,62 @@ def render_database_scanner_interface(region: str, username: str):
             }
         }
         
+        # AWS RDS-specific templates based on service selection
+        if cloud_provider == "AWS RDS Services" and aws_service:
+            if aws_service == "Amazon RDS for MySQL":
+                template_examples["AWS RDS Services"] = {
+                    "URL Format": "mysql://username:password@your-instance.cluster-abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED",
+                    "Individual Instance": "mysql://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED"
+                }
+            elif aws_service == "Amazon RDS for PostgreSQL":
+                template_examples["AWS RDS Services"] = {
+                    "URL Format": "postgresql://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:5432/your-database?sslmode=require"
+                }
+            elif aws_service == "Amazon RDS for MariaDB":
+                template_examples["AWS RDS Services"] = {
+                    "URL Format": "mysql://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED"
+                }
+            elif aws_service == "Amazon RDS for SQL Server":
+                template_examples["AWS RDS Services"] = {
+                    "ODBC Format": "DRIVER={ODBC Driver 17 for SQL Server};SERVER=your-instance.abc123.us-east-1.rds.amazonaws.com,1433;DATABASE=your-database;UID=username;PWD=password;Encrypt=yes;TrustServerCertificate=no;"
+                }
+            elif aws_service == "Amazon RDS for Oracle":
+                template_examples["AWS RDS Services"] = {
+                    "Oracle Format": "oracle://username:password@your-instance.abc123.us-east-1.rds.amazonaws.com:1521/XE"
+                }
+            elif aws_service == "Amazon Aurora MySQL-Compatible":
+                template_examples["AWS RDS Services"] = {
+                    "Cluster Endpoint": "mysql://username:password@your-cluster.cluster-abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED",
+                    "Reader Endpoint": "mysql://username:password@your-cluster.cluster-ro-abc123.us-east-1.rds.amazonaws.com:3306/your-database?ssl-mode=REQUIRED"
+                }
+            elif aws_service == "Amazon Aurora PostgreSQL-Compatible":
+                template_examples["AWS RDS Services"] = {
+                    "Cluster Endpoint": "postgresql://username:password@your-cluster.cluster-abc123.us-east-1.rds.amazonaws.com:5432/your-database?sslmode=require",
+                    "Reader Endpoint": "postgresql://username:password@your-cluster.cluster-ro-abc123.us-east-1.rds.amazonaws.com:5432/your-database?sslmode=require"
+                }
+        
+        # Google Cloud SQL-specific templates based on service selection
+        elif cloud_provider == "Google Cloud SQL Services" and gcp_service:
+            if gcp_service == "Cloud SQL for MySQL":
+                template_examples["Google Cloud SQL Services"] = {
+                    "Public IP": "mysql://username:password@your-public-ip:3306/your-database?ssl-mode=REQUIRED",
+                    "Private IP": "mysql://username:password@your-private-ip:3306/your-database?ssl-mode=REQUIRED",
+                    "Connection Name": "mysql://username:password@localhost:3306/your-database?unix_socket=/cloudsql/your-project:region:instance"
+                }
+            elif gcp_service == "Cloud SQL for PostgreSQL":
+                template_examples["Google Cloud SQL Services"] = {
+                    "Public IP": "postgresql://username:password@your-public-ip:5432/your-database?sslmode=require",
+                    "Private IP": "postgresql://username:password@your-private-ip:5432/your-database?sslmode=require",
+                    "Connection Name": "postgresql://username:password@localhost:5432/your-database?host=/cloudsql/your-project:region:instance"
+                }
+            elif gcp_service == "Cloud SQL for SQL Server":
+                template_examples["Google Cloud SQL Services"] = {
+                    "Public IP": "DRIVER={ODBC Driver 17 for SQL Server};SERVER=your-public-ip,1433;DATABASE=your-database;UID=username;PWD=password;Encrypt=yes;",
+                    "Private IP": "DRIVER={ODBC Driver 17 for SQL Server};SERVER=your-private-ip,1433;DATABASE=your-database;UID=username;PWD=password;Encrypt=yes;"
+                }
+        
         # Azure-specific templates based on service selection
-        if cloud_provider == "Azure Database Services" and azure_service:
+        elif cloud_provider == "Azure Database Services" and azure_service:
             if azure_service == "Azure Database for MySQL (Flexible Server)":
                 template_examples["Azure Database Services"] = {
                     "Azure Format": "Server=your-server.mysql.database.azure.com;\nPort=3306;\nDatabase=your-database;\nUid=your-username;\nPwd=your-password;\nSslMode=Required;",
@@ -3444,12 +3523,21 @@ def render_database_scanner_interface(region: str, username: str):
         
         # Show examples for selected provider
         if cloud_provider != "Custom" and cloud_provider in template_examples and template_examples[cloud_provider]:
-            service_name = azure_service if cloud_provider == "Azure Database Services" else cloud_provider
+            if cloud_provider == "Azure Database Services":
+                service_name = azure_service
+            elif cloud_provider == "AWS RDS Services":
+                service_name = aws_service
+            elif cloud_provider == "Google Cloud SQL Services":
+                service_name = gcp_service
+            else:
+                service_name = cloud_provider
+            
             st.markdown(f"### 📋 {service_name} Connection String Examples")
             for db_type, example in template_examples[cloud_provider].items():
                 with st.expander(f"{db_type} Template"):
                     st.code(example, language="text")
-                    if st.button(f"Use {db_type} Template", key=f"template_{cloud_provider}_{azure_service}_{db_type}"):
+                    service_key = azure_service or aws_service or gcp_service or "default"
+                    if st.button(f"Use {db_type} Template", key=f"template_{cloud_provider}_{service_key}_{db_type}"):
                         st.session_state['connection_string_template'] = example
         
         # Cloud database connection string
@@ -3471,14 +3559,19 @@ def render_database_scanner_interface(region: str, username: str):
         
         # Enhanced cloud provider detection
         if connection_string:
-            if any(cloud in connection_string.lower() for cloud in ['amazonaws.com', 'rds']):
-                st.success("🚀 **AWS RDS** detected - SSL will be automatically enabled")
+            if any(cloud in connection_string.lower() for cloud in ['rds.amazonaws.com', 'cluster-', '.rds.']):
+                if 'cluster-' in connection_string.lower():
+                    st.success("🚀 **Amazon Aurora** detected - SSL will be automatically enabled")
+                else:
+                    st.success("🚀 **AWS RDS** detected - SSL will be automatically enabled")
             elif any(cloud in connection_string.lower() for cloud in ['mysql.database.azure.com']):
                 st.success("🔵 **Azure Database for MySQL** detected - SSL will be automatically enabled")
             elif any(cloud in connection_string.lower() for cloud in ['postgres.database.azure.com']):
                 st.success("🔵 **Azure Database for PostgreSQL** detected - SSL will be automatically enabled")  
             elif any(cloud in connection_string.lower() for cloud in ['database.windows.net']):
                 st.success("🔵 **Azure SQL Database** detected - SSL will be automatically enabled")
+            elif any(cloud in connection_string.lower() for cloud in ['cloudsql', '/cloudsql/']):
+                st.success("🌐 **Google Cloud SQL** detected - SSL will be automatically enabled")
             elif any(cloud in connection_string.lower() for cloud in ['sql.goog', 'googleusercontent']):
                 st.success("🌐 **Google Cloud SQL** detected - SSL will be automatically enabled")
             elif any(cloud in connection_string.lower() for cloud in ['supabase.co']):
