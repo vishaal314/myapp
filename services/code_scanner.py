@@ -18,7 +18,7 @@ except ImportError:
     # Fallback to standard logging if centralized logger not available
     logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Set
+from typing import Dict, List, Any, Optional, Tuple, Set, Callable, Union
 from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
 
@@ -31,6 +31,31 @@ except ImportError:
     # Fallback if module not available
     def detect_nl_violations(content):
         return []
+
+# Custom exception classes for better error handling
+class ScannerError(Exception):
+    """Base exception for code scanner errors"""
+    pass
+
+class CheckpointError(ScannerError):
+    """Exception raised when checkpoint operations fail"""
+    pass
+
+class FileProcessingError(ScannerError):
+    """Exception raised when file processing fails"""
+    pass
+
+class TimeoutError(ScannerError):
+    """Exception raised when scan timeout is exceeded"""
+    pass
+
+class PatternCompilationError(ScannerError):
+    """Exception raised when regex pattern compilation fails"""
+    pass
+
+class InvalidConfigurationError(ScannerError):
+    """Exception raised when scanner configuration is invalid"""
+    pass
 
 class CodeScanner:
     """
@@ -105,47 +130,53 @@ class CodeScanner:
         self.include_article_refs = include_article_refs
         
         # Enhanced regex patterns for secrets and PII detection by provider
+        # Fixed to prevent ReDoS attacks by simplifying complex quantifiers
         self.secret_patterns = {
-            # General API keys and tokens
-            'api_key': r'(?i)(api[_-]?key|apikey)[^\w\n]*?[\'"=:]+[^\w\n]*?([\w\-]{20,64})',
-            'auth_token': r'(?i)(auth[_-]token|oauth|bearer|jwt)[^\w\n]*?[\'"=:]+[^\w\n]*?([^\s;,]{30,64})',
-            'generic_secret': r'(?i)(secret|key|token)[^\w\n]*?[\'"=:]+[^\w\n]*?([^\s;,]{16,64})',
+            # General API keys and tokens - simplified to prevent ReDoS
+            'api_key': r'(?i)(api[_-]?key|apikey)\s*[=:]\s*["\']?([A-Za-z0-9_-]{20,64})["\']?',
+            'auth_token': r'(?i)(auth[_-]?token|oauth|bearer|jwt)\s*[=:]\s*["\']?([A-Za-z0-9_.-]{30,64})["\']?',
+            'generic_secret': r'(?i)(secret|key|token)\s*[=:]\s*["\']?([A-Za-z0-9_.-]{16,64})["\']?',
             
-            # AWS
-            'aws_access_key': r'(?i)(AWS|AKIA)[^\w\n]*?(ACCESS|SECRET)[^\w\n]*?(KEY)[^\w\n]*?[\'"=:]+[^\w\n]*?([A-Za-z0-9/+=]{16,40})',
-            'aws_key_id': r'(?i)(AKIA[0-9A-Z]{16})',
-            'aws_secret': r'(?i)(aws[^\w\n]*?([\'"]?(?:access|secret)[_-]?key[\'"]?)[^\w\n]*?[\'"=:]+[^\w\n]*?([A-Za-z0-9/+=]{40}))',
+            # AWS - simplified patterns
+            'aws_access_key': r'(?i)(aws_access_key_id|access_key)\s*[=:]\s*["\']?([A-Za-z0-9/+=]{16,40})["\']?',
+            'aws_key_id': r'\b(AKIA[0-9A-Z]{16})\b',
+            'aws_secret': r'(?i)(aws_secret_access_key|secret_key)\s*[=:]\s*["\']?([A-Za-z0-9/+=]{40})["\']?',
             
-            # Azure
-            'azure_key': r'(?i)(azure[^\w\n]*?(key|token|secret))[^\w\n]*?[\'"=:]+[^\w\n]*?([A-Za-z0-9+/=]{44})',
-            'azure_connection': r'(?i)(DefaultEndpointsProtocol=https)(.*?)(AccountKey=[A-Za-z0-9+/=]{88})',
-            'azure_storage': r'(?i)(BlobEndpoint|QueueEndpoint|TableEndpoint|FileEndpoint)(=https://[a-z0-9]+\.)(blob|queue|table|file)(\.core\.windows\.net/)',
+            # Azure - fixed patterns
+            'azure_key': r'(?i)(azure_key|azure_token|azure_secret)\s*[=:]\s*["\']?([A-Za-z0-9+/=]{44})["\']?',
+            'azure_connection': r'(DefaultEndpointsProtocol=https[^;]+AccountKey=)([A-Za-z0-9+/=]{88})',
+            'azure_storage': r'(BlobEndpoint|QueueEndpoint|TableEndpoint|FileEndpoint)=https://[a-z0-9]+\.(blob|queue|table|file)\.core\.windows\.net/',
             
-            # Google Cloud
-            'gcp_api_key': r'(?i)(AIza[0-9A-Za-z\-_]{35})',
-            'gcp_service_account': r'(?i)("type": "service_account"[.\s\S]*?"private_key": "[^"]*")',
+            # Google Cloud - simplified
+            'gcp_api_key': r'\b(AIza[0-9A-Za-z_-]{35})\b',
+            'gcp_service_account': r'"type":\s*"service_account"[^}]+?"private_key":\s*"([^"]+)"',
             
-            # Payment processors
-            'stripe_key': r'(?i)(sk_live_|pk_live_)([a-zA-Z0-9]{24})',
-            'stripe_test_key': r'(?i)(sk_test_|pk_test_)([a-zA-Z0-9]{24})',
-            'paypal_key': r'(?i)(access_token\$production\$[0-9a-z]{16}\$[0-9a-f]{32})',
-            'braintree_key': r'(?i)(access_token\$sandbox\$[0-9a-z]{16}\$[0-9a-f]{32})',
+            # Payment processors - fixed patterns
+            'stripe_key': r'\b(sk_(?:live|test)_[a-zA-Z0-9]{24})\b',
+            'stripe_public_key': r'\b(pk_(?:live|test)_[a-zA-Z0-9]{24})\b',
+            'paypal_key': r'\b(access_token\$production\$[0-9a-z]{16}\$[0-9a-f]{32})\b',
+            'braintree_key': r'\b(access_token\$sandbox\$[0-9a-z]{16}\$[0-9a-f]{32})\b',
             
-            # Database
-            'connection_string': r'(?i)(mongodb|mysql|postgresql|jdbc|sqlserver|oracle|redis)(://|:|@)([^\s;,]*:[^\s;,]*@)([a-zA-Z0-9.-]+)(:[0-9]+)?',
-            'mongodb_uri': r'(?i)(mongodb(?:\+srv)?://[^:]+:[^@]+@[^/]+)',
-            'mysql_conn': r'(?i)(mysql://[^:]+:[^@]+@[^/]+)',
-            'postgres_conn': r'(?i)(postgres(?:ql)?://[^:]+:[^@]+@[^/]+)',
+            # Database - simplified to prevent ReDoS
+            'connection_string': r'(mongodb|mysql|postgresql|sqlserver)://[^:\s]+:[^@\s]+@[^/\s]+(?::[0-9]+)?',
+            'mongodb_uri': r'mongodb(?:\+srv)?://[^:\s]+:[^@\s]+@[^/\s]+',
+            'mysql_conn': r'mysql://[^:\s]+:[^@\s]+@[^/\s]+',
+            'postgres_conn': r'postgres(?:ql)?://[^:\s]+:[^@\s]+@[^/\s]+',
             
-            # Social media
-            'twitter_key': r'(?i)(twitter[^\w\n]*?(api|secret|token)[^\w\n]*?key)[^\w\n]*?[\'"=:]+[^\w\n]*?([a-zA-Z0-9]{35,44})',
-            'facebook_key': r'(?i)(facebook[^\w\n]*?(api|secret|app|client)[^\w\n]*?(key|id|token))[^\w\n]*?[\'"=:]+[^\w\n]*?([a-zA-Z0-9]{32,40})',
-            'github_token': r'(?i)(gh[pousr]_[a-zA-Z0-9_]{36})',
+            # Social media - simplified patterns
+            'twitter_key': r'(?i)(twitter_api_key|twitter_token)\s*[=:]\s*["\']?([a-zA-Z0-9]{35,50})["\']?',
+            'facebook_key': r'(?i)(facebook_app_secret|facebook_token)\s*[=:]\s*["\']?([a-zA-Z0-9]{32,40})["\']?',
+            'github_token': r'\b(gh[pousr]_[a-zA-Z0-9_]{36})\b',
             
-            # Passwords
-            'password': r'(?i)(password|passwd|pwd)[^\w\n]*?[\'"=:]+[^\w\n]*?([^\s;,]{8,32})',
-            'passwd_assignment': r'(?i)(password|passwd|pwd)\s*(=|:=|:)\s*["\']([^"\']{8,32})["\']'
+            # Passwords - simplified
+            'password': r'(?i)(password|passwd|pwd)\s*[=:]\s*["\']([^"\']{8,32})["\']',
+            'passwd_assignment': r'(?i)(password|passwd|pwd)\s*[=:]\s*["\']([^"\']{8,32})["\']'
         }
+        
+        # Pre-compile regex patterns to improve performance and catch compilation errors early
+        self.compiled_patterns = {}
+        self.compiled_comment_patterns = {}
+        self._compile_patterns()
         
         # Map of file extensions to language-specific comment patterns
         self.comment_patterns = {
@@ -341,7 +372,31 @@ class CodeScanner:
             ]
         }
         
-    def set_progress_callback(self, callback_function):
+    def _compile_patterns(self):
+        """
+        Pre-compile all regex patterns to improve performance and catch compilation errors early.
+        Raises PatternCompilationError if any pattern fails to compile.
+        """
+        # Compile secret detection patterns
+        for name, pattern in self.secret_patterns.items():
+            try:
+                self.compiled_patterns[name] = re.compile(pattern, re.IGNORECASE | re.MULTILINE)
+            except re.error as e:
+                raise PatternCompilationError(f"Failed to compile pattern '{name}': {e}")
+        
+        # Compile comment patterns for each file extension
+        for ext, patterns in self.comment_patterns.items():
+            compiled_ext_patterns = []
+            for pattern in patterns:
+                try:
+                    compiled_ext_patterns.append(re.compile(pattern, re.MULTILINE | re.DOTALL))
+                except re.error as e:
+                    logger.warning(f"Failed to compile comment pattern for {ext}: {e}")
+            self.compiled_comment_patterns[ext] = compiled_ext_patterns
+        
+        logger.info(f"Successfully compiled {len(self.compiled_patterns)} secret patterns and comment patterns for {len(self.compiled_comment_patterns)} file types")
+        
+    def set_progress_callback(self, callback_function: Optional[Callable[[int, int, str], None]]):
         """
         Set a callback function to report progress during long-running scans.
         
