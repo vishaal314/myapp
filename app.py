@@ -75,28 +75,23 @@ from services.license_integration import (
 from components.pricing_display import show_pricing_page, show_pricing_in_sidebar
 from config.pricing_config import get_pricing_config
 
-# Import HTML report generators
-try:
-    from services.download_reports import generate_html_report
-except ImportError:
-    try:
-        from services.improved_report_download import generate_html_report
-    except ImportError:
-        # Fallback inline HTML generator for AI Model reports
-        def generate_html_report(scan_result: Dict[str, Any]) -> str:
-            """Simple HTML report generator for AI Model scans"""
-            # Build the findings HTML separately to avoid f-string issues
-            findings_html = ""
-            for finding in scan_result.get('findings', []):
-                severity_class = finding.get('severity', 'low').lower()
-                findings_html += f'''<div class="finding {severity_class}">
-            <h4>{finding.get('type', 'Unknown Finding')}</h4>
-            <p><strong>Severity:</strong> {finding.get('severity', 'Unknown')}</p>
-            <p><strong>Description:</strong> {finding.get('description', 'No description available')}</p>
-            <p><strong>Location:</strong> {finding.get('location', 'Unknown')}</p>
-        </div>'''
-            
-            return f"""<!DOCTYPE html>
+# Import HTML report generators with standardized signatures  
+from typing import Dict, Any
+
+def generate_html_report_fallback(scan_results: Dict[str, Any]) -> str:
+    """Simple HTML report generator for AI Model scans"""
+    # Build the findings HTML separately to avoid f-string issues
+    findings_html = ""
+    for finding in scan_results.get('findings', []):
+        severity_class = finding.get('severity', 'low').lower()
+        findings_html += f'''<div class="finding {severity_class}">
+        <h4>{finding.get('type', 'Unknown Finding')}</h4>
+        <p><strong>Severity:</strong> {finding.get('severity', 'Unknown')}</p>
+        <p><strong>Description:</strong> {finding.get('description', 'No description available')}</p>
+        <p><strong>Location:</strong> {finding.get('location', 'Unknown')}</p>
+    </div>'''
+    
+    return f"""<!DOCTYPE html>
 <html>
 <head>
     <title>AI Model Analysis Report</title>
@@ -114,23 +109,23 @@ except ImportError:
 <body>
     <div class="header">
         <h1>AI Model Analysis Report</h1>
-        <p>Generated on {scan_result.get('timestamp', 'Unknown')}</p>
+        <p>Generated on {scan_results.get('timestamp', 'Unknown')}</p>
     </div>
     
     <div class="section">
         <h2>Model Information</h2>
-        <div class="metric"><strong>Framework:</strong> {scan_result.get('model_framework', 'Multi-Framework')}</div>
-        <div class="metric"><strong>AI Act Status:</strong> {scan_result.get('ai_act_compliance', 'Assessment Complete')}</div>
-        <div class="metric"><strong>Compliance Score:</strong> {scan_result.get('compliance_score', 85)}/100</div>
-        <div class="metric"><strong>Files Analyzed:</strong> {scan_result.get('files_scanned', 0)}</div>
-        <div class="metric"><strong>Total Findings:</strong> {scan_result.get('total_pii_found', 0)}</div>
+        <div class="metric"><strong>Framework:</strong> {scan_results.get('model_framework', 'Multi-Framework')}</div>
+        <div class="metric"><strong>AI Act Status:</strong> {scan_results.get('ai_act_compliance', 'Assessment Complete')}</div>
+        <div class="metric"><strong>Compliance Score:</strong> {scan_results.get('compliance_score', 85)}/100</div>
+        <div class="metric"><strong>Files Analyzed:</strong> {scan_results.get('files_scanned', 0)}</div>
+        <div class="metric"><strong>Total Findings:</strong> {scan_results.get('total_pii_found', 0)}</div>
     </div>
     
     <div class="section">
         <h2>Risk Analysis</h2>
-        <div class="metric"><strong>High Risk:</strong> {scan_result.get('high_risk_count', 0)} findings</div>
-        <div class="metric"><strong>Medium Risk:</strong> {scan_result.get('medium_risk_count', 0)} findings</div>
-        <div class="metric"><strong>Low Risk:</strong> {scan_result.get('low_risk_count', 0)} findings</div>
+        <div class="metric"><strong>High Risk:</strong> {scan_results.get('high_risk_count', 0)} findings</div>
+        <div class="metric"><strong>Medium Risk:</strong> {scan_results.get('medium_risk_count', 0)} findings</div>
+        <div class="metric"><strong>Low Risk:</strong> {scan_results.get('low_risk_count', 0)} findings</div>
     </div>
     
     <div class="section">
@@ -143,6 +138,16 @@ except ImportError:
     </div>
 </body>
 </html>"""
+
+# Now set up the proper import hierarchy with consistent signatures
+try:
+    from services.download_reports import generate_html_report
+except ImportError:
+    try:
+        from services.improved_report_download import generate_html_report
+    except ImportError:
+        # Use our standardized fallback
+        generate_html_report = generate_html_report_fallback
 
 # Activity tracking imports - Consolidated and Fixed
 try:
