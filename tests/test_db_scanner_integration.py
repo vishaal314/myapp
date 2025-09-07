@@ -174,7 +174,7 @@ class TestAzureIntegration(TestDatabaseScannerIntegration):
         # Check GDPR compliance assessment
         summary = scan_results['summary']
         self.assertIn('gdpr_compliance_score', summary)
-        self.assertLess(summary['gdpr_compliance_score'], 80)  # Should be low due to high PII exposure
+        self.assertLessEqual(summary['gdpr_compliance_score'], 30)  # PII-heavy: 15-30% (Critical)
         
     @patch('services.db_scanner.mysql.connector.connect')
     def test_azure_postgresql_compliance_scan(self, mock_connect):
@@ -342,8 +342,10 @@ class TestAWSIntegration(TestDatabaseScannerIntegration):
         for violation in expected_violations:
             self.assertIn(violation, violation_types)
             
-        # Should have low compliance score due to violations
-        self.assertLess(scan_results['summary']['gdpr_compliance_score'], 50)
+        # Should have low compliance score due to violations (PII-heavy range: 15-30%)
+        compliance_score = scan_results['summary']['gdpr_compliance_score']
+        self.assertGreaterEqual(compliance_score, 15)  # Minimum for PII-heavy
+        self.assertLessEqual(compliance_score, 30)     # Maximum for PII-heavy
         
     @patch('services.db_scanner.psycopg2.connect')
     def test_aws_aurora_postgresql_performance_scan(self, mock_connect):
@@ -471,10 +473,10 @@ class TestGoogleCloudIntegration(TestDatabaseScannerIntegration):
         for pii_type in expected_pii:
             self.assertIn(pii_type, pii_found, f"Expected {pii_type} in e-commerce database")
             
-        # E-commerce should have moderate compliance score
+        # E-commerce should have moderate compliance score (40-70% range)
         compliance_score = scan_results['summary']['gdpr_compliance_score']
-        self.assertGreater(compliance_score, 40)
-        self.assertLess(compliance_score, 80)
+        self.assertGreaterEqual(compliance_score, 40)  # Standard e-commerce minimum
+        self.assertLessEqual(compliance_score, 70)     # Standard e-commerce maximum
         
     @patch('services.db_scanner.psycopg2.connect')
     def test_gcp_postgresql_private_ip_security_scan(self, mock_connect):
@@ -534,9 +536,10 @@ class TestGoogleCloudIntegration(TestDatabaseScannerIntegration):
         security_findings = [f for f in findings if 'security' in f.get('context', '').lower()]
         self.assertGreater(len(security_findings), 0)
         
-        # Should have high compliance due to security measures
+        # Should have high compliance due to security measures (compliance-ready: 80-95%)
         compliance_score = scan_results['summary']['gdpr_compliance_score']
-        self.assertGreater(compliance_score, 70)
+        self.assertGreaterEqual(compliance_score, 80)  # Compliance-ready minimum
+        self.assertLessEqual(compliance_score, 95)     # Compliance-ready maximum
         
         # Check for encryption and security best practices
         summary = scan_results['summary']
