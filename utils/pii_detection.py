@@ -35,7 +35,7 @@ def identify_pii_in_text(text: str, region: str = "Netherlands") -> List[Dict[st
     # Dates of birth
     pii_items.extend(_find_dates_of_birth(text))
     
-    # Netherlands-specific identifiers
+    # Netherlands-specific identifiers with ML-enhanced context
     if region == "Netherlands":
         pii_items.extend(_find_bsn_numbers(text))
         pii_items.extend(_find_kvk_numbers(text))
@@ -45,6 +45,12 @@ def identify_pii_in_text(text: str, region: str = "Netherlands") -> List[Dict[st
         pii_items.extend(_find_dutch_business_identifiers(text))
         pii_items.extend(_find_dutch_health_insurance(text))
         pii_items.extend(_find_dutch_bank_codes(text))
+        pii_items.extend(_find_dutch_regional_identifiers(text))
+        pii_items.extend(_find_dutch_educational_identifiers(text))
+        pii_items.extend(_find_dutch_municipal_services(text))
+        
+        # Apply ML-enhanced context analysis for Netherlands
+        pii_items = _enhance_dutch_context_analysis(pii_items, text)
     
     # Passport numbers
     pii_items.extend(_find_passport_numbers(text))
@@ -1104,3 +1110,219 @@ def _find_dutch_bank_codes(text: str) -> List[Dict[str, Any]]:
             })
     
     return found
+
+
+def _find_dutch_regional_identifiers(text: str) -> List[Dict[str, Any]]:
+    """Find Dutch regional and provincial identifiers."""
+    patterns = [
+        # Provincial identifiers
+        r'\bNOORD[-\s]*HOLLAND[-\s]*(\d{4,8})\b',    # North Holland
+        r'\bZUID[-\s]*HOLLAND[-\s]*(\d{4,8})\b',     # South Holland  
+        r'\bUTRECHT[-\s]*(\d{4,8})\b',              # Utrecht province
+        r'\bGELDERLAND[-\s]*(\d{4,8})\b',           # Gelderland
+        r'\bOVERIJSSEL[-\s]*(\d{4,8})\b',           # Overijssel
+        r'\bFLEVOLAND[-\s]*(\d{4,8})\b',            # Flevoland
+        r'\bNOORD[-\s]*BRABANT[-\s]*(\d{4,8})\b',    # North Brabant
+        r'\bZEELAND[-\s]*(\d{4,8})\b',              # Zeeland
+        r'\bLIMBURG[-\s]*(\d{4,8})\b',              # Limburg
+        r'\bFRIESLAND[-\s]*(\d{4,8})\b',            # Friesland
+        r'\bDRENTHE[-\s]*(\d{4,8})\b',              # Drenthe
+        r'\bGRONINGEN[-\s]*(\d{4,8})\b',            # Groningen
+        
+        # Regional service identifiers
+        r'\bGGD[-\s]*(\d{4,6})\b',                  # Regional health service
+        r'\bWATERSCHAP[-\s]*(\d{4,6})\b',           # Water board
+        r'\bVEILIGHEIDSREGIO[-\s]*(\d{2,3})\b',     # Safety region
+        r'\bRPA[-\s]*(\d{4,6})\b',                  # Regional police authority
+        
+        # Municipal service codes
+        r'\bGEMEENTE[-\s]*(\d{4,8})\b',             # Municipality code
+        r'\bBURGER[-\s]*service[-\s]*(\d{4,8})\b',   # Citizen service number
+        r'\bWONING[-\s]*(\d{6,10})\b',              # Housing identifier
+        r'\bUITKERING[-\s]*(\d{6,10})\b',           # Social benefit number
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            value = match.group(1) if match.lastindex else match.group(0)
+            
+            # Determine regional identifier type
+            region_type = "Dutch Regional Identifier"
+            description = "Netherlands regional service identifier"
+            
+            if "GEMEENTE" in match.group(0):
+                region_type = "Municipality Code"
+                description = "Dutch municipality service identifier"
+            elif "WATERSCHAP" in match.group(0):
+                region_type = "Water Board ID"
+                description = "Dutch water management authority"
+            elif "GGD" in match.group(0):
+                region_type = "Health Service ID"
+                description = "Regional health authority identifier"
+            
+            found.append({
+                'type': region_type,
+                'value': value,
+                'description': description,
+                'risk_level': 'Medium'
+            })
+    
+    return found
+
+
+def _find_dutch_educational_identifiers(text: str) -> List[Dict[str, Any]]:
+    """Find Dutch educational system identifiers."""
+    patterns = [
+        # Student identification
+        r'\bSTUDENT[-\s]*nummer[-\s]*(\d{6,10})\b',   # Student number
+        r'\bONDERWIJS[-\s]*nummer[-\s]*(\d{8,12})\b', # Education number
+        r'\bDUO[-\s]*nummer[-\s]*(\d{8,10})\b',       # Education service number
+        
+        # Educational certificates
+        r'\bDIPLOMA[-\s]*nummer[-\s]*([A-Z0-9]{8,12})\b', # Diploma number
+        r'\bCERTIFICAT[-\s]*nummer[-\s]*([A-Z0-9]{6,10})\b', # Certificate number
+        r'\bEXAMEN[-\s]*nummer[-\s]*(\d{6,10})\b',     # Exam number
+        
+        # Student financial aid
+        r'\bSTUDIE[-\s]*financiering[-\s]*(\d{8,10})\b', # Student finance
+        r'\bBEURS[-\s]*nummer[-\s]*(\d{6,10})\b',      # Grant/scholarship number
+        r'\bLEENING[-\s]*nummer[-\s]*(\d{8,12})\b',    # Student loan number
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            value = match.group(1) if match.lastindex else match.group(0)
+            
+            edu_type = "Dutch Educational ID"
+            description = "Netherlands education system identifier"
+            risk_level = "Medium"
+            
+            if "STUDENT" in match.group(0):
+                edu_type = "Student Number"
+                description = "Dutch student identification number"
+                risk_level = "High"
+            elif "FINANCIERING" in match.group(0) or "BEURS" in match.group(0):
+                edu_type = "Student Finance ID"
+                description = "Dutch student financial aid identifier"
+                risk_level = "High"
+            
+            found.append({
+                'type': edu_type,
+                'value': value,
+                'description': description,
+                'risk_level': risk_level
+            })
+    
+    return found
+
+
+def _find_dutch_municipal_services(text: str) -> List[Dict[str, Any]]:
+    """Find Dutch municipal and local government service identifiers."""
+    patterns = [
+        # Citizen services
+        r'\bBURGER[-\s]*zaken[-\s]*(\d{6,10})\b',     # Citizen affairs
+        r'\bPASSPOORT[-\s]*aanvraag[-\s]*(\d{8,12})\b', # Passport application
+        r'\bUTTREKSEL[-\s]*BRP[-\s]*(\d{8,12})\b',    # Personal records extract
+        
+        # Municipal permits and licenses
+        r'\bBOUW[-\s]*vergunning[-\s]*(\d{6,10})\b',  # Building permit
+        r'\bEVENEMENT[-\s]*vergunning[-\s]*(\d{6,10})\b', # Event permit
+        r'\bHORECA[-\s]*vergunning[-\s]*(\d{6,10})\b', # Hospitality license
+        
+        # Municipal taxation
+        r'\bOZB[-\s]*nummer[-\s]*(\d{8,12})\b',       # Property tax (OZB)
+        r'\bRIOOL[-\s]*heffing[-\s]*(\d{6,10})\b',    # Sewerage charge
+        r'\bAFVAL[-\s]*heffing[-\s]*(\d{6,10})\b',    # Waste collection charge
+        
+        # Municipal registrations
+        r'\bVERHUIZING[-\s]*(\d{8,12})\b',            # Change of address
+        r'\bGEBOORTE[-\s]*akte[-\s]*(\d{6,10})\b',    # Birth certificate
+        r'\bHUWELIJK[-\s]*akte[-\s]*(\d{6,10})\b',    # Marriage certificate
+    ]
+    
+    found = []
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            value = match.group(1) if match.lastindex else match.group(0)
+            
+            service_type = "Dutch Municipal Service ID"
+            description = "Netherlands municipal service identifier"
+            risk_level = "Medium"
+            
+            if "BURGER" in match.group(0) or "PASPOORT" in match.group(0):
+                service_type = "Citizen Service ID"
+                description = "Dutch citizen service identifier"
+                risk_level = "High"
+            elif "AKTE" in match.group(0):
+                service_type = "Civil Registry Document"
+                description = "Dutch civil registration identifier"
+                risk_level = "High"
+            
+            found.append({
+                'type': service_type,
+                'value': value,
+                'description': description,
+                'risk_level': risk_level
+            })
+    
+    return found
+
+
+def _enhance_dutch_context_analysis(pii_items: List[Dict[str, Any]], text: str) -> List[Dict[str, Any]]:
+    """Apply ML-enhanced context analysis for Dutch PII detection."""
+    
+    # Dutch legal context keywords for enhanced risk assessment
+    high_risk_contexts = [
+        'patiënt', 'klant', 'burger', 'persoonlijk', 'vertrouwelijk',
+        'geheim', 'privé', 'medisch', 'financieel', 'juridisch'
+    ]
+    
+    # Dutch GDPR-specific terms
+    gdpr_contexts = [
+        'AVG', 'UAVG', 'privacyverklaring', 'toestemming', 'verwerkingsovereenkomst',
+        'privacy by design', 'privacy by default', 'persoonsgegevens'
+    ]
+    
+    enhanced_items = []
+    text_lower = text.lower()
+    
+    for item in pii_items:
+        # Create enhanced copy of the item
+        enhanced_item = item.copy()
+        
+        # Get surrounding context (100 characters before and after)
+        item_value = str(item.get('value', ''))
+        if item_value in text:
+            start_pos = text.find(item_value)
+            context_start = max(0, start_pos - 100)
+            context_end = min(len(text), start_pos + len(item_value) + 100)
+            context = text[context_start:context_end].lower()
+            
+            # Analyze context for risk enhancement
+            original_risk = item.get('risk_level', 'Medium')
+            
+            # Check for high-risk context
+            if any(keyword in context for keyword in high_risk_contexts):
+                if original_risk == 'Medium':
+                    enhanced_item['risk_level'] = 'High'
+                enhanced_item['context_enhancement'] = 'High-risk context detected'
+            
+            # Check for GDPR-specific context
+            if any(keyword in context for keyword in gdpr_contexts):
+                enhanced_item['gdpr_context'] = True
+                enhanced_item['compliance_note'] = 'GDPR/UAVG context detected - requires special handling'
+            
+            # Netherlands-specific enhancements
+            if item.get('type') == 'BSN':
+                if any(term in context for term in ['patiënt', 'medisch', 'ziekenhuis']):
+                    enhanced_item['special_category'] = 'Medical context - Article 9 GDPR/UAVG'
+                    enhanced_item['risk_level'] = 'Critical'
+        
+        enhanced_items.append(enhanced_item)
+    
+    return enhanced_items
