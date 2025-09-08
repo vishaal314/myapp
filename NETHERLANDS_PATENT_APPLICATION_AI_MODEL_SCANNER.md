@@ -1,8 +1,8 @@
 # NETHERLANDS PATENT APPLICATION
 ## AI Model Scanner for EU AI Act 2025 Compliance
 
-**Applicant**: [Your Name/Company Name]  
-**Filing Date**: [Tomorrow's Date]  
+**Applicant**: [Vishaal Kumar]  
+**Filing Date**: [09/09/2025]  
 **Patent Title**: "System and Method for Automated AI Model Risk Assessment and EU AI Act 2025 Compliance Verification"
 
 ---
