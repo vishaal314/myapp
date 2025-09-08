@@ -55,16 +55,16 @@ jobs:
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
         docker system prune -af
     
-    - name: Build Docker image
+    - name: Build and compress Docker image
       run: |
         docker build -t dataguardian-pro:latest .
-        docker save dataguardian-pro:latest > dataguardian-pro.tar
+        docker save dataguardian-pro:latest | gzip > dataguardian-pro.tar.gz
     
     - name: Upload Docker image artifact
       uses: actions/upload-artifact@v4
       with:
         name: docker-image
-        path: dataguardian-pro.tar
+        path: dataguardian-pro.tar.gz
 
   deploy:
     needs: [test, build]
@@ -103,7 +103,7 @@ jobs:
         username: ${{ env.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         port: 22
-        source: "dataguardian-pro.tar,docker-compose.prod.yml,deploy.sh,nginx.conf"
+        source: "dataguardian-pro.tar.gz,docker-compose.prod.yml,deploy.sh,nginx.conf"
         target: /opt/dataguardian-pro/
     
     - name: Load and start services
@@ -116,7 +116,8 @@ jobs:
         script: |
           cd /opt/dataguardian-pro
           
-          # Load Docker image
+          # Load Docker image (decompress first)
+          gunzip dataguardian-pro.tar.gz
           docker load < dataguardian-pro.tar
           
           # Make deployment script executable
