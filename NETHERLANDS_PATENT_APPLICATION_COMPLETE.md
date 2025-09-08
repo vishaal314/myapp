@@ -5,12 +5,12 @@
 
 **PATENT APPLICATION FORM**
 
-**Applicant Name:** [YOUR NAME HERE]  
-**Applicant Address:** [YOUR ADDRESS HERE]  
-**Email:** [YOUR EMAIL HERE]  
-**Phone:** [YOUR PHONE HERE]  
+**Applicant Name:** Vishaal Kumar  
+**Applicant Address:** [275,Bellevuelaan, 2012BX ,Haarlem]  
+**Email:** [vishaalnoord7@gmail.com]  
+**Phone:** [0626175240]  
 
-**Filing Date:** [TODAY'S DATE]  
+**Filing Date:** [09/09/2025]  
 **Application Number:** [TO BE ASSIGNED BY RVO]  
 **Patent Title:** "System and Method for Automated AI Model Risk Assessment and EU AI Act 2025 Compliance Verification"  
 
@@ -690,15 +690,15 @@ This patented technology forms the core of DataGuardian Pro, targeting €25K MR
 
 **DECLARATION:**
 
-I, [YOUR NAME HERE], hereby declare that:
+I, Vishaal Kumar , hereby declare that:
 1. I am the inventor of the described system
 2. The invention is novel and non-obvious
 3. All technical details are accurate and complete
 4. I am entitled to apply for this patent
 
-**Signature:** [YOUR SIGNATURE HERE]  
-**Date:** [TODAY'S DATE]  
-**Place:** [YOUR LOCATION]
+**Signature:** Vishaal Kumar 
+**Date:** 09/09/2025
+**Place:** Haarlem , Netherlands
 
 ---
 
