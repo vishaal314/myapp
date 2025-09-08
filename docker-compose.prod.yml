@@ -81,7 +81,7 @@ services:
     volumes:
       - ./ssl:/etc/letsencrypt
       - ./certbot-var:/var/lib/letsencrypt
-    command: certonly --webroot --webroot-path=/var/www/html --email vishaal314@gmail.com --agree-tos --no-eff-email -d dataguardianpro.nl
+    command: certonly --webroot --webroot-path=/var/www/html --email vishaal314@gmail.com --agree-tos --no-eff-email -d vishaalnoord7.retzor.com
 
 volumes:
   postgres_data:

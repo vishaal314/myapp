@@ -82,7 +82,7 @@ events {}
 http {
     server {
         listen 80;
-        server_name dataguardianpro.nl;
+        server_name vishaalnoord7.retzor.com;
         
         location /.well-known/acme-challenge/ {
             root /var/www/html;
@@ -100,7 +100,7 @@ EOF
     docker run -d --name temp-nginx -p 80:80 -v /tmp/nginx-ssl-setup.conf:/etc/nginx/nginx.conf -v /var/www/html:/var/www/html nginx:alpine
 
     # Generate certificates
-    docker run --rm -v "$PROJECT_DIR/ssl":/etc/letsencrypt -v "$PROJECT_DIR/certbot-var":/var/lib/letsencrypt -v /var/www/html:/var/www/html certbot/certbot certonly --webroot --webroot-path=/var/www/html --email vishaal314@gmail.com --agree-tos --no-eff-email -d dataguardianpro.nl
+    docker run --rm -v "$PROJECT_DIR/ssl":/etc/letsencrypt -v "$PROJECT_DIR/certbot-var":/var/lib/letsencrypt -v /var/www/html:/var/www/html certbot/certbot certonly --webroot --webroot-path=/var/www/html --email vishaal314@gmail.com --agree-tos --no-eff-email -d vishaalnoord7.retzor.com
 
     # Stop temporary nginx
     docker stop temp-nginx && docker rm temp-nginx
@@ -139,8 +139,8 @@ DEBUG=false
 SECRET_KEY=$(openssl rand -hex 32)
 
 # Domain Configuration
-DOMAIN=dataguardianpro.nl
-ALLOWED_HOSTS=dataguardianpro.nl,localhost,127.0.0.1
+DOMAIN=vishaalnoord7.retzor.com
+ALLOWED_HOSTS=vishaalnoord7.retzor.com,localhost,127.0.0.1
 
 # Performance Configuration
 REDIS_CACHE_TTL=3600
@@ -234,7 +234,7 @@ deploy() {
 EOF
     
     log "✅ DataGuardian Pro deployment completed successfully!"
-    log "🌐 Application available at: https://dataguardianpro.nl"
+    log "🌐 Application available at: https://vishaalnoord7.retzor.com"
 }
 
 # Main execution

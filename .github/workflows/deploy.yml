@@ -9,7 +9,7 @@ on:
 env:
   SERVER_HOST: 45.81.35.202
   SERVER_USER: root
-  DOMAIN_NAME: dataguardianpro.nl
+  DOMAIN_NAME: vishaalnoord7.retzor.com
   APP_PORT: 5000
 
 jobs:
