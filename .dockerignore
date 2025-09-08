@@ -84,9 +84,20 @@ config/production_security.env
 node_modules/
 npm-debug.log*
 
-# Documentation
+# Documentation (exclude large files to save build space)
 *.md
 docs/
+AI_MODEL_SCANNER_*.md
+NETHERLANDS_PATENT_*.md
+CODE_REVIEW_*.md
+BUDGET_*.md
+PATENT_*.md
+*_SUMMARY.md
+*_STRATEGY.md
+*_PLAN.md
+*_DESIGN.md
+*_CHECKLIST.md
+*_DIAGRAM.txt
 
 # Tests
 tests/
