@@ -10946,19 +10946,26 @@ def render_settings_page():
         
         # Show download statistics if license manager is available
         try:
-            from services.license_manager import get_usage_stats
-            usage_stats = get_usage_stats()
+            from services.license_integration import LicenseIntegration
+            license_integration = LicenseIntegration()
+            usage_stats = license_integration.get_usage_summary()
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Total Downloads", usage_stats.get('downloads', 0))
+                st.metric("Total Downloads", usage_stats.get('total_downloads', 0))
             with col2:
-                st.metric("Report Downloads", usage_stats.get('report_downloads', 0))
+                st.metric("Report Downloads", usage_stats.get('reports_generated', 0))
             with col3:
-                st.metric("Document Downloads", usage_stats.get('document_downloads', 0))
+                st.metric("Document Downloads", usage_stats.get('scans_completed', 0))
                 
         except (ImportError, Exception):
-            st.info("Download statistics not available")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Downloads", "0")
+            with col2:
+                st.metric("Report Downloads", "0")
+            with col3:
+                st.metric("Document Downloads", "0")
         
         # Download preferences
         st.markdown("### ⚙️ Download Preferences")
