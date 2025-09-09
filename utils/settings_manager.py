@@ -345,7 +345,7 @@ class SettingsManager:
             
             query += " ORDER BY updated_at DESC"
             
-            results = self.db.fetch_query(query, params)
+            results = self.db.fetch_query(query, tuple(params))
             
             audit_log = []
             for row in results:

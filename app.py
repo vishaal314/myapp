@@ -76,7 +76,7 @@ from components.pricing_display import show_pricing_page, show_pricing_in_sideba
 from config.pricing_config import get_pricing_config
 
 # Import HTML report generators with standardized signatures  
-from typing import Dict, Any
+from typing import Dict, Any, Union, Optional
 
 def generate_html_report_fallback(scan_result: Dict[str, Any]) -> str:
     """Simple HTML report generator for AI Model scans"""
@@ -154,7 +154,7 @@ def get_html_report_generator():
             return generate_html_report_fallback
 
 # Use the wrapper to ensure consistent typing - define with proper type annotation
-generate_html_report: callable = get_html_report_generator()
+generate_html_report = get_html_report_generator()
 
 # Activity tracking imports - Consolidated and Fixed
 try:

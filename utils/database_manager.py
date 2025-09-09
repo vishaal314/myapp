@@ -9,9 +9,13 @@ import psycopg2
 import psycopg2.pool
 import os
 import json
+import logging
 from datetime import datetime
+from typing import Optional
 import streamlit as st
 from contextlib import contextmanager
+
+logger = logging.getLogger(__name__)
 
 class DatabaseManager:
     _instance = None
@@ -255,7 +259,7 @@ class DatabaseManager:
             st.error(f"Database query error: {str(e)}")
             return []
     
-    def execute_query(self, query: str, params: tuple = None) -> bool:
+    def execute_query(self, query: str, params: Optional[tuple] = None) -> bool:
         """Execute a query (INSERT, UPDATE, DELETE) and return success status"""
         try:
             with self.get_connection() as conn:
@@ -271,7 +275,7 @@ class DatabaseManager:
             logger.error(f"Execute query error: {str(e)}")
             return False
     
-    def fetch_query(self, query: str, params: tuple = None) -> list:
+    def fetch_query(self, query: str, params: Optional[tuple] = None) -> list:
         """Execute a SELECT query and return results"""
         try:
             with self.get_connection() as conn:
