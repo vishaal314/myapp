@@ -10526,16 +10526,16 @@ def render_settings_page():
     if f"settings_initialized_{username}" not in st.session_state:
         settings_manager.initialize_user_settings(username)
         st.session_state[f"settings_initialized_{username}"] = True
-        
-        # Settings categories
-        tabs = st.tabs([
-            "👤 Profile", "🔐 API Keys", "⚖️ Compliance", 
-            "🔍 Scanners", "📊 Reports", "🔒 Security", "📥 Downloads"
-        ])
-        
-        # Profile Settings
-        with tabs[0]:
-            st.subheader("Profile Preferences")
+    
+    # Settings categories
+    tabs = st.tabs([
+        "👤 Profile", "🔐 API Keys", "⚖️ Compliance", 
+        "🔍 Scanners", "📊 Reports", "🔒 Security", "📥 Downloads"
+    ])
+    
+    # Profile Settings
+    with tabs[0]:
+        st.subheader("Profile Preferences")
         
         profile_settings = settings_manager.get_user_settings(username, "profile")
         
