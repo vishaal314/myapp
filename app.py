@@ -140,14 +140,21 @@ def generate_html_report_fallback(scan_result: Dict[str, Any]) -> str:
 </html>"""
 
 # Now set up the proper import hierarchy with consistent signatures
-try:
-    from services.download_reports import generate_html_report
-except ImportError:
+def get_html_report_generator():
+    """Get HTML report generator with consistent signature"""
     try:
-        from services.improved_report_download import generate_html_report
+        from services.download_reports import generate_html_report
+        return generate_html_report
     except ImportError:
-        # Use our standardized fallback
-        generate_html_report = generate_html_report_fallback
+        try:
+            from services.improved_report_download import generate_html_report
+            return generate_html_report
+        except ImportError:
+            # Use our standardized fallback
+            return generate_html_report_fallback
+
+# Use the wrapper to ensure consistent typing
+generate_html_report = get_html_report_generator()
 
 # Activity tracking imports - Consolidated and Fixed
 try:
@@ -156,11 +163,11 @@ try:
         track_scan_completed as activity_track_completed,
         track_scan_failed as activity_track_failed,
         ActivityType, 
-        ScannerType as ActivityScannerType
+        ScannerType
     )
     
-    # Define local ScannerType for app-wide consistency  
-    ScannerType = ActivityScannerType
+    # ScannerType is now imported directly to avoid alias conflicts
+    ACTIVITY_TRACKING_AVAILABLE = True
     from typing import Dict, Any
     
     # Compatibility wrapper functions with proper signatures
