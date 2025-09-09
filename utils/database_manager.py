@@ -254,6 +254,38 @@ class DatabaseManager:
         except Exception as e:
             st.error(f"Database query error: {str(e)}")
             return []
+    
+    def execute_query(self, query: str, params: tuple = None) -> bool:
+        """Execute a query (INSERT, UPDATE, DELETE) and return success status"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if params:
+                    cursor.execute(query, params)
+                else:
+                    cursor.execute(query)
+                conn.commit()
+                cursor.close()
+                return True
+        except Exception as e:
+            logger.error(f"Execute query error: {str(e)}")
+            return False
+    
+    def fetch_query(self, query: str, params: tuple = None) -> list:
+        """Execute a SELECT query and return results"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if params:
+                    cursor.execute(query, params)
+                else:
+                    cursor.execute(query)
+                results = cursor.fetchall()
+                cursor.close()
+                return results
+        except Exception as e:
+            logger.error(f"Fetch query error: {str(e)}")
+            return []
 
 # Singleton instance
 db_manager = DatabaseManager()
