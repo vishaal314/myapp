@@ -1053,6 +1053,10 @@ def render_authenticated_interface():
             current_nav_key = nav_key
             break
     
+    # Debug logging for navigation
+    if "Settings" in str(selected_nav):
+        logger.info(f"Settings navigation selected: '{selected_nav}' -> key: '{current_nav_key}'")
+    
     # Log successful navigation for monitoring
     if selected_nav and "Scanner Logs" in selected_nav:
         logger.info(f"Scanner log dashboard accessed by user")
@@ -10507,15 +10511,17 @@ def render_history_trends(scans_data):
 
 def render_settings_page():
     """Comprehensive settings page with user preferences, API configurations, and compliance settings"""
-    from utils.translations import _
-    from utils.settings_manager import SettingsManager
-    import json
-    
-    st.title(f"⚙️ {_('sidebar.settings', 'Settings')}")
-    
-    # Initialize settings manager
-    settings_manager = SettingsManager()
-    username = st.session_state.get('username', 'anonymous')
+    try:
+        from utils.translations import _
+        from utils.settings_manager import SettingsManager
+        import json
+        
+        logger.info("Settings page rendering started")
+        st.title(f"⚙️ {_('sidebar.settings', 'Settings')}")
+        
+        # Initialize settings manager
+        settings_manager = SettingsManager()
+        username = st.session_state.get('username', 'anonymous')
     
     # Initialize user settings if first time
     if f"settings_initialized_{username}" not in st.session_state:
