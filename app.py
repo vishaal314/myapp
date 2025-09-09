@@ -10511,32 +10511,31 @@ def render_history_trends(scans_data):
 
 def render_settings_page():
     """Comprehensive settings page with user preferences, API configurations, and compliance settings"""
-    try:
-        from utils.translations import _
-        from utils.settings_manager import SettingsManager
-        import json
-        
-        logger.info("Settings page rendering started")
-        st.title(f"⚙️ {_('sidebar.settings', 'Settings')}")
-        
-        # Initialize settings manager
-        settings_manager = SettingsManager()
-        username = st.session_state.get('username', 'anonymous')
+    from utils.translations import _
+    from utils.settings_manager import SettingsManager
+    import json
+    
+    logger.info("Settings page rendering started")
+    st.title(f"⚙️ {_('sidebar.settings', 'Settings')}")
+    
+    # Initialize settings manager
+    settings_manager = SettingsManager()
+    username = st.session_state.get('username', 'anonymous')
     
     # Initialize user settings if first time
     if f"settings_initialized_{username}" not in st.session_state:
         settings_manager.initialize_user_settings(username)
         st.session_state[f"settings_initialized_{username}"] = True
-    
-    # Settings categories
-    tabs = st.tabs([
-        "👤 Profile", "🔐 API Keys", "⚖️ Compliance", 
-        "🔍 Scanners", "📊 Reports", "🔒 Security", "📥 Downloads"
-    ])
-    
-    # Profile Settings
-    with tabs[0]:
-        st.subheader("Profile Preferences")
+        
+        # Settings categories
+        tabs = st.tabs([
+            "👤 Profile", "🔐 API Keys", "⚖️ Compliance", 
+            "🔍 Scanners", "📊 Reports", "🔒 Security", "📥 Downloads"
+        ])
+        
+        # Profile Settings
+        with tabs[0]:
+            st.subheader("Profile Preferences")
         
         profile_settings = settings_manager.get_user_settings(username, "profile")
         
