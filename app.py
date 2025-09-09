@@ -928,6 +928,7 @@ def render_authenticated_interface():
         nav_options = [
             f"🏠 {_('sidebar.dashboard', 'Dashboard')}", 
             f"🔍 {_('scan.new_scan_title', 'New Scan')}", 
+            "🤖 Predictive Analytics",
             f"📊 {_('results.title', 'Results')}", 
             f"📋 {_('history.title', 'History')}", 
             f"⚙️ {_('sidebar.settings', 'Settings')}",
