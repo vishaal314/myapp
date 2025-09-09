@@ -1015,17 +1015,23 @@ def render_authenticated_interface():
                     
                 # Additional common navigation terms
                 nav_mapping['Dashboard'] = 'dashboard'
+                nav_mapping['🏠 Dashboard'] = 'dashboard'
                 nav_mapping['New Scan'] = 'scan'
                 nav_mapping['🔍 New Scan'] = 'scan'
                 nav_mapping['Nieuwe Scan'] = 'scan'
                 nav_mapping['Results'] = 'results'
+                nav_mapping['📊 Results'] = 'results'
                 nav_mapping['Resultaten'] = 'results'
                 nav_mapping['History'] = 'history'
+                nav_mapping['📋 History'] = 'history'
                 nav_mapping['Geschiedenis'] = 'history'
                 nav_mapping['Settings'] = 'settings'
+                nav_mapping['⚙️ Settings'] = 'settings'
                 nav_mapping['Instellingen'] = 'settings'
                 nav_mapping['Admin'] = 'admin'
+                nav_mapping['👥 Admin'] = 'admin'
                 nav_mapping['Privacy Rights'] = 'privacy_rights'
+                nav_mapping['🔒 Privacy Rights'] = 'privacy_rights'
                 nav_mapping['Privacyrechten'] = 'privacy_rights'
                 # Scanner Logs should be mapped before generic scan terms
                 nav_mapping['🔍 Scanner Logs'] = 'scanner_logs'
