@@ -78,11 +78,11 @@ from config.pricing_config import get_pricing_config
 # Import HTML report generators with standardized signatures  
 from typing import Dict, Any
 
-def generate_html_report_fallback(scan_results: Dict[str, Any]) -> str:
+def generate_html_report_fallback(scan_result: Dict[str, Any]) -> str:
     """Simple HTML report generator for AI Model scans"""
     # Build the findings HTML separately to avoid f-string issues
     findings_html = ""
-    for finding in scan_results.get('findings', []):
+    for finding in scan_result.get('findings', []):
         severity_class = finding.get('severity', 'low').lower()
         findings_html += f'''<div class="finding {severity_class}">
         <h4>{finding.get('type', 'Unknown Finding')}</h4>
@@ -109,23 +109,23 @@ def generate_html_report_fallback(scan_results: Dict[str, Any]) -> str:
 <body>
     <div class="header">
         <h1>AI Model Analysis Report</h1>
-        <p>Generated on {scan_results.get('timestamp', 'Unknown')}</p>
+        <p>Generated on {scan_result.get('timestamp', 'Unknown')}</p>
     </div>
     
     <div class="section">
         <h2>Model Information</h2>
-        <div class="metric"><strong>Framework:</strong> {scan_results.get('model_framework', 'Multi-Framework')}</div>
-        <div class="metric"><strong>AI Act Status:</strong> {scan_results.get('ai_act_compliance', 'Assessment Complete')}</div>
-        <div class="metric"><strong>Compliance Score:</strong> {scan_results.get('compliance_score', 85)}/100</div>
-        <div class="metric"><strong>Files Analyzed:</strong> {scan_results.get('files_scanned', 0)}</div>
-        <div class="metric"><strong>Total Findings:</strong> {scan_results.get('total_pii_found', 0)}</div>
+        <div class="metric"><strong>Framework:</strong> {scan_result.get('model_framework', 'Multi-Framework')}</div>
+        <div class="metric"><strong>AI Act Status:</strong> {scan_result.get('ai_act_compliance', 'Assessment Complete')}</div>
+        <div class="metric"><strong>Compliance Score:</strong> {scan_result.get('compliance_score', 85)}/100</div>
+        <div class="metric"><strong>Files Analyzed:</strong> {scan_result.get('files_scanned', 0)}</div>
+        <div class="metric"><strong>Total Findings:</strong> {scan_result.get('total_pii_found', 0)}</div>
     </div>
     
     <div class="section">
         <h2>Risk Analysis</h2>
-        <div class="metric"><strong>High Risk:</strong> {scan_results.get('high_risk_count', 0)} findings</div>
-        <div class="metric"><strong>Medium Risk:</strong> {scan_results.get('medium_risk_count', 0)} findings</div>
-        <div class="metric"><strong>Low Risk:</strong> {scan_results.get('low_risk_count', 0)} findings</div>
+        <div class="metric"><strong>High Risk:</strong> {scan_result.get('high_risk_count', 0)} findings</div>
+        <div class="metric"><strong>Medium Risk:</strong> {scan_result.get('medium_risk_count', 0)} findings</div>
+        <div class="metric"><strong>Low Risk:</strong> {scan_result.get('low_risk_count', 0)} findings</div>
     </div>
     
     <div class="section">
@@ -162,9 +162,6 @@ try:
     # Define local ScannerType for app-wide consistency  
     ScannerType = ActivityScannerType
     from typing import Dict, Any
-    
-    # Create compatibility aliases
-    from utils.activity_tracker import ScannerType as AppScannerType
     
     # Compatibility wrapper functions with proper signatures
     def track_scan_completed_wrapper_safe(scanner_type, user_id, session_id, findings_count=0, files_scanned=0, compliance_score=0, **kwargs):
@@ -244,6 +241,22 @@ except ImportError:
     def get_user_id(): 
         """Fallback user ID"""
         return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
+
+# Ensure ScannerType is available globally to avoid "possibly unbound" errors
+if 'ScannerType' not in globals():
+    try:
+        from utils.activity_tracker import ScannerType
+    except ImportError:
+        class ScannerType:
+            DOCUMENT = "document"
+            IMAGE = "image" 
+            WEBSITE = "website"
+            CODE = "code"
+            DATABASE = "database"
+            DPIA = "dpia"
+            AI_MODEL = "ai_model"
+            SOC2 = "soc2"
+            SUSTAINABILITY = "sustainability"
 
 # Configure basic logging
 logging.basicConfig(

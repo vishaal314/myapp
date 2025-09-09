@@ -293,7 +293,10 @@ class PredictiveComplianceEngine:
         
         # Calculate trend using linear regression slope
         x = np.arange(len(recent_scores))
-        slope = np.polyfit(x, recent_scores, 1)[0]
+        # Ensure numpy arrays are properly typed
+        x_array = np.asarray(x, dtype=np.float64)
+        y_array = np.asarray(recent_scores, dtype=np.float64)
+        slope = np.polyfit(x_array, y_array, 1)[0]
         
         if slope > 2:
             return ComplianceTrend.IMPROVING
@@ -710,7 +713,7 @@ Actual compliance outcomes may vary based on organizational changes and external
         return report
 
 def predict_compliance_future(scan_history: List[Dict[str, Any]], 
-                            business_context: Dict[str, Any] = None,
+                            business_context: Optional[Dict[str, Any]] = None,
                             region: str = "Netherlands") -> Tuple[CompliancePrediction, List[RiskForecast], str]:
     """
     Convenience function for comprehensive compliance prediction.
