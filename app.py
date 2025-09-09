@@ -1138,7 +1138,7 @@ def generate_predictive_analytics_html_report(prediction, scan_history, username
             <h3>🎯 Predicted Compliance Score: {prediction.future_score:.1f}/100</h3>
             <p><strong>Trend:</strong> {prediction.trend.value}</p>
             <p><strong>Confidence Range:</strong> {prediction.confidence_interval[0]:.1f} - {prediction.confidence_interval[1]:.1f}</p>
-            <p><strong>Risk Priority:</strong> <span class="badge">{prediction.action_priority.value}</span></p>
+            <p><strong>Risk Priority:</strong> <span class="badge">{prediction.recommendation_priority}</span></p>
         </div>
         
         <h2>⚠️ Predicted Violations & Risk Factors</h2>
