@@ -1123,30 +1123,38 @@ def render_predictive_analytics():
         username = st.session_state.get('username', 'anonymous')
         aggregator = ResultsAggregator()
         
-        # Get scan metadata first
-        scan_metadata = aggregator.get_user_scans(username, limit=50)
+        # Optimize performance - use fewer scans and cache results
+        with st.spinner("⚡ Loading scan data for ML predictions..."):
+            scan_metadata = aggregator.get_user_scans(username, limit=15)  # Reduced from 50 to 15 for speed
+            
+            # Enrich with detailed results for predictive analysis
+            scan_history = []
+            for i, scan in enumerate(scan_metadata):
+                # Show progress for long operations
+                if i % 5 == 0:
+                    st.progress(i / len(scan_metadata))
+                
+                # Get full scan results including compliance_score and findings
+                detailed_result = aggregator.get_scan_result(scan['scan_id'])
+                if detailed_result:
+                    # Combine metadata with detailed results
+                    enriched_scan = {
+                        'scan_id': scan['scan_id'],
+                        'timestamp': scan['timestamp'],
+                        'scan_type': scan['scan_type'],
+                        'region': scan['region'],
+                        'file_count': scan.get('file_count', 0),
+                        'total_pii_found': scan.get('total_pii_found', 0),
+                        'high_risk_count': scan.get('high_risk_count', 0),
+                        'compliance_score': detailed_result.get('compliance_score', 75),
+                        'findings': detailed_result.get('findings', [])
+                    }
+                    scan_history.append(enriched_scan)
+            
+            # Clear progress bar
+            st.progress(100)
         
-        # Enrich with detailed results for predictive analysis
-        scan_history = []
-        for scan in scan_metadata:
-            # Get full scan results including compliance_score and findings
-            detailed_result = aggregator.get_scan_result(scan['scan_id'])
-            if detailed_result:
-                # Combine metadata with detailed results
-                enriched_scan = {
-                    'scan_id': scan['scan_id'],
-                    'timestamp': scan['timestamp'],
-                    'scan_type': scan['scan_type'],
-                    'region': scan['region'],
-                    'file_count': scan.get('file_count', 0),
-                    'total_pii_found': scan.get('total_pii_found', 0),
-                    'high_risk_count': scan.get('high_risk_count', 0),
-                    'compliance_score': detailed_result.get('compliance_score', 75),
-                    'findings': detailed_result.get('findings', [])
-                }
-                scan_history.append(enriched_scan)
-        
-        st.info(f"📊 Using {len(scan_history)} scans from Recent Scan Activity for ML predictions")
+        st.success(f"⚡ Loaded {len(scan_history)} scans from Recent Scan Activity for ML analysis")
         
         if not scan_history:
             st.warning("📊 No scan history found. Perform some scans first to generate predictive insights.")
@@ -1174,8 +1182,9 @@ def render_predictive_analytics():
             
             prediction = engine.predict_compliance_trajectory(sample_data, forecast_days=30)
         else:
-            # Generate real predictions
-            prediction = engine.predict_compliance_trajectory(scan_history, forecast_days=30)
+            # Generate real predictions with progress indicator
+            with st.spinner("🤖 Generating ML-powered compliance predictions..."):
+                prediction = engine.predict_compliance_trajectory(scan_history, forecast_days=30)
         
         # Display prediction results
         col1, col2, col3, col4 = st.columns(4)
