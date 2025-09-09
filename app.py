@@ -1119,10 +1119,34 @@ def render_predictive_analytics():
         # Initialize the predictive engine
         engine = PredictiveComplianceEngine(region="Netherlands")
         
-        # Get historical scan data
+        # Get historical scan data - same as Dashboard Recent Scan Activity
         username = st.session_state.get('username', 'anonymous')
         aggregator = ResultsAggregator()
-        scan_history = aggregator.get_user_scans(username, limit=50)
+        
+        # Get scan metadata first
+        scan_metadata = aggregator.get_user_scans(username, limit=50)
+        
+        # Enrich with detailed results for predictive analysis
+        scan_history = []
+        for scan in scan_metadata:
+            # Get full scan results including compliance_score and findings
+            detailed_result = aggregator.get_scan_result(scan['scan_id'])
+            if detailed_result:
+                # Combine metadata with detailed results
+                enriched_scan = {
+                    'scan_id': scan['scan_id'],
+                    'timestamp': scan['timestamp'],
+                    'scan_type': scan['scan_type'],
+                    'region': scan['region'],
+                    'file_count': scan.get('file_count', 0),
+                    'total_pii_found': scan.get('total_pii_found', 0),
+                    'high_risk_count': scan.get('high_risk_count', 0),
+                    'compliance_score': detailed_result.get('compliance_score', 75),
+                    'findings': detailed_result.get('findings', [])
+                }
+                scan_history.append(enriched_scan)
+        
+        st.info(f"📊 Using {len(scan_history)} scans from Recent Scan Activity for ML predictions")
         
         if not scan_history:
             st.warning("📊 No scan history found. Perform some scans first to generate predictive insights.")
