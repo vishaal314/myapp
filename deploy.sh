@@ -198,24 +198,31 @@ deploy() {
     # Create environment file
     create_env_file
     
-    # Pull latest images and restart services
-    log "Starting services..."
-    docker-compose -f docker-compose.prod.yml up -d --build
+    # Only start docker-compose if not skipped (for CI/CD control)
+    if [ "${SKIP_COMPOSE:-false}" != "true" ]; then
+        # Pull latest images and restart services
+        log "Starting services..."
+        docker-compose -f docker-compose.prod.yml up -d --build
+        
+        # Wait for services to be ready
+        log "Waiting for services to start..."
+        sleep 60
+    else
+        log "Skipping docker-compose startup (SKIP_COMPOSE=true)"
+    fi
     
-    # Wait for services to be ready
-    log "Waiting for services to start..."
-    sleep 60
-    
-    # Health check
-    log "Performing health check..."
-    for i in {1..10}; do
-        if curl -f http://localhost:5000 >/dev/null 2>&1; then
-            log "✅ Application is healthy!"
-            break
-        fi
-        log "Waiting for application to start... ($i/10)"
-        sleep 10
-    done
+    # Health check (only if not skipping compose)
+    if [ "${SKIP_COMPOSE:-false}" != "true" ]; then
+        log "Performing health check..."
+        for i in {1..10}; do
+            if curl -f http://localhost:5000 >/dev/null 2>&1; then
+                log "✅ Application is healthy!"
+                break
+            fi
+            log "Waiting for application to start... ($i/10)"
+            sleep 10
+        done
+    fi
     
     # Setup log rotation
     cat > /etc/logrotate.d/dataguardian-pro << 'EOF'

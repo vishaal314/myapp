@@ -5,15 +5,18 @@ services:
     image: dataguardian-pro:latest
     container_name: dataguardian-pro
     restart: unless-stopped
+    pull_policy: never  # Don't try to pull - use local image
     ports:
       - "5000:5000"
     environment:
       - ENVIRONMENT=production
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://${DB_USER:-dataguardian_pro}:${DB_PASSWORD:-dataguardian_secure_pass_2025}@postgres:5432/dataguardian_pro}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-not_configured}
+      - DB_USER=${DB_USER:-dataguardian_pro}
+      - DB_PASSWORD=${DB_PASSWORD:-dataguardian_secure_pass_2025}
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs

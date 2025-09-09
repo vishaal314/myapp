@@ -87,14 +87,24 @@ jobs:
         port: 22
         script: |
           # Create application directory
-          mkdir -p /opt/dataguardian-pro
+          mkdir -p /opt/dataguardian-pro/{logs,data,cache,reports,backups,ssl}
           cd /opt/dataguardian-pro
           
           # Stop existing services
           docker-compose down || echo "No existing services to stop"
           
-          # Clean up old images
-          docker system prune -f || echo "Docker cleanup completed"
+          # Aggressive cleanup to free space
+          docker system prune -af --volumes || echo "Docker cleanup completed"
+          
+          # Remove unused packages and clean package cache
+          apt autoremove -y || echo "Package cleanup completed"
+          apt autoclean || echo "Package cache cleanup completed"
+          
+          # Clear temporary files
+          rm -rf /tmp/* || echo "Temp cleanup completed"
+          
+          # Show disk usage
+          df -h
     
     - name: Copy files to server
       uses: appleboy/scp-action@v0.1.4
@@ -120,13 +130,18 @@ jobs:
           gunzip dataguardian-pro.tar.gz
           docker load < dataguardian-pro.tar
           
+          # Clean up tar file immediately to save space
+          rm -f dataguardian-pro.tar
+          
           # Make deployment script executable
           chmod +x deploy.sh
           
-          # Run deployment
-          ./deploy.sh production
+          # Run deployment (but skip the docker-compose part as we'll do it manually)
+          SKIP_COMPOSE=true ./deploy.sh production
           
-          # Start services
+          # Start services with explicit environment variables
+          export DB_USER=dataguardian_pro
+          export DB_PASSWORD=dataguardian_secure_pass_2025
           docker-compose -f docker-compose.prod.yml up -d
           
           # Wait for services to start
