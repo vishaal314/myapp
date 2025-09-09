@@ -130,6 +130,66 @@ class PredictiveComplianceEngine:
             }
         }
     
+    def _validate_and_sanitize_scan_data(self, scan_history: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Validate and sanitize scan data for ML processing"""
+        if not scan_history or not isinstance(scan_history, list):
+            return []
+        
+        validated_scans = []
+        for scan in scan_history:
+            if self._is_valid_scan(scan):
+                sanitized_scan = self._sanitize_scan(scan)
+                if sanitized_scan:
+                    validated_scans.append(sanitized_scan)
+        
+        return validated_scans
+    
+    def _is_valid_scan(self, scan: Dict[str, Any]) -> bool:
+        """Check if scan data is valid for ML processing"""
+        if not isinstance(scan, dict):
+            return False
+        
+        # Required fields for prediction
+        required_fields = ['timestamp', 'scan_type']
+        if not all(field in scan for field in required_fields):
+            return False
+        
+        # Validate timestamp format
+        try:
+            datetime.fromisoformat(scan['timestamp'][:19])
+        except (ValueError, KeyError, TypeError):
+            return False
+        
+        return True
+    
+    def _sanitize_scan(self, scan: Dict[str, Any]) -> Dict[str, Any]:
+        """Sanitize scan data with safe defaults"""
+        sanitized = scan.copy()
+        
+        # Ensure compliance_score is a valid number
+        if 'compliance_score' not in sanitized or not isinstance(sanitized['compliance_score'], (int, float)):
+            sanitized['compliance_score'] = 75.0  # Safe default
+        else:
+            # Clamp to valid range
+            sanitized['compliance_score'] = max(0.0, min(100.0, float(sanitized['compliance_score'])))
+        
+        # Ensure findings is a list
+        if 'findings' not in sanitized or not isinstance(sanitized['findings'], list):
+            sanitized['findings'] = []
+        
+        # Sanitize finding entries
+        sanitized_findings = []
+        for finding in sanitized['findings']:
+            if isinstance(finding, dict):
+                sanitized_finding = {
+                    'type': str(finding.get('type', 'unknown')),
+                    'severity': str(finding.get('severity', 'Low'))
+                }
+                sanitized_findings.append(sanitized_finding)
+        sanitized['findings'] = sanitized_findings
+        
+        return sanitized
+
     def _load_risk_indicators(self) -> Dict[str, Any]:
         """Load risk indicators and warning signals"""
         return {
@@ -186,40 +246,73 @@ class PredictiveComplianceEngine:
         Returns:
             Compliance prediction with recommendations
         """
-        if not scan_history:
+        try:
+            # Validate input data
+            validated_scan_history = self._validate_and_sanitize_scan_data(scan_history)
+            
+            if not validated_scan_history:
+                return self._generate_baseline_prediction(forecast_days)
+            
+            # Prepare time series data with error handling
+            time_series_data = self._prepare_time_series_data(validated_scan_history)
+            
+            if time_series_data is None or len(time_series_data) == 0:
+                return self._generate_baseline_prediction(forecast_days)
+            
+            # Calculate current trend with fallback
+            try:
+                current_trend = self._calculate_compliance_trend(time_series_data)
+            except Exception as e:
+                print(f"Warning: Trend calculation failed: {e}, using stable trend")
+                current_trend = ComplianceTrend.STABLE
+            
+            # Predict future compliance score with error handling
+            try:
+                future_score, confidence_interval = self._forecast_compliance_score(
+                    time_series_data, forecast_days
+                )
+            except Exception as e:
+                print(f"Warning: Score forecasting failed: {e}, using baseline")
+                future_score = 75.0
+                confidence_interval = (65.0, 85.0)
+            
+            # Identify risk factors with validation
+            try:
+                risk_factors = self._identify_risk_factors(validated_scan_history, time_series_data)
+            except Exception as e:
+                print(f"Warning: Risk factor identification failed: {e}")
+                risk_factors = ["Data quality insufficient for detailed risk analysis"]
+            
+            # Predict specific violations with fallback
+            try:
+                predicted_violations = self._predict_future_violations(validated_scan_history, risk_factors)
+            except Exception as e:
+                print(f"Warning: Violation prediction failed: {e}")
+                predicted_violations = []
+            
+            # Determine action priority with safe defaults
+            try:
+                recommendation_priority, time_to_action = self._calculate_action_priority(
+                    future_score, current_trend, risk_factors
+                )
+            except Exception as e:
+                print(f"Warning: Priority calculation failed: {e}")
+                recommendation_priority, time_to_action = "Medium", "Review in 30 days"
+            
+            return CompliancePrediction(
+                future_score=future_score,
+                confidence_interval=confidence_interval,
+                trend=current_trend,
+                risk_factors=risk_factors,
+                predicted_violations=predicted_violations,
+                recommendation_priority=recommendation_priority,
+                time_to_action=time_to_action
+            )
+            
+        except Exception as e:
+            print(f"Critical error in compliance prediction: {e}")
+            # Return safe fallback prediction
             return self._generate_baseline_prediction(forecast_days)
-        
-        # Prepare time series data
-        time_series_data = self._prepare_time_series_data(scan_history)
-        
-        # Calculate current trend
-        current_trend = self._calculate_compliance_trend(time_series_data)
-        
-        # Predict future compliance score
-        future_score, confidence_interval = self._forecast_compliance_score(
-            time_series_data, forecast_days
-        )
-        
-        # Identify risk factors
-        risk_factors = self._identify_risk_factors(scan_history, time_series_data)
-        
-        # Predict specific violations
-        predicted_violations = self._predict_future_violations(scan_history, risk_factors)
-        
-        # Determine action priority
-        recommendation_priority, time_to_action = self._calculate_action_priority(
-            future_score, current_trend, risk_factors
-        )
-        
-        return CompliancePrediction(
-            future_score=future_score,
-            confidence_interval=confidence_interval,
-            trend=current_trend,
-            risk_factors=risk_factors,
-            predicted_violations=predicted_violations,
-            recommendation_priority=recommendation_priority,
-            time_to_action=time_to_action
-        )
     
     def forecast_regulatory_risk(self, current_state: Dict[str, Any],
                                business_context: Dict[str, Any]) -> List[RiskForecast]:
