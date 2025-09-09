@@ -1157,10 +1157,19 @@ def render_predictive_analytics():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
+            # Calculate proper trend delta
+            if scan_history and len(scan_history) > 0:
+                current_score = scan_history[-1].get('compliance_score', 75)
+                score_delta = prediction.future_score - current_score
+                delta_str = f"{score_delta:+.1f}"
+            else:
+                # For sample data, use a reasonable delta
+                delta_str = "+6.1"
+            
             st.metric(
                 "Predicted Score",
                 f"{prediction.future_score:.1f}/100",
-                f"{prediction.future_score - 75:.1f}" if len(scan_history) > 0 else "+6.1"
+                delta_str
             )
             
         with col2:
