@@ -30,7 +30,8 @@ def create_modern_sidebar_nav(nav_options, icon_map=None):
     if icon_map is None:
         icon_map = {
             _("scan.title", "Scan"): "🔍",
-            _("dashboard.welcome", "Dashboard"): "📊", 
+            _("dashboard.welcome", "Dashboard"): "📊",
+            "🤖 Predictive Analytics": "🤖", 
             _("history.title", "History"): "📚",
             _("results.title", "Results"): "📋",
             _("report.generate", "Reports"): "📄",
@@ -63,8 +64,9 @@ def get_navigation_options(user_role):
     report_title = _("report.generate", "Reports")
     simple_dpia_title = _("dpia.simple_assessment", "Simple DPIA")
     
-    # Base navigation for all users
-    nav_options = [scan_title, simple_dpia_title, dashboard_title, history_title, results_title, report_title]
+    # Base navigation for all users  
+    predictive_title = "🤖 Predictive Analytics"
+    nav_options = [scan_title, simple_dpia_title, dashboard_title, predictive_title, history_title, results_title, report_title]
     
     # Add iDEAL Payment Test option
     ideal_test_title = "💳 iDEAL Payment Test"
