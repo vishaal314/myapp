@@ -65,6 +65,7 @@ jobs:
       with:
         name: docker-image
         path: dataguardian-pro.tar.gz
+        retention-days: 1
 
   deploy:
     needs: [test, build]
@@ -150,8 +151,15 @@ jobs:
           # Check service health
           curl -f http://localhost:5000 || echo "Service health check completed"
           
+          # Verify services are running
+          docker ps -a
+          docker logs dataguardian-pro --tail=20 || echo "No logs available yet"
+          
+          # Show final disk usage
+          df -h
+          
           # Clean up deployment files
-          rm -f dataguardian-pro.tar
+          rm -f dataguardian-pro.tar*
 
   notify:
     needs: [deploy]
