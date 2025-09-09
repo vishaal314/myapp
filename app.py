@@ -153,8 +153,8 @@ def get_html_report_generator():
             # Use our standardized fallback
             return generate_html_report_fallback
 
-# Use the wrapper to ensure consistent typing
-generate_html_report = get_html_report_generator()
+# Use the wrapper to ensure consistent typing - define with proper type annotation
+generate_html_report: callable = get_html_report_generator()
 
 # Activity tracking imports - Consolidated and Fixed
 try:
@@ -219,25 +219,22 @@ try:
         
 except ImportError:
     # Fallback definitions for activity tracking
+    ACTIVITY_TRACKING_AVAILABLE = False
+    
     def track_scan_completed_wrapper(**kwargs): pass
     def track_scan_failed_wrapper(**kwargs): pass
     
-    # Import ScannerType from activity_tracker to avoid conflicts
-    try:
-        from utils.activity_tracker import ScannerType as FallbackScannerType
-        ScannerType = FallbackScannerType
-    except ImportError:
-        # Final fallback if activity_tracker is not available
-        class ScannerType:
-            DOCUMENT = "document"
-            IMAGE = "image" 
-            WEBSITE = "website"
-            CODE = "code"
-            DATABASE = "database"
-            DPIA = "dpia"
-            AI_MODEL = "ai_model"
-            SOC2 = "soc2"
-            SUSTAINABILITY = "sustainability"
+    # Define consistent ScannerType fallback
+    class ScannerType:
+        DOCUMENT = "document"
+        IMAGE = "image" 
+        WEBSITE = "website"
+        CODE = "code"
+        DATABASE = "database"
+        DPIA = "dpia"
+        AI_MODEL = "ai_model"
+        SOC2 = "soc2"
+        SUSTAINABILITY = "sustainability"
     
     def get_session_id(): 
         """Fallback session ID"""
@@ -249,21 +246,29 @@ except ImportError:
         """Fallback user ID"""
         return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
 
-# Ensure ScannerType is available globally to avoid "possibly unbound" errors
-if 'ScannerType' not in globals():
-    try:
-        from utils.activity_tracker import ScannerType
-    except ImportError:
-        class ScannerType:
-            DOCUMENT = "document"
-            IMAGE = "image" 
-            WEBSITE = "website"
-            CODE = "code"
-            DATABASE = "database"
-            DPIA = "dpia"
-            AI_MODEL = "ai_model"
-            SOC2 = "soc2"
-            SUSTAINABILITY = "sustainability"
+# Global variable definitions to avoid "possibly unbound" errors
+def ensure_global_variables():
+    """Ensure all required global variables are defined"""
+    global user_id, session_id, ssl_mode, ssl_cert_path, ssl_key_path, ssl_ca_path
+    
+    # Initialize session variables if they don't exist
+    if 'user_id' not in globals():
+        user_id = None
+    if 'session_id' not in globals(): 
+        session_id = None
+    
+    # Initialize SSL variables with defaults
+    if 'ssl_mode' not in globals():
+        ssl_mode = 'prefer'
+    if 'ssl_cert_path' not in globals():
+        ssl_cert_path = None
+    if 'ssl_key_path' not in globals():
+        ssl_key_path = None  
+    if 'ssl_ca_path' not in globals():
+        ssl_ca_path = None
+
+# Initialize global variables
+ensure_global_variables()
 
 # Configure basic logging
 logging.basicConfig(
@@ -4106,6 +4111,8 @@ def render_database_scanner_interface(region: str, username: str):
         
         # SSL/TLS Configuration (Advanced) - Initialize variables at function start to avoid scope issues
         ssl_mode = "Auto-detect"  # Default value
+        # Initialize SSL variables at function scope to avoid "possibly unbound" errors
+        ssl_mode = "Auto-detect"
         ssl_cert_path = ""
         ssl_key_path = ""
         ssl_ca_path = ""
@@ -4117,10 +4124,10 @@ def render_database_scanner_interface(region: str, username: str):
                                       ["Auto-detect", "disable", "require", "verify-ca", "verify-full"],
                                       index=0,  # Default to Auto-detect
                                       help="Auto-detect enables SSL for cloud databases")
-                ssl_cert_path = st.text_input("SSL Certificate Path (optional)")
+                ssl_cert_path = st.text_input("SSL Certificate Path (optional)", value="")
             with col2:
-                ssl_key_path = st.text_input("SSL Key Path (optional)")
-                ssl_ca_path = st.text_input("SSL CA Path (optional)")
+                ssl_key_path = st.text_input("SSL Key Path (optional)", value="")
+                ssl_ca_path = st.text_input("SSL CA Path (optional)", value="")
         
         # Auto-detect cloud database
         if host and host != "localhost":
