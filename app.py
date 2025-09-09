@@ -10519,7 +10519,7 @@ def render_settings_page():
     # Settings categories
     tabs = st.tabs([
         "👤 Profile", "🔐 API Keys", "⚖️ Compliance", 
-        "🔍 Scanners", "📊 Reports", "🔒 Security"
+        "🔍 Scanners", "📊 Reports", "🔒 Security", "📥 Downloads"
     ])
     
     # Profile Settings
@@ -10823,6 +10823,182 @@ def render_settings_page():
             settings_manager.save_user_setting(username, "security", "login_alerts", login_alerts)
             settings_manager.save_user_setting(username, "security", "two_factor_enabled", two_factor)
             st.success("Security settings saved successfully!")
+    
+    # Downloads Management
+    with tabs[6]:
+        st.subheader("📥 Document Downloads")
+        
+        # Available documents section
+        st.markdown("### 📄 Available Documents")
+        
+        # Patent applications
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### 🔬 Patent Applications")
+            
+            # Check if patent PDFs exist
+            import os
+            patent_files = []
+            if os.path.exists("DataGuardian_Pro_Patent_Application_2_Predictive_Compliance_Engine.pdf"):
+                patent_files.append({
+                    "name": "Predictive Compliance Analytics Engine", 
+                    "file": "DataGuardian_Pro_Patent_Application_2_Predictive_Compliance_Engine.pdf",
+                    "size": "49KB",
+                    "type": "Patent Application"
+                })
+            
+            # Check for other patent files
+            for file in ["Patent_Conclusions.pdf", "Patent_Description.pdf", "Patent_Drawings.pdf"]:
+                if os.path.exists(file):
+                    patent_files.append({
+                        "name": file.replace("_", " ").replace(".pdf", ""),
+                        "file": file,
+                        "size": f"{os.path.getsize(file)//1024}KB" if os.path.exists(file) else "Unknown",
+                        "type": "Patent Document"
+                    })
+            
+            if patent_files:
+                for patent in patent_files:
+                    with st.container():
+                        st.write(f"**{patent['name']}**")
+                        st.caption(f"{patent['type']} • {patent['size']}")
+                        
+                        if os.path.exists(patent['file']):
+                            with open(patent['file'], "rb") as file:
+                                st.download_button(
+                                    label=f"📥 Download {patent['name']}",
+                                    data=file.read(),
+                                    file_name=patent['file'],
+                                    mime="application/pdf",
+                                    key=f"patent_{patent['file']}"
+                                )
+                        st.markdown("---")
+            else:
+                st.info("No patent documents available yet.")
+        
+        with col2:
+            st.markdown("#### 📊 Scan Reports") 
+            
+            # Get recent scan results from session
+            if 'last_scan_results' in st.session_state:
+                scan_results = st.session_state['last_scan_results']
+                
+                st.write("**Latest Scan Report**")
+                st.caption(f"Scan ID: {scan_results.get('scan_id', 'Unknown')} • {scan_results.get('scan_type', 'Unknown')} Scan")
+                
+                # Generate and offer downloads
+                try:
+                    from services.download_reports import generate_html_report, generate_pdf_report
+                    
+                    col_pdf, col_html = st.columns(2)
+                    
+                    with col_pdf:
+                        try:
+                            pdf_content = generate_pdf_report(scan_results)
+                            st.download_button(
+                                label="📥 PDF Report",
+                                data=pdf_content,
+                                file_name=f"scan_report_{scan_results.get('scan_id', 'unknown')}.pdf",
+                                mime="application/pdf",
+                                key="latest_pdf_download"
+                            )
+                        except Exception as e:
+                            st.caption("PDF generation unavailable")
+                    
+                    with col_html:
+                        try:
+                            html_content = generate_html_report(scan_results)
+                            st.download_button(
+                                label="📥 HTML Report",
+                                data=html_content,
+                                file_name=f"scan_report_{scan_results.get('scan_id', 'unknown')}.html",
+                                mime="text/html",
+                                key="latest_html_download"
+                            )
+                        except Exception as e:
+                            st.caption("HTML generation unavailable")
+                            
+                except ImportError:
+                    st.caption("Report generation services unavailable")
+                
+                st.markdown("---")
+                
+                # Raw data download
+                st.write("**Raw Scan Data**")
+                if st.button("📊 Export as JSON", key="json_export"):
+                    import json
+                    json_data = json.dumps(scan_results, indent=2, default=str)
+                    st.download_button(
+                        label="💾 Download JSON",
+                        data=json_data,
+                        file_name=f"scan_data_{scan_results.get('scan_id', 'unknown')}.json",
+                        mime="application/json",
+                        key="json_data_download"
+                    )
+                    st.success("JSON export ready!")
+                    
+            else:
+                st.info("No recent scan results available. Run a scan to generate reports.")
+        
+        # Download history section
+        st.markdown("### 📈 Download Statistics")
+        
+        # Show download statistics if license manager is available
+        try:
+            from services.license_manager import get_usage_stats
+            usage_stats = get_usage_stats()
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Downloads", usage_stats.get('downloads', 0))
+            with col2:
+                st.metric("Report Downloads", usage_stats.get('report_downloads', 0))
+            with col3:
+                st.metric("Document Downloads", usage_stats.get('document_downloads', 0))
+                
+        except (ImportError, Exception):
+            st.info("Download statistics not available")
+        
+        # Download preferences
+        st.markdown("### ⚙️ Download Preferences")
+        
+        download_settings = settings_manager.get_user_settings(username, "downloads")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            auto_download = st.checkbox(
+                "Auto-download reports after scans",
+                value=download_settings.get("auto_download", False),
+                help="Automatically download reports after each scan completes"
+            )
+            
+            default_format = st.selectbox(
+                "Preferred download format",
+                ["PDF", "HTML", "JSON", "CSV"],
+                index=0
+            )
+        
+        with col2:
+            include_metadata = st.checkbox(
+                "Include scan metadata",
+                value=download_settings.get("include_metadata", True),
+                help="Include technical metadata in downloaded reports"
+            )
+            
+            compress_downloads = st.checkbox(
+                "Compress large files",
+                value=download_settings.get("compress_downloads", False),
+                help="Automatically compress downloads larger than 1MB"
+            )
+        
+        if st.button("💾 Save Download Preferences", key="save_downloads"):
+            settings_manager.save_user_setting(username, "downloads", "auto_download", auto_download)
+            settings_manager.save_user_setting(username, "downloads", "default_format", default_format.lower())
+            settings_manager.save_user_setting(username, "downloads", "include_metadata", include_metadata)
+            settings_manager.save_user_setting(username, "downloads", "compress_downloads", compress_downloads)
+            st.success("Download preferences saved successfully!")
     
     # Settings management section
     st.markdown("---")
