@@ -1,0 +1,44 @@
+025-09-10 23:17:23] Configuring firewall...
+Backing up 'user.rules' to '/etc/ufw/user.rules.20250910_231724'
+Backing up 'before.rules' to '/etc/ufw/before.rules.20250910_231724'
+Backing up 'after.rules' to '/etc/ufw/after.rules.20250910_231724'
+Backing up 'user6.rules' to '/etc/ufw/user6.rules.20250910_231724'
+Backing up 'before6.rules' to '/etc/ufw/before6.rules.20250910_231724'
+Backing up 'after6.rules' to '/etc/ufw/after6.rules.20250910_231724'
+
+Default incoming policy changed to 'deny'
+(be sure to update your rules accordingly)
+Default outgoing policy changed to 'allow'
+(be sure to update your rules accordingly)
+Rules updated
+Rules updated (v6)
+Rules updated
+Rules updated (v6)
+Rules updated
+Rules updated (v6)
+Firewall is active and enabled on system startup
+[2025-09-10 23:17:27] Configuring fail2ban...
+Synchronizing state of fail2ban.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable fail2ban
+[2025-09-10 23:17:29] Fail2ban configured successfully
+[2025-09-10 23:17:29] Setting up SSL certificates with Let's Encrypt...
+340b7dd3337311bb2aafd223d9a7b2aeceb69688d8d342404e2581df06b84216
+[2025-09-10 23:17:35] Requesting SSL certificate from Let's Encrypt...
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Certificate not yet due for renewal
+
+You have an existing certificate that has exactly the same domains or certificate name you requested and isn't close to expiry.
+(ref: /etc/letsencrypt/renewal/dataguardianpro.nl.conf)
+
+What would you like to do?
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+1: Keep the existing certificate for now
+2: Renew & replace the certificate (may be subject to CA rate limits)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Select the appropriate number [1-2] then [enter] (press 'c' to cancel): An unexpected error occurred:
+EOFError
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+[2025-09-10 23:17:40] Performing cleanup...
+temp-nginx
+temp-nginx
+[2025-09-10 23:17:41] Cleanup completed
