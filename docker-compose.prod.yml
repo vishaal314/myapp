@@ -17,6 +17,8 @@ services:
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-not_configured}
       - DB_USER=${DB_USER:-dataguardian_pro}
       - DB_PASSWORD=${DB_PASSWORD:-dataguardian_secure_pass_2025}
+      - DOMAIN=${DOMAIN:-localhost}
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL:-admin@example.com}
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -69,10 +71,13 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ./ssl:/etc/nginx/ssl
       - /var/log/nginx:/var/log/nginx
+      - /var/www/html:/var/www/html
     networks:
       - dataguardian-network
     depends_on:
@@ -84,7 +89,7 @@ services:
     volumes:
       - ./ssl:/etc/letsencrypt
       - ./certbot-var:/var/lib/letsencrypt
-    command: certonly --webroot --webroot-path=/var/www/html --email vishaal314@gmail.com --agree-tos --no-eff-email -d vishaalnoord7.retzor.com
+    command: certonly --webroot --webroot-path=/var/www/html --email ${CERTBOT_EMAIL:-admin@example.com} --agree-tos --no-eff-email -d ${DOMAIN:-localhost}
 
 volumes:
   postgres_data:
