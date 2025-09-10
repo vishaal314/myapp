@@ -163,10 +163,11 @@ try:
         track_scan_completed as activity_track_completed,
         track_scan_failed as activity_track_failed,
         ActivityType, 
-        ScannerType
+        ScannerType as ActivityScannerType
     )
     
-    # ScannerType is now imported directly to avoid alias conflicts
+    # Use imported ScannerType to avoid conflicts
+    ScannerType = ActivityScannerType
     ACTIVITY_TRACKING_AVAILABLE = True
     from typing import Dict, Any
     
@@ -221,8 +222,9 @@ except ImportError:
     # Fallback definitions for activity tracking
     ACTIVITY_TRACKING_AVAILABLE = False
     
-    def track_scan_completed_wrapper(**kwargs): pass
-    def track_scan_failed_wrapper(**kwargs): pass
+    def track_scan_completed_wrapper_safe(**kwargs): pass
+    def track_scan_failed_wrapper_safe(**kwargs): pass
+    def track_scan_failed_wrapper(**kwargs): pass  # Alias for compatibility
     
     # Define consistent ScannerType fallback
     class ScannerType:
@@ -251,24 +253,29 @@ def ensure_global_variables():
     """Ensure all required global variables are defined"""
     global user_id, session_id, ssl_mode, ssl_cert_path, ssl_key_path, ssl_ca_path
     
-    # Initialize session variables if they don't exist
-    if 'user_id' not in globals():
-        user_id = None
-    if 'session_id' not in globals(): 
-        session_id = None
+    # Initialize session variables using session state if available
+    user_id = st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     # Initialize SSL variables with defaults
-    if 'ssl_mode' not in globals():
-        ssl_mode = 'prefer'
-    if 'ssl_cert_path' not in globals():
-        ssl_cert_path = None
-    if 'ssl_key_path' not in globals():
-        ssl_key_path = None  
-    if 'ssl_ca_path' not in globals():
-        ssl_ca_path = None
+    ssl_mode = 'prefer'
+    ssl_cert_path = None
+    ssl_key_path = None
+    ssl_ca_path = None
 
 # Initialize global variables
 ensure_global_variables()
+
+# Helper functions to get session info safely
+def get_safe_user_id():
+    """Get user ID safely from session state or fallback"""
+    return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
+
+def get_safe_session_id():
+    """Get session ID safely from session state or create new"""
+    if 'session_id' not in st.session_state:
+        st.session_state.session_id = str(uuid.uuid4())
+    return st.session_state.session_id
 
 # Configure basic logging
 logging.basicConfig(
@@ -3192,7 +3199,7 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.CODE,
             user_id=user_id,
             session_id=session_id,
@@ -3806,7 +3813,7 @@ def execute_image_scan(region, username, uploaded_files):
         from utils.activity_tracker import ScannerType
         
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.IMAGE,
             user_id=user_id,
             session_id=session_id,
@@ -4156,15 +4163,15 @@ def render_database_scanner_interface(region: str, username: str):
                 st.error("Please fill in all required fields")
                 return
             
-            # Prepare SSL parameters - variables now properly scoped
+            # Prepare SSL parameters - variables are defined in the form above
             ssl_params = {}
             if ssl_mode and ssl_mode != "Auto-detect":
                 ssl_params['ssl_mode'] = ssl_mode
-            if ssl_cert_path:
+            if ssl_cert_path and ssl_cert_path.strip():
                 ssl_params['ssl_cert_path'] = ssl_cert_path
-            if ssl_key_path:
+            if ssl_key_path and ssl_key_path.strip():
                 ssl_params['ssl_key_path'] = ssl_key_path
-            if ssl_ca_path:
+            if ssl_ca_path and ssl_ca_path.strip():
                 ssl_params['ssl_ca_path'] = ssl_ca_path
             
             execute_database_scan(region, username, db_type, host, port, database, username_db, password, ssl_params)
@@ -4172,8 +4179,8 @@ def render_database_scanner_interface(region: str, username: str):
 def execute_database_scan(region, username, db_type, host, port, database, username_db, password, ssl_params=None):
     """Execute database scanning with connection timeout and activity tracking"""
     # Initialize variables to avoid unbound variable errors
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
-    user_id = st.session_state.get('user_id', username)
+    session_id = get_safe_session_id()
+    user_id = get_safe_user_id()
     
     try:
         from services.db_scanner import DBScanner
@@ -4319,7 +4326,7 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
     except Exception as e:
         # Track scan failure with safe error handling
         try:
-            track_scan_failed_wrapper(
+            track_scan_failed_wrapper_safe(
                 scanner_type=ScannerType.DATABASE,
                 user_id=user_id,
                 session_id=session_id,
@@ -4333,8 +4340,8 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
 def execute_database_scan_cloud(region, username, connection_string):
     """Execute database scanning using connection string for cloud databases"""
     # Initialize variables to avoid unbound variable errors
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
-    user_id = st.session_state.get('user_id', username)
+    session_id = get_safe_session_id()
+    user_id = get_safe_user_id()
     
     try:
         from services.db_scanner import DBScanner
@@ -4467,7 +4474,7 @@ def execute_database_scan_cloud(region, username, connection_string):
     except Exception as e:
         # Track scan failure with safe error handling
         try:
-            track_scan_failed_wrapper(
+            track_scan_failed_wrapper_safe(
                 scanner_type=ScannerType.DATABASE,
                 user_id=user_id,
                 session_id=session_id,
@@ -5323,7 +5330,7 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.API,
             user_id=user_id,
             session_id=session_id,
@@ -6584,7 +6591,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.AI_MODEL,
             user_id=user_id,
             session_id=session_id,
@@ -6964,7 +6971,7 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.SOC2,
             user_id=user_id,
             session_id=session_id,
@@ -7626,7 +7633,7 @@ def execute_website_scan(region, username, url, scan_config):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.WEBSITE,
             user_id=user_id,
             session_id=session_id,
@@ -8545,7 +8552,7 @@ def execute_enhanced_dpia_scan(region, username, responses):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.DPIA,
             user_id=user_id,
             session_id=session_id,
@@ -9297,7 +9304,7 @@ def execute_sustainability_scan(region, username, scan_params):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.SUSTAINABILITY,
             user_id=user_id,
             session_id=session_id,

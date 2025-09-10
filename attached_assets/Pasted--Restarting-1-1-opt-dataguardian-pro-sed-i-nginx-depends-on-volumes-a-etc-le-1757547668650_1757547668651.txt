@@ -1,0 +1,33 @@
+[+] Restarting 1/1:/opt/dataguardian-pro# sed -i '/nginx:/,/depends_on:/{/volumes:/a\      - /etc/letsencrypt:/etc/letse
+ ✔ Container dataguardian-nginx  Started                                                                           1.0s
+root@vishaalnoord7:/opt/dataguardian-pro# {'
+root@vishaalnoord7:/opt/dataguardian-pro# curl -I https://dataguardianpro.nl
+HTTP/1.1 200 OK
+Server: nginx/1.29.1 potential confusion
+Date: Wed, 10 Sep 2025 23:38:03 GMT
+Content-Type: text/html
+Content-Length: 1522
+Connection: keep-alive
+Accept-Ranges: bytes
+Etag: "5210ffee5c7fed165789ad59315dbff8eab0bbeab5da20392dc6b5e61972b9f5904b464f0d5fdb7c93015754b4f01e67251cc1ccec1422ed53ff5523ea3e4561"
+Last-Modified: Wed, 10 Sep 2025 22:08:02 GMT
+Cache-Control: no-cache
+Vary: Accept-Encoding
+
+root@vishaalnoord7:/opt/dataguardian-pro# docker logs dataguardian-nginx --tail 15
+82.168.156.192 - - [10/Sep/2025:23:40:22 +0000] "GET /_stcore/stream HTTP/1.1" 400 34 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:22 +0000] "GET /_stcore/host-config HTTP/1.1" 304 0 "https://dataguardianpro.nl/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:22 +0000] "GET /_stcore/health HTTP/1.1" 304 0 "https://dataguardianpro.nl/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:23 +0000] "GET /_stcore/stream HTTP/1.1" 400 34 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:23 +0000] "GET /_stcore/health HTTP/1.1" 304 0 "https://dataguardianpro.nl/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:23 +0000] "GET /_stcore/host-config HTTP/1.1" 304 0 "https://dataguardianpro.nl/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:27 +0000] "GET /_stcore/stream HTTP/1.1" 400 34 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:27 +0000] "GET /_stcore/health HTTP/1.1" 304 0 "https://dataguardianpro.nl/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:27 +0000] "GET /_stcore/host-config HTTP/1.1" 304 0 "https://dataguardianpro.nl/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:27 +0000] "GET /_stcore/stream HTTP/1.1" 400 34 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:27 +0000] "GET /_stcore/host-config HTTP/1.1" 304 0 "https://dataguardianpro.nl/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:27 +0000] "GET /_stcore/health HTTP/1.1" 304 0 "https://dataguardianpro.nl/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:28 +0000] "GET /_stcore/stream HTTP/1.1" 400 34 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:28 +0000] "GET /_stcore/host-config HTTP/1.1" 304 0 "https://dataguardianpro.nl/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+82.168.156.192 - - [10/Sep/2025:23:40:28 +0000] "GET /_stcore/health HTTP/1.1" 304 0 "https://dataguardianpro.nl/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+root@vishaalnoord7:/opt/dataguardian-pro#
