@@ -293,6 +293,7 @@ main() {
     check_port_conflicts
     
     log "=== DataGuardian Pro Deployment Started ==="
+
     
     create_directories
     update_system
