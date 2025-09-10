@@ -1,0 +1,33 @@
+> [internal] load metadata for docker.io/library/python:3.11-slim                                                                                                                                           1.7s
+ => [internal] load .dockerignore                                                                                                                                                                             0.0s
+ => => transferring context: 2B                                                                                                                                                                               0.0s
+ => [1/9] FROM docker.io/library/python:3.11-slim@sha256:91e9d01cf4bd56be7128c603506b6fe367ef7506f9f2ad8f3a908aeec8941bb9                                                                                    19.8s
+ => => resolve docker.io/library/python:3.11-slim@sha256:91e9d01cf4bd56be7128c603506b6fe367ef7506f9f2ad8f3a908aeec8941bb9                                                                                     0.0s
+ => => sha256:11b89692b2085631f6e2407edd8545b033c8e6945837103875d6db484e945b6f 1.29MB / 1.29MB                                                                                                                0.7s
+ => => sha256:91e9d01cf4bd56be7128c603506b6fe367ef7506f9f2ad8f3a908aeec8941bb9 10.37kB / 10.37kB                                                                                                              0.0s
+ => => sha256:316d89b74c4d467565864be703299878ca7a97893ed44ae45f6acba5af09d154 1.75kB / 1.75kB                                                                                                                0.0s
+ => => sha256:c4640ec0986fe463924ebb5351694191eefd91ce3cfea2137e0ed81b6cb88194 5.38kB / 5.38kB                                                                                                                0.0s
+ => => sha256:ce1261c6d567efa8e3b457673eeeb474a0a8066df6bb95ca9a6a94a31e219dd3 29.77MB / 29.77MB                                                                                                              2.7s
+ => => sha256:764e05fe66b6768e40fa2a21d5108eceb8f3f8f2c32463d72c109c54dde0d5c1 14.64MB / 14.64MB                                                                                                              4.1s
+ => => sha256:a4aefcec16c5bdc01af2ad1c5341b420d4179f3b825c0dc866367fb43f0d50ac 250B / 250B                                                                                                                    1.2s
+ => => extracting sha256:ce1261c6d567efa8e3b457673eeeb474a0a8066df6bb95ca9a6a94a31e219dd3                                                                                                                     8.9s
+ => => extracting sha256:11b89692b2085631f6e2407edd8545b033c8e6945837103875d6db484e945b6f                                                                                                                     0.5s
+ => => extracting sha256:764e05fe66b6768e40fa2a21d5108eceb8f3f8f2c32463d72c109c54dde0d5c1                                                                                                                     5.9s
+ => => extracting sha256:a4aefcec16c5bdc01af2ad1c5341b420d4179f3b825c0dc866367fb43f0d50ac                                                                                                                     0.0s
+ => [internal] load build context                                                                                                                                                                            64.7s
+ => => transferring context: 843.87MB                                                                                                                                                                        64.2s
+ => [2/9] WORKDIR /app                                                                                                                                                                                        0.3s
+ => CANCELED [3/9] RUN apt-get update && apt-get install -y     build-essential     curl     git     libpq-dev     postgresql-client     tesseract-ocr     && rm -rf /var/lib/apt/lists/*                    46.0s
+ => ERROR [4/9] COPY production_requirements.txt requirements.txt                                                                                                                                             0.0s
+------
+ > [4/9] COPY production_requirements.txt requirements.txt:
+------
+Dockerfile:17
+--------------------
+  15 |
+  16 |     # Copy requirements first for better caching
+  17 | >>> COPY production_requirements.txt requirements.txt
+  18 |
+  19 |     # Install Python dependencies (optimize for space)
+--------------------
+ERROR: failed to build: failed to solve: failed to compute cache key: failed to calculate checksum of ref 5120338b-e449-4c56-b6c1-2d88c58e01df::xft40qg0xzy6uk0grc4plrbl8: "/production_requirements.txt": not found
