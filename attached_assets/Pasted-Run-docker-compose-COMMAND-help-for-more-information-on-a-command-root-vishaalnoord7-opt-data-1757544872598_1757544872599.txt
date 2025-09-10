@@ -1,0 +1,20 @@
+Run 'docker compose COMMAND --help' for more information on a command.
+root@vishaalnoord7:/opt/dataguardian-pro# docker compose -f docker-compose.prod.yml stop
+WARN[0000] /opt/dataguardian-pro/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+[+] Stopping 3/3
+ ✔ Container dataguardian-nginx     Stopped                                                                        0.6s
+ ✔ Container dataguardian-postgres  Stopped                                                                        0.6s
+ ✔ Container dataguardian-pro       Stopped                                                                        0.7s
+root@vishaalnoord7:/opt/dataguardian-pro# docker compose -f docker-compose.prod.yml start
+WARN[0000] /opt/dataguardian-pro/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+[+] Running 3/3
+ ✔ Container dataguardian-postgres  Started                                                                        0.6s
+ ✔ Container dataguardian-pro       Started                                                                        0.7s
+ ✔ Container dataguardian-nginx     Started                                                                        0.7s
+root@vishaalnoord7:/opt/dataguardian-pro# docker ps
+CONTAINER ID   IMAGE                     COMMAND                  CREATED          STATUS                    PORTS                                                                          NAMES
+c15495c02c3d   nginx:alpine              "/docker-entrypoint.…"   37 minutes ago   Up 13 seconds             0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp   dataguardian-nginx
+b1f630f55c7b   dataguardian-pro:latest   "streamlit run app.p…"   37 minutes ago   Up 14 seconds (healthy)   127.0.0.1:5000->5000/tcp                                                       dataguardian-pro
+9890160330cb   postgres:16               "docker-entrypoint.s…"   37 minutes ago   Up 14 seconds             5432/tcp                                                                       dataguardian-postgres
+root@vishaalnoord7:/opt/dataguardian-pro# restart nginx
+-bash: restart: command not found
