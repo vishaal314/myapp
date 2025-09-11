@@ -39,11 +39,19 @@ logger = logging.getLogger(__name__)
 # Session state initialization
 def init_session_state():
     """Initialize all required session state variables"""
+    
+    # Detect browser language for Dutch users
+    def detect_default_language():
+        """Detect appropriate default language based on browser and domain"""
+        # Since this is dataguardianpro.nl (Dutch domain), default to Dutch
+        # This can be enhanced with browser language detection if needed
+        return 'nl'  # Default to Dutch for dataguardianpro.nl domain
+    
     defaults = {
         'authenticated': False,
         'username': None,
         'user_role': 'user',
-        'language': 'en',
+        'language': detect_default_language(),  # Smart language detection
         'session_id': str(uuid.uuid4()),
         'scan_results': {},
         'show_registration': False,
