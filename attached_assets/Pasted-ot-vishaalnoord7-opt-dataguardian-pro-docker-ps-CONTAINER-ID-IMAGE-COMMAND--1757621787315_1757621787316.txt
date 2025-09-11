@@ -1,0 +1,13 @@
+ot@vishaalnoord7:/opt/dataguardian-pro# docker ps
+CONTAINER ID   IMAGE                     COMMAND                  CREATED        STATUS                   PORTS                                                                          NAMES
+c15495c02c3d   nginx:alpine              "/docker-entrypoint.…"   22 hours ago   Up 21 hours              0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp   dataguardian-nginx
+b1f630f55c7b   dataguardian-pro:latest   "streamlit run app.p…"   22 hours ago   Up 2 minutes (healthy)   127.0.0.1:5000->5000/tcp                                                       dataguardian-pro
+9890160330cb   postgres:16               "docker-entrypoint.s…"   22 hours ago   Up 21 hours              5432/tcp                                                                       dataguardian-postgres
+root@vishaalnoord7:/opt/dataguardian-pro# docker compose exec dataguardian-nginx nginx -t
+no configuration file provided: not found
+root@vishaalnoord7:/opt/dataguardian-pro# docker compose -f docker-compose.prod.yml restart nginx
+WARN[0000] /opt/dataguardian-pro/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+[+] Restarting 0/1
+ ⠇ Container dataguardian-nginx  Restarting                                                                                                                                                             0.8s
+Error response from daemon: Cannot restart container c15495c02c3d1e8a68b13ea01367d50f4074766987b8f7c685bd17015aa90887: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: error mounting "/opt/dataguardian-pro/nginx.conf" to rootfs at "/etc/nginx/nginx.conf": create mountpoint for /etc/nginx/nginx.conf mount: cannot create subdirectories in "/var/lib/docker/overlay2/6582ba752ca68dec9fd9f6b215f0461f2cbe3195dcc2e8704ae1284285ba2500/merged/etc/nginx/nginx.conf": not a directory: unknown: Are you trying to mount a directory onto a file (or vice-versa)? Check if the specified host path exists and is the expected type
+root@vishaalnoord7:/opt/dataguardian-pro#
