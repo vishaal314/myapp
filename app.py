@@ -577,8 +577,14 @@ def render_settings():
 def main():
     """Main application entry point"""
     try:
-        # Initialize session state
+        # Initialize session state FIRST
         init_session_state()
+        
+        # Force Dutch language for new sessions on dataguardianpro.nl
+        if 'language_initialized' not in st.session_state:
+            st.session_state.language = 'nl'  # Force Dutch default
+            st.session_state.language_initialized = True
+            st.rerun()  # Force refresh with Dutch language
         
         # Render sidebar (includes login/logout)
         render_sidebar()
