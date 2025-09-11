@@ -225,20 +225,26 @@ def render_sidebar():
     with st.sidebar:
         st.image("https://via.placeholder.com/200x60/1f77b4/white?text=DataGuardian+Pro", width=200)
         
-        # Language selector
+        # Language selector (fixed to properly switch)
         languages = {'en': '🇬🇧 English', 'nl': '🇳🇱 Nederlands'}
         current_lang = st.session_state.get('language', 'en')
+        
+        def on_language_change():
+            """Handle language change with proper state update"""
+            new_lang = st.session_state.language_selector
+            if new_lang != current_lang:
+                st.session_state.language = new_lang
+                # Clear any cached UI state to force refresh
+                st.session_state.current_page = st.session_state.get('current_page', 'dashboard')
+        
         selected_lang = st.selectbox(
             "Language", 
             options=list(languages.keys()),
             format_func=lambda x: languages[x],
             index=list(languages.keys()).index(current_lang),
-            key="language_selector"
+            key="language_selector",
+            on_change=on_language_change
         )
-        
-        if selected_lang != st.session_state.get('language'):
-            st.session_state.language = selected_lang
-            st.rerun()
         
         if st.session_state.authenticated:
             st.success(f"👤 {st.session_state.user_name}")
