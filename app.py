@@ -267,7 +267,7 @@ def render_sidebar():
             
             # Logout
             st.markdown("---")
-            if st.button("🚪 Logout", use_container_width=True):
+            if st.button(f"🚪 {_('sidebar.logout')}", use_container_width=True):
                 for key in ['authenticated', 'username', 'user_role', 'user_name']:
                     if key in st.session_state:
                         del st.session_state[key]
@@ -285,7 +285,7 @@ def render_sidebar():
                 with col1:
                     login_btn = st.form_submit_button(_('login.button'), type="primary")
                 with col2:
-                    demo_btn = st.form_submit_button("Demo", help="Quick demo login")
+                    demo_btn = st.form_submit_button(_('demo.button'), help=_('demo.help'))
                 
                 if login_btn and username and password:
                     if authenticate_user(username, password):

@@ -950,6 +950,30 @@
     "password_mismatch": "Wachtwoorden komen niet overeen"
   },
   "demo": {
-    "login_success": "Demo login succesvol!"
+    "login_success": "Demo login succesvol!",
+    "button": "Demo",
+    "help": "Snelle demo login"
+  },
+  "sidebar": {
+    "language": "Taal",
+    "logout": "Uitloggen"
+  },
+  "spinner": {
+    "ai_analyzing": "AI model analyseren...",
+    "code_scanning": "Repository scannen...",
+    "website_scanning": "Website scannen..."
+  },
+  "options": {
+    "pii_detection": "PII Detectie",
+    "ai_act_compliance": "AI Act Naleving",
+    "gdpr_analysis": "GDPR Analyse",
+    "security_scan": "Beveiligingsscan",
+    "bias_detection": "Bias Detectie"
+  },
+  "severity": {
+    "high": "Hoog",
+    "medium": "Gemiddeld",
+    "low": "Laag",
+    "critical": "Kritisch"
   }
 }

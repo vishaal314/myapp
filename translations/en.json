@@ -446,6 +446,30 @@
     "password_mismatch": "Passwords don't match"
   },
   "demo": {
-    "login_success": "Demo login successful!"
+    "login_success": "Demo login successful!",
+    "button": "Demo",
+    "help": "Quick demo login"
+  },
+  "sidebar": {
+    "language": "Language",
+    "logout": "Logout"
+  },
+  "spinner": {
+    "ai_analyzing": "Analyzing AI model...",
+    "code_scanning": "Scanning repository...",
+    "website_scanning": "Scanning website..."
+  },
+  "options": {
+    "pii_detection": "PII Detection",
+    "ai_act_compliance": "AI Act Compliance",
+    "gdpr_analysis": "GDPR Analysis",
+    "security_scan": "Security Scan",
+    "bias_detection": "Bias Detection"
+  },
+  "severity": {
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "critical": "Critical"
   }
 }
