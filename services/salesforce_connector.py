@@ -89,7 +89,7 @@ class SalesforceConnector:
             return self.authenticate()
         return True
     
-    def _make_api_request(self, endpoint: str, method: str = 'GET', data: Optional[Dict] = None) -> Optional[Dict]:
+    def _make_api_request(self, endpoint: str, method: str = 'GET', data: Dict = None) -> Optional[Dict]:
         """Make authenticated API request to Salesforce"""
         if not self._ensure_authenticated():
             return None

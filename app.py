@@ -90,11 +90,11 @@ def load_translations():
 TRANSLATIONS = load_translations()
 
 def get_text(key: str, default: str = "") -> str:
-    """Get translated text with nested key support and English fallback"""
+    """Get translated text with nested key support"""
     lang = st.session_state.get('language', 'en')
-    
-    # Try current language first
     translation_dict = TRANSLATIONS.get(lang, {})
+    
+    # Support nested keys like 'app.title'
     keys = key.split('.')
     value = translation_dict
     
@@ -102,23 +102,6 @@ def get_text(key: str, default: str = "") -> str:
         if isinstance(value, dict) and k in value:
             value = value[k]
         else:
-            # If not found in current language, try English fallback
-            if lang != 'en':
-                english_dict = TRANSLATIONS.get('en', {})
-                english_value = english_dict
-                for k in keys:
-                    if isinstance(english_value, dict) and k in english_value:
-                        english_value = english_value[k]
-                    else:
-                        # Log missing translation key for monitoring
-                        logger.warning(f"Missing translation key '{key}' for language '{lang}' and English fallback")
-                        return default or key
-                # Log successful fallback to English (debug level to reduce noise)
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f"Using English fallback for key '{key}' in language '{lang}'")
-                return english_value if isinstance(english_value, str) else (default or key)
-            # Log missing translation key for English and current language
-            logger.warning(f"Missing translation key '{key}' in both '{lang}' and English translations")
             return default or key
     
     return value if isinstance(value, str) else (default or key)
@@ -127,39 +110,11 @@ def _(key: str, default: str = "") -> str:
     """Shorthand for get_text"""
     return get_text(key, default)
 
-# Dynamic value mapping for scan results
-def translate_dynamic_value(value, value_type='general'):
-    """Translate dynamic values like severity, status, types"""
-    if not value:
-        return value
-    
-    # Convert to lowercase key format
-    key_value = value.lower().replace(' ', '_').replace('-', '_')
-    
-    # Try different mapping categories
-    mapping_keys = {
-        'severity': f'severity.{key_value}',
-        'status': f'status.{key_value}',
-        'type': f'types.{key_value}',
-        'general': f'values.{key_value}'
-    }
-    
-    # Try the specific type first, then general
-    for key_type in [value_type, 'general']:
-        if key_type in mapping_keys:
-            translated = get_text(mapping_keys[key_type])
-            if translated != mapping_keys[key_type]:  # Found translation
-                return translated
-    
-    # Return original if no translation found
-    return value
-
 # Authentication (simplified but functional)
 DEMO_USERS = {
     'demo@dataguardianpro.nl': {'password': 'demo123', 'role': 'admin', 'name': 'Demo User'},
     'admin@dataguardianpro.nl': {'password': 'admin123', 'role': 'admin', 'name': 'Admin User'},
-    'user@dataguardianpro.nl': {'password': 'user123', 'role': 'user', 'name': 'Standard User'},
-    'vishaal314@gmail.com': {'password': 'admin123', 'role': 'admin', 'name': 'Vishaal Admin'}
+    'user@dataguardianpro.nl': {'password': 'user123', 'role': 'user', 'name': 'Standard User'}
 }
 
 def authenticate_user(username: str, password: str) -> bool:
@@ -266,74 +221,11 @@ def run_website_scan(url: str) -> Dict[str, Any]:
         'pages_scanned': 25
     }
 
-# Additional scanner implementations for complete feature access
-def run_document_scan(file_data) -> Dict[str, Any]:
-    """Document scanner for PDF, DOCX, TXT analysis"""
-    return {
-        'scan_id': f'DOC-{str(uuid.uuid4())[:8]}',
-        'timestamp': datetime.now().isoformat(),
-        'file_name': getattr(file_data, 'name', 'uploaded_document'),
-        'status': 'completed',
-        'compliance_score': 88,
-        'findings': [
-            {'type': 'PII Detection', 'severity': 'High', 'description': 'Personal email addresses found in document', 'location': 'Page 2, paragraph 3', 'recommendation': 'Redact or encrypt personal identifiers'},
-            {'type': 'BSN Detection', 'severity': 'Critical', 'description': 'Dutch BSN numbers detected', 'location': 'Page 1, section 2', 'recommendation': 'Implement proper BSN handling per UAVG requirements'}
-        ],
-        'pages_processed': 5, 'pii_items_found': 8, 'gdpr_score': 88
-    }
-
-def run_image_scan(image_data) -> Dict[str, Any]:
-    """Image scanner with OCR and facial recognition privacy assessment"""
-    return {
-        'scan_id': f'IMG-{str(uuid.uuid4())[:8]}',
-        'timestamp': datetime.now().isoformat(),
-        'file_name': getattr(image_data, 'name', 'uploaded_image'),
-        'status': 'completed', 'compliance_score': 91,
-        'findings': [
-            {'type': 'Face Detection', 'severity': 'High', 'description': 'Human faces detected without consent indicators', 'location': 'Image coordinates: (234, 156)', 'recommendation': 'Implement face blurring or consent verification'},
-            {'type': 'Text Extraction', 'severity': 'Medium', 'description': 'Personal information in image text', 'location': 'OCR text analysis', 'recommendation': 'Review extracted text for PII'}
-        ],
-        'faces_detected': 3, 'text_extracted': True, 'gdpr_score': 91
-    }
-
-def run_database_scan(connection_string: str) -> Dict[str, Any]:
-    """Database scanner for PII and compliance analysis"""
-    return {
-        'scan_id': f'DB-{str(uuid.uuid4())[:8]}', 'timestamp': datetime.now().isoformat(), 'database_type': 'PostgreSQL', 'status': 'completed', 'compliance_score': 85,
-        'findings': [
-            {'type': 'Unencrypted PII', 'severity': 'Critical', 'description': 'Personal data stored without encryption', 'location': 'users.email, users.phone', 'recommendation': 'Implement column-level encryption'},
-            {'type': 'Access Controls', 'severity': 'Medium', 'description': 'Overly permissive database roles', 'location': 'Role: app_user', 'recommendation': 'Implement principle of least privilege'}
-        ],
-        'tables_scanned': 15, 'pii_columns_found': 12, 'gdpr_score': 85
-    }
-
-def run_dpia_scan(assessment_data) -> Dict[str, Any]:
-    """DPIA scanner for GDPR Article 35 compliance"""
-    return {'scan_id': f'DPIA-{str(uuid.uuid4())[:8]}', 'timestamp': datetime.now().isoformat(), 'assessment_type': 'GDPR Article 35', 'status': 'completed', 'compliance_score': 94, 'risk_level': 'Medium', 'findings': [{'type': 'Risk Assessment', 'severity': 'Medium', 'description': 'Moderate privacy risk identified', 'location': 'Data processing workflow', 'recommendation': 'Implement additional safeguards'}], 'uavg_compliant': True, 'gdpr_score': 94}
-
-def run_soc2_scan(system_data) -> Dict[str, Any]:
-    """SOC2 scanner for security controls assessment"""
-    return {'scan_id': f'SOC2-{str(uuid.uuid4())[:8]}', 'timestamp': datetime.now().isoformat(), 'framework': 'SOC2 Type II', 'status': 'completed', 'compliance_score': 87, 'findings': [{'type': 'Access Control', 'severity': 'High', 'description': 'Multi-factor authentication not enforced', 'location': 'System authentication', 'recommendation': 'Implement MFA for all user accounts'}, {'type': 'Monitoring', 'severity': 'Medium', 'description': 'Insufficient logging for security events', 'location': 'System audit logs', 'recommendation': 'Enhance security event monitoring'}], 'controls_tested': 64, 'controls_passed': 56, 'soc2_score': 87}
-
-def run_api_scan(api_endpoint: str) -> Dict[str, Any]:
-    """API scanner for endpoint security and privacy"""
-    return {'scan_id': f'API-{str(uuid.uuid4())[:8]}', 'timestamp': datetime.now().isoformat(), 'endpoint': api_endpoint, 'status': 'completed', 'compliance_score': 79, 'findings': [{'type': 'Data Exposure', 'severity': 'High', 'description': 'Sensitive data returned without proper authorization', 'location': '/api/users endpoint', 'recommendation': 'Implement field-level access controls'}, {'type': 'Rate Limiting', 'severity': 'Medium', 'description': 'No rate limiting implemented', 'location': 'API gateway', 'recommendation': 'Implement API rate limiting'}], 'endpoints_tested': 28, 'vulnerabilities_found': 7, 'gdpr_score': 79}
-
-def run_sustainability_scan(resource_data) -> Dict[str, Any]:
-    """Sustainability scanner for environmental impact"""
-    return {'scan_id': f'SUSTAIN-{str(uuid.uuid4())[:8]}', 'timestamp': datetime.now().isoformat(), 'resource_type': 'Cloud Infrastructure', 'status': 'completed', 'sustainability_score': 76, 'findings': [{'type': 'Zombie Resources', 'severity': 'Medium', 'description': 'Unused compute instances running', 'location': 'EU-West region', 'recommendation': 'Terminate or resize unused resources'}, {'type': 'Carbon Footprint', 'severity': 'Low', 'description': 'Above average CO₂ emissions', 'location': 'Data processing workloads', 'recommendation': 'Optimize algorithms for energy efficiency'}], 'co2_emissions_kg': 145.2, 'energy_usage_kwh': 287.5, 'waste_resources_count': 12}
-
-# Enterprise connector integration is handled through components/enterprise_ui.py
-# This provides real OAuth2 authentication for Microsoft 365, Google Workspace, SAP, Salesforce, and Exact Online
-
 # UI Components
 def render_sidebar():
     """Render the application sidebar"""
     with st.sidebar:
-        # Render SVG logo using HTML for better compatibility
-        with open("assets/logo.svg", "r") as logo_file:
-            logo_svg = logo_file.read()
-        st.markdown(f'<div style="margin-bottom: 10px;">{logo_svg}</div>', unsafe_allow_html=True)
+        st.image("https://via.placeholder.com/200x60/1f77b4/white?text=DataGuardian+Pro", width=200)
         
         # Language selector (fixed to properly switch)
         languages = {'en': '🇬🇧 English', 'nl': '🇳🇱 Nederlands'}
@@ -348,7 +240,7 @@ def render_sidebar():
                 st.session_state.current_page = st.session_state.get('current_page', 'dashboard')
         
         selected_lang = st.selectbox(
-            _('sidebar.language'), 
+            "Language", 
             options=list(languages.keys()),
             format_func=lambda x: languages[x],
             index=list(languages.keys()).index(current_lang),
@@ -375,7 +267,7 @@ def render_sidebar():
             
             # Logout
             st.markdown("---")
-            if st.button(f"🚪 {_('sidebar.logout')}", use_container_width=True):
+            if st.button("🚪 Logout", use_container_width=True):
                 for key in ['authenticated', 'username', 'user_role', 'user_name']:
                     if key in st.session_state:
                         del st.session_state[key]
@@ -393,7 +285,7 @@ def render_sidebar():
                 with col1:
                     login_btn = st.form_submit_button(_('login.button'), type="primary")
                 with col2:
-                    demo_btn = st.form_submit_button(_('demo.button'), help=_('demo.help'))
+                    demo_btn = st.form_submit_button("Demo", help="Quick demo login")
                 
                 if login_btn and username and password:
                     if authenticate_user(username, password):
@@ -404,7 +296,7 @@ def render_sidebar():
                 
                 if demo_btn:
                     if authenticate_user('demo@dataguardianpro.nl', 'demo123'):
-                        st.success(_('demo.login_success'))
+                        st.success('Demo login successful!')
                         st.rerun()
 
 def render_landing_page():
@@ -570,7 +462,7 @@ def render_dashboard():
     st.title("📊 DataGuardian Pro Dashboard")
     
     # Welcome message
-    st.success(f"{_('common.welcome_back')}, {st.session_state.user_name}! 👋")
+    st.success(f"Welcome back, {st.session_state.user_name}! 👋")
     
     # Stats overview
     col1, col2, col3, col4 = st.columns(4)
@@ -611,307 +503,87 @@ def render_scanners():
     st.title("🔍 Privacy Scanners")
     st.write("Select a scanner to perform privacy compliance analysis:")
     
-    # All 11 Scanner tabs including Enterprise Connectors
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([
-        "🤖 AI Model", "💻 Code", "🌐 Website", "📄 Document", 
-        "🖼️ Image", "🗄️ Database", "📋 DPIA", "🛡️ SOC2", 
-        "🔌 API", "🌱 Sustainability", "🔗 Enterprise Connectors"
-    ])
+    # Scanner tabs
+    tab1, tab2, tab3 = st.tabs(["🤖 AI Model", "💻 Code", "🌐 Website"])
     
     with tab1:
-        st.subheader(_('scanners.ai.title'))
-        st.write(_('scanners.ai.description'))
+        st.subheader("AI Model Privacy Scanner")
+        st.write("Analyze AI models for privacy compliance and AI Act requirements.")
         
         with st.form("ai_model_form"):
-            model_path = st.text_input(_('scanners.ai.input_label'), placeholder=_('scanners.ai.input_placeholder'))
+            model_path = st.text_input("Model Path/URL", placeholder="path/to/your/model or https://huggingface.co/model")
             scan_options = st.multiselect(
                 "Scan Options",
                 ["PII Detection", "AI Act Compliance", "Bias Assessment", "Data Lineage"],
                 default=["PII Detection", "AI Act Compliance"]
             )
             
-            if st.form_submit_button(f"🚀 {_('scanners.ai.button')}", type="primary"):
+            if st.form_submit_button("🚀 Start AI Model Scan", type="primary"):
                 if model_path:
-                    with st.spinner(_('spinner.ai_analyzing')):
+                    with st.spinner("Analyzing AI model..."):
                         import time
                         time.sleep(3)  # Simulate processing
                         result = run_ai_model_scan(model_path)
                         st.session_state.scan_results[result['scan_id']] = result
                         
-                    st.success(_('scanners.ai.success'))
-                    # Display translated scan results instead of raw JSON
-                    st.write(f"**{_('reports.status_label')}:** {translate_dynamic_value(result.get('status', 'Unknown'), 'status')}")
-                    st.write(f"**{_('reports.compliance_score_label')}:** {result.get('compliance_score', 'N/A')}")
-                    if result.get('findings'):
-                        st.write(f"**{_('reports.findings_label', 'Findings')}:** {len(result['findings'])}")
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            translated_severity = translate_dynamic_value(finding.get('severity'), 'severity')
-                            translated_type = translate_dynamic_value(finding.get('type'), 'type')
-                            st.write(f"{severity_color} **{translated_severity}** - {translated_type}: {finding.get('description')}")
+                    st.success("AI Model scan completed!")
+                    st.json(result)
                 else:
-                    st.error(_('scanners.ai.error_missing'))
+                    st.error("Please provide a model path or URL")
     
     with tab2:
-        st.subheader(_('scanners.code.title'))
-        st.write(_('scanners.code.description'))
+        st.subheader("Code Repository Scanner")
+        st.write("Scan source code repositories for secrets, PII, and privacy violations.")
         
         with st.form("code_scan_form"):
-            repo_url = st.text_input(_('scanners.code.input_label'), placeholder=_('scanners.code.input_placeholder'))
+            repo_url = st.text_input("Repository URL", placeholder="https://github.com/user/repo")
             scan_types = st.multiselect(
                 "Scan Types",
                 ["Secrets Detection", "PII Detection", "GDPR Compliance", "Security Vulnerabilities"],
                 default=["Secrets Detection", "PII Detection"]
             )
             
-            if st.form_submit_button(f"🚀 {_('scanners.code.button')}", type="primary"):
+            if st.form_submit_button("🚀 Start Code Scan", type="primary"):
                 if repo_url:
-                    with st.spinner(_('spinner.code_scanning')):
+                    with st.spinner("Scanning repository..."):
                         import time
                         time.sleep(2)
                         result = run_code_scan(repo_url)
                         st.session_state.scan_results[result['scan_id']] = result
                     
-                    st.success(_('scanners.code.success'))
-                    # Display translated scan results instead of raw JSON
-                    st.write(f"**{_('reports.status_label')}:** {translate_dynamic_value(result.get('status', 'Unknown'), 'status')}")
-                    st.write(f"**{_('reports.compliance_score_label')}:** {result.get('compliance_score', 'N/A')}")
-                    if result.get('findings'):
-                        st.write(f"**{_('reports.findings_label', 'Findings')}:** {len(result['findings'])}")
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            translated_severity = translate_dynamic_value(finding.get('severity'), 'severity')
-                            translated_type = translate_dynamic_value(finding.get('type'), 'type')
-                            st.write(f"{severity_color} **{translated_severity}** - {translated_type}: {finding.get('description')}")
+                    st.success("Code scan completed!")
+                    st.json(result)
                 else:
-                    st.error(_('scanners.code.error_missing'))
+                    st.error("Please provide a repository URL")
     
     with tab3:
-        st.subheader(_('scanners.website.title'))
-        st.write(_('scanners.website.description'))
+        st.subheader("Website Privacy Scanner")
+        st.write("Analyze websites for GDPR compliance, cookies, and tracking.")
         
         with st.form("website_scan_form"):
-            website_url = st.text_input(_('scanners.website.input_label'), placeholder=_('scanners.website.input_placeholder'))
-            depth = st.slider(_('scanners.website.depth_label'), 1, 50, 10)
+            website_url = st.text_input("Website URL", placeholder="https://example.com")
+            depth = st.slider("Scan Depth (pages)", 1, 50, 10)
             
-            if st.form_submit_button(f"🚀 {_('scanners.website.button')}", type="primary"):
+            if st.form_submit_button("🚀 Start Website Scan", type="primary"):
                 if website_url:
-                    with st.spinner(_('spinner.website_scanning')):
+                    with st.spinner("Scanning website..."):
                         import time
                         time.sleep(2)
                         result = run_website_scan(website_url)
                         st.session_state.scan_results[result['scan_id']] = result
                     
-                    st.success(_('scanners.website.success'))
-                    # Display translated scan results instead of raw JSON
-                    st.write(f"**{_('reports.status_label')}:** {translate_dynamic_value(result.get('status', 'Unknown'), 'status')}")
-                    st.write(f"**{_('reports.compliance_score_label')}:** {result.get('compliance_score', 'N/A')}")
-                    if result.get('findings'):
-                        st.write(f"**{_('reports.findings_label', 'Findings')}:** {len(result['findings'])}")
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            translated_severity = translate_dynamic_value(finding.get('severity'), 'severity')
-                            translated_type = translate_dynamic_value(finding.get('type'), 'type')
-                            st.write(f"{severity_color} **{translated_severity}** - {translated_type}: {finding.get('description')}")
+                    st.success("Website scan completed!")
+                    st.json(result)
                 else:
-                    st.error(_('scanners.website.error_missing'))
-    
-    # Document Scanner Tab
-    with tab4:
-        st.subheader("📄 Document Scanner")
-        st.write("Upload documents (PDF, DOCX, TXT) for privacy analysis and PII detection.")
-        
-        with st.form("document_form"):
-            uploaded_file = st.file_uploader("Choose file", type=['pdf', 'docx', 'txt'])
-            scan_types = st.multiselect("Analysis Types", ["PII Detection", "BSN Detection", "GDPR Compliance", "Data Classification"], default=["PII Detection", "BSN Detection"])
-            
-            if st.form_submit_button("🚀 Analyze Document", type="primary"):
-                if uploaded_file:
-                    with st.spinner("Analyzing document..."):
-                        import time; time.sleep(2)
-                        result = run_document_scan(uploaded_file)
-                        st.session_state.scan_results[result['scan_id']] = result
-                    st.success("Document analysis completed!")
-                    st.write(f"**Status:** {translate_dynamic_value(result.get('status'), 'status')} | **Score:** {result.get('compliance_score')}%")
-                    if result.get('findings'):
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            st.write(f"{severity_color} **{translate_dynamic_value(finding.get('severity'), 'severity')}** - {translate_dynamic_value(finding.get('type'), 'type')}: {finding.get('description')}")
-                else:
-                    st.error("Please upload a file")
-    
-    # Image Scanner Tab
-    with tab5:
-        st.subheader("🖼️ Image Scanner")
-        st.write("Analyze images for faces, OCR text extraction, and privacy compliance.")
-        
-        with st.form("image_form"):
-            uploaded_image = st.file_uploader("Choose image", type=['jpg', 'png', 'jpeg', 'tiff'])
-            analysis_options = st.multiselect("Analysis Options", ["Face Detection", "OCR Text Extraction", "Metadata Analysis", "Privacy Assessment"], default=["Face Detection", "OCR Text Extraction"])
-            
-            if st.form_submit_button("🚀 Analyze Image", type="primary"):
-                if uploaded_image:
-                    with st.spinner("Processing image..."):
-                        import time; time.sleep(2)
-                        result = run_image_scan(uploaded_image)
-                        st.session_state.scan_results[result['scan_id']] = result
-                    st.success("Image analysis completed!")
-                    st.write(f"**Status:** {translate_dynamic_value(result.get('status'), 'status')} | **Score:** {result.get('compliance_score')}%")
-                    if result.get('findings'):
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            st.write(f"{severity_color} **{translate_dynamic_value(finding.get('severity'), 'severity')}** - {translate_dynamic_value(finding.get('type'), 'type')}: {finding.get('description')}")
-                else:
-                    st.error("Please upload an image")
-    
-    # Database Scanner Tab
-    with tab6:
-        st.subheader("🗄️ Database Scanner")
-        st.write("Scan databases for PII, encryption compliance, and access controls.")
-        
-        with st.form("database_form"):
-            connection_string = st.text_input("Database Connection", placeholder="postgresql://user:pass@host:port/db")
-            scan_options = st.multiselect("Scan Options", ["PII Detection", "Encryption Check", "Access Control Audit", "GDPR Compliance"], default=["PII Detection", "Encryption Check"])
-            
-            if st.form_submit_button("🚀 Scan Database", type="primary"):
-                if connection_string:
-                    with st.spinner("Scanning database..."):
-                        import time; time.sleep(3)
-                        result = run_database_scan(connection_string)
-                        st.session_state.scan_results[result['scan_id']] = result
-                    st.success("Database scan completed!")
-                    st.write(f"**Status:** {translate_dynamic_value(result.get('status'), 'status')} | **Score:** {result.get('compliance_score')}%")
-                    if result.get('findings'):
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            st.write(f"{severity_color} **{translate_dynamic_value(finding.get('severity'), 'severity')}** - {translate_dynamic_value(finding.get('type'), 'type')}: {finding.get('description')}")
-                else:
-                    st.error("Please provide database connection string")
-    
-    # DPIA Scanner Tab
-    with tab7:
-        st.subheader("📋 DPIA Scanner")
-        st.write("Data Protection Impact Assessment for GDPR Article 35 compliance.")
-        
-        with st.form("dpia_form"):
-            project_name = st.text_input("Project/Process Name", placeholder="Customer data processing system")
-            risk_level = st.selectbox("Estimated Risk Level", ["Low", "Medium", "High", "Very High"])
-            data_categories = st.multiselect("Data Categories", ["Personal Data", "Special Category Data", "Criminal Data", "Children's Data"], default=["Personal Data"])
-            
-            if st.form_submit_button("🚀 Generate DPIA", type="primary"):
-                if project_name:
-                    with st.spinner("Generating DPIA assessment..."):
-                        import time; time.sleep(2)
-                        result = run_dpia_scan({"project": project_name, "risk": risk_level})
-                        st.session_state.scan_results[result['scan_id']] = result
-                    st.success("DPIA assessment completed!")
-                    st.write(f"**Status:** {translate_dynamic_value(result.get('status'), 'status')} | **Score:** {result.get('compliance_score')}%")
-                    st.write(f"**Risk Level:** {result.get('risk_level')} | **UAVG Compliant:** {'Yes' if result.get('uavg_compliant') else 'No'}")
-                    if result.get('findings'):
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            st.write(f"{severity_color} **{translate_dynamic_value(finding.get('severity'), 'severity')}** - {translate_dynamic_value(finding.get('type'), 'type')}: {finding.get('description')}")
-                else:
-                    st.error("Please provide project name")
-    
-    # SOC2 Scanner Tab
-    with tab8:
-        st.subheader("🛡️ SOC2 Scanner")
-        st.write("SOC2 Type II compliance assessment for security controls.")
-        
-        with st.form("soc2_form"):
-            system_name = st.text_input("System Name", placeholder="Production application system")
-            control_areas = st.multiselect("Control Areas", ["Security", "Availability", "Processing Integrity", "Confidentiality", "Privacy"], default=["Security", "Confidentiality"])
-            assessment_period = st.selectbox("Assessment Period", ["3 months", "6 months", "12 months"])
-            
-            if st.form_submit_button("🚀 Run SOC2 Assessment", type="primary"):
-                if system_name:
-                    with st.spinner("Running SOC2 assessment..."):
-                        import time; time.sleep(3)
-                        result = run_soc2_scan({"system": system_name, "controls": control_areas})
-                        st.session_state.scan_results[result['scan_id']] = result
-                    st.success("SOC2 assessment completed!")
-                    st.write(f"**Status:** {translate_dynamic_value(result.get('status'), 'status')} | **Score:** {result.get('compliance_score')}%")
-                    st.write(f"**Controls Tested:** {result.get('controls_tested')} | **Passed:** {result.get('controls_passed')}")
-                    if result.get('findings'):
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            st.write(f"{severity_color} **{translate_dynamic_value(finding.get('severity'), 'severity')}** - {translate_dynamic_value(finding.get('type'), 'type')}: {finding.get('description')}")
-                else:
-                    st.error("Please provide system name")
-    
-    # API Scanner Tab
-    with tab9:
-        st.subheader("🔌 API Scanner")
-        st.write("REST API security and privacy compliance scanning.")
-        
-        with st.form("api_form"):
-            api_endpoint = st.text_input("API Endpoint", placeholder="https://api.example.com/v1")
-            scan_types = st.multiselect("Scan Types", ["Data Exposure", "Authentication", "Rate Limiting", "GDPR Compliance"], default=["Data Exposure", "Authentication"])
-            auth_token = st.text_input("API Token (optional)", type="password", placeholder="Bearer token for authenticated endpoints")
-            
-            if st.form_submit_button("🚀 Scan API", type="primary"):
-                if api_endpoint:
-                    with st.spinner("Scanning API endpoints..."):
-                        import time; time.sleep(2)
-                        result = run_api_scan(api_endpoint)
-                        st.session_state.scan_results[result['scan_id']] = result
-                    st.success("API scan completed!")
-                    st.write(f"**Status:** {translate_dynamic_value(result.get('status'), 'status')} | **Score:** {result.get('compliance_score')}%")
-                    st.write(f"**Endpoints Tested:** {result.get('endpoints_tested')} | **Vulnerabilities:** {result.get('vulnerabilities_found')}")
-                    if result.get('findings'):
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            st.write(f"{severity_color} **{translate_dynamic_value(finding.get('severity'), 'severity')}** - {translate_dynamic_value(finding.get('type'), 'type')}: {finding.get('description')}")
-                else:
-                    st.error("Please provide API endpoint URL")
-    
-    # Sustainability Scanner Tab
-    with tab10:
-        st.subheader("🌱 Sustainability Scanner")
-        st.write("Environmental impact analysis and green coding assessment.")
-        
-        with st.form("sustainability_form"):
-            resource_type = st.selectbox("Resource Type", ["Cloud Infrastructure", "Application Code", "Data Centers", "Development Processes"])
-            analysis_scope = st.multiselect("Analysis Scope", ["Carbon Footprint", "Energy Usage", "Zombie Resources", "Code Efficiency"], default=["Carbon Footprint", "Zombie Resources"])
-            region = st.selectbox("Region", ["EU-West", "EU-Central", "Netherlands", "Global"])
-            
-            if st.form_submit_button("🚀 Analyze Sustainability", type="primary"):
-                if resource_type:
-                    with st.spinner("Analyzing sustainability metrics..."):
-                        import time; time.sleep(2)
-                        result = run_sustainability_scan({"type": resource_type, "scope": analysis_scope})
-                        st.session_state.scan_results[result['scan_id']] = result
-                    st.success("Sustainability analysis completed!")
-                    st.write(f"**Status:** {translate_dynamic_value(result.get('status'), 'status')} | **Score:** {result.get('sustainability_score')}%")
-                    st.write(f"**CO₂ Emissions:** {result.get('co2_emissions_kg')}kg | **Energy Usage:** {result.get('energy_usage_kwh')}kWh | **Waste Resources:** {result.get('waste_resources_count')}")
-                    if result.get('findings'):
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            st.write(f"{severity_color} **{translate_dynamic_value(finding.get('severity'), 'severity')}** - {translate_dynamic_value(finding.get('type'), 'type')}: {finding.get('description')}")
-                else:
-                    st.error("Please select resource type")
-    
-    # Enterprise Connectors Tab - Real production connectors
-    with tab11:
-        st.subheader("🔗 Enterprise Connectors")
-        st.write("Connect to enterprise systems with OAuth2 authentication: Microsoft 365, Google Workspace, SAP, Salesforce, and Exact Online.")
-        
-        # Import and use the real enterprise UI
-        try:
-            from components.enterprise_ui import show_enterprise_connectors
-            show_enterprise_connectors()
-        except ImportError as e:
-            st.error(f"Enterprise connectors module not available: {str(e)}")
-            st.info("Enterprise connectors include: Microsoft 365 (SharePoint, OneDrive, Exchange, Teams), Google Workspace (Drive, Gmail, Docs), SAP ERP, Salesforce CRM, and Exact Online ERP with full OAuth2 authentication and token management.")
+                    st.error("Please provide a website URL")
 
 def render_reports():
     """Render the reports page"""
     st.title("📋 Scan Reports")
     
     if not st.session_state.scan_results:
-        st.info(_('reports.no_results'))
-        if st.button(f"🔍 {_('common.go_to_scanners')}"):
+        st.info("No scan results available. Run a scanner first to see reports here.")
+        if st.button("🔍 Go to Scanners"):
             st.session_state.current_page = 'scanners'
             st.rerun()
         return
@@ -924,23 +596,21 @@ def render_reports():
             col1, col2 = st.columns([2, 1])
             
             with col1:
-                st.write(f"**{_('reports.status_label')}:** {translate_dynamic_value(result.get('status', 'Unknown'), 'status')}")
-                st.write(f"**{_('reports.compliance_score_label')}:** {result.get('compliance_score', 'N/A')}")
+                st.write(f"**Status:** {result.get('status', 'Unknown')}")
+                st.write(f"**Compliance Score:** {result.get('compliance_score', 'N/A')}")
                 st.write(f"**Files/Pages Scanned:** {result.get('files_scanned', result.get('pages_scanned', 0))}")
                 
                 if 'findings' in result:
                     st.write(f"**Findings:** {len(result['findings'])}")
                     for finding in result['findings']:
                         severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                        translated_severity = translate_dynamic_value(finding.get('severity'), 'severity')
-                        translated_type = translate_dynamic_value(finding.get('type'), 'type')
-                        st.write(f"{severity_color} **{translated_severity}** - {translated_type}: {finding.get('description')}")
+                        st.write(f"{severity_color} {finding.get('type')}: {finding.get('description')}")
             
             with col2:
-                if st.button(f"📥 {_('reports.download_report')}", key=f"download_{scan_id}"):
-                    st.success(_('reports.report_download_start'))
-                if st.button(f"🔄 {_('reports.rerun_scan')}", key=f"rerun_{scan_id}"):
-                    st.info(_('reports.scan_rerun_start'))
+                if st.button(f"📥 Download Report", key=f"download_{scan_id}"):
+                    st.success("Report download would start here")
+                if st.button(f"🔄 Re-run Scan", key=f"rerun_{scan_id}"):
+                    st.info("Scan re-run would start here")
 
 def render_settings():
     """Render the settings page"""
@@ -949,40 +619,40 @@ def render_settings():
     tab1, tab2, tab3 = st.tabs(["👤 Profile", "🔔 Notifications", "🔒 Security"])
     
     with tab1:
-        st.subheader(_('settings.profile_title'))
+        st.subheader("Profile Settings")
         
         with st.form("profile_form"):
-            name = st.text_input(_('settings.full_name_label'), value=st.session_state.user_name)
-            email = st.text_input(_('settings.email_label'), value=st.session_state.username)
-            role = st.text_input(_('settings.role_label'), value=st.session_state.user_role, disabled=True)
+            name = st.text_input("Full Name", value=st.session_state.user_name)
+            email = st.text_input("Email", value=st.session_state.username)
+            role = st.text_input("Role", value=st.session_state.user_role, disabled=True)
             
             if st.form_submit_button("💾 Save Profile"):
                 st.session_state.user_name = name
-                st.success(_('settings.profile_updated'))
+                st.success("Profile updated successfully!")
     
     with tab2:
-        st.subheader(_('settings.notification_title'))
+        st.subheader("Notification Settings")
         
-        st.checkbox(_('settings.email_notifications'), value=True)
+        st.checkbox("Email notifications for scan completion", value=True)
         st.checkbox("Weekly compliance reports", value=True) 
-        st.checkbox(_('settings.critical_findings_alerts', 'Critical findings alerts'), value=True)
+        st.checkbox("Critical findings alerts", value=True)
         
         if st.button("💾 Save Notifications"):
-            st.success(_('settings.notifications_saved'))
+            st.success("Notification settings saved!")
     
     with tab3:
-        st.subheader(_('settings.security_title'))
+        st.subheader("Security Settings")
         
         with st.form("security_form"):
-            st.text_input(_('settings.current_password_label'), type="password")
-            new_pass = st.text_input(_('settings.new_password_label'), type="password")
-            confirm_pass = st.text_input(_('settings.confirm_password_label'), type="password")
+            st.text_input("Current Password", type="password")
+            new_pass = st.text_input("New Password", type="password")
+            confirm_pass = st.text_input("Confirm New Password", type="password")
             
             if st.form_submit_button("🔒 Change Password"):
                 if new_pass and new_pass == confirm_pass:
-                    st.success(_('settings.password_updated'))
+                    st.success("Password updated successfully!")
                 else:
-                    st.error(_('settings.password_mismatch'))
+                    st.error("Passwords don't match")
 
 def main():
     """Main application entry point"""
@@ -1027,8 +697,8 @@ def main():
         """, unsafe_allow_html=True)
         
     except Exception as e:
-        st.error(_('common.application_error'))
-        st.write(f"{_('common.error_prefix')}: {str(e)}")
+        st.error("Application Error")
+        st.write(f"Error: {str(e)}")
         logger.error(f"Application error: {e}")
 
 if __name__ == "__main__":

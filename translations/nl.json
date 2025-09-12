@@ -1,8 +1,8 @@
 {
   "app": {
     "title": "DataGuardian Pro",
-    "subtitle": "Enterprise Privacy Naleving Platform",
-    "tagline": "Detecteer, Beheer en Rapporteer Privacy Compliance met AI-gestuurde Precisie"
+    "subtitle": "Enterprise Privacy Compliance Platform",
+    "tagline": "Detecteer, Beheer en Rapporteer Privacynaleving met AI-gestuurde Precisie"
   },
   "landing": {
     "scanner_showcase_title": "Geavanceerde Privacy Scanners",
@@ -872,129 +872,5 @@
     "low_risk_issues": "Laag Risico Problemen",
     "vs_industry": "vs Industrie",
     "at_industry_average": "Op Industrie Gemiddelde"
-  },
-  "nav": {
-    "dashboard": "Dashboard",
-    "scanners": "Scanners",
-    "reports": "Rapporten",
-    "settings": "Instellingen"
-  },
-  "common": {
-    "language": "Taal",
-    "demo": "Demo",
-    "demo_help": "Snelle demo login",
-    "go_to_scanners": "Ga naar Scanners",
-    "welcome_back": "Welkom terug",
-    "application_error": "Applicatie Fout",
-    "error_prefix": "Fout"
-  },
-  "scanners": {
-    "ai": {
-      "title": "AI Model Privacy Scanner",
-      "description": "Analyseer AI-modellen voor privacynaleving en AI Act-vereisten.",
-      "input_label": "Model Pad/URL",
-      "input_placeholder": "pad/naar/uw/model of https://huggingface.co/model",
-      "button": "Model Scannen",
-      "success": "AI Model scan voltooid!",
-      "error_missing": "Gelieve een model pad of URL op te geven"
-    },
-    "code": {
-      "title": "Code Repository Scanner",
-      "description": "Scan broncode repositories voor geheimen, PII en privacy overtredingen.",
-      "input_label": "Repository URL",
-      "input_placeholder": "https://github.com/gebruiker/repo",
-      "button": "Repository Scannen",
-      "success": "Code scan voltooid!",
-      "error_missing": "Gelieve een repository URL op te geven"
-    },
-    "website": {
-      "title": "Website Privacy Scanner",
-      "description": "Analyseer websites voor GDPR-naleving, cookies en tracking.",
-      "input_label": "Website URL",
-      "input_placeholder": "https://voorbeeld.com",
-      "depth_label": "Scan Diepte (pagina's)",
-      "button": "Website Scannen",
-      "success": "Website scan voltooid!",
-      "error_missing": "Gelieve een website URL op te geven"
-    }
-  },
-  "reports": {
-    "no_results": "Geen scan resultaten beschikbaar. Voer eerst een scanner uit om rapporten hier te zien.",
-    "status_label": "Status",
-    "compliance_score_label": "Nalevingsscore",
-    "findings_label": "Bevindingen",
-    "download_report": "Rapport Downloaden",
-    "rerun_scan": "Scan Opnieuw Uitvoeren",
-    "report_download_start": "Rapport download zou hier starten",
-    "scan_rerun_start": "Scan opnieuw uitvoeren zou hier starten"
-  },
-  "settings": {
-    "profile_title": "Profiel Instellingen",
-    "full_name_label": "Volledige Naam",
-    "email_label": "E-mail",
-    "role_label": "Rol",
-    "update_profile_button": "Profiel Bijwerken",
-    "profile_updated": "Profiel succesvol bijgewerkt!",
-    "notification_title": "Notificatie Instellingen",
-    "email_notifications": "E-mail notificaties",
-    "critical_findings_alerts": "Kritieke bevindingen waarschuwingen",
-    "push_notifications": "Push notificaties",
-    "weekly_reports": "Wekelijkse rapporten",
-    "save_notifications_button": "Notificaties Opslaan",
-    "notifications_saved": "Notificatie instellingen opgeslagen!",
-    "security_title": "Beveiligingsinstellingen",
-    "current_password_label": "Huidig Wachtwoord",
-    "new_password_label": "Nieuw Wachtwoord",
-    "confirm_password_label": "Bevestig Nieuw Wachtwoord",
-    "update_password_button": "Wachtwoord Bijwerken",
-    "password_updated": "Wachtwoord succesvol bijgewerkt!",
-    "password_mismatch": "Wachtwoorden komen niet overeen"
-  },
-  "demo": {
-    "login_success": "Demo login succesvol!",
-    "button": "Demo",
-    "help": "Snelle demo login"
-  },
-  "sidebar": {
-    "navigation": "Navigatie",
-    "sign_in": "Inloggen",
-    "sign_out": "Uitloggen",
-    "create_account": "Account Aanmaken",
-    "welcome": "Welkom",
-    "quick_access": "Snelle Toegang",
-    "language": "Taal",
-    "logout": "Uitloggen"
-  },
-  "spinner": {
-    "ai_analyzing": "AI model analyseren...",
-    "code_scanning": "Repository scannen...",
-    "website_scanning": "Website scannen..."
-  },
-  "options": {
-    "pii_detection": "PII Detectie",
-    "ai_act_compliance": "AI Act Naleving",
-    "gdpr_analysis": "GDPR Analyse",
-    "security_scan": "Beveiligingsscan",
-    "bias_detection": "Bias Detectie"
-  },
-  "severity": {
-    "high": "Hoog",
-    "medium": "Gemiddeld",
-    "low": "Laag",
-    "critical": "Kritisch"
-  },
-  "status": {
-    "completed": "Voltooid",
-    "failed": "Gefaald",
-    "running": "Wordt uitgevoerd",
-    "pending": "In afwachting"
-  },
-  "types": {
-    "pii_detection": "PII Detectie",
-    "hardcoded_secret": "Hardgecodeerd Geheim",
-    "cookie_compliance": "Cookie Naleving",
-    "privacy_policy": "Privacybeleid",
-    "data_leakage": "Data Lekkage",
-    "bias_detection": "Bias Detectie"
   }
 }
