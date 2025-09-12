@@ -417,9 +417,9 @@ def render_landing_page():
         **{_('landing.roi_small_title')}**
         
         {_('landing.roi_small_desc')}
-        - **90%** kostenbesparing vs OneTrust
-        - **€15.000** besparing per jaar
-        - **ROI**: 1.711% over 3 jaar
+        - **90%** {_('landing.roi_cost_saving')} OneTrust
+        - **€15.000** {_('landing.roi_savings_per_year')}
+        - **ROI**: 1.711% {_('landing.roi_3_year')}
         """)
     
     with col2:
@@ -427,9 +427,9 @@ def render_landing_page():
         **{_('landing.roi_medium_title')}**
         
         {_('landing.roi_medium_desc')}
-        - **92%** kostenbesparing vs BigID
-        - **€180.000** besparing per jaar
-        - **ROI**: 4.250% over 3 jaar
+        - **92%** {_('landing.roi_cost_saving')} BigID
+        - **€180.000** {_('landing.roi_savings_per_year')}
+        - **ROI**: 4.250% {_('landing.roi_3_year')}
         """)
     
     with col3:
@@ -437,9 +437,9 @@ def render_landing_page():
         **{_('landing.roi_large_title')}**
         
         {_('landing.roi_large_desc')}
-        - **95%** kostenbesparing vs Varonis
-        - **€920.000** besparing per jaar
-        - **ROI**: 14.518% over 3 jaar
+        - **95%** {_('landing.roi_cost_saving')} Varonis
+        - **€920.000** {_('landing.roi_savings_per_year')}
+        - **ROI**: 14.518% {_('landing.roi_3_year')}
         """)
     
     # Call-to-action with proper translations
