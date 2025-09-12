@@ -296,7 +296,7 @@ def render_sidebar():
                 
                 if demo_btn:
                     if authenticate_user('demo@dataguardianpro.nl', 'demo123'):
-                        st.success('Demo login successful!')
+                        st.success(_('demo.login_success'))
                         st.rerun()
 
 def render_landing_page():
@@ -462,7 +462,7 @@ def render_dashboard():
     st.title("📊 DataGuardian Pro Dashboard")
     
     # Welcome message
-    st.success(f"Welcome back, {st.session_state.user_name}! 👋")
+    st.success(f"{_('common.welcome_back')}, {st.session_state.user_name}! 👋")
     
     # Stats overview
     col1, col2, col3, col4 = st.columns(4)
@@ -507,18 +507,18 @@ def render_scanners():
     tab1, tab2, tab3 = st.tabs(["🤖 AI Model", "💻 Code", "🌐 Website"])
     
     with tab1:
-        st.subheader("AI Model Privacy Scanner")
-        st.write("Analyze AI models for privacy compliance and AI Act requirements.")
+        st.subheader(_('scanners.ai.title'))
+        st.write(_('scanners.ai.description'))
         
         with st.form("ai_model_form"):
-            model_path = st.text_input("Model Path/URL", placeholder="path/to/your/model or https://huggingface.co/model")
+            model_path = st.text_input(_('scanners.ai.input_label'), placeholder=_('scanners.ai.input_placeholder'))
             scan_options = st.multiselect(
                 "Scan Options",
                 ["PII Detection", "AI Act Compliance", "Bias Assessment", "Data Lineage"],
                 default=["PII Detection", "AI Act Compliance"]
             )
             
-            if st.form_submit_button("🚀 Start AI Model Scan", type="primary"):
+            if st.form_submit_button(f"🚀 {_('scanners.ai.button')}", type="primary"):
                 if model_path:
                     with st.spinner("Analyzing AI model..."):
                         import time
@@ -526,24 +526,24 @@ def render_scanners():
                         result = run_ai_model_scan(model_path)
                         st.session_state.scan_results[result['scan_id']] = result
                         
-                    st.success("AI Model scan completed!")
+                    st.success(_('scanners.ai.success'))
                     st.json(result)
                 else:
-                    st.error("Please provide a model path or URL")
+                    st.error(_('scanners.ai.error_missing'))
     
     with tab2:
-        st.subheader("Code Repository Scanner")
-        st.write("Scan source code repositories for secrets, PII, and privacy violations.")
+        st.subheader(_('scanners.code.title'))
+        st.write(_('scanners.code.description'))
         
         with st.form("code_scan_form"):
-            repo_url = st.text_input("Repository URL", placeholder="https://github.com/user/repo")
+            repo_url = st.text_input(_('scanners.code.input_label'), placeholder=_('scanners.code.input_placeholder'))
             scan_types = st.multiselect(
                 "Scan Types",
                 ["Secrets Detection", "PII Detection", "GDPR Compliance", "Security Vulnerabilities"],
                 default=["Secrets Detection", "PII Detection"]
             )
             
-            if st.form_submit_button("🚀 Start Code Scan", type="primary"):
+            if st.form_submit_button(f"🚀 {_('scanners.code.button')}", type="primary"):
                 if repo_url:
                     with st.spinner("Scanning repository..."):
                         import time
@@ -551,20 +551,20 @@ def render_scanners():
                         result = run_code_scan(repo_url)
                         st.session_state.scan_results[result['scan_id']] = result
                     
-                    st.success("Code scan completed!")
+                    st.success(_('scanners.code.success'))
                     st.json(result)
                 else:
-                    st.error("Please provide a repository URL")
+                    st.error(_('scanners.code.error_missing'))
     
     with tab3:
-        st.subheader("Website Privacy Scanner")
-        st.write("Analyze websites for GDPR compliance, cookies, and tracking.")
+        st.subheader(_('scanners.website.title'))
+        st.write(_('scanners.website.description'))
         
         with st.form("website_scan_form"):
-            website_url = st.text_input("Website URL", placeholder="https://example.com")
-            depth = st.slider("Scan Depth (pages)", 1, 50, 10)
+            website_url = st.text_input(_('scanners.website.input_label'), placeholder=_('scanners.website.input_placeholder'))
+            depth = st.slider(_('scanners.website.depth_label'), 1, 50, 10)
             
-            if st.form_submit_button("🚀 Start Website Scan", type="primary"):
+            if st.form_submit_button(f"🚀 {_('scanners.website.button')}", type="primary"):
                 if website_url:
                     with st.spinner("Scanning website..."):
                         import time
@@ -572,18 +572,18 @@ def render_scanners():
                         result = run_website_scan(website_url)
                         st.session_state.scan_results[result['scan_id']] = result
                     
-                    st.success("Website scan completed!")
+                    st.success(_('scanners.website.success'))
                     st.json(result)
                 else:
-                    st.error("Please provide a website URL")
+                    st.error(_('scanners.website.error_missing'))
 
 def render_reports():
     """Render the reports page"""
     st.title("📋 Scan Reports")
     
     if not st.session_state.scan_results:
-        st.info("No scan results available. Run a scanner first to see reports here.")
-        if st.button("🔍 Go to Scanners"):
+        st.info(_('reports.no_results'))
+        if st.button(f"🔍 {_('common.go_to_scanners')}"):
             st.session_state.current_page = 'scanners'
             st.rerun()
         return
@@ -596,8 +596,8 @@ def render_reports():
             col1, col2 = st.columns([2, 1])
             
             with col1:
-                st.write(f"**Status:** {result.get('status', 'Unknown')}")
-                st.write(f"**Compliance Score:** {result.get('compliance_score', 'N/A')}")
+                st.write(f"**{_('reports.status_label')}:** {result.get('status', 'Unknown')}")
+                st.write(f"**{_('reports.compliance_score_label')}:** {result.get('compliance_score', 'N/A')}")
                 st.write(f"**Files/Pages Scanned:** {result.get('files_scanned', result.get('pages_scanned', 0))}")
                 
                 if 'findings' in result:
@@ -607,10 +607,10 @@ def render_reports():
                         st.write(f"{severity_color} {finding.get('type')}: {finding.get('description')}")
             
             with col2:
-                if st.button(f"📥 Download Report", key=f"download_{scan_id}"):
-                    st.success("Report download would start here")
-                if st.button(f"🔄 Re-run Scan", key=f"rerun_{scan_id}"):
-                    st.info("Scan re-run would start here")
+                if st.button(f"📥 {_('reports.download_report')}", key=f"download_{scan_id}"):
+                    st.success(_('reports.report_download_start'))
+                if st.button(f"🔄 {_('reports.rerun_scan')}", key=f"rerun_{scan_id}"):
+                    st.info(_('reports.scan_rerun_start'))
 
 def render_settings():
     """Render the settings page"""
@@ -619,40 +619,40 @@ def render_settings():
     tab1, tab2, tab3 = st.tabs(["👤 Profile", "🔔 Notifications", "🔒 Security"])
     
     with tab1:
-        st.subheader("Profile Settings")
+        st.subheader(_('settings.profile_title'))
         
         with st.form("profile_form"):
-            name = st.text_input("Full Name", value=st.session_state.user_name)
-            email = st.text_input("Email", value=st.session_state.username)
-            role = st.text_input("Role", value=st.session_state.user_role, disabled=True)
+            name = st.text_input(_('settings.full_name_label'), value=st.session_state.user_name)
+            email = st.text_input(_('settings.email_label'), value=st.session_state.username)
+            role = st.text_input(_('settings.role_label'), value=st.session_state.user_role, disabled=True)
             
             if st.form_submit_button("💾 Save Profile"):
                 st.session_state.user_name = name
-                st.success("Profile updated successfully!")
+                st.success(_('settings.profile_updated'))
     
     with tab2:
-        st.subheader("Notification Settings")
+        st.subheader(_('settings.notification_title'))
         
-        st.checkbox("Email notifications for scan completion", value=True)
+        st.checkbox(_('settings.email_notifications'), value=True)
         st.checkbox("Weekly compliance reports", value=True) 
         st.checkbox("Critical findings alerts", value=True)
         
         if st.button("💾 Save Notifications"):
-            st.success("Notification settings saved!")
+            st.success(_('settings.notifications_saved'))
     
     with tab3:
-        st.subheader("Security Settings")
+        st.subheader(_('settings.security_title'))
         
         with st.form("security_form"):
-            st.text_input("Current Password", type="password")
-            new_pass = st.text_input("New Password", type="password")
-            confirm_pass = st.text_input("Confirm New Password", type="password")
+            st.text_input(_('settings.current_password_label'), type="password")
+            new_pass = st.text_input(_('settings.new_password_label'), type="password")
+            confirm_pass = st.text_input(_('settings.confirm_password_label'), type="password")
             
             if st.form_submit_button("🔒 Change Password"):
                 if new_pass and new_pass == confirm_pass:
-                    st.success("Password updated successfully!")
+                    st.success(_('settings.password_updated'))
                 else:
-                    st.error("Passwords don't match")
+                    st.error(_('settings.password_mismatch'))
 
 def main():
     """Main application entry point"""
@@ -697,8 +697,8 @@ def main():
         """, unsafe_allow_html=True)
         
     except Exception as e:
-        st.error("Application Error")
-        st.write(f"Error: {str(e)}")
+        st.error(_('common.application_error'))
+        st.write(f"{_('common.error_prefix')}: {str(e)}")
         logger.error(f"Application error: {e}")
 
 if __name__ == "__main__":

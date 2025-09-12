@@ -872,5 +872,84 @@
     "low_risk_issues": "Laag Risico Problemen",
     "vs_industry": "vs Industrie",
     "at_industry_average": "Op Industrie Gemiddelde"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "scanners": "Scanners",
+    "reports": "Rapporten",
+    "settings": "Instellingen",
+    "logout": "Uitloggen"
+  },
+  "common": {
+    "language": "Taal",
+    "demo": "Demo",
+    "demo_help": "Snelle demo login",
+    "go_to_scanners": "Ga naar Scanners",
+    "welcome_back": "Welkom terug",
+    "application_error": "Applicatie Fout",
+    "error_prefix": "Fout"
+  },
+  "scanners": {
+    "ai": {
+      "title": "AI Model Privacy Scanner",
+      "description": "Analyseer AI-modellen voor privacynaleving en AI Act-vereisten.",
+      "input_label": "Model Pad/URL",
+      "input_placeholder": "pad/naar/uw/model of https://huggingface.co/model",
+      "button": "Model Scannen",
+      "success": "AI Model scan voltooid!",
+      "error_missing": "Gelieve een model pad of URL op te geven"
+    },
+    "code": {
+      "title": "Code Repository Scanner",
+      "description": "Scan broncode repositories voor geheimen, PII en privacy overtredingen.",
+      "input_label": "Repository URL",
+      "input_placeholder": "https://github.com/gebruiker/repo",
+      "button": "Repository Scannen",
+      "success": "Code scan voltooid!",
+      "error_missing": "Gelieve een repository URL op te geven"
+    },
+    "website": {
+      "title": "Website Privacy Scanner",
+      "description": "Analyseer websites voor GDPR-naleving, cookies en tracking.",
+      "input_label": "Website URL",
+      "input_placeholder": "https://voorbeeld.com",
+      "depth_label": "Scan Diepte (pagina's)",
+      "button": "Website Scannen",
+      "success": "Website scan voltooid!",
+      "error_missing": "Gelieve een website URL op te geven"
+    }
+  },
+  "reports": {
+    "no_results": "Geen scan resultaten beschikbaar. Voer eerst een scanner uit om rapporten hier te zien.",
+    "status_label": "Status",
+    "compliance_score_label": "Nalevingsscore",
+    "download_report": "Rapport Downloaden",
+    "rerun_scan": "Scan Opnieuw Uitvoeren",
+    "report_download_start": "Rapport download zou hier starten",
+    "scan_rerun_start": "Scan opnieuw uitvoeren zou hier starten"
+  },
+  "settings": {
+    "profile_title": "Profiel Instellingen",
+    "full_name_label": "Volledige Naam",
+    "email_label": "E-mail",
+    "role_label": "Rol",
+    "update_profile_button": "Profiel Bijwerken",
+    "profile_updated": "Profiel succesvol bijgewerkt!",
+    "notification_title": "Notificatie Instellingen",
+    "email_notifications": "E-mail notificaties",
+    "push_notifications": "Push notificaties",
+    "weekly_reports": "Wekelijkse rapporten",
+    "save_notifications_button": "Notificaties Opslaan",
+    "notifications_saved": "Notificatie instellingen opgeslagen!",
+    "security_title": "Beveiligingsinstellingen",
+    "current_password_label": "Huidig Wachtwoord",
+    "new_password_label": "Nieuw Wachtwoord",
+    "confirm_password_label": "Bevestig Nieuw Wachtwoord",
+    "update_password_button": "Wachtwoord Bijwerken",
+    "password_updated": "Wachtwoord succesvol bijgewerkt!",
+    "password_mismatch": "Wachtwoorden komen niet overeen"
+  },
+  "demo": {
+    "login_success": "Demo login succesvol!"
   }
 }
