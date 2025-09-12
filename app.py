@@ -110,8 +110,15 @@ def get_text(key: str, default: str = "") -> str:
                     if isinstance(english_value, dict) and k in english_value:
                         english_value = english_value[k]
                     else:
+                        # Log missing translation key for monitoring
+                        logger.warning(f"Missing translation key '{key}' for language '{lang}' and English fallback")
                         return default or key
+                # Log successful fallback to English (debug level to reduce noise)
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f"Using English fallback for key '{key}' in language '{lang}'")
                 return english_value if isinstance(english_value, str) else (default or key)
+            # Log missing translation key for English and current language
+            logger.warning(f"Missing translation key '{key}' in both '{lang}' and English translations")
             return default or key
     
     return value if isinstance(value, str) else (default or key)
@@ -262,7 +269,10 @@ def run_website_scan(url: str) -> Dict[str, Any]:
 def render_sidebar():
     """Render the application sidebar"""
     with st.sidebar:
-        st.image("https://via.placeholder.com/200x60/1f77b4/white?text=DataGuardian+Pro", width=200)
+        # Render SVG logo using HTML for better compatibility
+        with open("assets/logo.svg", "r") as logo_file:
+            logo_svg = logo_file.read()
+        st.markdown(f'<div style="margin-bottom: 10px;">{logo_svg}</div>', unsafe_allow_html=True)
         
         # Language selector (fixed to properly switch)
         languages = {'en': '🇬🇧 English', 'nl': '🇳🇱 Nederlands'}
