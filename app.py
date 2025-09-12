@@ -63,56 +63,50 @@ def init_session_state():
         if key not in st.session_state:
             st.session_state[key] = value
 
-# Translation system (simplified)
-TRANSLATIONS = {
-    'en': {
-        'app.title': 'DataGuardian Pro',
-        'app.subtitle': 'Enterprise Privacy Compliance Platform',
-        'app.tagline': 'Detect, Manage, and Report Privacy Compliance with AI-powered Precision',
-        'login.title': 'Login',
-        'login.email_username': 'Email/Username',
-        'login.password': 'Password',
-        'login.button': 'Login',
-        'login.success': 'Login successful!',
-        'login.error.invalid_credentials': 'Invalid credentials',
-        'nav.dashboard': 'Dashboard',
-        'nav.scanners': 'Privacy Scanners',
-        'nav.reports': 'Reports',
-        'nav.settings': 'Settings',
-        'scanner.ai_model': 'AI Model Scanner',
-        'scanner.code': 'Code Scanner',
-        'scanner.website': 'Website Scanner',
-        'scanner.document': 'Document Scanner',
-        'scanner.dpia': 'DPIA Assessment'
-    },
-    'nl': {
-        'app.title': 'DataGuardian Pro',
-        'app.subtitle': 'Enterprise Privacy Compliance Platform',
-        'app.tagline': 'Detecteer, Beheer en Rapporteer Privacy Compliance met AI-kracht',
-        'login.title': 'Inloggen',
-        'login.email_username': 'E-mail/Gebruikersnaam',
-        'login.password': 'Wachtwoord',
-        'login.button': 'Inloggen',
-        'login.success': 'Succesvol ingelogd!',
-        'login.error.invalid_credentials': 'Ongeldige inloggegevens',
-        'nav.dashboard': 'Dashboard',
-        'nav.scanners': 'Privacy Scanners',
-        'nav.reports': 'Rapporten',
-        'nav.settings': 'Instellingen',
-        'scanner.ai_model': 'AI Model Scanner',
-        'scanner.code': 'Code Scanner',
-        'scanner.website': 'Website Scanner',
-        'scanner.document': 'Document Scanner',
-        'scanner.dpia': 'DPIA Beoordeling'
-    }
-}
+# Translation system - Load from JSON files
+def load_translations():
+    """Load translations from JSON files"""
+    translations = {}
+    
+    # Load English translations
+    try:
+        with open('translations/en.json', 'r', encoding='utf-8') as f:
+            translations['en'] = json.load(f)
+    except Exception as e:
+        logger.warning(f"Could not load English translations: {e}")
+        translations['en'] = {}
+    
+    # Load Dutch translations
+    try:
+        with open('translations/nl.json', 'r', encoding='utf-8') as f:
+            translations['nl'] = json.load(f)
+    except Exception as e:
+        logger.warning(f"Could not load Dutch translations: {e}")
+        translations['nl'] = {}
+    
+    return translations
 
-def get_text(key: str, default: str = None) -> str:
-    """Get translated text"""
+# Load translations from JSON files
+TRANSLATIONS = load_translations()
+
+def get_text(key: str, default: str = "") -> str:
+    """Get translated text with nested key support"""
     lang = st.session_state.get('language', 'en')
-    return TRANSLATIONS.get(lang, {}).get(key, default or key)
+    translation_dict = TRANSLATIONS.get(lang, {})
+    
+    # Support nested keys like 'app.title'
+    keys = key.split('.')
+    value = translation_dict
+    
+    for k in keys:
+        if isinstance(value, dict) and k in value:
+            value = value[k]
+        else:
+            return default or key
+    
+    return value if isinstance(value, str) else (default or key)
 
-def _(key: str, default: str = None) -> str:
+def _(key: str, default: str = "") -> str:
     """Shorthand for get_text"""
     return get_text(key, default)
 
@@ -322,60 +316,146 @@ def render_landing_page():
     </div>
     """, unsafe_allow_html=True)
     
-    # Scanner showcase
-    st.markdown("### 🔍 Comprehensive Privacy Scanners")
+    # Scanner showcase with comprehensive translations
+    st.markdown(f"### {_('landing.scanner_showcase_title')}")
+    st.markdown(f"*{_('landing.scanner_showcase_subtitle')}*")
     
+    # Scanner grid with proper translations
     scanners = [
-        {"icon": "🤖", "name": _('scanner.ai_model'), "desc": "AI Act compliance and model privacy analysis"},
-        {"icon": "💻", "name": _('scanner.code'), "desc": "Source code PII and secrets detection"},
-        {"icon": "🌐", "name": _('scanner.website'), "desc": "Website GDPR and cookie compliance"},
-        {"icon": "📄", "name": _('scanner.document'), "desc": "Document privacy assessment"},
-        {"icon": "📋", "name": _('scanner.dpia'), "desc": "Data Protection Impact Assessment"}
+        {
+            "icon": "💻", 
+            "title": _('landing.scanner.code_title'),
+            "desc": _('landing.scanner.code_desc'),
+            "features": [
+                _('landing.scanner.code_f1'),
+                _('landing.scanner.code_f2'),
+                _('landing.scanner.code_f3'),
+                _('landing.scanner.code_f4')
+            ]
+        },
+        {
+            "icon": "📄", 
+            "title": _('landing.scanner.document_title'),
+            "desc": _('landing.scanner.document_desc'),
+            "features": [
+                _('landing.scanner.document_f1'),
+                _('landing.scanner.document_f2'),
+                _('landing.scanner.document_f3'),
+                _('landing.scanner.document_f4')
+            ]
+        },
+        {
+            "icon": "🖼️", 
+            "title": _('landing.scanner.image_title'),
+            "desc": _('landing.scanner.image_desc'),
+            "features": [
+                _('landing.scanner.image_f1'),
+                _('landing.scanner.image_f2'),
+                _('landing.scanner.image_f3'),
+                _('landing.scanner.image_f4')
+            ]
+        },
+        {
+            "icon": "🌐", 
+            "title": _('landing.scanner.website_title'),
+            "desc": _('landing.scanner.website_desc'),
+            "features": [
+                _('landing.scanner.website_f1'),
+                _('landing.scanner.website_f2'),
+                _('landing.scanner.website_f3'),
+                _('landing.scanner.website_f4')
+            ]
+        },
+        {
+            "icon": "🤖", 
+            "title": _('landing.scanner.ai_title'),
+            "desc": _('landing.scanner.ai_desc'),
+            "features": [
+                _('landing.scanner.ai_f1'),
+                _('landing.scanner.ai_f2'),
+                _('landing.scanner.ai_f3'),
+                _('landing.scanner.ai_f4')
+            ]
+        },
+        {
+            "icon": "📋", 
+            "title": _('landing.scanner.dpia_title'),
+            "desc": _('landing.scanner.dpia_desc'),
+            "features": [
+                _('landing.scanner.dpia_f1'),
+                _('landing.scanner.dpia_f2'),
+                _('landing.scanner.dpia_f3'),
+                _('landing.scanner.dpia_f4')
+            ]
+        }
     ]
     
-    cols = st.columns(len(scanners))
+    # Display scanners in grid
+    cols = st.columns(3)
     for i, scanner in enumerate(scanners):
-        with cols[i]:
-            st.markdown(f"""
-            <div style="text-align: center; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem;">
-                <div style="font-size: 2rem;">{scanner['icon']}</div>
-                <h4>{scanner['name']}</h4>
-                <p style="font-size: 0.9rem; color: #666;">{scanner['desc']}</p>
-            </div>
-            """, unsafe_allow_html=True)
+        with cols[i % 3]:
+            with st.container():
+                st.markdown(f"""
+                <div style="border: 1px solid #ddd; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; background: #f8f9fa;">
+                    <div style="text-align: center; font-size: 2.5rem; margin-bottom: 1rem;">{scanner['icon']}</div>
+                    <h4 style="text-align: center; color: #1f77b4; margin-bottom: 0.8rem;">{scanner['title']}</h4>
+                    <p style="text-align: center; color: #666; font-size: 0.95rem; margin-bottom: 1rem;">{scanner['desc']}</p>
+                    <ul style="font-size: 0.9rem; color: #555; padding-left: 1.2rem;">
+                        {''.join([f'<li>{feature}</li>' for feature in scanner['features']])}
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
     
-    # Features section
+    # ROI Section with Dutch translations
     st.markdown("---")
-    st.markdown("### ✨ Key Features")
+    st.markdown(f"### {_('landing.roi_title')}")
+    st.markdown(f"*{_('landing.roi_subtitle')}*")
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("""
-        **🎯 AI-Powered Detection**
-        - Advanced PII recognition
-        - Smart pattern matching
-        - Context-aware analysis
+        st.markdown(f"""
+        **{_('landing.roi_small_title')}**
+        
+        {_('landing.roi_small_desc')}
+        - **90%** kostenbesparing vs OneTrust
+        - **€15.000** besparing per jaar
+        - **ROI**: 1.711% over 3 jaar
         """)
     
     with col2:
-        st.markdown("""
-        **📊 Comprehensive Reporting**
-        - Executive summaries
-        - Technical details
-        - Compliance certificates
+        st.markdown(f"""
+        **{_('landing.roi_medium_title')}**
+        
+        {_('landing.roi_medium_desc')}
+        - **92%** kostenbesparing vs BigID
+        - **€180.000** besparing per jaar
+        - **ROI**: 4.250% over 3 jaar
         """)
     
     with col3:
-        st.markdown("""
-        **🔒 Enterprise Security**
-        - End-to-end encryption
-        - Audit trails
-        - Role-based access
+        st.markdown(f"""
+        **{_('landing.roi_large_title')}**
+        
+        {_('landing.roi_large_desc')}
+        - **95%** kostenbesparing vs Varonis
+        - **€920.000** besparing per jaar
+        - **ROI**: 14.518% over 3 jaar
         """)
     
-    # Call-to-action
+    # Call-to-action with proper translations
     st.markdown("---")
-    st.info("👈 **Login to access the full DataGuardian Pro platform** (Use 'Demo' button for quick access)")
+    st.markdown(f"### {_('landing.cta_title')}")
+    st.markdown(f"*{_('landing.cta_subtitle')}*")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.success(f"✅ {_('landing.cta_benefit1')}")
+    with col2:
+        st.success(f"🇳🇱 {_('landing.cta_benefit2')}")
+    with col3:
+        st.success(f"🤖 {_('landing.cta_benefit3')}")
+    
+    st.info(f"👈 **{_('sidebar.sign_in')}** - {_('register.info')}")
 
 def render_dashboard():
     """Render the main dashboard"""
@@ -564,9 +644,9 @@ def render_settings():
         st.subheader("Security Settings")
         
         with st.form("security_form"):
-            st.password_input("Current Password")
-            new_pass = st.password_input("New Password")
-            confirm_pass = st.password_input("Confirm New Password")
+            st.text_input("Current Password", type="password")
+            new_pass = st.text_input("New Password", type="password")
+            confirm_pass = st.text_input("Confirm New Password", type="password")
             
             if st.form_submit_button("🔒 Change Password"):
                 if new_pass and new_pass == confirm_pass:
