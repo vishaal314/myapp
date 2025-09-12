@@ -108,6 +108,13 @@ def detect_ai_act_violations(content: str, document_metadata: Optional[Dict[str,
     findings.extend(_detect_human_oversight_gaps(content))
     findings.extend(_detect_fundamental_rights_gaps(content))
     
+    # NEW: Critical missing AI Act articles coverage
+    findings.extend(_detect_scope_and_definitions_violations(content))  # Articles 1-4
+    findings.extend(_detect_data_governance_violations(content))  # Articles 10-12
+    findings.extend(_detect_market_surveillance_violations(content))  # Articles 69-75
+    findings.extend(_detect_penalty_framework_violations(content))  # Articles 76-85
+    findings.extend(_detect_ce_marking_violations(content))  # Articles 30-49
+    
     # NEW: Integrate real-time compliance monitoring
     try:
         from utils.real_time_compliance_monitor import RealTimeComplianceMonitor
@@ -836,5 +843,219 @@ def _detect_fundamental_rights_gaps(content: str) -> List[Dict[str, Any]]:
             'penalty_risk': 'Up to €15M or 3% global turnover',
             'remediation': 'Conduct comprehensive fundamental rights impact assessment per Article 29'
         })
+    
+    return findings
+
+# NEW: Critical missing AI Act articles implementation
+
+def _detect_scope_and_definitions_violations(content: str) -> List[Dict[str, Any]]:
+    """Detect scope and definitions violations (Articles 1-4)."""
+    findings = []
+    
+    # Article 1-2: Scope and material coverage
+    ai_system_patterns = [
+        r"\b(?:artificial.*intelligence|ai.*system|machine.*learning|neural.*network|deep.*learning)\b",
+        r"\b(?:algorithmic.*decision|automated.*system|intelligent.*system)\b"
+    ]
+    
+    has_ai_system = any(re.search(pattern, content, re.IGNORECASE) for pattern in ai_system_patterns)
+    
+    if has_ai_system:
+        # Article 3: Key definitions compliance
+        definition_requirements = {
+            'ai_system_definition': r"\b(?:ai.*system.*definition|artificial.*intelligence.*system.*means)\b",
+            'risk_assessment_definition': r"\b(?:risk.*assessment|risk.*evaluation|risk.*analysis)\b",
+            'provider_definition': r"\b(?:ai.*provider|system.*provider|developer)\b",
+            'deployer_definition': r"\b(?:deployer|user.*ai.*system|operator)\b"
+        }
+        
+        missing_definitions = []
+        for definition, pattern in definition_requirements.items():
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_definitions.append(definition.replace('_', ' '))
+        
+        if len(missing_definitions) > 2:
+            findings.append({
+                'type': 'AI_ACT_SCOPE_DEFINITIONS_MISSING',
+                'category': 'Articles 1-4 - Scope and Definitions',
+                'severity': 'Medium',
+                'title': 'AI Act Scope and Definitions Not Clearly Defined',
+                'description': f'Missing key AI Act definitions: {", ".join(missing_definitions)}',
+                'article_reference': 'EU AI Act Articles 1-4',
+                'missing_definitions': missing_definitions,
+                'compliance_deadline': 'August 2, 2025',
+                'recommendation': 'Define AI system scope, provider/deployer roles, and risk assessment framework per Articles 1-4'
+            })
+    
+    return findings
+
+def _detect_data_governance_violations(content: str) -> List[Dict[str, Any]]:
+    """Detect data governance violations (Articles 10-12)."""
+    findings = []
+    
+    # Article 10: Data and data governance
+    data_patterns = [
+        r"\b(?:training.*data|dataset|data.*quality|data.*governance)\b",
+        r"\b(?:machine.*learning.*data|ai.*training.*data)\b"
+    ]
+    
+    has_data_processing = any(re.search(pattern, content, re.IGNORECASE) for pattern in data_patterns)
+    
+    if has_data_processing:
+        # Data governance requirements
+        governance_requirements = {
+            'data_quality_measures': r"\b(?:data.*quality|quality.*assurance|data.*validation)\b",
+            'bias_detection': r"\b(?:bias.*detection|bias.*mitigation|fairness.*assessment)\b",
+            'representative_datasets': r"\b(?:representative.*dataset|diverse.*data|balanced.*training)\b",
+            'data_provenance': r"\b(?:data.*provenance|data.*lineage|data.*source)\b",
+            'statistical_properties': r"\b(?:statistical.*properties|data.*statistics|distribution.*analysis)\b"
+        }
+        
+        missing_governance = []
+        for requirement, pattern in governance_requirements.items():
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_governance.append(requirement.replace('_', ' '))
+        
+        if len(missing_governance) > 2:
+            findings.append({
+                'type': 'AI_ACT_DATA_GOVERNANCE_INSUFFICIENT',
+                'category': 'Articles 10-12 - Data Governance',
+                'severity': 'High',
+                'title': 'Insufficient Data Governance Measures',
+                'description': f'Missing data governance elements: {", ".join(missing_governance)}',
+                'article_reference': 'EU AI Act Articles 10-12',
+                'missing_governance': missing_governance,
+                'compliance_deadline': 'August 2, 2027',
+                'penalty_risk': 'Up to €15M or 3% global turnover',
+                'recommendation': 'Implement comprehensive data governance including quality, bias detection, and provenance tracking'
+            })
+    
+    return findings
+
+def _detect_market_surveillance_violations(content: str) -> List[Dict[str, Any]]:
+    """Detect market surveillance violations (Articles 69-75)."""
+    findings = []
+    
+    # Article 69-75: Market surveillance and compliance
+    market_patterns = [
+        r"\b(?:market.*surveillance|compliance.*monitoring|regulatory.*oversight)\b",
+        r"\b(?:ai.*system.*market|commercial.*ai|deployed.*ai)\b"
+    ]
+    
+    has_market_presence = any(re.search(pattern, content, re.IGNORECASE) for pattern in market_patterns)
+    
+    if has_market_presence:
+        # Market surveillance requirements
+        surveillance_requirements = {
+            'incident_reporting': r"\b(?:incident.*report|malfunction.*report|serious.*incident)\b",
+            'corrective_measures': r"\b(?:corrective.*action|remedial.*measure|fix.*issue)\b",
+            'cooperation_authorities': r"\b(?:authority.*cooperation|regulatory.*cooperation|compliance.*authority)\b",
+            'withdrawal_procedures': r"\b(?:product.*withdrawal|market.*withdrawal|recall.*procedure)\b",
+            'risk_mitigation': r"\b(?:risk.*mitigation|safety.*measure|protective.*action)\b"
+        }
+        
+        missing_surveillance = []
+        for requirement, pattern in surveillance_requirements.items():
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_surveillance.append(requirement.replace('_', ' '))
+        
+        if len(missing_surveillance) > 2:
+            findings.append({
+                'type': 'AI_ACT_MARKET_SURVEILLANCE_GAPS',
+                'category': 'Articles 69-75 - Market Surveillance',
+                'severity': 'High',
+                'title': 'Market Surveillance Framework Insufficient',
+                'description': f'Missing surveillance elements: {", ".join(missing_surveillance)}',
+                'article_reference': 'EU AI Act Articles 69-75',
+                'missing_surveillance': missing_surveillance,
+                'compliance_deadline': 'August 2, 2025',
+                'penalty_risk': 'Up to €15M or 3% global turnover',
+                'recommendation': 'Establish market surveillance procedures including incident reporting and corrective measures'
+            })
+    
+    return findings
+
+def _detect_penalty_framework_violations(content: str) -> List[Dict[str, Any]]:
+    """Detect penalty framework violations (Articles 76-85)."""
+    findings = []
+    
+    # Article 83: Administrative fines
+    compliance_patterns = [
+        r"\b(?:ai.*act.*compliance|eu.*ai.*act|compliance.*framework)\b",
+        r"\b(?:regulatory.*compliance|legal.*compliance|ai.*regulation)\b"
+    ]
+    
+    has_compliance_reference = any(re.search(pattern, content, re.IGNORECASE) for pattern in compliance_patterns)
+    
+    if has_compliance_reference:
+        # Penalty awareness requirements
+        penalty_awareness = {
+            'fine_framework': r"\b(?:administrative.*fine|penalty.*framework|€35.*million|7%.*global.*turnover)\b",
+            'violation_categories': r"\b(?:prohibited.*practice|high.*risk.*violation|gpai.*violation)\b",
+            'compliance_measures': r"\b(?:compliance.*program|risk.*management|conformity.*assessment)\b",
+            'enforcement_awareness': r"\b(?:supervisory.*authority|enforcement.*action|regulatory.*oversight)\b"
+        }
+        
+        missing_awareness = []
+        for awareness, pattern in penalty_awareness.items():
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_awareness.append(awareness.replace('_', ' '))
+        
+        if len(missing_awareness) > 2:
+            findings.append({
+                'type': 'AI_ACT_PENALTY_FRAMEWORK_UNAWARENESS',
+                'category': 'Articles 76-85 - Penalties and Enforcement',
+                'severity': 'Medium',
+                'title': 'AI Act Penalty Framework Not Acknowledged',
+                'description': f'Missing penalty framework awareness: {", ".join(missing_awareness)}',
+                'article_reference': 'EU AI Act Articles 76-85',
+                'missing_awareness': missing_awareness,
+                'max_penalty': 'Up to €35M or 7% global turnover',
+                'compliance_deadline': 'August 2, 2025',
+                'recommendation': 'Acknowledge AI Act penalty framework and implement compliance measures to avoid violations'
+            })
+    
+    return findings
+
+def _detect_ce_marking_violations(content: str) -> List[Dict[str, Any]]:
+    """Detect CE marking violations (Articles 30-49)."""
+    findings = []
+    
+    # Article 48: CE marking requirements
+    ce_patterns = [
+        r"\b(?:ce.*marking|ce.*conformity|conformity.*marking)\b",
+        r"\b(?:high.*risk.*ai|ai.*system.*market|commercial.*ai)\b"
+    ]
+    
+    has_ce_relevance = any(re.search(pattern, content, re.IGNORECASE) for pattern in ce_patterns)
+    
+    if has_ce_relevance:
+        # CE marking requirements
+        ce_requirements = {
+            'conformity_assessment': r"\b(?:conformity.*assessment|third.*party.*assessment|notified.*body)\b",
+            'technical_documentation': r"\b(?:technical.*documentation|system.*documentation|compliance.*documentation)\b",
+            'quality_management': r"\b(?:quality.*management.*system|qms|iso.*9001)\b",
+            'eu_declaration': r"\b(?:eu.*declaration.*conformity|declaration.*conformity|doc)\b",
+            'ce_marking_placement': r"\b(?:ce.*marking.*placement|ce.*logo|conformity.*marking)\b"
+        }
+        
+        missing_ce_requirements = []
+        for requirement, pattern in ce_requirements.items():
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_ce_requirements.append(requirement.replace('_', ' '))
+        
+        if len(missing_ce_requirements) > 2:
+            findings.append({
+                'type': 'AI_ACT_CE_MARKING_INCOMPLETE',
+                'category': 'Articles 30-49 - CE Marking',
+                'severity': 'High',
+                'title': 'CE Marking Requirements Not Met',
+                'description': f'Missing CE marking elements: {", ".join(missing_ce_requirements)}',
+                'article_reference': 'EU AI Act Articles 30-49',
+                'missing_ce_requirements': missing_ce_requirements,
+                'compliance_deadline': 'August 2, 2027',
+                'penalty_risk': 'Up to €15M or 3% global turnover',
+                'recommendation': 'Complete CE marking process including conformity assessment, technical documentation, and quality management'
+            })
     
     return findings
