@@ -209,6 +209,37 @@ def validate_comprehensive_gdpr_compliance(content: str, region: str = "Netherla
     except ImportError:
         pass  # Module not available
     
+    # Validate critical missing GDPR articles
+    lawfulness_compliance = _validate_lawfulness_of_processing(content)  # Article 6
+    findings.extend(lawfulness_compliance['findings'])
+    
+    consent_compliance = _validate_consent_conditions(content)  # Article 7
+    findings.extend(consent_compliance['findings'])
+    
+    children_compliance = _validate_children_consent(content)  # Article 8
+    findings.extend(children_compliance['findings'])
+    
+    transparency_compliance = _validate_transparency_obligations(content)  # Article 12
+    findings.extend(transparency_compliance['findings'])
+    
+    controller_compliance = _validate_controller_responsibility(content)  # Article 24
+    findings.extend(controller_compliance['findings'])
+    
+    security_compliance = _validate_security_of_processing(content)  # Article 32
+    findings.extend(security_compliance['findings'])
+    
+    consultation_compliance = _validate_prior_consultation(content)  # Article 36
+    findings.extend(consultation_compliance['findings'])
+    
+    dpo_compliance = _validate_dpo_obligations(content)  # Articles 38-39
+    findings.extend(dpo_compliance['findings'])
+    
+    complaint_compliance = _validate_complaint_rights(content)  # Article 77
+    findings.extend(complaint_compliance['findings'])
+    
+    compensation_compliance = _validate_compensation_rights(content)  # Articles 82-84
+    findings.extend(compensation_compliance['findings'])
+    
     # Validate Processor obligations (Article 28)
     processor_compliance = _validate_processor_obligations(content)
     findings.extend(processor_compliance['findings'])
@@ -1129,3 +1160,368 @@ def _check_enhanced_international_transfers(content: str, metadata: Optional[Dic
         })
     
     return findings
+
+# NEW: Critical missing GDPR article validation functions
+
+def _validate_lawfulness_of_processing(content: str) -> Dict[str, Any]:
+    """Validate lawfulness of processing requirements (Article 6)."""
+    findings = []
+    
+    # Article 6 legal bases
+    legal_bases = [
+        r"\b(?:consent|freely\s+given|specific|informed|unambiguous)\b",
+        r"\b(?:contract|performance\s+of\s+contract|pre-?contractual\s+measures)\b", 
+        r"\b(?:legal\s+obligation|compliance\s+with\s+legal\s+obligation)\b",
+        r"\b(?:vital\s+interests?|life\s+or\s+death|medical\s+emergency)\b",
+        r"\b(?:public\s+task|official\s+authority|public\s+interest)\b",
+        r"\b(?:legitimate\s+interests?|balancing\s+test|overriding\s+interests?)\b"
+    ]
+    
+    processing_indicators = [
+        r"\b(?:personal\s+data|processing|collect|store|use|share|transfer)\b",
+        r"\b(?:customer\s+data|user\s+information|individual\s+data)\b"
+    ]
+    
+    has_processing = any(re.search(pattern, content, re.IGNORECASE) for pattern in processing_indicators)
+    has_legal_basis = any(re.search(pattern, content, re.IGNORECASE) for pattern in legal_bases)
+    
+    if has_processing and not has_legal_basis:
+        findings.append({
+            'type': 'MISSING_LEGAL_BASIS',
+            'category': 'Lawfulness of Processing',
+            'severity': 'Critical',
+            'title': 'Processing Without Legal Basis',
+            'description': 'Personal data processing detected without valid Article 6 legal basis',
+            'article_reference': 'GDPR Article 6',
+            'recommendation': 'Establish valid legal basis: consent, contract, legal obligation, vital interests, public task, or legitimate interests'
+        })
+    
+    score = 100 if not has_processing or (has_processing and has_legal_basis) else 20
+    return {'score': score, 'findings': findings}
+
+def _validate_consent_conditions(content: str) -> Dict[str, Any]:
+    """Validate consent conditions (Article 7)."""
+    findings = []
+    
+    consent_patterns = [r"\b(?:consent|agree|accept)\b"]
+    has_consent_reference = any(re.search(pattern, content, re.IGNORECASE) for pattern in consent_patterns)
+    
+    if has_consent_reference:
+        # Article 7 requirements
+        consent_requirements = {
+            'freely_given': r"\b(?:freely\s+given|voluntary|not\s+forced)\b",
+            'specific': r"\b(?:specific\s+purpose|clearly\s+defined|explicit\s+purpose)\b",
+            'informed': r"\b(?:informed\s+consent|clear\s+information|understand)\b",
+            'unambiguous': r"\b(?:unambiguous|clear\s+indication|affirmative\s+action)\b",
+            'withdrawable': r"\b(?:withdraw\s+consent|revoke|opt-?out|unsubscribe)\b"
+        }
+        
+        missing_requirements = []
+        for requirement, pattern in consent_requirements.items():
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_requirements.append(requirement.replace('_', ' '))
+        
+        if missing_requirements:
+            findings.append({
+                'type': 'INVALID_CONSENT_CONDITIONS',
+                'category': 'Consent Conditions',
+                'severity': 'High',
+                'title': 'Consent Does Not Meet Article 7 Requirements',
+                'description': f'Missing consent requirements: {", ".join(missing_requirements)}',
+                'article_reference': 'GDPR Article 7',
+                'missing_requirements': missing_requirements,
+                'recommendation': 'Ensure consent is freely given, specific, informed, unambiguous and withdrawable'
+            })
+    
+    score = 100 if not has_consent_reference or len(findings) == 0 else 40
+    return {'score': score, 'findings': findings}
+
+def _validate_children_consent(content: str) -> Dict[str, Any]:
+    """Validate children's consent requirements (Article 8)."""
+    findings = []
+    
+    children_patterns = [
+        r"\b(?:child|children|minor|under\s+16|under\s+13|parental\s+consent)\b",
+        r"\b(?:age\s+verification|guardian\s+consent|parental\s+approval)\b"
+    ]
+    
+    has_children_reference = any(re.search(pattern, content, re.IGNORECASE) for pattern in children_patterns)
+    
+    if has_children_reference:
+        # Check for proper safeguards
+        safeguard_patterns = [
+            r"\b(?:parental\s+consent|guardian\s+approval|age\s+verification)\b",
+            r"\b(?:16\s+years?\s+old|minimum\s+age|under\s+16)\b"
+        ]
+        
+        has_safeguards = any(re.search(pattern, content, re.IGNORECASE) for pattern in safeguard_patterns)
+        
+        if not has_safeguards:
+            findings.append({
+                'type': 'CHILDREN_DATA_NO_SAFEGUARDS',
+                'category': 'Children Data Protection',
+                'severity': 'Critical',
+                'title': 'Children Data Processing Without Proper Safeguards',
+                'description': 'Processing of children data without parental consent or age verification',
+                'article_reference': 'GDPR Article 8',
+                'recommendation': 'Implement age verification and parental consent for children under 16'
+            })
+    
+    score = 100 if not has_children_reference or len(findings) == 0 else 30
+    return {'score': score, 'findings': findings}
+
+def _validate_transparency_obligations(content: str) -> Dict[str, Any]:
+    """Validate transparency obligations (Article 12)."""
+    findings = []
+    
+    processing_patterns = [r"\b(?:personal\s+data|collect|process|store)\b"]
+    has_processing = any(re.search(pattern, content, re.IGNORECASE) for pattern in processing_patterns)
+    
+    if has_processing:
+        # Article 12 transparency requirements
+        transparency_elements = {
+            'clear_language': r"\b(?:plain\s+language|easy\s+to\s+understand|clear\s+terms)\b",
+            'accessible_format': r"\b(?:accessible|readable|user-?friendly)\b",
+            'contact_details': r"\b(?:contact\s+us|email|phone|address)\b",
+            'data_categories': r"\b(?:data\s+we\s+collect|information\s+types|categories\s+of\s+data)\b",
+            'purposes': r"\b(?:purpose|why\s+we\s+collect|use\s+your\s+data)\b"
+        }
+        
+        missing_elements = []
+        for element, pattern in transparency_elements.items():
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_elements.append(element.replace('_', ' '))
+        
+        if missing_elements:
+            findings.append({
+                'type': 'TRANSPARENCY_OBLIGATIONS_MISSING',
+                'category': 'Transparency Obligations',
+                'severity': 'High',
+                'title': 'Information Not Provided in Transparent Manner',
+                'description': f'Missing transparency elements: {", ".join(missing_elements)}',
+                'article_reference': 'GDPR Article 12',
+                'missing_elements': missing_elements,
+                'recommendation': 'Provide information in concise, transparent, intelligible and easily accessible form'
+            })
+    
+    score = 100 if not has_processing or len(findings) == 0 else 50
+    return {'score': score, 'findings': findings}
+
+def _validate_controller_responsibility(content: str) -> Dict[str, Any]:
+    """Validate data controller responsibility (Article 24)."""
+    findings = []
+    
+    controller_patterns = [r"\b(?:data\s+controller|responsible\s+for\s+processing|we\s+are\s+controller)\b"]
+    has_controller_reference = any(re.search(pattern, content, re.IGNORECASE) for pattern in controller_patterns)
+    
+    if has_controller_reference:
+        # Article 24 accountability requirements
+        accountability_elements = {
+            'policies': r"\b(?:privacy\s+policy|data\s+protection\s+policy|policies)\b",
+            'procedures': r"\b(?:procedures|processes|guidelines)\b",
+            'training': r"\b(?:staff\s+training|employee\s+training|awareness)\b",
+            'monitoring': r"\b(?:monitoring|oversight|compliance\s+review)\b",
+            'documentation': r"\b(?:records|documentation|evidence)\b"
+        }
+        
+        missing_elements = []
+        for element, pattern in accountability_elements.items():
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_elements.append(element)
+        
+        if len(missing_elements) > 2:  # Missing more than 2 key elements
+            findings.append({
+                'type': 'CONTROLLER_RESPONSIBILITY_GAPS',
+                'category': 'Controller Responsibility', 
+                'severity': 'High',
+                'title': 'Insufficient Controller Accountability Measures',
+                'description': f'Missing accountability elements: {", ".join(missing_elements)}',
+                'article_reference': 'GDPR Article 24',
+                'missing_elements': missing_elements,
+                'recommendation': 'Implement technical and organizational measures to demonstrate compliance'
+            })
+    
+    score = 100 if len(findings) == 0 else 60
+    return {'score': score, 'findings': findings}
+
+def _validate_security_of_processing(content: str) -> Dict[str, Any]:
+    """Validate security of processing requirements (Article 32)."""
+    findings = []
+    
+    processing_patterns = [r"\b(?:process|store|transmit|handle)\s+(?:personal\s+)?data\b"]
+    has_processing = any(re.search(pattern, content, re.IGNORECASE) for pattern in processing_patterns)
+    
+    if has_processing:
+        # Article 32 security measures
+        security_measures = {
+            'encryption': r"\b(?:encryption|encrypted|crypto|ssl|tls)\b",
+            'access_controls': r"\b(?:access\s+control|authentication|authorization|passwords?)\b",
+            'backup': r"\b(?:backup|restore|recovery|resilience)\b",
+            'testing': r"\b(?:security\s+testing|penetration\s+test|vulnerability)\b",
+            'monitoring': r"\b(?:monitoring|logging|audit\s+trail|intrusion\s+detection)\b"
+        }
+        
+        missing_measures = []
+        for measure, pattern in security_measures.items():
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_measures.append(measure.replace('_', ' '))
+        
+        if len(missing_measures) > 2:
+            findings.append({
+                'type': 'INADEQUATE_SECURITY_MEASURES',
+                'category': 'Security of Processing',
+                'severity': 'Critical',
+                'title': 'Insufficient Technical and Organizational Security Measures',
+                'description': f'Missing security measures: {", ".join(missing_measures)}',
+                'article_reference': 'GDPR Article 32',
+                'missing_measures': missing_measures,
+                'recommendation': 'Implement appropriate technical and organizational measures including encryption, access controls, and monitoring'
+            })
+    
+    score = 100 if not has_processing or len(findings) == 0 else 40
+    return {'score': score, 'findings': findings}
+
+def _validate_prior_consultation(content: str) -> Dict[str, Any]:
+    """Validate prior consultation requirements (Article 36)."""
+    findings = []
+    
+    high_risk_patterns = [
+        r"\b(?:high\s+risk|systematic\s+monitoring|large\s+scale)\b",
+        r"\b(?:special\s+categories|automated\s+decision|profiling)\b"
+    ]
+    
+    has_high_risk = any(re.search(pattern, content, re.IGNORECASE) for pattern in high_risk_patterns)
+    
+    if has_high_risk:
+        consultation_patterns = [
+            r"\b(?:supervisory\s+authority|prior\s+consultation|authority\s+approval)\b",
+            r"\b(?:dpa\s+consultation|regulatory\s+guidance)\b"
+        ]
+        
+        has_consultation = any(re.search(pattern, content, re.IGNORECASE) for pattern in consultation_patterns)
+        
+        if not has_consultation:
+            findings.append({
+                'type': 'PRIOR_CONSULTATION_MISSING',
+                'category': 'Prior Consultation',
+                'severity': 'High',
+                'title': 'High-Risk Processing Without Prior Consultation',
+                'description': 'High-risk processing detected without supervisory authority consultation',
+                'article_reference': 'GDPR Article 36',
+                'recommendation': 'Consult supervisory authority before commencing high-risk processing'
+            })
+    
+    score = 100 if not has_high_risk or len(findings) == 0 else 50
+    return {'score': score, 'findings': findings}
+
+def _validate_dpo_obligations(content: str) -> Dict[str, Any]:
+    """Validate DPO obligations (Articles 38-39)."""
+    findings = []
+    
+    dpo_patterns = [r"\b(?:data\s+protection\s+officer|dpo)\b"]
+    has_dpo_reference = any(re.search(pattern, content, re.IGNORECASE) for pattern in dpo_patterns)
+    
+    if has_dpo_reference:
+        # Article 38-39 DPO requirements
+        dpo_requirements = {
+            'independence': r"\b(?:independent|no\s+conflict|separate\s+reporting)\b",
+            'expertise': r"\b(?:expert|qualified|certified|experienced)\b",
+            'contact_details': r"\b(?:contact\s+dpo|dpo\s+email|reach\s+dpo)\b",
+            'monitoring': r"\b(?:monitor\s+compliance|oversee|compliance\s+monitoring)\b",
+            'training': r"\b(?:training|awareness|education)\b"
+        }
+        
+        missing_requirements = []
+        for requirement, pattern in dpo_requirements.items():
+            if not re.search(pattern, content, re.IGNORECASE):
+                missing_requirements.append(requirement.replace('_', ' '))
+        
+        if missing_requirements:
+            findings.append({
+                'type': 'DPO_OBLIGATIONS_INCOMPLETE',
+                'category': 'DPO Obligations',
+                'severity': 'Medium',
+                'title': 'DPO Tasks and Qualifications Not Fully Defined',
+                'description': f'Missing DPO requirements: {", ".join(missing_requirements)}',
+                'article_reference': 'GDPR Articles 38-39',
+                'missing_requirements': missing_requirements,
+                'recommendation': 'Ensure DPO independence, expertise, and proper task definition'
+            })
+    
+    score = 100 if not has_dpo_reference or len(findings) == 0 else 70
+    return {'score': score, 'findings': findings}
+
+def _validate_complaint_rights(content: str) -> Dict[str, Any]:
+    """Validate right to lodge complaints (Article 77)."""
+    findings = []
+    
+    processing_patterns = [r"\b(?:personal\s+data|collect|process)\b"]
+    has_processing = any(re.search(pattern, content, re.IGNORECASE) for pattern in processing_patterns)
+    
+    if has_processing:
+        complaint_patterns = [
+            r"\b(?:lodge\s+complaint|supervisory\s+authority|data\s+protection\s+authority)\b",
+            r"\b(?:complaint\s+procedure|file\s+complaint|regulator)\b"
+        ]
+        
+        has_complaint_info = any(re.search(pattern, content, re.IGNORECASE) for pattern in complaint_patterns)
+        
+        if not has_complaint_info:
+            findings.append({
+                'type': 'COMPLAINT_RIGHTS_MISSING',
+                'category': 'Complaint Rights',
+                'severity': 'Medium',
+                'title': 'Right to Lodge Complaint Not Disclosed',
+                'description': 'Information about right to lodge complaint with supervisory authority missing',
+                'article_reference': 'GDPR Article 77',
+                'recommendation': 'Inform data subjects about their right to lodge complaints with supervisory authority'
+            })
+    
+    score = 100 if not has_processing or len(findings) == 0 else 70
+    return {'score': score, 'findings': findings}
+
+def _validate_compensation_rights(content: str) -> Dict[str, Any]:
+    """Validate compensation and administrative fines (Articles 82-84)."""
+    findings = []
+    
+    processing_patterns = [r"\b(?:personal\s+data|process|breach|violation)\b"]
+    has_processing = any(re.search(pattern, content, re.IGNORECASE) for pattern in processing_patterns)
+    
+    if has_processing:
+        compensation_patterns = [
+            r"\b(?:compensation|damages|liability|indemnity)\b",
+            r"\b(?:right\s+to\s+compensation|material\s+damage|non-?material\s+damage)\b"
+        ]
+        
+        penalty_patterns = [
+            r"\b(?:administrative\s+fine|penalty|sanctions?|€?\d+\s*million)\b",
+            r"\b(?:4%\s*(?:of\s+)?(?:annual\s+)?turnover|20\s*million\s*euro)\b"
+        ]
+        
+        has_compensation_info = any(re.search(pattern, content, re.IGNORECASE) for pattern in compensation_patterns)
+        has_penalty_awareness = any(re.search(pattern, content, re.IGNORECASE) for pattern in penalty_patterns)
+        
+        if not has_compensation_info:
+            findings.append({
+                'type': 'COMPENSATION_RIGHTS_MISSING',
+                'category': 'Compensation Rights',
+                'severity': 'Medium',
+                'title': 'Compensation Rights Not Disclosed',
+                'description': 'Information about right to compensation for damages not provided',
+                'article_reference': 'GDPR Article 82',
+                'recommendation': 'Inform about right to compensation for material and non-material damages'
+            })
+        
+        if not has_penalty_awareness:
+            findings.append({
+                'type': 'PENALTY_AWARENESS_MISSING',
+                'category': 'Administrative Penalties',
+                'severity': 'Low',
+                'title': 'Administrative Fine Framework Not Acknowledged',
+                'description': 'Awareness of GDPR penalty framework not demonstrated',
+                'article_reference': 'GDPR Articles 83-84',
+                'recommendation': 'Acknowledge administrative fine framework (up to €20M or 4% of turnover)'
+            })
+    
+    score = 100 if not has_processing or len(findings) == 0 else 80
+    return {'score': score, 'findings': findings}
