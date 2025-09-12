@@ -323,45 +323,8 @@ def run_sustainability_scan(resource_data) -> Dict[str, Any]:
     """Sustainability scanner for environmental impact"""
     return {'scan_id': f'SUSTAIN-{str(uuid.uuid4())[:8]}', 'timestamp': datetime.now().isoformat(), 'resource_type': 'Cloud Infrastructure', 'status': 'completed', 'sustainability_score': 76, 'findings': [{'type': 'Zombie Resources', 'severity': 'Medium', 'description': 'Unused compute instances running', 'location': 'EU-West region', 'recommendation': 'Terminate or resize unused resources'}, {'type': 'Carbon Footprint', 'severity': 'Low', 'description': 'Above average CO₂ emissions', 'location': 'Data processing workloads', 'recommendation': 'Optimize algorithms for energy efficiency'}], 'co2_emissions_kg': 145.2, 'energy_usage_kwh': 287.5, 'waste_resources_count': 12}
 
-# Enterprise Connector Scanners
-def run_sap_connector_scan(connection_data) -> Dict[str, Any]:
-    """SAP enterprise connector for ERP data privacy analysis"""
-    return {
-        'scan_id': f'SAP-{str(uuid.uuid4())[:8]}',
-        'timestamp': datetime.now().isoformat(),
-        'system_type': 'SAP ERP',
-        'status': 'completed',
-        'compliance_score': 83,
-        'findings': [
-            {'type': 'Customer PII', 'severity': 'High', 'description': 'Unencrypted customer data in MARA tables', 'location': 'SAP ECC Customer Master', 'recommendation': 'Implement SAP data encryption and field-level security'},
-            {'type': 'Employee Data', 'severity': 'Critical', 'description': 'HR payroll data without proper access controls', 'location': 'PA infotypes', 'recommendation': 'Configure role-based authorization objects'},
-            {'type': 'GDPR Rights', 'severity': 'Medium', 'description': 'Data subject rights automation missing', 'location': 'SAP ILM policies', 'recommendation': 'Implement SAP GDPR compliance framework'}
-        ],
-        'tables_scanned': 156,
-        'pii_records_found': 25847,
-        'modules_analyzed': ['SD', 'MM', 'HR', 'FI'],
-        'gdpr_score': 83
-    }
-
-def run_salesforce_connector_scan(connection_data) -> Dict[str, Any]:
-    """Salesforce enterprise connector for CRM data privacy analysis"""
-    return {
-        'scan_id': f'SFDC-{str(uuid.uuid4())[:8]}',
-        'timestamp': datetime.now().isoformat(),
-        'system_type': 'Salesforce CRM',
-        'status': 'completed',
-        'compliance_score': 89,
-        'findings': [
-            {'type': 'Contact PII', 'severity': 'Medium', 'description': 'Personal email addresses in custom fields without encryption', 'location': 'Contact custom fields', 'recommendation': 'Enable Salesforce Shield Platform Encryption'},
-            {'type': 'Data Sharing', 'severity': 'High', 'description': 'External sharing rules expose sensitive data', 'location': 'Opportunity sharing rules', 'recommendation': 'Review and restrict sharing rule criteria'},
-            {'type': 'API Access', 'severity': 'Medium', 'description': 'Bulk API access to PII data without audit trail', 'location': 'Connected Apps', 'recommendation': 'Enable field audit trail and API monitoring'}
-        ],
-        'objects_scanned': 45,
-        'records_analyzed': 1847293,
-        'fields_with_pii': 23,
-        'orgs_analyzed': ['Production', 'Sandbox'],
-        'gdpr_score': 89
-    }
+# Enterprise connector integration is handled through components/enterprise_ui.py
+# This provides real OAuth2 authentication for Microsoft 365, Google Workspace, SAP, Salesforce, and Exact Online
 
 # UI Components
 def render_sidebar():
@@ -648,11 +611,11 @@ def render_scanners():
     st.title("🔍 Privacy Scanners")
     st.write("Select a scanner to perform privacy compliance analysis:")
     
-    # All 12 Scanner tabs including Enterprise Connectors
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12 = st.tabs([
+    # All 11 Scanner tabs including Enterprise Connectors
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([
         "🤖 AI Model", "💻 Code", "🌐 Website", "📄 Document", 
         "🖼️ Image", "🗄️ Database", "📋 DPIA", "🛡️ SOC2", 
-        "🔌 API", "🌱 Sustainability", "🏢 SAP", "📈 Salesforce"
+        "🔌 API", "🌱 Sustainability", "🔗 Enterprise Connectors"
     ])
     
     with tab1:
@@ -929,69 +892,18 @@ def render_scanners():
                 else:
                     st.error("Please select resource type")
     
-    # SAP Enterprise Connector Tab
+    # Enterprise Connectors Tab - Real production connectors
     with tab11:
-        st.subheader("🏢 SAP Connector")
-        st.write("Connect to SAP ERP systems for comprehensive privacy and PII analysis across all modules.")
+        st.subheader("🔗 Enterprise Connectors")
+        st.write("Connect to enterprise systems with OAuth2 authentication: Microsoft 365, Google Workspace, SAP, Salesforce, and Exact Online.")
         
-        with st.form("sap_form"):
-            sap_server = st.text_input("SAP Server", placeholder="sap-server.company.com")
-            sap_client = st.text_input("Client (Mandant)", placeholder="100")
-            sap_user = st.text_input("SAP Username", placeholder="username")
-            sap_password = st.text_input("SAP Password", type="password")
-            modules = st.multiselect("SAP Modules to Scan", ["SD (Sales)", "MM (Materials)", "HR (Human Resources)", "FI (Finance)", "CO (Controlling)"], default=["SD (Sales)", "HR (Human Resources)"])
-            scan_depth = st.selectbox("Scan Depth", ["Tables Only", "Tables + Custom Fields", "Deep Analysis (All Objects)"])
-            
-            if st.form_submit_button("🚀 Connect & Scan SAP", type="primary"):
-                if sap_server and sap_client and sap_user:
-                    with st.spinner("Connecting to SAP and analyzing data..."):
-                        import time; time.sleep(4)
-                        result = run_sap_connector_scan({"server": sap_server, "client": sap_client, "modules": modules})
-                        st.session_state.scan_results[result['scan_id']] = result
-                    st.success("SAP system scan completed!")
-                    st.write(f"**Status:** {translate_dynamic_value(result.get('status'), 'status')} | **Score:** {result.get('compliance_score')}%")
-                    st.write(f"**Tables Scanned:** {result.get('tables_scanned')} | **PII Records Found:** {result.get('pii_records_found'):,} | **Modules:** {', '.join(result.get('modules_analyzed', []))}")
-                    if result.get('findings'):
-                        st.write("**Key Findings:**")
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            st.write(f"{severity_color} **{translate_dynamic_value(finding.get('severity'), 'severity')}** - {translate_dynamic_value(finding.get('type'), 'type')}: {finding.get('description')}")
-                            st.write(f"   → *Location:* {finding.get('location')} | *Recommendation:* {finding.get('recommendation')}")
-                else:
-                    st.error("Please provide SAP server, client, and username")
-    
-    # Salesforce Enterprise Connector Tab
-    with tab12:
-        st.subheader("📈 Salesforce Connector")
-        st.write("Connect to Salesforce CRM for privacy compliance analysis across all objects and data.")
-        
-        with st.form("salesforce_form"):
-            sf_instance = st.text_input("Salesforce Instance URL", placeholder="https://yourcompany.salesforce.com")
-            sf_username = st.text_input("Salesforce Username", placeholder="user@company.com")
-            sf_password = st.text_input("Salesforce Password", type="password")
-            sf_token = st.text_input("Security Token", type="password", help="Your Salesforce security token")
-            objects_to_scan = st.multiselect("Objects to Scan", ["Contact", "Lead", "Account", "Opportunity", "Case", "Custom Objects"], default=["Contact", "Lead", "Account"])
-            include_custom_fields = st.checkbox("Include Custom Fields", value=True)
-            scan_sharing = st.checkbox("Analyze Sharing Rules", value=True)
-            
-            if st.form_submit_button("🚀 Connect & Scan Salesforce", type="primary"):
-                if sf_instance and sf_username and sf_password:
-                    with st.spinner("Connecting to Salesforce and analyzing data..."):
-                        import time; time.sleep(4)
-                        result = run_salesforce_connector_scan({"instance": sf_instance, "username": sf_username, "objects": objects_to_scan})
-                        st.session_state.scan_results[result['scan_id']] = result
-                    st.success("Salesforce system scan completed!")
-                    st.write(f"**Status:** {translate_dynamic_value(result.get('status'), 'status')} | **Score:** {result.get('compliance_score')}%")
-                    st.write(f"**Objects Scanned:** {result.get('objects_scanned')} | **Records Analyzed:** {result.get('records_analyzed'):,} | **PII Fields:** {result.get('fields_with_pii')}")
-                    st.write(f"**Organizations:** {', '.join(result.get('orgs_analyzed', []))}")
-                    if result.get('findings'):
-                        st.write("**Key Findings:**")
-                        for finding in result['findings']:
-                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                            st.write(f"{severity_color} **{translate_dynamic_value(finding.get('severity'), 'severity')}** - {translate_dynamic_value(finding.get('type'), 'type')}: {finding.get('description')}")
-                            st.write(f"   → *Location:* {finding.get('location')} | *Recommendation:* {finding.get('recommendation')}")
-                else:
-                    st.error("Please provide Salesforce instance URL, username, and password")
+        # Import and use the real enterprise UI
+        try:
+            from components.enterprise_ui import show_enterprise_connectors
+            show_enterprise_connectors()
+        except ImportError as e:
+            st.error(f"Enterprise connectors module not available: {str(e)}")
+            st.info("Enterprise connectors include: Microsoft 365 (SharePoint, OneDrive, Exchange, Teams), Google Workspace (Drive, Gmail, Docs), SAP ERP, Salesforce CRM, and Exact Online ERP with full OAuth2 authentication and token management.")
 
 def render_reports():
     """Render the reports page"""
