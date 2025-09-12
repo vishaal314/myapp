@@ -81,7 +81,7 @@ class SAPConnector:
             st.error(f"SAP authentication error: {str(e)}")
             return False
     
-    def _make_api_request(self, endpoint: str, method: str = 'GET', data: Dict = None) -> Optional[Any]:
+    def _make_api_request(self, endpoint: str, method: str = 'GET', data: Optional[Dict] = None) -> Optional[Any]:
         """Make authenticated API request to SAP"""
         if not self.csrf_token:
             if not self.authenticate():
