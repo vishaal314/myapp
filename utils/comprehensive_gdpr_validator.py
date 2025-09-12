@@ -401,6 +401,12 @@ def _validate_international_transfers(content: str) -> Dict[str, Any]:
     """Validate international transfer safeguards (Articles 44-49)."""
     findings = []
     
+    # Initialize transfer safeguard variables with defaults
+    has_adequacy = False
+    has_safeguards = False
+    has_bcr = False
+    has_derogation = False
+    
     # Enhanced detection patterns for international transfers
     transfer_patterns = [
         r"\b(?:international\s+transfer|cross-?border\s+transfer|third\s+country\s+transfer)\b",
