@@ -158,7 +158,8 @@ def translate_dynamic_value(value, value_type='general'):
 DEMO_USERS = {
     'demo@dataguardianpro.nl': {'password': 'demo123', 'role': 'admin', 'name': 'Demo User'},
     'admin@dataguardianpro.nl': {'password': 'admin123', 'role': 'admin', 'name': 'Admin User'},
-    'user@dataguardianpro.nl': {'password': 'user123', 'role': 'user', 'name': 'Standard User'}
+    'user@dataguardianpro.nl': {'password': 'user123', 'role': 'user', 'name': 'Standard User'},
+    'vishaal314@gmail.com': {'password': 'admin123', 'role': 'admin', 'name': 'Vishaal Admin'}
 }
 
 def authenticate_user(username: str, password: str) -> bool:
