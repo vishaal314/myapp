@@ -143,6 +143,9 @@ class EnterpriseConnectorScanner:
         self.last_api_call = None
         self._rate_limit_lock = threading.Lock()  # Thread-safe rate limiting
         
+        # Initialize exact_divisions for Exact Online multi-company support
+        self.exact_divisions = []
+        
         # Get GDPR rules for region
         self.region_rules = get_region_rules(region)
         
@@ -760,13 +763,14 @@ class EnterpriseConnectorScanner:
                     'Authorization': f'Bearer {self.access_token}',
                     'Accept': 'application/json'
                 })
-                # Set up demo divisions
+                # Set up demo divisions immediately in demo mode
                 self.exact_divisions = [
                     {'Division': 123456, 'Description': 'Demo Company A'},
                     {'Division': 789012, 'Description': 'Demo Company B'},
                     {'Division': 345678, 'Description': 'Demo Company C'},
                     {'Division': 901234, 'Description': 'Demo Company D'}
                 ]
+                logger.info(f"Exact Online demo mode: Set up {len(self.exact_divisions)} demo divisions")
                 return True
                 
         except Exception as e:
