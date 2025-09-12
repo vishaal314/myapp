@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "DataGuardian Pro",
-    "subtitle": "Enterprise Privacy Compliance Platform",
+    "subtitle": "Enterprise Privacynaleving Platform",
     "tagline": "Detecteer, Beheer en Rapporteer Privacynaleving met AI-gestuurde Precisie"
   },
   "landing": {
@@ -81,9 +81,6 @@
     "roi_payback": "Terugverdientijd",
     "roi_fine_protection": "GDPR boete bescherming",
     "roi_automation": "Compliance automatisering",
-    "roi_cost_saving": "kostenbesparing vs",
-    "roi_savings_per_year": "besparing per jaar",
-    "roi_3_year": "over 3 jaar",
     "cta_title": "Klaar om Uw Data te Beveiligen?",
     "cta_subtitle": "Inloggen om te beginnen met scannen en volledige GDPR-naleving voor uw organisatie te waarborgen",
     "cta_benefit1": "90% Kostenbesparing",
@@ -166,6 +163,25 @@
     "error": {
       "missing_fields": "Vul alle verplichte velden in",
       "invalid_credentials": "Ongeldige inloggegevens"
+    }
+  },
+  "register": {
+    "username": "Gebruikersnaam",
+    "email": "E-mail",
+    "email_placeholder": "uw@email.com",
+    "password": "Wachtwoord",
+    "password_help": "Minimaal 8 tekens, inclusief een cijfer en speciaal teken",
+    "confirm_password": "Bevestig Wachtwoord",
+    "role": "Rol",
+    "terms": "Ik ga akkoord met de Algemene Voorwaarden",
+    "button": "Registreren",
+    "error": {
+      "missing_fields": "Vul alle verplichte velden in",
+      "passwords_mismatch": "Wachtwoorden komen niet overeen",
+      "terms_required": "U moet akkoord gaan met de voorwaarden",
+      "email_invalid": "Ongeldig e-mailadres",
+      "username_taken": "Deze gebruikersnaam is reeds bezet",
+      "email_taken": "Dit e-mailadres is reeds geregistreerd"
     }
   },
   "dashboard": {

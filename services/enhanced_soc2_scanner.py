@@ -7,6 +7,14 @@ import uuid
 import json
 import os
 import logging
+
+# Import centralized logging
+try:
+    from utils.centralized_logger import get_scanner_logger
+    logger = get_scanner_logger("enhanced_soc2_scanner")
+except ImportError:
+    # Fallback to standard logging if centralized logger not available
+    logger = logging.getLogger(__name__)
 import requests
 from datetime import datetime
 from typing import Dict, List, Any, Optional
@@ -17,7 +25,7 @@ class EnhancedSOC2Scanner:
     """Enhanced SOC2 Scanner with TSC criteria mapping and compliance automation"""
     
     def __init__(self):
-        self.logger = logging.getLogger(__name__)
+        self.
         
         # Trust Service Criteria mapping
         self.tsc_criteria = {
@@ -133,6 +141,10 @@ class EnhancedSOC2Scanner:
     
     def scan_soc2_compliance_enhanced(self, repo_url: str, criteria: List[str], region: str, status=None):
         """Execute enhanced SOC2 compliance scanning with TSC mapping"""
+    # Log scan start
+    if hasattr(logger, 'scan_started'):
+        logger.scan_started('enhanced_soc2_scanner', 'scan_target')
+
         try:
             if status:
                 status.update(label="Initializing SOC2 analysis framework...")
@@ -186,6 +198,13 @@ class EnhancedSOC2Scanner:
             
             recommendations = self._generate_compliance_recommendations(scan_results)
             scan_results['recommendations'] = recommendations
+            
+            # Integrate cost savings analysis
+            try:
+                from services.cost_savings_calculator import integrate_cost_savings_into_report
+                scan_results = integrate_cost_savings_into_report(scan_results, 'soc2', self.region)
+            except Exception as e:
+                self.logger.warning(f"Cost savings integration failed: {e}")
             
             return scan_results
             
