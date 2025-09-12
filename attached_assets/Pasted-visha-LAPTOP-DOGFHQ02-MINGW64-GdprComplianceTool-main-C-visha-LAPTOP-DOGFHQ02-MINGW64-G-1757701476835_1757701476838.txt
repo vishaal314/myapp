@@ -1,0 +1,51 @@
+visha@LAPTOP-DOGFHQ02 MINGW64 ~/GdprComplianceTool (main)
+$ ^C
+
+visha@LAPTOP-DOGFHQ02 MINGW64 ~/GdprComplianceTool (main)
+$ ssh-copy-id -i ~/.ssh/dataguardian_deploy.pub root@45.81.35.202
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/c/Users/visha/.ssh/dataguardian_deploy.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+root@45.81.35.202's password:
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with: "ssh -i /c/Users/visha/.ssh/dataguardian_deploy 'root@45.81.35.202'"
+and check to make sure that only the key(s) you wanted were added.
+
+
+visha@LAPTOP-DOGFHQ02 MINGW64 ~/GdprComplianceTool (main)
+$ ssh -i ~/.ssh/dataguardian_deploy root@45.81.35.202
+Enter passphrase for key '/c/Users/visha/.ssh/dataguardian_deploy':
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-75-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+New release '24.04.3 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+Last login: Thu Sep 11 21:49:05 2025 from 82.168.156.192
+root@vishaalnoord7:~# cat ~/.ssh/dataguardian_deploy
+cat: /root/.ssh/dataguardian_deploy: No such file or directory
+root@vishaalnoord7:~# exit
+logout
+Connection to 45.81.35.202 closed.
+
+visha@LAPTOP-DOGFHQ02 MINGW64 ~/GdprComplianceTool (main)
+$ ssh-copy-id -i ~/.ssh/dataguardian_deploy.pub root@45.81.35.202
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/c/Users/visha/.ssh/dataguardian_deploy.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+Enter passphrase for key '/c/Users/visha/.ssh/dataguardian_deploy':
+
+/usr/bin/ssh-copy-id: WARNING: All keys were skipped because they already exist on the remote system.
+                (if you think this is a mistake, you may want to use -f option)
+
+
+visha@LAPTOP-DOGFHQ02 MINGW64 ~/GdprComplianceTool (main)
+$
