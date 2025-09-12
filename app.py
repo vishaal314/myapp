@@ -90,11 +90,11 @@ def load_translations():
 TRANSLATIONS = load_translations()
 
 def get_text(key: str, default: str = "") -> str:
-    """Get translated text with nested key support"""
+    """Get translated text with nested key support and English fallback"""
     lang = st.session_state.get('language', 'en')
-    translation_dict = TRANSLATIONS.get(lang, {})
     
-    # Support nested keys like 'app.title'
+    # Try current language first
+    translation_dict = TRANSLATIONS.get(lang, {})
     keys = key.split('.')
     value = translation_dict
     
@@ -102,6 +102,16 @@ def get_text(key: str, default: str = "") -> str:
         if isinstance(value, dict) and k in value:
             value = value[k]
         else:
+            # If not found in current language, try English fallback
+            if lang != 'en':
+                english_dict = TRANSLATIONS.get('en', {})
+                english_value = english_dict
+                for k in keys:
+                    if isinstance(english_value, dict) and k in english_value:
+                        english_value = english_value[k]
+                    else:
+                        return default or key
+                return english_value if isinstance(english_value, str) else (default or key)
             return default or key
     
     return value if isinstance(value, str) else (default or key)
@@ -109,6 +119,33 @@ def get_text(key: str, default: str = "") -> str:
 def _(key: str, default: str = "") -> str:
     """Shorthand for get_text"""
     return get_text(key, default)
+
+# Dynamic value mapping for scan results
+def translate_dynamic_value(value, value_type='general'):
+    """Translate dynamic values like severity, status, types"""
+    if not value:
+        return value
+    
+    # Convert to lowercase key format
+    key_value = value.lower().replace(' ', '_').replace('-', '_')
+    
+    # Try different mapping categories
+    mapping_keys = {
+        'severity': f'severity.{key_value}',
+        'status': f'status.{key_value}',
+        'type': f'types.{key_value}',
+        'general': f'values.{key_value}'
+    }
+    
+    # Try the specific type first, then general
+    for key_type in [value_type, 'general']:
+        if key_type in mapping_keys:
+            translated = get_text(mapping_keys[key_type])
+            if translated != mapping_keys[key_type]:  # Found translation
+                return translated
+    
+    # Return original if no translation found
+    return value
 
 # Authentication (simplified but functional)
 DEMO_USERS = {
@@ -240,7 +277,7 @@ def render_sidebar():
                 st.session_state.current_page = st.session_state.get('current_page', 'dashboard')
         
         selected_lang = st.selectbox(
-            "Language", 
+            _('sidebar.language'), 
             options=list(languages.keys()),
             format_func=lambda x: languages[x],
             index=list(languages.keys()).index(current_lang),
@@ -520,14 +557,23 @@ def render_scanners():
             
             if st.form_submit_button(f"🚀 {_('scanners.ai.button')}", type="primary"):
                 if model_path:
-                    with st.spinner("Analyzing AI model..."):
+                    with st.spinner(_('spinner.ai_analyzing')):
                         import time
                         time.sleep(3)  # Simulate processing
                         result = run_ai_model_scan(model_path)
                         st.session_state.scan_results[result['scan_id']] = result
                         
                     st.success(_('scanners.ai.success'))
-                    st.json(result)
+                    # Display translated scan results instead of raw JSON
+                    st.write(f"**{_('reports.status_label')}:** {translate_dynamic_value(result.get('status', 'Unknown'), 'status')}")
+                    st.write(f"**{_('reports.compliance_score_label')}:** {result.get('compliance_score', 'N/A')}")
+                    if result.get('findings'):
+                        st.write(f"**{_('reports.findings_label', 'Findings')}:** {len(result['findings'])}")
+                        for finding in result['findings']:
+                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
+                            translated_severity = translate_dynamic_value(finding.get('severity'), 'severity')
+                            translated_type = translate_dynamic_value(finding.get('type'), 'type')
+                            st.write(f"{severity_color} **{translated_severity}** - {translated_type}: {finding.get('description')}")
                 else:
                     st.error(_('scanners.ai.error_missing'))
     
@@ -545,14 +591,23 @@ def render_scanners():
             
             if st.form_submit_button(f"🚀 {_('scanners.code.button')}", type="primary"):
                 if repo_url:
-                    with st.spinner("Scanning repository..."):
+                    with st.spinner(_('spinner.code_scanning')):
                         import time
                         time.sleep(2)
                         result = run_code_scan(repo_url)
                         st.session_state.scan_results[result['scan_id']] = result
                     
                     st.success(_('scanners.code.success'))
-                    st.json(result)
+                    # Display translated scan results instead of raw JSON
+                    st.write(f"**{_('reports.status_label')}:** {translate_dynamic_value(result.get('status', 'Unknown'), 'status')}")
+                    st.write(f"**{_('reports.compliance_score_label')}:** {result.get('compliance_score', 'N/A')}")
+                    if result.get('findings'):
+                        st.write(f"**{_('reports.findings_label', 'Findings')}:** {len(result['findings'])}")
+                        for finding in result['findings']:
+                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
+                            translated_severity = translate_dynamic_value(finding.get('severity'), 'severity')
+                            translated_type = translate_dynamic_value(finding.get('type'), 'type')
+                            st.write(f"{severity_color} **{translated_severity}** - {translated_type}: {finding.get('description')}")
                 else:
                     st.error(_('scanners.code.error_missing'))
     
@@ -566,14 +621,23 @@ def render_scanners():
             
             if st.form_submit_button(f"🚀 {_('scanners.website.button')}", type="primary"):
                 if website_url:
-                    with st.spinner("Scanning website..."):
+                    with st.spinner(_('spinner.website_scanning')):
                         import time
                         time.sleep(2)
                         result = run_website_scan(website_url)
                         st.session_state.scan_results[result['scan_id']] = result
                     
                     st.success(_('scanners.website.success'))
-                    st.json(result)
+                    # Display translated scan results instead of raw JSON
+                    st.write(f"**{_('reports.status_label')}:** {translate_dynamic_value(result.get('status', 'Unknown'), 'status')}")
+                    st.write(f"**{_('reports.compliance_score_label')}:** {result.get('compliance_score', 'N/A')}")
+                    if result.get('findings'):
+                        st.write(f"**{_('reports.findings_label', 'Findings')}:** {len(result['findings'])}")
+                        for finding in result['findings']:
+                            severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
+                            translated_severity = translate_dynamic_value(finding.get('severity'), 'severity')
+                            translated_type = translate_dynamic_value(finding.get('type'), 'type')
+                            st.write(f"{severity_color} **{translated_severity}** - {translated_type}: {finding.get('description')}")
                 else:
                     st.error(_('scanners.website.error_missing'))
 
@@ -596,7 +660,7 @@ def render_reports():
             col1, col2 = st.columns([2, 1])
             
             with col1:
-                st.write(f"**{_('reports.status_label')}:** {result.get('status', 'Unknown')}")
+                st.write(f"**{_('reports.status_label')}:** {translate_dynamic_value(result.get('status', 'Unknown'), 'status')}")
                 st.write(f"**{_('reports.compliance_score_label')}:** {result.get('compliance_score', 'N/A')}")
                 st.write(f"**Files/Pages Scanned:** {result.get('files_scanned', result.get('pages_scanned', 0))}")
                 
@@ -604,7 +668,9 @@ def render_reports():
                     st.write(f"**Findings:** {len(result['findings'])}")
                     for finding in result['findings']:
                         severity_color = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🟢"}.get(finding.get('severity'), "⚪")
-                        st.write(f"{severity_color} {finding.get('type')}: {finding.get('description')}")
+                        translated_severity = translate_dynamic_value(finding.get('severity'), 'severity')
+                        translated_type = translate_dynamic_value(finding.get('type'), 'type')
+                        st.write(f"{severity_color} **{translated_severity}** - {translated_type}: {finding.get('description')}")
             
             with col2:
                 if st.button(f"📥 {_('reports.download_report')}", key=f"download_{scan_id}"):
@@ -635,7 +701,7 @@ def render_settings():
         
         st.checkbox(_('settings.email_notifications'), value=True)
         st.checkbox("Weekly compliance reports", value=True) 
-        st.checkbox("Critical findings alerts", value=True)
+        st.checkbox(_('settings.critical_findings_alerts', 'Critical findings alerts'), value=True)
         
         if st.button("💾 Save Notifications"):
             st.success(_('settings.notifications_saved'))

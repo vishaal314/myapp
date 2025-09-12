@@ -373,8 +373,7 @@
     "dashboard": "Dashboard",
     "scanners": "Scanners",
     "reports": "Reports",
-    "settings": "Settings",
-    "logout": "Logout"
+    "settings": "Settings"
   },
   "common": {
     "language": "Language",
@@ -419,6 +418,7 @@
     "no_results": "No scan results available. Run a scanner first to see reports here.",
     "status_label": "Status",
     "compliance_score_label": "Compliance Score",
+    "findings_label": "Findings",
     "download_report": "Download Report",
     "rerun_scan": "Re-run Scan",
     "report_download_start": "Report download would start here",
@@ -433,6 +433,7 @@
     "profile_updated": "Profile updated successfully!",
     "notification_title": "Notification Settings",
     "email_notifications": "Email notifications",
+    "critical_findings_alerts": "Critical findings alerts",
     "push_notifications": "Push notifications",
     "weekly_reports": "Weekly reports",
     "save_notifications_button": "Save Notifications",
@@ -451,6 +452,12 @@
     "help": "Quick demo login"
   },
   "sidebar": {
+    "navigation": "Navigation",
+    "sign_in": "Sign In",
+    "sign_out": "Sign Out",
+    "create_account": "Create Account",
+    "welcome": "Welcome",
+    "quick_access": "Quick Access",
     "language": "Language",
     "logout": "Logout"
   },
@@ -471,5 +478,19 @@
     "medium": "Medium",
     "low": "Low",
     "critical": "Critical"
+  },
+  "status": {
+    "completed": "Completed",
+    "failed": "Failed",
+    "running": "Running",
+    "pending": "Pending"
+  },
+  "types": {
+    "pii_detection": "PII Detection",
+    "hardcoded_secret": "Hardcoded Secret",
+    "cookie_compliance": "Cookie Compliance",
+    "privacy_policy": "Privacy Policy",
+    "data_leakage": "Data Leakage",
+    "bias_detection": "Bias Detection"
   }
 }

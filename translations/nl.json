@@ -877,8 +877,7 @@
     "dashboard": "Dashboard",
     "scanners": "Scanners",
     "reports": "Rapporten",
-    "settings": "Instellingen",
-    "logout": "Uitloggen"
+    "settings": "Instellingen"
   },
   "common": {
     "language": "Taal",
@@ -923,6 +922,7 @@
     "no_results": "Geen scan resultaten beschikbaar. Voer eerst een scanner uit om rapporten hier te zien.",
     "status_label": "Status",
     "compliance_score_label": "Nalevingsscore",
+    "findings_label": "Bevindingen",
     "download_report": "Rapport Downloaden",
     "rerun_scan": "Scan Opnieuw Uitvoeren",
     "report_download_start": "Rapport download zou hier starten",
@@ -937,6 +937,7 @@
     "profile_updated": "Profiel succesvol bijgewerkt!",
     "notification_title": "Notificatie Instellingen",
     "email_notifications": "E-mail notificaties",
+    "critical_findings_alerts": "Kritieke bevindingen waarschuwingen",
     "push_notifications": "Push notificaties",
     "weekly_reports": "Wekelijkse rapporten",
     "save_notifications_button": "Notificaties Opslaan",
@@ -955,6 +956,12 @@
     "help": "Snelle demo login"
   },
   "sidebar": {
+    "navigation": "Navigatie",
+    "sign_in": "Inloggen",
+    "sign_out": "Uitloggen",
+    "create_account": "Account Aanmaken",
+    "welcome": "Welkom",
+    "quick_access": "Snelle Toegang",
     "language": "Taal",
     "logout": "Uitloggen"
   },
@@ -975,5 +982,19 @@
     "medium": "Gemiddeld",
     "low": "Laag",
     "critical": "Kritisch"
+  },
+  "status": {
+    "completed": "Voltooid",
+    "failed": "Gefaald",
+    "running": "Wordt uitgevoerd",
+    "pending": "In afwachting"
+  },
+  "types": {
+    "pii_detection": "PII Detectie",
+    "hardcoded_secret": "Hardgecodeerd Geheim",
+    "cookie_compliance": "Cookie Naleving",
+    "privacy_policy": "Privacybeleid",
+    "data_leakage": "Data Lekkage",
+    "bias_detection": "Bias Detectie"
   }
 }
