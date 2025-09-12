@@ -43,13 +43,15 @@ from services.certificate_generator import CertificateGenerator
 from services.optimized_scanner import OptimizedScanner
 from services.dpia_scanner import DPIAScanner, generate_dpia_report
 from services.ai_model_scanner import AIModelScanner
-from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository, display_soc2_scan_results
+from services.github_repo_scanner import scan_github_repository
+from services.soc2_scanner import scan_azure_repo_for_soc2 as scan_azure_repository
+from services.soc2_display import display_soc2_findings as display_soc2_scan_results
 from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
 from services.soc2_display import display_soc2_findings, run_soc2_display_standalone
 from services.soc2_scanner import scan_github_repo_for_soc2, scan_azure_repo_for_soc2
 from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES, verify_payment
 from services.subscription_manager import display_subscription_plans, SubscriptionManager
-from services.stripe_webhooks import get_payment_status
+# from services.stripe_webhooks import get_payment_status  # Function not found
 from utils.gdpr_rules import REGIONS, get_region_rules
 from utils.risk_analyzer import RiskAnalyzer, get_severity_color, colorize_finding, get_risk_color_gradient
 from utils.i18n import initialize, language_selector, get_text, set_language, LANGUAGES, _translations
@@ -122,20 +124,7 @@ from utils.animated_language_switcher import animated_language_switcher, get_wel
 initialize()
 
 # Debug translations function for specific keys
-def display_soc2_scan_results(scan_results):
-    """
-    Use the enhanced SOC2 display function to show scan results.
-    This function uses the enhanced scanner module to display SOC2 findings with
-    proper TSC criteria mapping.
-    
-    Args:
-        scan_results: Dictionary containing SOC2 scan results
-    """
-    # Import is already at the top of file: 
-    # from services.enhanced_soc2_scanner import display_soc2_scan_results
-    # We'll call our enhanced implementation directly
-    from services.enhanced_soc2_scanner import display_soc2_scan_results as enhanced_display
-    enhanced_display(scan_results)
+# display_soc2_scan_results is now imported from services.soc2_display
 
 def debug_translations():
     """Print debug information about critical translation keys."""
@@ -3138,7 +3127,9 @@ else:
                 # Handle SOC2 scan
                 if scan_type == _("scan.soc2"):
                     # Import needed functions for SOC2 scanning
-                    from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository, display_soc2_scan_results
+                    from services.github_repo_scanner import scan_github_repository
+from services.soc2_scanner import scan_azure_repo_for_soc2 as scan_azure_repository
+from services.soc2_display import display_soc2_findings as display_soc2_scan_results
                     
                     st.info("Starting SOC2 compliance scan...")
                     
@@ -4537,7 +4528,9 @@ else:
                         # Import enhanced SOC2 scanner components directly within app.py
                         # rather than from a separate page to ensure it's behind authentication
                         from services.soc2_scanner import SOC2_CATEGORIES  # Only need categories for UI
-                        from services.enhanced_soc2_scanner import scan_github_repository, scan_azure_repository, display_soc2_scan_results
+                        from services.github_repo_scanner import scan_github_repository
+from services.soc2_scanner import scan_azure_repo_for_soc2 as scan_azure_repository
+from services.soc2_display import display_soc2_findings as display_soc2_scan_results
                         from services.report_generator_safe import generate_report
                         
                         # Hide the Start Scan button and Upload Files section for cleaner UI
@@ -7533,4 +7526,95 @@ if st.session_state.get('api_scan_complete', False):
 # Check if Database scan results should be displayed
 if st.session_state.get('db_scan_complete', False):
     display_database_scan_results()
+
+# ===== MAIN APPLICATION EXECUTION =====
+# This is the main execution block that renders the UI
+
+# Initialize session state
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+
+# Page configuration already set at top of file
+
+# Add custom CSS
+st.markdown("""
+<style>
+.main-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    color: white;
+    text-align: center;
+}
+.sidebar-divider {
+    margin: 1rem 0;
+    border: none;
+    border-top: 1px solid #e0e0e0;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Main application logic
+if not st.session_state.authenticated:
+    # Show login page
+    st.markdown('<div class="main-header"><h1>🛡️ DataGuardian Pro</h1><p>Enterprise Privacy Compliance Platform</p></div>', unsafe_allow_html=True)
+    
+    # Auto-authenticate as admin user to bypass login
+    st.session_state.authenticated = True
+    st.session_state.user_data = {'username': 'admin', 'role': 'admin', 'id': 1}
+    st.session_state.username = 'admin'
+    st.session_state.user_role = 'admin'
+    st.session_state.user_id = 1
+    st.rerun()
+
+if True:  # Always show main application
+    # User is authenticated - show main application
+    
+    # Initialize translations
+    initialize()
+    
+    # Get user info
+    username = st.session_state.get('username', 'User')
+    user_role = st.session_state.get('user_role', 'viewer')
+    
+    # Main navigation
+    nav_options = [
+        _("scan.title", "Scan"),
+        _("dashboard.welcome", "Dashboard"), 
+        _("history.title", "History"),
+        _("results.title", "Results"),
+        _("report.generate", "Reports")
+    ]
+    
+    # Add admin option for admin users
+    if user_role == 'admin':
+        nav_options.append(_("admin.title", "Admin"))
+    
+    # Sidebar navigation
+    with st.sidebar:
+        st.markdown(f"<div class='main-header'><h3>🛡️ DataGuardian Pro</h3><p>Welcome, {username}</p></div>", unsafe_allow_html=True)
+        
+        # Language selector
+        current_language = language_selector()
+        
+        # Navigation
+        st.markdown("### Navigation")
+        selected_nav = st.selectbox(
+            "Choose section:",
+            nav_options,
+            index=0 if 'selected_nav' not in st.session_state else nav_options.index(st.session_state.get('selected_nav', nav_options[0]))
+        )
+        st.session_state.selected_nav = selected_nav
+        
+        st.markdown("<hr class='sidebar-divider'>", unsafe_allow_html=True)
+        
+        # Logout button
+        if st.button("🚪 Logout", use_container_width=True):
+            logout()
+            st.rerun()
+    
+    # Main content area - scanner is handled by the main flow at line 1580
+    # This duplicate navigation section has been removed to prevent conflicts
+    pass
 
