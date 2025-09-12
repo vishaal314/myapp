@@ -72,6 +72,7 @@
     "image",
     "enterprise_connector_scanner",
     "enterprise_connector",
+    "enterprise",
     "document_scanner",
     "document",
     "all_scanners",
