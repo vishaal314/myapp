@@ -488,11 +488,22 @@ class AIModelScanner:
         
         try:
             # Load model safely with TensorFlow availability check
-            if TF_AVAILABLE and hasattr(tf, 'keras') and hasattr(tf.keras, 'models'):
-                model = tf.keras.models.load_model(model_path)
-            else:
-                # Fallback to tf.saved_model if keras not available
-                model = tf.saved_model.load(model_path)
+            model = None
+            if TF_AVAILABLE and tf:
+                try:
+                    # Try to load with Keras first
+                    keras_module = getattr(tf, 'keras', None)
+                    if keras_module and hasattr(keras_module, 'models'):
+                        model = keras_module.models.load_model(model_path)
+                    else:
+                        # Fallback to tf.saved_model if keras not available
+                        model = tf.saved_model.load(model_path)
+                except Exception:
+                    # Final fallback to saved_model
+                    model = tf.saved_model.load(model_path)
+            
+            if model is None:
+                raise Exception("Unable to load TensorFlow model")
             
             analysis = {
                 'framework': 'TensorFlow',
