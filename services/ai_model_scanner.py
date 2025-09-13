@@ -488,7 +488,7 @@ class AIModelScanner:
         
         try:
             # Load model safely with TensorFlow availability check
-            if hasattr(tf, 'keras') and hasattr(tf.keras, 'models'):
+            if hasattr(tf, 'keras') and hasattr(getattr(tf, 'keras', None), 'models'):
                 model = tf.keras.models.load_model(model_path)
             else:
                 # Fallback to tf.saved_model if keras not available
