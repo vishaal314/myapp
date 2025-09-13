@@ -160,6 +160,9 @@ class IntelligentImageScanner:
             scan_results['status'] = 'failed'
             scan_results['error'] = str(e)
         
+        # Fix UI display bug: Add files_scanned field for compatibility with UI components
+        scan_results['files_scanned'] = scan_results.get('images_processed', 0)
+        
         return scan_results
 
     def _analyze_image_collection(self, image_paths: List[str]) -> Dict[str, Any]:
