@@ -141,7 +141,7 @@ class IntelligentRepoScanner:
             
             # Step 2: Repository cloning (only if not cached)
             clone_result = self._clone_repository_shallow(repo_url, branch)
-            if not clone_result or not clone_result[0]:
+            if clone_result is None:
                 scan_results['status'] = 'failed'
                 scan_results['error'] = 'Failed to clone repository'
                 return scan_results
@@ -156,10 +156,11 @@ class IntelligentRepoScanner:
                 repo_analysis = cached_metadata
             else:
                 # Analyze only the specified directory if provided
-                if directory_path and os.path.exists(os.path.join(repo_path, directory_path)):
-                    analysis_path = os.path.join(repo_path, directory_path)
-                else:
-                    analysis_path = repo_path
+                analysis_path: str = repo_path
+                if directory_path is not None:
+                    candidate = os.path.join(repo_path, directory_path)
+                    if os.path.exists(candidate):
+                        analysis_path = candidate
                 repo_analysis = self._analyze_repository_structure(analysis_path)
                 repo_analysis['is_subdirectory'] = bool(directory_path)
                 repo_analysis['subdirectory_path'] = directory_path
@@ -177,10 +178,11 @@ class IntelligentRepoScanner:
                 progress_callback(10, 100, "Repository analyzed, starting intelligent scan...")
             
             # Step 5: Execute selected strategy with directory scope
-            if directory_path and os.path.exists(os.path.join(repo_path, directory_path)):
-                scan_base_path = os.path.join(repo_path, directory_path)
-            else:
-                scan_base_path = repo_path
+            scan_base_path: str = repo_path
+            if directory_path is not None:
+                candidate2 = os.path.join(repo_path, directory_path)
+                if os.path.exists(candidate2):
+                    scan_base_path = candidate2
             if strategy['type'] == 'sampling':
                 files_to_scan = self._select_files_by_sampling(scan_base_path, repo_analysis, strategy)
             elif strategy['type'] == 'priority':
@@ -226,6 +228,7 @@ class IntelligentRepoScanner:
             'code_files': 0,
             'config_files': 0,
             'test_files': 0,
+            'infrastructure_files': 0,
             'languages': Counter(),
             'directories': [],
             'file_sizes': [],
@@ -234,8 +237,19 @@ class IntelligentRepoScanner:
             'estimated_risk_level': 'low'
         }
         
-        code_extensions = {'.py', '.js', '.ts', '.java', '.php', '.cs', '.go', '.rb', '.cpp', '.c', '.h'}
-        config_extensions = {'.json', '.yml', '.yaml', '.xml', '.env', '.ini', '.conf', '.config'}
+        # Enhanced file type recognition for infrastructure and development files
+        code_extensions = {
+            '.py', '.js', '.ts', '.java', '.php', '.cs', '.go', '.rb', '.cpp', '.c', '.h',
+            '.rs', '.kt', '.swift', '.scala', '.dart', '.lua', '.perl', '.pl', '.r'
+        }
+        config_extensions = {
+            '.json', '.yml', '.yaml', '.xml', '.env', '.ini', '.conf', '.config',
+            '.toml', '.properties', '.settings', '.prefs', '.plist', '.cfg'
+        }
+        infrastructure_extensions = {
+            '.dockerfile', '.tf', '.tfvars', '.hcl', '.sh', '.bash', '.zsh', '.fish',
+            '.ps1', '.bat', '.cmd', '.makefile', '.gradle', '.maven', '.sbt'
+        }
         test_patterns = {'test', 'tests', 'spec', '__test__', '.test.', '.spec.'}
         
         try:
@@ -259,17 +273,29 @@ class IntelligentRepoScanner:
                     except:
                         size = 0
                     
-                    # Categorize files
-                    if ext in code_extensions:
+                    # Enhanced file categorization with infrastructure support
+                    filename_lower = filename.lower()
+                    
+                    # Special handling for files without extensions
+                    if filename_lower in ['dockerfile', 'makefile', 'jenkinsfile', 'vagrantfile', 'procfile']:
+                        analysis['infrastructure_files'] += 1
+                        analysis['config_files'] += 1
+                        analysis['high_priority_files'] += 1
+                        analysis['languages'][filename_lower] += 1
+                    elif ext in code_extensions:
                         analysis['code_files'] += 1
                         analysis['languages'][ext] += 1
                         
                         # Check for high-priority patterns
-                        if any(pattern in filename.lower() or pattern in root.lower() 
+                        if any(pattern in filename_lower or pattern in root.lower() 
                                for pattern in ['config', 'auth', 'api', 'model', 'service']):
                             analysis['high_priority_files'] += 1
-                    
-                    elif ext in config_extensions or any(pattern in filename.lower() 
+                    elif ext in infrastructure_extensions:
+                        analysis['infrastructure_files'] += 1
+                        analysis['config_files'] += 1
+                        analysis['high_priority_files'] += 1
+                        analysis['languages'][ext] += 1
+                    elif ext in config_extensions or any(pattern in filename_lower 
                                                        for pattern in ['.env', 'config', 'settings']):
                         analysis['config_files'] += 1
                         analysis['high_priority_files'] += 1
@@ -293,7 +319,7 @@ class IntelligentRepoScanner:
             analysis['estimated_risk_level'] = 'medium'
         
         logger.info(f"Repository analysis: {analysis['total_files']} files, "
-                   f"{analysis['code_files']} code files, "
+                   f"{analysis['code_files']} code files, {analysis['infrastructure_files']} infrastructure files, "
                    f"{analysis['estimated_risk_level']} risk level")
         
         return analysis
@@ -442,23 +468,37 @@ class IntelligentRepoScanner:
         ext = os.path.splitext(filename)[1]
         if ext in {'.env', '.conf', '.config', '.ini', '.properties'}:
             priority += 2.5
-        elif ext in {'.py', '.js', '.java', '.php', '.cs'}:
+        elif ext in {'.py', '.js', '.java', '.php', '.cs', '.go', '.rs', '.ts'}:
             priority += 1.0
-        elif ext in {'.json', '.yml', '.yaml', '.xml'}:
+        elif ext in {'.json', '.yml', '.yaml', '.xml', '.toml'}:
             priority += 1.5
+        elif ext in {'.dockerfile', '.tf', '.sh', '.bash'} or 'dockerfile' in filename:
+            priority += 2.0  # High priority for infrastructure files
         
         return priority
 
     def _is_scannable_file(self, filename: str) -> bool:
         """Check if file should be scanned."""
         scannable_extensions = {
+            # Code files
             '.py', '.js', '.ts', '.java', '.php', '.cs', '.go', '.rb', '.cpp', '.c', '.h',
+            '.rs', '.kt', '.swift', '.scala', '.dart', '.lua', '.perl', '.pl', '.r',
+            # Config files
             '.json', '.yml', '.yaml', '.xml', '.env', '.ini', '.conf', '.config', '.properties',
-            '.sql', '.sh', '.bat', '.ps1', '.tf', '.dockerfile'
+            '.toml', '.settings', '.prefs', '.plist', '.cfg',
+            # Infrastructure files
+            '.dockerfile', '.tf', '.tfvars', '.hcl', '.sh', '.bash', '.zsh', '.fish',
+            '.ps1', '.bat', '.cmd', '.sql', '.gradle', '.maven', '.sbt'
         }
         
-        _, ext = os.path.splitext(filename.lower())
-        return ext in scannable_extensions and not filename.startswith('.')
+        # Special files without extensions
+        special_files = {'dockerfile', 'makefile', 'jenkinsfile', 'vagrantfile', 'procfile'}
+        
+        filename_lower = filename.lower()
+        _, ext = os.path.splitext(filename_lower)
+        
+        # Check extension or special filename
+        return (ext in scannable_extensions or filename_lower in special_files) and not filename.startswith('.')
 
     def _execute_parallel_scanning(self, files_to_scan: List[str], repo_path: str, 
                                  scan_results: Dict[str, Any], 
@@ -639,7 +679,7 @@ class IntelligentRepoScanner:
         
         return repo_url, None, None
 
-    def _clone_repository_shallow(self, repo_url: str, branch: Optional[str] = None) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def _clone_repository_shallow(self, repo_url: str, branch: Optional[str] = None) -> Optional[Tuple[str, Optional[str], Optional[str]]]:
         """Clone repository with minimal depth for faster cloning."""
         try:
             # Validate and fix repository URL
@@ -688,7 +728,7 @@ class IntelligentRepoScanner:
             
             if result.returncode == 0:
                 logger.info(f"Successfully cloned repository to {temp_dir}")
-                return temp_dir, target_branch, directory_path
+                return (temp_dir, target_branch, directory_path)
             else:
                 error_msg = result.stderr
                 logger.error(f"Clone failed with return code {result.returncode}: {error_msg}")
@@ -720,7 +760,7 @@ class IntelligentRepoScanner:
                     
                     if fallback_result.returncode == 0:
                         logger.info(f"Successfully cloned repository without branch specification to {temp_dir}")
-                        return temp_dir, None, directory_path
+                        return (temp_dir, None, directory_path)
                     else:
                         logger.error(f"Fallback clone also failed: {fallback_result.stderr}")
                         error_msg = fallback_result.stderr
@@ -741,7 +781,7 @@ class IntelligentRepoScanner:
             # Only return None for non-critical errors, re-raise for important ones
             if "Repository not found" in str(e) or "not found" in str(e).lower():
                 raise e
-            return None, None, None
+            return None
 
     def _cleanup(self):
         """Clean up temporary directories."""
