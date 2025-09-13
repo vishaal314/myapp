@@ -410,6 +410,17 @@ def main():
             # Initialize i18n system (cached)
             initialize()
             
+            # Initialize enterprise integration (process-global, non-breaking)
+            try:
+                from services.enterprise_orchestrator import initialize_enterprise_integration
+                # This function now handles process-global singleton initialization internally
+                initialize_enterprise_integration(use_redis=False)
+                logger.info("Enterprise integration initialized successfully")
+            except ImportError:
+                logger.debug("Enterprise integration not available (development mode)")
+            except Exception as e:
+                logger.warning(f"Enterprise integration initialization failed: {e}")
+            
             if 'authenticated' not in st.session_state:
                 st.session_state.authenticated = False
             

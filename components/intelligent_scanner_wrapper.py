@@ -18,6 +18,13 @@ from utils.activity_tracker import track_scan_started, track_scan_completed, tra
 from services.license_integration import track_scanner_usage
 from services.results_aggregator import ResultsAggregator
 
+# Enterprise integration - non-breaking import
+try:
+    from utils.event_bus import EventType, publish_event
+    ENTERPRISE_EVENTS_AVAILABLE = True
+except ImportError:
+    ENTERPRISE_EVENTS_AVAILABLE = False
+
 logger = logging.getLogger("components.intelligent_scanner_wrapper")
 
 class IntelligentScannerWrapper:
@@ -39,6 +46,9 @@ class IntelligentScannerWrapper:
         # Session tracking setup
         session_id = st.session_state.get('session_id', str(uuid.uuid4()))
         user_id = st.session_state.get('user_id', username)
+        
+        # Generate stable scan_id for event correlation
+        scan_id = f"code_scan_{uuid.uuid4().hex[:12]}_{int(datetime.now().timestamp())}"
         
         scan_start_time = datetime.now()
         
@@ -73,6 +83,28 @@ class IntelligentScannerWrapper:
                 'max_files': max_files
             }
         )
+        
+        # Enterprise event publishing (non-breaking)
+        if ENTERPRISE_EVENTS_AVAILABLE:
+            try:
+                publish_event(
+                    event_type=EventType.SCAN_STARTED,
+                    source="intelligent_scanner",
+                    user_id=user_id,
+                    session_id=session_id,
+                    data={
+                        'scan_id': scan_id,  # Add stable scan_id for correlation
+                        'scanner_type': 'code',
+                        'region': region,
+                        'source_type': source_type,
+                        'source_info': source_info,
+                        'scan_mode': scan_mode,
+                        'gdpr_compliance': gdpr_compliance,
+                        'netherlands_uavg': region == "Netherlands"
+                    }
+                )
+            except Exception as e:
+                logger.debug(f"Enterprise event publishing failed: {e}")
         
         # Progress tracking
         progress_bar = st.progress(0)
@@ -165,6 +197,7 @@ class IntelligentScannerWrapper:
             # Ensure scan_type is set correctly for database storage
             scan_result['scan_type'] = 'code'
             scan_result['region'] = region
+            scan_result['scan_id'] = scan_id  # Add stable scan_id to results
             scan_result['total_pii_found'] = findings_count
             scan_result['high_risk_count'] = len([f for f in scan_result.get('findings', []) if f.get('severity') == 'high'])
             
@@ -191,6 +224,68 @@ class IntelligentScannerWrapper:
                     'strategy_used': scan_result.get('scanning_strategy', {}).get('type', 'unknown')
                 }
             )
+            
+            # Enterprise event publishing (non-breaking)
+            if ENTERPRISE_EVENTS_AVAILABLE:
+                try:
+                    # Publish scan completed event
+                    publish_event(
+                        event_type=EventType.SCAN_COMPLETED,
+                        source="intelligent_scanner",
+                        user_id=user_id,
+                        session_id=session_id,
+                        data={
+                            'scan_id': scan_id,  # Same scan_id for correlation
+                            'scanner_type': 'code',
+                            'region': region,
+                            'findings': scan_result.get('findings', []),
+                            'findings_count': findings_count,
+                            'compliance_score': scan_result.get('compliance_score', 0),
+                            'critical_issues': len([f for f in scan_result.get('findings', []) if f.get('risk_level') == 'Critical']),
+                            'high_issues': len([f for f in scan_result.get('findings', []) if f.get('risk_level') == 'High']),
+                            'scan_duration_ms': scan_duration,
+                            'success': True,
+                            'files_scanned': scan_result.get('files_scanned', scan_result.get('files_processed', 0))
+                        }
+                    )
+                    
+                    # Publish individual finding events for enterprise processing
+                    findings = scan_result.get('findings', [])
+                    for finding in findings:
+                        publish_event(
+                            event_type=EventType.FINDING_DETECTED,
+                            source="intelligent_scanner",
+                            user_id=user_id,
+                            session_id=session_id,
+                            data={
+                                'scan_id': scan_id,  # Same scan_id for correlation
+                                'scanner_type': 'code',
+                                'type': finding.get('type', 'Unknown'),
+                                'risk_level': finding.get('risk_level', finding.get('severity', 'Low')),
+                                'location': finding.get('file', finding.get('location', 'Unknown')),
+                                'description': finding.get('description', ''),
+                                'line_number': finding.get('line_number'),
+                                'finding_id': finding.get('id', str(uuid.uuid4()))
+                            }
+                        )
+                        
+                        # Publish critical issue events for high-priority findings
+                        if finding.get('risk_level') == 'Critical' or finding.get('severity') == 'Critical':
+                            publish_event(
+                                event_type=EventType.CRITICAL_ISSUE_FOUND,
+                                source="intelligent_scanner",
+                                user_id=user_id,
+                                session_id=session_id,
+                                data={
+                                    'scan_id': scan_id,  # Same scan_id for correlation
+                                    'scanner_type': 'code',
+                                    'finding': finding,
+                                    'requires_immediate_attention': True,
+                                    'auto_ticket_eligible': True
+                                }
+                            )
+                except Exception as e:
+                    logger.debug(f"Enterprise event publishing failed: {e}")
             
             # Track license usage
             track_scanner_usage('code', region, success=True, duration_ms=scan_duration)
@@ -234,6 +329,10 @@ class IntelligentScannerWrapper:
         
         session_id = st.session_state.get('session_id', str(uuid.uuid4()))
         user_id = st.session_state.get('user_id', username)
+        
+        # Generate stable scan_id for event correlation
+        scan_id = f"image_scan_{uuid.uuid4().hex[:12]}_{int(datetime.now().timestamp())}"
+        
         scan_start_time = datetime.now()
         
         # Track scan start
@@ -250,6 +349,26 @@ class IntelligentScannerWrapper:
                 'image_types': [file.name.split('.')[-1] for file in uploaded_files]
             }
         )
+        
+        # Enterprise event publishing (non-breaking)
+        if ENTERPRISE_EVENTS_AVAILABLE:
+            try:
+                publish_event(
+                    event_type=EventType.SCAN_STARTED,
+                    source="intelligent_scanner",
+                    user_id=user_id,
+                    session_id=session_id,
+                    data={
+                        'scan_id': scan_id,  # Add stable scan_id for correlation
+                        'scanner_type': 'image',
+                        'region': region,
+                        'file_count': len(uploaded_files),
+                        'scan_mode': scan_mode,
+                        'image_types': [file.name.split('.')[-1] for file in uploaded_files]
+                    }
+                )
+            except Exception as e:
+                logger.debug(f"Enterprise event publishing failed: {e}")
         
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -287,6 +406,11 @@ class IntelligentScannerWrapper:
             scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
             findings_count = len(scan_result.get('findings', []))
             
+            # Add scan_id to scan result for consistency
+            scan_result['scan_id'] = scan_id
+            scan_result['scanner_type'] = 'image'
+            scan_result['region'] = region
+            
             track_scan_completed(
                 session_id=session_id,
                 user_id=user_id,
@@ -297,12 +421,75 @@ class IntelligentScannerWrapper:
                 duration_ms=scan_duration,
                 region=region,
                 details={
-                    'scan_id': scan_result.get('scan_id'),
+                    'scan_id': scan_id,  # Use consistent scan_id
                     'face_detections': scan_result.get('face_detections', 0),
                     'document_detections': scan_result.get('document_detections', 0),
                     'ocr_results_count': len(scan_result.get('ocr_results', []))
                 }
             )
+            
+            # Enterprise event publishing (non-breaking)
+            if ENTERPRISE_EVENTS_AVAILABLE:
+                try:
+                    # Publish scan completed event
+                    publish_event(
+                        event_type=EventType.SCAN_COMPLETED,
+                        source="intelligent_scanner",
+                        user_id=user_id,
+                        session_id=session_id,
+                        data={
+                            'scan_id': scan_id,  # Same scan_id for correlation
+                            'scanner_type': 'image',
+                            'region': region,
+                            'findings': scan_result.get('findings', []),
+                            'findings_count': findings_count,
+                            'compliance_score': scan_result.get('compliance_score', 0),
+                            'critical_issues': len([f for f in scan_result.get('findings', []) if f.get('risk_level') == 'Critical']),
+                            'high_issues': len([f for f in scan_result.get('findings', []) if f.get('risk_level') == 'High']),
+                            'scan_duration_ms': scan_duration,
+                            'success': True,
+                            'images_processed': scan_result.get('images_processed', 0),
+                            'face_detections': scan_result.get('face_detections', 0)
+                        }
+                    )
+                    
+                    # Publish individual finding events for enterprise processing
+                    findings = scan_result.get('findings', [])
+                    for finding in findings:
+                        publish_event(
+                            event_type=EventType.FINDING_DETECTED,
+                            source="intelligent_scanner",
+                            user_id=user_id,
+                            session_id=session_id,
+                            data={
+                                'scan_id': scan_id,  # Same scan_id for correlation
+                                'scanner_type': 'image',
+                                'type': finding.get('type', 'Unknown'),
+                                'risk_level': finding.get('risk_level', finding.get('severity', 'Low')),
+                                'location': finding.get('file', finding.get('location', 'Unknown')),
+                                'description': finding.get('description', ''),
+                                'finding_id': finding.get('id', str(uuid.uuid4())),
+                                'image_metadata': finding.get('metadata', {})
+                            }
+                        )
+                        
+                        # Publish critical issue events for high-priority findings
+                        if finding.get('risk_level') == 'Critical' or finding.get('severity') == 'Critical':
+                            publish_event(
+                                event_type=EventType.CRITICAL_ISSUE_FOUND,
+                                source="intelligent_scanner",
+                                user_id=user_id,
+                                session_id=session_id,
+                                data={
+                                    'scan_id': scan_id,  # Same scan_id for correlation
+                                    'scanner_type': 'image',
+                                    'finding': finding,
+                                    'requires_immediate_attention': True,
+                                    'auto_ticket_eligible': True
+                                }
+                            )
+                except Exception as e:
+                    logger.debug(f"Enterprise event publishing failed: {e}")
             
             track_scanner_usage('image', region, success=True, duration_ms=scan_duration)
             
