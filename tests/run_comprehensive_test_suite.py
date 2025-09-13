@@ -122,7 +122,7 @@ def main():
     
     if not existing_files:
         print("❌ No test files found!")
-        return
+        return []
     
     print(f"📋 Found {len(existing_files)} test suites to run")
     print(f"📁 Test files: {', '.join(existing_files)}")
@@ -152,10 +152,10 @@ def main():
     print("COMPREHENSIVE TEST SUITE SUMMARY")
     print(f"{'='*80}")
     
-    total_tests = sum(r['tests_run'] for r in results)
-    total_passed = sum(r['passed'] for r in results)
-    total_failures = sum(r['failures'] for r in results) 
-    total_errors = sum(r['errors'] for r in results)
+    total_tests = sum(r['tests_run'] for r in results if r)
+    total_passed = sum(r['passed'] for r in results if r)
+    total_failures = sum(r['failures'] for r in results if r) 
+    total_errors = sum(r['errors'] for r in results if r)
     overall_success_rate = (total_passed / total_tests * 100) if total_tests > 0 else 0
     
     print(f"📊 OVERALL METRICS:")
@@ -243,8 +243,9 @@ if __name__ == '__main__':
     results = main()
     
     # Exit with appropriate code
-    total_tests = sum(r['tests_run'] for r in results)
-    total_passed = sum(r['passed'] for r in results)
+    valid_results = [r for r in results if r is not None]
+    total_tests = sum(r['tests_run'] for r in valid_results)
+    total_passed = sum(r['passed'] for r in valid_results)
     success_rate = (total_passed / total_tests * 100) if total_tests > 0 else 0
     
     if success_rate >= 80:

@@ -348,8 +348,8 @@ class RuntimeEnforcementHealthMonitor:
                                    package_type: str,
                                    duration_ms: float,
                                    success: bool,
-                                   details: Dict[str, Any] = None,
-                                   user_context: Dict[str, Any] = None):
+                                   details: Optional[Dict[str, Any]] = None,
+                                   user_context: Optional[Dict[str, Any]] = None):
         """Log structured package generation event"""
         event = PackageGenerationEvent(
             event_id=f"pkg_{int(time.time() * 1000)}_{package_type}",
@@ -432,7 +432,7 @@ class RuntimeEnforcementHealthMonitor:
         
         return list(set(recommendations))  # Remove duplicates
     
-    def export_health_report(self, output_path: str = None) -> str:
+    def export_health_report(self, output_path: Optional[str] = None) -> str:
         """Export health report to file"""
         if output_path is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -467,7 +467,7 @@ def perform_health_check() -> Dict[str, Any]:
     monitor = get_health_monitor()
     return monitor.get_health_report()
 
-def log_package_event(package_type: str, duration_ms: float, success: bool, details: Dict[str, Any] = None):
+def log_package_event(package_type: str, duration_ms: float, success: bool, details: Optional[Dict[str, Any]] = None):
     """Convenience function to log package generation event"""
     monitor = get_health_monitor()
     monitor.log_package_generation_event(package_type, duration_ms, success, details)
