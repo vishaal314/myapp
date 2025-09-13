@@ -88,6 +88,41 @@ class DBScanner:
         # PII detection patterns
         self.pii_patterns = self._get_pii_patterns()
         
+        # AI Act compliance patterns for database analysis
+        self.ai_act_db_patterns = {
+            'ai_training_data': [
+                r'(training.*data|train.*set|dataset|training.*samples)',
+                r'(feature.*vector|label|target.*variable|ground.*truth)',
+                r'(model.*training|ml.*training|ai.*training)',
+                r'(test.*set|validation.*set|holdout.*data)'
+            ],
+            'ai_model_storage': [
+                r'(model.*weights|model.*parameters|neural.*network)',
+                r'(checkpoint|saved.*model|model.*artifact)',
+                r'(tensorflow|pytorch|keras|sklearn|pickle)',
+                r'(embedding|vector.*store|feature.*store)'
+            ],
+            'prohibited_ai_data': [
+                r'(emotion.*label|sentiment.*score|mood.*data)',
+                r'(biometric.*template|facial.*feature|voice.*print)',
+                r'(behavioral.*profile|psychological.*profile|personality.*trait)',
+                r'(social.*score|citizen.*score|risk.*profile)'
+            ],
+            'high_risk_ai_data': [
+                r'(medical.*diagnosis|health.*prediction|clinical.*data)',
+                r'(financial.*score|credit.*risk|loan.*default)',
+                r'(recruitment.*score|hiring.*prediction|candidate.*ranking)',
+                r'(legal.*outcome|court.*prediction|judicial.*data)',
+                r'(education.*score|student.*performance|academic.*prediction)'
+            ],
+            'ai_audit_data': [
+                r'(bias.*test|fairness.*metric|discrimination.*test)',
+                r'(model.*explanation|feature.*importance|prediction.*rationale)',
+                r'(human.*review|manual.*override|audit.*trail)',
+                r'(performance.*metric|accuracy.*score|model.*evaluation)'
+            ]
+        }
+        
         # Sampling settings
         self.max_sample_rows = 100
         self.max_columns_to_scan = 50

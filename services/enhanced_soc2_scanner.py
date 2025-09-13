@@ -24,8 +24,9 @@ import streamlit as st
 class EnhancedSOC2Scanner:
     """Enhanced SOC2 Scanner with TSC criteria mapping and compliance automation"""
     
-    def __init__(self):
+    def __init__(self, region="Netherlands"):
         """Initialize Enhanced SOC2 Scanner with TSC criteria mapping."""
+        self.region = region
         
         # Trust Service Criteria mapping
         self.tsc_criteria = {
@@ -141,9 +142,12 @@ class EnhancedSOC2Scanner:
     
     def scan_soc2_compliance_enhanced(self, repo_url: str, criteria: List[str], region: str, status=None):
         """Execute enhanced SOC2 compliance scanning with TSC mapping"""
-    # Log scan start
-    if hasattr(logger, 'scan_started'):
-        logger.scan_started('enhanced_soc2_scanner', 'scan_target')
+        # Initialize logger attribute
+        self.logger = logger
+        
+        # Log scan start
+        if hasattr(logger, 'scan_started'):
+            logger.scan_started('enhanced_soc2_scanner', 'scan_target')
 
         try:
             if status:

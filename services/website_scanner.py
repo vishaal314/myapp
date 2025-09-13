@@ -112,6 +112,47 @@ class WebsiteScanner:
             'social': ['facebook', 'twitter', 'linkedin', 'pinterest', 'instagram', 'youtube', 'vimeo', 'tumblr']
         }
         
+        # AI Act compliance patterns for website analysis
+        self.ai_act_web_patterns = {
+            'ai_chatbots': [
+                r'(chatbot|chat.*bot|virtual.*assistant|ai.*assistant)',
+                r'(openai|gpt|claude|bard|gemini|copilot)',
+                r'(conversation.*ai|conversational.*ai|dialog.*system)',
+                r'(nlp|natural.*language.*processing|speech.*recognition)'
+            ],
+            'recommendation_systems': [
+                r'(recommendation|recommend|personalization|personalized)',
+                r'(machine.*learning|ml.*algorithm|predictive.*analytics)',
+                r'(user.*behavior|behavioral.*analytics|content.*filtering)',
+                r'(collaborative.*filtering|content.*based.*filtering)'
+            ],
+            'automated_decision_making': [
+                r'(automated.*decision|algorithmic.*decision|ai.*decision)',
+                r'(scoring.*system|risk.*assessment|credit.*scoring)',
+                r'(automated.*approval|automatic.*approval|ai.*approval)',
+                r'(algorithmic.*trading|automated.*trading|robo.*advisor)'
+            ],
+            'biometric_ai': [
+                r'(facial.*recognition|face.*recognition|biometric)',
+                r'(fingerprint.*recognition|voice.*recognition|iris.*scan)',
+                r'(emotion.*detection|sentiment.*analysis|mood.*detection)',
+                r'(gait.*analysis|behavioral.*biometrics|keystroke.*dynamics)'
+            ],
+            'high_risk_web_ai': [
+                r'(medical.*ai|healthcare.*ai|diagnostic.*ai)',
+                r'(education.*ai|learning.*analytics|student.*assessment)',
+                r'(recruitment.*ai|hiring.*algorithm|resume.*screening)',
+                r'(financial.*ai|loan.*algorithm|credit.*ai)',
+                r'(legal.*ai|court.*ai|judicial.*algorithm)'
+            ],
+            'ai_transparency_web': [
+                r'(ai.*explanation|algorithm.*explanation|explainable.*ai)',
+                r'(human.*review|manual.*oversight|human.*intervention)',
+                r'(ai.*audit|algorithm.*audit|fairness.*testing)',
+                r'(bias.*detection|discrimination.*testing|algorithmic.*accountability)'
+            ]
+        }
+        
         # Progress tracking
         self.progress_callback = None
         self.is_running = False

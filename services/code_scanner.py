@@ -265,6 +265,58 @@ class CodeScanner:
             '.txt': []
         }
         
+        # AI Act compliance patterns for EU AI Act 2025 enforcement
+        self.ai_act_patterns = {
+            'ai_frameworks': [
+                r'import\s+(tensorflow|torch|pytorch|sklearn|keras|transformers|huggingface)',
+                r'from\s+(tensorflow|torch|pytorch|sklearn|keras|transformers|huggingface)',
+                r'import\s+.*\b(tf|torch|nn|model|neural|network)\b',
+                r'(TensorFlow|PyTorch|Keras|Scikit-learn|HuggingFace|OpenAI|Anthropic)'
+            ],
+            'prohibited_ai_practices': [
+                r'(subliminal|manipulative|deceptive).*\b(ai|algorithm|model)\b',
+                r'(social.*scoring|citizen.*scoring|behavioral.*scoring)',
+                r'(emotion.*recognition|emotional.*ai|affect.*recognition)',
+                r'(biometric.*identification|facial.*recognition|voice.*print)',
+                r'(predictive.*policing|crime.*prediction|risk.*assessment)',
+                r'(dark.*pattern|manipulation|exploitation).*\b(ai|ml|algorithm)\b'
+            ],
+            'high_risk_ai_systems': [
+                r'(medical|healthcare|diagnostic).*\b(ai|ml|model|algorithm)\b',
+                r'(autonomous|self.*driving|driverless).*\b(vehicle|car|transport)\b',
+                r'(recruitment|hiring|employment).*\b(ai|algorithm|scoring)\b',
+                r'(education|grading|assessment).*\b(ai|algorithm|automated)\b',
+                r'(credit.*scoring|loan.*approval|financial.*ai)',
+                r'(border.*control|immigration|visa).*\b(ai|automated)\b',
+                r'(legal|judicial|court).*\b(ai|algorithm|automated.*decision)\b'
+            ],
+            'ai_training_patterns': [
+                r'(train|training|fit|compile).*\b(model|neural|network|ai)\b',
+                r'(dataset|training.*data|model.*training)',
+                r'(epochs|batch.*size|learning.*rate|optimizer)',
+                r'(model\.fit|model\.train|train_step|training_loop)',
+                r'(loss.*function|cost.*function|objective.*function)'
+            ],
+            'ai_model_files': [
+                r'\.(h5|pkl|pickle|joblib|model|weights|checkpoint|pb|pth|pt|onnx|tflite)$',
+                r'(model|weights|checkpoint).*\.(json|yaml|yml|config)$',
+                r'(trained.*model|saved.*model|model.*export)'
+            ],
+            'ai_transparency_requirements': [
+                r'(explainability|interpretability|transparency).*\b(ai|model)\b',
+                r'(bias.*detection|fairness.*testing|algorithmic.*audit)',
+                r'(model.*documentation|ai.*documentation|algorithm.*description)',
+                r'(human.*oversight|human.*review|manual.*override)',
+                r'(ai.*impact.*assessment|algorithmic.*impact.*assessment)'
+            ]
+        }
+        
+        # Pre-compile regex patterns to improve performance and catch compilation errors early
+        self.compiled_patterns = {}
+        self.compiled_comment_patterns = {}
+        self.compiled_ai_patterns = {}
+        self._compile_patterns()
+        
         # Regulatory frameworks mapped to article references
         self.regulatory_refs = {
             "GDPR (EU)": {
@@ -389,7 +441,17 @@ class CodeScanner:
                     logger.warning(f"Failed to compile comment pattern for {ext}: {e}")
             self.compiled_comment_patterns[ext] = compiled_ext_patterns
         
-        logger.info(f"Successfully compiled {len(self.compiled_patterns)} secret patterns and comment patterns for {len(self.compiled_comment_patterns)} file types")
+        # Compile AI Act patterns
+        for category, patterns in self.ai_act_patterns.items():
+            compiled_category_patterns = []
+            for pattern in patterns:
+                try:
+                    compiled_category_patterns.append(re.compile(pattern, re.IGNORECASE | re.MULTILINE))
+                except re.error as e:
+                    logger.warning(f"Failed to compile AI Act pattern for {category}: {e}")
+            self.compiled_ai_patterns[category] = compiled_category_patterns
+        
+        logger.info(f"Successfully compiled {len(self.compiled_patterns)} secret patterns, {len(self.compiled_comment_patterns)} comment patterns, and {len(self.compiled_ai_patterns)} AI Act patterns")
         
     def set_progress_callback(self, callback_function: Optional[Callable[[int, int, str], None]]):
         """
