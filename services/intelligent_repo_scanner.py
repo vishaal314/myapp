@@ -615,7 +615,39 @@ class IntelligentRepoScanner:
                 error_msg = result.stderr
                 logger.error(f"Clone failed with return code {result.returncode}: {error_msg}")
                 
-                # More specific error handling instead of the confusing big-data-europe message
+                # Handle branch not found - try without branch specification
+                if branch and ("not found in upstream origin" in error_msg or "Remote branch" in error_msg):
+                    logger.info(f"Branch '{branch}' not found, trying without branch specification")
+                    
+                    # Remove the temporary directory and create a new one
+                    try:
+                        if os.path.exists(temp_dir):
+                            shutil.rmtree(temp_dir)
+                    except:
+                        pass
+                    
+                    temp_dir = tempfile.mkdtemp(prefix="intelligent_repo_")
+                    self.temp_dirs.append(temp_dir)
+                    
+                    # Try cloning without branch specification
+                    fallback_args = ['git', 'clone', '--depth', '1', repo_url, temp_dir]
+                    logger.info(f"Executing fallback git clone command: {' '.join(fallback_args)}")
+                    
+                    fallback_result = subprocess.run(
+                        fallback_args,
+                        capture_output=True,
+                        text=True,
+                        timeout=45
+                    )
+                    
+                    if fallback_result.returncode == 0:
+                        logger.info(f"Successfully cloned repository without branch specification to {temp_dir}")
+                        return temp_dir
+                    else:
+                        logger.error(f"Fallback clone also failed: {fallback_result.stderr}")
+                        error_msg = fallback_result.stderr
+                
+                # More specific error handling
                 if "not found" in error_msg.lower() or "repository not found" in error_msg.lower():
                     raise Exception(f"❌ Repository not found: {repo_url}\n\nPlease verify:\n• The repository URL is correct\n• The repository is public or you have access\n• Your network connection is working")
                 elif "permission denied" in error_msg.lower():
