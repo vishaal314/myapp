@@ -1138,7 +1138,8 @@ class DBScanner:
         """
         if self.connection:
             try:
-                if hasattr(self.connection, 'close'):
+                # Type-safe connection closing
+                if hasattr(self.connection, 'close') and callable(getattr(self.connection, 'close', None)):
                     self.connection.close()
                     logger.info("Disconnected from database")
             except Exception as e:
@@ -1159,7 +1160,7 @@ class DBScanner:
         
         tables = []
         try:
-            if hasattr(self.connection, 'cursor'):
+            if hasattr(self.connection, 'cursor') and callable(getattr(self.connection, 'cursor', None)):
                 cursor = self.connection.cursor()
             else:
                 return []
@@ -1197,10 +1198,11 @@ class DBScanner:
             for row in rows:
                 if isinstance(row, (list, tuple)) and len(row) > 0:
                     tables.append(str(row[0]))
-                elif hasattr(row, '__getitem__'):
+                elif hasattr(row, '__getitem__') and hasattr(row, '__len__'):
                     try:
-                        tables.append(str(row[0]))
-                    except (IndexError, TypeError):
+                        if len(row) > 0:
+                            tables.append(str(row[0]))
+                    except (IndexError, TypeError, KeyError):
                         continue
             
             # Limit the number of tables to scan
@@ -1230,7 +1232,7 @@ class DBScanner:
         
         columns = []
         try:
-            if hasattr(self.connection, 'cursor'):
+            if hasattr(self.connection, 'cursor') and callable(getattr(self.connection, 'cursor', None)):
                 cursor = self.connection.cursor()
             else:
                 return []
@@ -1263,10 +1265,11 @@ class DBScanner:
                 for row in rows:
                     if isinstance(row, (list, tuple)) and len(row) > 1:
                         columns.append(str(row[1]))
-                    elif hasattr(row, '__getitem__'):
+                    elif hasattr(row, '__getitem__') and hasattr(row, '__len__'):
                         try:
-                            columns.append(str(row[1]))
-                        except (IndexError, TypeError):
+                            if len(row) > 1:
+                                columns.append(str(row[1]))
+                        except (IndexError, TypeError, KeyError):
                             continue
                 cursor.close()
                 return columns
@@ -1277,10 +1280,11 @@ class DBScanner:
             for row in rows:
                 if isinstance(row, (list, tuple)) and len(row) > 0:
                     columns.append(str(row[0]))
-                elif hasattr(row, '__getitem__'):
+                elif hasattr(row, '__getitem__') and hasattr(row, '__len__'):
                     try:
-                        columns.append(str(row[0]))
-                    except (IndexError, TypeError):
+                        if len(row) > 0:
+                            columns.append(str(row[0]))
+                    except (IndexError, TypeError, KeyError):
                         continue
             
             # Limit the number of columns to scan
@@ -1330,7 +1334,7 @@ class DBScanner:
         
         sample_data = []
         try:
-            if hasattr(self.connection, 'cursor'):
+            if hasattr(self.connection, 'cursor') and callable(getattr(self.connection, 'cursor', None)):
                 cursor = self.connection.cursor()
             else:
                 return []

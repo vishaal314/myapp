@@ -593,6 +593,8 @@ class IntelligentRepoScanner:
                 clone_args.extend(['--branch', branch, '--single-branch'])
             clone_args.extend([repo_url, temp_dir])
             
+            logger.info(f"Executing git clone command: {' '.join(clone_args)}")
+            
             result = subprocess.run(
                 clone_args,
                 capture_output=True,
@@ -600,16 +602,26 @@ class IntelligentRepoScanner:
                 timeout=45  # 45 second timeout for cloning
             )
             
+            logger.info(f"Git clone result - Return code: {result.returncode}")
+            if result.stdout:
+                logger.info(f"Git clone stdout: {result.stdout}")
+            if result.stderr:
+                logger.info(f"Git clone stderr: {result.stderr}")
+            
             if result.returncode == 0:
                 logger.info(f"Successfully cloned repository to {temp_dir}")
                 return temp_dir
             else:
                 error_msg = result.stderr
-                if "not found" in error_msg.lower():
-                    if "big-data-europe" in repo_url:
-                        raise Exception(f"❌ Repository not found.\n\n✅ Try one of these popular big-data-europe repos:\n• https://github.com/big-data-europe/docker-hadoop\n• https://github.com/big-data-europe/docker-spark\n• https://github.com/big-data-europe/docker-hive\n• https://github.com/big-data-europe/docker-hadoop-spark-workbench")
-                logger.error(f"Clone failed: {error_msg}")
-                raise Exception(f"Clone failed: {error_msg}")
+                logger.error(f"Clone failed with return code {result.returncode}: {error_msg}")
+                
+                # More specific error handling instead of the confusing big-data-europe message
+                if "not found" in error_msg.lower() or "repository not found" in error_msg.lower():
+                    raise Exception(f"❌ Repository not found: {repo_url}\n\nPlease verify:\n• The repository URL is correct\n• The repository is public or you have access\n• Your network connection is working")
+                elif "permission denied" in error_msg.lower():
+                    raise Exception(f"❌ Permission denied accessing repository: {repo_url}\n\nThis may be a private repository requiring authentication.")
+                else:
+                    raise Exception(f"❌ Git clone failed: {error_msg}")
                 
         except subprocess.TimeoutExpired:
             logger.error("Repository clone timed out")

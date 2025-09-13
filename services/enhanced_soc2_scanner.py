@@ -146,8 +146,7 @@ class EnhancedSOC2Scanner:
         self.logger = logger
         
         # Log scan start
-        if hasattr(logger, 'scan_started'):
-            logger.scan_started('enhanced_soc2_scanner', 'scan_target')
+        logger.info(f"Starting enhanced SOC2 scan for {repo_url}")
 
         try:
             if status:
