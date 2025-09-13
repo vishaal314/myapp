@@ -25,7 +25,7 @@ class EnhancedSOC2Scanner:
     """Enhanced SOC2 Scanner with TSC criteria mapping and compliance automation"""
     
     def __init__(self):
-        self.
+        """Initialize Enhanced SOC2 Scanner with TSC criteria mapping."""
         
         # Trust Service Criteria mapping
         self.tsc_criteria = {
