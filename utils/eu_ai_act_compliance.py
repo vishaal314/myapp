@@ -124,6 +124,49 @@ def detect_ai_act_violations(content: str, document_metadata: Optional[Dict[str,
     except ImportError:
         pass  # Module not available
     
+    # NEW: Integrate 2025 compliance gap fixes
+    try:
+        from utils.copyright_compliance_detector import CopyrightComplianceDetector
+        copyright_detector = CopyrightComplianceDetector()
+        copyright_findings = copyright_detector.detect_copyright_violations(content, document_metadata)
+        findings.extend(copyright_findings)
+    except ImportError:
+        pass
+    
+    try:
+        from utils.privacy_enhancing_tech_validator import PrivacyEnhancingTechValidator
+        pet_validator = PrivacyEnhancingTechValidator()
+        pet_results = pet_validator.validate_privacy_technologies(content, document_metadata)
+        for result in pet_results:
+            findings.extend(result.findings)
+    except ImportError:
+        pass
+    
+    try:
+        from utils.enhanced_breach_response import EnhancedBreachResponseSystem
+        breach_system = EnhancedBreachResponseSystem()
+        breach_incident = breach_system.detect_potential_breach(content, document_metadata)
+        if breach_incident:
+            findings.append({
+                'type': 'POTENTIAL_BREACH_DETECTED',
+                'category': 'Enhanced Breach Response',
+                'incident_id': breach_incident.incident_id,
+                'severity': breach_incident.severity.value,
+                'description': f'Potential data breach detected: {breach_incident.category.value}',
+                'remediation': 'Initiate automated breach response procedures',
+                'regulation': 'GDPR Article 33 + Netherlands UAVG breach notification'
+            })
+    except ImportError:
+        pass
+    
+    try:
+        from utils.cloud_provider_eu_compliance import CloudProviderEUComplianceValidator
+        cloud_validator = CloudProviderEUComplianceValidator()
+        cloud_findings = cloud_validator.detect_cloud_provider_usage(content, document_metadata)
+        findings.extend(cloud_findings)
+    except ImportError:
+        pass
+    
     return findings
 
 def _detect_prohibited_practices(content: str) -> List[Dict[str, Any]]:

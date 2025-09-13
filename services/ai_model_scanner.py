@@ -234,6 +234,10 @@ class AIModelScanner:
             # NEW: Add comprehensive EU AI Act 2025 compliance checks
             eu_ai_act_findings = self._generate_eu_ai_act_2025_findings(scan_result)
             scan_result["findings"].extend(eu_ai_act_findings)
+            
+            # NEW: 2025 compliance gap fixes integration
+            enhanced_findings = self._perform_2025_compliance_gap_assessment(model_source, model_details, sample_inputs)
+            scan_result["findings"].extend(enhanced_findings)
 
             try:
                 metrics = self._calculate_risk_metrics(scan_result["findings"])
@@ -2073,3 +2077,193 @@ class AIModelScanner:
             ],
             "compliance_status": "system_required"
         })
+    
+    def _perform_2025_compliance_gap_assessment(self, model_source: str, model_details: Dict[str, Any], sample_inputs: List[str]) -> List[Dict[str, Any]]:
+        """
+        Perform 2025 compliance gap assessment including:
+        1. Copyright compliance for AI training data
+        2. EU database registration requirements
+        3. Privacy-enhancing technology validation
+        4. Enhanced breach response readiness
+        5. Cloud provider EU compliance
+        """
+        findings = []
+        
+        # 1. Copyright Compliance Assessment
+        try:
+            from utils.copyright_compliance_detector import CopyrightComplianceDetector
+            copyright_detector = CopyrightComplianceDetector()
+            
+            # Create metadata for copyright assessment
+            copyright_metadata = {
+                'model_type': model_details.get('model_type', 'unknown'),
+                'training_data_source': model_details.get('training_data_source', 'unspecified'),
+                'use_case': model_details.get('intended_purpose', 'general'),
+                'model_source': model_source
+            }
+            
+            copyright_violations = copyright_detector.detect_copyright_violations(
+                f"{model_source} {' '.join(sample_inputs)}", copyright_metadata
+            )
+            
+            for violation in copyright_violations:
+                violation['scanner_source'] = 'AI Model Scanner - Copyright Assessment'
+                violation['ai_model_context'] = True
+                findings.append(violation)
+                
+        except ImportError:
+            findings.append({
+                'type': 'COPYRIGHT_ASSESSMENT_UNAVAILABLE',
+                'category': 'AI Model Copyright Compliance',
+                'description': 'Copyright compliance assessment module not available',
+                'risk_level': 'Medium',
+                'remediation': 'Implement copyright compliance checking for AI training data'
+            })
+        
+        # 2. EU Database Registration Assessment
+        try:
+            from utils.eu_database_registration import EUDatabaseRegistration
+            registration_system = EUDatabaseRegistration()
+            
+            # Create AI system metadata for registration assessment
+            ai_system_metadata = {
+                'name': model_details.get('name', 'AI Model System'),
+                'intended_purpose': model_details.get('intended_purpose', 'AI model deployment'),
+                'model_type': model_details.get('model_type', 'machine_learning'),
+                'use_case': model_details.get('use_case', 'automated_decision_making'),
+                'domain': model_details.get('domain', 'general'),
+                'deployment_date': datetime.now().strftime('%Y-%m-%d'),
+                'provider_name': 'DataGuardian Pro Implementation',
+                'geographic_scope': 'EU'
+            }
+            
+            registration_assessment = registration_system.assess_registration_requirement(ai_system_metadata)
+            
+            if registration_assessment['registration_required']:
+                findings.append({
+                    'type': 'EU_DATABASE_REGISTRATION_REQUIRED',
+                    'category': 'AI Act Article 49 - EU Database Registration',
+                    'description': f'AI system requires EU database registration in {registration_assessment["category"]} category',
+                    'registration_deadline': registration_assessment['deadline'],
+                    'urgency': registration_assessment['urgency'],
+                    'risk_level': 'High' if registration_assessment['urgency'] in ['CRITICAL', 'HIGH'] else 'Medium',
+                    'remediation': 'Initiate EU database registration process for high-risk AI system',
+                    'regulation': 'EU AI Act Article 49',
+                    'next_steps': registration_assessment.get('next_steps', [])
+                })
+                
+        except ImportError:
+            findings.append({
+                'type': 'EU_REGISTRATION_ASSESSMENT_UNAVAILABLE',
+                'category': 'AI Act Article 49 - EU Database Registration',
+                'description': 'EU database registration assessment module not available',
+                'risk_level': 'Medium',
+                'remediation': 'Implement EU database registration assessment for AI systems'
+            })
+        
+        # 3. Privacy-Enhancing Technology Validation
+        try:
+            from utils.privacy_enhancing_tech_validator import PrivacyEnhancingTechValidator
+            pet_validator = PrivacyEnhancingTechValidator()
+            
+            pet_metadata = {
+                'data_sensitivity': model_details.get('data_sensitivity', 'medium'),
+                'system_type': 'machine_learning',
+                'use_case': model_details.get('use_case', 'ai_training'),
+                'deployment_type': model_details.get('deployment_type', 'cloud')
+            }
+            
+            pet_results = pet_validator.validate_privacy_technologies(
+                f"{model_source} {' '.join(sample_inputs)}", pet_metadata
+            )
+            
+            for result in pet_results:
+                if result.detected and result.compliance_level.value != 'compliant':
+                    findings.append({
+                        'type': 'PET_COMPLIANCE_GAP',
+                        'category': f'Privacy-Enhancing Technology - {result.pet_type.value}',
+                        'description': f'{result.pet_type.value} implementation needs improvement',
+                        'compliance_level': result.compliance_level.value,
+                        'quality_score': result.implementation_quality,
+                        'risk_level': 'High' if result.implementation_quality < 50 else 'Medium',
+                        'recommendations': result.recommendations,
+                        'regulatory_impact': result.regulatory_impact,
+                        'regulation': 'GDPR Article 25 + AI Act privacy requirements'
+                    })
+                elif not result.detected and result.compliance_level.value == 'not_implemented':
+                    findings.append({
+                        'type': 'PET_NOT_IMPLEMENTED',
+                        'category': f'Privacy-Enhancing Technology - {result.pet_type.value}',
+                        'description': f'{result.pet_type.value} not implemented but recommended',
+                        'risk_level': 'Medium',
+                        'recommendations': result.recommendations,
+                        'regulation': 'GDPR Article 25 - Privacy by Design'
+                    })
+                    
+        except ImportError:
+            findings.append({
+                'type': 'PET_ASSESSMENT_UNAVAILABLE',
+                'category': 'Privacy-Enhancing Technology Assessment',
+                'description': 'Privacy-enhancing technology assessment module not available',
+                'risk_level': 'Medium',
+                'remediation': 'Implement PET validation for AI systems'
+            })
+        
+        # 4. Enhanced Breach Response Readiness
+        try:
+            from utils.enhanced_breach_response import EnhancedBreachResponseSystem
+            breach_system = EnhancedBreachResponseSystem()
+            
+            # Check for potential breach indicators in model metadata
+            breach_content = f"AI model deployment: {model_details.get('deployment_description', '')} Training data: {model_details.get('training_data_description', '')}"
+            
+            # This won't create an actual incident but assesses breach response readiness
+            if not hasattr(breach_system, 'auto_response_enabled') or not breach_system.auto_response_enabled:
+                findings.append({
+                    'type': 'BREACH_RESPONSE_NOT_CONFIGURED',
+                    'category': 'Enhanced Breach Response',
+                    'description': 'Automated breach response system not properly configured',
+                    'risk_level': 'High',
+                    'remediation': 'Configure automated breach response with sub-hour notification capability',
+                    'regulation': 'GDPR Article 33 - Breach notification within 72 hours'
+                })
+                
+        except ImportError:
+            findings.append({
+                'type': 'BREACH_RESPONSE_UNAVAILABLE',
+                'category': 'Enhanced Breach Response',
+                'description': 'Enhanced breach response system not available',
+                'risk_level': 'High',
+                'remediation': 'Implement enhanced breach response automation'
+            })
+        
+        # 5. Cloud Provider EU Compliance Assessment
+        try:
+            from utils.cloud_provider_eu_compliance import CloudProviderEUComplianceValidator
+            cloud_validator = CloudProviderEUComplianceValidator()
+            
+            cloud_content = f"Model deployment: {model_details.get('deployment_environment', '')} Infrastructure: {model_details.get('infrastructure_description', '')}"
+            
+            cloud_metadata = {
+                'deployment_type': model_details.get('deployment_type', 'cloud'),
+                'data_sensitivity': model_details.get('data_sensitivity', 'high'),
+                'geographic_scope': 'EU'
+            }
+            
+            cloud_findings = cloud_validator.detect_cloud_provider_usage(cloud_content, cloud_metadata)
+            
+            for cloud_finding in cloud_findings:
+                cloud_finding['scanner_source'] = 'AI Model Scanner - Cloud Compliance Assessment'
+                cloud_finding['ai_model_context'] = True
+                findings.append(cloud_finding)
+                
+        except ImportError:
+            findings.append({
+                'type': 'CLOUD_COMPLIANCE_ASSESSMENT_UNAVAILABLE',
+                'category': 'Cloud Provider EU Compliance',
+                'description': 'Cloud provider EU compliance assessment not available',
+                'risk_level': 'Medium',
+                'remediation': 'Implement cloud provider EU compliance validation'
+            })
+        
+        return findings
