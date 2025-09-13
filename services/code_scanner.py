@@ -311,6 +311,55 @@ class CodeScanner:
             ]
         }
         
+        # UAVG (Dutch GDPR implementation) specific compliance patterns
+        self.uavg_patterns = {
+            'bsn_numbers': [
+                r'\b(BSN|Burgerservicenummer|sofi[-\s]?nummer)(?:[:\s-]+)?(\d{9})\b',
+                r'\b(BSN|Burgerservicenummer|sofi[-\s]?nummer)(?:[:\s-]+)?(\d{3}[-\s]\d{3}[-\s]\d{3})\b',
+                r'\b(\d{9})\b(?=.*(?:BSN|burger|citizen|persoon))'
+            ],
+            'dutch_medical_data': [
+                r'\b(medisch(?:e)?|patiënt(?:en)?|diagnos(?:e|tisch)|behandeling|gezondheid(?:s)?)\b',
+                r'\b(ziekenhuis|huisarts|specialist|UMC|zorg(?:verlener)?|apotheek)\b',
+                r'\b(elektronisch\s+patiëntendossier|EPD|zorgverlening|medische\s+gegevens)\b',
+                r'\b(DigiD|medicijnen|behandelplan|zorgverzekeraar)\b'
+            ],
+            'dutch_personal_identifiers': [
+                r'\b(paspoort(?:nummer)?|rijbewijs(?:nummer)?|identiteitskaart)\b',
+                r'\b(Nederlandse\s+nationaliteit|Nederlands\s+staatsburgerschap)\b',
+                r'\b(GBA|BRP|basisregistratie\s+personen)\b',
+                r'\b(postcode|huisnummer|adres(?:gegevens)?)\s*[:\s]*[0-9]{4}\s*[A-Z]{2}\b'
+            ],
+            'dutch_financial_identifiers': [
+                r'\b(IBAN\s*[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}[A-Z0-9]{0,16})\b',
+                r'\b(bank(?:rekening)?(?:nummer)?|rekeningnummer|BIC|SWIFT)\b',
+                r'\b(belasting(?:nummer)?|BTW[-\s]?nummer|fiscaal\s+nummer)\b',
+                r'\b(ABN\s+AMRO|ING\s+Bank|Rabobank|SNS\s+Bank)\b'
+            ],
+            'dutch_employment_data': [
+                r'\b(werknemers(?:nummer)?|personeelsnummer|UWV|WW[-\s]?uitkering)\b',
+                r'\b(CAO|arbeidscontract|salaris(?:administratie)?|loonstrook)\b',
+                r'\b(ziekteverzuim|arbeidsongeschiktheid|pensioen(?:regeling)?)\b'
+            ],
+            'dutch_education_data': [
+                r'\b(onderwijsnummer|studentnummer|leerlingnummer|diplomanummer)\b',
+                r'\b(onderwijsinstelling|school(?:gegevens)?|studieresultaten)\b',
+                r'\b(DUO|studiefinanciering|onderwijsloopbaan)\b'
+            ],
+            'dutch_minors_consent': [
+                r'\b(leeftijd(?:s)?verificatie|leeftijd(?:s)?check|16\s*jaar)\b',
+                r'\b(onder|jonger\s+dan)\s+(?:16|zestien)\s+jaar\b',
+                r'\b(ouderlijke\s+toestemming|toestemming\s+van\s+ouders|minderjarig)\b',
+                r'\b(wettelijke\s+vertegenwoordiger|voogd(?:ij)?)\b'
+            ],
+            'dutch_legal_basis': [
+                r'\b(gerechtvaardigd\s+belang|toestemming|wettelijke\s+verplichting)\b',
+                r'\b(vitaal\s+belang|openbaar\s+belang|uitvoering\s+overeenkomst)\b',
+                r'\b(UAVG|Uitvoeringswet|AVG|gegevensbescherming)\b',
+                r'\b(Autoriteit\s+Persoonsgegevens|AP|privacy(?:beleid)?)\b'
+            ]
+        }
+        
         # Pre-compile regex patterns to improve performance and catch compilation errors early
         self.compiled_patterns = {}
         self.compiled_comment_patterns = {}
@@ -451,7 +500,18 @@ class CodeScanner:
                     logger.warning(f"Failed to compile AI Act pattern for {category}: {e}")
             self.compiled_ai_patterns[category] = compiled_category_patterns
         
-        logger.info(f"Successfully compiled {len(self.compiled_patterns)} secret patterns, {len(self.compiled_comment_patterns)} comment patterns, and {len(self.compiled_ai_patterns)} AI Act patterns")
+        # Compile UAVG (Dutch GDPR) patterns
+        self.compiled_uavg_patterns = {}
+        for category, patterns in self.uavg_patterns.items():
+            compiled_category_patterns = []
+            for pattern in patterns:
+                try:
+                    compiled_category_patterns.append(re.compile(pattern, re.IGNORECASE | re.MULTILINE))
+                except re.error as e:
+                    logger.warning(f"Failed to compile UAVG pattern for {category}: {e}")
+            self.compiled_uavg_patterns[category] = compiled_category_patterns
+        
+        logger.info(f"Successfully compiled {len(self.compiled_patterns)} secret patterns, {len(self.compiled_comment_patterns)} comment patterns, {len(self.compiled_ai_patterns)} AI Act patterns, and {len(self.compiled_uavg_patterns)} UAVG patterns")
         
     def set_progress_callback(self, callback_function: Optional[Callable[[int, int, str], None]]):
         """
@@ -1203,12 +1263,21 @@ class CodeScanner:
         Returns:
             Standardized scan result dictionary
         """
-        # Add Netherlands-specific violations if available
+        # Add Netherlands-specific GDPR (UAVG) violations if available
         try:
-            nl_violations = detect_nl_violations('\n'.join([str(pii) for pii in all_pii]))
+            # Check both GDPR and Dutch UAVG compliance
+            content_for_nl_check = '\n'.join([str(pii) for pii in all_pii])
+            nl_violations = detect_nl_violations(content_for_nl_check)
+            
+            # Add UAVG-specific compliance information
+            for violation in nl_violations:
+                violation['compliance_frameworks'] = ['GDPR', 'UAVG']
+                violation['netherlands_specific'] = True
+                
             all_pii.extend(nl_violations)
+            logger.info(f"Netherlands GDPR/UAVG compliance check completed: {len(nl_violations)} violations found")
         except Exception as e:
-            logger.warning(f"Netherlands violation detection failed: {e}")
+            logger.warning(f"Netherlands GDPR/UAVG violation detection failed: {e}")
         
         # Calculate risk metrics
         risk_counts = {'Low': 0, 'Medium': 0, 'High': 0, 'Critical': 0}
@@ -1610,6 +1679,29 @@ class CodeScanner:
                 
                 pii_found.append(finding)
             
+            # Check for UAVG (Dutch GDPR) specific patterns
+            if self.region.lower() in ['netherlands', 'nederland', 'nl']:
+                for category, compiled_patterns in self.compiled_uavg_patterns.items():
+                    for pattern in compiled_patterns:
+                        matches = pattern.finditer(line)
+                        for match in matches:
+                            # Determine UAVG-specific risk level
+                            uavg_risk_level = self._get_uavg_risk_level(category, match.group())
+                            
+                            # Create UAVG finding
+                            uavg_finding = {
+                                'type': f'UAVG-{category.replace("_", " ").title()}',
+                                'value': match.group()[:50] + '...' if len(match.group()) > 50 else match.group(),
+                                'location': f'Line {line_num} ({content_type})',
+                                'risk_level': uavg_risk_level,
+                                'reason': self._get_uavg_reason(category),
+                                'compliance_frameworks': ['GDPR', 'UAVG'],
+                                'netherlands_specific': True,
+                                'regulatory_reference': self._get_uavg_article_reference(category)
+                            }
+                            
+                            pii_found.append(uavg_finding)
+            
             # Check for vulnerability patterns in each line
             if content_type == "code":  # Only check code, not comments
                 for vuln_type, patterns in vulnerability_patterns.items():
@@ -1677,3 +1769,73 @@ class CodeScanner:
         default_reason = f"{pii_type} is potentially personal data under GDPR"
         
         return reasons.get(pii_type, default_reason)
+    
+    def _get_uavg_risk_level(self, category: str, matched_text: str) -> str:
+        """
+        Determine UAVG-specific risk level for different categories.
+        
+        Args:
+            category: UAVG pattern category
+            matched_text: The matched text
+            
+        Returns:
+            Risk level string
+        """
+        risk_levels = {
+            'bsn_numbers': 'Critical',  # BSN is highly sensitive in Netherlands
+            'dutch_medical_data': 'High',
+            'dutch_personal_identifiers': 'High',
+            'dutch_financial_identifiers': 'High',
+            'dutch_employment_data': 'Medium',
+            'dutch_education_data': 'Medium',
+            'dutch_minors_consent': 'High',  # Important for UAVG compliance
+            'dutch_legal_basis': 'Medium'
+        }
+        
+        return risk_levels.get(category, 'Medium')
+    
+    def _get_uavg_reason(self, category: str) -> str:
+        """
+        Get UAVG-specific reason for the finding.
+        
+        Args:
+            category: UAVG pattern category
+            
+        Returns:
+            Explanation string
+        """
+        reasons = {
+            'bsn_numbers': 'Dutch Burgerservicenummer (BSN) detected - requires special handling under UAVG Article 46',
+            'dutch_medical_data': 'Medical data requires additional safeguards under UAVG Article 30',
+            'dutch_personal_identifiers': 'Dutch personal identifiers require GDPR/UAVG compliance measures',
+            'dutch_financial_identifiers': 'Financial identifiers require secure processing under GDPR/UAVG',
+            'dutch_employment_data': 'Employment data processing must comply with Dutch labor law and UAVG',
+            'dutch_education_data': 'Educational data requires special handling under Dutch privacy laws',
+            'dutch_minors_consent': 'Parental consent required for users under 16 years under UAVG Article 5',
+            'dutch_legal_basis': 'Legal basis references indicate data processing requiring GDPR/UAVG compliance'
+        }
+        
+        return reasons.get(category, 'UAVG compliance required for Dutch personal data processing')
+    
+    def _get_uavg_article_reference(self, category: str) -> str:
+        """
+        Get specific UAVG article reference for the category.
+        
+        Args:
+            category: UAVG pattern category
+            
+        Returns:
+            Article reference string
+        """
+        article_refs = {
+            'bsn_numbers': 'UAVG Article 46',
+            'dutch_medical_data': 'UAVG Article 30',
+            'dutch_personal_identifiers': 'GDPR Article 4(1) + UAVG',
+            'dutch_financial_identifiers': 'GDPR Article 6 + UAVG',
+            'dutch_employment_data': 'GDPR Article 6(1)(b) + UAVG',
+            'dutch_education_data': 'GDPR Article 6 + UAVG Article 43-47',
+            'dutch_minors_consent': 'UAVG Article 5 (GDPR Article 8)',
+            'dutch_legal_basis': 'GDPR Articles 6-7 + UAVG'
+        }
+        
+        return article_refs.get(category, 'GDPR + UAVG')

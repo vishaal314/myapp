@@ -447,8 +447,8 @@ class SOC2AuditManager:
                     tester: str,
                     test_results: str,
                     effectiveness: ControlEffectiveness,
-                    deficiencies: List[str] = None,
-                    remediation_actions: List[str] = None) -> bool:
+                    deficiencies: Optional[List[str]] = None,
+                    remediation_actions: Optional[List[str]] = None) -> bool:
         """Record control testing results"""
         
         if control_id not in self.controls:
