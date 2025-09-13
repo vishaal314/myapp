@@ -260,6 +260,10 @@ class IntelligentRepoScanner:
             '.dockerfile', '.tf', '.tfvars', '.hcl', '.sh', '.bash', '.zsh', '.fish',
             '.ps1', '.bat', '.cmd', '.makefile', '.gradle', '.maven', '.sbt'
         }
+        # Documentation files that can contain sensitive information
+        documentation_extensions = {
+            '.md', '.txt', '.rst', '.adoc', '.org', '.tex', '.rtf'
+        }
         test_patterns = {'test', 'tests', 'spec', '__test__', '.test.', '.spec.'}
         
         try:
@@ -309,7 +313,13 @@ class IntelligentRepoScanner:
                                                        for pattern in ['.env', 'config', 'settings']):
                         analysis['config_files'] += 1
                         analysis['high_priority_files'] += 1
-                    
+                    elif ext in documentation_extensions:
+                        # Count documentation files as code files for scanning purposes
+                        analysis['code_files'] += 1
+                        analysis['languages'][ext] += 1
+                        # Documentation can contain sensitive info (API keys, tokens, etc.)
+                        if any(pattern in filename_lower for pattern in ['readme', 'api', 'auth', 'config', 'secret']):
+                            analysis['high_priority_files'] += 1
                     elif any(pattern in filename.lower() or pattern in root.lower() 
                             for pattern in test_patterns):
                         analysis['test_files'] += 1
@@ -498,7 +508,9 @@ class IntelligentRepoScanner:
             '.toml', '.settings', '.prefs', '.plist', '.cfg',
             # Infrastructure files
             '.dockerfile', '.tf', '.tfvars', '.hcl', '.sh', '.bash', '.zsh', '.fish',
-            '.ps1', '.bat', '.cmd', '.sql', '.gradle', '.maven', '.sbt'
+            '.ps1', '.bat', '.cmd', '.sql', '.gradle', '.maven', '.sbt',
+            # Documentation and text files (can contain sensitive info)
+            '.md', '.txt', '.rst', '.adoc', '.org', '.tex', '.rtf'
         }
         
         # Special files without extensions
