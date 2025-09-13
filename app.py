@@ -224,7 +224,7 @@ except ImportError:
     def track_scan_completed_wrapper(**kwargs): pass
     def track_scan_failed_wrapper(**kwargs): pass
     
-    # Define consistent ScannerType fallback
+    # Define consistent ScannerType fallback with all scanner types
     class ScannerType:
         DOCUMENT = "document"
         IMAGE = "image" 
@@ -235,6 +235,12 @@ except ImportError:
         AI_MODEL = "ai_model"
         SOC2 = "soc2"
         SUSTAINABILITY = "sustainability"
+        ENTERPRISE = "enterprise"
+        REPOSITORY = "repository"
+        BLOB = "blob"
+        COOKIE = "cookie"
+        API = "api"
+        CONNECTORS_E2E = "connectors_e2e"
     
     def get_session_id(): 
         """Fallback session ID"""
@@ -1861,10 +1867,34 @@ def render_dashboard():
                         'ScannerType.IMAGE': 'Image Scanner',
                         'ScannerType.DATABASE': 'Database Scanner',
                         'ScannerType.API': 'API Scanner',
+                        'ScannerType.ENTERPRISE': 'Enterprise Connector Scanner',
                         'ScannerType.WEBSITE': 'Website Scanner',
                         'ScannerType.SOC2': 'SOC2 Scanner',
                         'ScannerType.DPIA': 'DPIA Scanner',
-                        'ScannerType.SUSTAINABILITY': 'Sustainability Scanner'
+                        'ScannerType.SUSTAINABILITY': 'Sustainability Scanner',
+                        'ScannerType.REPOSITORY': 'Repository Scanner',
+                        'ScannerType.BLOB': 'Blob Scanner',
+                        'ScannerType.COOKIE': 'Cookie Scanner',
+                        # Additional mappings for plain string values
+                        'ai_model': 'AI Model Scanner',
+                        'code': 'Code Scanner',
+                        'document': 'Document Scanner', 
+                        'image': 'Image Scanner',
+                        'database': 'Database Scanner',
+                        'api': 'API Scanner',
+                        'enterprise': 'Enterprise Connector Scanner',
+                        'website': 'Website Scanner',
+                        'soc2': 'SOC2 Scanner',
+                        'dpia': 'DPIA Scanner',
+                        'sustainability': 'Sustainability Scanner',
+                        'repository': 'Repository Scanner',
+                        'blob': 'Blob Scanner',
+                        'cookie': 'Cookie Scanner',
+                        # Special mappings for connectors e2e
+                        'connectors_e2e': 'Connectors E2E',
+                        'connector_e2e': 'Connectors E2E',
+                        'enterprise_e2e': 'Connectors E2E',
+                        'connector_test': 'Connectors E2E'
                     }
                     
                     scan_type = enum_to_display.get(str(scanner_type_raw), scanner_type_raw or 'Unknown')

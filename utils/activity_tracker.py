@@ -41,6 +41,7 @@ class ScannerType(Enum):
     REPOSITORY = "repository"              # Git Repository Scanner
     BLOB = "blob"                         # Blob storage scanner
     COOKIE = "cookie"                     # Cookie compliance scanner
+    CONNECTORS_E2E = "connectors_e2e"     # Connectors E2E Testing
 
 @dataclass
 class ActivityEntry:
