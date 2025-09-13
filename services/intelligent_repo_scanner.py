@@ -140,18 +140,29 @@ class IntelligentRepoScanner:
                     return cached_scan
             
             # Step 2: Repository cloning (only if not cached)
-            repo_path = self._clone_repository_shallow(repo_url, branch)
-            if not repo_path:
+            clone_result = self._clone_repository_shallow(repo_url, branch)
+            if not clone_result or not clone_result[0]:
                 scan_results['status'] = 'failed'
                 scan_results['error'] = 'Failed to clone repository'
                 return scan_results
+            
+            repo_path, detected_branch, directory_path = clone_result
+            scan_results['detected_branch'] = detected_branch
+            scan_results['scan_directory'] = directory_path
             
             # Step 3: Repository analysis (use cache if available)
             if cached_metadata:
                 logger.info(f"Using cached repository metadata for {repo_url}")
                 repo_analysis = cached_metadata
             else:
-                repo_analysis = self._analyze_repository_structure(repo_path)
+                # Analyze only the specified directory if provided
+                if directory_path and os.path.exists(os.path.join(repo_path, directory_path)):
+                    analysis_path = os.path.join(repo_path, directory_path)
+                else:
+                    analysis_path = repo_path
+                repo_analysis = self._analyze_repository_structure(analysis_path)
+                repo_analysis['is_subdirectory'] = bool(directory_path)
+                repo_analysis['subdirectory_path'] = directory_path
                 # Cache the metadata for future use
                 if repository_cache:
                     repository_cache.cache_repository_metadata(repo_url, repo_analysis, branch)
@@ -165,13 +176,17 @@ class IntelligentRepoScanner:
             if progress_callback:
                 progress_callback(10, 100, "Repository analyzed, starting intelligent scan...")
             
-            # Step 5: Execute selected strategy
+            # Step 5: Execute selected strategy with directory scope
+            if directory_path and os.path.exists(os.path.join(repo_path, directory_path)):
+                scan_base_path = os.path.join(repo_path, directory_path)
+            else:
+                scan_base_path = repo_path
             if strategy['type'] == 'sampling':
-                files_to_scan = self._select_files_by_sampling(repo_path, repo_analysis, strategy)
+                files_to_scan = self._select_files_by_sampling(scan_base_path, repo_analysis, strategy)
             elif strategy['type'] == 'priority':
-                files_to_scan = self._select_files_by_priority(repo_path, repo_analysis, strategy)
+                files_to_scan = self._select_files_by_priority(scan_base_path, repo_analysis, strategy)
             else:  # comprehensive or progressive
-                files_to_scan = self._select_files_comprehensive(repo_path, repo_analysis, strategy)
+                files_to_scan = self._select_files_comprehensive(scan_base_path, repo_analysis, strategy)
             
             scan_results['total_files_found'] = repo_analysis['total_files']
             # Improved coverage calculation
@@ -180,7 +195,7 @@ class IntelligentRepoScanner:
             
             # Step 6: Parallel scanning execution
             findings = self._execute_parallel_scanning(
-                files_to_scan, repo_path, scan_results, progress_callback
+                files_to_scan, scan_base_path, scan_results, progress_callback
             )
             
             scan_results['findings'] = findings
@@ -566,7 +581,65 @@ class IntelligentRepoScanner:
             logger.warning(f"Error scanning file {file_path}: {str(e)}")
             return []
 
-    def _clone_repository_shallow(self, repo_url: str, branch: Optional[str] = None) -> Optional[str]:
+    def _detect_default_branch(self, repo_url: str) -> Optional[str]:
+        """Detect the default branch of a repository using git ls-remote."""
+        try:
+            # Use git ls-remote to get the default branch
+            result = subprocess.run(
+                ['git', 'ls-remote', '--symref', repo_url, 'HEAD'],
+                capture_output=True,
+                text=True,
+                timeout=15
+            )
+            
+            if result.returncode == 0 and result.stdout:
+                lines = result.stdout.strip().split('\n')
+                for line in lines:
+                    if line.startswith('ref: refs/heads/'):
+                        default_branch = line.split('/')[-1]
+                        logger.info(f"Detected default branch: {default_branch}")
+                        return default_branch
+            
+            # Fallback: try common branch names
+            for branch_name in ['main', 'master', 'develop']:
+                result = subprocess.run(
+                    ['git', 'ls-remote', repo_url, f'refs/heads/{branch_name}'],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    logger.info(f"Found branch via fallback: {branch_name}")
+                    return branch_name
+                    
+        except Exception as e:
+            logger.warning(f"Could not detect default branch: {str(e)}")
+        
+        return None
+
+    def _parse_directory_url(self, repo_url: str) -> Tuple[str, Optional[str], Optional[str]]:
+        """Parse directory-specific URLs to extract repo, branch, and directory path."""
+        original_url = repo_url
+        directory_path = None
+        specified_branch = None
+        
+        # Handle directory-specific URLs (like /tree/master/datanode)
+        if '/tree/' in repo_url:
+            parts = repo_url.split('/tree/')
+            base_repo = parts[0]
+            if len(parts) > 1:
+                tree_part = parts[1]
+                tree_components = tree_part.split('/', 1)
+                specified_branch = tree_components[0]
+                if len(tree_components) > 1:
+                    directory_path = tree_components[1]
+            
+            logger.info(f"Parsed URL - Repo: {base_repo}, Branch: {specified_branch}, Directory: {directory_path}")
+            return base_repo, specified_branch, directory_path
+        
+        return repo_url, None, None
+
+    def _clone_repository_shallow(self, repo_url: str, branch: Optional[str] = None) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         """Clone repository with minimal depth for faster cloning."""
         try:
             # Validate and fix repository URL
@@ -578,19 +651,24 @@ class IntelligentRepoScanner:
                 ]
                 raise Exception(f"❌ Incomplete repository URL '{repo_url}'. Please specify a repository name.\n\n✅ Popular big-data-europe repos to try:\n• {repo_url}docker-hadoop\n• {repo_url}docker-spark\n• {repo_url}docker-hive")
             
-            # Handle directory-specific URLs (like /tree/master/data)
-            if '/tree/' in repo_url:
-                base_repo = repo_url.split('/tree/')[0]
-                logger.info(f"Converting directory URL to repository URL: {repo_url} -> {base_repo}")
-                repo_url = base_repo
+            # Parse directory-specific URLs
+            original_url = repo_url
+            base_repo, url_branch, directory_path = self._parse_directory_url(repo_url)
+            
+            # Determine which branch to use: specified branch > URL branch > auto-detected default
+            target_branch = branch or url_branch
+            if not target_branch:
+                target_branch = self._detect_default_branch(base_repo)
+            
+            repo_url = base_repo
             
             temp_dir = tempfile.mkdtemp(prefix="intelligent_repo_")
             self.temp_dirs.append(temp_dir)
             
-            # Shallow clone with single branch - try without specifying branch first
+            # Shallow clone with detected or specified branch
             clone_args = ['git', 'clone', '--depth', '1']
-            if branch:
-                clone_args.extend(['--branch', branch, '--single-branch'])
+            if target_branch:
+                clone_args.extend(['--branch', target_branch, '--single-branch'])
             clone_args.extend([repo_url, temp_dir])
             
             logger.info(f"Executing git clone command: {' '.join(clone_args)}")
@@ -610,14 +688,14 @@ class IntelligentRepoScanner:
             
             if result.returncode == 0:
                 logger.info(f"Successfully cloned repository to {temp_dir}")
-                return temp_dir
+                return temp_dir, target_branch, directory_path
             else:
                 error_msg = result.stderr
                 logger.error(f"Clone failed with return code {result.returncode}: {error_msg}")
                 
                 # Handle branch not found - try without branch specification
-                if branch and ("not found in upstream origin" in error_msg or "Remote branch" in error_msg):
-                    logger.info(f"Branch '{branch}' not found, trying without branch specification")
+                if target_branch and ("not found in upstream origin" in error_msg or "Remote branch" in error_msg):
+                    logger.info(f"Branch '{target_branch}' not found, trying without branch specification")
                     
                     # Remove the temporary directory and create a new one
                     try:
@@ -642,7 +720,7 @@ class IntelligentRepoScanner:
                     
                     if fallback_result.returncode == 0:
                         logger.info(f"Successfully cloned repository without branch specification to {temp_dir}")
-                        return temp_dir
+                        return temp_dir, None, directory_path
                     else:
                         logger.error(f"Fallback clone also failed: {fallback_result.stderr}")
                         error_msg = fallback_result.stderr
@@ -663,7 +741,7 @@ class IntelligentRepoScanner:
             # Only return None for non-critical errors, re-raise for important ones
             if "Repository not found" in str(e) or "not found" in str(e).lower():
                 raise e
-            return None
+            return None, None, None
 
     def _cleanup(self):
         """Clean up temporary directories."""
