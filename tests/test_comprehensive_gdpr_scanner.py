@@ -19,7 +19,7 @@ from pathlib import Path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services.code_scanner import CodeScanner
-from services.intelligent_repo_scanner import IntelligentRepositoryScanner
+# from services.intelligent_repo_scanner import IntelligentRepositoryScanner
 from utils.netherlands_gdpr import detect_nl_violations
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
 
@@ -28,7 +28,7 @@ class TestGDPRScannerFunctionality(unittest.TestCase):
     
     def setUp(self):
         self.scanner = CodeScanner(region="Netherlands")
-        self.repo_scanner = IntelligentRepositoryScanner()
+        # self.repo_scanner = IntelligentRepositoryScanner()
         
     def test_01_scanner_initialization(self):
         """Test GDPR scanner initializes correctly"""
