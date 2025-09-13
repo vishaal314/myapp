@@ -20,6 +20,7 @@ from services.vendor_risk_management import VendorRiskManagement
 from services.enterprise_connector_hardening import EnterpriseConnectorHardening
 from services.enterprise_ticketing_integrations import EnterpriseTicketingIntegrations
 from services.soc2_audit_readiness import SOC2AuditReadiness
+from services.enterprise_listeners import initialize_enterprise_listeners, get_enterprise_listener
 
 logger = logging.getLogger("services.enterprise_orchestrator")
 
@@ -55,6 +56,11 @@ class EnterpriseOrchestrator:
             return
             
         try:
+            # Get enterprise listener instance for delegation (no auto-registration)
+            self.enterprise_listener = get_enterprise_listener()
+            logger.info("Initialized enterprise listener for delegation")
+            
+            # Register orchestrator as coordinator (delegates to enterprise listener)
             # Core scanning events
             self._listener_ids.append(
                 self.event_bus.subscribe(EventType.SCAN_STARTED, self._on_scan_started)
@@ -136,48 +142,18 @@ class EnterpriseOrchestrator:
             logger.error(f"EnterpriseOrchestrator: Error handling scan started: {e}")
     
     def _on_scan_completed(self, event: Event) -> None:
-        """Handle scan completed events"""
+        """Handle scan completed events - delegate to enterprise listener"""
         try:
-            data = event.data
-            findings = data.get('findings', [])
-            compliance_score = data.get('compliance_score', 0)
-            critical_count = data.get('critical_issues', 0)
-            high_count = data.get('high_issues', 0)
+            logger.debug(f"EnterpriseOrchestrator: Delegating scan completion to enterprise listener")
             
-            # Update RoPA with scan results
-            if hasattr(self.ropa_service, 'update_scan_results'):
-                self.ropa_service.update_scan_results({
-                    'scan_id': event.event_id,
-                    'findings_count': len(findings),
-                    'compliance_score': compliance_score,
-                    'critical_issues': critical_count,
-                    'completed_at': event.timestamp.isoformat()
-                })
+            # Delegate to enterprise listener for evidence capture
+            if hasattr(self, 'enterprise_listener'):
+                self.enterprise_listener._handle_scan_completion(event)
             
-            # Auto-create tickets for high-risk scans
-            if critical_count > 0 or high_count > 5:
-                self._auto_create_ticket(event, {
-                    'critical_count': critical_count,
-                    'high_count': high_count,
-                    'compliance_score': compliance_score
-                })
-            
-            # Finalize SOC2 evidence
-            if hasattr(self.soc2_service, 'finalize_scan_evidence'):
-                self.soc2_service.finalize_scan_evidence({
-                    'scan_id': event.event_id,
-                    'compliance_score': compliance_score,
-                    'findings_summary': {
-                        'critical': critical_count,
-                        'high': high_count,
-                        'total': len(findings)
-                    }
-                })
-            
-            logger.debug(f"EnterpriseOrchestrator: Processed scan completion with {len(findings)} findings")
+            logger.debug(f"EnterpriseOrchestrator: Scan completion delegation complete")
             
         except Exception as e:
-            logger.error(f"EnterpriseOrchestrator: Error handling scan completed: {e}")
+            logger.error(f"EnterpriseOrchestrator: Error delegating scan completion: {e}")
     
     def _on_finding_detected(self, event: Event) -> None:
         """Handle individual finding detection events"""
@@ -214,27 +190,15 @@ class EnterpriseOrchestrator:
             logger.error(f"EnterpriseOrchestrator: Error handling finding detected: {e}")
     
     def _on_critical_issue(self, event: Event) -> None:
-        """Handle critical issues requiring immediate attention"""
+        """Handle critical issues - delegate to enterprise listener"""
         try:
-            data = event.data
+            logger.info(f"EnterpriseOrchestrator: Delegating critical issue to enterprise listener")
             
-            # Auto-create high-priority ticket
-            self._auto_create_ticket(event, {
-                'priority': 'Critical',
-                'auto_created': True,
-                'requires_immediate_action': True
-            })
+            # Delegate to enterprise listener for ticket creation and evidence
+            if hasattr(self, 'enterprise_listener'):
+                self.enterprise_listener._handle_critical_issue(event)
             
-            # Trigger vendor risk assessment if applicable
-            if 'vendor' in str(data).lower() or 'third-party' in str(data).lower():
-                if hasattr(self.vendor_service, 'trigger_risk_assessment'):
-                    self.vendor_service.trigger_risk_assessment({
-                        'scan_id': event.event_id,
-                        'critical_finding': data,
-                        'user_id': event.user_id
-                    })
-            
-            logger.info(f"EnterpriseOrchestrator: Processed critical issue, auto-created ticket")
+            logger.info("EnterpriseOrchestrator: Critical issue delegation complete")
             
         except Exception as e:
             logger.error(f"EnterpriseOrchestrator: Error handling critical issue: {e}")
