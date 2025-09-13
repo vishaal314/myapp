@@ -128,11 +128,21 @@ class IntelligentRepoScanner:
             # Step 1: Check cache for repository metadata
             cached_metadata = None
             if repository_cache:
-                cached_metadata = repository_cache.get_repository_metadata(repo_url, branch)
+                # Extract directory from original URL for caching
+                original_url = repo_url
+                cache_directory = None
+                if '/tree/' in original_url:
+                    parts = original_url.split('/tree/')
+                    if len(parts) > 1:
+                        tree_components = parts[1].split('/', 1)
+                        if len(tree_components) > 1:
+                            cache_directory = tree_components[1]
+                
+                cached_metadata = repository_cache.get_repository_metadata(repo_url, branch, cache_directory)
                 
                 # Check for complete cached scan result
                 cached_scan = repository_cache.get_cached_scan_result(
-                    repo_url, scan_mode, max_files or 50, branch
+                    repo_url, scan_mode, max_files or 50, branch, cache_directory
                 )
                 if cached_scan:
                     logger.info(f"Using cached scan result for {repo_url}")
@@ -166,7 +176,7 @@ class IntelligentRepoScanner:
                 repo_analysis['subdirectory_path'] = directory_path
                 # Cache the metadata for future use
                 if repository_cache:
-                    repository_cache.cache_repository_metadata(repo_url, repo_analysis, branch)
+                    repository_cache.cache_repository_metadata(repo_url, repo_analysis, branch, directory_path)
             
             scan_results['repository_stats'] = repo_analysis
             
@@ -206,7 +216,7 @@ class IntelligentRepoScanner:
             # Step 7: Cache the complete scan result
             if repository_cache and scan_results['status'] == 'completed':
                 repository_cache.cache_scan_result(
-                    repo_url, scan_results, scan_mode, max_files or 50, branch
+                    repo_url, scan_results, scan_mode, max_files or 50, branch, directory_path
                 )
             
             logger.info(f"Intelligent scan completed: {len(findings)} findings in {scan_results['duration_seconds']:.1f}s")

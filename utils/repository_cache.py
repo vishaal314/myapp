@@ -57,9 +57,10 @@ class RepositoryCache:
         
         logger.info(f"Repository cache initialized: {cache_dir} (TTL: {cache_ttl_hours}h)")
     
-    def _get_repo_hash(self, repo_url: str, branch: Optional[str] = None) -> str:
-        """Generate unique hash for repository URL and branch."""
-        cache_key = f"{repo_url}#{branch or 'default'}"
+    def _get_repo_hash(self, repo_url: str, branch: Optional[str] = None, directory_path: Optional[str] = None) -> str:
+        """Generate unique hash for repository URL, branch, and directory path."""
+        # Enhanced cache key that includes directory scope
+        cache_key = f"{repo_url}#{branch or 'default'}#{directory_path or 'root'}"
         return hashlib.sha256(cache_key.encode()).hexdigest()[:16]
     
     def _get_cache_path(self, repo_hash: str) -> Optional[Path]:
@@ -81,7 +82,7 @@ class RepositoryCache:
             logger.warning(f"Error checking cache validity: {e}")
             return False
     
-    def get_repository_metadata(self, repo_url: str, branch: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def get_repository_metadata(self, repo_url: str, branch: Optional[str] = None, directory_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
         Get cached repository metadata.
         
@@ -97,9 +98,10 @@ class RepositoryCache:
             self.stats['misses'] += 1
             return None
             
+        repo_hash = self._get_repo_hash(repo_url, branch, directory_path)
+        cache_file = self._get_cache_path(repo_hash)
+        
         try:
-            repo_hash = self._get_repo_hash(repo_url, branch)
-            cache_file = self._get_cache_path(repo_hash)
             
             if cache_file is None:
                 self.stats['misses'] += 1
@@ -135,7 +137,7 @@ class RepositoryCache:
             return None
     
     def cache_repository_metadata(self, repo_url: str, metadata: Dict[str, Any], 
-                                 branch: Optional[str] = None) -> None:
+                                 branch: Optional[str] = None, directory_path: Optional[str] = None) -> None:
         """
         Cache repository metadata.
         
@@ -143,8 +145,9 @@ class RepositoryCache:
             repo_url: Repository URL
             metadata: Repository metadata to cache
             branch: Git branch (optional)
+            directory_path: Directory path within repository (optional)
         """
-        repo_hash = self._get_repo_hash(repo_url, branch)
+        repo_hash = self._get_repo_hash(repo_url, branch, directory_path)
         cache_file = self._get_cache_path(repo_hash)
         
         if cache_file is None:
@@ -154,9 +157,10 @@ class RepositoryCache:
             cache_data = {
                 'repo_url': repo_url,
                 'branch': branch,
+                'directory_path': directory_path,
                 'cached_at': datetime.now().isoformat(),
                 'metadata': metadata,
-                'cache_version': '1.0'
+                'cache_version': '2.0'  # Updated version for directory support
             }
             
             with open(cache_file, 'w') as f:
@@ -172,7 +176,7 @@ class RepositoryCache:
             logger.error(f"Error caching metadata for {repo_url}: {e}")
     
     def get_cached_scan_result(self, repo_url: str, scan_mode: str, max_files: int,
-                              branch: Optional[str] = None) -> Optional[Dict[str, Any]]:
+                              branch: Optional[str] = None, directory_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
         Get cached scan result for specific parameters.
         
@@ -181,6 +185,7 @@ class RepositoryCache:
             scan_mode: Scan mode used
             max_files: Maximum files scanned
             branch: Git branch
+            directory_path: Directory path within repository (optional)
             
         Returns:
             Cached scan result or None
@@ -188,8 +193,8 @@ class RepositoryCache:
         if self.cache_dir is None:
             return None
             
-        repo_hash = self._get_repo_hash(repo_url, branch)
-        scan_key = f"{scan_mode}_{max_files}"
+        repo_hash = self._get_repo_hash(repo_url, branch, directory_path)
+        scan_key = f"{scan_mode}_{max_files}_{directory_path or 'root'}"
         cache_file = self.cache_dir / f"{repo_hash}_scan_{hashlib.md5(scan_key.encode()).hexdigest()[:8]}.json"
         
         if not self._is_cache_valid(cache_file):
@@ -209,7 +214,7 @@ class RepositoryCache:
             return None
     
     def cache_scan_result(self, repo_url: str, scan_result: Dict[str, Any], 
-                         scan_mode: str, max_files: int, branch: Optional[str] = None) -> None:
+                         scan_mode: str, max_files: int, branch: Optional[str] = None, directory_path: Optional[str] = None) -> None:
         """
         Cache complete scan result.
         
@@ -223,19 +228,20 @@ class RepositoryCache:
         if self.cache_dir is None:
             return
             
-        repo_hash = self._get_repo_hash(repo_url, branch)
-        scan_key = f"{scan_mode}_{max_files}"
+        repo_hash = self._get_repo_hash(repo_url, branch, directory_path)
+        scan_key = f"{scan_mode}_{max_files}_{directory_path or 'root'}"
         cache_file = self.cache_dir / f"{repo_hash}_scan_{hashlib.md5(scan_key.encode()).hexdigest()[:8]}.json"
         
         try:
             cache_data = {
                 'repo_url': repo_url,
                 'branch': branch,
+                'directory_path': directory_path,
                 'scan_mode': scan_mode,
                 'max_files': max_files,
                 'cached_at': datetime.now().isoformat(),
                 'scan_result': scan_result,
-                'cache_version': '1.0'
+                'cache_version': '2.0'  # Updated version for directory support
             }
             
             with open(cache_file, 'w') as f:
