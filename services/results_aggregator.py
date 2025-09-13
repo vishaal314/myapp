@@ -2,57 +2,94 @@ import os
 import json
 import uuid
 import psycopg2
+import logging
 from psycopg2.extras import Json
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple
 
+# Import encryption service for PII protection
+try:
+    from .encryption_service import get_encryption_service
+    from .multi_tenant_service import MultiTenantService
+except ImportError:
+    # Fallback for direct execution
+    from encryption_service import get_encryption_service
+    from multi_tenant_service import MultiTenantService
+
+logger = logging.getLogger(__name__)
+
 class ResultsAggregator:
     """
-    Aggregates and stores scan results in a PostgreSQL database.
-    Falls back to file-based storage if database is unavailable.
+    Aggregates and stores scan results in a PostgreSQL database with enterprise-grade security.
+    
+    Security Features:
+    - Field-level encryption for PII data
+    - No file-based fallback to prevent data leakage
+    - GDPR/UAVG compliant data protection
     """
     
     def __init__(self, db_url: Optional[str] = None):
         """
-        Initialize the results aggregator.
+        Initialize the results aggregator with secure PII encryption and multi-tenant isolation.
         
         Args:
             db_url: PostgreSQL database URL. If None, uses DATABASE_URL environment variable.
         """
         self.db_url = db_url or os.environ.get('DATABASE_URL')
+        self.encryption_service = get_encryption_service()
+        
+        # Initialize multi-tenant service for secure tenant isolation
+        try:
+            self.multi_tenant_service = MultiTenantService()
+            logger.info("Multi-tenant service initialized for secure tenant isolation")
+        except Exception as e:
+            logger.error(f"Failed to initialize multi-tenant service: {str(e)}")
+            raise RuntimeError(f"Multi-tenant service required for enterprise security compliance: {str(e)}")
+        
+        # Enterprise security: No file fallback to prevent PII data leakage
         self.use_file_storage = False
+        
         try:
             self._init_db()
+            logger.info("ResultsAggregator initialized with enterprise security and tenant isolation")
         except Exception as e:
-            print(f"Error initializing database: {str(e)}")
-            self.use_file_storage = True
-            self._init_file_storage()
+            logger.error(f"Error initializing database: {str(e)}")
+            # Enterprise security: Fail secure - no file fallback for PII data
+            raise RuntimeError(f"Database connection required for enterprise security compliance: {str(e)}")
+    
+    def _get_secure_connection(self, organization_id: str = 'default_org', admin_bypass: bool = False):
+        """
+        Get a secure database connection with tenant context for enterprise security.
+        
+        Args:
+            organization_id: Organization ID for tenant isolation
+            admin_bypass: Whether to bypass RLS for admin operations
+            
+        Returns:
+            Secure database connection with proper tenant context
+        """
+        try:
+            if not self.db_url:
+                raise RuntimeError("DATABASE_URL environment variable required for enterprise deployment")
+            
+            # Use multi-tenant service for secure connections with RLS
+            return self.multi_tenant_service.get_secure_connection(organization_id, admin_bypass)
+            
+        except Exception as e:
+            logger.error(f"Secure database connection error for organization {organization_id}: {str(e)}")
+            # Enterprise security: No file fallback for PII data
+            raise RuntimeError(f"Secure database connection required for enterprise security compliance: {str(e)}")
     
     def _get_connection(self):
-        """Get a database connection with error handling."""
-        try:
-            if self.db_url and not self.use_file_storage:
-                return psycopg2.connect(self.db_url, sslmode='prefer')
-            return None
-        except Exception as e:
-            print(f"Database connection error: {str(e)}")
-            self.use_file_storage = True
-            return None
+        """Deprecated: Use _get_secure_connection instead for tenant isolation."""
+        logger.warning("Using deprecated _get_connection - should use _get_secure_connection with organization_id")
+        return self._get_secure_connection('default_org', admin_bypass=True)
     
-    def _init_file_storage(self):
-        """Initialize file-based storage for results."""
-        # Create necessary directories
+    def _ensure_reports_directory(self):
+        """Ensure reports directory exists for non-PII report generation."""
+        # Only create reports directory for non-sensitive report files
+        # PII data is never stored in files for enterprise security
         os.makedirs('reports', exist_ok=True)
-        os.makedirs('data', exist_ok=True)
-        
-        # Create initial empty files if they don't exist
-        if not os.path.exists('data/scans.json'):
-            with open('data/scans.json', 'w') as f:
-                json.dump([], f)
-                
-        if not os.path.exists('data/audit_log.json'):
-            with open('data/audit_log.json', 'w') as f:
-                json.dump([], f)
     
     def _init_db(self):
         """Initialize the database with required tables if they don't exist."""
@@ -142,73 +179,74 @@ class ResultsAggregator:
             cursor.close()
             conn.close()
         except Exception as e:
-            print(f"Error creating database tables: {str(e)}")
+            logger.error(f"Error creating database tables: {str(e)}")
             if conn:
                 conn.close()
-            self.use_file_storage = True
-            self._init_file_storage()
+            # Enterprise security: Fail secure - no file fallback for PII data
+            raise RuntimeError(f"Database initialization required for enterprise security compliance: {str(e)}")
     
-    def save_scan_result(self, username: str, result: Dict[str, Any]) -> str:
+    def save_scan_result(self, username: str, result: Dict[str, Any], organization_id: str = 'default_org') -> str:
         """
-        Save scan result - alias for store_scan_result for backward compatibility.
+        Save scan result - alias for store_scan_result for backward compatibility with tenant isolation.
         
         Args:
             username: Username who performed the scan
             result: Scan result dictionary
+            organization_id: Organization ID for tenant isolation
             
         Returns:
             str: Scan ID of the saved result
         """
-        return self.store_scan_result(username, result)
+        return self.store_scan_result(username, result, organization_id)
     
-    def store_scan_result(self, username: str, result: Dict[str, Any]) -> str:
+    def store_scan_result(self, username: str, result: Dict[str, Any], organization_id: str = 'default_org') -> str:
         """
-        Store a scan result in the database.
+        Store a scan result in the database with enterprise-grade PII encryption and tenant isolation.
         
         Args:
             username: Username associated with the scan
-            result: Scan result dictionary
+            result: Scan result dictionary containing potentially sensitive PII data
+            organization_id: Organization ID for tenant isolation
         
         Returns:
-            Scan ID
+            str: Scan ID of the stored result
         """
         # Generate a scan ID if not present
         scan_id = result.get('scan_id', f"scan_{uuid.uuid4().hex}")
         result['scan_id'] = scan_id
         
-        # Extract metadata
+        # Extract metadata (non-PII fields safe for database indexing)
         scan_type = result.get('scan_type', 'unknown')
         region = result.get('region', 'Netherlands')  # Default to Netherlands for GDPR
         file_count = result.get('files_scanned', 0)
         total_pii = result.get('total_pii_found', 0)
         high_risk = result.get('high_risk_count', 0)
         
-        if self.use_file_storage:
-            return self._store_scan_result_file(username, scan_id, scan_type, 
-                                              region, file_count, total_pii, 
-                                              high_risk, result)
-        
         try:
-            conn = self._get_connection()
-            if not conn:
-                self.use_file_storage = True
-                return self._store_scan_result_file(username, scan_id, scan_type, 
-                                                 region, file_count, total_pii, 
-                                                 high_risk, result)
+            # Validate tenant access
+            if not self.multi_tenant_service.validate_tenant_access(organization_id):
+                raise PermissionError(f"Access denied to organization {organization_id}")
             
+            # Enterprise security: Encrypt PII-sensitive data before storage
+            encrypted_result = self.encryption_service.encrypt_scan_result(result)
+            logger.info(f"Encrypted scan result {scan_id} for secure storage in organization {organization_id}")
+            
+            # Use secure connection with tenant context
+            conn = self._get_secure_connection(organization_id)
             cursor = conn.cursor()
             
-            # Insert into scans table
+            # Store encrypted result in database with organization_id for tenant isolation
             cursor.execute("""
             INSERT INTO scans 
-            (scan_id, username, timestamp, scan_type, region, file_count, total_pii_found, high_risk_count, result_json)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (scan_id, username, timestamp, scan_type, region, file_count, total_pii_found, high_risk_count, result_json, organization_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (scan_id) DO UPDATE SET
             timestamp = EXCLUDED.timestamp,
             result_json = EXCLUDED.result_json,
             file_count = EXCLUDED.file_count,
             total_pii_found = EXCLUDED.total_pii_found,
-            high_risk_count = EXCLUDED.high_risk_count
+            high_risk_count = EXCLUDED.high_risk_count,
+            organization_id = EXCLUDED.organization_id
             """, (
                 scan_id,
                 username,
@@ -218,121 +256,151 @@ class ResultsAggregator:
                 file_count,
                 total_pii,
                 high_risk,
-                Json(result)
+                Json(encrypted_result),  # Store encrypted version
+                organization_id  # Add organization_id for tenant isolation
             ))
             
             conn.commit()
             cursor.close()
             conn.close()
             
+            # Update tenant usage statistics
+            self.multi_tenant_service.update_tenant_usage(organization_id, increment_scans=1)
+            
+            logger.info(f"Successfully stored encrypted scan result {scan_id} for organization {organization_id}")
             return scan_id
+            
         except Exception as e:
-            print(f"Error storing scan result: {str(e)}")
-            self.use_file_storage = True
-            return self._store_scan_result_file(username, scan_id, scan_type, 
-                                             region, file_count, total_pii, 
-                                             high_risk, result)
+            logger.error(f"Error storing scan result: {str(e)}")
+            # Enterprise security: Fail secure - no fallback storage for PII data
+            raise RuntimeError(f"Failed to store scan result securely: {str(e)}")
     
-    def _store_scan_result_file(self, username: str, scan_id: str, scan_type: str,
-                              region: str, file_count: int, total_pii: int,
-                              high_risk: int, result: Dict[str, Any]) -> str:
-        """Store scan result in file system."""
-        try:
-            # Load existing scans
-            scans = []
-            if os.path.exists('data/scans.json'):
-                with open('data/scans.json', 'r') as f:
-                    scans = json.load(f)
-            
-            # Create scan entry
-            scan_entry = {
-                'scan_id': scan_id,
-                'username': username,
-                'timestamp': datetime.now().isoformat(),
-                'scan_type': scan_type,
-                'region': region,
-                'file_count': file_count,
-                'total_pii_found': total_pii,
-                'high_risk_count': high_risk,
-                'result': result
-            }
-            
-            # Remove previous entry with same scan_id if exists
-            scans = [s for s in scans if s.get('scan_id') != scan_id]
-            
-            # Add new entry
-            scans.append(scan_entry)
-            
-            # Save to file
-            with open('data/scans.json', 'w') as f:
-                json.dump(scans, f, indent=2)
-            
-            # Save detailed result to separate file
-            with open(f'reports/scan_{scan_id}.json', 'w') as f:
-                json.dump(result, f, indent=2)
-                
-            return scan_id
-        except Exception as e:
-            print(f"Error storing scan result to file: {str(e)}")
-            return scan_id
-    
-    def get_scan_result(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def _legacy_file_cleanup(self):
         """
-        Get a scan result by ID.
+        Enterprise security: Remove any legacy file-based PII storage.
+        Called during system maintenance to ensure no PII remains in files.
+        """
+        logger.warning("Enterprise security: Cleaning up legacy PII files")
+        
+        # Remove potentially sensitive files
+        sensitive_files = [
+            'data/scans.json',
+            'data/audit_log.json'
+        ]
+        
+        for file_path in sensitive_files:
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                    logger.info(f"Removed legacy PII file: {file_path}")
+                except Exception as e:
+                    logger.error(f"Failed to remove legacy file {file_path}: {str(e)}")
+        
+        # Remove scan report files (may contain PII)
+        if os.path.exists('reports'):
+            for filename in os.listdir('reports'):
+                if filename.startswith('scan_') and filename.endswith('.json'):
+                    try:
+                        os.remove(os.path.join('reports', filename))
+                        logger.info(f"Removed legacy scan file: {filename}")
+                    except Exception as e:
+                        logger.error(f"Failed to remove legacy scan file {filename}: {str(e)}")
+    
+    def get_scan_result(self, scan_id: str, organization_id: str = 'default_org') -> Optional[Dict[str, Any]]:
+        """
+        Get a scan result by ID with automatic PII decryption and tenant isolation.
         
         Args:
             scan_id: Scan ID
+            organization_id: Organization ID for tenant isolation
             
         Returns:
-            Scan result dictionary or None if not found
+            Decrypted scan result dictionary or None if not found
         """
-        if self.use_file_storage:
-            return self._get_scan_result_file(scan_id)
-        
         try:
-            conn = self._get_connection()
-            if not conn:
-                self.use_file_storage = True
-                return self._get_scan_result_file(scan_id)
+            # Validate tenant access
+            if not self.multi_tenant_service.validate_tenant_access(organization_id):
+                raise PermissionError(f"Access denied to organization {organization_id}")
             
+            # Use secure connection with tenant context
+            conn = self._get_secure_connection(organization_id)
             cursor = conn.cursor()
             
-            # Query the scans table
+            # Query with tenant isolation - RLS will automatically filter by organization_id
             cursor.execute("SELECT result_json FROM scans WHERE scan_id = %s", (scan_id,))
             result = cursor.fetchone()
             
             cursor.close()
             conn.close()
             
-            if result:
-                return result[0]
-            return None
-        except Exception as e:
-            print(f"Error retrieving scan result: {str(e)}")
-            self.use_file_storage = True
-            return self._get_scan_result_file(scan_id)
-    
-    def _get_scan_result_file(self, scan_id: str) -> Optional[Dict[str, Any]]:
-        """Get scan result from file system."""
-        try:
-            # Try to load from detailed file first
-            if os.path.exists(f'reports/scan_{scan_id}.json'):
-                with open(f'reports/scan_{scan_id}.json', 'r') as f:
-                    return json.load(f)
-            
-            # Otherwise, look in the scans.json file
-            if os.path.exists('data/scans.json'):
-                with open('data/scans.json', 'r') as f:
-                    scans = json.load(f)
+            if result and result[0]:
+                # Enterprise security: Decrypt PII data before returning
+                encrypted_result = result[0]
+                decrypted_result = self.encryption_service.decrypt_scan_result(encrypted_result)
+                logger.info(f"Successfully decrypted scan result {scan_id} for organization {organization_id}")
+                return decrypted_result
                 
-                for scan in scans:
-                    if scan.get('scan_id') == scan_id:
-                        return scan.get('result')
+            logger.info(f"Scan result {scan_id} not found or not accessible for organization {organization_id}")
+            return None
             
-            return None
         except Exception as e:
-            print(f"Error retrieving scan result from file: {str(e)}")
-            return None
+            logger.error(f"Error retrieving scan result {scan_id} for organization {organization_id}: {str(e)}")
+            # Enterprise security: Fail secure - no file fallback for PII data
+            raise RuntimeError(f"Failed to retrieve scan result securely: {str(e)}")
+    
+    def _migrate_legacy_data(self) -> int:
+        """
+        Enterprise security: Migrate any existing unencrypted data to encrypted format.
+        
+        Returns:
+            int: Number of records migrated
+        """
+        logger.info("Starting legacy data migration to encrypted format")
+        migrated_count = 0
+        
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            
+            # Find records without encryption metadata
+            cursor.execute("""
+                SELECT scan_id, result_json 
+                FROM scans 
+                WHERE result_json->>'_encryption_version' IS NULL
+                LIMIT 100
+            """)
+            
+            legacy_records = cursor.fetchall()
+            
+            for scan_id, result_json in legacy_records:
+                try:
+                    # Encrypt the legacy data
+                    encrypted_result = self.encryption_service.encrypt_scan_result(result_json)
+                    
+                    # Update the record with encrypted version
+                    cursor.execute("""
+                        UPDATE scans 
+                        SET result_json = %s 
+                        WHERE scan_id = %s
+                    """, (Json(encrypted_result), scan_id))
+                    
+                    migrated_count += 1
+                    logger.info(f"Migrated legacy record: {scan_id}")
+                    
+                except Exception as record_error:
+                    logger.error(f"Failed to migrate record {scan_id}: {str(record_error)}")
+                    continue
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            logger.info(f"Successfully migrated {migrated_count} legacy records to encrypted format")
+            return migrated_count
+            
+        except Exception as e:
+            logger.error(f"Legacy data migration failed: {str(e)}")
+            return migrated_count
 
     def get_user_scans(self, username: str, limit: int = 20) -> List[Dict[str, Any]]:
         """
@@ -345,14 +413,8 @@ class ResultsAggregator:
         Returns:
             List of scan metadata dictionaries
         """
-        if self.use_file_storage:
-            return self._get_user_scans_file(username, limit)
-        
         try:
             conn = self._get_connection()
-            if not conn:
-                self.use_file_storage = True
-                return self._get_user_scans_file(username, limit)
             
             cursor = conn.cursor()
             
@@ -536,14 +598,15 @@ class ResultsAggregator:
             print(f"Error retrieving recent scans from file: {str(e)}")
             return []
 
-    def log_audit_event(self, username: str, action: str, details: Optional[Dict[str, Any]] = None) -> None:
+    def log_audit_event(self, username: str, action: str, details: Optional[Dict[str, Any]] = None, organization_id: str = 'default_org') -> None:
         """
-        Log an audit event for tracking user actions and system activities.
+        Log an audit event for tracking user actions and system activities with tenant isolation.
         
         Args:
             username: Username performing the action
             action: Type of action (e.g., 'login', 'scan', 'report_download')
             details: Dictionary of additional details
+            organization_id: Organization ID for tenant isolation
         """
         log_id = f"log_{uuid.uuid4().hex}"
         
@@ -552,29 +615,32 @@ class ResultsAggregator:
             return
         
         try:
-            conn = self._get_connection()
-            if not conn:
-                self.use_file_storage = True
-                self._log_user_action_file(log_id, username, action, details)
-                return
+            # Validate tenant access
+            if not self.multi_tenant_service.validate_tenant_access(organization_id):
+                raise PermissionError(f"Access denied to organization {organization_id}")
             
+            # Use secure connection with tenant context
+            conn = self._get_secure_connection(organization_id)
             cursor = conn.cursor()
             
-            # Insert into audit_log table
+            # Insert into audit_log table with organization_id for tenant isolation
             cursor.execute("""
-            INSERT INTO audit_log (log_id, username, action, timestamp, details)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO audit_log (log_id, username, action, timestamp, details, organization_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
             """, (
                 log_id,
                 username,
                 action,
                 datetime.now(),
-                Json(details) if details else None
+                Json(details) if details else None,
+                organization_id  # Add organization_id for tenant isolation
             ))
             
             conn.commit()
             cursor.close()
             conn.close()
+            
+            logger.info(f"Audit event logged for organization {organization_id}: {action} by {username}")
         except Exception as e:
             print(f"Error logging audit event: {str(e)}")
             self.use_file_storage = True

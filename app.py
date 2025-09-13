@@ -71,6 +71,11 @@ from services.license_integration import (
     show_license_sidebar, show_usage_dashboard, LicenseIntegration
 )
 
+# Enterprise security imports
+from services.enterprise_auth_service import get_enterprise_auth_service, EnterpriseUser
+from services.multi_tenant_service import get_multi_tenant_service, TenantTier
+from services.encryption_service import get_encryption_service
+
 # Pricing system imports
 from components.pricing_display import show_pricing_page, show_pricing_in_sidebar
 from config.pricing_config import get_pricing_config
@@ -223,6 +228,14 @@ try:
         """Get current user ID"""
         import streamlit as st
         return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
+    
+    def get_organization_id():
+        """Get current organization ID for multi-tenant isolation"""
+        import streamlit as st
+        enterprise_user = st.session_state.get('enterprise_user')
+        if enterprise_user and hasattr(enterprise_user, 'organization_id'):
+            return enterprise_user.organization_id
+        return st.session_state.get('organization_id', 'default_org')
         
 except ImportError:
     # Fallback definitions for activity tracking
