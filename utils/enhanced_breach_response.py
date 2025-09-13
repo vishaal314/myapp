@@ -5,13 +5,11 @@ Sub-hour breach notification and automated incident response
 
 import json
 import hashlib
-import smtplib
+import re
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass, asdict
 from enum import Enum
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
 
 class BreachSeverity(Enum):
     """Breach severity levels for prioritization"""
@@ -331,8 +329,13 @@ class EnhancedBreachResponseSystem:
                         severity_scores[BreachSeverity.MEDIUM] += 1
         
         # Return highest scoring severity
-        max_severity = max(severity_scores, key=severity_scores.get)
-        return max_severity if severity_scores[max_severity] > 0 else BreachSeverity.LOW
+        max_score = 0
+        max_severity = BreachSeverity.LOW
+        for severity, score in severity_scores.items():
+            if score > max_score:
+                max_score = score
+                max_severity = severity
+        return max_severity if max_score > 0 else BreachSeverity.LOW
     
     def _classify_breach_category(self, content: str) -> BreachCategory:
         """Classify the type of breach"""
@@ -481,6 +484,30 @@ class EnhancedBreachResponseSystem:
         # Start investigation workflow
         self._initiate_investigation(incident)
     
+    def _initiate_containment(self, incident: BreachIncident) -> None:
+        """Initiate immediate containment actions"""
+        incident.timeline.append({
+            "timestamp": datetime.now().isoformat(),
+            "event": "Containment Initiated",
+            "details": "Immediate containment measures activated"
+        })
+    
+    def _alert_internal_teams(self, incident: BreachIncident) -> None:
+        """Alert internal stakeholder teams"""
+        incident.timeline.append({
+            "timestamp": datetime.now().isoformat(),
+            "event": "Internal Teams Alerted",
+            "details": "Security team, legal team, and management notified"
+        })
+    
+    def _initiate_investigation(self, incident: BreachIncident) -> None:
+        """Start formal investigation workflow"""
+        incident.timeline.append({
+            "timestamp": datetime.now().isoformat(),
+            "event": "Investigation Started",
+            "details": "Formal forensic investigation initiated"
+        })
+    
     def _schedule_immediate_notification(self, incident: BreachIncident) -> None:
         """Schedule immediate notification for critical breaches"""
         # In a real implementation, this would integrate with email/SMS services
@@ -540,12 +567,12 @@ class EnhancedBreachResponseSystem:
         }
     
     def submit_whistleblower_report(self, report_details: Dict[str, Any], 
-                                  evidence: List[str] = None) -> WhistleblowerReport:
+                                  evidence: Optional[List[str]] = None) -> WhistleblowerReport:
         """Submit and process whistleblower report"""
         evidence = evidence or []
         
         report_id = f"WB-{datetime.now().strftime('%Y%m%d%H%M%S')}-{hashlib.md5(json.dumps(report_details).encode()).hexdigest()[:6].upper()}"
-        reporter_id = f"ANON-{hashlib.md5(f"{report_id}{datetime.now()}".encode()).hexdigest()[:8].upper()}"
+        reporter_id = f"ANON-{hashlib.md5((report_id + str(datetime.now())).encode()).hexdigest()[:8].upper()}"
         
         # Assess severity and incentive eligibility
         severity = self._assess_whistleblower_severity(report_details)

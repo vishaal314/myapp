@@ -235,9 +235,20 @@ class AIModelScanner:
             eu_ai_act_findings = self._generate_eu_ai_act_2025_findings(scan_result)
             scan_result["findings"].extend(eu_ai_act_findings)
             
-            # NEW: 2025 compliance gap fixes integration
-            enhanced_findings = self._perform_2025_compliance_gap_assessment(model_source, model_details, sample_inputs)
-            scan_result["findings"].extend(enhanced_findings)
+            # NEW: 2025 compliance gap fixes integration (temporarily disabled for testing)
+            try:
+                enhanced_findings = self._perform_2025_compliance_gap_assessment(model_source, model_details, sample_inputs)
+                scan_result["findings"].extend(enhanced_findings)
+            except Exception as gap_error:
+                logging.warning(f"2025 compliance gap assessment failed: {gap_error}")
+                # Add a basic finding instead of failing
+                scan_result["findings"].append({
+                    "type": "2025_COMPLIANCE_ASSESSMENT_ERROR",
+                    "category": "System Warning",
+                    "description": f"2025 compliance gap assessment encountered an error: {str(gap_error)}",
+                    "risk_level": "medium",
+                    "location": "Compliance Assessment System"
+                })
 
             try:
                 metrics = self._calculate_risk_metrics(scan_result["findings"])
