@@ -21,6 +21,14 @@ from utils.gdpr_rules import REGIONS
 from utils.i18n import get_text
 from utils.async_scan_manager import submit_async_scan
 
+# Enterprise integration - non-breaking import
+try:
+    from utils.event_bus import EventType, publish_event
+    from components.enterprise_actions import show_enterprise_actions, show_quick_enterprise_sidebar
+    ENTERPRISE_EVENTS_AVAILABLE = True
+except ImportError:
+    ENTERPRISE_EVENTS_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 # Define translation function
@@ -33,6 +41,10 @@ def render_scanner_interface():
     Preserves exact UI behavior and structure
     """
     st.title(_("scan.new_scan_title"))
+    
+    # Show enterprise quick actions in sidebar if available
+    if ENTERPRISE_EVENTS_AVAILABLE:
+        show_quick_enterprise_sidebar()
     
     # Check if user has permission to create scans
     if not require_permission('scan:create'):

@@ -14,6 +14,13 @@ from typing import Dict, List, Any, Optional
 
 from services.compliance_score import ComplianceScoreManager
 
+# Enterprise integration - non-breaking import
+try:
+    from utils.event_bus import EventType, publish_event
+    ENTERPRISE_EVENTS_AVAILABLE = True
+except ImportError:
+    ENTERPRISE_EVENTS_AVAILABLE = False
+
 def render_compliance_dashboard(current_username: Optional[str] = None):
     """
     Render the compliance score dashboard with interactive visualizations.
@@ -35,6 +42,23 @@ def render_compliance_dashboard(current_username: Optional[str] = None):
     
     # Create dashboard layout
     st.subheader("Compliance Score Dashboard")
+    
+    # Publish compliance dashboard viewed event
+    if ENTERPRISE_EVENTS_AVAILABLE:
+        try:
+            publish_event(
+                event_type=EventType.CONNECTOR_EVENT,
+                source="compliance_dashboard",
+                user_id=current_username or "unknown",
+                session_id=st.session_state.get('session_id', 'unknown'),
+                data={
+                    'event': 'dashboard_viewed',
+                    'compliance_score': current_score["overall_score"],
+                    'timestamp': datetime.now().isoformat()
+                }
+            )
+        except Exception:
+            pass  # Silently continue if event publishing fails
     
     # Main score display with badge
     st.markdown(f"""

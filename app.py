@@ -78,6 +78,13 @@ from config.pricing_config import get_pricing_config
 # Import HTML report generators with standardized signatures  
 from typing import Dict, Any, Union, Optional
 
+# Enterprise integration - non-breaking import
+try:
+    from components.enterprise_actions import show_enterprise_actions
+    ENTERPRISE_ACTIONS_AVAILABLE = True
+except ImportError:
+    ENTERPRISE_ACTIONS_AVAILABLE = False
+
 def generate_html_report_fallback(scan_result: Dict[str, Any]) -> str:
     """Simple HTML report generator for AI Model scans"""
     # Build the findings HTML separately to avoid f-string issues
@@ -3487,6 +3494,16 @@ def display_scan_results(scan_results):
             st.info("🔄 Please run a scan first to generate reports.")
     else:
         st.info("💎 Report downloads are available with Professional and Enterprise licenses.")
+    
+    # Add contextual enterprise actions
+    if ENTERPRISE_ACTIONS_AVAILABLE and scan_results:
+        try:
+            current_username = st.session_state.get('username', 'unknown')
+            scan_type = scan_results.get('scan_type', 'code')
+            show_enterprise_actions(scan_results, scan_type, current_username)
+        except Exception as e:
+            # Silently continue if enterprise actions fail
+            pass
 
 # Add similar interfaces for other scanners
 def render_document_scanner_interface(region: str, username: str):
@@ -6004,6 +6021,16 @@ def display_enterprise_scan_results(scan_results: dict, connector_name: str):
     with col4:
         if st.button("🔗 Generate Share Link", key=f"share_{connector_name}"):
             st.success("Secure share link generated!")
+    
+    # Add contextual enterprise actions
+    if ENTERPRISE_ACTIONS_AVAILABLE and scan_results:
+        try:
+            current_username = st.session_state.get('username', 'unknown')
+            scan_type = 'enterprise_connector'
+            show_enterprise_actions(scan_results, scan_type, current_username)
+        except Exception as e:
+            # Silently continue if enterprise actions fail
+            pass
 
 def render_ai_model_scanner_interface(region: str, username: str):
     """AI Model scanner interface with comprehensive analysis capabilities"""
