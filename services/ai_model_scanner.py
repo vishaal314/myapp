@@ -497,13 +497,14 @@ class AIModelScanner:
             analysis = {
                 'framework': 'TensorFlow',
                 'architecture_analyzed': True,
-                'parameters_count': model.count_params(),
-                'layers_count': len(model.layers),
+                'parameters_count': getattr(model, 'count_params', lambda: 0)() if hasattr(model, 'count_params') else 0,
+                'layers_count': len(getattr(model, 'layers', [])),
                 'findings': []
             }
             
             # Analyze layers for privacy risks
-            for layer in model.layers:
+            model_layers = getattr(model, 'layers', [])
+            for layer in model_layers:
                 if 'embedding' in layer.__class__.__name__.lower():
                     analysis['findings'].append({
                         'category': 'Privacy Risk',
