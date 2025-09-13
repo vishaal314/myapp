@@ -16,6 +16,7 @@ import streamlit as st
 from services.intelligent_scanner_manager import intelligent_scanner_manager
 from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
 from services.license_integration import track_scanner_usage
+from services.results_aggregator import ResultsAggregator
 
 logger = logging.getLogger("components.intelligent_scanner_wrapper")
 
@@ -24,6 +25,7 @@ class IntelligentScannerWrapper:
     
     def __init__(self):
         self.scanner_manager = intelligent_scanner_manager
+        self.results_aggregator = ResultsAggregator()
     
     def execute_code_scan_intelligent(self, region: str, username: str, 
                                     uploaded_files=None, repo_url=None, 
@@ -159,6 +161,19 @@ class IntelligentScannerWrapper:
             # Track successful completion
             scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
             findings_count = len(scan_result.get('findings', []))
+            
+            # Ensure scan_type is set correctly for database storage
+            scan_result['scan_type'] = 'code'
+            scan_result['region'] = region
+            scan_result['total_pii_found'] = findings_count
+            scan_result['high_risk_count'] = len([f for f in scan_result.get('findings', []) if f.get('severity') == 'high'])
+            
+            # Save scan result to database for dashboard display
+            try:
+                self.results_aggregator.save_scan_result(username, scan_result)
+                logger.info(f"Code scan result saved to database with scan_type='code' for user {username}")
+            except Exception as e:
+                logger.error(f"Failed to save code scan result to database: {str(e)}")
             
             track_scan_completed(
                 session_id=session_id,
