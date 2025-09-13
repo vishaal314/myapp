@@ -173,11 +173,6 @@ class CodeScanner:
             'passwd_assignment': r'(?i)(password|passwd|pwd)\s*[=:]\s*["\']([^"\']{8,32})["\']'
         }
         
-        # Pre-compile regex patterns to improve performance and catch compilation errors early
-        self.compiled_patterns = {}
-        self.compiled_comment_patterns = {}
-        self._compile_patterns()
-        
         # Map of file extensions to language-specific comment patterns
         self.comment_patterns = {
             # Python
