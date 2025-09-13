@@ -2030,6 +2030,11 @@ def render_dashboard():
                             cost_savings = "€18,000"  # Code security compliance
                         else:
                             cost_savings = "€9,000"
+                    elif scan_type_raw in ['image', 'image scanner', 'ocr', 'photo']:
+                        if pii_count > 3:
+                            cost_savings = "€7,500"  # Image privacy compliance savings
+                        else:
+                            cost_savings = "€4,200"  # Clean image scan value
                     else:
                         # Generic scanner
                         base_savings = max(2000, pii_count * 500)  # €500 per PII item
