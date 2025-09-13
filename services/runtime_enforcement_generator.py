@@ -62,13 +62,50 @@ class RuntimeEnforcementGenerator:
         self.region = region
         self.packages_generated = 0
         
-        # Initialize remediation engine if available
+        # Initialize remediation engine if available  
+        self.remediation_engine = None
         if REMEDIATION_ENGINE_AVAILABLE:
-            self.remediation_engine = AutomatedRemediationEngine(region=region, dry_run=False)
+            try:
+                from services.automated_remediation_engine import AutomatedRemediationEngine
+                self.remediation_engine = AutomatedRemediationEngine(region=region, dry_run=False)
+            except Exception:
+                self.remediation_engine = None
         
         # Load enforcement templates
         self.enforcement_templates = self._load_enforcement_templates()
         self.compliance_rules = self._load_compliance_rules()
+    
+    def _load_compliance_rules(self) -> Dict[str, Dict[str, Any]]:
+        """Load compliance enforcement rules"""
+        return {
+            "netherlands_uavg": {
+                "cookie_consent_required": True,
+                "explicit_consent_only": True,
+                "reject_all_button_required": True,
+                "consent_withdrawal_required": True,
+                "auto_reject_timeout": 30,
+                "essential_cookies_only_default": True,
+                "data_breach_notification_hours": 72,
+                "bsn_protection_required": True
+            },
+            "gdpr_general": {
+                "data_minimization": True,
+                "purpose_limitation": True,
+                "storage_limitation": True,
+                "lawful_basis_required": True,
+                "data_subject_rights": True,
+                "privacy_by_design": True,
+                "dpo_contact_required": False
+            },
+            "security_requirements": {
+                "https_required": True,
+                "security_headers_required": True,
+                "password_hashing_required": True,
+                "api_key_protection": True,
+                "sql_injection_protection": True,
+                "xss_protection": True
+            }
+        }
     
     def _load_enforcement_templates(self) -> Dict[str, Dict[str, str]]:
         """Load enforcement package templates"""
@@ -765,78 +802,8 @@ stages:
         
         results = data['detailed_results']
         
-        # Generate HTML report
-        with open('compliance_report.html', 'w') as f:
-            f.write('''
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>DataGuardian Pro - Compliance Report</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { background: #2c3e50; color: white; padding: 20px; border-radius: 5px; }
-                .metric { display: inline-block; margin: 10px; padding: 15px; border-radius: 5px; text-align: center; }
-                .critical { background: #e74c3c; color: white; }
-                .high { background: #f39c12; color: white; }
-                .good { background: #27ae60; color: white; }
-                .finding { margin: 10px 0; padding: 10px; border-left: 4px solid #3498db; background: #f8f9fa; }
-                .finding-critical { border-left-color: #e74c3c; }
-                .finding-high { border-left-color: #f39c12; }
-            </style>
-        </head>
-        <body>
-            <div class=\"header\">
-                <h1>🛡️ DataGuardian Pro - Privacy Compliance Report</h1>
-                <p>Generated: ''' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '''</p>
-            </div>
-            
-            <div style=\"margin: 20px 0;\">
-                <div class=\"metric ''' + ('critical' if data['critical_count'] > 0 else 'good') + '''\">
-                    <h3>''' + str(data['critical_count']) + '''</h3>
-                    <p>Critical Issues</p>
-                </div>
-                <div class=\"metric ''' + ('high' if data['high_count'] > 5 else 'good') + '''\">
-                    <h3>''' + str(data['high_count']) + '''</h3>
-                    <p>High Risk Issues</p>
-                </div>
-                <div class=\"metric ''' + ('good' if data['compliance_score'] >= 70 else 'critical') + '''\">
-                    <h3>''' + str(data['compliance_score']) + '''%</h3>
-                    <p>Compliance Score</p>
-                </div>
-            </div>
-            ''')
-            
-            if data['critical_count'] > 0:
-                f.write('<h2>🔴 Critical Issues (Must Fix)</h2>')
-                critical_findings = [f for f in results['findings'] if f.get('risk_level') == 'Critical']
-                for finding in critical_findings[:10]:
-                    f.write(f'''
-                    <div class=\"finding finding-critical\">
-                        <strong>{finding.get('type', 'Unknown')}</strong><br>
-                        {finding.get('description', '')}<br>
-                        <small>Location: {finding.get('location', 'Unknown')} | Impact: {finding.get('impact', 'Unknown')}</small>
-                    </div>
-                    ''')
-            
-            f.write('''
-            <h2>📋 Recommendations</h2>
-            <ul>
-                <li>Address all critical privacy violations immediately</li>
-                <li>Review and resolve high-risk issues before production</li>
-                <li>Implement automated privacy controls</li>
-                <li>Schedule regular compliance monitoring</li>
-            </ul>
-            
-            <h2>🔗 Next Steps</h2>
-            <ul>
-                <li>Review detailed findings in the JSON report</li>
-                <li>Use DataGuardian Pro remediation engine for automated fixes</li>
-                <li>Update privacy policies and documentation</li>
-                <li>Schedule follow-up compliance scans</li>
-            </ul>
-            </body>
-            </html>
-            ''')
+        # Generate simple compliance report
+        python scripts/generate_compliance_report.py compliance_results.json
         "
       displayName: 'Generate Compliance Report'
       condition: always()
@@ -934,41 +901,10 @@ stages:
             }
         }
     
-    def _load_compliance_rules(self) -> Dict[str, Dict[str, Any]]:
-        """Load compliance enforcement rules"""
-        return {
-            "netherlands_uavg": {
-                "cookie_consent_required": True,
-                "explicit_consent_only": True,
-                "reject_all_button_required": True,
-                "consent_withdrawal_required": True,
-                "auto_reject_timeout": 30,  # seconds
-                "essential_cookies_only_default": True,
-                "data_breach_notification_hours": 72,
-                "bsn_protection_required": True
-            },
-            "gdpr_general": {
-                "data_minimization": True,
-                "purpose_limitation": True,
-                "storage_limitation": True,
-                "lawful_basis_required": True,
-                "data_subject_rights": True,
-                "privacy_by_design": True,
-                "dpo_contact_required": False  # Optional for SMEs
-            },
-            "security_requirements": {
-                "https_required": True,
-                "security_headers_required": True,
-                "password_hashing_required": True,
-                "api_key_protection": True,
-                "sql_injection_protection": True,
-                "xss_protection": True
-            }
-        }
     
     def generate_cookie_blocking_package(self, 
                                        website_domain: str,
-                                       compliance_config: Dict[str, Any] = None) -> EnforcementPackage:
+                                       compliance_config: Optional[Dict[str, Any]] = None) -> EnforcementPackage:
         """Generate cookie blocking enforcement package"""
         package_id = f"cookie-blocker-{website_domain.replace('.', '-')}-{int(datetime.now().timestamp())}"
         
@@ -1017,7 +953,7 @@ stages:
     def generate_cicd_compliance_package(self,
                                        platform: str,  # 'github-actions' or 'azure-devops'
                                        repository_name: str,
-                                       compliance_thresholds: Dict[str, int] = None) -> EnforcementPackage:
+                                       compliance_thresholds: Optional[Dict[str, int]] = None) -> EnforcementPackage:
         """Generate CI/CD compliance enforcement package"""
         
         thresholds = compliance_thresholds or {
@@ -1085,7 +1021,7 @@ stages:
     
     def generate_runtime_monitor_package(self,
                                        application_type: str,  # 'web', 'api', 'mobile'
-                                       monitoring_config: Dict[str, Any] = None) -> EnforcementPackage:
+                                       monitoring_config: Optional[Dict[str, Any]] = None) -> EnforcementPackage:
         """Generate runtime compliance monitoring package"""
         
         config = monitoring_config or {
@@ -1130,7 +1066,7 @@ stages:
             }
         )
     
-    def package_to_zip(self, package: EnforcementPackage, output_path: str = None) -> str:
+    def package_to_zip(self, package: EnforcementPackage, output_path: Optional[str] = None) -> str:
         """Export enforcement package as ZIP file"""
         if not output_path:
             output_path = f"{package.package_id}.zip"

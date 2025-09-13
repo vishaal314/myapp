@@ -362,7 +362,7 @@ server {
         }
     
     def remediate_findings(self, findings: List[Dict[str, Any]], 
-                          target_directory: str = None) -> List[RemediationResult]:
+                          target_directory: Optional[str] = None) -> List[RemediationResult]:
         """
         Attempt to remediate a list of findings automatically or semi-automatically.
         
@@ -391,7 +391,7 @@ server {
         return results
     
     def _remediate_single_finding(self, finding: Dict[str, Any], 
-                                 target_directory: str = None) -> RemediationResult:
+                                 target_directory: Optional[str] = None) -> RemediationResult:
         """Remediate a single finding"""
         finding_type = finding.get('type', '').lower()
         finding_id = finding.get('id') or f"finding_{hash(str(finding))}"
@@ -418,7 +418,7 @@ server {
     
     def _execute_automated_remediation(self, finding: Dict[str, Any], 
                                      rules: Dict[str, Any],
-                                     target_directory: str = None) -> RemediationResult:
+                                     target_directory: Optional[str] = None) -> RemediationResult:
         """Execute fully automated remediation"""
         finding_id = finding.get('id', 'unknown')
         finding_type = finding.get('type', '').lower()
@@ -465,7 +465,7 @@ server {
     
     def _execute_semi_automated_remediation(self, finding: Dict[str, Any],
                                           rules: Dict[str, Any],
-                                          target_directory: str = None) -> RemediationResult:
+                                          target_directory: Optional[str] = None) -> RemediationResult:
         """Execute semi-automated remediation with guided steps"""
         finding_id = finding.get('id', 'unknown')
         finding_type = finding.get('type', '').lower()
@@ -503,7 +503,7 @@ server {
                 actions_taken=actions_taken
             )
     
-    def _fix_email_pii(self, finding: Dict[str, Any], target_directory: str = None) -> Tuple[bool, List[str]]:
+    def _fix_email_pii(self, finding: Dict[str, Any], target_directory: Optional[str] = None) -> Tuple[bool, List[str]]:
         """Fix hardcoded email PII automatically"""
         actions = []
         
@@ -525,7 +525,7 @@ server {
         
         return False, ["Could not locate file or email value"]
     
-    def _fix_missing_ssl(self, finding: Dict[str, Any], target_directory: str = None) -> Tuple[bool, List[str]]:
+    def _fix_missing_ssl(self, finding: Dict[str, Any], target_directory: Optional[str] = None) -> Tuple[bool, List[str]]:
         """Fix missing SSL configuration"""
         actions = []
         
@@ -548,7 +548,7 @@ server {
         return False, ["Could not determine server type for SSL configuration"]
     
     def _generate_aws_key_fix_template(self, finding: Dict[str, Any], 
-                                     target_directory: str = None) -> Tuple[bool, List[str]]:
+                                     target_directory: Optional[str] = None) -> Tuple[bool, List[str]]:
         """Generate AWS key remediation template"""
         actions = []
         
@@ -581,7 +581,7 @@ server {
             return False, [f"Template generation failed: {str(e)}"]
     
     def _generate_cookie_consent_template(self, finding: Dict[str, Any],
-                                        target_directory: str = None) -> Tuple[bool, List[str]]:
+                                        target_directory: Optional[str] = None) -> Tuple[bool, List[str]]:
         """Generate cookie consent mechanism template"""
         actions = []
         
@@ -639,7 +639,7 @@ server {
         if finding_type in ['email_pii', 'missing_ssl']:
             return True  # Simulated success
         else:
-            return None  # Cannot verify automatically
+            return False  # Cannot verify automatically
     
     def generate_remediation_report(self, results: List[RemediationResult]) -> str:
         """Generate a comprehensive remediation report"""
@@ -697,7 +697,7 @@ server {
         return report
 
 def remediate_scan_findings(findings: List[Dict[str, Any]], 
-                          target_directory: str = None,
+                          target_directory: Optional[str] = None,
                           region: str = "Netherlands",
                           dry_run: bool = True) -> Tuple[List[RemediationResult], str]:
     """
