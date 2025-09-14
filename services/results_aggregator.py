@@ -113,9 +113,20 @@ class ResultsAggregator:
                 file_count INTEGER NOT NULL,
                 total_pii_found INTEGER NOT NULL,
                 high_risk_count INTEGER NOT NULL,
-                result_json JSONB NOT NULL
+                result_json JSONB NOT NULL,
+                organization_id TEXT NOT NULL DEFAULT 'default_org'
             )
             ''')
+            
+            # Migration: Add organization_id column if it doesn't exist (for existing databases)
+            try:
+                cursor.execute('''
+                ALTER TABLE scans ADD COLUMN organization_id TEXT NOT NULL DEFAULT 'default_org'
+                ''')
+                logger.info("Added organization_id column to existing scans table")
+            except Exception as migration_error:
+                # Column might already exist, which is fine
+                logger.debug(f"Migration note: {migration_error}")
             
             # Create audit log table
             cursor.execute('''

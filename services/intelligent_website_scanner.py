@@ -168,6 +168,11 @@ class IntelligentWebsiteScanner:
             scan_results['total_findings'] = len(findings)
             scan_results['critical_findings'] = len([f for f in findings if f.get('severity') == 'Critical'])
             scan_results['high_risk_findings'] = len([f for f in findings if f.get('severity') == 'High'])
+            
+            # Set database-compatible field names for dashboard display
+            scan_results['total_pii_found'] = len(findings)  # Database expects this field name
+            scan_results['high_risk_count'] = len([f for f in findings if f.get('severity') == 'High'])  # Database expects this field name
+            scan_results['files_scanned'] = scan_results['pages_scanned']  # Database expects files_scanned
             scan_results['lines_analyzed'] = scan_results['pages_scanned'] * 50  # Estimate 50 lines per page
             
             # Calculate coverage metrics
