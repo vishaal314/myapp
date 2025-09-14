@@ -99,8 +99,8 @@ class APIScanner:
             self._local.session = requests.Session()
             self._local.session.headers.update(self._session_headers)
             
-            # Apply global session configuration
-            self._local.session.timeout = self.request_timeout
+            # Apply global session configuration - timeout is handled per-request
+            # Note: Session object doesn't have timeout attribute, use it in request calls
             if hasattr(self, 'verify_ssl'):
                 self._local.session.verify = self.verify_ssl
         
@@ -125,7 +125,13 @@ class APIScanner:
         # Fallback to thread ID for isolation
         import threading
         thread_id = threading.current_thread().ident
-        return f"thread_{thread_id % 1000000}"
+        # Ensure thread_id is not None before using modulo
+        if thread_id is not None:
+            return f"thread_{thread_id % 1000000}"
+        else:
+            # Ultimate fallback if thread ID is None
+            import os
+            return f"process_{os.getpid() % 1000000}"
     
     def _load_pii_patterns(self):
         """Load PII detection patterns for API response analysis."""
@@ -595,7 +601,7 @@ class APIScanner:
             return {
                 'url': endpoint_url,
                 'status_code': 0,
-                'error': str(e),
+                'error': str(e) if e is not None else "Unknown error",
                 'findings': []
             }
     
@@ -694,9 +700,11 @@ class APIScanner:
                 import streamlit as st
                 if hasattr(st, 'session_state'):
                     for key, value in st.session_state.items():
-                        if key.startswith('checkpoint_') and isinstance(value, dict):
+                        # Ensure key is string before calling string methods
+                        key_str = str(key) if key is not None else ""
+                        if key_str.startswith('checkpoint_') and isinstance(value, dict):
                             checkpoints.append({
-                                'scan_id': value.get('scan_id', key.replace('checkpoint_', '')),
+                                'scan_id': value.get('scan_id', key_str.replace('checkpoint_', '')),
                                 'timestamp': value.get('timestamp', 'Unknown'),
                                 'completed_endpoints': value.get('total_completed', 0)
                             })

@@ -83,6 +83,27 @@ from config.pricing_config import get_pricing_config
 # Import HTML report generators with standardized signatures  
 from typing import Dict, Any, Union, Optional
 
+# Import activity tracker and ScannerType globally to avoid unbound variable errors
+try:
+    from utils.activity_tracker import ScannerType, track_scan_started, track_scan_completed, track_scan_failed
+    ACTIVITY_TRACKER_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"Failed to import activity tracker: {e}")
+    ACTIVITY_TRACKER_AVAILABLE = False
+    # Create a fallback ScannerType enum to prevent unbound variable errors
+    class ScannerType:
+        CODE = "code"
+        BLOB = "blob"
+        IMAGE = "image"
+        WEBSITE = "website"
+        DATABASE = "database"
+        DPIA = "dpia"
+        AI_MODEL = "ai_model"
+        SOC2 = "soc2"
+        SUSTAINABILITY = "sustainability"
+        API = "api"
+        ENTERPRISE_CONNECTOR = "enterprise_connector"
+
 # Enterprise integration - non-breaking import
 try:
     from components.enterprise_actions import show_enterprise_actions
