@@ -842,7 +842,7 @@ class UnifiedHTMLReportGenerator:
             
             # Get real user scan history instead of fake data
             try:
-                historical_data = aggregator.get_scan_results_for_user(username)
+                historical_data = aggregator.get_all_scans(username, limit=50)
                 if not historical_data or len(historical_data) < 3:
                     logger.warning(f"Insufficient historical data for user {username}, using fallback")
                     return self._generate_fallback_forecast_section(current_score)
