@@ -452,24 +452,33 @@ class PredictiveComplianceEngine:
         return daily_aggregated
     
     def _calculate_compliance_trend(self, time_series_data: pd.DataFrame) -> ComplianceTrend:
-        """Calculate current compliance trend"""
+        """Calculate current compliance trend with improved smoothing"""
         if len(time_series_data) < 3:
             return ComplianceTrend.STABLE
         
-        recent_scores = time_series_data['compliance_score'].tail(5).values
+        # Use smoothed scores if available, otherwise use raw scores
+        score_column = 'smoothed_compliance_score' if 'smoothed_compliance_score' in time_series_data.columns else 'compliance_score'
+        recent_scores = time_series_data[score_column].tail(7).values  # Use more data points for stability
         
-        # Calculate trend using linear regression slope
-        x = np.arange(len(recent_scores))
-        # Ensure numpy arrays are properly typed
+        # Apply additional smoothing for trend calculation
+        if len(recent_scores) >= 5:
+            # Use exponential weighted moving average for trend analysis
+            smoothed_scores = pd.Series(recent_scores).ewm(span=3, adjust=False).mean().values
+        else:
+            smoothed_scores = recent_scores
+        
+        # Calculate trend using linear regression slope on smoothed data
+        x = np.arange(len(smoothed_scores))
         x_array = np.asarray(x, dtype=np.float64)
-        y_array = np.asarray(recent_scores, dtype=np.float64)
+        y_array = np.asarray(smoothed_scores, dtype=np.float64)
         slope = np.polyfit(x_array, y_array, 1)[0]
         
-        if slope > 2:
+        # Use more conservative thresholds for smoother trend classification
+        if slope > 1.5:  # Less sensitive to small fluctuations
             return ComplianceTrend.IMPROVING
-        elif slope < -2:
+        elif slope < -1.5:
             return ComplianceTrend.DETERIORATING
-        elif any(score < 50 for score in recent_scores[-2:]):
+        elif any(score < 50 for score in smoothed_scores[-2:]):  # Use smoothed scores for critical check
             return ComplianceTrend.CRITICAL
         else:
             return ComplianceTrend.STABLE
@@ -528,12 +537,22 @@ class PredictiveComplianceEngine:
         
         # Calculate confidence interval from recent residuals
         if len(smoothed_scores) >= 3:
-            # Calculate residuals from simple trend line
+            # Use smoothed trend line calculation instead of simple linear regression
             x_all = np.arange(len(smoothed_scores), dtype=np.float64)
             y_all = np.asarray(smoothed_scores, dtype=np.float64)
-            trend_line = np.polyfit(x_all, y_all, 1)
+            
+            # Apply additional smoothing for trend line calculation
+            if len(y_all) >= 5:
+                # Use rolling average for more stable trend
+                window_size = min(3, len(y_all) // 2)
+                y_smoothed = pd.Series(y_all).rolling(window=window_size, center=True, min_periods=1).mean().values
+            else:
+                y_smoothed = y_all
+            
+            # Calculate trend line with robust regression (less sensitive to outliers)
+            trend_line = np.polyfit(x_all, y_smoothed, 1)
             predicted_all = np.polyval(trend_line, x_all)
-            residuals = y_all - predicted_all
+            residuals = y_smoothed - predicted_all
             
             # Use MAD-based standard error (more robust than std)
             mad = np.median(np.abs(residuals - np.median(residuals)))

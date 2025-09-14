@@ -933,14 +933,34 @@ class UnifiedHTMLReportGenerator:
                 'opacity': 0.8
             })
             
-            # 2. Smoothed trend line (overlay)
+            # 2. Enhanced smoothed trend line (overlay) with improved smoothing
+            # Apply additional smoothing to trend line data for better visualization
+            trend_x = dates[:-1]
+            trend_y = smoothed_scores[:-1]
+            
+            # Apply moving average smoothing if we have enough data points
+            if len(trend_y) >= 5:
+                # Use simple moving average with window of 3 for final smoothing
+                smoothed_trend_y = []
+                for i in range(len(trend_y)):
+                    start_idx = max(0, i - 1)
+                    end_idx = min(len(trend_y), i + 2)
+                    window_values = trend_y[start_idx:end_idx]
+                    smoothed_trend_y.append(sum(window_values) / len(window_values))
+                trend_y = smoothed_trend_y
+            
             chart_data_series.append({
-                'x': dates[:-1],
-                'y': smoothed_scores[:-1],
+                'x': trend_x,
+                'y': trend_y,
                 'type': 'scatter',
                 'mode': 'lines',
                 'name': '📈 Trend Line',
-                'line': {'color': '#1976D2', 'width': 4, 'shape': 'spline'},
+                'line': {
+                    'color': '#1976D2', 
+                    'width': 4, 
+                    'shape': 'spline',
+                    'smoothing': 1.3  # Enhanced spline smoothing
+                },
                 'hovertemplate': '<b>%{x}</b><br>Trend: <b>%{y:.1f}%</b><extra></extra>',
                 'yaxis': 'y'
             })
