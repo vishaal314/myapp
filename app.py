@@ -2227,9 +2227,12 @@ def render_dashboard():
                     'text': '📄 Text Document',
                     'file': '📄 File',
                     
-                    # 4. Website Scanner (all variations)
+                    # 4. Website Scanner (all variations) - Enhanced with intelligent scanner
                     'website': '🌐 Website',
+                    'website scanner': '🌐 Website',
+                    'intelligent website scanner': '🌐 Website',
                     'web': '🌐 Web',
+                    'web scanner': '🌐 Website',
                     'url': '🌐 URL',
                     'http': '🌐 HTTP',
                     'https': '🌐 HTTPS',
