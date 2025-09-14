@@ -5531,10 +5531,36 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
             st.write(f"• **Total Findings:** {scan_results['total_findings']}")
             st.write(f"• **GDPR Compliance:** {'✅ Compliant' if scan_results['gdpr_compliance'] else '❌ Non-compliant'}")
         
-        # Calculate scan metrics and track completion
+        # Calculate scan metrics for tracking and storage
         scan_duration = int((datetime.now() - scan_start_time).total_seconds() * 1000)
         findings_count = len(scan_results["findings"])
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
+        
+        # Store results in aggregator database (like other scanners do)
+        try:
+            from services.results_aggregator import ResultsAggregator
+            aggregator = ResultsAggregator()
+            
+            # Prepare complete result for storage
+            complete_result = scan_results.copy()
+            complete_result.update({
+                'scan_type': 'api',
+                'username': username,
+                'user_id': user_id,
+                'session_id': session_id,
+                'total_findings': scan_results.get('total_findings', findings_count),
+                'total_pii_found': findings_count,
+                'high_risk_count': high_risk_count
+            })
+            
+            stored_scan_id = aggregator.save_scan_result(
+                username=username,
+                result=complete_result
+            )
+            logger.info(f"API Scanner: Successfully stored scan result with ID: {stored_scan_id}")
+            
+        except Exception as store_error:
+            logger.error(f"API Scanner: FAILED to store scan result in aggregator: {store_error}")
         
         # Track successful completion
         track_scan_completed_wrapper_safe(
