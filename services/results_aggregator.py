@@ -319,6 +319,19 @@ class ResultsAggregator:
             # Enterprise security: Fail secure - no fallback storage for PII data
             raise RuntimeError(f"Failed to store scan result securely: {str(e)}")
     
+    def _init_file_storage(self):
+        """Initialize file-based storage for non-strict mode."""
+        try:
+            os.makedirs('data', exist_ok=True)
+            # Create empty scan file if it doesn't exist
+            if not os.path.exists('data/scans.json'):
+                with open('data/scans.json', 'w') as f:
+                    json.dump([], f)
+            logger.info("File-based storage initialized for non-strict mode")
+        except Exception as e:
+            logger.error(f"Error initializing file storage: {e}")
+            raise
+    
     def _legacy_file_cleanup(self):
         """
         Enterprise security: Remove any legacy file-based PII storage.
