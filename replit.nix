@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.redis
     pkgs.libstdcxx5
     pkgs.glibc
     pkgs.gcc
