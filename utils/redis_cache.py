@@ -26,19 +26,35 @@ class RedisCache:
             'deletes': 0,
             'errors': 0
         }
-        self.default_ttl = 3600  # 1 hour
+        # Optimized TTL values for different data types
+        self.ttl_config = {
+            'scan_results': 7200,      # 2 hours for scan results
+            'compliance_scores': 3600,  # 1 hour for compliance scores
+            'user_sessions': 1800,      # 30 minutes for sessions
+            'dashboard_data': 300,      # 5 minutes for dashboard metrics
+            'large_datasets': 14400,    # 4 hours for large dataset queries
+            'default': 3600             # 1 hour default
+        }
         self.connect()
     
     def connect(self):
-        """Connect to Redis server"""
+        """Connect to Redis server with optimized configuration"""
         try:
-            # Try to connect to Redis
+            # Enhanced Redis connection with performance settings
             redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
-            self.redis_client = redis.from_url(redis_url, decode_responses=False)
+            self.redis_client = redis.from_url(
+                redis_url, 
+                decode_responses=False,
+                socket_connect_timeout=5,
+                socket_timeout=5,
+                retry_on_timeout=True,
+                health_check_interval=30,
+                max_connections=20  # Connection pooling
+            )
             
             # Test connection
             self.redis_client.ping()
-            logger.info("Redis cache connected successfully")
+            logger.info("Redis cache connected successfully with optimized settings")
             
         except Exception as e:
             logger.warning(f"Redis connection failed: {e}. Using in-memory fallback.")

@@ -102,7 +102,7 @@ class ResultsAggregator:
         try:
             cursor = conn.cursor()
             
-            # Create scans table
+            # Create optimized scans table with performance indexes
             cursor.execute('''
             CREATE TABLE IF NOT EXISTS scans (
                 scan_id TEXT PRIMARY KEY,
@@ -118,6 +118,22 @@ class ResultsAggregator:
             )
             ''')
             
+            # Add performance indexes for common queries
+            performance_indexes = [
+                "CREATE INDEX IF NOT EXISTS idx_scans_username_timestamp ON scans(username, timestamp DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_scans_organization_timestamp ON scans(organization_id, timestamp DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_scans_scan_type ON scans(scan_type)",
+                "CREATE INDEX IF NOT EXISTS idx_scans_timestamp ON scans(timestamp DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_scans_composite ON scans(username, organization_id, timestamp DESC)"
+            ]
+            
+            for index_sql in performance_indexes:
+                try:
+                    cursor.execute(index_sql)
+                    logger.debug(f"Created performance index: {index_sql.split()[5]}")
+                except Exception as index_error:
+                    logger.debug(f"Index creation note: {index_error}")
+            
             # Migration: Add organization_id column if it doesn't exist (for existing databases)
             try:
                 cursor.execute('''
@@ -128,7 +144,7 @@ class ResultsAggregator:
                 # Column might already exist, which is fine
                 logger.debug(f"Migration note: {migration_error}")
             
-            # Create audit log table
+            # Create optimized audit log table with performance indexes
             cursor.execute('''
             CREATE TABLE IF NOT EXISTS audit_log (
                 log_id TEXT PRIMARY KEY,
@@ -138,6 +154,19 @@ class ResultsAggregator:
                 details JSONB
             )
             ''')
+            
+            # Add performance indexes for audit log
+            audit_indexes = [
+                "CREATE INDEX IF NOT EXISTS idx_audit_username_timestamp ON audit_log(username, timestamp DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action)",
+                "CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp DESC)"
+            ]
+            
+            for index_sql in audit_indexes:
+                try:
+                    cursor.execute(index_sql)
+                except Exception as index_error:
+                    logger.debug(f"Audit index note: {index_error}")
             
             # Create PII types reference table
             cursor.execute('''
@@ -516,8 +545,8 @@ class ResultsAggregator:
         
         return []
     
-    def _get_recent_scans_db(self, days: int = 30, username: Optional[str] = None, organization_id: str = 'default_org') -> Optional[List[Dict[str, Any]]]:
-        """Get recent scans from database with enhanced error handling and tenant isolation."""
+    def _get_recent_scans_db(self, days: int = 30, username: Optional[str] = None, organization_id: str = 'default_org', limit: int = 1000) -> Optional[List[Dict[str, Any]]]:
+        """Get recent scans from database with enhanced error handling, tenant isolation, and performance optimization."""
         
         try:
             conn = self._get_secure_connection(organization_id)
@@ -531,23 +560,25 @@ class ResultsAggregator:
             cutoff_date = datetime.now() - timedelta(days=days)
             print(f"Querying scans since: {cutoff_date} for user: {username}")
             
-            # Build query with optional username filter  
+            # Optimized query with LIMIT for large datasets and proper indexing
             if username:
                 cursor.execute("""
                     SELECT scan_id, username, timestamp, scan_type, region, 
                            file_count, total_pii_found, high_risk_count, result_json
                     FROM scans 
-                    WHERE timestamp >= %s AND username = %s
+                    WHERE username = %s AND organization_id = %s AND timestamp >= %s
                     ORDER BY timestamp DESC
-                """, (cutoff_date, username))
+                    LIMIT %s
+                """, (username, organization_id, cutoff_date, limit))
             else:
                 cursor.execute("""
                     SELECT scan_id, username, timestamp, scan_type, region, 
                            file_count, total_pii_found, high_risk_count, result_json
                     FROM scans 
-                    WHERE timestamp >= %s
+                    WHERE organization_id = %s AND timestamp >= %s
                     ORDER BY timestamp DESC
-                """, (cutoff_date,))
+                    LIMIT %s
+                """, (organization_id, cutoff_date, limit))
             
             results = cursor.fetchall()
             print(f"Database returned {len(results)} scan records")
