@@ -6172,23 +6172,118 @@ def display_enterprise_scan_results(scan_results: dict, connector_name: str):
         for i, recommendation in enumerate(scan_results['recommendations'], 1):
             st.write(f"{i}. {recommendation}")
     
-    # Generate HTML report for download
+    # Generate properly formatted scan results for HTML report
+    formatted_scan_results = {
+        'scan_type': f'Enterprise Connector - {connector_name}',
+        'scan_id': f"ENT-{connector_name.upper()[:3]}-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+        'timestamp': datetime.now().isoformat(),
+        'region': 'Netherlands',
+        'username': st.session_state.get('username', 'user'),
+        'files_scanned': scan_results.get('total_items_scanned', len(scan_results.get('findings', []))),
+        'total_findings': scan_results.get('total_findings', len(scan_results.get('findings', []))),
+        'high_risk_findings': scan_results.get('high_risk_findings', 0),
+        'medium_risk_findings': scan_results.get('medium_risk_findings', 0),
+        'low_risk_findings': scan_results.get('low_risk_findings', 0),
+        'compliance_score': scan_results.get('compliance_score', 85),
+        'connector_name': connector_name,
+        'findings': []
+    }
+    
+    # Process findings with proper details
+    for finding in scan_results.get('findings', []):
+        processed_finding = {
+            'type': finding.get('type', 'PII Detection'),
+            'severity': finding.get('risk_level', 'Medium').capitalize(),
+            'description': f"{finding.get('type', 'PII')} detected in {connector_name}",
+            'location': finding.get('location', finding.get('source', 'Unknown location')),
+            'data_classification': finding.get('data_category', 'Personal Data'),
+            'pii_types': []
+        }
+        
+        # Extract PII types from finding
+        if finding.get('pii_found'):
+            for pii in finding.get('pii_found', []):
+                processed_finding['pii_types'].append({
+                    'type': pii.get('type', 'Personal Information'),
+                    'count': pii.get('count', 1),
+                    'context': pii.get('context', 'Found in document')
+                })
+        else:
+            # Infer PII type from finding data
+            pii_type = 'Personal Information'
+            if 'email' in finding.get('type', '').lower():
+                pii_type = 'Email Address'
+            elif 'phone' in finding.get('type', '').lower():
+                pii_type = 'Phone Number'
+            elif 'name' in finding.get('type', '').lower():
+                pii_type = 'Personal Name'
+            
+            processed_finding['pii_types'].append({
+                'type': pii_type,
+                'count': 1,
+                'context': f'Detected in {finding.get("source", "file")}'
+            })
+        
+        formatted_scan_results['findings'].append(processed_finding)
+    
+    # Generate HTML report with formatted data
     try:
         from services.unified_html_report_generator import generate_comprehensive_report
-        html_report = generate_comprehensive_report(scan_results)
+        html_report = generate_comprehensive_report(formatted_scan_results)
     except ImportError:
-        # Fallback to basic HTML generation
+        # Enhanced fallback HTML generation
+        findings_html = ""
+        for finding in formatted_scan_results['findings']:
+            pii_details = ', '.join([f"{pii['type']} ({pii['count']})" for pii in finding['pii_types']])
+            findings_html += f"""
+            <div style="margin: 10px 0; padding: 10px; border-left: 3px solid #ff9800;">
+                <h4>{finding['type']} - {finding['severity']}</h4>
+                <p><strong>Location:</strong> {finding['location']}</p>
+                <p><strong>PII Types:</strong> {pii_details}</p>
+                <p><strong>Classification:</strong> {finding['data_classification']}</p>
+            </div>
+            """
+        
         html_report = f"""
         <html>
-        <head><title>Enterprise Connector - {connector_name} Report</title></head>
+        <head>
+            <title>Enterprise Connector - {connector_name} Report</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                .header {{ background: #1976d2; color: white; padding: 20px; border-radius: 8px; }}
+                .summary {{ background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 8px; }}
+                .metric {{ display: inline-block; margin: 10px 15px; text-align: center; }}
+            </style>
+        </head>
         <body>
-        <h1>Enterprise Connector Report: {connector_name}</h1>
-        <h2>Scan Summary</h2>
-        <p>Total Findings: {scan_results.get('total_findings', 0)}</p>
-        <p>High Risk Findings: {scan_results.get('high_risk_findings', 0)}</p>
-        <p>Compliance Score: {scan_results.get('compliance_score', 0)}/100</p>
-        <h2>Findings</h2>
-        {''.join([f'<p><strong>{finding.get("source", "Unknown")}</strong>: {finding.get("pii_found", [{}])[0].get("type", "N/A") if finding.get("pii_found") else "N/A"}</p>' for finding in scan_results.get('findings', [])])}
+            <div class="header">
+                <h1>🏢 Enterprise Connector Report: {connector_name}</h1>
+                <p>Scan ID: {formatted_scan_results['scan_id']} | Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            </div>
+            
+            <div class="summary">
+                <h2>📊 Scan Summary</h2>
+                <div class="metric">
+                    <h3>{formatted_scan_results['files_scanned']}</h3>
+                    <p>Items Scanned</p>
+                </div>
+                <div class="metric">
+                    <h3>{formatted_scan_results['total_findings']}</h3>
+                    <p>Total Findings</p>
+                </div>
+                <div class="metric">
+                    <h3>{formatted_scan_results['compliance_score']}%</h3>
+                    <p>Compliance Score</p>
+                </div>
+            </div>
+            
+            <h2>🔍 Detailed Findings</h2>
+            {findings_html}
+            
+            <footer style="margin-top: 40px; text-align: center; color: #666; border-top: 1px solid #ddd; padding-top: 20px;">
+                Generated by DataGuardian Pro - Enterprise Privacy Compliance Platform<br>
+                Report ID: {formatted_scan_results['scan_id']} | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            </footer>
         </body>
         </html>
         """
