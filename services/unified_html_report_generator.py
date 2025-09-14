@@ -822,99 +822,100 @@ class UnifiedHTMLReportGenerator:
     def _generate_compliance_forecast_section(self, scan_result: Dict[str, Any]) -> str:
         """Generate compliance forecast chart section for HTML report."""
         try:
-            # Get historical compliance data and current score
+            # Get current user from scan result
+            username = scan_result.get('username', 'unknown')
             current_score = scan_result.get('compliance_score', 70)
             scan_timestamp = scan_result.get('timestamp', datetime.now().isoformat())
             
             # Safe import of predictive engine with dependencies
             try:
                 from services.predictive_compliance_engine import PredictiveComplianceEngine
+                from services.results_aggregator import ResultsAggregator
                 engine = PredictiveComplianceEngine(region="Netherlands")
+                aggregator = ResultsAggregator()
             except ImportError as e:
                 logger.warning(f"Predictive compliance engine not available: {e}")
                 return self._generate_fallback_forecast_section(current_score)
             
-            # Create realistic historical data for the chart
             import json
-            import random
             from datetime import timedelta
             
-            historical_data = []
-            base_date = datetime.fromisoformat(scan_timestamp.replace('Z', '+00:00').replace('+00:00', ''))
+            # Get real user scan history instead of fake data
+            try:
+                historical_data = aggregator.get_scan_results_for_user(username)
+                if not historical_data or len(historical_data) < 3:
+                    logger.warning(f"Insufficient historical data for user {username}, using fallback")
+                    return self._generate_fallback_forecast_section(current_score)
+                
+                # Process data through enhanced predictive engine with smoothing
+                time_series = engine._prepare_time_series_data(historical_data)
+                if time_series.empty:
+                    logger.warning("No time series data available, using fallback")
+                    return self._generate_fallback_forecast_section(current_score)
+                    
+            except Exception as e:
+                logger.warning(f"Error loading user scan history: {e}, using fallback")
+                return self._generate_fallback_forecast_section(current_score)
             
-            # Generate 15 realistic historical points with authentic compliance patterns
-            base_score = current_score
-            trend_direction = random.choice([-1, 0, 1])  # Declining, stable, improving
-            seasonal_factor = 1.0
-            
-            for i in range(15):
-                date = base_date - timedelta(days=(15-i)*5)  # More frequent scans
-                
-                # Realistic compliance score simulation
-                if i < 5:
-                    # Early period - lower scores
-                    score = base_score - 15 + i * 2 + random.uniform(-3, 3)
-                elif i < 10:
-                    # Middle period - gradual improvement
-                    score = base_score - 8 + i * 1.5 + random.uniform(-2, 2)
-                else:
-                    # Recent period - approaching current score
-                    score = base_score - 5 + (i-10) * 1 + random.uniform(-1, 1)
-                
-                # Add seasonal variation (compliance tends to improve at year-end)
-                month = date.month
-                if month in [11, 12]:  # Year-end compliance push
-                    score += random.uniform(2, 5)
-                elif month in [6, 7, 8]:  # Summer dip
-                    score -= random.uniform(1, 3)
-                
-                score = max(45, min(95, score))  # Realistic range
-                
-                historical_data.append({
-                    'timestamp': date.isoformat(),
-                    'compliance_score': score,
-                    'findings': random.randint(3, 12),
-                    'critical_findings': random.randint(0, 3),
-                    'high_findings': random.randint(1, 5)
-                })
-            
-            # Get prediction for 30 days ahead
+            # Get prediction using real smoothed data
             prediction = engine.predict_compliance_trajectory(historical_data, forecast_days=30)
             
-            # Prepare data for the chart
-            dates = [datetime.fromisoformat(item['timestamp'].replace('Z', '+00:00').replace('+00:00', '')).strftime('%Y-%m-%d') for item in historical_data]
-            scores = [item['compliance_score'] for item in historical_data]
+            # Prepare data for the chart using smoothed time series data
+            dates = time_series['date'].dt.strftime('%Y-%m-%d').tolist()
+            raw_scores = time_series['raw_compliance_score'].tolist() if 'raw_compliance_score' in time_series.columns else []
+            smoothed_scores = time_series['smoothed_compliance_score'].tolist() if 'smoothed_compliance_score' in time_series.columns else time_series['compliance_score'].tolist()
             
             # Add prediction point
+            base_date = datetime.fromisoformat(scan_timestamp.replace('Z', '+00:00').replace('+00:00', ''))
             future_date = (base_date + timedelta(days=30)).strftime('%Y-%m-%d')
             dates.append(future_date)
-            scores.append(prediction.future_score)
+            if raw_scores:
+                raw_scores.append(prediction.future_score)
+            smoothed_scores.append(prediction.future_score)
             
-            # Clean, easy-to-view chart data
+            # Clean, easy-to-view chart data with both raw and smoothed data
+            chart_data_series = []
+            
+            # Add raw data if available (with outliers)
+            if raw_scores:
+                chart_data_series.append({
+                    'x': dates[:-1],
+                    'y': raw_scores[:-1],
+                    'type': 'scatter',
+                    'mode': 'lines+markers',
+                    'name': '📊 Raw Compliance (with outliers)',
+                    'line': {'color': '#BDBDBD', 'width': 2, 'dash': 'dot'},
+                    'marker': {'size': 6, 'color': '#BDBDBD', 'line': {'width': 1, 'color': 'white'}},
+                    'hovertemplate': '<b>%{x}</b><br>Raw Score: <b>%{y:.1f}%</b><extra></extra>',
+                    'showlegend': True
+                })
+            
+            # Main smoothed trend line - prominent and clean
+            chart_data_series.append({
+                'x': dates[:-1],
+                'y': smoothed_scores[:-1],
+                'type': 'scatter',
+                'mode': 'lines+markers',
+                'name': '📈 Smoothed Compliance (realistic trend)',
+                'line': {'color': '#1976D2', 'width': 3, 'shape': 'spline'},
+                'marker': {'size': 8, 'color': '#1976D2', 'line': {'width': 2, 'color': 'white'}},
+                'hovertemplate': '<b>%{x}</b><br>Smoothed Score: <b>%{y:.1f}%</b><extra></extra>'
+            })
+            
+            # AI Prediction - continues from smoothed data
+            chart_data_series.append({
+                'x': [dates[-2], dates[-1]],
+                'y': [smoothed_scores[-2], smoothed_scores[-1]],
+                'type': 'scatter',
+                'mode': 'lines+markers',
+                'name': '🤖 AI Forecast',
+                'line': {'color': '#FF6B35', 'dash': 'dash', 'width': 3},
+                'marker': {'size': 10, 'color': '#FF6B35', 'line': {'width': 2, 'color': 'white'}},
+                'hovertemplate': '<b>%{x}</b><br>Predicted: <b>%{y:.1f}%</b><extra></extra>'
+            })
+            
             chart_data = {
-                'data': [
-                    # Main historical trend line - clean and prominent
-                    {
-                        'x': dates[:-1],
-                        'y': scores[:-1],
-                        'type': 'scatter',
-                        'mode': 'lines+markers',
-                        'name': '📊 Historical Compliance',
-                        'line': {'color': '#1976D2', 'width': 3, 'shape': 'spline'},
-                        'marker': {'size': 8, 'color': '#1976D2', 'line': {'width': 2, 'color': 'white'}},
-                        'hovertemplate': '<b>%{x}</b><br>Score: <b>%{y:.1f}%</b><extra></extra>'
-                    },
-                    # AI Prediction - distinct but not overwhelming
-                    {
-                        'x': [dates[-2], dates[-1]],
-                        'y': [scores[-2], scores[-1]],
-                        'type': 'scatter',
-                        'mode': 'lines+markers',
-                        'name': '🤖 AI Forecast',
-                        'line': {'color': '#FF6B35', 'dash': 'dash', 'width': 3},
-                        'marker': {'size': 10, 'color': '#FF6B35', 'line': {'width': 2, 'color': 'white'}},
-                        'hovertemplate': '<b>%{x}</b><br>Predicted: <b>%{y:.1f}%</b><extra></extra>'
-                    },
+                'data': chart_data_series + [
                     # Confidence range as subtle markers
                     {
                         'x': [dates[-1], dates[-1]],
@@ -989,11 +990,11 @@ class UnifiedHTMLReportGenerator:
             # Convert to JSON for embedding
             chart_json = json.dumps(chart_data)
             
-            # Determine trend
-            if len(scores) >= 2:
-                trend_direction = "↗️" if scores[-1] > scores[-2] else "↘️" if scores[-1] < scores[-2] else "→"
-                trend_text = "Improving" if scores[-1] > scores[-2] else "Declining" if scores[-1] < scores[-2] else "Stable"
-                trend_class = "trend-improving" if scores[-1] > scores[-2] else "trend-declining" if scores[-1] < scores[-2] else "trend-stable"
+            # Determine trend based on smoothed data (more reliable than raw)
+            if len(smoothed_scores) >= 2:
+                trend_direction = "↗️" if smoothed_scores[-1] > smoothed_scores[-2] else "↘️" if smoothed_scores[-1] < smoothed_scores[-2] else "→"
+                trend_text = "Improving" if smoothed_scores[-1] > smoothed_scores[-2] else "Declining" if smoothed_scores[-1] < smoothed_scores[-2] else "Stable"
+                trend_class = "trend-improving" if smoothed_scores[-1] > smoothed_scores[-2] else "trend-declining" if smoothed_scores[-1] < smoothed_scores[-2] else "trend-stable"
             else:
                 trend_direction = "→"
                 trend_text = "Stable"
@@ -1031,7 +1032,8 @@ class UnifiedHTMLReportGenerator:
                     <h4>📊 Understanding Your Compliance Forecast</h4>
                     <div class="explanation-grid">
                         <div class="explanation-item">
-                            <strong>📈 Historical Compliance:</strong> Your actual compliance scores over time (blue line)
+                            <strong>📊 Raw Compliance:</strong> Your actual scores with outliers (gray dotted line)<br>
+                            <strong>📈 Smoothed Compliance:</strong> Realistic trend after outlier removal and smoothing (blue line)
                         </div>
                         <div class="explanation-item">
                             <strong>🔮 AI Prediction:</strong> Machine learning forecast for next 30 days (orange dashed line)
