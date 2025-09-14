@@ -1432,13 +1432,24 @@ def render_predictive_analytics():
                     st.write(f"**Timeline:** {violation['timeline']}")
                     st.write(f"**Description:** {violation['description']}")
         
-        # Compliance Score Forecast Chart
-        st.subheader("📈 Compliance Score Forecast")
+        # Enhanced Interactive Compliance Dashboard
+        st.subheader("📊 Interactive Compliance Forecast & Trends")
         
         if scan_history:
-            # Create historical + predicted chart
-            dates = [datetime.fromisoformat(scan['timestamp'][:19]) for scan in scan_history[-10:]]
-            scores = [scan.get('compliance_score', 70) for scan in scan_history[-10:]]
+            # Process data for enhanced visualization
+            dates = [datetime.fromisoformat(scan['timestamp'][:19]) for scan in scan_history[-15:]]
+            scores = [scan.get('compliance_score', 70) for scan in scan_history[-15:]]
+            
+            # Weekly aggregation for bars (using Python built-ins)
+            from collections import defaultdict
+            weekly_data = defaultdict(list)
+            for date, score in zip(dates, scores):
+                monday = date - timedelta(days=date.weekday())
+                week_key = monday.strftime('%Y-%m-%d')
+                weekly_data[week_key].append(score)
+            
+            weekly_dates = sorted(weekly_data.keys())
+            weekly_scores = [sum(weekly_data[week])/len(weekly_data[week]) for week in weekly_dates]
             
             # Add prediction point
             future_date = datetime.now() + timedelta(days=30)
@@ -1447,65 +1458,108 @@ def render_predictive_analytics():
             
             fig = go.Figure()
             
-            # Clean risk zone background (subtle shading only)
-            fig.add_hrect(y0=80, y1=100, fillcolor="rgba(76, 175, 80, 0.05)", layer="below", line_width=0)
-            fig.add_hrect(y0=60, y1=80, fillcolor="rgba(255, 193, 7, 0.05)", layer="below", line_width=0)
-            fig.add_hrect(y0=0, y1=60, fillcolor="rgba(244, 67, 54, 0.05)", layer="below", line_width=0)
+            # Enhanced risk zone backgrounds with better colors
+            fig.add_hrect(y0=90, y1=100, fillcolor="rgba(76, 175, 80, 0.1)", layer="below", line_width=0)
+            fig.add_hrect(y0=75, y1=90, fillcolor="rgba(139, 195, 74, 0.08)", layer="below", line_width=0)
+            fig.add_hrect(y0=50, y1=75, fillcolor="rgba(255, 193, 7, 0.08)", layer="below", line_width=0)
+            fig.add_hrect(y0=0, y1=50, fillcolor="rgba(244, 67, 54, 0.08)", layer="below", line_width=0)
             
-            # Main historical trend line - clean and prominent
+            # 1. Weekly compliance bars with color coding
+            fig.add_trace(go.Bar(
+                x=weekly_dates,
+                y=weekly_scores,
+                name='📊 Weekly Compliance',
+                marker=dict(
+                    color=weekly_scores,
+                    colorscale=[
+                        [0, '#F44336'],     # Red
+                        [0.25, '#FF9800'],  # Orange  
+                        [0.5, '#FFC107'],   # Amber
+                        [0.75, '#8BC34A'],  # Light Green
+                        [1, '#4CAF50']      # Green
+                    ],
+                    cmin=0,
+                    cmax=100,
+                    line=dict(color='white', width=1)
+                ),
+                hovertemplate='<b>Week of %{x}</b><br>Compliance: <b>%{y:.1f}%</b><extra></extra>',
+                opacity=0.8
+            ))
+            
+            # 2. Smoothed trend line overlay
             fig.add_trace(go.Scatter(
                 x=dates[:-1],
                 y=scores[:-1],
-                mode='lines+markers',
-                name='📊 Historical Compliance',
-                line=dict(color='#1976D2', width=3, shape='spline'),
-                marker=dict(size=8, color='#1976D2', line=dict(width=2, color='white')),
-                hovertemplate='<b>%{x}</b><br>Score: <b>%{y:.1f}%</b><extra></extra>'
+                mode='lines',
+                name='📈 Trend Line',
+                line=dict(color='#1976D2', width=4, shape='spline'),
+                hovertemplate='<b>%{x}</b><br>Trend: <b>%{y:.1f}%</b><extra></extra>'
             ))
             
-            # AI Prediction - distinct but not overwhelming
+            # 3. Enhanced AI forecast with confidence bands
             fig.add_trace(go.Scatter(
                 x=[dates[-2], dates[-1]],
-                y=[scores[-2], scores[-1]], 
+                y=[scores[-2], scores[-1]],
                 mode='lines+markers',
-                name='🤖 AI Forecast',
+                name='🔮 AI Forecast',
                 line=dict(color='#FF6B35', dash='dash', width=3),
-                marker=dict(size=10, color='#FF6B35', line=dict(width=2, color='white')),
-                hovertemplate='<b>%{x}</b><br>Predicted: <b>%{y:.1f}%</b><extra></extra>'
+                marker=dict(size=12, color='#FF6B35', line=dict(width=2, color='white')),
+                hovertemplate='<b>%{x}</b><br>Forecast: <b>%{y:.1f}%</b><extra></extra>'
             ))
             
-            # Confidence range as a subtle band
+            # 4. Forecast confidence band
             fig.add_trace(go.Scatter(
-                x=[future_date, future_date],
-                y=[prediction.confidence_interval[0], prediction.confidence_interval[1]],
-                mode='markers',
-                name=f'📊 Confidence Range',
-                marker=dict(size=6, color='rgba(255, 107, 53, 0.3)', line=dict(width=1, color='#FF6B35')),
-                hovertemplate='<b>Range:</b> %{y:.1f}%<extra></extra>',
-                showlegend=False
+                x=[dates[-2], dates[-1]],
+                y=[scores[-2], prediction.confidence_interval[1]],
+                mode='lines',
+                line=dict(color='rgba(255, 107, 53, 0.3)', width=0),
+                showlegend=False,
+                hoverinfo='skip'
             ))
             
-            # Clean reference lines (minimal and subtle)
-            fig.add_hline(y=80, line_dash="dot", line_color="rgba(76, 175, 80, 0.6)", line_width=1)
-            fig.add_hline(y=60, line_dash="dot", line_color="rgba(244, 67, 54, 0.6)", line_width=1)
+            fig.add_trace(go.Scatter(
+                x=[dates[-2], dates[-1]],
+                y=[scores[-2], prediction.confidence_interval[0]],
+                mode='lines',
+                name='Confidence Band',
+                line=dict(color='rgba(255, 107, 53, 0.3)', width=0),
+                fill='tonexty',
+                fillcolor='rgba(255, 107, 53, 0.2)',
+                hovertemplate='<b>Confidence Range</b><br>%{x}: %{y:.1f}%<extra></extra>'
+            ))
             
-            # Minimal annotations - only essential ones
+            # Professional benchmark lines
+            fig.add_hline(y=90, line_dash="dash", line_color="rgba(76, 175, 80, 0.7)", line_width=2)
+            fig.add_hline(y=75, line_dash="dash", line_color="rgba(255, 193, 7, 0.7)", line_width=2)
+            fig.add_hline(y=50, line_dash="dash", line_color="rgba(244, 67, 54, 0.7)", line_width=2)
+            
+            # Enhanced risk level annotations
             fig.add_annotation(
-                x=dates[-1], y=85, text="Good (80%+)", 
-                showarrow=False, font=dict(size=10, color="#4CAF50"),
-                xanchor="left", bgcolor="rgba(255,255,255,0.8)"
+                x=dates[-1], y=95, text="Excellent (90%+)", 
+                showarrow=False, font=dict(size=11, color="#4CAF50"),
+                xanchor="left", bgcolor="rgba(255,255,255,0.9)"
             )
             fig.add_annotation(
-                x=dates[-1], y=65, text="Needs Attention (60%+)", 
-                showarrow=False, font=dict(size=10, color="#F44336"),
-                xanchor="left", bgcolor="rgba(255,255,255,0.8)"
+                x=dates[-1], y=82, text="Good (75-90%)", 
+                showarrow=False, font=dict(size=11, color="#8BC34A"),
+                xanchor="left", bgcolor="rgba(255,255,255,0.9)"
+            )
+            fig.add_annotation(
+                x=dates[-1], y=62, text="Attention Needed (50-75%)", 
+                showarrow=False, font=dict(size=11, color="#FF9800"),
+                xanchor="left", bgcolor="rgba(255,255,255,0.9)"
+            )
+            fig.add_annotation(
+                x=dates[-1], y=25, text="Critical (<50%)", 
+                showarrow=False, font=dict(size=11, color="#F44336"),
+                xanchor="left", bgcolor="rgba(255,255,255,0.9)"
             )
             
-            # Clean, minimal layout
+            # Professional interactive layout
             fig.update_layout(
                 title=dict(
-                    text='📈 Compliance Score Forecast',
-                    font=dict(size=18, color='#333'),
+                    text='📊 Interactive Compliance Forecast & Trends',
+                    font=dict(size=20, color='#333', family='Arial, sans-serif'),
                     x=0.5
                 ),
                 xaxis=dict(
@@ -1519,7 +1573,7 @@ def render_predictive_analytics():
                 ),
                 yaxis=dict(
                     title='Compliance Score (%)',
-                    range=[40, 100],
+                    range=[0, 100],
                     showgrid=True,
                     gridwidth=0.5,
                     gridcolor='rgba(0,0,0,0.1)',
@@ -1535,10 +1589,12 @@ def render_predictive_analytics():
                     y=1.02,
                     xanchor="center",
                     x=0.5,
-                    font=dict(size=11)
+                    font=dict(size=12, family='Arial'),
+                    bgcolor='rgba(255,255,255,0.8)'
                 ),
-                height=450,
-                margin=dict(t=80, b=50, l=60, r=60)
+                height=500,
+                margin=dict(t=120, b=80, l=80, r=80),
+                hovermode='x unified'
             )
             
             st.plotly_chart(fig, use_container_width=True)
