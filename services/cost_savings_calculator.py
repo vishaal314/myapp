@@ -4,7 +4,7 @@ Calculates monetary value of compliance findings across all scanner types
 """
 
 import logging
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 from datetime import datetime
 from enum import Enum
 

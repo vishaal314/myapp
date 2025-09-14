@@ -90,11 +90,11 @@ try:
 except ImportError:
     ENTERPRISE_ACTIONS_AVAILABLE = False
 
-def generate_html_report_fallback(scan_result: Dict[str, Any]) -> str:
+def generate_html_report_fallback(scan_results: Dict[str, Any]) -> str:
     """Simple HTML report generator for AI Model scans"""
     # Build the findings HTML separately to avoid f-string issues
     findings_html = ""
-    for finding in scan_result.get('findings', []):
+    for finding in scan_results.get('findings', []):
         severity_class = finding.get('severity', 'low').lower()
         findings_html += f'''<div class="finding {severity_class}">
         <h4>{finding.get('type', 'Unknown Finding')}</h4>
@@ -121,7 +121,7 @@ def generate_html_report_fallback(scan_result: Dict[str, Any]) -> str:
 <body>
     <div class="header">
         <h1>AI Model Analysis Report</h1>
-        <p>Generated on {scan_result.get('timestamp', 'Unknown')}</p>
+        <p>Generated on {scan_results.get('timestamp', 'Unknown')}</p>
     </div>
     
     <div class="section">
