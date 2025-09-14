@@ -441,6 +441,7 @@ class APIScanner:
         # Generate comprehensive scan results
         scan_results = {
             'scan_id': scan_id,
+            'scan_type': 'api',  # Set proper scanner type for dashboard display
             'scan_time': self.start_time.isoformat(),
             'completion_time': completion_time.isoformat(),
             'duration_seconds': duration_seconds,
