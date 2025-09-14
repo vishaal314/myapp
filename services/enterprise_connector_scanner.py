@@ -1574,7 +1574,7 @@ class EnterpriseConnectorScanner:
         Scan Salesforce CRM for PII with Netherlands BSN/KvK specialization.
         Covers Accounts, Contacts, Leads, Custom Objects with Netherlands-specific fields.
         """
-        results = {
+        results: Dict[str, Any] = {
             'accounts_scanned': 0,
             'contacts_scanned': 0,
             'leads_scanned': 0,
@@ -1718,7 +1718,7 @@ class EnterpriseConnectorScanner:
         Scan SAP ERP for PII with Netherlands BSN detection in HR and Finance modules.
         Covers PA0002 (Personal Data), KNA1 (Customer Master), LFA1 (Vendor Master).
         """
-        results = {
+        results: Dict[str, Any] = {
             'hr_records_scanned': 0,
             'customer_records_scanned': 0,
             'vendor_records_scanned': 0,
