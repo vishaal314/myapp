@@ -3422,23 +3422,46 @@ def display_scan_results(scan_results):
     # Track report viewing
     track_report_usage('view', success=True)
     
-    # Enhanced summary metrics
+    # Enhanced summary metrics with scanner-specific handling
     col1, col2, col3, col4 = st.columns(4)
+    
+    # Check if this is an API scanner result
+    scan_type = scan_results.get('scan_type', '')
+    is_api_scan = ('api' in scan_type.lower() or 
+                   'Comprehensive API Security Scanner' in scan_type or
+                   scan_results.get('endpoints_scanned') is not None)
+    
     with col1:
-        # Check multiple possible field names for files scanned
-        files_scanned = (
-            scan_results.get("files_scanned", 0) or
-            scan_results.get("images_processed", 0) or  
-            scan_results.get("cloud_resources_analyzed", 0) or
-            scan_results.get("documents_processed", 0) or
-            0
-        )
-        st.metric("Files Scanned", files_scanned)
+        if is_api_scan:
+            # API scanner: show endpoints scanned
+            endpoints_scanned = scan_results.get("endpoints_scanned", 0)
+            st.metric("Endpoints Scanned", endpoints_scanned)
+        else:
+            # Other scanners: show files scanned
+            files_scanned = (
+                scan_results.get("files_scanned", 0) or
+                scan_results.get("images_processed", 0) or  
+                scan_results.get("cloud_resources_analyzed", 0) or
+                scan_results.get("documents_processed", 0) or
+                0
+            )
+            st.metric("Files Scanned", files_scanned)
     with col2:
-        st.metric("Total Findings", len(scan_results.get("findings", [])))
+        # Use total_findings for API scanner, fallback to findings count
+        if is_api_scan:
+            total_findings = scan_results.get("total_findings", len(scan_results.get("findings", [])))
+            st.metric("Total Findings", total_findings)
+        else:
+            st.metric("Total Findings", len(scan_results.get("findings", [])))
     with col3:
-        lines_analyzed = scan_results.get("lines_analyzed", scan_results.get("total_lines", 0))
-        st.metric("Lines Analyzed", f"{lines_analyzed:,}" if lines_analyzed else "0")
+        if is_api_scan:
+            # API scanner: show API calls analyzed or responses analyzed
+            api_calls = scan_results.get("api_calls_analyzed", scan_results.get("responses_analyzed", len(scan_results.get("endpoints_data", []))))
+            st.metric("Responses Analyzed", f"{api_calls:,}" if api_calls else "0")
+        else:
+            # Other scanners: show lines analyzed
+            lines_analyzed = scan_results.get("lines_analyzed", scan_results.get("total_lines", 0))
+            st.metric("Lines Analyzed", f"{lines_analyzed:,}" if lines_analyzed else "0")
     with col4:
         critical_count = len([f for f in scan_results.get("findings", []) if f.get("severity") == "Critical" or f.get("risk_level") == "Critical"])
         st.metric("Critical Issues", critical_count)

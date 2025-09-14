@@ -706,9 +706,14 @@ def display_code_scan_results(scan_results):
     # Summary metrics using working result format
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Files Scanned", scan_results.get('files_scanned', 0))
+        # Handle different scanner types with appropriate metrics
+        scan_type = scan_results.get('scan_type', '')
+        if 'api' in scan_type.lower() or scan_results.get('endpoints_scanned') is not None:
+            st.metric("Endpoints Scanned", scan_results.get('endpoints_scanned', 0))
+        else:
+            st.metric("Files Scanned", scan_results.get('files_scanned', 0))
     with col2:
-        st.metric("Total PII Found", scan_results.get('total_pii_found', 0))
+        st.metric("Total Findings", scan_results.get('total_findings', scan_results.get('total_pii_found', 0)))
     with col3:
         scan_type = scan_results.get('scan_type', 'code')
         st.metric("Scan Type", scan_type.title())
