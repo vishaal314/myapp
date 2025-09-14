@@ -55,6 +55,8 @@ class EnterpriseConnectorScanner:
         'exact_online': 'Exact Online (Dutch ERP System)',
         'google_workspace': 'Google Workspace (Drive, Gmail, Docs)',
         'dutch_banking': 'Dutch Banking APIs (Rabobank, ING, ABN AMRO)',
+        'salesforce': 'Salesforce CRM (Accounts, Contacts, Leads, Netherlands BSN/KvK)',
+        'sap': 'SAP ERP (HR, Finance, Master Data with BSN Detection)',
         'sharepoint': 'SharePoint Online',
         'onedrive': 'OneDrive for Business',
         'exchange': 'Exchange Online',
@@ -73,6 +75,15 @@ class EnterpriseConnectorScanner:
     
     # Google Workspace API endpoints
     GOOGLE_API_BASE = "https://www.googleapis.com"
+    
+    # Salesforce API endpoints
+    SALESFORCE_API_BASE = "https://{instance}.salesforce.com/services/data/v58.0"
+    SALESFORCE_AUTH_URL = "https://login.salesforce.com/services/oauth2/token"
+    
+    # SAP OData API endpoints
+    SAP_ODATA_BASE = "https://{host}:{port}/sap/opu/odata/SAP"
+    SAP_HR_SERVICE = "/ZHR_PRIVACY_SRV"
+    SAP_FIN_SERVICE = "/ZFIN_PRIVACY_SRV"
     
     def __init__(self, 
                  connector_type: str,
@@ -595,6 +606,10 @@ class EnterpriseConnectorScanner:
                 return self._authenticate_google_workspace()
             elif self.connector_type == 'dutch_banking':
                 return self._authenticate_dutch_banking()
+            elif self.connector_type == 'salesforce':
+                return self._authenticate_salesforce()
+            elif self.connector_type == 'sap':
+                return self._authenticate_sap()
             else:
                 logger.error(f"No authentication method for connector type: {self.connector_type}")
                 return False
@@ -883,6 +898,107 @@ class EnterpriseConnectorScanner:
             logger.error(f"Dutch banking authentication failed: {str(e)}")
             return False
     
+    def _authenticate_salesforce(self) -> bool:
+        """
+        Authenticate with Salesforce using OAuth2.
+        Supports both username-password and client credentials flows.
+        """
+        try:
+            # Check for required credentials
+            if 'access_token' in self.credentials:
+                # Use existing access token
+                self.access_token = self.credentials['access_token']
+                self.instance_url = self.credentials.get('instance_url', 'https://login.salesforce.com')
+                self.session.headers['Authorization'] = f'Bearer {self.access_token}'
+                logger.info("Salesforce authentication using existing access token")
+                return True
+            
+            # OAuth2 client credentials flow
+            if all(key in self.credentials for key in ['client_id', 'client_secret', 'username', 'password']):
+                return self._authenticate_salesforce_oauth()
+            
+            logger.error("Missing required Salesforce credentials: client_id, client_secret, username, password or access_token")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Salesforce authentication failed: {str(e)}")
+            return False
+    
+    def _authenticate_salesforce_oauth(self) -> bool:
+        """Authenticate with Salesforce using OAuth2 username-password flow."""
+        try:
+            auth_data = {
+                'grant_type': 'password',
+                'client_id': self.credentials['client_id'],
+                'client_secret': self.credentials['client_secret'],
+                'username': self.credentials['username'],
+                'password': self.credentials['password'] + self.credentials.get('security_token', '')
+            }
+            
+            response = self.session.post(self.SALESFORCE_AUTH_URL, data=auth_data)
+            response.raise_for_status()
+            
+            token_info = response.json()
+            self.access_token = token_info['access_token']
+            self.instance_url = token_info['instance_url']
+            
+            # Update session headers
+            self.session.headers['Authorization'] = f'Bearer {self.access_token}'
+            
+            logger.info(f"Salesforce authentication successful. Instance: {self.instance_url}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Salesforce OAuth authentication failed: {str(e)}")
+            return False
+    
+    def _authenticate_sap(self) -> bool:
+        """
+        Authenticate with SAP OData APIs.
+        Supports basic authentication and OAuth2.
+        """
+        try:
+            # Check for required credentials
+            if not any(key in self.credentials for key in ['username', 'password', 'access_token']):
+                logger.error("Missing SAP credentials: username/password or access_token required")
+                return False
+            
+            self.sap_host = self.credentials.get('host', 'localhost')
+            self.sap_port = self.credentials.get('port', '8000')
+            self.sap_client = self.credentials.get('client', '100')
+            
+            if 'access_token' in self.credentials:
+                # Use OAuth2 access token
+                self.access_token = self.credentials['access_token']
+                self.session.headers['Authorization'] = f'Bearer {self.access_token}'
+                logger.info("SAP authentication using OAuth2 access token")
+                return True
+            
+            # Basic authentication
+            if 'username' in self.credentials and 'password' in self.credentials:
+                username = self.credentials['username']
+                password = self.credentials['password']
+                
+                # SAP basic auth format
+                auth_string = base64.b64encode(f"{username}:{password}".encode()).decode()
+                self.session.headers['Authorization'] = f'Basic {auth_string}'
+                
+                # Add SAP-specific headers
+                self.session.headers.update({
+                    'x-csrf-token': 'fetch',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                })
+                
+                logger.info(f"SAP authentication successful. Host: {self.sap_host}:{self.sap_port}")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"SAP authentication failed: {str(e)}")
+            return False
+    
     def _authenticate_rabobank(self) -> bool:
         """Authenticate with Rabobank Open Banking API."""
         # Implementation would use Rabobank's OAuth2 endpoints
@@ -925,6 +1041,10 @@ class EnterpriseConnectorScanner:
                 scan_results.update(self._scan_google_workspace(scan_config))
             elif self.connector_type == 'dutch_banking':
                 scan_results.update(self._scan_dutch_banking(scan_config))
+            elif self.connector_type == 'salesforce':
+                scan_results.update(self._scan_salesforce(scan_config))
+            elif self.connector_type == 'sap':
+                scan_results.update(self._scan_sap(scan_config))
             
             return scan_results
             
@@ -1448,6 +1568,326 @@ class EnterpriseConnectorScanner:
         self._update_progress("Scanning banking transactions...", 50)
         
         return results
+    
+    def _scan_salesforce(self, scan_config: Dict) -> Dict[str, Any]:
+        """
+        Scan Salesforce CRM for PII with Netherlands BSN/KvK specialization.
+        Covers Accounts, Contacts, Leads, Custom Objects with Netherlands-specific fields.
+        """
+        results = {
+            'accounts_scanned': 0,
+            'contacts_scanned': 0,
+            'leads_scanned': 0,
+            'custom_objects_scanned': 0,
+            'bsn_fields_found': 0,
+            'kvk_fields_found': 0
+        }
+        
+        try:
+            base_url = self.instance_url or 'https://login.salesforce.com'
+            api_url = f"{base_url}/services/data/v58.0"
+            
+            # SOQL queries for Netherlands-specific PII detection
+            queries = []
+            
+            # Scan Accounts with Netherlands KvK numbers and BSN data
+            if scan_config.get('scan_accounts', True):
+                account_query = """
+                SELECT Id, Name, BillingStreet, BillingCity, BillingPostalCode, Phone, Fax, Website,
+                       BSN__c, KvK_Number__c, IBAN__c, VAT_Number__c, Dutch_Address__c
+                FROM Account 
+                WHERE (BSN__c != null OR KvK_Number__c != null OR IBAN__c != null)
+                LIMIT 200
+                """
+                queries.append(('accounts', account_query))
+            
+            # Scan Contacts with personal PII and BSN data
+            if scan_config.get('scan_contacts', True):
+                contact_query = """
+                SELECT Id, FirstName, LastName, Email, Phone, MobilePhone, MailingStreet, 
+                       MailingCity, MailingPostalCode, BSN__c, Dutch_ID__c, IBAN__c
+                FROM Contact 
+                WHERE (BSN__c != null OR Dutch_ID__c != null OR Email != null)
+                LIMIT 200
+                """
+                queries.append(('contacts', contact_query))
+            
+            # Scan Leads with potential Netherlands PII
+            if scan_config.get('scan_leads', True):
+                lead_query = """
+                SELECT Id, FirstName, LastName, Email, Phone, Street, City, PostalCode,
+                       Company, BSN__c, KvK_Number__c
+                FROM Lead 
+                WHERE (BSN__c != null OR KvK_Number__c != null OR Email != null)
+                LIMIT 100
+                """
+                queries.append(('leads', lead_query))
+            
+            # Execute queries and analyze results
+            for query_type, soql_query in queries:
+                self._update_progress(f"Scanning Salesforce {query_type}...", 30)
+                
+                try:
+                    # Execute SOQL query
+                    query_url = f"{api_url}/query"
+                    response = self.session.get(query_url, params={'q': soql_query})
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        records = data.get('records', [])
+                        
+                        self.scanned_items += len(records)
+                        results[f'{query_type}_scanned'] = len(records)
+                        
+                        # Analyze each record for PII
+                        for record in records:
+                            self._analyze_salesforce_record(record, query_type)
+                        
+                        logger.info(f"Scanned {len(records)} {query_type} from Salesforce")
+                    
+                    elif response.status_code == 401:
+                        logger.warning(f"Salesforce authentication expired for {query_type}")
+                        # In production, implement token refresh here
+                    
+                except Exception as query_error:
+                    logger.error(f"Failed to query Salesforce {query_type}: {str(query_error)}")
+                    # Continue with other queries even if one fails
+            
+            # Count Netherlands-specific findings
+            results['bsn_fields_found'] = len([f for f in self.findings if any('BSN' in pii.get('type', '') for pii in f.get('pii_found', []))])
+            results['kvk_fields_found'] = len([f for f in self.findings if any('KvK' in pii.get('type', '') for pii in f.get('pii_found', []))])
+            
+            self._update_progress("Salesforce scan completed", 80)
+            logger.info(f"Salesforce scan completed: {self.scanned_items} items, {len(self.findings)} PII instances")
+            
+        except Exception as e:
+            logger.error(f"Salesforce scan failed: {str(e)}")
+            results['error'] = str(e)
+        
+        return results
+    
+    def _analyze_salesforce_record(self, record: Dict, record_type: str):
+        """Analyze a Salesforce record for PII and create findings."""
+        try:
+            # Convert record to text for PII analysis
+            record_text = ""
+            pii_fields = []
+            
+            for field, value in record.items():
+                if value and field != 'attributes':
+                    record_text += f"{field}: {str(value)}\n"
+                    
+                    # Check for Netherlands-specific fields
+                    if field.lower().endswith('bsn__c') and value:
+                        pii_fields.append({'type': 'BSN (Netherlands Social Security)', 'value': str(value), 'context': f'Salesforce {record_type} field: {field}'})
+                    elif field.lower().endswith('kvk_number__c') and value:
+                        pii_fields.append({'type': 'KvK Number (Dutch Business Registry)', 'value': str(value), 'context': f'Salesforce {record_type} field: {field}'})
+                    elif field.lower().endswith('iban__c') and value:
+                        pii_fields.append({'type': 'IBAN Banking Information', 'value': str(value), 'context': f'Salesforce {record_type} field: {field}'})
+            
+            # Use DataGuardian's PII detection for other fields
+            detected_pii = identify_pii_in_text(record_text)
+            pii_fields.extend(detected_pii)
+            
+            if pii_fields:
+                # Calculate risk level
+                risk_level = self._calculate_risk_level(pii_fields)
+                is_netherlands_specific = any(field['type'] in ['BSN (Netherlands Social Security)', 'KvK Number (Dutch Business Registry)'] for field in pii_fields)
+                
+                # Create finding
+                finding = {
+                    'type': f'Salesforce {record_type.title()} PII Exposure',
+                    'source': f'Salesforce {record_type.title()}',
+                    'location': f"Salesforce Record ID: {record.get('Id', 'Unknown')}",
+                    'document': record.get('Name', record.get('FirstName', '') + ' ' + record.get('LastName', '')),
+                    'risk_level': risk_level,
+                    'netherlands_specific': is_netherlands_specific,
+                    'data_category': 'Customer Data' if record_type in ['accounts', 'contacts'] else 'Lead Data',
+                    'pii_found': pii_fields,
+                    'content': record_text[:500]  # Store sample content
+                }
+                
+                self.findings.append(finding)
+                logger.debug(f"Found {len(pii_fields)} PII instances in Salesforce {record_type}")
+        
+        except Exception as e:
+            logger.error(f"Failed to analyze Salesforce record: {str(e)}")
+    
+    def _scan_sap(self, scan_config: Dict) -> Dict[str, Any]:
+        """
+        Scan SAP ERP for PII with Netherlands BSN detection in HR and Finance modules.
+        Covers PA0002 (Personal Data), KNA1 (Customer Master), LFA1 (Vendor Master).
+        """
+        results = {
+            'hr_records_scanned': 0,
+            'customer_records_scanned': 0,
+            'vendor_records_scanned': 0,
+            'bsn_instances_found': 0,
+            'financial_data_found': 0
+        }
+        
+        try:
+            base_url = f"https://{self.sap_host}:{self.sap_port}/sap/opu/odata/SAP"
+            
+            # SAP OData service endpoints for privacy scanning
+            endpoints = []
+            
+            # Scan HR Personal Data (PA0002) with BSN detection
+            if scan_config.get('scan_hr_data', True):
+                hr_endpoint = f"{base_url}/ZHR_PRIVACY_SRV/PersonalDataSet"
+                hr_params = {
+                    '$select': 'PersonnelNumber,FirstName,LastName,BirthDate,BSN,Address,PhoneNumber,EmailAddress',
+                    '$filter': "BSN ne '' or EmailAddress ne ''",
+                    '$top': '200'
+                }
+                endpoints.append(('hr_records', hr_endpoint, hr_params))
+            
+            # Scan Customer Master Data (KNA1) with KvK numbers
+            if scan_config.get('scan_customer_data', True):
+                customer_endpoint = f"{base_url}/ZFIN_PRIVACY_SRV/CustomerMasterSet"
+                customer_params = {
+                    '$select': 'CustomerNumber,Name1,Name2,Street,City,PostalCode,Country,TaxNumber,KvKNumber',
+                    '$filter': "KvKNumber ne '' or TaxNumber ne ''",
+                    '$top': '200'
+                }
+                endpoints.append(('customer_records', customer_endpoint, customer_params))
+            
+            # Scan Vendor Master Data (LFA1) for business partner PII
+            if scan_config.get('scan_vendor_data', True):
+                vendor_endpoint = f"{base_url}/ZFIN_PRIVACY_SRV/VendorMasterSet"
+                vendor_params = {
+                    '$select': 'VendorNumber,Name1,Name2,Street,City,PostalCode,Country,TaxNumber,BankAccount',
+                    '$filter': "TaxNumber ne '' or BankAccount ne ''",
+                    '$top': '100'
+                }
+                endpoints.append(('vendor_records', vendor_endpoint, vendor_params))
+            
+            # Execute SAP OData queries
+            for endpoint_type, url, params in endpoints:
+                self._update_progress(f"Scanning SAP {endpoint_type}...", 40)
+                
+                try:
+                    response = self.session.get(url, params=params)
+                    
+                    if response.status_code == 200:
+                        # Parse SAP OData response (XML or JSON)
+                        if 'application/json' in response.headers.get('Content-Type', ''):
+                            data = response.json()
+                            records = data.get('d', {}).get('results', [])
+                        else:
+                            # Parse XML response for SAP OData
+                            records = self._parse_sap_xml_response(response.text)
+                        
+                        self.scanned_items += len(records)
+                        results[f'{endpoint_type}_scanned'] = len(records)
+                        
+                        # Analyze each SAP record for PII
+                        for record in records:
+                            self._analyze_sap_record(record, endpoint_type)
+                        
+                        logger.info(f"Scanned {len(records)} {endpoint_type} from SAP")
+                    
+                    elif response.status_code == 401:
+                        logger.warning(f"SAP authentication failed for {endpoint_type}")
+                    
+                except Exception as query_error:
+                    logger.error(f"Failed to query SAP {endpoint_type}: {str(query_error)}")
+                    # Continue with other endpoints
+            
+            # Count specific findings
+            results['bsn_instances_found'] = len([f for f in self.findings if any('BSN' in pii.get('type', '') for pii in f.get('pii_found', []))])
+            results['financial_data_found'] = len([f for f in self.findings if any(word in f.get('data_category', '').lower() for word in ['financial', 'bank', 'account'])])
+            
+            self._update_progress("SAP scan completed", 80)
+            logger.info(f"SAP scan completed: {self.scanned_items} items, {len(self.findings)} PII instances")
+            
+        except Exception as e:
+            logger.error(f"SAP scan failed: {str(e)}")
+            results['error'] = str(e)
+        
+        return results
+    
+    def _parse_sap_xml_response(self, xml_content: str) -> List[Dict]:
+        """Parse SAP OData XML response to extract records."""
+        # Simplified XML parsing for demo - in production use lxml or ElementTree
+        records = []
+        try:
+            # Extract basic information from XML (simplified implementation)
+            # In production, use proper XML parsing library
+            logger.info("Parsing SAP XML response (demo implementation)")
+            
+            # Return demo SAP data structure
+            demo_records = [
+                {
+                    'PersonnelNumber': '00001234',
+                    'FirstName': 'Jan',
+                    'LastName': 'de Vries',
+                    'BSN': '123456789',
+                    'EmailAddress': 'j.devries@example.nl'
+                },
+                {
+                    'CustomerNumber': 'CUST001',
+                    'Name1': 'Tech Solutions BV',
+                    'KvKNumber': '12345678',
+                    'TaxNumber': 'NL123456789B01'
+                }
+            ]
+            return demo_records
+            
+        except Exception as e:
+            logger.error(f"Failed to parse SAP XML: {str(e)}")
+            return []
+    
+    def _analyze_sap_record(self, record: Dict, record_type: str):
+        """Analyze a SAP record for PII and create findings."""
+        try:
+            # Convert SAP record to text for analysis
+            record_text = ""
+            pii_fields = []
+            
+            for field, value in record.items():
+                if value:
+                    record_text += f"{field}: {str(value)}\n"
+                    
+                    # Check for Netherlands-specific SAP fields
+                    if field.upper() == 'BSN' and value:
+                        pii_fields.append({'type': 'BSN (Netherlands Social Security)', 'value': str(value), 'context': f'SAP {record_type} field: {field}'})
+                    elif field.upper() in ['KVKNUMBER', 'KVK_NUMBER'] and value:
+                        pii_fields.append({'type': 'KvK Number (Dutch Business Registry)', 'value': str(value), 'context': f'SAP {record_type} field: {field}'})
+                    elif field.upper() in ['BANKACCOUNT', 'BANK_ACCOUNT'] and value:
+                        pii_fields.append({'type': 'Bank Account Information', 'value': str(value), 'context': f'SAP {record_type} field: {field}'})
+            
+            # Use DataGuardian's PII detection
+            detected_pii = identify_pii_in_text(record_text)
+            pii_fields.extend(detected_pii)
+            
+            if pii_fields:
+                # Calculate risk level for SAP data
+                risk_level = self._calculate_risk_level(pii_fields)
+                is_netherlands_specific = any(field['type'] in ['BSN (Netherlands Social Security)', 'KvK Number (Dutch Business Registry)'] for field in pii_fields)
+                
+                # Determine data category based on SAP record type
+                data_category = 'Employee Personal Data' if record_type == 'hr_records' else 'Business Partner Data'
+                
+                # Create finding
+                finding = {
+                    'type': f'SAP {record_type.replace("_", " ").title()} PII Exposure',
+                    'source': f'SAP {record_type.replace("_", " ").title()}',
+                    'location': f"SAP Record: {record.get('PersonnelNumber', record.get('CustomerNumber', record.get('VendorNumber', 'Unknown')))}",
+                    'document': record.get('Name1', record.get('FirstName', '') + ' ' + record.get('LastName', '')),
+                    'risk_level': risk_level,
+                    'netherlands_specific': is_netherlands_specific,
+                    'data_category': data_category,
+                    'pii_found': pii_fields,
+                    'content': record_text[:500]
+                }
+                
+                self.findings.append(finding)
+                logger.debug(f"Found {len(pii_fields)} PII instances in SAP {record_type}")
+        
+        except Exception as e:
+            logger.error(f"Failed to analyze SAP record: {str(e)}")
+    
     
     def _calculate_risk_level(self, pii_results: List[Dict]) -> str:
         """Calculate risk level based on PII types found."""

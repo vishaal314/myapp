@@ -5687,10 +5687,12 @@ def render_enterprise_connector_interface(region: str, username: str):
         """))
     
     # Create tabs for different connector types
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         _('enterprise_tab_microsoft365', "🏢 Microsoft 365"), 
         _('enterprise_tab_exact_online', "🇳🇱 Exact Online"), 
         _('enterprise_tab_google_workspace', "📊 Google Workspace"),
+        _('enterprise_tab_salesforce', "💼 Salesforce CRM"),
+        _('enterprise_tab_sap', "🏭 SAP ERP"),
         _('enterprise_tab_dutch_banking', "🏦 Dutch Banking")
     ])
     
@@ -5704,6 +5706,12 @@ def render_enterprise_connector_interface(region: str, username: str):
         render_google_workspace_connector(region, username)
     
     with tab4:
+        render_salesforce_connector(region, username)
+    
+    with tab5:
+        render_sap_connector(region, username)
+    
+    with tab6:
         render_dutch_banking_connector(region, username)
 
 def render_microsoft365_connector(region: str, username: str):
@@ -6118,6 +6126,259 @@ def render_dutch_banking_connector(region: str, username: str):
     
     if st.button("🚀 Demo Banking Scan"):
         st.success("✅ Demo banking scan completed - PSD2 integration coming soon!")
+
+def render_salesforce_connector(region: str, username: str):
+    """Salesforce CRM connector interface"""
+    from services.enterprise_connector_scanner import EnterpriseConnectorScanner
+    from utils.activity_tracker import ScannerType
+    
+    st.subheader("💼 Salesforce CRM Integration")
+    st.write("Scan Salesforce Accounts, Contacts, and Leads for PII with Netherlands BSN/KvK specialization.")
+    
+    # Competitive advantage highlight
+    st.success("🎯 **Enterprise Revenue Driver**: Salesforce integration enables €5K-10K enterprise deals vs €250 SME pricing. Critical for €25K MRR achievement.")
+    
+    # Authentication setup
+    st.markdown("### Authentication Setup")
+    
+    auth_method = st.radio(
+        "Salesforce Authentication Method",
+        ["Username & Password", "Access Token", "Demo Mode"],
+        help="Choose authentication method for Salesforce API access"
+    )
+    
+    credentials = {}
+    
+    if auth_method == "Username & Password":
+        col1, col2 = st.columns(2)
+        with col1:
+            credentials['username'] = st.text_input("Salesforce Username", help="Your Salesforce login username")
+            credentials['password'] = st.text_input("Salesforce Password", type="password", help="Your Salesforce password")
+        with col2:
+            credentials['client_id'] = st.text_input("Consumer Key", help="Connected App Consumer Key from Salesforce")
+            credentials['client_secret'] = st.text_input("Consumer Secret", type="password", help="Connected App Consumer Secret")
+            credentials['security_token'] = st.text_input("Security Token", type="password", help="Salesforce security token (optional)")
+    
+    elif auth_method == "Access Token":
+        credentials['access_token'] = st.text_input("Salesforce Access Token", type="password")
+        credentials['instance_url'] = st.text_input("Instance URL", value="https://your-instance.salesforce.com", help="Your Salesforce instance URL")
+    
+    else:  # Demo Mode
+        st.success("✅ Demo mode enabled - using sample Netherlands Salesforce data")
+        credentials = {'access_token': 'salesforce_demo_token', 'instance_url': 'https://demo.salesforce.com'}
+    
+    # Scan configuration
+    st.markdown("### Scan Configuration")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        scan_accounts = st.checkbox("🏢 Accounts", value=True, help="Scan Account records with KvK numbers")
+        scan_contacts = st.checkbox("👤 Contacts", value=True, help="Scan Contact records with BSN data")
+    with col2:
+        scan_leads = st.checkbox("📋 Leads", value=True, help="Scan Lead records with Netherlands PII")
+        scan_custom_objects = st.checkbox("🔧 Custom Objects", value=False, help="Scan custom objects (if any)")
+    
+    # Netherlands-specific options
+    st.markdown("### Netherlands Specialization")
+    col1, col2 = st.columns(2)
+    with col1:
+        scan_bsn_fields = st.checkbox("🔍 BSN Field Detection", value=True, help="Detect BSN__c and similar custom fields")
+        scan_kvk_fields = st.checkbox("🏢 KvK Number Detection", value=True, help="Detect KvK_Number__c and business registry fields")
+    with col2:
+        scan_iban_fields = st.checkbox("💳 IBAN Detection", value=True, help="Detect IBAN__c and banking fields")
+        uavg_compliance = st.checkbox("⚖️ UAVG Compliance Analysis", value=True, help="Netherlands privacy law compliance")
+    
+    if st.button("🚀 Start Salesforce Scan", type="primary"):
+        try:
+            scanner = EnterpriseConnectorScanner(
+                connector_type='salesforce',
+                credentials=credentials,
+                region=region
+            )
+            
+            scan_config = {
+                'scan_accounts': scan_accounts,
+                'scan_contacts': scan_contacts,
+                'scan_leads': scan_leads,
+                'scan_custom_objects': scan_custom_objects,
+                'scan_bsn_fields': scan_bsn_fields,
+                'scan_kvk_fields': scan_kvk_fields,
+                'scan_iban_fields': scan_iban_fields,
+                'uavg_compliance': uavg_compliance
+            }
+            
+            with st.spinner("Scanning Salesforce CRM..."):
+                scan_results = scanner.scan_enterprise_source(scan_config)
+            
+            if scan_results.get('success'):
+                # Store results in aggregator database
+                try:
+                    from services.results_aggregator import ResultsAggregator
+                    aggregator = ResultsAggregator()
+                    
+                    complete_result = {
+                        **scan_results,
+                        'scan_type': 'enterprise connector',
+                        'total_pii_found': scan_results.get('pii_instances_found', 0),
+                        'high_risk_count': scan_results.get('high_risk_findings', 0),
+                        'region': region,
+                        'files_scanned': scan_results.get('total_items_scanned', 0),
+                        'username': username,
+                        'user_id': st.session_state.get('user_id', username),
+                        'connector_type': 'Salesforce'
+                    }
+                    
+                    stored_scan_id = aggregator.save_scan_result(username=username, result=complete_result)
+                    
+                except Exception as store_error:
+                    st.error(f"Failed to store scan results: {store_error}")
+                
+                display_enterprise_scan_results(scan_results, 'Salesforce')
+                
+                # Highlight Netherlands-specific findings
+                if scan_results.get('bsn_fields_found', 0) > 0:
+                    st.warning(f"⚠️ {scan_results['bsn_fields_found']} BSN instances found in Salesforce - UAVG compliance review required")
+                
+                if scan_results.get('kvk_fields_found', 0) > 0:
+                    st.info(f"🏢 {scan_results['kvk_fields_found']} KvK numbers detected in Salesforce")
+            else:
+                st.error(f"Salesforce scan failed: {scan_results.get('error', 'Unknown error')}")
+        
+        except Exception as e:
+            st.error(f"Salesforce connector failed: {str(e)}")
+
+def render_sap_connector(region: str, username: str):
+    """SAP ERP connector interface"""
+    from services.enterprise_connector_scanner import EnterpriseConnectorScanner
+    from utils.activity_tracker import ScannerType
+    
+    st.subheader("🏭 SAP ERP Integration")
+    st.write("Scan SAP HR, Finance, and Master Data modules for PII with Netherlands BSN detection in PA0002, KNA1, LFA1.")
+    
+    # Premium positioning highlight
+    st.success("💰 **Premium Enterprise Connector**: SAP integration commands €10K-15K licenses. 77% of European enterprises run on SAP - critical for high-value deals.")
+    
+    # Authentication setup
+    st.markdown("### SAP System Authentication")
+    
+    auth_method = st.radio(
+        "SAP Authentication Method",
+        ["Basic Authentication", "OAuth2 Token", "Demo Mode"],
+        help="Choose authentication method for SAP OData APIs"
+    )
+    
+    credentials = {}
+    
+    if auth_method == "Basic Authentication":
+        col1, col2 = st.columns(2)
+        with col1:
+            credentials['host'] = st.text_input("SAP Host", value="sap-server.company.com", help="SAP system hostname")
+            credentials['port'] = st.text_input("Port", value="8000", help="SAP HTTP port (usually 8000)")
+            credentials['client'] = st.text_input("Client", value="100", help="SAP client (usually 100)")
+        with col2:
+            credentials['username'] = st.text_input("SAP Username", help="SAP system username")
+            credentials['password'] = st.text_input("SAP Password", type="password", help="SAP system password")
+    
+    elif auth_method == "OAuth2 Token":
+        credentials['access_token'] = st.text_input("SAP OAuth2 Token", type="password")
+        credentials['host'] = st.text_input("SAP Host", value="sap-server.company.com")
+        credentials['port'] = st.text_input("Port", value="8000")
+    
+    else:  # Demo Mode
+        st.success("✅ Demo mode enabled - using sample Netherlands SAP data")
+        credentials = {'username': 'demo', 'password': 'demo', 'host': 'demo-sap', 'port': '8000', 'client': '100'}
+    
+    # SAP Module Configuration
+    st.markdown("### SAP Module Configuration")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        scan_hr_data = st.checkbox("👥 HR Module (PA0002)", value=True, help="Personal data with BSN detection")
+        scan_customer_data = st.checkbox("🏢 Customer Master (KNA1)", value=True, help="Customer records with KvK numbers")
+    with col2:
+        scan_vendor_data = st.checkbox("🤝 Vendor Master (LFA1)", value=True, help="Vendor records with business data")
+        scan_finance_data = st.checkbox("💰 Finance Module", value=False, help="Financial transactions (advanced)")
+    
+    # Netherlands-specific SAP fields
+    st.markdown("### Netherlands Specialization")
+    col1, col2 = st.columns(2)
+    with col1:
+        detect_bsn_fields = st.checkbox("🔍 BSN Detection (PA0002)", value=True, help="Netherlands Social Security Numbers in HR")
+        detect_kvk_fields = st.checkbox("🏢 KvK Detection (KNA1)", value=True, help="Dutch Chamber of Commerce numbers")
+    with col2:
+        detect_tax_numbers = st.checkbox("💼 Tax Number Detection", value=True, help="Netherlands tax identifiers")
+        uavg_compliance = st.checkbox("⚖️ UAVG Compliance", value=True, help="Netherlands privacy law compliance")
+    
+    # Advanced SAP settings
+    with st.expander("🔧 Advanced SAP Settings"):
+        max_records = st.slider("Maximum Records per Module", 50, 1000, 200, help="Limit records scanned per SAP module")
+        odata_version = st.selectbox("OData Version", ["v2", "v4"], index=0, help="SAP OData service version")
+        custom_services = st.text_area("Custom OData Services", placeholder="ZHR_PRIVACY_SRV\nZFIN_PRIVACY_SRV", help="Additional custom SAP services to scan")
+    
+    if st.button("🚀 Start SAP Scan", type="primary"):
+        try:
+            scanner = EnterpriseConnectorScanner(
+                connector_type='sap',
+                credentials=credentials,
+                region=region,
+                max_items=max_records
+            )
+            
+            scan_config = {
+                'scan_hr_data': scan_hr_data,
+                'scan_customer_data': scan_customer_data,
+                'scan_vendor_data': scan_vendor_data,
+                'scan_finance_data': scan_finance_data,
+                'detect_bsn_fields': detect_bsn_fields,
+                'detect_kvk_fields': detect_kvk_fields,
+                'detect_tax_numbers': detect_tax_numbers,
+                'uavg_compliance': uavg_compliance,
+                'odata_version': odata_version,
+                'custom_services': custom_services.split('\n') if custom_services else []
+            }
+            
+            with st.spinner("Scanning SAP ERP system..."):
+                scan_results = scanner.scan_enterprise_source(scan_config)
+            
+            if scan_results.get('success'):
+                # Store results in aggregator database
+                try:
+                    from services.results_aggregator import ResultsAggregator
+                    aggregator = ResultsAggregator()
+                    
+                    complete_result = {
+                        **scan_results,
+                        'scan_type': 'enterprise connector',
+                        'total_pii_found': scan_results.get('pii_instances_found', 0),
+                        'high_risk_count': scan_results.get('high_risk_findings', 0),
+                        'region': region,
+                        'files_scanned': scan_results.get('total_items_scanned', 0),
+                        'username': username,
+                        'user_id': st.session_state.get('user_id', username),
+                        'connector_type': 'SAP'
+                    }
+                    
+                    stored_scan_id = aggregator.save_scan_result(username=username, result=complete_result)
+                    
+                except Exception as store_error:
+                    st.error(f"Failed to store scan results: {store_error}")
+                
+                display_enterprise_scan_results(scan_results, 'SAP')
+                
+                # SAP-specific findings summary
+                if scan_results.get('bsn_instances_found', 0) > 0:
+                    st.warning(f"⚠️ {scan_results['bsn_instances_found']} BSN instances found in SAP HR module - Immediate UAVG compliance review required")
+                
+                if scan_results.get('hr_records_scanned', 0) > 0:
+                    st.info(f"👥 Scanned {scan_results['hr_records_scanned']} HR records from SAP PA0002")
+                
+                if scan_results.get('customer_records_scanned', 0) > 0:
+                    st.info(f"🏢 Scanned {scan_results['customer_records_scanned']} customer records from SAP KNA1")
+            else:
+                st.error(f"SAP scan failed: {scan_results.get('error', 'Unknown error')}")
+        
+        except Exception as e:
+            st.error(f"SAP connector failed: {str(e)}")
 
 def display_enterprise_scan_results(scan_results: dict, connector_name: str):
     """Display enterprise connector scan results in a professional format"""
