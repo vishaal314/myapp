@@ -36,7 +36,7 @@ class APIScanner:
     security vulnerabilities, PII exposure, and GDPR compliance requirements.
     """
     
-    def __init__(self, max_endpoints=50, request_timeout=10, rate_limit_delay=1, 
+    def __init__(self, max_endpoints=50, request_timeout=10, rate_limit_delay=0.1, 
                  follow_redirects=True, verify_ssl=True, region="Netherlands"):
         """
         Initialize the API scanner.
@@ -44,7 +44,7 @@ class APIScanner:
         Args:
             max_endpoints: Maximum number of endpoints to scan (default: 50)
             request_timeout: Timeout for API requests in seconds (default: 10)
-            rate_limit_delay: Delay between requests to respect rate limits (default: 1)
+            rate_limit_delay: Delay between requests to respect rate limits (default: 0.1)
             follow_redirects: Whether to follow HTTP redirects (default: True)
             verify_ssl: Whether to verify SSL certificates (default: True)
             region: Region for applying GDPR rules (default: "Netherlands")
@@ -58,6 +58,8 @@ class APIScanner:
         self.progress_callback = None
         self.is_running = False
         self.start_time = None
+        self._rate_limit_detected = False
+        self._rate_limit_retries = 0
         
         # Initialize session with proper headers
         self.session = requests.Session()
@@ -361,11 +363,32 @@ class APIScanner:
             logger.info(f"Scanning endpoint: {endpoint_url}")
             
             try:
-                # Respect rate limiting
-                time.sleep(self.rate_limit_delay)
+                # Exponential backoff with jitter for rate limiting
+                if self._rate_limit_detected:
+                    import random
+                    base_delay = self.rate_limit_delay
+                    exponential_delay = min(10.0, base_delay * (2 ** self._rate_limit_retries))
+                    jitter = random.uniform(0, 0.1 * exponential_delay)
+                    total_delay = exponential_delay + jitter
+                    time.sleep(total_delay)
+                else:
+                    time.sleep(self.rate_limit_delay)  # Minimal delay (0.1s default)
                 
                 # Scan the endpoint
                 endpoint_data = self._scan_endpoint(endpoint_url, base_url)
+                
+                # Check for rate limit response and adjust strategy
+                if endpoint_data.get('status_code') == 429:
+                    if not self._rate_limit_detected:
+                        self._rate_limit_detected = True
+                        self._rate_limit_retries = 1
+                    else:
+                        self._rate_limit_retries = min(5, self._rate_limit_retries + 1)
+                    logger.warning(f"Rate limiting detected on {endpoint_url}, retry #{self._rate_limit_retries}")
+                elif endpoint_data.get('status_code') in [200, 201, 202]:
+                    # Reset rate limiting state on success
+                    self._rate_limit_detected = False
+                    self._rate_limit_retries = 0
                 scanned_endpoints.append(endpoint_data)
                 
                 # Extract findings

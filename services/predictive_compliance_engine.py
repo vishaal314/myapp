@@ -545,12 +545,13 @@ class PredictiveComplianceEngine:
             if len(y_all) >= 5:
                 # Use rolling average for more stable trend
                 window_size = min(3, len(y_all) // 2)
-                y_smoothed = pd.Series(y_all).rolling(window=window_size, center=True, min_periods=1).mean().values
+                y_smoothed = pd.Series(y_all).rolling(window=window_size, center=True, min_periods=1).mean()
+                y_smoothed = np.asarray(y_smoothed, dtype=np.float64)
             else:
                 y_smoothed = y_all
             
             # Calculate trend line with robust regression (less sensitive to outliers)
-            trend_line = np.polyfit(x_all, y_smoothed, 1)
+            trend_line = np.polyfit(x_all, np.asarray(y_smoothed, dtype=np.float64), 1)
             predicted_all = np.polyval(trend_line, x_all)
             residuals = y_smoothed - predicted_all
             

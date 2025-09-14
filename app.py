@@ -89,6 +89,10 @@ try:
     ENTERPRISE_ACTIONS_AVAILABLE = True
 except ImportError:
     ENTERPRISE_ACTIONS_AVAILABLE = False
+    # Define a fallback function to avoid "possibly unbound" error
+    def show_enterprise_actions(*args, **kwargs):
+        """Fallback function when enterprise actions are not available"""
+        return None
 
 def generate_html_report_fallback(scan_results: Dict[str, Any]) -> str:
     """Simple HTML report generator for AI Model scans"""
@@ -126,18 +130,18 @@ def generate_html_report_fallback(scan_results: Dict[str, Any]) -> str:
     
     <div class="section">
         <h2>Model Information</h2>
-        <div class="metric"><strong>Framework:</strong> {scan_result.get('model_framework', 'Multi-Framework')}</div>
-        <div class="metric"><strong>AI Act Status:</strong> {scan_result.get('ai_act_compliance', 'Assessment Complete')}</div>
-        <div class="metric"><strong>Compliance Score:</strong> {scan_result.get('compliance_score', 85)}/100</div>
-        <div class="metric"><strong>Files Analyzed:</strong> {scan_result.get('files_scanned', 0)}</div>
-        <div class="metric"><strong>Total Findings:</strong> {scan_result.get('total_pii_found', 0)}</div>
+        <div class="metric"><strong>Framework:</strong> {scan_results.get('model_framework', 'Multi-Framework')}</div>
+        <div class="metric"><strong>AI Act Status:</strong> {scan_results.get('ai_act_compliance', 'Assessment Complete')}</div>
+        <div class="metric"><strong>Compliance Score:</strong> {scan_results.get('compliance_score', 85)}/100</div>
+        <div class="metric"><strong>Files Analyzed:</strong> {scan_results.get('files_scanned', 0)}</div>
+        <div class="metric"><strong>Total Findings:</strong> {scan_results.get('total_pii_found', 0)}</div>
     </div>
     
     <div class="section">
         <h2>Risk Analysis</h2>
-        <div class="metric"><strong>High Risk:</strong> {scan_result.get('high_risk_count', 0)} findings</div>
-        <div class="metric"><strong>Medium Risk:</strong> {scan_result.get('medium_risk_count', 0)} findings</div>
-        <div class="metric"><strong>Low Risk:</strong> {scan_result.get('low_risk_count', 0)} findings</div>
+        <div class="metric"><strong>High Risk:</strong> {scan_results.get('high_risk_count', 0)} findings</div>
+        <div class="metric"><strong>Medium Risk:</strong> {scan_results.get('medium_risk_count', 0)} findings</div>
+        <div class="metric"><strong>Low Risk:</strong> {scan_results.get('low_risk_count', 0)} findings</div>
     </div>
     
     <div class="section">
