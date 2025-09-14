@@ -21,10 +21,10 @@ class PIICategory(Enum):
 
 class PIIAction(Enum):
     """Actions that can be taken on PII items."""
-    MASK = "mask"           # Replace with asterisks
-    SUPPRESS = "suppress"   # Remove from output
-    APPROVE = "approve"     # Mark as legitimate/necessary
-    REMEDIATE = "remediate" # Flag for removal from source
+    MASK = "masked"         # Replace with asterisks
+    SUPPRESS = "suppressed" # Remove from output
+    APPROVE = "approved"    # Mark as legitimate/necessary
+    REMEDIATE = "remediated" # Flag for removal from source
 
 @dataclass
 class PIIItem:
@@ -60,24 +60,55 @@ class PIIManagementSystem:
     def __init__(self, data_dir: str = "data"):
         """Initialize PII management system."""
         self.data_dir = data_dir
+        self.pii_file = f"{data_dir}/pii_items.json"
+        self.audit_file = f"{data_dir}/pii_audit.json"
         self.pii_items: List[PIIItem] = []
         self.masking_rules: List[PIIMaskingRule] = []
+        self.audit_log: List[Dict[str, Any]] = []
         self._load_data()
         self._setup_default_masking_rules()
     
     def _load_data(self):
         """Load existing PII data and masking rules."""
-        try:
-            # Load PII items from scan results
-            from services.results_aggregator import ResultsAggregator
-            aggregator = ResultsAggregator()
-            recent_scans = aggregator.get_recent_scans(days=90)
-            
-            for scan in recent_scans:
-                self._extract_pii_from_scan(scan)
+        import os
+        
+        # Load persisted PII items first
+        if os.path.exists(self.pii_file):
+            try:
+                with open(self.pii_file, 'r') as f:
+                    data = json.load(f)
+                    for item_data in data:
+                        item = PIIItem(**item_data)
+                        item.category = PIICategory(item.category) if isinstance(item.category, str) else item.category
+                        if item.action_taken:
+                            item.action_taken = PIIAction(item.action_taken) if isinstance(item.action_taken, str) else item.action_taken
+                        self.pii_items.append(item)
+            except Exception as e:
+                logger.warning(f"Could not load PII items: {e}")
+        
+        # Load audit log
+        if os.path.exists(self.audit_file):
+            try:
+                with open(self.audit_file, 'r') as f:
+                    self.audit_log = json.load(f)
+            except Exception as e:
+                logger.warning(f"Could not load audit log: {e}")
+        
+        # If no persisted items, extract from scans
+        if not self.pii_items:
+            try:
+                from services.results_aggregator import ResultsAggregator
+                aggregator = ResultsAggregator()
+                recent_scans = aggregator.get_recent_scans(days=90)
                 
-        except Exception as e:
-            logger.warning(f"Could not load scan data: {e}")
+                for scan in recent_scans:
+                    self._extract_pii_from_scan(scan)
+                    
+                # Save extracted items
+                self._save_data()
+                    
+            except Exception as e:
+                logger.warning(f"Could not load scan data: {e}")
     
     def _extract_pii_from_scan(self, scan: Dict[str, Any]):
         """Extract PII items from scan results."""
@@ -226,6 +257,16 @@ class PIIManagementSystem:
         
         for item in self.pii_items:
             if item.id in item_ids:
+                # Log the action
+                self.audit_log.append({
+                    'timestamp': action_timestamp,
+                    'item_id': item.id,
+                    'action': action.value,
+                    'reviewer': reviewer,
+                    'notes': notes,
+                    'previous_status': item.status
+                })
+                
                 item.action_taken = action
                 item.action_timestamp = action_timestamp
                 item.reviewer = reviewer
@@ -233,6 +274,8 @@ class PIIManagementSystem:
                 item.status = action.value
                 updated_count += 1
         
+        # Save changes
+        self._save_data()
         return updated_count
     
     def get_items_by_category(self, category: PIICategory, limit: int = 100) -> List[PIIItem]:
@@ -350,3 +393,48 @@ class PIIManagementSystem:
             recommendations.append("PII management is in good standing - continue regular monitoring")
         
         return recommendations
+    
+    def _save_data(self):
+        """Save PII items and audit log to persistent storage."""
+        import os
+        
+        # Ensure data directory exists
+        os.makedirs(self.data_dir, exist_ok=True)
+        
+        # Save PII items
+        try:
+            pii_data = []
+            for item in self.pii_items:
+                item_dict = asdict(item)
+                # Convert enums to strings for JSON serialization
+                if isinstance(item_dict['category'], PIICategory):
+                    item_dict['category'] = item_dict['category'].value
+                if item_dict['action_taken'] and isinstance(item_dict['action_taken'], PIIAction):
+                    item_dict['action_taken'] = item_dict['action_taken'].value
+                pii_data.append(item_dict)
+            
+            with open(self.pii_file, 'w') as f:
+                json.dump(pii_data, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to save PII items: {e}")
+        
+        # Save audit log
+        try:
+            with open(self.audit_file, 'w') as f:
+                json.dump(self.audit_log, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to save audit log: {e}")
+    
+    def get_audit_trail(self, item_id: Optional[str] = None, days: int = 30) -> List[Dict[str, Any]]:
+        """Get audit trail for specific item or all items."""
+        cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
+        
+        filtered_log = [
+            entry for entry in self.audit_log
+            if entry.get('timestamp', '') >= cutoff_date
+        ]
+        
+        if item_id:
+            filtered_log = [entry for entry in filtered_log if entry.get('item_id') == item_id]
+        
+        return sorted(filtered_log, key=lambda x: x.get('timestamp', ''), reverse=True)
