@@ -890,151 +890,99 @@ class UnifiedHTMLReportGenerator:
             dates.append(future_date)
             scores.append(prediction.future_score)
             
-            # Create impressive Plotly chart data with multiple series
+            # Clean, easy-to-view chart data
             chart_data = {
                 'data': [
-                    # Historical compliance line with gradient fill
+                    # Main historical trend line - clean and prominent
                     {
                         'x': dates[:-1],
                         'y': scores[:-1],
                         'type': 'scatter',
                         'mode': 'lines+markers',
-                        'name': '📊 Historical Compliance Scores',
-                        'line': {'color': '#2E86AB', 'width': 4, 'shape': 'spline'},
-                        'marker': {
-                            'size': 10, 
-                            'color': scores[:-1],
-                            'colorscale': 'RdYlGn',
-                            'cmin': 0,
-                            'cmax': 100,
-                            'line': {'width': 2, 'color': 'white'},
-                            'showscale': False
-                        },
-                        'fill': 'tonexty',
-                        'fillcolor': 'rgba(46, 134, 171, 0.1)',
-                        'hovertemplate': '<b>Date:</b> %{x}<br><b>Compliance Score:</b> %{y:.1f}%<br><b>Status:</b> %{text}<extra></extra>',
-                        'text': [f"{'🟢 Excellent' if s >= 90 else '🟡 Good' if s >= 80 else '🟠 Needs Attention' if s >= 70 else '🔴 Critical'}" for s in scores[:-1]]
+                        'name': '📊 Historical Compliance',
+                        'line': {'color': '#1976D2', 'width': 3, 'shape': 'spline'},
+                        'marker': {'size': 8, 'color': '#1976D2', 'line': {'width': 2, 'color': 'white'}},
+                        'hovertemplate': '<b>%{x}</b><br>Score: <b>%{y:.1f}%</b><extra></extra>'
                     },
-                    # AI Prediction with confidence band
+                    # AI Prediction - distinct but not overwhelming
                     {
                         'x': [dates[-2], dates[-1]],
                         'y': [scores[-2], scores[-1]],
                         'type': 'scatter',
                         'mode': 'lines+markers',
-                        'name': '🤖 AI Prediction (30 days)',
-                        'line': {'color': '#F18F01', 'dash': 'dash', 'width': 5},
-                        'marker': {
-                            'size': 15, 
-                            'color': '#F18F01', 
-                            'line': {'width': 3, 'color': 'white'},
-                            'symbol': 'diamond'
-                        },
-                        'hovertemplate': '<b>Predicted Date:</b> %{x}<br><b>Predicted Score:</b> %{y:.1f}%<br><b>Confidence:</b> 85%<extra></extra>'
+                        'name': '🤖 AI Forecast',
+                        'line': {'color': '#FF6B35', 'dash': 'dash', 'width': 3},
+                        'marker': {'size': 10, 'color': '#FF6B35', 'line': {'width': 2, 'color': 'white'}},
+                        'hovertemplate': '<b>%{x}</b><br>Predicted: <b>%{y:.1f}%</b><extra></extra>'
                     },
-                    # Confidence interval band
+                    # Confidence range as subtle markers
                     {
-                        'x': [dates[-1], dates[-1], dates[-1]],
-                        'y': [prediction.confidence_interval[0], prediction.future_score, prediction.confidence_interval[1]],
+                        'x': [dates[-1], dates[-1]],
+                        'y': [prediction.confidence_interval[0], prediction.confidence_interval[1]],
                         'type': 'scatter',
                         'mode': 'markers',
-                        'name': f'📊 Confidence Range ({prediction.confidence_interval[0]:.1f}% - {prediction.confidence_interval[1]:.1f}%)',
-                        'marker': {
-                            'size': [8, 15, 8], 
-                            'color': ['rgba(241, 143, 1, 0.4)', '#F18F01', 'rgba(241, 143, 1, 0.4)'],
-                            'line': {'width': 2, 'color': '#F18F01'}
-                        },
+                        'name': 'Confidence Range',
+                        'marker': {'size': 6, 'color': 'rgba(255, 107, 53, 0.3)', 'line': {'width': 1, 'color': '#FF6B35'}},
                         'hovertemplate': '<b>Range:</b> %{y:.1f}%<extra></extra>',
-                        'showlegend': True
-                    },
-                    # Industry benchmark - Financial Services
-                    {
-                        'x': dates,
-                        'y': [78.5] * len(dates),
-                        'type': 'scatter',
-                        'mode': 'lines',
-                        'name': '🏦 Financial Services Benchmark',
-                        'line': {'color': 'purple', 'dash': 'dot', 'width': 2},
-                        'hovertemplate': '<b>Financial Services Average:</b> 78.5%<extra></extra>',
-                        'opacity': 0.7
-                    },
-                    # Industry benchmark - Technology
-                    {
-                        'x': dates,
-                        'y': [81.2] * len(dates),
-                        'type': 'scatter',
-                        'mode': 'lines',
-                        'name': '💻 Technology Sector Benchmark',
-                        'line': {'color': 'blue', 'dash': 'dot', 'width': 2},
-                        'hovertemplate': '<b>Technology Average:</b> 81.2%<extra></extra>',
-                        'opacity': 0.7
+                        'showlegend': False
                     }
                 ],
                 'layout': {
                     'title': {
-                        'text': '🎯 Advanced AI-Powered Compliance Intelligence Dashboard',
-                        'font': {'size': 22, 'family': 'Arial Black', 'color': '#1565c0'},
+                        'text': '📈 Compliance Score Forecast',
+                        'font': {'size': 18, 'color': '#333'},
                         'x': 0.5
                     },
                     'xaxis': {
-                        'title': {'text': '📅 Timeline', 'font': {'size': 14, 'color': '#333'}},
+                        'title': 'Timeline',
                         'showgrid': True,
-                        'gridwidth': 1,
+                        'gridwidth': 0.5,
                         'gridcolor': 'rgba(0,0,0,0.1)',
-                        'zeroline': False,
-                        'tickfont': {'size': 11}
+                        'showline': True,
+                        'linecolor': 'rgba(0,0,0,0.2)'
                     },
                     'yaxis': {
-                        'title': {'text': '📊 Compliance Score (%)', 'font': {'size': 14, 'color': '#333'}},
+                        'title': 'Compliance Score (%)',
                         'range': [40, 100],
                         'showgrid': True,
-                        'gridwidth': 1,
+                        'gridwidth': 0.5,
                         'gridcolor': 'rgba(0,0,0,0.1)',
-                        'zeroline': False,
-                        'tickfont': {'size': 11},
-                        'ticksuffix': '%'
+                        'ticksuffix': '%',
+                        'showline': True,
+                        'linecolor': 'rgba(0,0,0,0.2)'
                     },
-                    'plot_bgcolor': 'rgba(248,249,250,0.8)',
+                    'plot_bgcolor': 'white',
                     'paper_bgcolor': 'white',
                     'shapes': [
-                        # Risk zone shaded areas
-                        {'type': 'rect', 'x0': dates[0], 'x1': dates[-1], 'y0': 90, 'y1': 100, 
-                         'fillcolor': 'rgba(0,255,0,0.1)', 'line': {'width': 0}, 'layer': 'below'},
-                        {'type': 'rect', 'x0': dates[0], 'x1': dates[-1], 'y0': 80, 'y1': 90, 
-                         'fillcolor': 'rgba(255,255,0,0.1)', 'line': {'width': 0}, 'layer': 'below'},
-                        {'type': 'rect', 'x0': dates[0], 'x1': dates[-1], 'y0': 70, 'y1': 80, 
-                         'fillcolor': 'rgba(255,165,0,0.1)', 'line': {'width': 0}, 'layer': 'below'},
-                        {'type': 'rect', 'x0': dates[0], 'x1': dates[-1], 'y0': 40, 'y1': 70, 
-                         'fillcolor': 'rgba(255,0,0,0.1)', 'line': {'width': 0}, 'layer': 'below'},
-                        # Risk zone boundary lines
-                        {'type': 'line', 'x0': dates[0], 'x1': dates[-1], 'y0': 90, 'y1': 90, 
-                         'line': {'dash': 'dash', 'color': 'green', 'width': 2}},
+                        # Clean risk zone background (subtle shading only)
+                        {'type': 'rect', 'x0': dates[0], 'x1': dates[-1], 'y0': 80, 'y1': 100, 
+                         'fillcolor': 'rgba(76, 175, 80, 0.05)', 'line': {'width': 0}, 'layer': 'below'},
+                        {'type': 'rect', 'x0': dates[0], 'x1': dates[-1], 'y0': 60, 'y1': 80, 
+                         'fillcolor': 'rgba(255, 193, 7, 0.05)', 'line': {'width': 0}, 'layer': 'below'},
+                        {'type': 'rect', 'x0': dates[0], 'x1': dates[-1], 'y0': 40, 'y1': 60, 
+                         'fillcolor': 'rgba(244, 67, 54, 0.05)', 'line': {'width': 0}, 'layer': 'below'},
+                        # Clean reference lines (minimal and subtle)
                         {'type': 'line', 'x0': dates[0], 'x1': dates[-1], 'y0': 80, 'y1': 80, 
-                         'line': {'dash': 'dash', 'color': 'orange', 'width': 2}},
-                        {'type': 'line', 'x0': dates[0], 'x1': dates[-1], 'y0': 70, 'y1': 70, 
-                         'line': {'dash': 'dash', 'color': 'red', 'width': 2}}
+                         'line': {'dash': 'dot', 'color': 'rgba(76, 175, 80, 0.6)', 'width': 1}},
+                        {'type': 'line', 'x0': dates[0], 'x1': dates[-1], 'y0': 60, 'y1': 60, 
+                         'line': {'dash': 'dot', 'color': 'rgba(244, 67, 54, 0.6)', 'width': 1}}
                     ],
                     'annotations': [
-                        {'x': dates[-1], 'y': 95, 'text': '🟢 EXCELLENT', 'showarrow': False, 'xanchor': 'left', 
-                         'font': {'size': 12, 'color': 'green', 'family': 'Arial Black'}, 'bgcolor': 'rgba(255,255,255,0.8)'},
-                        {'x': dates[-1], 'y': 85, 'text': '🟡 GOOD', 'showarrow': False, 'xanchor': 'left', 
-                         'font': {'size': 12, 'color': 'orange', 'family': 'Arial Black'}, 'bgcolor': 'rgba(255,255,255,0.8)'},
-                        {'x': dates[-1], 'y': 75, 'text': '🟠 ATTENTION', 'showarrow': False, 'xanchor': 'left', 
-                         'font': {'size': 12, 'color': 'red', 'family': 'Arial Black'}, 'bgcolor': 'rgba(255,255,255,0.8)'},
-                        {'x': dates[-1], 'y': 65, 'text': '🔴 CRITICAL', 'showarrow': False, 'xanchor': 'left', 
-                         'font': {'size': 12, 'color': 'darkred', 'family': 'Arial Black'}, 'bgcolor': 'rgba(255,255,255,0.8)'}
+                        {'x': dates[-1], 'y': 85, 'text': 'Good (80%+)', 'showarrow': False, 'xanchor': 'left',
+                         'font': {'size': 10, 'color': '#4CAF50'}, 'bgcolor': 'rgba(255,255,255,0.8)'},
+                        {'x': dates[-1], 'y': 65, 'text': 'Needs Attention (60%+)', 'showarrow': False, 'xanchor': 'left',
+                         'font': {'size': 10, 'color': '#F44336'}, 'bgcolor': 'rgba(255,255,255,0.8)'}
                     ],
                     'legend': {
-                        'orientation': 'v',
-                        'x': 1.02,
-                        'y': 1,
-                        'font': {'size': 11},
-                        'bgcolor': 'rgba(255,255,255,0.9)',
-                        'bordercolor': 'rgba(0,0,0,0.2)',
-                        'borderwidth': 1
+                        'orientation': 'h',
+                        'yanchor': 'bottom',
+                        'y': 1.02,
+                        'xanchor': 'center',
+                        'x': 0.5,
+                        'font': {'size': 11}
                     },
-                    'height': 600,
-                    'margin': {'t': 100, 'b': 80, 'l': 80, 'r': 200},
-                    'hovermode': 'x unified'
+                    'height': 450,
+                    'margin': {'t': 80, 'b': 50, 'l': 60, 'r': 60}
                 }
             }
             
@@ -1053,7 +1001,7 @@ class UnifiedHTMLReportGenerator:
             
             return f"""
             <div class="compliance-forecast-section">
-                <h2>🎯 Advanced AI-Powered Compliance Intelligence</h2>
+                <h2>📈 Compliance Score Forecast</h2>
                 <div class="forecast-summary">
                     <div class="forecast-metric">
                         <span class="metric-value">{prediction.future_score:.1f}%</span>
@@ -1065,19 +1013,7 @@ class UnifiedHTMLReportGenerator:
                     </div>
                     <div class="forecast-metric">
                         <span class="metric-value">{prediction.confidence_interval[0]:.1f}% - {prediction.confidence_interval[1]:.1f}%</span>
-                        <span class="metric-label">📊 Confidence Interval (95%)</span>
-                    </div>
-                    <div class="forecast-metric">
-                        <span class="metric-value">85%</span>
-                        <span class="metric-label">🎯 Prediction Accuracy</span>
-                    </div>
-                    <div class="forecast-metric">
-                        <span class="metric-value">{len(historical_data)}</span>
-                        <span class="metric-label">📋 Historical Data Points</span>
-                    </div>
-                    <div class="forecast-metric">
-                        <span class="metric-value">{prediction.time_to_action}</span>
-                        <span class="metric-label">⏰ Recommended Action Timeline</span>
+                        <span class="metric-label">📊 Confidence Range</span>
                     </div>
                 </div>
                 <div id="compliance-forecast-chart"></div>
@@ -1085,16 +1021,8 @@ class UnifiedHTMLReportGenerator:
                     var chartData = {chart_json};
                     var config = {{
                         responsive: true,
-                        displayModeBar: true,
-                        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
-                        displaylogo: false,
-                        toImageButtonOptions: {{
-                            format: 'png',
-                            filename: 'compliance_forecast',
-                            height: 600,
-                            width: 1200,
-                            scale: 2
-                        }}
+                        displayModeBar: false,
+                        displaylogo: false
                     }};
                     Plotly.newPlot('compliance-forecast-chart', chartData.data, chartData.layout, config);
                 </script>
