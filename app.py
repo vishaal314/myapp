@@ -1447,42 +1447,130 @@ def render_predictive_analytics():
             
             fig = go.Figure()
             
-            # Historical data
+            # Add risk zones as background shapes
+            fig.add_hline(y=90, line_dash="dash", line_color="green", annotation_text="Excellent (90%+)", annotation_position="top right")
+            fig.add_hline(y=80, line_dash="dash", line_color="orange", annotation_text="Good (80%+)", annotation_position="top right")
+            fig.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="Needs Attention (70%+)", annotation_position="top right")
+            fig.add_hline(y=60, line_dash="dash", line_color="darkred", annotation_text="Critical (<60%)", annotation_position="top right")
+            
+            # Add risk zone shading
+            fig.add_hrect(y0=90, y1=100, fillcolor="green", opacity=0.1, layer="below", line_width=0)
+            fig.add_hrect(y0=80, y1=90, fillcolor="lightgreen", opacity=0.1, layer="below", line_width=0)
+            fig.add_hrect(y0=70, y1=80, fillcolor="yellow", opacity=0.1, layer="below", line_width=0)
+            fig.add_hrect(y0=60, y1=70, fillcolor="orange", opacity=0.1, layer="below", line_width=0)
+            fig.add_hrect(y0=0, y1=60, fillcolor="red", opacity=0.1, layer="below", line_width=0)
+            
+            # Industry benchmark lines
+            fig.add_hline(y=78.5, line_dash="dot", line_color="purple", annotation_text="Financial Services Avg", annotation_position="bottom right")
+            fig.add_hline(y=81.2, line_dash="dot", line_color="blue", annotation_text="Technology Avg", annotation_position="bottom right")
+            
+            # Historical data with enhanced styling
             fig.add_trace(go.Scatter(
                 x=dates[:-1],
                 y=scores[:-1],
                 mode='lines+markers',
-                name='Historical Scores',
-                line=dict(color='blue')
+                name='Historical Compliance',
+                line=dict(color='#2E86AB', width=3),
+                marker=dict(size=8, color='#2E86AB', line=dict(width=2, color='white')),
+                hovertemplate='<b>Date:</b> %{x}<br><b>Score:</b> %{y:.1f}%<br><extra></extra>'
             ))
             
-            # Prediction
+            # Prediction with enhanced styling
             fig.add_trace(go.Scatter(
                 x=[dates[-2], dates[-1]],
                 y=[scores[-2], scores[-1]], 
                 mode='lines+markers',
-                name='Predicted Score',
-                line=dict(color='red', dash='dash')
+                name='AI Prediction',
+                line=dict(color='#F18F01', dash='dash', width=4),
+                marker=dict(size=12, color='#F18F01', line=dict(width=3, color='white')),
+                hovertemplate='<b>Predicted Date:</b> %{x}<br><b>Predicted Score:</b> %{y:.1f}%<br><extra></extra>'
             ))
             
-            # Confidence interval
+            # Confidence interval as filled area
             fig.add_trace(go.Scatter(
-                x=[future_date, future_date],
-                y=[prediction.confidence_interval[0], prediction.confidence_interval[1]],
+                x=[future_date, future_date, future_date],
+                y=[prediction.confidence_interval[0], prediction.future_score, prediction.confidence_interval[1]],
                 mode='markers',
-                name='Confidence Range',
-                marker=dict(color='red', size=8),
-                showlegend=False
+                name='Confidence Interval',
+                marker=dict(color=['#FFB3B3', '#F18F01', '#FFB3B3'], size=[6, 12, 6]),
+                hovertemplate='<b>Range:</b> %{y:.1f}%<br><extra></extra>',
+                showlegend=True
             ))
             
+            # Add trend arrow annotation
+            if len(scores) >= 2:
+                trend_direction = "↗️" if scores[-1] > scores[-2] else "↘️" if scores[-1] < scores[-2] else "→"
+                trend_text = "Improving" if scores[-1] > scores[-2] else "Declining" if scores[-1] < scores[-2] else "Stable"
+                trend_color = "green" if scores[-1] > scores[-2] else "red" if scores[-1] < scores[-2] else "blue"
+                
+                fig.add_annotation(
+                    x=future_date,
+                    y=prediction.future_score + 5,
+                    text=f"{trend_direction} {trend_text}",
+                    showarrow=True,
+                    arrowhead=2,
+                    arrowcolor=trend_color,
+                    font=dict(size=14, color=trend_color, family="Arial Black")
+                )
+            
+            # Enhanced layout with professional styling
             fig.update_layout(
-                title='Compliance Score Trend & Prediction',
-                xaxis_title='Date',
-                yaxis_title='Compliance Score',
-                yaxis=dict(range=[0, 100])
+                title=dict(
+                    text='🎯 AI-Powered Compliance Score Forecast & Risk Analysis',
+                    font=dict(size=20, family="Arial Black"),
+                    x=0.5
+                ),
+                xaxis=dict(
+                    title='Timeline',
+                    showgrid=True,
+                    gridwidth=1,
+                    gridcolor='lightgray',
+                    tickformat='%b %d'
+                ),
+                yaxis=dict(
+                    title='Compliance Score (%)',
+                    range=[0, 100],
+                    showgrid=True,
+                    gridwidth=1,
+                    gridcolor='lightgray',
+                    ticksuffix='%'
+                ),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1
+                ),
+                height=500,
+                margin=dict(t=100, b=50, l=50, r=50)
             )
             
             st.plotly_chart(fig, use_container_width=True)
+            
+            # Chart explanation
+            with st.expander("📊 Understanding Your Compliance Forecast"):
+                st.markdown("""
+                **Chart Features:**
+                - **📈 Historical Compliance**: Your actual compliance scores over time (blue line)
+                - **🔮 AI Prediction**: Machine learning forecast for next 30 days (orange dashed line)
+                - **📊 Confidence Interval**: Range of possible outcomes based on data uncertainty
+                - **🏢 Industry Benchmarks**: Dotted lines showing average scores for Financial Services and Technology sectors
+                - **🚨 Risk Zones**: Color-coded background areas indicating compliance health levels
+                
+                **Risk Zone Guide:**
+                - 🟢 **Excellent (90%+)**: Outstanding compliance posture
+                - 🟡 **Good (80-89%)**: Solid compliance with minor improvements needed  
+                - 🟠 **Needs Attention (70-79%)**: Moderate risk requiring focused action
+                - 🔴 **Critical (<60%)**: High risk requiring immediate intervention
+                
+                **Trend Indicators:**
+                - ↗️ **Improving**: Compliance score trending upward
+                - → **Stable**: Compliance score remaining steady
+                - ↘️ **Declining**: Compliance score trending downward (action needed)
+                """)
         
         # Industry Benchmarking
         st.subheader("🏢 Industry Benchmarking")
