@@ -6176,88 +6176,109 @@ def display_enterprise_scan_results(scan_results: dict, connector_name: str):
     st.markdown("### 📥 Export Options")
     col1, col2, col3, col4 = st.columns(4)
     
+    def build_export_payload(scan_results: dict, connector_name: str) -> dict:
+        """Build standardized export payload for both HTML and PDF reports"""
+        current_time = datetime.now().isoformat()
+        return {
+            'scan_type': f'Enterprise Connector - {connector_name}',
+            'scan_id': f"ENT-{connector_name.upper()[:3]}-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+            'timestamp': current_time,  # Required by some generators
+            'scan_timestamp': scan_results.get('scan_timestamp', current_time),
+            'total_findings': scan_results.get('total_findings', 0),
+            'high_risk_findings': scan_results.get('high_risk_findings', 0),
+            'total_items_scanned': scan_results.get('total_items_scanned', 0),
+            'compliance_score': scan_results.get('compliance_score', 0),
+            'netherlands_specific_findings': scan_results.get('netherlands_specific_findings', 0),
+            'bsn_instances': scan_results.get('bsn_instances', 0),
+            'kvk_instances': scan_results.get('kvk_instances', 0),
+            'findings': scan_results.get('findings', [])[:50],  # Limit for performance
+            'recommendations': scan_results.get('recommendations', []),
+            'connector_type': connector_name,
+            'region': 'Netherlands',
+            'username': st.session_state.get('username', 'user')
+        }
+    
+    # Generate cache keys
+    pdf_cache_key = f"pdf_content_{connector_name}_{hash(str(scan_results))}"
+    html_cache_key = f"html_content_{connector_name}_{hash(str(scan_results))}"
+    
     with col1:
-        if st.button("📄 Download PDF Report", key=f"pdf_{connector_name}"):
-            try:
-                # Generate PDF report for Enterprise Connector scan
-                from services.direct_report_download import generate_pdf_report
-                
-                # Create formatted scan data for PDF report
-                formatted_results = {
-                    'scan_type': f'Enterprise Connector - {connector_name}',
-                    'scan_id': f"ENT-{connector_name.upper()[:3]}-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
-                    'total_findings': scan_results.get('total_findings', 0),
-                    'high_risk_findings': scan_results.get('high_risk_findings', 0),
-                    'total_items_scanned': scan_results.get('total_items_scanned', 0),
-                    'compliance_score': scan_results.get('compliance_score', 0),
-                    'netherlands_specific_findings': scan_results.get('netherlands_specific_findings', 0),
-                    'bsn_instances': scan_results.get('bsn_instances', 0),
-                    'kvk_instances': scan_results.get('kvk_instances', 0),
-                    'findings': scan_results.get('findings', []),
-                    'recommendations': scan_results.get('recommendations', []),
-                    'connector_type': connector_name,
-                    'scan_timestamp': scan_results.get('scan_timestamp', datetime.now().isoformat()),
-                    'region': 'Netherlands',
-                    'username': st.session_state.get('username', 'user')
-                }
-                
-                pdf_content = generate_pdf_report(formatted_results)
-                
-                # Create PDF download
-                st.download_button(
-                    label="💾 Download PDF Report",
-                    data=pdf_content,
-                    file_name=f"enterprise_connector_{connector_name.lower().replace(' ', '_')}_report.pdf",
-                    mime="application/pdf",
-                    key=f"download_pdf_{connector_name}"
-                )
-                st.success("✅ PDF report generated successfully!")
-                
-            except Exception as e:
-                st.error(f"Error generating PDF report: {e}")
-                st.info("Please try again or contact support if the issue persists.")
+        # Single-click PDF download with caching
+        if pdf_cache_key not in st.session_state:
+            if st.button("📄 Generate PDF Report", key=f"pdf_gen_{connector_name}"):
+                try:
+                    with st.spinner("🔄 Generating PDF report..."):
+                        from services.direct_report_download import generate_pdf_report
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        
+                        payload = build_export_payload(scan_results, connector_name)
+                        pdf_content = generate_pdf_report(payload)
+                        st.session_state[pdf_cache_key] = pdf_content
+                        logger.info(f"PDF report generated successfully for {connector_name} - Size: {len(pdf_content)} bytes")
+                        st.success("✅ PDF report ready for download!")
+                        st.rerun()
+                        
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"PDF generation failed for {connector_name}: {str(e)}")
+                    st.error("PDF report generation failed. Please try again.")
+                    if pdf_cache_key in st.session_state:
+                        del st.session_state[pdf_cache_key]
+        else:
+            # Show download button when PDF is cached
+            st.download_button(
+                label="💾 Download PDF Report",
+                data=st.session_state[pdf_cache_key],
+                file_name=f"enterprise_connector_{connector_name.lower().replace(' ', '_')}_report.pdf",
+                mime="application/pdf",
+                key=f"download_pdf_{connector_name}"
+            )
+            if st.button("🔄 Regenerate PDF", key=f"regen_pdf_{connector_name}"):
+                del st.session_state[pdf_cache_key]
+                st.rerun()
     
     with col2:
         if st.button("📊 Export to Excel", key=f"excel_{connector_name}"):
             st.success("Excel export initiated!")
     
     with col3:
-        if st.button("🌐 Download HTML Report", key=f"html_{connector_name}"):
-            try:
-                # Generate HTML report for Enterprise Connector scan
-                from services.download_reports import generate_html_report
-                
-                # Create formatted scan data for HTML report
-                formatted_results = {
-                    'scan_type': f'Enterprise Connector - {connector_name}',
-                    'total_findings': scan_results.get('total_findings', 0),
-                    'high_risk_findings': scan_results.get('high_risk_findings', 0),
-                    'total_items_scanned': scan_results.get('total_items_scanned', 0),
-                    'compliance_score': scan_results.get('compliance_score', 0),
-                    'netherlands_specific_findings': scan_results.get('netherlands_specific_findings', 0),
-                    'bsn_instances': scan_results.get('bsn_instances', 0),
-                    'kvk_instances': scan_results.get('kvk_instances', 0),
-                    'findings': scan_results.get('findings', []),
-                    'recommendations': scan_results.get('recommendations', []),
-                    'connector_type': connector_name,
-                    'scan_timestamp': scan_results.get('scan_timestamp', datetime.now().isoformat())
-                }
-                
-                html_content = generate_html_report(formatted_results)
-                
-                # Create download
-                st.download_button(
-                    label="💾 Download HTML Report",
-                    data=html_content,
-                    file_name=f"enterprise_connector_{connector_name.lower().replace(' ', '_')}_report.html",
-                    mime="text/html",
-                    key=f"download_html_{connector_name}"
-                )
-                st.success("✅ HTML report generated successfully!")
-                
-            except Exception as e:
-                st.error(f"Error generating HTML report: {e}")
-                st.info("Please try again or contact support if the issue persists.")
+        # Single-click HTML download with caching
+        if html_cache_key not in st.session_state:
+            if st.button("🌐 Generate HTML Report", key=f"html_gen_{connector_name}"):
+                try:
+                    with st.spinner("🔄 Generating HTML report..."):
+                        from services.download_reports import generate_html_report
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        
+                        payload = build_export_payload(scan_results, connector_name)
+                        html_content = generate_html_report(payload)
+                        st.session_state[html_cache_key] = html_content
+                        logger.info(f"HTML report generated successfully for {connector_name} - Size: {len(html_content)} bytes")
+                        st.success("✅ HTML report ready for download!")
+                        st.rerun()
+                        
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"HTML generation failed for {connector_name}: {str(e)}")
+                    st.error("HTML report generation failed. Please try again.")
+                    if html_cache_key in st.session_state:
+                        del st.session_state[html_cache_key]
+        else:
+            # Show download button when HTML is cached
+            st.download_button(
+                label="💾 Download HTML Report",
+                data=st.session_state[html_cache_key],
+                file_name=f"enterprise_connector_{connector_name.lower().replace(' ', '_')}_report.html",
+                mime="text/html",
+                key=f"download_html_{connector_name}"
+            )
+            if st.button("🔄 Regenerate HTML", key=f"regen_html_{connector_name}"):
+                del st.session_state[html_cache_key]
+                st.rerun()
     
     with col4:
         if st.button("🔗 Generate Share Link", key=f"share_{connector_name}"):
