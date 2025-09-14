@@ -1447,93 +1447,85 @@ def render_predictive_analytics():
             
             fig = go.Figure()
             
-            # Add risk zones as background shapes
-            fig.add_hline(y=90, line_dash="dash", line_color="green", annotation_text="Excellent (90%+)", annotation_position="top right")
-            fig.add_hline(y=80, line_dash="dash", line_color="orange", annotation_text="Good (80%+)", annotation_position="top right")
-            fig.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="Needs Attention (70%+)", annotation_position="top right")
-            fig.add_hline(y=60, line_dash="dash", line_color="darkred", annotation_text="Critical (<60%)", annotation_position="top right")
+            # Clean risk zone background (subtle shading only)
+            fig.add_hrect(y0=80, y1=100, fillcolor="rgba(76, 175, 80, 0.05)", layer="below", line_width=0)
+            fig.add_hrect(y0=60, y1=80, fillcolor="rgba(255, 193, 7, 0.05)", layer="below", line_width=0)
+            fig.add_hrect(y0=0, y1=60, fillcolor="rgba(244, 67, 54, 0.05)", layer="below", line_width=0)
             
-            # Add risk zone shading
-            fig.add_hrect(y0=90, y1=100, fillcolor="green", opacity=0.1, layer="below", line_width=0)
-            fig.add_hrect(y0=80, y1=90, fillcolor="lightgreen", opacity=0.1, layer="below", line_width=0)
-            fig.add_hrect(y0=70, y1=80, fillcolor="yellow", opacity=0.1, layer="below", line_width=0)
-            fig.add_hrect(y0=60, y1=70, fillcolor="orange", opacity=0.1, layer="below", line_width=0)
-            fig.add_hrect(y0=0, y1=60, fillcolor="red", opacity=0.1, layer="below", line_width=0)
-            
-            # Industry benchmark lines
-            fig.add_hline(y=78.5, line_dash="dot", line_color="purple", annotation_text="Financial Services Avg", annotation_position="bottom right")
-            fig.add_hline(y=81.2, line_dash="dot", line_color="blue", annotation_text="Technology Avg", annotation_position="bottom right")
-            
-            # Historical data with enhanced styling
+            # Main historical trend line - clean and prominent
             fig.add_trace(go.Scatter(
                 x=dates[:-1],
                 y=scores[:-1],
                 mode='lines+markers',
-                name='Historical Compliance',
-                line=dict(color='#2E86AB', width=3),
-                marker=dict(size=8, color='#2E86AB', line=dict(width=2, color='white')),
-                hovertemplate='<b>Date:</b> %{x}<br><b>Score:</b> %{y:.1f}%<br><extra></extra>'
+                name='📊 Historical Compliance',
+                line=dict(color='#1976D2', width=3, shape='spline'),
+                marker=dict(size=8, color='#1976D2', line=dict(width=2, color='white')),
+                hovertemplate='<b>%{x}</b><br>Score: <b>%{y:.1f}%</b><extra></extra>'
             ))
             
-            # Prediction with enhanced styling
+            # AI Prediction - distinct but not overwhelming
             fig.add_trace(go.Scatter(
                 x=[dates[-2], dates[-1]],
                 y=[scores[-2], scores[-1]], 
                 mode='lines+markers',
-                name='AI Prediction',
-                line=dict(color='#F18F01', dash='dash', width=4),
-                marker=dict(size=12, color='#F18F01', line=dict(width=3, color='white')),
-                hovertemplate='<b>Predicted Date:</b> %{x}<br><b>Predicted Score:</b> %{y:.1f}%<br><extra></extra>'
+                name='🤖 AI Forecast',
+                line=dict(color='#FF6B35', dash='dash', width=3),
+                marker=dict(size=10, color='#FF6B35', line=dict(width=2, color='white')),
+                hovertemplate='<b>%{x}</b><br>Predicted: <b>%{y:.1f}%</b><extra></extra>'
             ))
             
-            # Confidence interval as filled area
+            # Confidence range as a subtle band
             fig.add_trace(go.Scatter(
-                x=[future_date, future_date, future_date],
-                y=[prediction.confidence_interval[0], prediction.future_score, prediction.confidence_interval[1]],
+                x=[future_date, future_date],
+                y=[prediction.confidence_interval[0], prediction.confidence_interval[1]],
                 mode='markers',
-                name='Confidence Interval',
-                marker=dict(color=['#FFB3B3', '#F18F01', '#FFB3B3'], size=[6, 12, 6]),
-                hovertemplate='<b>Range:</b> %{y:.1f}%<br><extra></extra>',
-                showlegend=True
+                name=f'📊 Confidence Range',
+                marker=dict(size=6, color='rgba(255, 107, 53, 0.3)', line=dict(width=1, color='#FF6B35')),
+                hovertemplate='<b>Range:</b> %{y:.1f}%<extra></extra>',
+                showlegend=False
             ))
             
-            # Add trend arrow annotation
-            if len(scores) >= 2:
-                trend_direction = "↗️" if scores[-1] > scores[-2] else "↘️" if scores[-1] < scores[-2] else "→"
-                trend_text = "Improving" if scores[-1] > scores[-2] else "Declining" if scores[-1] < scores[-2] else "Stable"
-                trend_color = "green" if scores[-1] > scores[-2] else "red" if scores[-1] < scores[-2] else "blue"
-                
-                fig.add_annotation(
-                    x=future_date,
-                    y=prediction.future_score + 5,
-                    text=f"{trend_direction} {trend_text}",
-                    showarrow=True,
-                    arrowhead=2,
-                    arrowcolor=trend_color,
-                    font=dict(size=14, color=trend_color, family="Arial Black")
-                )
+            # Clean reference lines (minimal and subtle)
+            fig.add_hline(y=80, line_dash="dot", line_color="rgba(76, 175, 80, 0.6)", line_width=1)
+            fig.add_hline(y=60, line_dash="dot", line_color="rgba(244, 67, 54, 0.6)", line_width=1)
             
-            # Enhanced layout with professional styling
+            # Minimal annotations - only essential ones
+            fig.add_annotation(
+                x=dates[-1], y=85, text="Good (80%+)", 
+                showarrow=False, font=dict(size=10, color="#4CAF50"),
+                xanchor="left", bgcolor="rgba(255,255,255,0.8)"
+            )
+            fig.add_annotation(
+                x=dates[-1], y=65, text="Needs Attention (60%+)", 
+                showarrow=False, font=dict(size=10, color="#F44336"),
+                xanchor="left", bgcolor="rgba(255,255,255,0.8)"
+            )
+            
+            # Clean, minimal layout
             fig.update_layout(
                 title=dict(
-                    text='🎯 AI-Powered Compliance Score Forecast & Risk Analysis',
-                    font=dict(size=20, family="Arial Black"),
+                    text='📈 Compliance Score Forecast',
+                    font=dict(size=18, color='#333'),
                     x=0.5
                 ),
                 xaxis=dict(
                     title='Timeline',
                     showgrid=True,
-                    gridwidth=1,
-                    gridcolor='lightgray',
-                    tickformat='%b %d'
+                    gridwidth=0.5,
+                    gridcolor='rgba(0,0,0,0.1)',
+                    tickformat='%b %d',
+                    showline=True,
+                    linecolor='rgba(0,0,0,0.2)'
                 ),
                 yaxis=dict(
                     title='Compliance Score (%)',
-                    range=[0, 100],
+                    range=[40, 100],
                     showgrid=True,
-                    gridwidth=1,
-                    gridcolor='lightgray',
-                    ticksuffix='%'
+                    gridwidth=0.5,
+                    gridcolor='rgba(0,0,0,0.1)',
+                    ticksuffix='%',
+                    showline=True,
+                    linecolor='rgba(0,0,0,0.2)'
                 ),
                 plot_bgcolor='white',
                 paper_bgcolor='white',
@@ -1541,11 +1533,12 @@ def render_predictive_analytics():
                     orientation="h",
                     yanchor="bottom",
                     y=1.02,
-                    xanchor="right",
-                    x=1
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(size=11)
                 ),
-                height=500,
-                margin=dict(t=100, b=50, l=50, r=50)
+                height=450,
+                margin=dict(t=80, b=50, l=60, r=60)
             )
             
             st.plotly_chart(fig, use_container_width=True)
