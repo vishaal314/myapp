@@ -304,22 +304,7 @@ class ComplianceDashboardGenerator:
         # Convert risk scores back to compliance scores for display
         compliance_scores = [100 - risk for risk in trend_data['risk_scores']]
         
-        # Compliance score trend (blue line, linear shape)
-        fig.add_trace(
-            go.Scatter(
-                x=trend_data['dates'],
-                y=compliance_scores,
-                mode='lines+markers',
-                name='📈 Compliance Trend',
-                line=dict(
-                    color='#1976D2',  # Same blue as trend line
-                    width=4,
-                    shape='linear'  # Linear shape to prevent artifacts
-                ),
-                marker=dict(size=6, color='#1976D2')
-            ),
-            row=1, col=1
-        )
+        # Trend line removed per user request
         
         # Critical findings trend
         fig.add_trace(

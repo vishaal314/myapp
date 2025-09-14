@@ -934,49 +934,7 @@ class UnifiedHTMLReportGenerator:
                 'opacity': 0.8
             })
             
-            # 2. Fixed trend line using weekly data alignment (no spline interpolation)
-            # Use same weekly aggregation as bars to prevent misalignment artifacts
-            trend_weekly_y = []
-            for weekly_score in weekly_smoothed:
-                if weekly_score > 0:  # Filter out zero/None scores that cause dips
-                    trend_weekly_y.append(weekly_score)
-                elif trend_weekly_y:  # Use last valid score if current is zero/None
-                    trend_weekly_y.append(trend_weekly_y[-1])
-                else:
-                    trend_weekly_y.append(75.0)  # Fallback score
-            
-            # Apply EMA smoothing to weekly data for stable trend
-            if len(trend_weekly_y) >= 3:
-                ema_alpha = 0.3  # Exponential moving average factor
-                ema_smoothed = [trend_weekly_y[0]]  # Start with first value
-                for i in range(1, len(trend_weekly_y)):
-                    ema_value = ema_alpha * trend_weekly_y[i] + (1 - ema_alpha) * ema_smoothed[-1]
-                    ema_smoothed.append(ema_value)
-                trend_weekly_y = ema_smoothed
-            
-            # Clamp week-over-week changes to max 10 points to prevent spikes
-            clamped_trend = [trend_weekly_y[0]] if trend_weekly_y else [75.0]
-            for i in range(1, len(trend_weekly_y)):
-                prev_val = clamped_trend[-1]
-                curr_val = trend_weekly_y[i]
-                # Limit change to ±10 points per week
-                clamped_val = max(prev_val - 10, min(prev_val + 10, curr_val))
-                clamped_trend.append(clamped_val)
-            
-            chart_data_series.append({
-                'x': weekly_dates,  # Use weekly dates to match bars
-                'y': clamped_trend,
-                'type': 'scatter',
-                'mode': 'lines',
-                'name': '📈 Trend Line',
-                'line': {
-                    'color': '#1976D2', 
-                    'width': 4, 
-                    'shape': 'linear'  # Use linear instead of spline to prevent artifacts
-                },
-                'hovertemplate': '<b>%{x}</b><br>Trend: <b>%{y:.1f}%</b><extra></extra>',
-                'yaxis': 'y'
-            })
+            # 2. Trend line removed per user request
             
             # 3. Forecast center line
             chart_data_series.append({
