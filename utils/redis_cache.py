@@ -5,12 +5,13 @@ Provides high-performance caching for scan results and user sessions
 
 import redis
 import json
-import pickle
 import logging
 import time
 from typing import Any, Optional, Dict, List
 from datetime import datetime, timedelta
 import os
+import base64
+from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,8 @@ class RedisCache:
     
     def __init__(self):
         self.redis_client = None
+        self._fallback_cache = {}
+        self._fallback_expiry = {}
         self.stats = {
             'hits': 0,
             'misses': 0,
@@ -39,85 +42,182 @@ class RedisCache:
         self.connect()
     
     def connect(self):
-        """Connect to Redis server with optimized configuration"""
-        try:
-            # Enhanced Redis connection with performance settings
-            redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
-            self.redis_client = redis.from_url(
-                redis_url, 
-                decode_responses=False,
-                socket_connect_timeout=5,
-                socket_timeout=5,
-                retry_on_timeout=True,
-                health_check_interval=30,
-                max_connections=20  # Connection pooling
-            )
+        """Connect to Redis server with retry logic and graceful fallback"""
+        redis_urls = [
+            os.getenv('REDIS_URL', ''),
+            'redis://localhost:6379/0',
+            'redis://127.0.0.1:6379/0',
+            'redis://redis:6379/0'  # Docker container name
+        ]
+        
+        # Filter out empty URLs
+        redis_urls = [url for url in redis_urls if url]
+        
+        for attempt in range(3):  # 3 retry attempts
+            for redis_url in redis_urls:
+                try:
+                    logger.info(f"Attempting Redis connection to {redis_url} (attempt {attempt + 1}/3)")
+                    
+                    # Enhanced Redis connection with performance settings
+                    self.redis_client = redis.from_url(
+                        redis_url, 
+                        decode_responses=False,
+                        socket_connect_timeout=2,  # Faster timeout for retries
+                        socket_timeout=2,
+                        retry_on_timeout=True,
+                        health_check_interval=30,
+                        max_connections=20  # Connection pooling
+                    )
+                    
+                    # Test connection
+                    self.redis_client.ping()
+                    logger.info(f"Redis cache connected successfully to {redis_url}")
+                    return  # Success, exit function
+                    
+                except Exception as e:
+                    logger.debug(f"Redis connection failed for {redis_url}: {e}")
+                    self.redis_client = None
+                    continue
             
-            # Test connection
-            self.redis_client.ping()
-            logger.info("Redis cache connected successfully with optimized settings")
-            
-        except Exception as e:
-            logger.warning(f"Redis connection failed: {e}. Using in-memory fallback.")
-            self.redis_client = None
+            # Wait before next attempt (exponential backoff)
+            if attempt < 2:
+                wait_time = 2 ** attempt
+                logger.debug(f"Waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
+        
+        logger.warning("All Redis connection attempts failed. Using in-memory fallback.")
+        self._init_fallback_cache()
+    
+    def _init_fallback_cache(self):
+        """Initialize in-memory fallback cache"""
+        self._fallback_cache = {}
+        self._fallback_expiry = {}
+        logger.info("In-memory fallback cache initialized")
+    
+    def _cleanup_expired_fallback_entries(self):
+        """Clean up expired entries from fallback cache"""
+        current_time = time.time()
+        expired_keys = [
+            key for key, expiry in self._fallback_expiry.items() 
+            if current_time > expiry
+        ]
+        
+        for key in expired_keys:
+            self._fallback_cache.pop(key, None)
+            self._fallback_expiry.pop(key, None)
     
     def _get_key(self, key: str, namespace: str = "dg") -> str:
         """Get namespaced cache key"""
         return f"{namespace}:{key}"
     
     def get(self, key: str, namespace: str = "dg") -> Any:
-        """Get value from cache"""
-        if not self.redis_client:
-            return None
-            
-        try:
-            cache_key = self._get_key(key, namespace)
-            value = self.redis_client.get(cache_key)
-            
-            if value is not None:
-                self.stats['hits'] += 1
-                # Try JSON first, then pickle
-                try:
-                    return json.loads(value.decode('utf-8') if isinstance(value, bytes) else str(value))
-                except (json.JSONDecodeError, TypeError, UnicodeDecodeError):
-                    return pickle.loads(value if isinstance(value, bytes) else str(value).encode())
-            else:
-                self.stats['misses'] += 1
-                return None
+        """Get value from cache with fallback support"""
+        cache_key = self._get_key(key, namespace)
+        
+        # Try Redis first
+        if self.redis_client:
+            try:
+                value = self.redis_client.get(cache_key)
                 
-        except Exception as e:
-            logger.error(f"Cache get error for key {key}: {e}")
-            self.stats['errors'] += 1
-            return None
+                if value is not None:
+                    self.stats['hits'] += 1
+                    # Use only JSON deserialization for security
+                    try:
+                        decoded_value = value.decode('utf-8') if isinstance(value, bytes) else str(value)
+                        return self._safe_json_loads(decoded_value)
+                    except (json.JSONDecodeError, TypeError, UnicodeDecodeError) as e:
+                        logger.warning(f"Failed to deserialize cached value for key {key}: {e}")
+                        # Return None instead of attempting unsafe pickle deserialization
+                        return None
+                        
+            except Exception as e:
+                logger.debug(f"Redis get error for key {key}: {e}")
+                self.stats['errors'] += 1
+        
+        # Fallback to in-memory cache
+        self._cleanup_expired_fallback_entries()
+        if cache_key in self._fallback_cache:
+            self.stats['hits'] += 1
+            return self._fallback_cache[cache_key]
+        
+        self.stats['misses'] += 1
+        return None
     
     def set(self, key: str, value: Any, ttl: Optional[int] = None, namespace: str = "dg") -> bool:
-        """Set value in cache"""
-        if not self.redis_client:
-            return False
-            
-        try:
-            cache_key = self._get_key(key, namespace)
-            expiry = ttl or self.default_ttl
-            
-            # Try JSON first, then pickle
+        """Set value in cache with fallback support"""
+        cache_key = self._get_key(key, namespace)
+        expiry = ttl or self.default_ttl
+        success = False
+        
+        # Try Redis first
+        if self.redis_client:
             try:
-                serialized_value = json.dumps(value)
-            except (TypeError, ValueError):
-                serialized_value = pickle.dumps(value)
-            
-            result = self.redis_client.setex(cache_key, expiry, serialized_value)
-            
-            if result:
-                self.stats['sets'] += 1
-                return True
-            else:
-                self.stats['errors'] += 1
-                return False
+                # Use only JSON serialization for security
+                serialized_value = self._safe_json_dumps(value)
                 
-        except Exception as e:
-            logger.error(f"Cache set error for key {key}: {e}")
-            self.stats['errors'] += 1
-            return False
+                result = self.redis_client.setex(cache_key, expiry, serialized_value)
+                
+                if result:
+                    self.stats['sets'] += 1
+                    success = True
+                else:
+                    self.stats['errors'] += 1
+                    
+            except Exception as e:
+                logger.debug(f"Redis set error for key {key}: {e}")
+                self.stats['errors'] += 1
+        
+        # Always store in fallback cache as backup (with TTL)
+        self._cleanup_expired_fallback_entries()
+        self._fallback_cache[cache_key] = value
+        self._fallback_expiry[cache_key] = time.time() + expiry
+        
+        if not success:
+            self.stats['sets'] += 1  # Count fallback as successful set
+        
+        return True  # Always return True since we have fallback
+    
+    def _safe_json_dumps(self, value: Any) -> str:
+        """Safely serialize value to JSON, handling complex types"""
+        def json_serializer(obj):
+            """Custom JSON serializer for complex types"""
+            if isinstance(obj, datetime):
+                return {'__datetime__': obj.isoformat()}
+            elif isinstance(obj, timedelta):
+                return {'__timedelta__': obj.total_seconds()}
+            elif isinstance(obj, Decimal):
+                return {'__decimal__': str(obj)}
+            elif isinstance(obj, set):
+                return {'__set__': list(obj)}
+            elif isinstance(obj, bytes):
+                return {'__bytes__': base64.b64encode(obj).decode('utf-8')}
+            elif hasattr(obj, '__dict__'):
+                return {'__object__': obj.__dict__, '__class__': obj.__class__.__name__}
+            raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+        
+        return json.dumps(value, default=json_serializer, ensure_ascii=False)
+    
+    def _safe_json_loads(self, value: str) -> Any:
+        """Safely deserialize JSON value, handling complex types"""
+        def json_deserializer(dct):
+            """Custom JSON deserializer for complex types"""
+            if '__datetime__' in dct:
+                return datetime.fromisoformat(dct['__datetime__'])
+            elif '__timedelta__' in dct:
+                return timedelta(seconds=dct['__timedelta__'])
+            elif '__decimal__' in dct:
+                return Decimal(dct['__decimal__'])
+            elif '__set__' in dct:
+                return set(dct['__set__'])
+            elif '__bytes__' in dct:
+                return base64.b64decode(dct['__bytes__'])
+            elif '__object__' in dct:
+                # For security, don't reconstruct arbitrary objects
+                # Return the dict instead
+                return dct['__object__']
+            return dct
+        
+        return json.loads(value, object_hook=json_deserializer)
     
     def delete(self, key: str, namespace: str = "dg") -> bool:
         """Delete value from cache"""

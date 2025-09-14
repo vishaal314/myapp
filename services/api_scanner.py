@@ -10,6 +10,8 @@ import re
 import json
 import time
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock, local
 
 # Import centralized logging
 try:
@@ -37,7 +39,8 @@ class APIScanner:
     """
     
     def __init__(self, max_endpoints=50, request_timeout=10, rate_limit_delay=0.1, 
-                 follow_redirects=True, verify_ssl=True, region="Netherlands"):
+                 follow_redirects=True, verify_ssl=True, region="Netherlands", 
+                 batch_size=5, max_workers=3):
         """
         Initialize the API scanner.
         
@@ -60,14 +63,20 @@ class APIScanner:
         self.start_time = None
         self._rate_limit_detected = False
         self._rate_limit_retries = 0
+        self.batch_size = batch_size
+        self.max_workers = max_workers
+        self._stats_lock = Lock()  # Thread-safe statistics
+        self._shared_data_lock = Lock()  # Lock for all shared data structures
+        self._checkpoint_enabled = True
+        self._checkpoint_interval = 5  # Save checkpoint every 5 scanned endpoints
         
-        # Initialize session with proper headers
-        self.session = requests.Session()
-        self.session.headers.update({
+        # Initialize thread-local storage for sessions
+        self._local = local()
+        self._session_headers = {
             'User-Agent': 'DataGuardian-API-Scanner/1.0 (Privacy Compliance Scanner)',
             'Accept': 'application/json, application/xml, text/plain, */*',
             'Accept-Language': 'en-US,en;q=0.9'
-        })
+        }
         
         # Load PII detection patterns
         self._load_pii_patterns()
@@ -83,6 +92,40 @@ class APIScanner:
         
         # Load Netherlands UAVG specific rules
         self._load_netherlands_compliance_rules()
+    
+    def _get_session(self):
+        """Get or create a thread-local requests session for thread safety."""
+        if not hasattr(self._local, 'session'):
+            self._local.session = requests.Session()
+            self._local.session.headers.update(self._session_headers)
+            
+            # Apply global session configuration
+            self._local.session.timeout = self.request_timeout
+            if hasattr(self, 'verify_ssl'):
+                self._local.session.verify = self.verify_ssl
+        
+        return self._local.session
+    
+    def _get_user_scope(self):
+        """Get user scope for checkpoint keys - ensures user isolation"""
+        try:
+            import streamlit as st
+            # Try to get session ID or user ID from Streamlit
+            if hasattr(st, 'session_state'):
+                # Create a consistent user scope from session
+                session_info = getattr(st.session_state, '_session_info', None)
+                if session_info:
+                    return f"user_{hash(str(session_info)) % 1000000}"
+                # Fallback: create scope from session state hash
+                session_hash = hash(str(id(st.session_state))) % 1000000
+                return f"session_{session_hash}"
+        except (ImportError, AttributeError):
+            pass
+        
+        # Fallback to thread ID for isolation
+        import threading
+        thread_id = threading.current_thread().ident
+        return f"thread_{thread_id % 1000000}"
     
     def _load_pii_patterns(self):
         """Load PII detection patterns for API response analysis."""
@@ -299,7 +342,7 @@ class APIScanner:
         self.progress_callback = callback_function
     
     def scan_api(self, base_url: str, auth_token: Optional[str] = None, openapi_spec: Optional[str] = None, 
-                 endpoints: Optional[List[str]] = None) -> Dict[str, Any]:
+                 endpoints: Optional[List[str]] = None, resume_scan_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Perform a comprehensive scan of an API.
         
@@ -315,8 +358,13 @@ class APIScanner:
         self.start_time = datetime.now()
         self.is_running = True
         
-        # Generate a unique scan ID
-        scan_id = hashlib.md5(f"{base_url}:{self.start_time.isoformat()}".encode()).hexdigest()[:10]
+        # Generate or use existing scan ID for resume functionality
+        if resume_scan_id:
+            scan_id = resume_scan_id
+            logger.info(f"Resuming scan with ID: {scan_id}")
+        else:
+            scan_id = hashlib.md5(f"{base_url}:{self.start_time.isoformat()}".encode()).hexdigest()[:10]
+            logger.info(f"Starting new scan with ID: {scan_id}")
         
         # Parse and normalize the base URL
         parsed_url = urlparse(base_url)
@@ -326,19 +374,33 @@ class APIScanner:
         
         base_domain = parsed_url.netloc
         
-        # Initialize scan data structures
-        scanned_endpoints = []
-        findings = []
-        vulnerabilities = []
-        pii_exposures = []
-        auth_issues = []
+        # Initialize or resume scan data structures
+        checkpoint_data = self._load_checkpoint(scan_id) if resume_scan_id else None
         
-        # Set up authentication if provided
+        if checkpoint_data:
+            # Resume from checkpoint
+            scanned_endpoints = checkpoint_data.get('scanned_endpoints', [])
+            findings = checkpoint_data.get('findings', [])
+            vulnerabilities = checkpoint_data.get('vulnerabilities', [])
+            pii_exposures = checkpoint_data.get('pii_exposures', [])
+            auth_issues = checkpoint_data.get('auth_issues', [])
+            completed_endpoints = set(checkpoint_data.get('completed_endpoints', []))
+            logger.info(f"Resumed from checkpoint: {len(scanned_endpoints)} endpoints already completed")
+        else:
+            # Initialize fresh scan data structures
+            scanned_endpoints = []
+            findings = []
+            vulnerabilities = []
+            pii_exposures = []
+            auth_issues = []
+            completed_endpoints = set()
+        
+        # Set up authentication if provided (stored for thread-local sessions)
         if auth_token:
             if auth_token.startswith('Bearer '):
-                self.session.headers['Authorization'] = auth_token
+                self._session_headers['Authorization'] = auth_token
             else:
-                self.session.headers['Authorization'] = f'Bearer {auth_token}'
+                self._session_headers['Authorization'] = f'Bearer {auth_token}'
         
         # Discover endpoints
         if openapi_spec:
@@ -355,62 +417,17 @@ class APIScanner:
         if self.progress_callback:
             self.progress_callback(0, len(discovered_endpoints), f"Starting API scan of {base_domain}")
         
-        # Scan each endpoint
-        for i, endpoint_url in enumerate(discovered_endpoints):
-            if not self.is_running:
-                break
-            
-            logger.info(f"Scanning endpoint: {endpoint_url}")
-            
-            try:
-                # Exponential backoff with jitter for rate limiting
-                if self._rate_limit_detected:
-                    import random
-                    base_delay = self.rate_limit_delay
-                    exponential_delay = min(10.0, base_delay * (2 ** self._rate_limit_retries))
-                    jitter = random.uniform(0, 0.1 * exponential_delay)
-                    total_delay = exponential_delay + jitter
-                    time.sleep(total_delay)
-                else:
-                    time.sleep(self.rate_limit_delay)  # Minimal delay (0.1s default)
-                
-                # Scan the endpoint
-                endpoint_data = self._scan_endpoint(endpoint_url, base_url)
-                
-                # Check for rate limit response and adjust strategy
-                if endpoint_data.get('status_code') == 429:
-                    if not self._rate_limit_detected:
-                        self._rate_limit_detected = True
-                        self._rate_limit_retries = 1
-                    else:
-                        self._rate_limit_retries = min(5, self._rate_limit_retries + 1)
-                    logger.warning(f"Rate limiting detected on {endpoint_url}, retry #{self._rate_limit_retries}")
-                elif endpoint_data.get('status_code') in [200, 201, 202]:
-                    # Reset rate limiting state on success
-                    self._rate_limit_detected = False
-                    self._rate_limit_retries = 0
-                scanned_endpoints.append(endpoint_data)
-                
-                # Extract findings
-                endpoint_findings = endpoint_data.get('findings', [])
-                findings.extend(endpoint_findings)
-                
-                # Categorize findings
-                for finding in endpoint_findings:
-                    if finding.get('type') == 'vulnerability':
-                        vulnerabilities.append(finding)
-                    elif finding.get('type') == 'pii_exposure':
-                        pii_exposures.append(finding)
-                    elif finding.get('type') == 'auth_issue':
-                        auth_issues.append(finding)
-                
-                # Report progress
-                if self.progress_callback:
-                    self.progress_callback(i + 1, len(discovered_endpoints), f"Scanned {endpoint_url}")
-                
-            except Exception as e:
-                logger.warning(f"Error scanning endpoint {endpoint_url}: {str(e)}")
-                continue
+        # Filter out already completed endpoints for resume functionality
+        if resume_scan_id and completed_endpoints:
+            remaining_endpoints = [ep for ep in discovered_endpoints if ep not in completed_endpoints]
+            logger.info(f"Resume: Skipping {len(completed_endpoints)} already completed endpoints, "
+                       f"scanning {len(remaining_endpoints)} remaining")
+            discovered_endpoints = remaining_endpoints
+
+        # Scan endpoints with batch processing
+        self._batch_scan_endpoints(discovered_endpoints, base_url, scanned_endpoints, 
+                                 findings, vulnerabilities, pii_exposures, auth_issues, 
+                                 scan_id, completed_endpoints)
         
         # Perform additional security checks
         ssl_info = self._check_ssl_security(base_url)
@@ -456,6 +473,240 @@ class APIScanner:
         self.is_running = False
         return scan_results
     
+    def _batch_scan_endpoints(self, discovered_endpoints, base_url, scanned_endpoints, 
+                            findings, vulnerabilities, pii_exposures, auth_issues,
+                            scan_id, completed_endpoints):
+        """Scan endpoints using batch processing with concurrent execution and checkpoint support"""
+        total_endpoints = len(discovered_endpoints)
+        completed = 0
+        
+        # Process endpoints in batches
+        for batch_start in range(0, total_endpoints, self.batch_size):
+            if not self.is_running:
+                break
+                
+            batch_end = min(batch_start + self.batch_size, total_endpoints)
+            batch_endpoints = discovered_endpoints[batch_start:batch_end]
+            
+            logger.info(f"Processing batch {batch_start//self.batch_size + 1}: "
+                       f"endpoints {batch_start + 1}-{batch_end} of {total_endpoints}")
+            
+            # Use ThreadPoolExecutor for concurrent scanning
+            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                # Submit all endpoints in the batch
+                future_to_endpoint = {
+                    executor.submit(self._scan_endpoint_with_retry, endpoint_url, base_url): endpoint_url
+                    for endpoint_url in batch_endpoints
+                }
+                
+                # Process completed scans
+                for future in as_completed(future_to_endpoint):
+                    if not self.is_running:
+                        break
+                        
+                    endpoint_url = future_to_endpoint[future]
+                    completed += 1
+                    
+                    try:
+                        endpoint_data = future.result()
+                        
+                        # Thread-safe operations - protect ALL shared data access
+                        with self._shared_data_lock:
+                            scanned_endpoints.append(endpoint_data)
+                            
+                            # Extract findings
+                            endpoint_findings = endpoint_data.get('findings', [])
+                            findings.extend(endpoint_findings)
+                            
+                            # Categorize findings
+                            for finding in endpoint_findings:
+                                if finding.get('type') == 'vulnerability':
+                                    vulnerabilities.append(finding)
+                                elif finding.get('type') == 'pii_exposure':
+                                    pii_exposures.append(finding)
+                                elif finding.get('type') == 'auth_issue':
+                                    auth_issues.append(finding)
+                            
+                            # Mark endpoint as completed for resume functionality
+                            completed_endpoints.add(endpoint_url)
+                        
+                        # Report progress (outside lock to avoid blocking)
+                        if self.progress_callback:
+                            self.progress_callback(completed, total_endpoints, 
+                                                 f"Completed {endpoint_url}")
+                        logger.debug(f"Successfully scanned {endpoint_url}")
+                        
+                        # Save checkpoint periodically
+                        if self._checkpoint_enabled and completed % self._checkpoint_interval == 0:
+                            self._save_checkpoint(scan_id, scanned_endpoints, findings, 
+                                                vulnerabilities, pii_exposures, auth_issues, 
+                                                completed_endpoints)
+                        
+                    except Exception as e:
+                        logger.warning(f"Error scanning endpoint {endpoint_url}: {str(e)}")
+                        continue
+            
+            # Small delay between batches to prevent overwhelming the server
+            if batch_end < total_endpoints and self.is_running:
+                time.sleep(0.5)
+        
+        # Save final checkpoint
+        if self._checkpoint_enabled:
+            self._save_checkpoint(scan_id, scanned_endpoints, findings, 
+                                vulnerabilities, pii_exposures, auth_issues, 
+                                completed_endpoints)
+    
+    def _scan_endpoint_with_retry(self, endpoint_url, base_url):
+        """Scan individual endpoint with retry logic - thread-safe wrapper"""
+        try:
+            # Adaptive rate limiting per thread
+            if self._rate_limit_detected:
+                import random
+                base_delay = self.rate_limit_delay
+                exponential_delay = min(10.0, base_delay * (2 ** self._rate_limit_retries))
+                jitter = random.uniform(0, 0.1 * exponential_delay)
+                total_delay = exponential_delay + jitter
+                time.sleep(total_delay)
+            else:
+                time.sleep(self.rate_limit_delay)  # Minimal delay (0.1s default)
+            
+            # Scan the endpoint
+            endpoint_data = self._scan_endpoint(endpoint_url, base_url)
+            
+            # Check for rate limit response and adjust strategy
+            if endpoint_data.get('status_code') == 429:
+                if not self._rate_limit_detected:
+                    self._rate_limit_detected = True
+                    self._rate_limit_retries = 1
+                else:
+                    self._rate_limit_retries = min(5, self._rate_limit_retries + 1)
+                logger.warning(f"Rate limiting detected on {endpoint_url}, retry #{self._rate_limit_retries}")
+            elif endpoint_data.get('status_code') in [200, 201, 202]:
+                # Reset rate limiting state on success
+                self._rate_limit_detected = False
+                self._rate_limit_retries = 0
+            
+            return endpoint_data
+            
+        except Exception as e:
+            logger.error(f"Error in _scan_endpoint_with_retry for {endpoint_url}: {str(e)}")
+            # Return a minimal error response
+            return {
+                'url': endpoint_url,
+                'status_code': 0,
+                'error': str(e),
+                'findings': []
+            }
+    
+    def _save_checkpoint(self, scan_id: str, scanned_endpoints: list, findings: list,
+                        vulnerabilities: list, pii_exposures: list, auth_issues: list,
+                        completed_endpoints: set, user_id: str = None):
+        """Save scan checkpoint for resume functionality with user scoping"""
+        try:
+            checkpoint_data = {
+                'scan_id': scan_id,
+                'timestamp': datetime.now().isoformat(),
+                'scanned_endpoints': scanned_endpoints,
+                'findings': findings,
+                'vulnerabilities': vulnerabilities,
+                'pii_exposures': pii_exposures,
+                'auth_issues': auth_issues,
+                'completed_endpoints': list(completed_endpoints),
+                'total_completed': len(completed_endpoints)
+            }
+            
+            # Create user-scoped checkpoint key to prevent unauthorized access
+            user_scope = user_id or self._get_user_scope()
+            checkpoint_key = f"api_scan_checkpoint_{user_scope}_{scan_id}"
+            
+            # Try to use Redis cache first, fallback to session state
+            try:
+                from utils.redis_cache import get_cache
+                cache = get_cache()
+                cache.set(checkpoint_key, checkpoint_data, ttl=86400)  # 24 hours
+                logger.debug(f"Checkpoint saved to cache for scan {scan_id} (user: {user_scope})")
+            except Exception as e:
+                # Fallback to session state if available
+                try:
+                    import streamlit as st
+                    if hasattr(st, 'session_state'):
+                        st.session_state[f'checkpoint_{user_scope}_{scan_id}'] = checkpoint_data
+                        logger.debug(f"Checkpoint saved to session for scan {scan_id} (user: {user_scope})")
+                except:
+                    logger.warning(f"Failed to save checkpoint for scan {scan_id}: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Error saving checkpoint for scan {scan_id}: {e}")
+    
+    def _load_checkpoint(self, scan_id: str, user_id: str = None) -> Optional[Dict[str, Any]]:
+        """Load scan checkpoint for resume functionality with user scoping"""
+        try:
+            # Create user-scoped checkpoint key to prevent unauthorized access
+            user_scope = user_id or self._get_user_scope()
+            checkpoint_key = f"api_scan_checkpoint_{user_scope}_{scan_id}"
+            
+            # Try Redis cache first
+            try:
+                from utils.redis_cache import get_cache
+                cache = get_cache()
+                checkpoint_data = cache.get(checkpoint_key)
+                if checkpoint_data:
+                    logger.info(f"Checkpoint loaded from cache for scan {scan_id} (user: {user_scope})")
+                    return checkpoint_data
+            except Exception as e:
+                logger.debug(f"Cache checkpoint load failed: {e}")
+            
+            # Fallback to session state
+            try:
+                import streamlit as st
+                if hasattr(st, 'session_state'):
+                    checkpoint_data = st.session_state.get(f'checkpoint_{user_scope}_{scan_id}')
+                    if checkpoint_data:
+                        logger.info(f"Checkpoint loaded from session for scan {scan_id} (user: {user_scope})")
+                        return checkpoint_data
+            except:
+                pass
+            
+            logger.info(f"No checkpoint found for scan {scan_id}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error loading checkpoint for scan {scan_id}: {e}")
+            return None
+    
+    def get_available_checkpoints(self) -> List[Dict[str, str]]:
+        """Get list of available scan checkpoints for resume"""
+        checkpoints = []
+        try:
+            # Try Redis cache first
+            try:
+                from utils.redis_cache import get_cache
+                cache = get_cache()
+                # Note: This is a simplified approach - in production you'd want to 
+                # maintain a separate index of checkpoints
+                logger.debug("Checkpoint listing from cache not implemented (requires key scanning)")
+            except Exception as e:
+                logger.debug(f"Cache checkpoint listing failed: {e}")
+            
+            # Fallback to session state
+            try:
+                import streamlit as st
+                if hasattr(st, 'session_state'):
+                    for key, value in st.session_state.items():
+                        if key.startswith('checkpoint_') and isinstance(value, dict):
+                            checkpoints.append({
+                                'scan_id': value.get('scan_id', key.replace('checkpoint_', '')),
+                                'timestamp': value.get('timestamp', 'Unknown'),
+                                'completed_endpoints': value.get('total_completed', 0)
+                            })
+            except:
+                pass
+            
+        except Exception as e:
+            logger.error(f"Error listing checkpoints: {e}")
+        
+        return checkpoints
+    
     def _discover_endpoints(self, base_url: str) -> List[str]:
         """
         Discover API endpoints through various methods.
@@ -490,7 +741,7 @@ class APIScanner:
         doc_endpoints = ['/swagger.json', '/openapi.json', '/api-docs', '/docs']
         for doc_endpoint in doc_endpoints:
             try:
-                response = self.session.get(urljoin(base_url, doc_endpoint), 
+                response = self._get_session().get(urljoin(base_url, doc_endpoint), 
                                           timeout=self.request_timeout)
                 if response.status_code == 200:
                     spec_endpoints = self._parse_openapi_spec(response.text, base_url)
@@ -538,7 +789,7 @@ class APIScanner:
     
     def _scan_endpoint(self, endpoint_url: str, base_url: str) -> Dict[str, Any]:
         """
-        Scan a single API endpoint for security issues and PII exposure.
+        Scan a single API endpoint for security issues and PII exposure using thread-local session for thread safety.
         
         Args:
             endpoint_url: The endpoint URL to scan
@@ -570,8 +821,8 @@ class APIScanner:
                 if method in ['POST', 'PUT', 'PATCH']:
                     request_data = {'test': 'data', 'id': 1}
                 
-                # Make the request
-                response = self.session.request(
+                # Make the request using thread-local session
+                response = self._get_session().request(
                     method=method,
                     url=endpoint_url,
                     json=request_data,
@@ -953,7 +1204,7 @@ class APIScanner:
                         # Add payload to request body
                         request_data = {'test': payload, 'id': payload}
                     
-                    response = self.session.request(
+                    response = self._get_session().request(
                         method=method,
                         url=test_url,
                         json=request_data,
@@ -1005,7 +1256,7 @@ class APIScanner:
                 ssl_info['enabled'] = True
                 
                 # Test SSL connection
-                response = self.session.get(base_url, timeout=self.request_timeout, verify=True)
+                response = self._get_session().get(base_url, timeout=self.request_timeout, verify=True)
                 ssl_info['valid_certificate'] = True
                 
             else:
@@ -1030,7 +1281,7 @@ class APIScanner:
         
         try:
             # Send OPTIONS request to check CORS headers
-            response = self.session.options(base_url, timeout=self.request_timeout)
+            response = self._get_session().options(base_url, timeout=self.request_timeout)
             
             cors_headers = {
                 'Access-Control-Allow-Origin': 'allow_origins',
@@ -1064,7 +1315,7 @@ class APIScanner:
             # Make multiple rapid requests to test rate limiting
             responses = []
             for i in range(5):
-                response = self.session.get(base_url, timeout=self.request_timeout)
+                response = self._get_session().get(base_url, timeout=self.request_timeout)
                 responses.append(response)
                 
                 # Check for rate limit headers
