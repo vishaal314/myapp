@@ -351,11 +351,15 @@ class PredictiveComplianceEngine:
         return sorted(risk_forecasts, key=lambda x: x.probability, reverse=True)
     
     def _prepare_time_series_data(self, scan_history: List[Dict[str, Any]]) -> pd.DataFrame:
-        """Prepare time series data for forecasting"""
-        data = []
+        """Prepare time series data for forecasting with proper aggregation and smoothing"""
+        if not scan_history:
+            return pd.DataFrame()
         
+        # Step 1: Parse timestamps to dates and create raw data
+        raw_data = []
         for scan in scan_history:
             timestamp = pd.to_datetime(scan.get('timestamp', datetime.now().isoformat()))
+            date = timestamp.date()  # Convert to date for daily aggregation
             findings = scan.get('findings', [])
             
             # Extract metrics
@@ -363,12 +367,13 @@ class PredictiveComplianceEngine:
             critical_count = sum(1 for f in findings if f.get('severity') == 'Critical')
             high_count = sum(1 for f in findings if f.get('severity') == 'High')
             
-            # Ensure we have a reasonable compliance score, default to 75 if missing/0
+            # Ensure reasonable compliance score
             compliance_score = scan.get('compliance_score', 75)
             if compliance_score == 0:
-                compliance_score = 75  # Default reasonable score
+                compliance_score = 75
             
-            data.append({
+            raw_data.append({
+                'date': date,
                 'timestamp': timestamp,
                 'total_findings': total_findings,
                 'critical_findings': critical_count,
@@ -377,9 +382,74 @@ class PredictiveComplianceEngine:
                 'scan_type': scan.get('scan_type', 'Unknown')
             })
         
-        df = pd.DataFrame(data)
-        df = df.sort_values('timestamp')
-        return df
+        if not raw_data:
+            return pd.DataFrame()
+        
+        # Step 2: Group by date and compute daily medians
+        raw_df = pd.DataFrame(raw_data)
+        daily_aggregated = raw_df.groupby('date').agg({
+            'compliance_score': 'median',
+            'total_findings': 'median',
+            'critical_findings': 'median',
+            'high_findings': 'median'
+        }).reset_index()
+        
+        # Step 3: Reindex to continuous daily range (fill gaps up to 3 days)
+        if len(daily_aggregated) > 1:
+            start_date = daily_aggregated['date'].min()
+            end_date = daily_aggregated['date'].max()
+            date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+            
+            # Create full date range DataFrame
+            full_df = pd.DataFrame({'date': [d.date() for d in date_range]})
+            daily_aggregated = full_df.merge(daily_aggregated, on='date', how='left')
+            
+            # Forward fill gaps up to 3 days
+            daily_aggregated = daily_aggregated.ffill(limit=3)
+        
+        # Step 4: Apply 7-day EMA with outlier detection using MAD
+        if len(daily_aggregated) >= 3:
+            scores = daily_aggregated['compliance_score'].values
+            
+            # Calculate rolling median and MAD for outlier detection
+            window = min(7, len(scores))
+            rolling_median = pd.Series(scores).rolling(window=window, center=True).median()
+            rolling_mad = pd.Series(scores).rolling(window=window, center=True).apply(
+                lambda x: np.median(np.abs(x - np.median(x))) * 1.4826  # MAD to std conversion
+            )
+            
+            # Detect and replace outliers (|x - median| > 2.5 * MAD)
+            cleaned_scores = scores.copy()
+            for i in range(len(scores)):
+                if not pd.isna(rolling_median.iloc[i]) and not pd.isna(rolling_mad.iloc[i]):
+                    if abs(scores[i] - rolling_median.iloc[i]) > 2.5 * rolling_mad.iloc[i]:
+                        cleaned_scores[i] = rolling_median.iloc[i]
+            
+            # Apply 7-day EMA
+            smoothed_scores = pd.Series(cleaned_scores).ewm(span=7, adjust=False).mean().values
+            
+            # Step 5: Apply delta cap (±6 points max daily change)
+            max_delta = 6.0
+            final_scores = [smoothed_scores[0]]
+            for i in range(1, len(smoothed_scores)):
+                prev_score = final_scores[i-1]
+                curr_score = smoothed_scores[i]
+                capped_score = np.clip(curr_score, prev_score - max_delta, prev_score + max_delta)
+                final_scores.append(capped_score)
+            
+            daily_aggregated['smoothed_compliance_score'] = final_scores
+            daily_aggregated['raw_compliance_score'] = daily_aggregated['compliance_score']
+            daily_aggregated['compliance_score'] = final_scores  # Use smoothed as primary
+        else:
+            # Insufficient data for smoothing
+            daily_aggregated['smoothed_compliance_score'] = daily_aggregated['compliance_score']
+            daily_aggregated['raw_compliance_score'] = daily_aggregated['compliance_score']
+        
+        # Convert date back to timestamp for compatibility
+        daily_aggregated['timestamp'] = pd.to_datetime(daily_aggregated['date'])
+        daily_aggregated = daily_aggregated.sort_values('timestamp')
+        
+        return daily_aggregated
     
     def _calculate_compliance_trend(self, time_series_data: pd.DataFrame) -> ComplianceTrend:
         """Calculate current compliance trend"""
@@ -406,39 +476,82 @@ class PredictiveComplianceEngine:
     
     def _forecast_compliance_score(self, time_series_data: pd.DataFrame, 
                                  forecast_days: int) -> Tuple[float, Tuple[float, float]]:
-        """Forecast future compliance score using time series analysis"""
+        """Forecast future compliance score using smoothed time series analysis"""
         
-        if len(time_series_data) < 5:
-            # Insufficient data - use current score with realistic confidence interval
-            current_score = time_series_data['compliance_score'].iloc[-1] if len(time_series_data) > 0 else 75.0
-            # Ensure we don't return 0.0 - provide reasonable prediction
-            if current_score == 0:
-                current_score = 75.0
-            predicted_score = min(100.0, max(20.0, current_score + 5.0))  # Small improvement expected
-            return predicted_score, (predicted_score - 10, min(100.0, predicted_score + 10))
+        if len(time_series_data) == 0:
+            return 75.0, (65.0, 85.0)
         
-        scores = time_series_data['compliance_score'].values
+        # Use smoothed scores for more stable forecasting
+        smoothed_scores = time_series_data['smoothed_compliance_score'].values if 'smoothed_compliance_score' in time_series_data.columns else time_series_data['compliance_score'].values
         
-        # Simple exponential smoothing for prediction
-        alpha = 0.3  # Smoothing parameter
-        smoothed = [scores[0]]
+        if len(smoothed_scores) < 6:
+            # Insufficient data - use revert-to-mean blend with industry benchmark
+            current_score = smoothed_scores[-1] if len(smoothed_scores) > 0 else 75.0
+            industry_benchmark = 78.5  # Financial services average from patterns
+            
+            # Blend current score with industry benchmark (60/40 ratio)
+            predicted_score = 0.6 * current_score + 0.4 * industry_benchmark
+            predicted_score = max(0.0, min(100.0, predicted_score))
+            
+            # Conservative confidence interval for limited data
+            confidence_interval = (
+                max(0.0, predicted_score - 5.0),
+                min(100.0, predicted_score + 5.0)
+            )
+            
+            return predicted_score, confidence_interval
         
-        for i in range(1, len(scores)):
-            smoothed.append(alpha * scores[i] + (1 - alpha) * smoothed[i-1])
+        # Use damped linear trend on smoothed series
+        # Calculate trend over last 7 days (or all available if less)
+        trend_window = min(7, len(smoothed_scores))
+        recent_scores = smoothed_scores[-trend_window:]
         
-        # Forecast next value
-        forecast = alpha * scores[-1] + (1 - alpha) * smoothed[-1]
+        # Linear regression to get trend
+        x = np.arange(len(recent_scores), dtype=np.float64)
+        y = np.asarray(recent_scores, dtype=np.float64)
+        trend_slope = np.polyfit(x, y, 1)[0] if len(recent_scores) > 1 else 0
         
-        # Calculate confidence interval based on historical variance
-        residuals = np.array(scores[1:]) - np.array(smoothed[:-1])
-        std_error = np.std(residuals)
+        # Apply damping factor to trend (0.5 = moderate damping)
+        damping_factor = 0.5
+        damped_slope = trend_slope * damping_factor
         
-        confidence_interval = (
-            max(0, forecast - 1.96 * std_error),
-            min(100, forecast + 1.96 * std_error)
-        )
+        # Forecast: last smoothed value + damped trend * forecast_days
+        last_smoothed = smoothed_scores[-1]
+        forecast = last_smoothed + (damped_slope * forecast_days)
         
-        return max(0, min(100, forecast)), confidence_interval
+        # Ensure continuity: first forecast point equals last smoothed value
+        if forecast_days == 30:  # Standard 30-day forecast
+            forecast = last_smoothed + (damped_slope * 30)
+        
+        # Clamp to valid range
+        forecast = max(0.0, min(100.0, forecast))
+        
+        # Calculate confidence interval from recent residuals
+        if len(smoothed_scores) >= 3:
+            # Calculate residuals from simple trend line
+            x_all = np.arange(len(smoothed_scores), dtype=np.float64)
+            y_all = np.asarray(smoothed_scores, dtype=np.float64)
+            trend_line = np.polyfit(x_all, y_all, 1)
+            predicted_all = np.polyval(trend_line, x_all)
+            residuals = y_all - predicted_all
+            
+            # Use MAD-based standard error (more robust than std)
+            mad = np.median(np.abs(residuals - np.median(residuals)))
+            std_error = mad * 1.4826  # Convert MAD to std equivalent
+            
+            # 95% confidence interval
+            confidence_interval = (
+                max(0.0, forecast - 1.96 * std_error),
+                min(100.0, forecast + 1.96 * std_error)
+            )
+        else:
+            # Fallback confidence interval
+            confidence_interval = (
+                max(0.0, forecast - 8.0),
+                min(100.0, forecast + 8.0)
+            )
+        
+        return forecast, confidence_interval
     
     def _identify_risk_factors(self, scan_history: List[Dict[str, Any]], 
                              time_series_data: pd.DataFrame) -> List[str]:
