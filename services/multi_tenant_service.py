@@ -226,6 +226,12 @@ class MultiTenantService:
             
         except Exception as e:
             logger.error(f"Failed to initialize Row Level Security: {str(e)}")
+            # Rollback any partial transaction to clean state
+            try:
+                conn.rollback()
+                logger.info("Rolled back failed RLS transaction")
+            except:
+                pass
             # Don't raise exception here to avoid breaking schema initialization
             # RLS can be configured later if needed
             logger.warning("Continuing without RLS - manual configuration may be required")
@@ -247,6 +253,7 @@ class MultiTenantService:
                 raise PermissionError(f"Access denied to organization {organization_id}")
             
             conn = psycopg2.connect(self.db_url, sslmode='require')
+            conn.autocommit = True  # Use autocommit for SET commands to avoid transaction issues
             cursor = conn.cursor()
             
             # Set organization context for RLS
@@ -258,6 +265,8 @@ class MultiTenantService:
             else:
                 cursor.execute("SET app.admin_bypass = 'false'")
             
+            # Reset autocommit for normal operations
+            conn.autocommit = False
             cursor.close()
             
             logger.debug(f"Secure connection established for organization {organization_id}")
