@@ -81,9 +81,8 @@ class ResultsAggregator:
             raise RuntimeError(f"Secure database connection required for enterprise security compliance: {str(e)}")
     
     def _get_connection(self):
-        """Deprecated: Use _get_secure_connection instead for tenant isolation."""
-        logger.warning("Using deprecated _get_connection - should use _get_secure_connection with organization_id")
-        return self._get_secure_connection('default_org', admin_bypass=True)
+        """DEPRECATED AND UNSAFE: This method bypasses tenant isolation and should not be used."""
+        raise RuntimeError("_get_connection() is deprecated and unsafe - use _get_secure_connection() with proper organization_id for tenant isolation")
     
     def _ensure_reports_directory(self):
         """Ensure reports directory exists for non-PII report generation."""
@@ -93,7 +92,7 @@ class ResultsAggregator:
     
     def _init_db(self):
         """Initialize the database with required tables if they don't exist."""
-        conn = self._get_connection()
+        conn = self._get_secure_connection('system_admin', admin_bypass=True)
         if not conn:
             print("No database connection available. Using file-based storage.")
             self.use_file_storage = True
@@ -359,7 +358,7 @@ class ResultsAggregator:
         migrated_count = 0
         
         try:
-            conn = self._get_connection()
+            conn = self._get_secure_connection('system_admin', admin_bypass=True)
             cursor = conn.cursor()
             
             # Find records without encryption metadata
@@ -402,19 +401,20 @@ class ResultsAggregator:
             logger.error(f"Legacy data migration failed: {str(e)}")
             return migrated_count
 
-    def get_user_scans(self, username: str, limit: int = 20) -> List[Dict[str, Any]]:
+    def get_user_scans(self, username: str, limit: int = 20, organization_id: str = 'default_org') -> List[Dict[str, Any]]:
         """
-        Get recent scans for a user.
+        Get recent scans for a user with proper tenant isolation.
         
         Args:
             username: Username to get scans for
             limit: Maximum number of scans to return
+            organization_id: Organization ID for tenant isolation
             
         Returns:
             List of scan metadata dictionaries
         """
         try:
-            conn = self._get_connection()
+            conn = self._get_secure_connection(organization_id)
             
             cursor = conn.cursor()
             
@@ -505,11 +505,11 @@ class ResultsAggregator:
         
         return []
     
-    def _get_recent_scans_db(self, days: int = 30, username: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
-        """Get recent scans from database with enhanced error handling."""
+    def _get_recent_scans_db(self, days: int = 30, username: Optional[str] = None, organization_id: str = 'default_org') -> Optional[List[Dict[str, Any]]]:
+        """Get recent scans from database with enhanced error handling and tenant isolation."""
         
         try:
-            conn = self._get_connection()
+            conn = self._get_secure_connection(organization_id)
             if not conn:
                 print(f"No database connection for recent scans query")
                 return None
@@ -700,12 +700,13 @@ class ResultsAggregator:
         results['scan_type'] = scan_type
         self.store_scan_result(username, results)
     
-    def get_scan_by_id(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def get_scan_by_id(self, scan_id: str, organization_id: str = 'default_org') -> Optional[Dict[str, Any]]:
         """
-        Retrieve a scan by its ID.
+        Retrieve a scan by its ID with proper tenant isolation.
         
         Args:
             scan_id: Unique scan identifier
+            organization_id: Organization ID for tenant isolation
             
         Returns:
             Scan results dictionary or None if not found
@@ -714,7 +715,7 @@ class ResultsAggregator:
             return self._get_scan_by_id_file(scan_id)
         
         try:
-            conn = self._get_connection()
+            conn = self._get_secure_connection(organization_id)
             if not conn:
                 self.use_file_storage = True
                 return self._get_scan_by_id_file(scan_id)
@@ -764,9 +765,10 @@ class ResultsAggregator:
             return None
 
     def store_compliance_score(self, username: str, repo_name: str, scan_id: str, 
-                             overall_score: int, principle_scores: Dict[str, int]) -> None:
+                             overall_score: int, principle_scores: Dict[str, int], 
+                             organization_id: str = 'default_org') -> None:
         """
-        Store a compliance score for a repository.
+        Store a compliance score for a repository with proper tenant isolation.
         
         Args:
             username: Username associated with the scan
@@ -774,6 +776,7 @@ class ResultsAggregator:
             scan_id: Associated scan ID
             overall_score: Overall compliance score (0-100)
             principle_scores: Dictionary mapping GDPR principles to scores (0-100)
+            organization_id: Organization ID for tenant isolation
         """
         score_id = f"score_{uuid.uuid4().hex}"
         
@@ -783,7 +786,7 @@ class ResultsAggregator:
             return
         
         try:
-            conn = self._get_connection()
+            conn = self._get_secure_connection(organization_id)
             if not conn:
                 self.use_file_storage = True
                 self._store_compliance_score_file(score_id, username, repo_name, scan_id,
@@ -848,14 +851,15 @@ class ResultsAggregator:
             print(f"Error storing compliance score to file: {str(e)}")
 
     def get_user_compliance_history(self, username: str, repo_name: Optional[str] = None,
-                                  days: int = 30) -> List[Dict[str, Any]]:
+                                  days: int = 30, organization_id: str = 'default_org') -> List[Dict[str, Any]]:
         """
-        Get compliance score history for a user.
+        Get compliance score history for a user with proper tenant isolation.
         
         Args:
             username: Username to get history for
             repo_name: Optional repository name to filter by
             days: Number of days of history to include
+            organization_id: Organization ID for tenant isolation
             
         Returns:
             List of compliance score data points
@@ -864,7 +868,7 @@ class ResultsAggregator:
             return self._get_user_compliance_history_file(username, repo_name, days)
         
         try:
-            conn = self._get_connection()
+            conn = self._get_secure_connection(organization_id)
             if not conn:
                 self.use_file_storage = True
                 return self._get_user_compliance_history_file(username, repo_name, days)

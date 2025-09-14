@@ -38,12 +38,18 @@ class SecureAuthManager:
         self.lockout_duration = 300  # 5 minutes
         
     def _get_jwt_secret(self) -> str:
-        """Get JWT secret from environment or generate secure one"""
+        """Get JWT secret from environment or fail safely"""
         secret = os.getenv('JWT_SECRET')
         if not secret:
-            # Generate a secure random secret
+            # In production, this should be a hard requirement
+            # For development, we'll allow a generated secret with clear warning
+            if os.getenv('ENVIRONMENT') == 'production':
+                raise ValueError("JWT_SECRET environment variable is required in production")
+            
+            # Generate a secure random secret for development only
             secret = secrets.token_urlsafe(64)
-            logger.warning("JWT_SECRET not set, using generated secret (will not persist across restarts)")
+            logger.warning("JWT_SECRET not set - using generated secret (DEVELOPMENT ONLY - will not persist across restarts)")
+            logger.info("To fix: Set JWT_SECRET environment variable to a secure random value")
         return secret
     
     def _hash_password(self, password: str) -> str:
@@ -114,7 +120,7 @@ class SecureAuthManager:
         if not admin_password:
             # Generate secure random password if not set
             admin_password = secrets.token_urlsafe(16)
-            logger.warning(f"ADMIN_PASSWORD not set, generated: {admin_password}")
+            logger.warning("ADMIN_PASSWORD not set - generated secure password (password not logged for security)")
         
         # Create default users with secure passwords
         default_users = {

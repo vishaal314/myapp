@@ -167,40 +167,59 @@ class MultiTenantService:
             cursor.execute("DROP POLICY IF EXISTS tenant_isolation_scans ON scans;")
             cursor.execute("DROP POLICY IF EXISTS tenant_isolation_audit_log ON audit_log;")
             
-            # Create RLS policy for scans table
+            # Create RLS policies for tenant isolation (idempotent)
             # Users can only access scans from their organization
             cursor.execute("""
-            CREATE POLICY tenant_isolation_scans ON scans
-            FOR ALL
-            TO PUBLIC
-            USING (organization_id = current_setting('app.current_organization_id', true));
+            DO $$ 
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'scans' AND policyname = 'tenant_isolation_scans') THEN
+                    CREATE POLICY tenant_isolation_scans ON scans
+                    FOR ALL
+                    TO PUBLIC
+                    USING (organization_id = current_setting('app.current_organization_id', true));
+                END IF;
+            END $$;
             """)
             
-            # Create RLS policy for audit_log table
             # Users can only access audit logs from their organization
             cursor.execute("""
-            CREATE POLICY tenant_isolation_audit_log ON audit_log
-            FOR ALL
-            TO PUBLIC
-            USING (organization_id = current_setting('app.current_organization_id', true));
+            DO $$ 
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'audit_log' AND policyname = 'tenant_isolation_audit_log') THEN
+                    CREATE POLICY tenant_isolation_audit_log ON audit_log
+                    FOR ALL
+                    TO PUBLIC
+                    USING (organization_id = current_setting('app.current_organization_id', true));
+                END IF;
+            END $$;
             """)
             
-            # Create administrative bypass policies for system operations
+            # Create administrative bypass policies for system operations (idempotent)
             # These allow operations when no organization context is set (for admin tasks)
             cursor.execute("""
-            CREATE POLICY admin_access_scans ON scans
-            FOR ALL
-            TO PUBLIC
-            USING (current_setting('app.current_organization_id', true) = '' OR 
-                   current_setting('app.admin_bypass', true) = 'true');
+            DO $$ 
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'scans' AND policyname = 'admin_access_scans') THEN
+                    CREATE POLICY admin_access_scans ON scans
+                    FOR ALL
+                    TO PUBLIC
+                    USING (current_setting('app.current_organization_id', true) = '' OR 
+                           current_setting('app.admin_bypass', true) = 'true');
+                END IF;
+            END $$;
             """)
             
             cursor.execute("""
-            CREATE POLICY admin_access_audit_log ON audit_log
-            FOR ALL
-            TO PUBLIC
-            USING (current_setting('app.current_organization_id', true) = '' OR 
-                   current_setting('app.admin_bypass', true) = 'true');
+            DO $$ 
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'audit_log' AND policyname = 'admin_access_audit_log') THEN
+                    CREATE POLICY admin_access_audit_log ON audit_log
+                    FOR ALL
+                    TO PUBLIC
+                    USING (current_setting('app.current_organization_id', true) = '' OR 
+                           current_setting('app.admin_bypass', true) = 'true');
+                END IF;
+            END $$;
             """)
             
             logger.info("Row Level Security policies created successfully")
