@@ -75,6 +75,12 @@ class APIScanner:
         
         # Load authentication methods database
         self._load_auth_methods()
+        
+        # Load AI Act 2025 compliance patterns
+        self._load_ai_act_patterns()
+        
+        # Load Netherlands UAVG specific rules
+        self._load_netherlands_compliance_rules()
     
     def _load_pii_patterns(self):
         """Load PII detection patterns for API response analysis."""
@@ -92,8 +98,8 @@ class APIScanner:
                 'gdpr_category': 'Personal Data'
             },
             'ssn': {
-                'pattern': r'\b\d{3}-\d{2}-\d{4}\b|\b\d{9}\b',
-                'description': 'Social Security Numbers detected',
+                'pattern': r'\b\d{3}-\d{2}-\d{4}\b',
+                'description': 'US Social Security Numbers detected',
                 'severity': 'Critical',
                 'gdpr_category': 'Special Category Data'
             },
@@ -120,6 +126,28 @@ class APIScanner:
                 'description': 'Passwords exposed in response',
                 'severity': 'Critical',
                 'gdpr_category': 'Authentication Data'
+            },
+            'bsn': {
+                'pattern': r'\b\d{9}\b|\b\d{3}[-.\s]\d{2}[-.\s]\d{3}\b',
+                'description': 'Dutch BSN (Burgerservicenummer) detected',
+                'severity': 'Critical',
+                'gdpr_category': 'Netherlands UAVG Special Category',
+                'netherlands_specific': True,
+                'notification_required': True,
+                'validation_required': True  # Needs 11-proef validation
+            },
+            'dutch_postal_code': {
+                'pattern': r'\b\d{4}\s?[A-Z]{2}\b',
+                'description': 'Dutch postal codes detected',
+                'severity': 'Medium',
+                'gdpr_category': 'Location Data',
+                'netherlands_specific': True
+            },
+            'iban': {
+                'pattern': r'\b[A-Z]{2}\d{2}[A-Z0-9]{4}\d{7}([A-Z0-9]?){0,16}\b',
+                'description': 'IBAN bank account numbers detected',
+                'severity': 'High',
+                'gdpr_category': 'Financial Data'
             }
         }
     
@@ -178,6 +206,84 @@ class APIScanner:
                 'pattern': r'Bearer\s+([A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+)',
                 'description': 'JWT token authentication',
                 'security_level': 'High'
+            }
+        }
+    
+    def _load_ai_act_patterns(self):
+        """Load EU AI Act 2025 compliance patterns for API analysis."""
+        self.ai_act_patterns = {
+            'ai_endpoints': {
+                'patterns': [
+                    r'/ai/', r'/artificial[-_]intelligence/', r'/machine[-_]learning/',
+                    r'/ml/', r'/neural/', r'/prediction/', r'/classification/',
+                    r'/recommendation/', r'/sentiment/', r'/nlp/', r'/cv/',
+                    r'/facial[-_]recognition/', r'/biometric/', r'/automated[-_]decision/'
+                ],
+                'description': 'AI system endpoints detected',
+                'severity': 'High',
+                'ai_act_category': 'AI System',
+                'compliance_required': True
+            },
+            'high_risk_ai': {
+                'patterns': [
+                    r'/credit[-_]scoring/', r'/loan[-_]approval/', r'/hiring/',
+                    r'/recruitment/', r'/facial[-_]recognition/', r'/emotion[-_]detection/',
+                    r'/biometric/', r'/surveillance/', r'/law[-_]enforcement/'
+                ],
+                'description': 'High-risk AI system detected',
+                'severity': 'Critical',
+                'ai_act_category': 'High-Risk AI System',
+                'transparency_required': True,
+                'human_oversight_required': True
+            },
+            'prohibited_ai': {
+                'patterns': [
+                    r'/social[-_]scoring/', r'/subliminal/', r'/manipulation/',
+                    r'/exploit[-_]vulnerabilities/', r'/mass[-_]surveillance/'
+                ],
+                'description': 'Potentially prohibited AI practice detected',
+                'severity': 'Critical',
+                'ai_act_category': 'Prohibited AI Practice',
+                'immediate_review_required': True
+            }
+        }
+    
+    def _load_netherlands_compliance_rules(self):
+        """Load Netherlands UAVG specific compliance rules."""
+        self.netherlands_rules = {
+            'ap_notification_triggers': {
+                'bsn_detection': {
+                    'threshold': 1,  # Any BSN detection triggers notification
+                    'description': 'BSN detection requires AP notification',
+                    'authority': 'Autoriteit Persoonsgegevens (AP)',
+                    'notification_period': '72 hours',
+                    'severity': 'Critical'
+                },
+                'data_breach_indicators': {
+                    'patterns': [
+                        r'unauthorized_access', r'data_leak', r'security_breach',
+                        r'privacy_violation', r'gdpr_breach'
+                    ],
+                    'description': 'Potential data breach indicators',
+                    'notification_required': True
+                }
+            },
+            'dutch_specific_pii': {
+                'description': 'Netherlands-specific PII categories requiring special protection',
+                'categories': [
+                    'BSN (Burgerservicenummer)',
+                    'Dutch postal codes with house numbers',
+                    'Dutch bank account numbers (IBAN)',
+                    'Dutch passport/ID numbers'
+                ]
+            },
+            'uavg_rights': {
+                'data_subject_rights': [
+                    'right_to_access', 'right_to_rectification', 
+                    'right_to_erasure', 'right_to_portability',
+                    'right_to_object', 'right_to_restrict_processing'
+                ],
+                'description': 'UAVG data subject rights implementation required'
             }
         }
     
@@ -320,6 +426,9 @@ class APIScanner:
             },
             'scan_type': 'api'
         }
+        
+        # Aggregate compliance findings into scan-level summaries
+        self._aggregate_compliance_findings(scan_results)
         
         self.is_running = False
         return scan_results
@@ -467,6 +576,13 @@ class APIScanner:
                 # Check for PII in response
                 self._check_pii_exposure(response, method, endpoint_data)
                 
+                # Check for AI Act 2025 compliance
+                self._check_ai_act_compliance(endpoint_url, response, method, endpoint_data)
+                
+                # Check Netherlands UAVG specific compliance
+                if self.region.lower() == "netherlands":
+                    self._check_netherlands_compliance(response, method, endpoint_data)
+                
                 # Test for vulnerabilities if method allows input
                 if method in ['GET', 'POST', 'PUT', 'PATCH'] and response.status_code not in [404, 405]:
                     self._test_vulnerabilities(endpoint_url, method, endpoint_data)
@@ -579,6 +695,224 @@ class APIScanner:
         
         except Exception as e:
             logger.debug(f"Error checking PII exposure: {str(e)}")
+    
+    def _check_ai_act_compliance(self, endpoint_url: str, response: requests.Response, method: str, endpoint_data: Dict[str, Any]):
+        """Check API endpoint for EU AI Act 2025 compliance requirements."""
+        try:
+            # Check endpoint URL for AI-related patterns
+            for category_name, category_info in self.ai_act_patterns.items():
+                for pattern in category_info['patterns']:
+                    if re.search(pattern, endpoint_url, re.IGNORECASE):
+                        finding = {
+                            'type': 'ai_act_compliance',
+                            'severity': category_info['severity'],
+                            'description': f"{category_info['description']} - {endpoint_url}",
+                            'ai_act_category': category_info['ai_act_category'],
+                            'method': method,
+                            'url': response.url,
+                            'endpoint_pattern': pattern
+                        }
+                        
+                        # Add specific requirements based on AI category
+                        if category_info.get('transparency_required'):
+                            finding['transparency_required'] = True
+                            finding['recommendation'] = 'Implement transparency measures: clear AI disclosure, decision explanation capabilities'
+                        
+                        if category_info.get('human_oversight_required'):
+                            finding['human_oversight_required'] = True
+                            finding['recommendation'] = 'Implement human oversight: meaningful human review of AI decisions'
+                        
+                        if category_info.get('immediate_review_required'):
+                            finding['immediate_review_required'] = True
+                            finding['recommendation'] = 'CRITICAL: Review for potential EU AI Act prohibition - may require immediate system changes'
+                        
+                        endpoint_data['findings'].append(finding)
+                        
+                        # Also check response content for AI-related data
+                        self._check_ai_response_content(response, method, endpoint_data, category_info)
+                        
+                        break  # Only match first pattern per category
+        
+        except Exception as e:
+            logger.debug(f"Error checking AI Act compliance: {str(e)}")
+    
+    def _check_ai_response_content(self, response: requests.Response, method: str, endpoint_data: Dict[str, Any], ai_category: Dict[str, Any]):
+        """Check API response content for AI Act compliance indicators."""
+        try:
+            response_text = response.text.lower()
+            
+            # AI Act specific content patterns
+            ai_content_patterns = {
+                'decision_explanation': r'(explanation|reasoning|why|because|decision_factors)',
+                'confidence_score': r'(confidence|probability|score|certainty)',
+                'human_review': r'(human_review|manual_check|human_oversight)',
+                'bias_indicators': r'(bias|fairness|discrimination|unfair)',
+                'automated_decision': r'(automated|algorithm|ml_decision|ai_result)'
+            }
+            
+            for pattern_name, pattern in ai_content_patterns.items():
+                if re.search(pattern, response_text):
+                    endpoint_data['findings'].append({
+                        'type': 'ai_transparency',
+                        'severity': 'Medium',
+                        'description': f'AI transparency indicator detected: {pattern_name}',
+                        'ai_pattern': pattern_name,
+                        'method': method,
+                        'url': response.url,
+                        'recommendation': f'Ensure {pattern_name} meets EU AI Act transparency requirements'
+                    })
+        
+        except Exception as e:
+            logger.debug(f"Error checking AI response content: {str(e)}")
+    
+    def _check_netherlands_compliance(self, response: requests.Response, method: str, endpoint_data: Dict[str, Any]):
+        """Check API response for Netherlands UAVG specific compliance requirements."""
+        try:
+            response_text = response.text
+            
+            # Check for BSN with enhanced Netherlands-specific handling and validation
+            if 'bsn' in self.pii_patterns:
+                bsn_pattern = self.pii_patterns['bsn']['pattern']
+                bsn_candidates = re.findall(bsn_pattern, response_text)
+                
+                # Validate each BSN candidate using 11-proef algorithm
+                valid_bsns = [bsn for bsn in bsn_candidates if self._validate_bsn(bsn)]
+                
+                if valid_bsns:
+                    # BSN detection triggers critical Netherlands compliance requirements
+                    endpoint_data['findings'].append({
+                        'type': 'netherlands_uavg_critical',
+                        'severity': 'Critical',
+                        'description': f'BSN detected in API response - UAVG compliance required',
+                        'netherlands_specific': True,
+                        'ap_notification_required': True,
+                        'notification_period': '72 hours',
+                        'authority': 'Autoriteit Persoonsgegevens (AP)',
+                        'method': method,
+                        'url': response.url,
+                        'bsn_count': len(valid_bsns),
+                        'recommendation': 'IMMEDIATE ACTION: Implement BSN masking, notify AP within 72 hours if data breach'
+                    })
+            
+            # Check for other Netherlands-specific patterns
+            nl_patterns = {
+                'dutch_address': r'\b\d{4}\s?[A-Z]{2}\s+\d+[A-Z]?\b',  # Postal code + house number
+                'dutch_kvk': r'\b\d{8}\b',  # KvK number
+                'dutch_phone': r'\b(\+31|0031|0)\s?[1-9]\s?\d{1,2}\s?\d{6,7}\b'
+            }
+            
+            for pattern_name, pattern in nl_patterns.items():
+                matches = re.findall(pattern, response_text, re.IGNORECASE)
+                if matches:
+                    endpoint_data['findings'].append({
+                        'type': 'netherlands_pii',
+                        'severity': 'High',
+                        'description': f'Netherlands-specific PII detected: {pattern_name}',
+                        'netherlands_specific': True,
+                        'pattern_type': pattern_name,
+                        'method': method,
+                        'url': response.url,
+                        'count': len(matches),
+                        'recommendation': f'Implement UAVG-compliant handling for {pattern_name}'
+                    })
+            
+            # Check for UAVG data subject rights implementation indicators
+            uavg_rights_indicators = [
+                'data_access', 'data_deletion', 'data_portability', 
+                'data_rectification', 'consent_withdrawal'
+            ]
+            
+            for indicator in uavg_rights_indicators:
+                if indicator in response_text.lower():
+                    endpoint_data['findings'].append({
+                        'type': 'uavg_rights_implementation',
+                        'severity': 'Low',
+                        'description': f'UAVG data subject rights implementation detected: {indicator}',
+                        'netherlands_specific': True,
+                        'rights_indicator': indicator,
+                        'method': method,
+                        'url': response.url,
+                        'recommendation': 'Verify UAVG data subject rights implementation is complete and compliant'
+                    })
+        
+        except Exception as e:
+            logger.debug(f"Error checking Netherlands compliance: {str(e)}")
+    
+    def _validate_bsn(self, bsn_candidate: str) -> bool:
+        """Validate Dutch BSN using 11-proef checksum algorithm."""
+        try:
+            # Remove any separators and get just digits
+            digits = re.sub(r'[-.\s]', '', bsn_candidate)
+            
+            # BSN must be exactly 9 digits
+            if len(digits) != 9 or not digits.isdigit():
+                return False
+            
+            # Apply 11-proef validation
+            total = 0
+            for i, digit in enumerate(digits[:8]):  # First 8 digits
+                total += int(digit) * (9 - i)
+            
+            # Add last digit multiplied by -1
+            total += int(digits[8]) * -1
+            
+            # Valid if total is divisible by 11
+            return total % 11 == 0
+            
+        except Exception:
+            return False
+    
+    def _aggregate_compliance_findings(self, scan_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Aggregate compliance findings into scan-level summaries."""
+        try:
+            compliance_summary = {
+                'ai_act_findings': [],
+                'regulatory_notifications': [],
+                'netherlands_uavg_status': 'compliant',
+                'ai_act_status': 'no_ai_detected'
+            }
+            
+            # Aggregate findings from all endpoints
+            all_findings = []
+            for endpoint_data in scan_results.get('endpoints_data', []):
+                all_findings.extend(endpoint_data.get('findings', []))
+            
+            # Process AI Act findings
+            ai_findings = [f for f in all_findings if f.get('type') in ['ai_act_compliance', 'ai_transparency']]
+            if ai_findings:
+                compliance_summary['ai_act_findings'] = ai_findings
+                
+                # Determine overall AI Act status
+                if any(f.get('immediate_review_required') for f in ai_findings):
+                    compliance_summary['ai_act_status'] = 'prohibited_practices_detected'
+                elif any(f.get('ai_act_category') == 'High-Risk AI System' for f in ai_findings):
+                    compliance_summary['ai_act_status'] = 'high_risk_ai_detected'
+                else:
+                    compliance_summary['ai_act_status'] = 'ai_system_detected'
+            
+            # Process Netherlands UAVG findings
+            nl_findings = [f for f in all_findings if f.get('netherlands_specific')]
+            bsn_findings = [f for f in nl_findings if f.get('type') == 'netherlands_uavg_critical']
+            
+            if bsn_findings:
+                compliance_summary['netherlands_uavg_status'] = 'critical_violation'
+                compliance_summary['regulatory_notifications'].append({
+                    'authority': 'Autoriteit Persoonsgegevens (AP)',
+                    'trigger': 'BSN detection in API response',
+                    'notification_period': '72 hours',
+                    'severity': 'Critical',
+                    'bsn_instances': sum(f.get('bsn_count', 0) for f in bsn_findings),
+                    'affected_endpoints': len(set(f.get('url') for f in bsn_findings))
+                })
+            elif nl_findings:
+                compliance_summary['netherlands_uavg_status'] = 'requires_attention'
+            
+            scan_results.update(compliance_summary)
+            return compliance_summary
+            
+        except Exception as e:
+            logger.debug(f"Error aggregating compliance findings: {str(e)}")
+            return {}
     
     def _test_vulnerabilities(self, endpoint_url: str, method: str, endpoint_data: Dict[str, Any]):
         """Test endpoint for common vulnerabilities."""
