@@ -1525,10 +1525,22 @@ class EnterpriseConnectorScanner:
                             'recommendation': 'Implement BSN masking and access controls'
                         })
             
-            # Calculate compliance score
+            # Calculate enterprise-grade compliance score based on risk levels
             total_items = max(self.scanned_items, 1)
-            violation_rate = len(self.findings) / total_items
-            compliance_analysis['compliance_score'] = max(0, 100 - (violation_rate * 100))
+            
+            # Count findings by risk level for proper weighting (case-insensitive)
+            critical_count = sum(1 for f in self.findings if f.get('risk_level', '').lower() == 'critical')
+            high_count = sum(1 for f in self.findings if f.get('risk_level', '').lower() == 'high') 
+            medium_count = sum(1 for f in self.findings if f.get('risk_level', '').lower() == 'medium')
+            low_count = sum(1 for f in self.findings if f.get('risk_level', '').lower() == 'low')
+            
+            # Weighted penalty scoring: Critical=40pts, High=25pts, Medium=10pts, Low=3pts
+            penalty_points = (critical_count * 40) + (high_count * 25) + (medium_count * 10) + (low_count * 3)
+            
+            # Calculate compliance score: start at 100, subtract penalties, minimum 15
+            compliance_analysis['compliance_score'] = max(15, 100 - penalty_points)
+            
+            logger.info(f"Compliance calculation: {critical_count}C/{high_count}H/{medium_count}M/{low_count}L = {penalty_points} penalty points, score: {compliance_analysis['compliance_score']}")
             
             # Perform comprehensive GDPR compliance analysis
             self._analyze_data_minimization_compliance(compliance_analysis)

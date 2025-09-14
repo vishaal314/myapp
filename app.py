@@ -6209,19 +6209,61 @@ def display_enterprise_scan_results(scan_results: dict, connector_name: str):
         'high_risk_findings': scan_results.get('high_risk_findings', 0),
         'medium_risk_findings': scan_results.get('medium_risk_findings', 0),
         'low_risk_findings': scan_results.get('low_risk_findings', 0),
-        'compliance_score': scan_results.get('compliance_score', 85),
+        'compliance_score': scan_results.get('compliance_score', scan_results.get('compliance_analysis', {}).get('compliance_score', 15)),
         'connector_name': connector_name,
         'findings': []
     }
     
-    # Process findings with proper details
+    # Process findings with rich, specific details from enterprise scanner
     for finding in scan_results.get('findings', []):
+        # Extract specific PII types and create detailed description
+        pii_summary = []
+        if finding.get('pii_found'):
+            for pii in finding.get('pii_found', []):
+                pii_type = pii.get('type', 'Personal Information')
+                if 'BSN' in pii_type:
+                    pii_summary.append('BSN (Netherlands Social Security)')
+                elif 'KvK' in pii_type or 'Chamber of Commerce' in pii_type:
+                    pii_summary.append('KvK Number (Dutch Business Registry)')
+                elif 'email' in pii_type.lower():
+                    pii_summary.append('Email addresses')
+                elif 'phone' in pii_type.lower():
+                    pii_summary.append('Phone numbers')  
+                elif 'address' in pii_type.lower():
+                    pii_summary.append('Physical addresses')
+                elif 'bank' in pii_type.lower() or 'iban' in pii_type.lower():
+                    pii_summary.append('Banking information')
+                else:
+                    pii_summary.append(pii_type)
+        
+        # Create enterprise-grade description with business context
+        source_context = finding.get('source', 'Unknown Source')
+        specific_location = finding.get('document', finding.get('file', finding.get('subject', '')))
+        
+        if pii_summary:
+            description = f"{', '.join(pii_summary)} found in {source_context}"
+            if specific_location:
+                description += f" ({specific_location})"
+        else:
+            description = f"PII exposure detected in {source_context}"
+        
+        # Determine proper data classification
+        data_class = 'Personal Data'
+        if any('BSN' in pii for pii in pii_summary):
+            data_class = 'Special Category Data (Netherlands BSN)'
+        elif any('bank' in pii.lower() for pii in pii_summary):
+            data_class = 'Financial Data'
+        elif any(word in source_context.lower() for word in ['hr', 'employee', 'personnel']):
+            data_class = 'Employee Personal Data'
+        elif any(word in source_context.lower() for word in ['customer', 'client', 'contact']):
+            data_class = 'Customer Personal Data'
+        
         processed_finding = {
-            'type': finding.get('type', 'PII Detection'),
+            'type': f"{source_context} Data Exposure",
             'severity': finding.get('risk_level', 'Medium').capitalize(),
-            'description': f"{finding.get('type', 'PII')} detected in {connector_name}",
-            'location': finding.get('location', finding.get('source', 'Unknown location')),
-            'data_classification': finding.get('data_category', 'Personal Data'),
+            'description': description,
+            'location': finding.get('location', f"{source_context} - {specific_location}" if specific_location else source_context),
+            'data_classification': data_class,
             'pii_types': []
         }
         
