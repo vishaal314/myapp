@@ -848,10 +848,12 @@ class UnifiedHTMLReportGenerator:
                     return self._generate_fallback_forecast_section(current_score)
                 
                 # Process data through enhanced predictive engine with smoothing
-                time_series = engine._prepare_time_series_data(historical_data)
-                if time_series.empty:
-                    logger.warning("No time series data available, using fallback")
-                    return self._generate_fallback_forecast_section(current_score)
+                try:
+                    time_series = engine._prepare_time_series_data(historical_data)
+                    has_time_series = not time_series.empty
+                except:
+                    has_time_series = False
+                    time_series = None
                     
             except Exception as e:
                 logger.warning(f"Error loading user scan history: {e}, using fallback")
@@ -860,10 +862,16 @@ class UnifiedHTMLReportGenerator:
             # Get prediction using real smoothed data
             prediction = engine.predict_compliance_trajectory(historical_data, forecast_days=30)
             
-            # Prepare data for the chart using smoothed time series data
-            dates = time_series['date'].dt.strftime('%Y-%m-%d').tolist()
-            raw_scores = time_series['raw_compliance_score'].tolist() if 'raw_compliance_score' in time_series.columns else []
-            smoothed_scores = time_series['smoothed_compliance_score'].tolist() if 'smoothed_compliance_score' in time_series.columns else time_series['compliance_score'].tolist()
+            # Prepare data for the chart using time series data
+            if has_time_series:
+                dates = time_series['date'].dt.strftime('%Y-%m-%d').tolist()
+                raw_scores = time_series['raw_compliance_score'].tolist() if 'raw_compliance_score' in time_series.columns else []
+                smoothed_scores = time_series['smoothed_compliance_score'].tolist() if 'smoothed_compliance_score' in time_series.columns else time_series['compliance_score'].tolist()
+            else:
+                # Fallback to basic data processing
+                dates = [datetime.fromisoformat(item['timestamp'].replace('Z', '+00:00').replace('+00:00', '')).strftime('%Y-%m-%d') for item in historical_data]
+                raw_scores = [item['compliance_score'] for item in historical_data]
+                smoothed_scores = raw_scores.copy()
             
             # Add prediction point
             base_date = datetime.fromisoformat(scan_timestamp.replace('Z', '+00:00').replace('+00:00', ''))
@@ -873,65 +881,113 @@ class UnifiedHTMLReportGenerator:
                 raw_scores.append(prediction.future_score)
             smoothed_scores.append(prediction.future_score)
             
-            # Clean, easy-to-view chart data with both raw and smoothed data
+            # Enhanced compliance visualization: Combined bar + line + forecast with interactivity
+            
+            # Weekly aggregation using built-in Python (no pandas dependency)
+            from collections import defaultdict
+            
+            weekly_data = defaultdict(list)
+            scores_by_date = list(zip(dates[:-1], smoothed_scores[:-1]))
+            
+            # Group data points by week
+            for date_str, score in scores_by_date:
+                try:
+                    date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+                    # Get Monday of the week
+                    monday = date_obj - timedelta(days=date_obj.weekday())
+                    week_key = monday.strftime('%Y-%m-%d')
+                    weekly_data[week_key].append(score)
+                except:
+                    continue
+            
+            # Calculate weekly averages
+            weekly_dates = sorted(weekly_data.keys())
+            weekly_smoothed = []
+            for week in weekly_dates:
+                scores = weekly_data[week]
+                avg_score = sum(scores) / len(scores) if scores else 0
+                weekly_smoothed.append(avg_score)
+            
             chart_data_series = []
             
-            # Add raw data if available (with outliers)
-            if raw_scores:
-                chart_data_series.append({
-                    'x': dates[:-1],
-                    'y': raw_scores[:-1],
-                    'type': 'scatter',
-                    'mode': 'lines+markers',
-                    'name': '📊 Raw Compliance (with outliers)',
-                    'line': {'color': '#BDBDBD', 'width': 2, 'dash': 'dot'},
-                    'marker': {'size': 6, 'color': '#BDBDBD', 'line': {'width': 1, 'color': 'white'}},
-                    'hovertemplate': '<b>%{x}</b><br>Raw Score: <b>%{y:.1f}%</b><extra></extra>',
-                    'showlegend': True
-                })
+            # 1. Weekly compliance bars (primary visualization)
+            chart_data_series.append({
+                'x': weekly_dates,
+                'y': weekly_smoothed,
+                'type': 'bar',
+                'name': '📊 Weekly Compliance',
+                'marker': {
+                    'color': weekly_smoothed,
+                    'colorscale': [
+                        [0, '#F44336'],     # 0-25%: Red
+                        [0.25, '#FF9800'],  # 25-50%: Orange  
+                        [0.5, '#FFC107'],   # 50-75%: Amber
+                        [0.75, '#8BC34A'],  # 75-90%: Light Green
+                        [1, '#4CAF50']      # 90-100%: Green
+                    ],
+                    'cmin': 0,
+                    'cmax': 100,
+                    'line': {'color': 'white', 'width': 1}
+                },
+                'hovertemplate': '<b>Week of %{x}</b><br>Compliance: <b>%{y:.1f}%</b><br><extra></extra>',
+                'opacity': 0.8
+            })
             
-            # Main smoothed trend line - prominent and clean
+            # 2. Smoothed trend line (overlay)
             chart_data_series.append({
                 'x': dates[:-1],
                 'y': smoothed_scores[:-1],
                 'type': 'scatter',
-                'mode': 'lines+markers',
-                'name': '📈 Smoothed Compliance (realistic trend)',
-                'line': {'color': '#1976D2', 'width': 3, 'shape': 'spline'},
-                'marker': {'size': 8, 'color': '#1976D2', 'line': {'width': 2, 'color': 'white'}},
-                'hovertemplate': '<b>%{x}</b><br>Smoothed Score: <b>%{y:.1f}%</b><extra></extra>'
+                'mode': 'lines',
+                'name': '📈 Trend Line',
+                'line': {'color': '#1976D2', 'width': 4, 'shape': 'spline'},
+                'hovertemplate': '<b>%{x}</b><br>Trend: <b>%{y:.1f}%</b><extra></extra>',
+                'yaxis': 'y'
             })
             
-            # AI Prediction - continues from smoothed data
+            # 3. Forecast center line
             chart_data_series.append({
                 'x': [dates[-2], dates[-1]],
                 'y': [smoothed_scores[-2], smoothed_scores[-1]],
                 'type': 'scatter',
                 'mode': 'lines+markers',
-                'name': '🤖 AI Forecast',
+                'name': '🔮 AI Forecast',
                 'line': {'color': '#FF6B35', 'dash': 'dash', 'width': 3},
-                'marker': {'size': 10, 'color': '#FF6B35', 'line': {'width': 2, 'color': 'white'}},
-                'hovertemplate': '<b>%{x}</b><br>Predicted: <b>%{y:.1f}%</b><extra></extra>'
+                'marker': {'size': 12, 'color': '#FF6B35', 'line': {'width': 2, 'color': 'white'}},
+                'hovertemplate': '<b>%{x}</b><br>Forecast: <b>%{y:.1f}%</b><extra></extra>'
+            })
+            
+            # 4. Forecast confidence band (upper bound)
+            chart_data_series.append({
+                'x': [dates[-2], dates[-1]],
+                'y': [smoothed_scores[-2], prediction.confidence_interval[1]],
+                'type': 'scatter',
+                'mode': 'lines',
+                'name': 'Upper Confidence',
+                'line': {'color': 'rgba(255, 107, 53, 0.3)', 'width': 0},
+                'showlegend': False,
+                'hoverinfo': 'skip'
+            })
+            
+            # 5. Forecast confidence band (lower bound with fill)
+            chart_data_series.append({
+                'x': [dates[-2], dates[-1]],
+                'y': [smoothed_scores[-2], prediction.confidence_interval[0]],
+                'type': 'scatter',
+                'mode': 'lines',
+                'name': 'Confidence Band',
+                'line': {'color': 'rgba(255, 107, 53, 0.3)', 'width': 0},
+                'fill': 'tonexty',
+                'fillcolor': 'rgba(255, 107, 53, 0.2)',
+                'hovertemplate': '<b>Confidence Range</b><br>%{x}: %{y:.1f}%<extra></extra>'
             })
             
             chart_data = {
-                'data': chart_data_series + [
-                    # Confidence range as subtle markers
-                    {
-                        'x': [dates[-1], dates[-1]],
-                        'y': [prediction.confidence_interval[0], prediction.confidence_interval[1]],
-                        'type': 'scatter',
-                        'mode': 'markers',
-                        'name': 'Confidence Range',
-                        'marker': {'size': 6, 'color': 'rgba(255, 107, 53, 0.3)', 'line': {'width': 1, 'color': '#FF6B35'}},
-                        'hovertemplate': '<b>Range:</b> %{y:.1f}%<extra></extra>',
-                        'showlegend': False
-                    }
-                ],
+                'data': chart_data_series,
                 'layout': {
                     'title': {
-                        'text': '📈 Compliance Score Forecast',
-                        'font': {'size': 18, 'color': '#333'},
+                        'text': '📊 Interactive Compliance Forecast & Trends',
+                        'font': {'size': 20, 'color': '#333', 'family': 'Arial, sans-serif'},
                         'x': 0.5
                     },
                     'xaxis': {
@@ -940,50 +996,96 @@ class UnifiedHTMLReportGenerator:
                         'gridwidth': 0.5,
                         'gridcolor': 'rgba(0,0,0,0.1)',
                         'showline': True,
-                        'linecolor': 'rgba(0,0,0,0.2)'
+                        'linecolor': 'rgba(0,0,0,0.2)',
+                        'rangeslider': {'visible': True, 'thickness': 0.05},
+                        'rangeselector': {
+                            'buttons': [
+                                {'count': 30, 'label': '30D', 'step': 'day', 'stepmode': 'backward'},
+                                {'count': 90, 'label': '90D', 'step': 'day', 'stepmode': 'backward'},
+                                {'step': 'all', 'label': 'All'}
+                            ],
+                            'y': 1.1
+                        }
                     },
                     'yaxis': {
                         'title': 'Compliance Score (%)',
-                        'range': [40, 100],
+                        'range': [0, 100],
                         'showgrid': True,
                         'gridwidth': 0.5,
                         'gridcolor': 'rgba(0,0,0,0.1)',
                         'ticksuffix': '%',
                         'showline': True,
-                        'linecolor': 'rgba(0,0,0,0.2)'
+                        'linecolor': 'rgba(0,0,0,0.2)',
+                        'fixedrange': False
                     },
                     'plot_bgcolor': 'white',
                     'paper_bgcolor': 'white',
                     'shapes': [
-                        # Clean risk zone background (subtle shading only)
-                        {'type': 'rect', 'x0': dates[0], 'x1': dates[-1], 'y0': 80, 'y1': 100, 
-                         'fillcolor': 'rgba(76, 175, 80, 0.05)', 'line': {'width': 0}, 'layer': 'below'},
-                        {'type': 'rect', 'x0': dates[0], 'x1': dates[-1], 'y0': 60, 'y1': 80, 
-                         'fillcolor': 'rgba(255, 193, 7, 0.05)', 'line': {'width': 0}, 'layer': 'below'},
-                        {'type': 'rect', 'x0': dates[0], 'x1': dates[-1], 'y0': 40, 'y1': 60, 
-                         'fillcolor': 'rgba(244, 67, 54, 0.05)', 'line': {'width': 0}, 'layer': 'below'},
-                        # Clean reference lines (minimal and subtle)
-                        {'type': 'line', 'x0': dates[0], 'x1': dates[-1], 'y0': 80, 'y1': 80, 
-                         'line': {'dash': 'dot', 'color': 'rgba(76, 175, 80, 0.6)', 'width': 1}},
-                        {'type': 'line', 'x0': dates[0], 'x1': dates[-1], 'y0': 60, 'y1': 60, 
-                         'line': {'dash': 'dot', 'color': 'rgba(244, 67, 54, 0.6)', 'width': 1}}
+                        # Risk zone background shading (professional colors)
+                        {'type': 'rect', 'x0': weekly_dates[0] if weekly_dates else dates[0], 'x1': dates[-1], 'y0': 90, 'y1': 100, 
+                         'fillcolor': 'rgba(76, 175, 80, 0.1)', 'line': {'width': 0}, 'layer': 'below'},
+                        {'type': 'rect', 'x0': weekly_dates[0] if weekly_dates else dates[0], 'x1': dates[-1], 'y0': 75, 'y1': 90, 
+                         'fillcolor': 'rgba(139, 195, 74, 0.08)', 'line': {'width': 0}, 'layer': 'below'},
+                        {'type': 'rect', 'x0': weekly_dates[0] if weekly_dates else dates[0], 'x1': dates[-1], 'y0': 50, 'y1': 75, 
+                         'fillcolor': 'rgba(255, 193, 7, 0.08)', 'line': {'width': 0}, 'layer': 'below'},
+                        {'type': 'rect', 'x0': weekly_dates[0] if weekly_dates else dates[0], 'x1': dates[-1], 'y0': 0, 'y1': 50, 
+                         'fillcolor': 'rgba(244, 67, 54, 0.08)', 'line': {'width': 0}, 'layer': 'below'},
+                        # Reference lines (industry benchmarks)
+                        {'type': 'line', 'x0': weekly_dates[0] if weekly_dates else dates[0], 'x1': dates[-1], 'y0': 90, 'y1': 90, 
+                         'line': {'dash': 'dash', 'color': 'rgba(76, 175, 80, 0.7)', 'width': 2}},
+                        {'type': 'line', 'x0': weekly_dates[0] if weekly_dates else dates[0], 'x1': dates[-1], 'y0': 75, 'y1': 75, 
+                         'line': {'dash': 'dash', 'color': 'rgba(255, 193, 7, 0.7)', 'width': 2}},
+                        {'type': 'line', 'x0': weekly_dates[0] if weekly_dates else dates[0], 'x1': dates[-1], 'y0': 50, 'y1': 50, 
+                         'line': {'dash': 'dash', 'color': 'rgba(244, 67, 54, 0.7)', 'width': 2}}
                     ],
                     'annotations': [
-                        {'x': dates[-1], 'y': 85, 'text': 'Good (80%+)', 'showarrow': False, 'xanchor': 'left',
-                         'font': {'size': 10, 'color': '#4CAF50'}, 'bgcolor': 'rgba(255,255,255,0.8)'},
-                        {'x': dates[-1], 'y': 65, 'text': 'Needs Attention (60%+)', 'showarrow': False, 'xanchor': 'left',
-                         'font': {'size': 10, 'color': '#F44336'}, 'bgcolor': 'rgba(255,255,255,0.8)'}
+                        {'x': dates[-1], 'y': 95, 'text': 'Excellent (90%+)', 'showarrow': False, 'xanchor': 'left',
+                         'font': {'size': 11, 'color': '#4CAF50', 'family': 'Arial'}, 'bgcolor': 'rgba(255,255,255,0.9)'},
+                        {'x': dates[-1], 'y': 82, 'text': 'Good (75-90%)', 'showarrow': False, 'xanchor': 'left',
+                         'font': {'size': 11, 'color': '#8BC34A', 'family': 'Arial'}, 'bgcolor': 'rgba(255,255,255,0.9)'},
+                        {'x': dates[-1], 'y': 62, 'text': 'Attention Needed (50-75%)', 'showarrow': False, 'xanchor': 'left',
+                         'font': {'size': 11, 'color': '#FF9800', 'family': 'Arial'}, 'bgcolor': 'rgba(255,255,255,0.9)'},
+                        {'x': dates[-1], 'y': 25, 'text': 'Critical (<50%)', 'showarrow': False, 'xanchor': 'left',
+                         'font': {'size': 11, 'color': '#F44336', 'family': 'Arial'}, 'bgcolor': 'rgba(255,255,255,0.9)'}
                     ],
+                    'updatemenus': [{
+                        'type': 'buttons',
+                        'direction': 'left',
+                        'buttons': [
+                            {'label': 'Bar + Trend', 'method': 'restyle', 'args': [{'visible': [True, True, True, True, True]}]},
+                            {'label': 'Trend Only', 'method': 'restyle', 'args': [{'visible': [False, True, True, True, True]}]},
+                            {'label': 'Bars Only', 'method': 'restyle', 'args': [{'visible': [True, False, True, True, True]}]}
+                        ],
+                        'x': 0,
+                        'y': 1.15,
+                        'xanchor': 'left',
+                        'yanchor': 'top'
+                    }],
                     'legend': {
                         'orientation': 'h',
                         'yanchor': 'bottom',
                         'y': 1.02,
                         'xanchor': 'center',
                         'x': 0.5,
-                        'font': {'size': 11}
+                        'font': {'size': 12, 'family': 'Arial'},
+                        'bgcolor': 'rgba(255,255,255,0.8)'
                     },
-                    'height': 450,
-                    'margin': {'t': 80, 'b': 50, 'l': 60, 'r': 60}
+                    'height': 500,
+                    'margin': {'t': 120, 'b': 80, 'l': 80, 'r': 80},
+                    'hovermode': 'x unified'
+                },
+                'config': {
+                    'displayModeBar': True,
+                    'displaylogo': False,
+                    'modeBarButtonsToAdd': ['pan2d', 'select2d', 'lasso2d', 'autoScale2d'],
+                    'modeBarButtonsToRemove': ['resetScale2d'],
+                    'toImageButtonOptions': {
+                        'format': 'png',
+                        'filename': 'compliance_forecast',
+                        'height': 500,
+                        'width': 1000,
+                        'scale': 2
+                    }
                 }
             }
             
@@ -1029,14 +1131,15 @@ class UnifiedHTMLReportGenerator:
                 </script>
                 
                 <div class="forecast-explanation">
-                    <h4>📊 Understanding Your Compliance Forecast</h4>
+                    <h4>📊 Understanding Your Interactive Compliance Dashboard</h4>
                     <div class="explanation-grid">
                         <div class="explanation-item">
-                            <strong>📊 Raw Compliance:</strong> Your actual scores with outliers (gray dotted line)<br>
-                            <strong>📈 Smoothed Compliance:</strong> Realistic trend after outlier removal and smoothing (blue line)
+                            <strong>📊 Weekly Compliance Bars:</strong> Color-coded weekly averages showing your compliance levels<br>
+                            <strong>📈 Trend Line:</strong> Smoothed trend analysis overlaid for pattern recognition (blue line)
                         </div>
                         <div class="explanation-item">
-                            <strong>🔮 AI Prediction:</strong> Machine learning forecast for next 30 days (orange dashed line)
+                            <strong>🔮 AI Forecast:</strong> Machine learning forecast with confidence bands (orange dashed line)<br>
+                            <strong>🎛️ Interactive Controls:</strong> Use buttons to switch views, drag timeline, hover for details
                         </div>
                         <div class="explanation-item">
                             <strong>🏢 Industry Benchmarks:</strong> Dotted lines showing average scores for Financial Services and Technology sectors
