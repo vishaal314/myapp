@@ -5467,9 +5467,6 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         progress_bar.progress(100)
         status_text.text("✅ Comprehensive API security scan completed!")
         
-        # Display results
-        display_scan_results(scan_results)
-        
         # Enhanced results summary
         st.markdown("---")
         st.subheader("🔍 API Security Analysis Summary")
