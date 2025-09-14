@@ -35,6 +35,7 @@ class RedisCache:
             'large_datasets': 14400,    # 4 hours for large dataset queries
             'default': 3600             # 1 hour default
         }
+        self.default_ttl = self.ttl_config['default']  # Maintain backward compatibility
         self.connect()
     
     def connect(self):

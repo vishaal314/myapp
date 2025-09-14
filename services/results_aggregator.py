@@ -37,6 +37,7 @@ class ResultsAggregator:
         """
         self.db_url = db_url or os.environ.get('DATABASE_URL')
         self.encryption_service = get_encryption_service()
+        self.strict_enterprise_mode = os.environ.get('STRICT_ENTERPRISE_MODE', '0').lower() in ('1','true','yes')
         
         # Initialize multi-tenant service for secure tenant isolation
         try:
@@ -54,8 +55,12 @@ class ResultsAggregator:
             logger.info("ResultsAggregator initialized with enterprise security and tenant isolation")
         except Exception as e:
             logger.error(f"Error initializing database: {str(e)}")
-            # Enterprise security: Fail secure - no file fallback for PII data
-            raise RuntimeError(f"Database connection required for enterprise security compliance: {str(e)}")
+            if self.strict_enterprise_mode:
+                raise RuntimeError(f"Database connection required for enterprise security compliance: {str(e)}")
+            else:
+                logger.warning("Non-strict mode: falling back to file-based storage")
+                self.use_file_storage = True
+                self._init_file_storage()
     
     def _get_secure_connection(self, organization_id: str = 'default_org', admin_bypass: bool = False):
         """
