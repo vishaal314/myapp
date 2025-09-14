@@ -6178,7 +6178,44 @@ def display_enterprise_scan_results(scan_results: dict, connector_name: str):
     
     with col1:
         if st.button("📄 Download PDF Report", key=f"pdf_{connector_name}"):
-            st.success("PDF report generation initiated!")
+            try:
+                # Generate PDF report for Enterprise Connector scan
+                from services.direct_report_download import generate_pdf_report
+                
+                # Create formatted scan data for PDF report
+                formatted_results = {
+                    'scan_type': f'Enterprise Connector - {connector_name}',
+                    'scan_id': f"ENT-{connector_name.upper()[:3]}-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+                    'total_findings': scan_results.get('total_findings', 0),
+                    'high_risk_findings': scan_results.get('high_risk_findings', 0),
+                    'total_items_scanned': scan_results.get('total_items_scanned', 0),
+                    'compliance_score': scan_results.get('compliance_score', 0),
+                    'netherlands_specific_findings': scan_results.get('netherlands_specific_findings', 0),
+                    'bsn_instances': scan_results.get('bsn_instances', 0),
+                    'kvk_instances': scan_results.get('kvk_instances', 0),
+                    'findings': scan_results.get('findings', []),
+                    'recommendations': scan_results.get('recommendations', []),
+                    'connector_type': connector_name,
+                    'scan_timestamp': scan_results.get('scan_timestamp', datetime.now().isoformat()),
+                    'region': 'Netherlands',
+                    'username': st.session_state.get('username', 'user')
+                }
+                
+                pdf_content = generate_pdf_report(formatted_results)
+                
+                # Create PDF download
+                st.download_button(
+                    label="💾 Download PDF Report",
+                    data=pdf_content,
+                    file_name=f"enterprise_connector_{connector_name.lower().replace(' ', '_')}_report.pdf",
+                    mime="application/pdf",
+                    key=f"download_pdf_{connector_name}"
+                )
+                st.success("✅ PDF report generated successfully!")
+                
+            except Exception as e:
+                st.error(f"Error generating PDF report: {e}")
+                st.info("Please try again or contact support if the issue persists.")
     
     with col2:
         if st.button("📊 Export to Excel", key=f"excel_{connector_name}"):
