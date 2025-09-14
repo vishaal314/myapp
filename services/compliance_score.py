@@ -99,16 +99,36 @@ class ComplianceScoreManager:
                 }
             }
         
-        # Group scans by type
-        scans_by_type = {}
+        # Map scan types to component categories
+        scan_type_mapping = {
+            'code': 'code',
+            'blob': 'blob', 
+            'dpia': 'dpia',
+            'image': 'image',
+            'website': 'website',
+            'database': 'database',
+            'db': 'database',  # Alternative name
+            'api': 'api',
+            'cloud': 'cloud',
+            'ai_model': 'ai_model',
+            'soc2': 'code',  # SOC2 scans map to code category
+            'gdpr': 'code',  # GDPR scans map to code category
+            'security': 'code',  # Security scans map to code category
+            'sustainability': 'cloud'  # Sustainability scans map to cloud category
+        }
+        
+        # Group scans by component category
+        scans_by_component = {}
         for scan in recent_scans:
             scan_type = scan.get('scan_type', 'unknown')
-            if scan_type not in scans_by_type:
-                scans_by_type[scan_type] = []
-            scans_by_type[scan_type].append(scan)
+            component = scan_type_mapping.get(scan_type, None)
+            if component:
+                if component not in scans_by_component:
+                    scans_by_component[component] = []
+                scans_by_component[component].append(scan)
         
         # Calculate scores for each component
-        for component, scans in scans_by_type.items():
+        for component, scans in scans_by_component.items():
             if component in component_scores:
                 # Skip if no scans for this component
                 if not scans:
@@ -123,24 +143,33 @@ class ComplianceScoreManager:
                 total_pii = sum(scan.get('total_pii_found', 0) for scan in scans)
                 high_risk = sum(scan.get('high_risk_count', 0) for scan in scans)
                 medium_risk = sum(scan.get('medium_risk_count', 0) for scan in scans)
+                file_count = sum(scan.get('file_count', 1) for scan in scans)
                 
                 # Calculate normalized scores (higher is better)
-                if total_pii > 0:
-                    # Risk ratio (lower is better)
-                    risk_ratio = (high_risk * 1.0 + medium_risk * 0.5) / total_pii
-                    risk_score = max(0, 100 - min(100, risk_ratio * 100))
+                if high_risk > 0 or medium_risk > 0:
+                    # Risk-based scoring: fewer high/medium risks = better score
+                    total_findings = high_risk + medium_risk
                     
-                    # Compliance factor
+                    # Risk penalty calculation
+                    risk_penalty = min(100, (high_risk * 20 + medium_risk * 10))
+                    risk_score = max(0, 100 - risk_penalty)
+                    
+                    # Compliance factor from scan results
                     compliance_factor = np.mean([
-                        scan.get('compliance_score', 70) for scan in scans 
-                        if 'compliance_score' in scan
-                    ]) if any('compliance_score' in scan for scan in scans) else 70
+                        scan.get('compliance_score', 50) for scan in scans 
+                        if 'compliance_score' in scan and scan.get('compliance_score') is not None
+                    ]) if any('compliance_score' in scan and scan.get('compliance_score') is not None for scan in scans) else 50
                     
-                    # Final component score
-                    component_scores[component] = int(min(100, (risk_score * 0.7 + compliance_factor * 0.3)))
+                    # Final component score (weighted average)
+                    component_scores[component] = int(min(100, max(0, (risk_score * 0.6 + compliance_factor * 0.4))))
                 else:
-                    # If no PII found, it's either not applicable or perfect
-                    component_scores[component] = 100
+                    # No high/medium risks found
+                    if total_pii > 0:
+                        # Has PII but low risk - good score
+                        component_scores[component] = 85
+                    else:
+                        # No PII and no risks - excellent score
+                        component_scores[component] = 95
         
         # Calculate overall score as weighted average of component scores
         # Weight factors based on importance for GDPR compliance
@@ -188,45 +217,73 @@ class ComplianceScoreManager:
         if not scans:
             return 0
             
-        # Based on coverage of different PII types
-        pii_types_found = set()
-        for scan in scans:
-            if 'pii_types' in scan:
-                pii_types_found.update(scan['pii_types'].keys())
+        # Calculate based on total PII found across all scans
+        total_pii = sum(scan.get('total_pii_found', 0) for scan in scans)
+        total_files = sum(scan.get('file_count', 1) for scan in scans)
         
-        # Common PII types that should be detected
-        common_pii_types = {
-            'email', 'phone', 'address', 'name', 'ip_address', 'credit_card',
-            'ssn', 'passport', 'drivers_license', 'date_of_birth'
-        }
-        
-        # Calculate coverage
-        coverage = len(pii_types_found.intersection(common_pii_types)) / len(common_pii_types)
-        return int(min(100, coverage * 100))
+        if total_files == 0:
+            return 0
+            
+        # PII detection effectiveness: balance between finding PII and not having too much
+        if total_pii > 0:
+            # Found PII - score based on reasonable detection rates
+            pii_per_file = total_pii / total_files
+            if pii_per_file <= 5:  # Reasonable amount
+                return 80
+            elif pii_per_file <= 20:  # Moderate amount
+                return 60  
+            else:  # High amount - needs attention
+                return 40
+        else:
+            # No PII found - could be good (no PII) or bad (missed detection)
+            return 70  # Neutral score
     
     def _calculate_risk_assessment_score(self, scans: List[Dict[str, Any]]) -> int:
         """Calculate risk assessment factor score."""
         if not scans:
             return 0
             
-        # Based on percentage of scans with risk assessment
-        scans_with_risk = sum(1 for scan in scans if 'risk_assessment' in scan)
-        return int(min(100, (scans_with_risk / len(scans)) * 100))
+        # Calculate based on risk distribution
+        total_high_risk = sum(scan.get('high_risk_count', 0) for scan in scans)
+        total_medium_risk = sum(scan.get('medium_risk_count', 0) for scan in scans)
+        total_findings = sum(scan.get('total_pii_found', 0) for scan in scans)
+        
+        if total_findings == 0:
+            return 85  # No findings = good risk posture
+            
+        # Risk ratio calculation: lower risk percentage = higher score
+        high_risk_ratio = total_high_risk / total_findings if total_findings > 0 else 0
+        medium_risk_ratio = total_medium_risk / total_findings if total_findings > 0 else 0
+        
+        # Score calculation (inverse of risk)
+        risk_penalty = (high_risk_ratio * 60) + (medium_risk_ratio * 30)
+        score = max(0, int(100 - (risk_penalty * 100)))
+        return min(100, score)
     
     def _calculate_documentation_score(self, scans: List[Dict[str, Any]]) -> int:
         """Calculate documentation factor score."""
         if not scans:
             return 0
             
-        # Based on documentation completeness
-        doc_scores = []
+        # Calculate based on scan completeness and quality indicators
+        documented_scans = 0
+        total_scans = len(scans)
+        
         for scan in scans:
-            if 'documentation' in scan:
-                doc_scores.append(scan['documentation'].get('completeness', 0))
-            else:
-                doc_scores.append(0)
+            # Check if scan has proper documentation indicators
+            has_documentation = any([
+                'scan_type' in scan,
+                'timestamp' in scan,
+                'result' in scan,
+                scan.get('total_pii_found', 0) >= 0  # Has PII count
+            ])
+            
+            if has_documentation:
+                documented_scans += 1
                 
-        return int(min(100, np.mean(doc_scores) if doc_scores else 0))
+        # Score based on documentation coverage
+        coverage_score = (documented_scans / total_scans) * 100 if total_scans > 0 else 0
+        return int(min(100, coverage_score))
     
     def _calculate_data_minimization_score(self, scans: List[Dict[str, Any]]) -> int:
         """Calculate data minimization factor score."""

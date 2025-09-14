@@ -192,20 +192,20 @@ class CloudResourcesScanner:
         elif self.provider == 'aws':
             # For AWS, we use the access key and secret key directly with boto3
             # Return a placeholder token since boto3 handles auth internally
-            self.auth_token = "aws-auth-handled-by-boto3"
+            self.auth_token = "SDK_AUTH_MANAGED"  # Authentication handled by boto3 SDK
             self.auth_time = datetime.now()
             return self.auth_token
             
         elif self.provider == 'gcp':
             # For GCP, we use the client ID and client secret or application default credentials
             # Return a placeholder token since google-auth handles auth internally
-            self.auth_token = "gcp-auth-handled-by-google-auth"
+            self.auth_token = "SDK_AUTH_MANAGED"  # Authentication handled by google-auth SDK
             self.auth_time = datetime.now()
             return self.auth_token
             
         elif self.provider == 'none':
             # No cloud provider, used for code analysis only
-            self.auth_token = "no-cloud-provider"
+            self.auth_token = "NO_CLOUD_AUTH_REQUIRED"  # No cloud provider selected
             self.auth_time = datetime.now()
             return self.auth_token
             

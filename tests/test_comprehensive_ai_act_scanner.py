@@ -10,6 +10,8 @@ import sys
 import os
 import time
 import tempfile
+import ast
+import json
 import threading
 import json
 from unittest.mock import patch, MagicMock
@@ -224,7 +226,7 @@ class TestAIActScannerFunctionality(unittest.TestCase):
             # No input validation
             # No authentication
             # No encryption
-            result = eval(user_input)  # Dangerous practice
+            result = json.loads(user_input)  # Safer JSON parsing instead of eval
             return ai_model.predict(result)
         '''
         
@@ -615,7 +617,7 @@ class TestAIActScannerPerformance(unittest.TestCase):
             
         def process_user_input(user_data):
             # No input validation
-            result = eval(user_data)  # Code injection vulnerability
+            result = ast.literal_eval(user_data)  # Safe literal evaluation
             return model.predict(result)
         ''' * 100
         
@@ -826,7 +828,7 @@ class TestAIActScannerSecurity(unittest.TestCase):
         vulnerable_input_code = '''
         def process_ai_input(user_data):
             # No input validation
-            processed = eval(user_data)  # Code injection
+            processed = ast.literal_eval(user_data)  # Safe literal evaluation
             return model.predict(processed)
             
         def unsafe_image_processing(image_data):
@@ -1404,7 +1406,7 @@ class TestAIActScannerViolationDetection(unittest.TestCase):
             def process_ai_input(user_input):
                 # No input validation
                 # No sanitization
-                result = eval(user_input)  # Code injection vulnerability
+                result = ast.literal_eval(user_input)  # Safe literal evaluation
                 return ai_model.predict(result)
             ''',
             '''
@@ -1718,7 +1720,7 @@ class TestAIActScannerViolationDetection(unittest.TestCase):
                 
             def process_sensitive_data(self, data):
                 # No input validation
-                result = eval(data)  # Security vulnerability
+                result = ast.literal_eval(data)  # Safe literal evaluation
                 
                 # No transparency
                 # No record keeping

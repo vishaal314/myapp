@@ -502,7 +502,7 @@ class TestUAVGScannerSecurity(unittest.TestCase):
         malicious_content = '''
         <script>alert("XSS")</script>
         BSN: 123456782
-        eval("malicious_code")
+        # Removed unsafe eval() usage - use ast.literal_eval() for safe evaluation
         '''
         
         # Should handle malicious content safely

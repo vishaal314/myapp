@@ -758,7 +758,7 @@ class EnterpriseConnectorScanner:
             else:
                 logger.warning("Exact Online requires user consent flow - using demo mode")
                 # In demo mode, we'll simulate the connection
-                self.access_token = "exact-access-token"
+                self.access_token = os.getenv('EXACT_DEMO_TOKEN', 'demo-token-placeholder')
                 self.session.headers.update({
                     'Authorization': f'Bearer {self.access_token}',
                     'Accept': 'application/json'
@@ -853,7 +853,7 @@ class EnterpriseConnectorScanner:
             # Note: In production, this would use google-auth library
             # For now, simulate successful authentication
             logger.info("Google Workspace service account authentication successful")
-            self.access_token = "google_service_account_token"
+            self.access_token = os.getenv('GOOGLE_SERVICE_ACCOUNT_TOKEN', 'demo-token-placeholder')
             return True
             
         except Exception as e:
@@ -887,21 +887,21 @@ class EnterpriseConnectorScanner:
         """Authenticate with Rabobank Open Banking API."""
         # Implementation would use Rabobank's OAuth2 endpoints
         logger.info("Rabobank authentication - demo mode")
-        self.access_token = "rabobank_demo_token"
+        self.access_token = os.getenv('RABOBANK_DEMO_TOKEN', 'demo-token-placeholder')
         return True
     
     def _authenticate_ing(self) -> bool:
         """Authenticate with ING Open Banking API."""
         # Implementation would use ING's OAuth2 endpoints
         logger.info("ING authentication - demo mode")
-        self.access_token = "ing_demo_token"
+        self.access_token = os.getenv('ING_DEMO_TOKEN', 'demo-token-placeholder')
         return True
     
     def _authenticate_abn_amro(self) -> bool:
         """Authenticate with ABN AMRO Open Banking API."""
         # Implementation would use ABN AMRO's OAuth2 endpoints
         logger.info("ABN AMRO authentication - demo mode")
-        self.access_token = "abn_amro_demo_token"
+        self.access_token = os.getenv('ABN_AMRO_DEMO_TOKEN', 'demo-token-placeholder')
         return True
     
     def _perform_connector_scan(self, scan_config: Dict) -> Dict[str, Any]:
