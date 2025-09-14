@@ -226,14 +226,9 @@ class MultiTenantService:
             
         except Exception as e:
             logger.error(f"Failed to initialize Row Level Security: {str(e)}")
-            # Rollback any partial transaction to clean state
-            try:
-                conn.rollback()
-                logger.info("Rolled back failed RLS transaction")
-            except:
-                pass
             # Don't raise exception here to avoid breaking schema initialization
             # RLS can be configured later if needed
+            # Note: Transaction rollback is handled by the calling method
             logger.warning("Continuing without RLS - manual configuration may be required")
     
     def get_secure_connection(self, organization_id: str, admin_bypass: bool = False):
