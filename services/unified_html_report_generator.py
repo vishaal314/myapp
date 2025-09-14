@@ -863,7 +863,7 @@ class UnifiedHTMLReportGenerator:
             prediction = engine.predict_compliance_trajectory(historical_data, forecast_days=30)
             
             # Prepare data for the chart using time series data
-            if has_time_series:
+            if has_time_series and time_series is not None:
                 dates = time_series['date'].dt.strftime('%Y-%m-%d').tolist()
                 raw_scores = time_series['raw_compliance_score'].tolist() if 'raw_compliance_score' in time_series.columns else []
                 smoothed_scores = time_series['smoothed_compliance_score'].tolist() if 'smoothed_compliance_score' in time_series.columns else time_series['compliance_score'].tolist()
@@ -877,9 +877,10 @@ class UnifiedHTMLReportGenerator:
             base_date = datetime.fromisoformat(scan_timestamp.replace('Z', '+00:00').replace('+00:00', ''))
             future_date = (base_date + timedelta(days=30)).strftime('%Y-%m-%d')
             dates.append(future_date)
-            if raw_scores:
+            if raw_scores and isinstance(raw_scores, list):
                 raw_scores.append(prediction.future_score)
-            smoothed_scores.append(prediction.future_score)
+            if isinstance(smoothed_scores, list):
+                smoothed_scores.append(prediction.future_score)
             
             # Enhanced compliance visualization: Combined bar + line + forecast with interactivity
             
@@ -933,33 +934,45 @@ class UnifiedHTMLReportGenerator:
                 'opacity': 0.8
             })
             
-            # 2. Enhanced smoothed trend line (overlay) with improved smoothing
-            # Apply additional smoothing to trend line data for better visualization
-            trend_x = dates[:-1]
-            trend_y = smoothed_scores[:-1]
+            # 2. Fixed trend line using weekly data alignment (no spline interpolation)
+            # Use same weekly aggregation as bars to prevent misalignment artifacts
+            trend_weekly_y = []
+            for weekly_score in weekly_smoothed:
+                if weekly_score > 0:  # Filter out zero/None scores that cause dips
+                    trend_weekly_y.append(weekly_score)
+                elif trend_weekly_y:  # Use last valid score if current is zero/None
+                    trend_weekly_y.append(trend_weekly_y[-1])
+                else:
+                    trend_weekly_y.append(75.0)  # Fallback score
             
-            # Apply moving average smoothing if we have enough data points
-            if len(trend_y) >= 5:
-                # Use simple moving average with window of 3 for final smoothing
-                smoothed_trend_y = []
-                for i in range(len(trend_y)):
-                    start_idx = max(0, i - 1)
-                    end_idx = min(len(trend_y), i + 2)
-                    window_values = trend_y[start_idx:end_idx]
-                    smoothed_trend_y.append(sum(window_values) / len(window_values))
-                trend_y = smoothed_trend_y
+            # Apply EMA smoothing to weekly data for stable trend
+            if len(trend_weekly_y) >= 3:
+                ema_alpha = 0.3  # Exponential moving average factor
+                ema_smoothed = [trend_weekly_y[0]]  # Start with first value
+                for i in range(1, len(trend_weekly_y)):
+                    ema_value = ema_alpha * trend_weekly_y[i] + (1 - ema_alpha) * ema_smoothed[-1]
+                    ema_smoothed.append(ema_value)
+                trend_weekly_y = ema_smoothed
+            
+            # Clamp week-over-week changes to max 10 points to prevent spikes
+            clamped_trend = [trend_weekly_y[0]] if trend_weekly_y else [75.0]
+            for i in range(1, len(trend_weekly_y)):
+                prev_val = clamped_trend[-1]
+                curr_val = trend_weekly_y[i]
+                # Limit change to ±10 points per week
+                clamped_val = max(prev_val - 10, min(prev_val + 10, curr_val))
+                clamped_trend.append(clamped_val)
             
             chart_data_series.append({
-                'x': trend_x,
-                'y': trend_y,
+                'x': weekly_dates,  # Use weekly dates to match bars
+                'y': clamped_trend,
                 'type': 'scatter',
                 'mode': 'lines',
                 'name': '📈 Trend Line',
                 'line': {
                     'color': '#1976D2', 
                     'width': 4, 
-                    'shape': 'spline',
-                    'smoothing': 1.3  # Enhanced spline smoothing
+                    'shape': 'linear'  # Use linear instead of spline to prevent artifacts
                 },
                 'hovertemplate': '<b>%{x}</b><br>Trend: <b>%{y:.1f}%</b><extra></extra>',
                 'yaxis': 'y'

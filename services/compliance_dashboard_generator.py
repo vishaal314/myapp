@@ -33,7 +33,7 @@ class ComplianceDashboardGenerator:
             'danger': '#dc3545'
         }
     
-    @st.cache_data(ttl=300)  # Cache for 5 minutes
+    @st.cache_data(ttl=300, hash_funcs={"scan_results": lambda x: str(hash(str(x[-1].get('timestamp', '')) if x else ''))})  # Cache with scan hash
     def generate_executive_dashboard(self, scan_results: List[Dict[str, Any]], 
                                    time_period: str = "30d") -> str:
         """
@@ -152,7 +152,7 @@ class ComplianceDashboardGenerator:
             if score > 0:
                 compliance_scores.append(score)
         
-        # Calculate trends (simulated for demo)
+        # Calculate trends from real data
         risk_trend_data = self._generate_risk_trend_data(scan_results)
         
         return {
@@ -167,25 +167,123 @@ class ComplianceDashboardGenerator:
         }
     
     def _generate_risk_trend_data(self, scan_results: List[Dict[str, Any]]) -> Dict[str, List]:
-        """Generate risk trend data for visualization"""
-        # Simulate trend data based on scan results
+        """Generate real risk trend data from actual scan results with weekly smoothing"""
+        if not scan_results:
+            return {'dates': [], 'risk_scores': [], 'critical_counts': []}
+        
+        try:
+            # Import predictive engine for real data processing
+            from services.predictive_compliance_engine import PredictiveComplianceEngine
+            engine = PredictiveComplianceEngine(region=self.region)
+            
+            # Process real scan data into time series with weekly smoothing
+            time_series_data = engine._prepare_time_series_data(scan_results)
+            
+            if time_series_data is None or time_series_data.empty:
+                # Fallback to basic processing if predictive engine fails
+                return self._generate_basic_trend_data(scan_results)
+            
+            # Extract weekly aggregated data
+            from collections import defaultdict
+            weekly_data = defaultdict(lambda: {'scores': [], 'critical_counts': []})
+            
+            for _, row in time_series_data.iterrows():
+                date_obj = row['date']
+                monday = date_obj - timedelta(days=date_obj.weekday())
+                week_key = monday.strftime('%Y-%m-%d')
+                
+                # Use smoothed scores if available
+                score = row.get('smoothed_compliance_score', row.get('compliance_score', 0))
+                critical_count = row.get('critical_findings', 0)
+                
+                weekly_data[week_key]['scores'].append(score)
+                weekly_data[week_key]['critical_counts'].append(critical_count)
+            
+            # Calculate weekly averages and apply EMA smoothing
+            weekly_dates = sorted(weekly_data.keys())
+            weekly_scores = []
+            weekly_criticals = []
+            
+            for week in weekly_dates:
+                week_data = weekly_data[week]
+                avg_score = sum(week_data['scores']) / len(week_data['scores']) if week_data['scores'] else 0
+                avg_critical = sum(week_data['critical_counts']) / len(week_data['critical_counts']) if week_data['critical_counts'] else 0
+                
+                # Filter out zero scores that cause dips
+                if avg_score > 0:
+                    weekly_scores.append(avg_score)
+                elif weekly_scores:  # Use last valid score
+                    weekly_scores.append(weekly_scores[-1])
+                else:
+                    weekly_scores.append(75.0)  # Fallback
+                
+                weekly_criticals.append(max(0, int(avg_critical)))
+            
+            # Apply EMA smoothing to prevent erratic movements
+            if len(weekly_scores) >= 3:
+                ema_alpha = 0.3
+                smoothed_scores = [weekly_scores[0]]
+                for i in range(1, len(weekly_scores)):
+                    smoothed_val = ema_alpha * weekly_scores[i] + (1 - ema_alpha) * smoothed_scores[-1]
+                    smoothed_scores.append(smoothed_val)
+                weekly_scores = smoothed_scores
+            
+            # Debug logging for trend line validation
+            import logging
+            logger = logging.getLogger(__name__)
+            if len(weekly_dates) >= 4:
+                logger.info(f"Dashboard trend data - Last 4 weeks: {weekly_dates[-4:]}")
+                logger.info(f"Compliance scores: {weekly_scores[-4:]}")
+                logger.info(f"Risk scores (100-compliance): {[100-s for s in weekly_scores[-4:]]}")
+            
+            return {
+                'dates': weekly_dates,
+                'risk_scores': [100 - score for score in weekly_scores],  # Convert compliance to risk
+                'critical_counts': weekly_criticals
+            }
+            
+        except ImportError:
+            return self._generate_basic_trend_data(scan_results)
+        except Exception:
+            return self._generate_basic_trend_data(scan_results)
+    
+    def _generate_basic_trend_data(self, scan_results: List[Dict[str, Any]]) -> Dict[str, List]:
+        """Fallback method for generating trend data from basic scan results"""
+        if not scan_results:
+            return {'dates': [], 'risk_scores': [], 'critical_counts': []}
+        
+        # Sort scan results by timestamp
+        sorted_scans = sorted(scan_results, key=lambda x: x.get('timestamp', ''), reverse=False)
+        
         dates = []
-        risk_scores = []
+        compliance_scores = []
         critical_counts = []
         
-        base_date = datetime.now() - timedelta(days=30)
+        for scan in sorted_scans[-30:]:  # Last 30 scans
+            try:
+                timestamp = scan.get('timestamp', '')
+                if timestamp:
+                    date_obj = datetime.fromisoformat(timestamp.replace('Z', '+00:00').replace('+00:00', ''))
+                    dates.append(date_obj.strftime('%Y-%m-%d'))
+                    
+                    # Get compliance score, filter out zeros
+                    score = scan.get('compliance_score', 0)
+                    if score > 0:
+                        compliance_scores.append(score)
+                    elif compliance_scores:  # Use last valid score
+                        compliance_scores.append(compliance_scores[-1])
+                    else:
+                        compliance_scores.append(75.0)  # Default fallback
+                    
+                    # Count critical findings
+                    findings = scan.get('findings', [])
+                    critical_count = sum(1 for f in findings if f.get('severity') == 'Critical')
+                    critical_counts.append(critical_count)
+            except:
+                continue
         
-        for i in range(30):
-            current_date = base_date + timedelta(days=i)
-            dates.append(current_date.strftime('%Y-%m-%d'))
-            
-            # Simulate improving trend
-            base_risk = 75 - (i * 1.2)  # Gradual improvement
-            risk_scores.append(max(20, base_risk + (i % 7 - 3) * 2))  # Add some variance
-            
-            # Simulate decreasing critical findings
-            critical_count = max(0, 15 - (i * 0.4) + (i % 5 - 2))
-            critical_counts.append(int(critical_count))
+        # Convert compliance to risk scores
+        risk_scores = [100 - score for score in compliance_scores]
         
         return {
             'dates': dates,
@@ -194,24 +292,31 @@ class ComplianceDashboardGenerator:
         }
     
     def _create_risk_trend_chart(self, dashboard_data: Dict[str, Any]) -> str:
-        """Create risk trend chart"""
+        """Create risk trend chart with linear interpolation (no spline artifacts)"""
         trend_data = dashboard_data['risk_trend_data']
         
         fig = make_subplots(
             rows=2, cols=1,
-            subplot_titles=['Risk Score Trend', 'Critical Findings Trend'],
+            subplot_titles=['Compliance Score Trend', 'Critical Findings Trend'],
             vertical_spacing=0.1
         )
         
-        # Risk score trend
+        # Convert risk scores back to compliance scores for display
+        compliance_scores = [100 - risk for risk in trend_data['risk_scores']]
+        
+        # Compliance score trend (blue line, linear shape)
         fig.add_trace(
             go.Scatter(
                 x=trend_data['dates'],
-                y=trend_data['risk_scores'],
+                y=compliance_scores,
                 mode='lines+markers',
-                name='Risk Score',
-                line=dict(color=self.color_palette['primary'], width=3),
-                marker=dict(size=6)
+                name='📈 Compliance Trend',
+                line=dict(
+                    color='#1976D2',  # Same blue as trend line
+                    width=4,
+                    shape='linear'  # Linear shape to prevent artifacts
+                ),
+                marker=dict(size=6, color='#1976D2')
             ),
             row=1, col=1
         )
