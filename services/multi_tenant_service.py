@@ -267,7 +267,7 @@ class MultiTenantService:
             logger.error(f"Failed to get secure connection for organization {organization_id}: {str(e)}")
             raise RuntimeError(f"Secure connection failed: {str(e)}")
     
-    def execute_with_tenant_context(self, organization_id: str, query: str, params: tuple = None, admin_bypass: bool = False):
+    def execute_with_tenant_context(self, organization_id: str, query: str, params: Optional[tuple] = None, admin_bypass: bool = False):
         """
         Execute a query with proper tenant context.
         
@@ -444,7 +444,7 @@ class MultiTenantService:
         """Get tenant configuration by organization ID."""
         return self.tenants.get(organization_id)
     
-    def validate_tenant_access(self, organization_id: str, resource_type: str = None) -> bool:
+    def validate_tenant_access(self, organization_id: str, resource_type: Optional[str] = None) -> bool:
         """
         Validate tenant access and enforce isolation.
         

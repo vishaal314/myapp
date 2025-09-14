@@ -541,8 +541,8 @@ class PredictiveComplianceEngine:
             
             # 95% confidence interval
             confidence_interval = (
-                max(0.0, forecast - 1.96 * std_error),
-                min(100.0, forecast + 1.96 * std_error)
+                max(0.0, float(forecast - 1.96 * std_error)),
+                min(100.0, float(forecast + 1.96 * std_error))
             )
         else:
             # Fallback confidence interval

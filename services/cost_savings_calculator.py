@@ -190,7 +190,7 @@ class CostSavingsCalculator:
             }
         }
     
-    def calculate_competitive_advantage(self, company_size: str, annual_revenue: float = None) -> Dict[str, Any]:
+    def calculate_competitive_advantage(self, company_size: str, annual_revenue: Optional[float] = None) -> Dict[str, Any]:
         """Calculate competitive advantage and ROI for different pricing tiers"""
         
         # Determine appropriate tier based on company size
