@@ -5750,10 +5750,13 @@ def render_enterprise_connector_interface(region: str, username: str):
         """))
     
     # Create tabs for different connector types
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
         _('enterprise_tab_microsoft365', "🏢 Microsoft 365"), 
         _('enterprise_tab_exact_online', "🇳🇱 Exact Online"), 
         _('enterprise_tab_google_workspace', "📊 Google Workspace"),
+        _('enterprise_tab_slack', "💬 Slack"),
+        _('enterprise_tab_jira', "🎫 Jira"),
+        _('enterprise_tab_confluence', "📖 Confluence"),
         _('enterprise_tab_salesforce', "💼 Salesforce CRM"),
         _('enterprise_tab_sap', "🏭 SAP ERP"),
         _('enterprise_tab_dutch_banking', "🏦 Dutch Banking")
@@ -5769,12 +5772,21 @@ def render_enterprise_connector_interface(region: str, username: str):
         render_google_workspace_connector(region, username)
     
     with tab4:
-        render_salesforce_connector(region, username)
+        render_slack_connector(region, username)
     
     with tab5:
-        render_sap_connector(region, username)
+        render_jira_connector(region, username)
     
     with tab6:
+        render_confluence_connector(region, username)
+    
+    with tab7:
+        render_salesforce_connector(region, username)
+    
+    with tab8:
+        render_sap_connector(region, username)
+    
+    with tab9:
         render_dutch_banking_connector(region, username)
 
 def render_microsoft365_connector(region: str, username: str):
@@ -6189,6 +6201,388 @@ def render_dutch_banking_connector(region: str, username: str):
     
     if st.button("🚀 Demo Banking Scan"):
         st.success("✅ Demo banking scan completed - PSD2 integration coming soon!")
+
+def render_slack_connector(region: str, username: str):
+    """Slack workspace connector interface"""
+    from services.enterprise_connector_scanner import EnterpriseConnectorScanner
+    from utils.activity_tracker import ScannerType
+    
+    st.subheader(_('scan.slack_integration', '💬 Slack Workspace Integration'))
+    st.write(_('scan.slack_integration_description', 'Scan Slack channels, messages, and shared files for PII with enterprise-grade security and Netherlands specialization.'))
+    
+    # Competitive advantage highlight
+    st.success("🎯 **Enterprise Revenue Driver**: Slack integration enables comprehensive collaboration platform scanning. Critical for enterprise deals targeting communication data compliance.")
+    
+    # Authentication setup
+    st.markdown(f"### {_('scan.slack_authentication', 'Slack Authentication')}")
+    
+    auth_method = st.radio(
+        _('scan.authentication_method', 'Authentication Method'),
+        [_('scan.bot_token', 'Bot Token'), _('scan.user_token', 'User Token'), _('scan.demo_mode', 'Demo Mode')],
+        help="Choose authentication method for Slack API access"
+    )
+    
+    credentials = {}
+    
+    if auth_method == _('scan.bot_token', 'Bot Token'):
+        credentials['bot_token'] = st.text_input("Slack Bot Token (xoxb-)", type="password", help="Bot token from Slack app configuration")
+        st.info("📋 **Required Bot Scopes**: channels:read, chat:read, files:read, users:read")
+        
+    elif auth_method == _('scan.user_token', 'User Token'):
+        credentials['access_token'] = st.text_input("Slack User Token (xoxp-)", type="password", help="User token from Slack OAuth flow")
+        st.info("📋 **Required User Scopes**: channels:read, chat:read, files:read")
+    
+    else:  # Demo Mode
+        st.success("✅ Demo mode enabled - using sample Netherlands Slack workspace data")
+        credentials = {'access_token': 'slack_demo_token'}
+    
+    # Scan configuration
+    st.markdown(f"### {_('scan.scan_configuration', 'Scan Configuration')}")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        scan_channels = st.checkbox("💬 Public Channels", value=True, help="Scan public channel messages")
+        scan_dms = st.checkbox("💭 Direct Messages", value=False, help="Scan direct messages (requires user permissions)")
+    with col2:
+        scan_files = st.checkbox("📎 Shared Files", value=True, help="Scan uploaded files and attachments")
+        scan_private = st.checkbox("🔒 Private Channels", value=False, help="Scan private channels (if bot has access)")
+    
+    # Netherlands-specific options
+    st.markdown("### Netherlands Specialization")
+    col1, col2 = st.columns(2)
+    with col1:
+        detect_bsn = st.checkbox("🔍 BSN Detection", value=True, help="Detect BSN numbers in messages and files")
+        detect_kvk = st.checkbox("🏢 KvK Detection", value=True, help="Detect KvK company numbers")
+    with col2:
+        detect_iban = st.checkbox("💳 IBAN Detection", value=True, help="Detect Dutch IBAN banking details")
+        uavg_compliance = st.checkbox("⚖️ UAVG Compliance Analysis", value=True, help="Netherlands privacy law compliance")
+    
+    if st.button("🚀 Start Slack Scan", type="primary"):
+        try:
+            scanner = EnterpriseConnectorScanner(
+                connector_type='slack',
+                credentials=credentials,
+                region=region
+            )
+            
+            scan_config = {
+                'scan_channels': scan_channels,
+                'scan_dms': scan_dms,
+                'scan_files': scan_files,
+                'scan_private': scan_private,
+                'detect_bsn': detect_bsn,
+                'detect_kvk': detect_kvk,
+                'detect_iban': detect_iban,
+                'uavg_compliance': uavg_compliance
+            }
+            
+            with st.spinner("Scanning Slack workspace..."):
+                scan_results = scanner.scan_enterprise_source(scan_config)
+            
+            if scan_results.get('success'):
+                # Store results in aggregator database
+                try:
+                    from services.results_aggregator import ResultsAggregator
+                    aggregator = ResultsAggregator()
+                    
+                    complete_result = {
+                        **scan_results,
+                        'scan_type': 'enterprise connector',
+                        'total_pii_found': scan_results.get('pii_instances_found', 0),
+                        'high_risk_count': scan_results.get('high_risk_findings', 0),
+                        'region': region,
+                        'files_scanned': scan_results.get('total_items_scanned', 0),
+                        'username': username,
+                        'user_id': st.session_state.get('user_id', username),
+                        'connector_type': 'Slack'
+                    }
+                    
+                    stored_scan_id = aggregator.save_scan_result(
+                        username=username,
+                        result=complete_result
+                    )
+                    logger.info(f"Slack Connector: Successfully stored scan result with ID: {stored_scan_id}")
+                    
+                except Exception as store_error:
+                    logger.error(f"Slack Connector: FAILED to store scan result in aggregator: {store_error}")
+                
+                display_enterprise_scan_results(scan_results, 'Slack')
+                
+                # Highlight Netherlands-specific findings
+                if scan_results.get('bsn_instances', 0) > 0:
+                    st.warning(f"⚠️ {scan_results['bsn_instances']} BSN instances found in Slack - UAVG compliance review required")
+                
+                if scan_results.get('kvk_instances', 0) > 0:
+                    st.info(f"🏢 {scan_results['kvk_instances']} KvK numbers detected in workspace")
+            else:
+                st.error(f"Slack scan failed: {scan_results.get('error', 'Unknown error')}")
+        
+        except Exception as e:
+            st.error(f"Slack connector failed: {str(e)}")
+
+def render_jira_connector(region: str, username: str):
+    """Jira project connector interface"""
+    from services.enterprise_connector_scanner import EnterpriseConnectorScanner
+    from utils.activity_tracker import ScannerType
+    
+    st.subheader(_('scan.jira_integration', '🎫 Jira Content Integration'))
+    st.write(_('scan.jira_integration_description', 'Scan Jira issues, comments, and attachments for PII with enterprise project management focus and Netherlands specialization.'))
+    
+    # Competitive advantage highlight
+    st.success("🎯 **Enterprise Revenue Driver**: Jira integration enables comprehensive project data scanning. Essential for development teams and enterprise compliance workflows.")
+    
+    # Authentication setup
+    st.markdown(f"### {_('scan.jira_authentication', 'Jira Authentication')}")
+    
+    auth_method = st.radio(
+        _('scan.authentication_method', 'Authentication Method'),
+        [_('scan.api_token', 'API Token'), _('scan.basic_auth', 'Username & Password'), _('scan.demo_mode', 'Demo Mode')],
+        help="Choose authentication method for Jira API access"
+    )
+    
+    credentials = {}
+    
+    if auth_method == _('scan.api_token', 'API Token'):
+        col1, col2 = st.columns(2)
+        with col1:
+            credentials['domain'] = st.text_input("Jira Domain", value="your-company.atlassian.net", help="Your Jira Cloud domain")
+            credentials['username'] = st.text_input("Username/Email", help="Your Jira account email")
+        with col2:
+            credentials['api_token'] = st.text_input("API Token", type="password", help="API token from Jira account settings")
+        
+        st.info("🔑 **Generate API Token**: Account Settings → Security → Create and manage API tokens")
+        
+    elif auth_method == _('scan.basic_auth', 'Username & Password'):
+        col1, col2 = st.columns(2)
+        with col1:
+            credentials['domain'] = st.text_input("Jira Domain", value="your-company.atlassian.net")
+            credentials['username'] = st.text_input("Username")
+        with col2:
+            credentials['password'] = st.text_input("Password", type="password")
+    
+    else:  # Demo Mode
+        st.success("✅ Demo mode enabled - using sample Netherlands Jira project data")
+        credentials = {'domain': 'demo.atlassian.net', 'username': 'demo', 'api_token': 'demo_token'}
+    
+    # Scan configuration
+    st.markdown(f"### {_('scan.scan_configuration', 'Scan Configuration')}")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        scan_issues = st.checkbox("🎫 Issues & Descriptions", value=True, help="Scan issue titles and descriptions")
+        scan_comments = st.checkbox("💭 Comments", value=True, help="Scan issue comments and discussions")
+    with col2:
+        scan_attachments = st.checkbox("📎 Attachments", value=True, help="Scan attached files and documents")
+        scan_custom_fields = st.checkbox("🔧 Custom Fields", value=True, help="Scan custom field values")
+    
+    # Project selection
+    project_filter = st.text_input("Project Filter (optional)", placeholder="e.g., PROJ,DEV,TEST", help="Comma-separated project keys. Leave empty to scan all projects")
+    
+    # Netherlands-specific options
+    st.markdown("### Netherlands Specialization")
+    col1, col2 = st.columns(2)
+    with col1:
+        detect_bsn = st.checkbox("🔍 BSN Detection", value=True, help="Detect BSN numbers in issues and attachments")
+        detect_kvk = st.checkbox("🏢 KvK Detection", value=True, help="Detect KvK company numbers")
+    with col2:
+        detect_iban = st.checkbox("💳 IBAN Detection", value=True, help="Detect Dutch IBAN banking details")
+        uavg_compliance = st.checkbox("⚖️ UAVG Compliance Analysis", value=True, help="Netherlands privacy law compliance")
+    
+    if st.button("🚀 Start Jira Scan", type="primary"):
+        try:
+            scanner = EnterpriseConnectorScanner(
+                connector_type='jira',
+                credentials=credentials,
+                region=region
+            )
+            
+            scan_config = {
+                'scan_issues': scan_issues,
+                'scan_comments': scan_comments,
+                'scan_attachments': scan_attachments,
+                'scan_custom_fields': scan_custom_fields,
+                'project_filter': project_filter.split(',') if project_filter else [],
+                'detect_bsn': detect_bsn,
+                'detect_kvk': detect_kvk,
+                'detect_iban': detect_iban,
+                'uavg_compliance': uavg_compliance
+            }
+            
+            with st.spinner("Scanning Jira projects..."):
+                scan_results = scanner.scan_enterprise_source(scan_config)
+            
+            if scan_results.get('success'):
+                # Store results in aggregator database
+                try:
+                    from services.results_aggregator import ResultsAggregator
+                    aggregator = ResultsAggregator()
+                    
+                    complete_result = {
+                        **scan_results,
+                        'scan_type': 'enterprise connector',
+                        'total_pii_found': scan_results.get('pii_instances_found', 0),
+                        'high_risk_count': scan_results.get('high_risk_findings', 0),
+                        'region': region,
+                        'files_scanned': scan_results.get('total_items_scanned', 0),
+                        'username': username,
+                        'user_id': st.session_state.get('user_id', username),
+                        'connector_type': 'Jira'
+                    }
+                    
+                    stored_scan_id = aggregator.save_scan_result(
+                        username=username,
+                        result=complete_result
+                    )
+                    logger.info(f"Jira Connector: Successfully stored scan result with ID: {stored_scan_id}")
+                    
+                except Exception as store_error:
+                    logger.error(f"Jira Connector: FAILED to store scan result in aggregator: {store_error}")
+                
+                display_enterprise_scan_results(scan_results, 'Jira')
+                
+                # Highlight Netherlands-specific findings
+                if scan_results.get('bsn_instances', 0) > 0:
+                    st.warning(f"⚠️ {scan_results['bsn_instances']} BSN instances found in Jira - UAVG compliance review required")
+                
+                if scan_results.get('kvk_instances', 0) > 0:
+                    st.info(f"🏢 {scan_results['kvk_instances']} KvK numbers detected in projects")
+            else:
+                st.error(f"Jira scan failed: {scan_results.get('error', 'Unknown error')}")
+        
+        except Exception as e:
+            st.error(f"Jira connector failed: {str(e)}")
+
+def render_confluence_connector(region: str, username: str):
+    """Confluence wiki connector interface"""
+    from services.enterprise_connector_scanner import EnterpriseConnectorScanner
+    from utils.activity_tracker import ScannerType
+    
+    st.subheader(_('scan.confluence_integration', '📖 Confluence Wiki Integration'))
+    st.write(_('scan.confluence_integration_description', 'Scan Confluence spaces, pages, and attachments for PII with enterprise documentation focus and Netherlands specialization.'))
+    
+    # Competitive advantage highlight
+    st.success("🎯 **Enterprise Revenue Driver**: Confluence integration enables comprehensive wiki and documentation scanning. Essential for knowledge management compliance.")
+    
+    # Authentication setup
+    st.markdown(f"### {_('scan.confluence_authentication', 'Confluence Authentication')}")
+    
+    auth_method = st.radio(
+        _('scan.authentication_method', 'Authentication Method'),
+        [_('scan.api_token', 'API Token'), _('scan.basic_auth', 'Username & Password'), _('scan.demo_mode', 'Demo Mode')],
+        help="Choose authentication method for Confluence API access"
+    )
+    
+    credentials = {}
+    
+    if auth_method == _('scan.api_token', 'API Token'):
+        col1, col2 = st.columns(2)
+        with col1:
+            credentials['domain'] = st.text_input("Confluence Domain", value="your-company.atlassian.net", help="Your Confluence Cloud domain")
+            credentials['username'] = st.text_input("Username/Email", help="Your Confluence account email")
+        with col2:
+            credentials['api_token'] = st.text_input("API Token", type="password", help="API token from Confluence account settings")
+        
+        st.info("🔑 **Generate API Token**: Account Settings → Security → Create and manage API tokens")
+        
+    elif auth_method == _('scan.basic_auth', 'Username & Password'):
+        col1, col2 = st.columns(2)
+        with col1:
+            credentials['domain'] = st.text_input("Confluence Domain", value="your-company.atlassian.net")
+            credentials['username'] = st.text_input("Username")
+        with col2:
+            credentials['password'] = st.text_input("Password", type="password")
+    
+    else:  # Demo Mode
+        st.success("✅ Demo mode enabled - using sample Netherlands Confluence wiki data")
+        credentials = {'domain': 'demo.atlassian.net', 'username': 'demo', 'api_token': 'demo_token'}
+    
+    # Scan configuration
+    st.markdown(f"### {_('scan.scan_configuration', 'Scan Configuration')}")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        scan_pages = st.checkbox("📄 Pages & Content", value=True, help="Scan page content and titles")
+        scan_comments = st.checkbox("💭 Comments", value=True, help="Scan page comments and discussions")
+    with col2:
+        scan_attachments = st.checkbox("📎 Attachments", value=True, help="Scan attached files and documents")
+        scan_blog_posts = st.checkbox("📝 Blog Posts", value=False, help="Scan Confluence blog posts")
+    
+    # Space selection
+    space_filter = st.text_input("Space Filter (optional)", placeholder="e.g., TEAM,DOCS,PROJ", help="Comma-separated space keys. Leave empty to scan all spaces")
+    
+    # Netherlands-specific options
+    st.markdown("### Netherlands Specialization")
+    col1, col2 = st.columns(2)
+    with col1:
+        detect_bsn = st.checkbox("🔍 BSN Detection", value=True, help="Detect BSN numbers in pages and attachments")
+        detect_kvk = st.checkbox("🏢 KvK Detection", value=True, help="Detect KvK company numbers")
+    with col2:
+        detect_iban = st.checkbox("💳 IBAN Detection", value=True, help="Detect Dutch IBAN banking details")
+        uavg_compliance = st.checkbox("⚖️ UAVG Compliance Analysis", value=True, help="Netherlands privacy law compliance")
+    
+    if st.button("🚀 Start Confluence Scan", type="primary"):
+        try:
+            scanner = EnterpriseConnectorScanner(
+                connector_type='confluence',
+                credentials=credentials,
+                region=region
+            )
+            
+            scan_config = {
+                'scan_pages': scan_pages,
+                'scan_comments': scan_comments,
+                'scan_attachments': scan_attachments,
+                'scan_blog_posts': scan_blog_posts,
+                'space_filter': space_filter.split(',') if space_filter else [],
+                'detect_bsn': detect_bsn,
+                'detect_kvk': detect_kvk,
+                'detect_iban': detect_iban,
+                'uavg_compliance': uavg_compliance
+            }
+            
+            with st.spinner("Scanning Confluence wiki..."):
+                scan_results = scanner.scan_enterprise_source(scan_config)
+            
+            if scan_results.get('success'):
+                # Store results in aggregator database
+                try:
+                    from services.results_aggregator import ResultsAggregator
+                    aggregator = ResultsAggregator()
+                    
+                    complete_result = {
+                        **scan_results,
+                        'scan_type': 'enterprise connector',
+                        'total_pii_found': scan_results.get('pii_instances_found', 0),
+                        'high_risk_count': scan_results.get('high_risk_findings', 0),
+                        'region': region,
+                        'files_scanned': scan_results.get('total_items_scanned', 0),
+                        'username': username,
+                        'user_id': st.session_state.get('user_id', username),
+                        'connector_type': 'Confluence'
+                    }
+                    
+                    stored_scan_id = aggregator.save_scan_result(
+                        username=username,
+                        result=complete_result
+                    )
+                    logger.info(f"Confluence Connector: Successfully stored scan result with ID: {stored_scan_id}")
+                    
+                except Exception as store_error:
+                    logger.error(f"Confluence Connector: FAILED to store scan result in aggregator: {store_error}")
+                
+                display_enterprise_scan_results(scan_results, 'Confluence')
+                
+                # Highlight Netherlands-specific findings
+                if scan_results.get('bsn_instances', 0) > 0:
+                    st.warning(f"⚠️ {scan_results['bsn_instances']} BSN instances found in Confluence - UAVG compliance review required")
+                
+                if scan_results.get('kvk_instances', 0) > 0:
+                    st.info(f"🏢 {scan_results['kvk_instances']} KvK numbers detected in wiki pages")
+            else:
+                st.error(f"Confluence scan failed: {scan_results.get('error', 'Unknown error')}")
+        
+        except Exception as e:
+            st.error(f"Confluence connector failed: {str(e)}")
 
 def render_salesforce_connector(region: str, username: str):
     """Salesforce CRM connector interface"""
