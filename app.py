@@ -5693,6 +5693,11 @@ def render_enterprise_connector_interface(region: str, username: str):
     # Import required modules to avoid unbound variables
     from utils.activity_tracker import ScannerType
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     # Debug: Check current language and translations
     current_lang = st.session_state.get('language', 'en')
@@ -5793,6 +5798,11 @@ def render_microsoft365_connector(region: str, username: str):
     """Microsoft 365 connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     from utils.activity_tracker import ScannerType
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.microsoft365_integration', '🏢 Microsoft 365 Integration'))
     st.write(_('scan.microsoft365_integration_description', 'Scan SharePoint, OneDrive, Exchange, and Teams for PII with Netherlands specialization.'))
@@ -5967,6 +5977,12 @@ def render_microsoft365_connector(region: str, username: str):
 def render_exact_online_connector(region: str, username: str):
     """Exact Online connector interface - Netherlands specialization"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
+    from utils.activity_tracker import ScannerType
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.exact_online_integration', '🇳🇱 Exact Online Integration'))
     st.write(_('scan.exact_online_integration_description', 'Netherlands-specialized ERP scanning with BSN validation and KvK verification.'))
@@ -6090,6 +6106,12 @@ def render_exact_online_connector(region: str, username: str):
 def render_google_workspace_connector(region: str, username: str):
     """Google Workspace connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
+    from utils.activity_tracker import ScannerType
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.google_workspace_integration', '📊 Google Workspace Integration'))
     st.write(_('scan.google_workspace_integration_description', 'Scan Google Drive, Gmail, and Docs for PII with enterprise-grade accuracy.'))
@@ -6183,6 +6205,12 @@ def render_google_workspace_connector(region: str, username: str):
 def render_dutch_banking_connector(region: str, username: str):
     """Dutch banking connector interface (PSD2 APIs)"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
+    from utils.activity_tracker import ScannerType
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.dutch_banking_integration', '🏦 Dutch Banking Integration'))
     st.write(_('scan.dutch_banking_integration_description', 'PSD2-compliant integration with major Dutch banks for transaction analysis.'))
@@ -6206,6 +6234,11 @@ def render_slack_connector(region: str, username: str):
     """Slack workspace connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     from utils.activity_tracker import ScannerType
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.slack_integration', '💬 Slack Workspace Integration'))
     st.write(_('scan.slack_integration_description', 'Scan Slack channels, messages, and shared files for PII with enterprise-grade security and Netherlands specialization.'))
@@ -6324,6 +6357,11 @@ def render_jira_connector(region: str, username: str):
     """Jira project connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     from utils.activity_tracker import ScannerType
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.jira_integration', '🎫 Jira Content Integration'))
     st.write(_('scan.jira_integration_description', 'Scan Jira issues, comments, and attachments for PII with enterprise project management focus and Netherlands specialization.'))
@@ -6456,6 +6494,11 @@ def render_confluence_connector(region: str, username: str):
     """Confluence wiki connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     from utils.activity_tracker import ScannerType
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.confluence_integration', '📖 Confluence Wiki Integration'))
     st.write(_('scan.confluence_integration_description', 'Scan Confluence spaces, pages, and attachments for PII with enterprise documentation focus and Netherlands specialization.'))
@@ -6588,6 +6631,11 @@ def render_salesforce_connector(region: str, username: str):
     """Salesforce CRM connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     from utils.activity_tracker import ScannerType
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader("💼 Salesforce CRM Integration")
     st.write("Scan Salesforce Accounts, Contacts, and Leads for PII with Netherlands BSN/KvK specialization.")
@@ -6708,6 +6756,11 @@ def render_sap_connector(region: str, username: str):
     """SAP ERP connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     from utils.activity_tracker import ScannerType
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader("🏭 SAP ERP Integration")
     st.write("Scan SAP HR, Finance, and Master Data modules for PII with Netherlands BSN detection in PA0002, KNA1, LFA1.")
