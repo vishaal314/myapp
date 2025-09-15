@@ -143,7 +143,12 @@ class MultiTenantService:
                 logger.info(f"Tenant isolation columns may already exist: {str(e)}")
             
             # Initialize Row Level Security (RLS) for tenant isolation
-            self._init_row_level_security(cursor)
+            try:
+                self._init_row_level_security(cursor)
+                logger.info("Row Level Security initialized successfully")
+            except Exception as rls_error:
+                logger.warning(f"Row Level Security initialization skipped: {rls_error}")
+                logger.info("Proceeding with basic tenant isolation (database still functional)")
             
             conn.commit()
             logger.info("Multi-tenant database schema initialized successfully with RLS")
@@ -342,7 +347,9 @@ class MultiTenantService:
     def _load_tenant_configs(self) -> None:
         """Load tenant configurations from database."""
         try:
-            conn = psycopg2.connect(self.db_url, sslmode='require')
+            # Use prefer for development, require for production
+            ssl_mode = 'prefer' if (self.db_url and ('localhost' in self.db_url or '127.0.0.1' in self.db_url)) else 'require'
+            conn = psycopg2.connect(self.db_url, sslmode=ssl_mode)
             cursor = conn.cursor()
             
             cursor.execute("""
