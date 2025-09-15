@@ -67,6 +67,9 @@
   "enterprise_tab_slack": "💬 Slack",
   "enterprise_tab_jira": "🎫 Jira",
   "enterprise_tab_confluence": "📖 Confluence",
+  "enterprise_tab_salesforce": "💼 Salesforce CRM",
+  "enterprise_tab_sap": "🏭 SAP ERP",
+  "enterprise_tab_dutch_banking": "🏦 Dutch Banking",
   "register": {
     "new_user": "New user?",
     "create_account": "Create Account",

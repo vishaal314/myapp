@@ -91,7 +91,7 @@ except ImportError as e:
     logging.warning(f"Failed to import activity tracker: {e}")
     ACTIVITY_TRACKER_AVAILABLE = False
     # Create a fallback ScannerType enum to prevent unbound variable errors
-    class ScannerType:
+    class ScannerTypeFallback:
         CODE = "code"
         BLOB = "blob"
         IMAGE = "image"
@@ -103,6 +103,9 @@ except ImportError as e:
         SUSTAINABILITY = "sustainability"
         API = "api"
         ENTERPRISE_CONNECTOR = "enterprise_connector"
+    
+    # Use fallback as ScannerType when tracker is not available
+    ScannerType = ScannerTypeFallback
 
 # Enterprise integration - non-breaking import
 try:
@@ -191,101 +194,90 @@ def get_html_report_generator():
             return generate_html_report_fallback
 
 # Use the wrapper to ensure consistent typing - define with proper type annotation
-generate_html_report = get_html_report_generator()
+generate_html_report: Any = get_html_report_generator()
 
 # Activity tracking imports - Consolidated and Fixed
-try:
-    from utils.activity_tracker import (
-        get_activity_tracker,
-        track_scan_completed as activity_track_completed,
-        track_scan_failed as activity_track_failed,
-        ActivityType, 
-        ScannerType
-    )
-    
-    # ScannerType is now imported directly to avoid alias conflicts
-    ACTIVITY_TRACKING_AVAILABLE = True
-    from typing import Dict, Any
-    
-    # Compatibility wrapper functions with proper signatures
-    def track_scan_completed_wrapper_safe(scanner_type, user_id, session_id, findings_count=0, files_scanned=0, compliance_score=0, **kwargs):
-        """Safe wrapper for scan completion tracking"""
-        try:
-            username = st.session_state.get('username', user_id)
-            return activity_track_completed(
-                session_id=session_id,
-                user_id=user_id,
-                username=username,
-                scanner_type=scanner_type,
-                findings_count=findings_count,
-                files_scanned=files_scanned,
-                compliance_score=compliance_score,
-                details=kwargs
-            )
-        except Exception as e:
-            logger.warning(f"Activity tracking failed: {e}")
-            return None
-    
-    def track_scan_failed_wrapper_safe(scanner_type, user_id, session_id, error_message, **kwargs):
-        """Safe wrapper for scan failure tracking"""
-        try:
-            username = st.session_state.get('username', user_id)
-            return activity_track_failed(
-                session_id=session_id,
-                user_id=user_id,
-                username=username,
-                scanner_type=scanner_type,
-                error_message=error_message,
-                details=kwargs
-            )
-        except Exception as e:
-            logger.warning(f"Activity tracking failed: {e}")
-            return None
-    
-    def get_session_id():
-        """Get or create session ID"""
-        import streamlit as st
-        if 'session_id' not in st.session_state:
-            st.session_state.session_id = str(uuid.uuid4())
-        return st.session_state.session_id
-    
-    def get_user_id():
-        """Get current user ID"""
-        import streamlit as st
-        return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
-    
-    def get_organization_id():
-        """Get current organization ID for multi-tenant isolation"""
-        import streamlit as st
-        enterprise_user = st.session_state.get('enterprise_user')
-        if enterprise_user and hasattr(enterprise_user, 'organization_id'):
-            return enterprise_user.organization_id
-        return st.session_state.get('organization_id', 'default_org')
+if ACTIVITY_TRACKER_AVAILABLE:
+    try:
+        from utils.activity_tracker import (
+            get_activity_tracker,
+            track_scan_completed as activity_track_completed,
+            track_scan_failed as activity_track_failed,
+            ActivityType
+        )
         
-except ImportError:
-    # Fallback definitions for activity tracking
+        # ScannerType already imported above, no need to reimport
+        ACTIVITY_TRACKING_AVAILABLE = True
+        from typing import Dict, Any
+        
+        # Compatibility wrapper functions with proper signatures
+        def track_scan_completed_wrapper_safe(scanner_type, user_id, session_id, findings_count=0, files_scanned=0, compliance_score=0, **kwargs):
+            """Safe wrapper for scan completion tracking"""
+            try:
+                username = st.session_state.get('username', user_id)
+                return activity_track_completed(
+                    session_id=session_id,
+                    user_id=user_id,
+                    username=username,
+                    scanner_type=scanner_type,
+                    findings_count=findings_count,
+                    files_scanned=files_scanned,
+                    compliance_score=compliance_score,
+                    details=kwargs
+                )
+            except Exception as e:
+                logger.warning(f"Activity tracking failed: {e}")
+                return None
+        
+        def track_scan_failed_wrapper_safe(scanner_type, user_id, session_id, error_message, **kwargs):
+            """Safe wrapper for scan failure tracking"""
+            try:
+                username = st.session_state.get('username', user_id)
+                return activity_track_failed(
+                    session_id=session_id,
+                    user_id=user_id,
+                    username=username,
+                    scanner_type=scanner_type,
+                    error_message=error_message,
+                    details=kwargs
+                )
+            except Exception as e:
+                logger.warning(f"Activity tracking failed: {e}")
+                return None
+        
+        def get_session_id():
+            """Get or create session ID"""
+            import streamlit as st
+            if 'session_id' not in st.session_state:
+                st.session_state.session_id = str(uuid.uuid4())
+            return st.session_state.session_id
+        
+        def get_user_id():
+            """Get current user ID"""
+            import streamlit as st
+            return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
+        
+        def get_organization_id():
+            """Get current organization ID for multi-tenant isolation"""
+            import streamlit as st
+            enterprise_user = st.session_state.get('enterprise_user')
+            if enterprise_user and hasattr(enterprise_user, 'organization_id'):
+                return enterprise_user.organization_id
+            return st.session_state.get('organization_id', 'default_org')
+            
+    except ImportError:
+        # Fallback if imports fail within the available tracker block
+        ACTIVITY_TRACKING_AVAILABLE = False
+else:
+    # Fallback definitions for activity tracking when tracker not available
     ACTIVITY_TRACKING_AVAILABLE = False
     
-    def track_scan_completed_wrapper(**kwargs): pass
-    def track_scan_failed_wrapper(**kwargs): pass
+    def track_scan_completed_wrapper_safe(**kwargs): pass
+    def track_scan_failed_wrapper_safe(**kwargs): pass
     
-    # Define consistent ScannerType fallback with all scanner types
-    class ScannerType:
-        DOCUMENT = "document"
-        IMAGE = "image" 
-        WEBSITE = "website"
-        CODE = "code"
-        DATABASE = "database"
-        DPIA = "dpia"
-        AI_MODEL = "ai_model"
-        SOC2 = "soc2"
-        SUSTAINABILITY = "sustainability"
-        ENTERPRISE = "enterprise"
-        REPOSITORY = "repository"
-        BLOB = "blob"
-        COOKIE = "cookie"
-        API = "api"
-        CONNECTORS_E2E = "connectors_e2e"
+    # Ensure ScannerType is available in fallback case
+    if 'ScannerType' not in globals():
+        ScannerType = ScannerTypeFallback
     
     def get_session_id(): 
         """Fallback session ID"""
@@ -296,27 +288,43 @@ except ImportError:
     def get_user_id(): 
         """Fallback user ID"""
         return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
+    
+    def get_organization_id(): 
+        """Fallback organization ID"""
+        return st.session_state.get('organization_id', 'default_org')
 
 # Global variable definitions to avoid "possibly unbound" errors
+# Initialize all global variables with defaults
+user_id: Optional[str] = None
+session_id: Optional[str] = None
+ssl_mode: str = 'prefer'
+ssl_cert_path: Optional[str] = None
+ssl_key_path: Optional[str] = None
+ssl_ca_path: Optional[str] = None
+
+# Helper functions to get session variables safely
+def get_current_user_id() -> str:
+    """Get current user ID from session state"""
+    return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
+
+def get_current_session_id() -> str:
+    """Get current session ID from session state"""
+    if 'session_id' not in st.session_state:
+        st.session_state['session_id'] = str(uuid.uuid4())
+    return st.session_state['session_id']
+
 def ensure_global_variables():
     """Ensure all required global variables are defined"""
     global user_id, session_id, ssl_mode, ssl_cert_path, ssl_key_path, ssl_ca_path
     
-    # Initialize session variables if they don't exist
-    if 'user_id' not in globals():
-        user_id = None
-    if 'session_id' not in globals(): 
-        session_id = None
+    # Reassign from session state if available
+    user_id = st.session_state.get('user_id', user_id)
+    session_id = st.session_state.get('session_id', session_id)
     
-    # Initialize SSL variables with defaults
-    if 'ssl_mode' not in globals():
-        ssl_mode = 'prefer'
-    if 'ssl_cert_path' not in globals():
-        ssl_cert_path = None
-    if 'ssl_key_path' not in globals():
-        ssl_key_path = None  
-    if 'ssl_ca_path' not in globals():
-        ssl_ca_path = None
+    # Ensure session_id is set
+    if session_id is None:
+        session_id = str(uuid.uuid4())
+        st.session_state['session_id'] = session_id
 
 # Initialize global variables
 ensure_global_variables()
@@ -3486,7 +3494,7 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.CODE,
             user_id=user_id,
             session_id=session_id,
@@ -4133,7 +4141,7 @@ def execute_image_scan(region, username, uploaded_files):
         from utils.activity_tracker import ScannerType
         
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.IMAGE,
             user_id=user_id,
             session_id=session_id,
@@ -4645,7 +4653,7 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
     except Exception as e:
         # Track scan failure with safe error handling
         try:
-            track_scan_failed_wrapper(
+            track_scan_failed_wrapper_safe(
                 scanner_type=ScannerType.DATABASE,
                 user_id=user_id,
                 session_id=session_id,
@@ -4793,7 +4801,7 @@ def execute_database_scan_cloud(region, username, connection_string):
     except Exception as e:
         # Track scan failure with safe error handling
         try:
-            track_scan_failed_wrapper(
+            track_scan_failed_wrapper_safe(
                 scanner_type=ScannerType.DATABASE,
                 user_id=user_id,
                 session_id=session_id,
@@ -5672,7 +5680,7 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.API,
             user_id=user_id,
             session_id=session_id,
@@ -7774,7 +7782,7 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.AI_MODEL,
             user_id=user_id,
             session_id=session_id,
@@ -8154,7 +8162,7 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.SOC2,
             user_id=user_id,
             session_id=session_id,
@@ -8816,7 +8824,7 @@ def execute_website_scan(region, username, url, scan_config):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.WEBSITE,
             user_id=user_id,
             session_id=session_id,
@@ -9735,7 +9743,7 @@ def execute_enhanced_dpia_scan(region, username, responses):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.DPIA,
             user_id=user_id,
             session_id=session_id,
@@ -10487,7 +10495,7 @@ def execute_sustainability_scan(region, username, scan_params):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper(
+        track_scan_failed_wrapper_safe(
             scanner_type=ScannerType.SUSTAINABILITY,
             user_id=user_id,
             session_id=session_id,

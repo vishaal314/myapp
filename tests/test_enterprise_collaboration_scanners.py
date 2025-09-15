@@ -14,7 +14,7 @@ import os
 # Import the enterprise connector scanner
 from services.enterprise_connector_scanner import EnterpriseConnectorScanner
 from services.enterprise_collaboration_helpers import (
-    SlackHelpers, JiraHelpers, ConfluenceHelpers,
+    SlackHelpers, JiraHelpers, ConfluenceHelpers, SalesforceHelpers, SAPHelpers, DutchBankingHelpers,
     assess_pii_risk, is_netherlands_specific_pii, should_scan_file, should_scan_attachment
 )
 
@@ -712,6 +712,271 @@ class TestPerformance(unittest.TestCase):
         del scanners
 
 
+class TestSalesforceScanner(unittest.TestCase):
+    """Test suite for Salesforce Scanner functionality."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        self.salesforce_credentials = {
+            'client_id': 'test_client_id',
+            'client_secret': 'test_client_secret',
+            'username': 'test@company.com',
+            'password': 'test_password',
+            'security_token': 'test_token'
+        }
+        
+        self.mock_objects = [
+            {'name': 'Account', 'label': 'Account', 'queryable': True},
+            {'name': 'Contact', 'label': 'Contact', 'queryable': True},
+            {'name': 'Lead', 'label': 'Lead', 'queryable': True}
+        ]
+        
+        self.mock_records = [
+            {
+                'Id': '0011234567890ABC',
+                'Name': 'Test Account',
+                'Phone': '+31612345678',
+                'BillingAddress': {'street': 'Test Street 123', 'city': 'Amsterdam'}
+            }
+        ]
+    
+    @patch('services.enterprise_collaboration_helpers.requests.post')
+    def test_salesforce_authentication_success(self, mock_post):
+        """Test successful Salesforce authentication."""
+        # Mock authentication response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'access_token': 'test_access_token',
+            'instance_url': 'https://test.salesforce.com'
+        }
+        mock_post.return_value = mock_response
+        
+        # Test authentication
+        salesforce_helper = SalesforceHelpers(self.salesforce_credentials)
+        result = salesforce_helper.authenticate()
+        
+        self.assertTrue(result)
+        self.assertEqual(salesforce_helper.access_token, 'test_access_token')
+        self.assertEqual(salesforce_helper.instance_url, 'https://test.salesforce.com')
+    
+    @patch('services.enterprise_collaboration_helpers.requests.post')
+    def test_salesforce_authentication_failure(self, mock_post):
+        """Test failed Salesforce authentication."""
+        # Mock authentication failure
+        mock_response = Mock()
+        mock_response.status_code = 400
+        mock_response.text = 'Invalid credentials'
+        mock_post.return_value = mock_response
+        
+        # Test authentication
+        salesforce_helper = SalesforceHelpers(self.salesforce_credentials)
+        result = salesforce_helper.authenticate()
+        
+        self.assertFalse(result)
+    
+    def test_salesforce_get_objects(self):
+        """Test getting Salesforce objects."""
+        salesforce_helper = SalesforceHelpers(self.salesforce_credentials)
+        salesforce_helper.instance_url = 'https://test.salesforce.com'
+        
+        # Mock session response
+        with patch.object(salesforce_helper.session, 'get') as mock_get:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {'sobjects': self.mock_objects}
+            mock_get.return_value = mock_response
+            
+            objects = salesforce_helper.get_objects()
+            
+            self.assertEqual(len(objects), 3)
+            self.assertEqual(objects[0]['name'], 'Account')
+    
+    def test_salesforce_get_records(self):
+        """Test getting Salesforce records."""
+        salesforce_helper = SalesforceHelpers(self.salesforce_credentials)
+        salesforce_helper.instance_url = 'https://test.salesforce.com'
+        
+        # Mock session response
+        with patch.object(salesforce_helper.session, 'get') as mock_get:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {'records': self.mock_records}
+            mock_get.return_value = mock_response
+            
+            records = salesforce_helper.get_records('Account')
+            
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0]['Name'], 'Test Account')
+
+
+class TestSAPScanner(unittest.TestCase):
+    """Test suite for SAP Scanner functionality."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        self.sap_credentials = {
+            'base_url': 'https://sap-server.company.com:8000',
+            'username': 'test_user',
+            'password': 'test_password',
+            'client': '100'
+        }
+        
+        self.mock_tables = [
+            {'name': 'KNA1', 'description': 'Customer Master'},
+            {'name': 'LFA1', 'description': 'Vendor Master'}
+        ]
+    
+    def test_sap_authentication_success(self):
+        """Test successful SAP authentication."""
+        sap_helper = SAPHelpers(self.sap_credentials)
+        
+        # Mock session response
+        with patch.object(sap_helper.session, 'get') as mock_get:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_get.return_value = mock_response
+            
+            result = sap_helper.authenticate()
+            
+            self.assertTrue(result)
+    
+    def test_sap_authentication_failure(self):
+        """Test failed SAP authentication."""
+        sap_helper = SAPHelpers(self.sap_credentials)
+        
+        # Mock session response
+        with patch.object(sap_helper.session, 'get') as mock_get:
+            mock_response = Mock()
+            mock_response.status_code = 401
+            mock_get.return_value = mock_response
+            
+            result = sap_helper.authenticate()
+            
+            self.assertFalse(result)
+    
+    def test_sap_get_tables(self):
+        """Test getting SAP tables."""
+        sap_helper = SAPHelpers(self.sap_credentials)
+        tables = sap_helper.get_tables()
+        
+        # Should return common SAP tables
+        self.assertGreater(len(tables), 0)
+        table_names = [table['name'] for table in tables]
+        self.assertIn('KNA1', table_names)
+        self.assertIn('LFA1', table_names)
+    
+    def test_sap_get_table_data(self):
+        """Test getting SAP table data."""
+        sap_helper = SAPHelpers(self.sap_credentials)
+        data = sap_helper.get_table_data('KNA1', limit=10)
+        
+        # Should return sample data or empty list
+        self.assertIsInstance(data, list)
+
+
+class TestDutchBankingScanner(unittest.TestCase):
+    """Test suite for Dutch Banking Scanner functionality."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        self.banking_credentials = {
+            'client_id': 'test_client_id',
+            'client_secret': 'test_client_secret',
+            'bank_code': 'ING'
+        }
+        
+        self.mock_accounts = [
+            {
+                'resourceId': 'account123',
+                'iban': 'NL02ABNA0123456789',
+                'name': 'Main Account',
+                'currency': 'EUR'
+            }
+        ]
+        
+        self.mock_transactions = [
+            {
+                'transactionId': 'tx123',
+                'bookingDate': '2023-12-01',
+                'transactionAmount': {'amount': '100.00', 'currency': 'EUR'},
+                'creditorName': 'John Doe',
+                'remittanceInformationUnstructured': 'Payment for services'
+            }
+        ]
+    
+    @patch('services.enterprise_collaboration_helpers.requests.Session.post')
+    def test_dutch_banking_authentication_success(self, mock_post):
+        """Test successful Dutch banking authentication."""
+        # Mock authentication response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'access_token': 'test_access_token',
+            'token_type': 'Bearer',
+            'expires_in': 3600
+        }
+        mock_post.return_value = mock_response
+        
+        # Test authentication
+        banking_helper = DutchBankingHelpers(self.banking_credentials)
+        result = banking_helper.authenticate()
+        
+        self.assertTrue(result)
+        self.assertEqual(banking_helper.access_token, 'test_access_token')
+    
+    @patch('services.enterprise_collaboration_helpers.requests.Session.post')
+    def test_dutch_banking_authentication_failure(self, mock_post):
+        """Test failed Dutch banking authentication."""
+        # Mock authentication failure
+        mock_response = Mock()
+        mock_response.status_code = 401
+        mock_response.text = 'Invalid credentials'
+        mock_post.return_value = mock_response
+        
+        # Test authentication
+        banking_helper = DutchBankingHelpers(self.banking_credentials)
+        result = banking_helper.authenticate()
+        
+        self.assertFalse(result)
+    
+    def test_dutch_banking_get_accounts(self):
+        """Test getting banking accounts."""
+        banking_helper = DutchBankingHelpers(self.banking_credentials)
+        banking_helper.access_token = 'test_token'
+        
+        # Mock session response
+        with patch.object(banking_helper.session, 'get') as mock_get:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {'accounts': self.mock_accounts}
+            mock_get.return_value = mock_response
+            
+            accounts = banking_helper.get_accounts()
+            
+            self.assertEqual(len(accounts), 1)
+            self.assertEqual(accounts[0]['iban'], 'NL02ABNA0123456789')
+    
+    def test_dutch_banking_scan_transaction_for_pii(self):
+        """Test scanning transactions for PII."""
+        banking_helper = DutchBankingHelpers(self.banking_credentials)
+        
+        # Test transaction with PII
+        test_transaction = {
+            'remittanceInformationUnstructured': 'Contact John at john@example.com or +31612345678',
+            'creditorName': 'John Doe',
+            'debtorName': 'Jane Smith'
+        }
+        
+        findings = banking_helper.scan_transaction_for_pii(test_transaction)
+        
+        # Should detect email and phone number
+        self.assertGreater(len(findings), 0)
+        finding_types = [f['type'] for f in findings]
+        self.assertIn('Email', finding_types)
+        self.assertIn('Dutch Phone', finding_types)
+
+
 if __name__ == '__main__':
     # Create test suite
     loader = unittest.TestLoader()
@@ -721,6 +986,9 @@ if __name__ == '__main__':
     suite.addTests(loader.loadTestsFromTestCase(TestSlackScanner))
     suite.addTests(loader.loadTestsFromTestCase(TestJiraScanner))
     suite.addTests(loader.loadTestsFromTestCase(TestConfluenceScanner))
+    suite.addTests(loader.loadTestsFromTestCase(TestSalesforceScanner))
+    suite.addTests(loader.loadTestsFromTestCase(TestSAPScanner))
+    suite.addTests(loader.loadTestsFromTestCase(TestDutchBankingScanner))
     suite.addTests(loader.loadTestsFromTestCase(TestHelperFunctions))
     suite.addTests(loader.loadTestsFromTestCase(TestPerformance))
     

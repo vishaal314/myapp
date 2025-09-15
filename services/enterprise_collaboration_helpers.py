@@ -471,3 +471,436 @@ def should_scan_file(file_info: Dict) -> bool:
 def should_scan_attachment(attachment_info: Dict) -> bool:
     """Determine if an attachment should be scanned for PII."""
     return should_scan_file(attachment_info)
+
+
+class SalesforceHelpers:
+    """Helper methods for Salesforce API integration."""
+    
+    def __init__(self, credentials: Dict[str, str]):
+        self.credentials = credentials
+        self.client_id = credentials.get('client_id')
+        self.client_secret = credentials.get('client_secret')
+        self.username = credentials.get('username')
+        self.password = credentials.get('password')
+        self.security_token = credentials.get('security_token')
+        self.domain = credentials.get('domain', 'login.salesforce.com')
+        self.access_token = credentials.get('access_token')
+        self.instance_url = credentials.get('instance_url')
+        self.session = requests.Session()
+        
+    def authenticate(self) -> bool:
+        """Authenticate with Salesforce using OAuth2."""
+        try:
+            # Try token authentication first if available
+            if self.access_token and self.instance_url:
+                self.session.headers.update({
+                    'Authorization': f'Bearer {self.access_token}',
+                    'Content-Type': 'application/json'
+                })
+                return self._validate_token()
+            
+            # Use username/password authentication
+            if not all([self.client_id, self.client_secret, self.username, self.password]):
+                logger.error("Missing required Salesforce credentials")
+                return False
+            
+            # OAuth2 authentication
+            auth_data = {
+                'grant_type': 'password',
+                'client_id': self.client_id,
+                'client_secret': self.client_secret,
+                'username': self.username,
+                'password': (self.password or '') + (self.security_token or '')
+            }
+            
+            response = requests.post(f'https://{self.domain}/services/oauth2/token', data=auth_data)
+            
+            if response.status_code == 200:
+                auth_response = response.json()
+                self.access_token = auth_response.get('access_token')
+                self.instance_url = auth_response.get('instance_url')
+                
+                self.session.headers.update({
+                    'Authorization': f'Bearer {self.access_token}',
+                    'Content-Type': 'application/json'
+                })
+                
+                logger.info("Salesforce authentication successful")
+                return True
+            else:
+                logger.error(f"Salesforce authentication failed: {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Salesforce authentication error: {str(e)}")
+            return False
+    
+    def _validate_token(self) -> bool:
+        """Validate the current access token."""
+        try:
+            response = self.session.get(f"{self.instance_url}/services/data/v57.0/")
+            return response.status_code == 200
+        except Exception as e:
+            logger.error(f"Token validation error: {str(e)}")
+            return False
+    
+    def get_objects(self) -> List[Dict]:
+        """Get list of Salesforce objects."""
+        try:
+            response = self.session.get(f"{self.instance_url}/services/data/v57.0/sobjects/")
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data.get('sobjects', [])
+            else:
+                logger.error(f"Error getting objects: {response.text}")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Error getting Salesforce objects: {str(e)}")
+            return []
+    
+    def get_records(self, object_name: str, fields: Optional[List[str]] = None, limit: int = 100) -> List[Dict]:
+        """Get records from a Salesforce object."""
+        try:
+            if not fields:
+                # Default fields for common objects
+                common_fields = {
+                    'Account': ['Id', 'Name', 'Phone', 'BillingAddress', 'Website'],
+                    'Contact': ['Id', 'FirstName', 'LastName', 'Email', 'Phone', 'MailingAddress'],
+                    'Lead': ['Id', 'FirstName', 'LastName', 'Email', 'Phone', 'Company'],
+                    'Opportunity': ['Id', 'Name', 'Amount', 'StageName', 'CloseDate'],
+                    'Case': ['Id', 'Subject', 'Description', 'Status', 'Priority']
+                }
+                fields = common_fields.get(object_name) or ['Id', 'Name']
+            
+            # Build SOQL query
+            fields_str = ', '.join(fields)
+            query = f"SELECT {fields_str} FROM {object_name} LIMIT {limit}"
+            
+            response = self.session.get(
+                f"{self.instance_url}/services/data/v57.0/query/",
+                params={'q': query}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data.get('records', [])
+            else:
+                logger.error(f"Error querying {object_name}: {response.text}")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Error getting Salesforce records: {str(e)}")
+            return []
+    
+    def get_attachments(self, record_id: str) -> List[Dict]:
+        """Get attachments for a Salesforce record."""
+        try:
+            query = f"SELECT Id, Name, Body, ContentType FROM Attachment WHERE ParentId = '{record_id}'"
+            
+            response = self.session.get(
+                f"{self.instance_url}/services/data/v57.0/query/",
+                params={'q': query}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data.get('records', [])
+            else:
+                logger.error(f"Error getting attachments: {response.text}")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Error getting Salesforce attachments: {str(e)}")
+            return []
+
+
+class SAPHelpers:
+    """Helper methods for SAP API integration."""
+    
+    def __init__(self, credentials: Dict[str, str]):
+        self.credentials = credentials
+        self.base_url = credentials.get('base_url')  # SAP system URL
+        self.client = credentials.get('client', '000')
+        self.username = credentials.get('username')
+        self.password = credentials.get('password')
+        self.language = credentials.get('language', 'EN')
+        self.session = requests.Session()
+        
+        # Configure basic authentication
+        if self.username and self.password:
+            self.session.auth = (self.username, self.password)
+    
+    def authenticate(self) -> bool:
+        """Test SAP system authentication."""
+        try:
+            if not all([self.base_url, self.username, self.password]):
+                logger.error("Missing required SAP credentials")
+                return False
+            
+            # Try to access SAP system info endpoint
+            test_url = f"{self.base_url}/sap/bc/rest/system/info"
+            response = self.session.get(test_url, timeout=10)
+            
+            if response.status_code == 200:
+                logger.info("SAP authentication successful")
+                return True
+            elif response.status_code == 401:
+                logger.error("SAP authentication failed: Invalid credentials")
+                return False
+            else:
+                logger.error(f"SAP authentication failed: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"SAP authentication error: {str(e)}")
+            return False
+    
+    def get_tables(self) -> List[Dict]:
+        """Get list of SAP tables accessible to the user."""
+        try:
+            # This would typically use RFC calls or OData services
+            # For demonstration, return common SAP tables
+            common_tables = [
+                {'name': 'KNA1', 'description': 'Customer Master'},
+                {'name': 'LFA1', 'description': 'Vendor Master'},
+                {'name': 'MARA', 'description': 'Material Master'},
+                {'name': 'VBAK', 'description': 'Sales Document Header'},
+                {'name': 'VBAP', 'description': 'Sales Document Items'},
+                {'name': 'EKKO', 'description': 'Purchase Document Header'},
+                {'name': 'EKPO', 'description': 'Purchase Document Items'},
+                {'name': 'BKPF', 'description': 'Accounting Document Header'},
+                {'name': 'BSEG', 'description': 'Accounting Document Segment'}
+            ]
+            
+            return common_tables
+            
+        except Exception as e:
+            logger.error(f"Error getting SAP tables: {str(e)}")
+            return []
+    
+    def get_table_data(self, table_name: str, limit: int = 100) -> List[Dict]:
+        """Get data from SAP table via OData or RFC."""
+        try:
+            # This would require SAP-specific connectors (pyrfc, etc.)
+            # For demonstration, return sample data structure
+            logger.info(f"Scanning SAP table {table_name} (sample implementation)")
+            
+            # Sample data structure for common tables
+            sample_data = {
+                'KNA1': [
+                    {'KUNNR': '0000100001', 'NAME1': 'Sample Customer', 'STRAS': 'Main Street 123'},
+                    {'KUNNR': '0000100002', 'NAME1': 'Another Customer', 'STRAS': 'Oak Avenue 456'}
+                ],
+                'LFA1': [
+                    {'LIFNR': '0000200001', 'NAME1': 'Sample Vendor', 'STRAS': 'Business Park 789'},
+                    {'LIFNR': '0000200002', 'NAME1': 'Another Vendor', 'STRAS': 'Industry Road 321'}
+                ]
+            }
+            
+            return sample_data.get(table_name, [])[:limit]
+            
+        except Exception as e:
+            logger.error(f"Error getting SAP table data: {str(e)}")
+            return []
+    
+    def execute_query(self, query: str) -> List[Dict]:
+        """Execute custom SAP query or report."""
+        try:
+            # This would execute custom ABAP queries or reports
+            logger.info(f"Executing SAP query: {query}")
+            return []
+            
+        except Exception as e:
+            logger.error(f"Error executing SAP query: {str(e)}")
+            return []
+
+
+class DutchBankingHelpers:
+    """Helper methods for Dutch Banking API integration (PSD2 compliant)."""
+    
+    def __init__(self, credentials: Dict[str, str]):
+        self.credentials = credentials
+        self.client_id = credentials.get('client_id')
+        self.client_secret = credentials.get('client_secret')
+        self.certificate_path = credentials.get('certificate_path')  # PSD2 certificate
+        self.private_key_path = credentials.get('private_key_path')
+        self.bank_code = credentials.get('bank_code')  # ING, ABN AMRO, Rabobank, etc.
+        self.base_url = self._get_bank_api_url()
+        self.access_token = credentials.get('access_token')
+        self.session = requests.Session()
+        
+        # Configure mutual TLS authentication for PSD2 compliance
+        if self.certificate_path and self.private_key_path:
+            self.session.cert = (self.certificate_path, self.private_key_path)
+    
+    def _get_bank_api_url(self) -> str:
+        """Get API URL based on bank code."""
+        bank_apis = {
+            'ING': 'https://api.ing.com',
+            'ABN_AMRO': 'https://api.abnamro.com',
+            'RABOBANK': 'https://api.rabobank.nl',
+            'ASN_BANK': 'https://api.asnbank.nl'
+        }
+        return bank_apis.get(self.bank_code or 'DEFAULT', 'https://api.example-bank.nl')
+    
+    def authenticate(self) -> bool:
+        """Authenticate with Dutch bank using PSD2 OAuth2 flow."""
+        try:
+            if not all([self.client_id, self.client_secret]):
+                logger.error("Missing required Dutch banking credentials")
+                return False
+            
+            # PSD2 OAuth2 client credentials flow
+            auth_data = {
+                'grant_type': 'client_credentials',
+                'scope': 'payment-accounts:balances:read payment-accounts:transactions:read'
+            }
+            
+            auth_headers = {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': f'Basic {base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()}'
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/oauth2/token",
+                data=auth_data,
+                headers=auth_headers
+            )
+            
+            if response.status_code == 200:
+                auth_response = response.json()
+                self.access_token = auth_response.get('access_token')
+                
+                self.session.headers.update({
+                    'Authorization': f'Bearer {self.access_token}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                })
+                
+                logger.info(f"Dutch banking authentication successful for {self.bank_code}")
+                return True
+            else:
+                logger.error(f"Dutch banking authentication failed: {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Dutch banking authentication error: {str(e)}")
+            return False
+    
+    def get_accounts(self) -> List[Dict]:
+        """Get list of bank accounts (PSD2 compliant)."""
+        try:
+            response = self.session.get(f"{self.base_url}/v1/accounts")
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data.get('accounts', [])
+            else:
+                logger.error(f"Error getting accounts: {response.text}")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Error getting Dutch banking accounts: {str(e)}")
+            return []
+    
+    def get_transactions(self, account_id: str, limit: int = 100) -> List[Dict]:
+        """Get transaction history for an account."""
+        try:
+            params = {
+                'limit': limit,
+                'bookingStatus': 'booked'  # Only booked transactions
+            }
+            
+            response = self.session.get(
+                f"{self.base_url}/v1/accounts/{account_id}/transactions",
+                params=params
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data.get('transactions', {}).get('booked', [])
+            else:
+                logger.error(f"Error getting transactions: {response.text}")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Error getting Dutch banking transactions: {str(e)}")
+            return []
+    
+    def get_account_balances(self, account_id: str) -> Dict:
+        """Get account balance information."""
+        try:
+            response = self.session.get(f"{self.base_url}/v1/accounts/{account_id}/balances")
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data.get('balances', {})
+            else:
+                logger.error(f"Error getting balances: {response.text}")
+                return {}
+                
+        except Exception as e:
+            logger.error(f"Error getting account balances: {str(e)}")
+            return {}
+    
+    def scan_transaction_for_pii(self, transaction: Dict) -> List[Dict]:
+        """Scan transaction data for PII (Dutch banking specific)."""
+        pii_findings = []
+        
+        try:
+            # Check transaction description and reference
+            text_fields = [
+                transaction.get('remittanceInformationUnstructured', ''),
+                transaction.get('creditorName', ''),
+                transaction.get('debtorName', ''),
+                transaction.get('creditorAccount', {}).get('iban', ''),
+                transaction.get('debtorAccount', {}).get('iban', '')
+            ]
+            
+            for field_text in text_fields:
+                if not field_text:
+                    continue
+                
+                # Dutch specific patterns
+                # BSN (Burgerservicenummer) detection
+                bsn_pattern = r'\b\d{8,9}\b'
+                if re.search(bsn_pattern, field_text):
+                    pii_findings.append({
+                        'type': 'BSN',
+                        'value': '[BSN DETECTED]',
+                        'field': 'transaction_data',
+                        'severity': 'high',
+                        'gdpr_article': 'Article 9 - Special categories'
+                    })
+                
+                # Email detection
+                email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+                emails = re.findall(email_pattern, field_text)
+                for email in emails:
+                    pii_findings.append({
+                        'type': 'Email',
+                        'value': email,
+                        'field': 'transaction_data',
+                        'severity': 'medium',
+                        'gdpr_article': 'Article 6 - Lawful basis'
+                    })
+                
+                # Phone number detection
+                phone_pattern = r'\b(?:\+31|0)[1-9](?:[0-9]{8})\b'
+                phones = re.findall(phone_pattern, field_text)
+                for phone in phones:
+                    pii_findings.append({
+                        'type': 'Dutch Phone',
+                        'value': phone,
+                        'field': 'transaction_data',
+                        'severity': 'medium',
+                        'gdpr_article': 'Article 6 - Lawful basis'
+                    })
+            
+            return pii_findings
+            
+        except Exception as e:
+            logger.error(f"Error scanning transaction for PII: {str(e)}")
+            return pii_findings

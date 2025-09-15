@@ -72,6 +72,9 @@
     "enterprise_tab_slack": "💬 Slack",
     "enterprise_tab_jira": "🎫 Jira", 
     "enterprise_tab_confluence": "📖 Confluence",
+    "enterprise_tab_salesforce": "💼 Salesforce CRM",
+    "enterprise_tab_sap": "🏭 SAP ERP",
+    "enterprise_tab_dutch_banking": "🏦 Nederlandse Banken",
     "compliance_dashboard": {
       "regulatory_coverage_title": "Regulatoire Dekking Overzicht",
       "detailed_compliance_title": "Gedetailleerde Regulatoire Naleving",
@@ -345,7 +348,6 @@
     "enterprise_tab_microsoft365": "🏢 Microsoft 365",
     "enterprise_tab_exact_online": "🇳🇱 Exact Online",
     "enterprise_tab_google_workspace": "📊 Google Workspace",
-    "enterprise_tab_dutch_banking": "🏦 Nederlandse Banken",
     "microsoft365_integration": "Microsoft 365 Integratie",
     "microsoft365_integration_description": "Scan SharePoint, OneDrive, Exchange, en Teams voor PII met Nederlandse specialisatie.",
     "authentication_setup": "Authenticatie Instelling",
