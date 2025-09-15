@@ -272,11 +272,21 @@ else:
     # Fallback definitions for activity tracking when tracker not available
     ACTIVITY_TRACKING_AVAILABLE = False
     
-    def track_scan_completed_wrapper_safe(**kwargs): pass
-    def track_scan_failed_wrapper_safe(**kwargs): pass
+    def track_scan_completed_wrapper_safe(*args, **kwargs): pass
+    def track_scan_failed_wrapper_safe(*args, **kwargs): pass
     
     # Ensure ScannerType is available in fallback case
     if 'ScannerType' not in globals():
+        # Define fallback class if not already defined
+        class ScannerTypeFallback:
+            DATABASE = "database"
+            API = "api"
+            WEBSITE = "website"
+            DPIA = "dpia"
+            AI_MODEL = "ai_model"
+            SOC2 = "soc2"
+            SUSTAINABILITY = "sustainability"
+        
         ScannerType = ScannerTypeFallback
     
     def get_session_id(): 
@@ -294,9 +304,11 @@ else:
         return st.session_state.get('organization_id', 'default_org')
 
 # Global variable definitions to avoid "possibly unbound" errors
-# Initialize all global variables with defaults
+# Initialize all global variables with defaults at module level
 user_id: Optional[str] = None
 session_id: Optional[str] = None
+
+# SSL configuration globals (always initialized to prevent unbound errors)
 ssl_mode: str = 'prefer'
 ssl_cert_path: Optional[str] = None
 ssl_key_path: Optional[str] = None
@@ -4653,13 +4665,21 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
     except Exception as e:
         # Track scan failure with safe error handling
         try:
+            # Ensure variables are defined for error tracking
+            if 'ScannerType' not in locals():
+                from utils.activity_tracker import ScannerType
+            if 'user_id' not in locals():
+                user_id = st.session_state.get('user_id', username)
+            if 'session_id' not in locals():
+                session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+                
             track_scan_failed_wrapper_safe(
                 scanner_type=ScannerType.DATABASE,
                 user_id=user_id,
                 session_id=session_id,
                 error_message=str(e)
             )
-        except (NameError, AttributeError):
+        except Exception:
             # Fallback if tracking variables are not available
             logger.warning(f"Activity tracking failed: {e}")
         st.error(f"Database scan failed: {str(e)}")
@@ -5679,18 +5699,29 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         st.success("✅ Comprehensive API security scan completed!")
         
     except Exception as e:
-        # Track scan failure
-        track_scan_failed_wrapper_safe(
-            scanner_type=ScannerType.API,
-            user_id=user_id,
-            session_id=session_id,
-            error_message=str(e),
-            region=region,
-            details={
-                'base_url': base_url,
-                'timeout': timeout
-            }
-        )
+        # Track scan failure with safe error handling
+        try:
+            # Ensure variables are defined for error tracking
+            if 'ScannerType' not in locals():
+                from utils.activity_tracker import ScannerType
+            if 'user_id' not in locals():
+                user_id = st.session_state.get('user_id', username)
+            if 'session_id' not in locals():
+                session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+                
+            track_scan_failed_wrapper_safe(
+                scanner_type=ScannerType.API,
+                user_id=user_id,
+                session_id=session_id,
+                error_message=str(e),
+                region=region,
+                details={
+                    'base_url': base_url if 'base_url' in locals() else 'unknown',
+                    'timeout': timeout if 'timeout' in locals() else 30
+                }
+            )
+        except Exception:
+            logger.warning(f"Activity tracking failed: {e}")
         st.error(f"API scan failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -7781,19 +7812,30 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             st.success("✅ AI Model analysis completed!")
         
     except Exception as e:
-        # Track scan failure
-        track_scan_failed_wrapper_safe(
-            scanner_type=ScannerType.AI_MODEL,
-            user_id=user_id,
-            session_id=session_id,
-            error_message=str(e),
-            region=region,
-            details={
-                'model_source': model_source,
-                'model_type': model_type,
-                'framework': framework
-            }
-        )
+        # Track scan failure with safe error handling
+        try:
+            # Ensure variables are defined for error tracking
+            if 'ScannerType' not in locals():
+                from utils.activity_tracker import ScannerType
+            if 'user_id' not in locals():
+                user_id = st.session_state.get('user_id', username)
+            if 'session_id' not in locals():
+                session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+                
+            track_scan_failed_wrapper_safe(
+                scanner_type=ScannerType.AI_MODEL,
+                user_id=user_id,
+                session_id=session_id,
+                error_message=str(e),
+                region=region,
+                details={
+                    'model_source': model_source if 'model_source' in locals() else 'unknown',
+                    'model_type': model_type if 'model_type' in locals() else 'unknown',
+                    'framework': framework if 'framework' in locals() else 'unknown'
+                }
+            )
+        except Exception:
+            logger.warning(f"Activity tracking failed: {e}")
         st.error(f"AI Model analysis failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -8797,20 +8839,22 @@ def execute_website_scan(region, username, url, scan_config):
         findings_count = len(scan_results["findings"])
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
         
-        # Track successful completion
-        track_scan_completed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
+        # Track successful completion with safe wrapper
+        track_scan_completed_wrapper_safe(
             scanner_type=ScannerType.WEBSITE,
+            user_id=user_id,
+            session_id=session_id,
             findings_count=findings_count,
             files_scanned=scan_results["pages_scanned"],
             compliance_score=scan_results["compliance_score"],
-            duration_ms=scan_duration,
+            scan_type="Website Scanner",
             region=region,
-            details={
+            file_count=scan_results["pages_scanned"],
+            total_pii_found=findings_count,
+            high_risk_count=high_risk_count,
+            result_data={
                 'scan_id': scan_results["scan_id"],
-                'high_risk_count': high_risk_count,
+                'duration_ms': scan_duration,
                 'url': url,
                 'pages_scanned': scan_results["pages_scanned"],
                 'cookies_found': len(scan_results["cookies_found"]),
@@ -9714,20 +9758,22 @@ def execute_enhanced_dpia_scan(region, username, responses):
         findings_count = len(scan_results["findings"])
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
         
-        # Track successful completion
-        track_scan_completed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
+        # Track successful completion with safe wrapper
+        track_scan_completed_wrapper_safe(
             scanner_type=ScannerType.DPIA,
+            user_id=user_id,
+            session_id=session_id,
             findings_count=findings_count,
             files_scanned=1,  # DPIA is a single assessment
             compliance_score=min(100, max(0, 100 - (scan_results["risk_score"] * 10))),
-            duration_ms=scan_duration,
+            scan_type="DPIA Scanner",
             region=region,
-            details={
+            file_count=1,
+            total_pii_found=findings_count,
+            high_risk_count=high_risk_count,
+            result_data={
                 'scan_id': scan_results["scan_id"],
-                'high_risk_count': high_risk_count,
+                'duration_ms': scan_duration,
                 'project_name': responses.get('project_name', 'Unknown'),
                 'risk_score': scan_results["risk_score"],
                 'risk_level': scan_results["risk_level"],
@@ -10467,20 +10513,22 @@ def execute_sustainability_scan(region, username, scan_params):
         findings_count = len(scan_results["findings"])
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
         
-        # Track successful completion
-        track_scan_completed(
-            session_id=session_id,
-            user_id=user_id,
-            username=username,
+        # Track successful completion with safe wrapper
+        track_scan_completed_wrapper_safe(
             scanner_type=ScannerType.SUSTAINABILITY,
+            user_id=user_id,
+            session_id=session_id,
             findings_count=findings_count,
             files_scanned=len(code_bloat_findings) + len(unused_resources),
             compliance_score=scan_results.get('compliance_score', 75),
-            duration_ms=scan_duration,
+            scan_type="Sustainability Scanner",
             region=region,
-            details={
+            file_count=len(code_bloat_findings) + len(unused_resources),
+            total_pii_found=findings_count,
+            high_risk_count=high_risk_count,
+            result_data={
                 'scan_id': scan_results["scan_id"],
-                'high_risk_count': high_risk_count,
+                'duration_ms': scan_duration,
                 'analysis_type': scan_params['analysis_type'],
                 'source_type': scan_params['source_type'],
                 'emissions_region': scan_params.get('emissions_region', 'us-east-1'),
@@ -10511,14 +10559,8 @@ def execute_sustainability_scan(region, username, scan_params):
         import traceback
         st.code(traceback.format_exc())
 
-def generate_html_report(scan_results):
-    """Generate enhanced HTML report using unified translation system"""
-    
-    # Use unified HTML report generator
-    from services.unified_html_report_generator import generate_unified_html_report
-    return generate_unified_html_report(scan_results)
-    source_type = scan_results.get('source_type', 'unknown')
-    scan_type = scan_results.get('scan_type', 'Code Analysis')
+# NOTE: generate_html_report is already defined above through get_html_report_generator()
+# This duplicate definition is removed to prevent "obscured declaration" warnings
     
     # For upload files source type, ensure proper data handling
     if source_type == 'upload_files' or source_type == 'Upload Files':
