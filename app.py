@@ -2228,85 +2228,93 @@ def render_dashboard():
                 # Complete mapping for all 9+ scanner types with comprehensive variations  
                 scanner_type_map = {
                     # 1. AI Model Scanner (all variations)
-                    'ai_model': '🤖 AI Model',
-                    'ai-model': '🤖 AI Model', 
-                    'ai model scanner': '🤖 AI Model',
-                    'aimodel': '🤖 AI Model',
-                    'ai_model_scanner': '🤖 AI Model',
-                    'ai model': '🤖 AI Model',
+                    'ai_model': '🤖 AI Model Scanner',
+                    'ai-model': '🤖 AI Model Scanner', 
+                    'ai model scanner': '🤖 AI Model Scanner',
+                    'aimodel': '🤖 AI Model Scanner',
+                    'ai_model_scanner': '🤖 AI Model Scanner',
+                    'ai model': '🤖 AI Model Scanner',
                     
                     # 2. Code Scanner (all variations) - Enhanced detection
-                    'code': '💻 Code',
-                    'code scanner': '💻 Code',
-                    'repository': '💻 Code', 
-                    'repo': '💻 Code',
-                    'directory': '💻 Code',
-                    'git': '💻 Code',
-                    'source': '💻 Code',
-                    'source code': '💻 Code',
+                    'code': '💻 Code Scanner',
+                    'code scanner': '💻 Code Scanner',
+                    'repository': '💻 Repository Scanner', 
+                    'repo': '💻 Repository Scanner',
+                    'directory': '💻 Code Scanner',
+                    'git': '💻 Git Scanner',
+                    'source': '💻 Code Scanner',
+                    'source code': '💻 Code Scanner',
                     
                     # 3. Document Scanner (all variations)
-                    'document': '📄 Document',
-                    'blob': '📄 Blob Storage',
-                    'pdf': '📄 PDF Document',
-                    'text': '📄 Text Document',
-                    'file': '📄 File',
+                    'document': '📄 Document Scanner',
+                    'blob': '📄 Blob Scanner',
+                    'pdf': '📄 PDF Scanner',
+                    'text': '📄 Text Scanner',
+                    'file': '📄 File Scanner',
                     
                     # 4. Website Scanner (all variations) - Enhanced with intelligent scanner
-                    'website': '🌐 Website',
-                    'website scanner': '🌐 Website',
-                    'intelligent website scanner': '🌐 Website',
-                    'web': '🌐 Web',
-                    'web scanner': '🌐 Website',
-                    'url': '🌐 URL',
-                    'http': '🌐 HTTP',
-                    'https': '🌐 HTTPS',
+                    'website': '🌐 Website Scanner',
+                    'website scanner': '🌐 Website Scanner',
+                    'intelligent website scanner': '🌐 Website Scanner',
+                    'web': '🌐 Website Scanner',
+                    'web scanner': '🌐 Website Scanner',
+                    'url': '🌐 URL Scanner',
+                    'http': '🌐 Website Scanner',
+                    'https': '🌐 Website Scanner',
                     
                     # 5. Database Scanner (all variations)
-                    'database': '🗄️ Database',
-                    'db': '🗄️ Database',
-                    'sql': '🗄️ SQL Database',
-                    'postgresql': '🗄️ PostgreSQL',
-                    'mysql': '🗄️ MySQL',
+                    'database': '🗄️ Database Scanner',
+                    'db': '🗄️ Database Scanner',
+                    'sql': '🗄️ SQL Scanner',
+                    'postgresql': '🗄️ PostgreSQL Scanner',
+                    'mysql': '🗄️ MySQL Scanner',
                     
                     # 6. Image Scanner (OCR-based)
-                    'image': '🖼️ Image',
-                    'ocr': '🖼️ OCR Image',
-                    'photo': '🖼️ Photo',
-                    'picture': '🖼️ Picture',
+                    'image': '🖼️ Image Scanner',
+                    'ocr': '🖼️ OCR Scanner',
+                    'photo': '🖼️ Image Scanner',
+                    'picture': '🖼️ Image Scanner',
                     
                     # 7. API Scanner
-                    'api': '🔗 API',
-                    'rest': '🔗 REST API',
-                    'graphql': '🔗 GraphQL API',
-                    'endpoint': '🔗 API Endpoint',
+                    'api': '🔗 API Scanner',
+                    'rest': '🔗 REST API Scanner',
+                    'graphql': '🔗 GraphQL Scanner',
+                    'endpoint': '🔗 API Scanner',
                     
                     # 8. SOC2 Scanner
-                    'soc2': '🔐 SOC2',
-                    'soc 2': '🔐 SOC2',
-                    'security': '🔐 Security',
-                    'compliance': '🔐 Compliance',
+                    'soc2': '🔐 SOC2 Scanner',
+                    'soc 2': '🔐 SOC2 Scanner',
+                    'security': '🔐 Security Scanner',
+                    'compliance': '🔐 Compliance Scanner',
                     
                     # 9. DPIA Scanner
-                    'dpia': '📋 DPIA',
-                    'data protection impact': '📋 DPIA',
-                    'privacy impact': '📋 DPIA',
-                    'gdpr': '📋 GDPR DPIA',
+                    'dpia': '📋 DPIA Scanner',
+                    'data protection impact': '📋 DPIA Scanner',
+                    'privacy impact': '📋 DPIA Scanner',
+                    'gdpr': '📋 GDPR Scanner',
                     
                     # 10. Sustainability Scanner (bonus)
-                    'sustainability': '🌱 Sustainability',
-                    'carbon': '🌱 Carbon Footprint',
-                    'energy': '🌱 Energy Analysis',
-                    'green': '🌱 Green Analysis',
+                    'sustainability': '🌱 Sustainability Scanner',
+                    'carbon': '🌱 Carbon Scanner',
+                    'energy': '🌱 Energy Scanner',
+                    'green': '🌱 Green Scanner',
                     
                     # Additional scanner types
-                    'cookie': '🍪 Cookie',
-                    'tracking': '🍪 Tracking',
-                    'consent': '🍪 Consent',
+                    'cookie': '🍪 Cookie Scanner',
+                    'tracking': '🍪 Tracking Scanner',
+                    'consent': '🍪 Consent Scanner',
                     
-                    # Default for unknown
-                    'unknown': '🔍 General',
-                    '': '🔍 General'
+                    # Additional fallbacks for unrecognized types
+                    'general': '💻 Code Scanner',  # Map general to Code Scanner since most are code scans
+                    'scan': '💻 Code Scanner',
+                    'default': '💻 Code Scanner',
+                    'undefined': '💻 Code Scanner',
+                    'null': '💻 Code Scanner',
+                    'none': '💻 Code Scanner',
+                    
+                    # Default for truly unknown
+                    'unknown': '🔍 Unknown Scanner',
+                    '': '🔍 Unknown Scanner'
                 }
                 
                 # First try exact match, then try variations
@@ -2319,9 +2327,12 @@ def render_dashboard():
                             display_type = value
                             break
                 
-                # Final fallback
+                # Final fallback with better handling
                 if not display_type:
-                    display_type = scan_type_raw.title() if scan_type_raw != 'unknown' else '🔍 General'
+                    if scan_type_raw and scan_type_raw not in ['unknown', '', 'null', 'none', 'undefined']:
+                        display_type = f"💻 {scan_type_raw.replace('_', ' ').title()} Scanner"
+                    else:
+                        display_type = '💻 Code Scanner'  # Default to Code Scanner instead of General
                     
                 logger.info(f"Dashboard: Scan type '{scan_type_raw}' mapped to '{display_type}'")
                 
