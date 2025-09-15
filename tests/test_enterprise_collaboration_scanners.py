@@ -210,10 +210,10 @@ class TestSlackScanner(unittest.TestCase):
             pii_findings = identify_pii_in_text(message)
             
             if 'john.doe@company.com' in message:
-                self.assertTrue(any(pii['type'] == 'email' for pii in pii_findings))
+                self.assertTrue(any(pii['type'] == 'Email' for pii in pii_findings))
             
             if '+31612345678' in message:
-                self.assertTrue(any(pii['type'] in ['phone', 'dutch_phone'] for pii in pii_findings))
+                self.assertTrue(any(pii['type'] in ['Phone', 'Dutch Phone Number'] for pii in pii_findings))
             
             if 'Normal message without PII' in message:
                 self.assertEqual(len(pii_findings), 0)
@@ -373,8 +373,8 @@ class TestJiraScanner(unittest.TestCase):
         pii_findings = identify_pii_in_text(issue_text)
         
         # Should find email and phone
-        email_found = any(pii['type'] == 'email' for pii in pii_findings)
-        phone_found = any(pii['type'] in ['phone', 'dutch_phone'] for pii in pii_findings)
+        email_found = any(pii['type'] == 'Email' for pii in pii_findings)
+        phone_found = any(pii['type'] in ['Phone', 'Dutch Phone Number'] for pii in pii_findings)
         
         self.assertTrue(email_found)
         self.assertTrue(phone_found)

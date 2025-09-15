@@ -418,7 +418,8 @@ def assess_pii_risk(pii_findings: List[Dict]) -> str:
         return 'low'
     
     high_risk_types = ['ssn', 'credit_card', 'bsn', 'passport', 'medical_record']
-    medium_risk_types = ['email', 'phone', 'address', 'name']
+    medium_risk_types = ['email', 'phone', 'address']
+    low_risk_types = ['name']
     
     pii_types = [pii.get('type', '').lower() for pii in pii_findings]
     
@@ -426,6 +427,8 @@ def assess_pii_risk(pii_findings: List[Dict]) -> str:
         return 'high'
     elif any(pii_type in medium_risk_types for pii_type in pii_types) or len(pii_findings) > 5:
         return 'medium'
+    elif any(pii_type in low_risk_types for pii_type in pii_types):
+        return 'low'
     else:
         return 'low'
 
