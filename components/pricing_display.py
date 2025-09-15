@@ -53,9 +53,12 @@ def show_pricing_cards(billing_cycle: BillingCycle):
     
     st.markdown("## Choose Your Plan")
     
-    # Standard tiers
-    cols = st.columns(4)
-    tiers = [PricingTier.STARTUP, PricingTier.GROWTH, PricingTier.SCALE, PricingTier.ENTERPRISE]
+    # Standard tiers (now including premium connectors)
+    cols = st.columns(3) if len([PricingTier.STARTUP, PricingTier.PROFESSIONAL, PricingTier.GROWTH, PricingTier.SCALE, PricingTier.SALESFORCE_PREMIUM, PricingTier.SAP_ENTERPRISE, PricingTier.ENTERPRISE]) > 4 else st.columns(4)
+    tiers = [PricingTier.STARTUP, PricingTier.PROFESSIONAL, PricingTier.GROWTH, PricingTier.SCALE]
+    
+    # Premium connector tiers (displayed separately for prominence)
+    premium_tiers = [PricingTier.SALESFORCE_PREMIUM, PricingTier.SAP_ENTERPRISE, PricingTier.ENTERPRISE]
     
     for i, tier in enumerate(tiers):
         with cols[i]:
@@ -102,6 +105,56 @@ def show_pricing_cards(billing_cycle: BillingCycle):
             button_type = "secondary" if is_current else ("primary" if is_popular else "secondary")
             
             if st.button(button_text, key=f"select_{tier.value}", disabled=button_disabled, type=button_type):
+                handle_tier_selection(tier, billing_cycle)
+    
+    # Premium Enterprise Connector Tiers
+    st.markdown("---")
+    st.markdown("## 🚀 Premium Enterprise Connectors")
+    st.markdown("**For enterprises using Salesforce CRM or SAP ERP systems**")
+    
+    premium_cols = st.columns(3)
+    for i, tier in enumerate(premium_tiers):
+        with premium_cols[i]:
+            pricing = config.get_tier_pricing(tier, billing_cycle)
+            tier_data = config.pricing_data["tiers"][tier.value]
+            
+            # Premium tier styling
+            is_current = (current_tier == tier) if current_tier else False
+            
+            if tier == PricingTier.ENTERPRISE:
+                st.markdown("⭐ **ULTIMATE**")
+            elif tier == PricingTier.SAP_ENTERPRISE:
+                st.markdown("💼 **SAP PREMIUM**")
+            elif tier == PricingTier.SALESFORCE_PREMIUM:
+                st.markdown("🔥 **CRM PREMIUM**")
+            
+            # Pricing header
+            st.markdown(f"### {pricing['name']}")
+            
+            if billing_cycle == BillingCycle.ANNUAL:
+                st.markdown(f"**€{pricing['price']:,}/year**")
+                st.markdown(f"*€{tier_data['monthly_price']}/month billed annually*")
+                if 'savings' in pricing:
+                    st.success(f"💰 Save €{pricing['savings']:,} vs monthly")
+            else:
+                st.markdown(f"**€{pricing['price']:,}/month**")
+            
+            # Target info
+            st.markdown(f"**For {tier_data['target_employees']} employees**")
+            st.markdown(f"*{tier_data['target_revenue']}*")
+            
+            # Premium features
+            st.markdown("**Premium Features:**")
+            premium_features = get_tier_premium_features(tier)
+            for feature in premium_features[:4]:
+                st.markdown(f"✅ {feature}")
+            
+            # CTA button
+            button_text = "Current Plan" if is_current else f"Select {tier.value.replace('_', ' ').title()}"
+            button_disabled = is_current
+            button_type = "secondary" if is_current else "primary"
+            
+            if st.button(button_text, key=f"select_premium_{tier.value}", disabled=button_disabled, type=button_type):
                 handle_tier_selection(tier, billing_cycle)
     
     # Government/Enterprise license
@@ -163,6 +216,31 @@ def get_tier_key_features(tier: PricingTier) -> List[str]:
     
     return feature_mapping.get(tier, [])
 
+def get_tier_premium_features(tier: PricingTier) -> List[str]:
+    """Get premium features for enterprise connector tiers"""
+    premium_feature_mapping = {
+        PricingTier.SALESFORCE_PREMIUM: [
+            "Salesforce CRM connector",
+            "Netherlands BSN/KvK detection in CRM", 
+            "Advanced CRM field mapping",
+            "Dedicated compliance team"
+        ],
+        PricingTier.SAP_ENTERPRISE: [
+            "SAP ERP connector (HR/Finance)",
+            "BSN detection in SAP modules",
+            "ERP data governance", 
+            "SAP consulting hours included"
+        ],
+        PricingTier.ENTERPRISE: [
+            "Salesforce + SAP connectors",
+            "Dutch Banking PSD2 integration",
+            "Advanced BSN/KvK validation",
+            "Executive partnership 24/7"
+        ]
+    }
+    
+    return premium_feature_mapping.get(tier, [])
+
 def show_competitive_comparison():
     """Show competitive pricing comparison"""
     st.markdown("## 💡 Why DataGuardian Pro?")
@@ -172,7 +250,7 @@ def show_competitive_comparison():
     
     # Comparison table
     comparison_data = []
-    tiers = [PricingTier.GROWTH, PricingTier.SCALE, PricingTier.ENTERPRISE]
+    tiers = [PricingTier.GROWTH, PricingTier.SCALE, PricingTier.SALESFORCE_PREMIUM, PricingTier.SAP_ENTERPRISE, PricingTier.ENTERPRISE]
     
     for tier in tiers:
         comparison = config.get_competitive_comparison(tier)
@@ -221,7 +299,7 @@ def show_features_comparison():
             for feature in features.keys():
                 all_features.add(feature)
         
-        tiers = [PricingTier.STARTUP, PricingTier.GROWTH, PricingTier.SCALE, PricingTier.ENTERPRISE]
+        tiers = [PricingTier.STARTUP, PricingTier.PROFESSIONAL, PricingTier.GROWTH, PricingTier.SCALE, PricingTier.SALESFORCE_PREMIUM, PricingTier.SAP_ENTERPRISE, PricingTier.ENTERPRISE]
         
         # Build comparison matrix
         for feature in sorted(all_features):

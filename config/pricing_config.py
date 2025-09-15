@@ -10,9 +10,11 @@ from enum import Enum
 class PricingTier(Enum):
     """Pricing tier levels"""
     STARTUP = "startup"
-    PROFESSIONAL = "professional"  # New strategic tier
+    PROFESSIONAL = "professional"
     GROWTH = "growth" 
     SCALE = "scale"
+    SALESFORCE_PREMIUM = "salesforce_premium"  # NEW: Premium Salesforce CRM tier
+    SAP_ENTERPRISE = "sap_enterprise"          # NEW: Premium SAP ERP tier
     ENTERPRISE = "enterprise"
     GOVERNMENT = "government"
 
@@ -35,9 +37,9 @@ class PricingConfig:
     def _load_pricing_configuration(self) -> Dict[str, Any]:
         """Load current pricing configuration - easily updatable"""
         return {
-            "version": "2.0",
-            "last_updated": "2025-08-28",
-            "effective_date": "2025-09-01",
+            "version": "3.0",  # Updated for premium connector pricing
+            "last_updated": "2025-09-15", 
+            "effective_date": "2025-09-15",  # Premium connector launch
             
             "tiers": {
                 PricingTier.STARTUP.value: {
@@ -45,14 +47,14 @@ class PricingConfig:
                     "description": "Complete GDPR + AI Act compliance for growing startups - 90% cost savings vs OneTrust + 30-day money-back guarantee",
                     "target_employees": "1-25",
                     "target_revenue": "< €1M",
-                    "monthly_price": 59,  # Increased from €49 for better margins
-                    "annual_price": 590,  # Proportional increase with 2 months free
+                    "monthly_price": 59,  # Optimized for SME market
+                    "annual_price": 590,  # 2 months free incentive
                     "setup_fee": 0,
-                    "max_scans_monthly": 200,  # Further increased for competitive edge
-                    "max_data_sources": 20,    # Enhanced value
+                    "max_scans_monthly": 200,  
+                    "max_data_sources": 20,    
                     "support_level": "priority_email_chat",
                     "sla_hours": 24,
-                    "guaranteed_savings": 18000,  # Increased guaranteed savings
+                    "guaranteed_savings": 18000,  
                     "includes_ai_act": True,
                     "netherlands_specialization": True,
                     "free_trial_days": 14,
@@ -128,13 +130,72 @@ class PricingConfig:
                     "priority_feature_development": True
                 },
                 
+                PricingTier.SALESFORCE_PREMIUM.value: {
+                    "name": "Salesforce Premium",
+                    "description": "Enterprise CRM compliance with Netherlands BSN/KvK specialization - 82% cost savings vs OneTrust + Salesforce modules (€6,990 vs €38,000)",
+                    "target_employees": "50-250",
+                    "target_revenue": "€5M - €25M", 
+                    "monthly_price": 699,  # Premium Salesforce integration pricing
+                    "annual_price": 6990,  # 2 months free
+                    "setup_fee": 0,
+                    "max_scans_monthly": "unlimited",
+                    "max_data_sources": "unlimited",
+                    "support_level": "dedicated_team_priority",
+                    "sla_hours": 4,   
+                    "includes_onboarding": True,
+                    "guaranteed_savings": 250000,  # Enhanced savings with CRM integration
+                    "salesforce_crm_connector": True,     # Premium feature
+                    "netherlands_bsn_advanced": True,     # Advanced BSN detection in CRM
+                    "kvk_enterprise_validation": True,    # Enterprise KvK validation
+                    "crm_data_mapping": True,             # Advanced CRM field mapping
+                    "api_access": True,
+                    "custom_workflows": True,
+                    "success_manager": "bi_weekly_check_in",
+                    "dedicated_compliance_team": True,
+                    "monthly_compliance_reports": True,
+                    "regulatory_change_monitoring": True,
+                    "priority_feature_development": True
+                },
+                
+                PricingTier.SAP_ENTERPRISE.value: {
+                    "name": "SAP Enterprise",
+                    "description": "Complete SAP ERP compliance with HR/Finance BSN scanning - 75% cost savings vs SAP GRC + OneTrust (€9,990 vs €42,000)",
+                    "target_employees": "100-500+",
+                    "target_revenue": "€10M - €100M", 
+                    "monthly_price": 999,  # Premium SAP integration pricing
+                    "annual_price": 9990,  # 2 months free
+                    "setup_fee": 0,
+                    "max_scans_monthly": "unlimited",
+                    "max_data_sources": "unlimited",
+                    "support_level": "dedicated_team_24_7",
+                    "sla_hours": 2,   # Premium SAP support
+                    "includes_onboarding": True,
+                    "guaranteed_savings": 400000,  # Maximum ERP compliance savings
+                    "sap_erp_connector": True,          # Premium SAP integration
+                    "sap_hr_module": True,             # PA0002 Personal Data scanning
+                    "sap_finance_module": True,        # KNA1/LFA1 business partner data
+                    "netherlands_bsn_advanced": True,  # Advanced BSN detection in ERP
+                    "kvk_enterprise_validation": True, # Enterprise KvK validation
+                    "erp_data_governance": True,       # Advanced ERP data governance
+                    "sap_custom_fields": True,         # Custom SAP field scanning
+                    "api_access": True,
+                    "custom_integrations": True,
+                    "white_label_option": True,
+                    "success_manager": "weekly_check_in",
+                    "dedicated_compliance_team": True,
+                    "monthly_compliance_reports": True,
+                    "regulatory_change_monitoring": True,
+                    "priority_feature_development": True,
+                    "sap_consulting_hours": 20         # SAP-specific compliance consulting
+                },
+                
                 PricingTier.ENTERPRISE.value: {
-                    "name": "Enterprise Ultimate",
-                    "description": "Complete platform + strategic partnership - 85% cost savings vs OneTrust (€11,990 vs €79,000)",
-                    "target_employees": "500+",
-                    "target_revenue": "€50M+",
-                    "monthly_price": 1199,  # Premium enterprise pricing
-                    "annual_price": 11990,  # 2 months free
+                    "name": "Enterprise Ultimate + Premium Connectors",
+                    "description": "Complete platform + Salesforce & SAP integration - 78% cost savings vs OneTrust Enterprise + modules (€13,990 vs €65,000)",
+                    "target_employees": "200+",
+                    "target_revenue": "€25M+", 
+                    "monthly_price": 1399,  # Premium pricing with Salesforce + SAP value
+                    "annual_price": 13990,  # 2 months free
                     "setup_fee": 0,  # Executive-level service includes setup
                     "max_scans_monthly": "unlimited",
                     "max_data_sources": "unlimited", 
@@ -142,10 +203,15 @@ class PricingConfig:
                     "sla_hours": 1,  # Ultra-premium response
                     "includes_onboarding": True,
                     "custom_integrations": True,
-                    "guaranteed_savings": 400000,  # Maximum value proposition
+                    "guaranteed_savings": 500000,  # Enhanced with premium connectors
+                    "salesforce_crm_connector": True,  # NEW: Premium Salesforce CRM integration
+                    "sap_erp_connector": True,        # NEW: Premium SAP ERP integration  
+                    "dutch_banking_connector": True,  # NEW: PSD2 banking integration
+                    "netherlands_bsn_advanced": True, # NEW: Advanced BSN validation & compliance
+                    "kvk_enterprise_validation": True, # NEW: Enterprise KvK number validation
                     "dedicated_success_team": True,
                     "monthly_executive_reviews": True,
-                    "legal_consultation_hours": 40,  # Doubled value
+                    "legal_consultation_hours": 40,  
                     "priority_feature_requests": True,
                     "source_code_escrow": True,
                     "strategic_compliance_consulting": True,
@@ -184,14 +250,19 @@ class PricingConfig:
             },
             
             "advanced_scanners": {
-                "enterprise_connectors": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "microsoft365_integration": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value], 
-                "exact_online_connector": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "google_workspace_integration": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "ai_model_scanning": [PricingTier.STARTUP.value, PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "advanced_ai_analysis": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "netherlands_bsn_detection": [PricingTier.STARTUP.value, PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "automated_reporting": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value]
+                "enterprise_connectors": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "microsoft365_integration": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value], 
+                "exact_online_connector": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "google_workspace_integration": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "salesforce_crm_connector": [PricingTier.SALESFORCE_PREMIUM.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],  # NEW: Premium Salesforce CRM
+                "sap_erp_connector": [PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],  # NEW: Premium SAP ERP
+                "dutch_banking_connector": [PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],  # NEW: PSD2 Banking
+                "netherlands_bsn_advanced": [PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],  # NEW: Advanced BSN
+                "kvk_enterprise_validation": [PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],  # NEW: Enterprise KvK
+                "ai_model_scanning": [PricingTier.STARTUP.value, PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "advanced_ai_analysis": [PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "netherlands_bsn_detection": [PricingTier.STARTUP.value, PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "automated_reporting": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value]
             },
             
             "compliance_features": {
@@ -205,16 +276,20 @@ class PricingConfig:
             },
             
             "enterprise_features": {
-                "api_access": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "white_label_deployment": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "custom_integrations": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "dedicated_support": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "success_manager": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "api_access": [PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "white_label_deployment": [PricingTier.SCALE.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "custom_integrations": [PricingTier.SCALE.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "custom_workflows": [PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],  # NEW: Custom workflow automation
+                "crm_data_mapping": [PricingTier.SALESFORCE_PREMIUM.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],  # NEW: Advanced CRM field mapping
+                "erp_data_governance": [PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],  # NEW: ERP data governance
+                "sap_consulting_hours": [PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],  # NEW: SAP-specific consulting
+                "dedicated_support": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "success_manager": [PricingTier.PROFESSIONAL.value, PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
                 "on_premises_deployment": [PricingTier.GOVERNMENT.value],
                 "source_code_access": [PricingTier.GOVERNMENT.value],
                 "legal_consultation": [PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "quarterly_business_reviews": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
-                "regulatory_change_monitoring": [PricingTier.SCALE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value]
+                "quarterly_business_reviews": [PricingTier.GROWTH.value, PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value],
+                "regulatory_change_monitoring": [PricingTier.SCALE.value, PricingTier.SALESFORCE_PREMIUM.value, PricingTier.SAP_ENTERPRISE.value, PricingTier.ENTERPRISE.value, PricingTier.GOVERNMENT.value]
             }
         }
     
@@ -375,7 +450,9 @@ class PricingConfig:
             PricingTier.STARTUP.value: {"onetrust": 6000, "privacera": 4500, "basic_tools": 3000},
             PricingTier.GROWTH.value: {"onetrust": 19500, "bigid_starter": 15000, "mid_tier": 12000},
             PricingTier.SCALE.value: {"onetrust": 29000, "bigid": 45000, "varonis": 38000},
-            PricingTier.ENTERPRISE.value: {"onetrust": 79000, "bigid_stack": 120000, "enterprise_suite": 95000},
+            PricingTier.SALESFORCE_PREMIUM.value: {"onetrust_salesforce": 38000, "salesforce_shield": 25000, "crm_compliance_stack": 42000},  # NEW: Salesforce-specific competitors
+            PricingTier.SAP_ENTERPRISE.value: {"sap_grc": 42000, "onetrust_sap": 50000, "erp_compliance_suite": 65000},  # NEW: SAP-specific competitors
+            PricingTier.ENTERPRISE.value: {"onetrust_enterprise": 65000, "bigid_full_stack": 85000, "varonis_enterprise": 75000},  # Updated with premium connectors
             PricingTier.GOVERNMENT.value: {"enterprise_deployment": 180000, "government_suite": 200000}
         }
         
@@ -433,7 +510,7 @@ def get_pricing_config(region: str = "Netherlands") -> PricingConfig:
 
 # Convenience functions for common operations
 def get_all_tiers() -> List[Dict[str, Any]]:
-    """Get all pricing tiers"""
+    """Get all pricing tiers including new premium connectors"""
     config = get_pricing_config()
     return [config.get_tier_pricing(tier) for tier in PricingTier if tier != PricingTier.GOVERNMENT]
 

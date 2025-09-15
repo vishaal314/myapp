@@ -32,63 +32,98 @@ def get_optimized_pricing_strategy() -> Dict[str, Any]:
         
         "revenue_projections": {
             "year_1": {
-                "startup_customers": {"count": 150, "arr": 73500, "tier": "€490/year"},
-                "growth_customers": {"count": 80, "arr": 119200, "tier": "€1,490/year"},
-                "scale_customers": {"count": 25, "arr": 99750, "tier": "€3,990/year"},
-                "enterprise_customers": {"count": 8, "arr": 71920, "tier": "€8,990/year"},
-                "standalone_licenses": {"count": 3, "arr": 52500, "tier": "€15K + €2.5K maintenance"},
-                "total_arr": 416870,
-                "monthly_recurring": 34739
+                "startup_customers": {"count": 120, "arr": 70800, "tier": "€590/year"},
+                "professional_customers": {"count": 80, "arr": 79200, "tier": "€990/year"},
+                "growth_customers": {"count": 60, "arr": 107400, "tier": "€1,790/year"},
+                "scale_customers": {"count": 30, "arr": 149700, "tier": "€4,990/year"},
+                "salesforce_premium_customers": {"count": 15, "arr": 104850, "tier": "€6,990/year"},  # NEW: Premium Salesforce
+                "sap_enterprise_customers": {"count": 10, "arr": 99900, "tier": "€9,990/year"},     # NEW: Premium SAP
+                "enterprise_ultimate_customers": {"count": 8, "arr": 111920, "tier": "€13,990/year"},
+                "government_licenses": {"count": 3, "arr": 52500, "tier": "€15K + €2.5K maintenance"},
+                "total_arr": 776270,  # Significantly increased with premium tiers
+                "monthly_recurring": 64689   # €25K+ MRR target achieved
             },
             "year_2": {
-                "total_customers": 350,
-                "total_arr": 850000,
-                "monthly_recurring": 70833,
-                "growth_rate": "104%"
+                "total_customers": 450,  # Enhanced growth with premium positioning
+                "total_arr": 1650000,    # Premium connector value realization
+                "monthly_recurring": 137500,  # Well above €25K MRR target
+                "growth_rate": "112%"    # Premium tiers drive higher growth
+            },
+            "year_3": {
+                "total_customers": 850,
+                "total_arr": 3200000,    # Market leadership with premium features
+                "monthly_recurring": 266667,
+                "growth_rate": "94%"
             }
         },
         
         "competitive_comparison": {
-            "onetrust": {
+            "onetrust_basic": {
                 "typical_cost": 25000,
-                "our_equivalent": 3990,  # Scale tier
-                "savings": 21010,
-                "savings_percentage": "84% cheaper"
+                "our_equivalent": 4990,  # Scale tier
+                "savings": 20010,
+                "savings_percentage": "80% cheaper"
             },
-            "bigid_varonis": {
-                "typical_cost": 75000,
-                "our_equivalent": 8990,  # Enterprise tier
-                "savings": 66010,
-                "savings_percentage": "88% cheaper"
-            },
-            "sme_tools_plus_consultant": {
-                "typical_cost": 8500,  # €200/month + implementation
-                "our_equivalent": 1490,  # Growth tier
-                "savings": 7010,
+            "onetrust_salesforce_modules": {
+                "typical_cost": 38000,  # OneTrust + Salesforce Shield
+                "our_equivalent": 6990,  # NEW: Salesforce Premium
+                "savings": 31010,
                 "savings_percentage": "82% cheaper"
+            },
+            "sap_grc_onetrust": {
+                "typical_cost": 42000,  # SAP GRC + OneTrust
+                "our_equivalent": 9990,  # NEW: SAP Enterprise
+                "savings": 32010,
+                "savings_percentage": "76% cheaper"
+            },
+            "enterprise_full_stack": {
+                "typical_cost": 65000,  # OneTrust Enterprise + modules
+                "our_equivalent": 13990,  # Ultimate with Salesforce + SAP
+                "savings": 51010,
+                "savings_percentage": "78% cheaper"
+            },
+            "bigid_varonis_stack": {
+                "typical_cost": 85000,
+                "our_equivalent": 13990,  # Enterprise Ultimate
+                "savings": 71010,
+                "savings_percentage": "84% cheaper"
             }
         },
         
         "value_justification": {
             "netherlands_specialization": [
-                "BSN detection and validation",
-                "KvK number compliance", 
-                "Dutch AP authority integration",
-                "UAVG-specific compliance rules",
-                "Exact Online connector (60% Netherlands SME market)"
+                "Advanced BSN detection and validation with 11-test algorithm",
+                "Enterprise KvK number compliance and validation", 
+                "Dutch AP authority integration and reporting",
+                "UAVG-specific compliance rules and penalties",
+                "Exact Online connector (60% Netherlands SME market)",
+                "Dutch Banking PSD2 API integration",
+                "Native Dutch language interface and reports"
+            ],
+            "premium_enterprise_connectors": [
+                "Salesforce CRM with Netherlands BSN/KvK field detection",
+                "SAP ERP HR/Finance module scanning (PA0002, KNA1, LFA1)",
+                "Microsoft 365 enterprise connector with Netherlands focus",
+                "Google Workspace integration",
+                "Dutch Banking APIs (Rabobank, ING, ABN AMRO)",
+                "Custom ERP data governance and field mapping"
             ],
             "enterprise_features": [
-                "Microsoft 365 enterprise connector",
                 "Advanced AI scanning with EU AI Act compliance",
-                "Real-time compliance monitoring",
-                "Professional compliance certificates",
-                "Multi-language support (Dutch/English)"
+                "Real-time compliance monitoring and alerts",
+                "Professional compliance certificates (€9.99 each)",
+                "Multi-language support (Dutch/English)",
+                "API access and white-label deployment",
+                "Custom workflow automation",
+                "Dedicated success managers and consulting"
             ],
             "cost_effectiveness": [
-                "95% cost savings vs OneTrust enterprise",
-                "88% cheaper than BigID/Varonis stack",
-                "ROI: 400-1400% in first year",
-                "Payback period: 1-3 months"
+                "76-84% cost savings vs OneTrust + enterprise modules",
+                "82% cheaper than OneTrust + Salesforce Shield stack",
+                "76% cheaper than SAP GRC + OneTrust combination",
+                "ROI: 600-2400% in first year with premium connectors",
+                "Payback period: 1-2 months for enterprise tiers",
+                "Guaranteed savings up to €500,000 annually"
             ]
         }
     }
