@@ -189,6 +189,13 @@ class ComplianceDashboardGenerator:
             
             for _, row in time_series_data.iterrows():
                 date_obj = row['date']
+                # Ensure date_obj is a datetime object, not a numpy array
+                if hasattr(date_obj, '__iter__') and not isinstance(date_obj, str):
+                    # If it's an array-like object, take the first element
+                    date_obj = date_obj[0] if len(date_obj) > 0 else datetime.now()
+                # Convert to datetime if it's not already
+                if not isinstance(date_obj, datetime):
+                    date_obj = pd.to_datetime(date_obj)
                 monday = date_obj - timedelta(days=date_obj.weekday())
                 week_key = monday.strftime('%Y-%m-%d')
                 
