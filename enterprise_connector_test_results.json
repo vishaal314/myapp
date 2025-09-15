@@ -1,0 +1,246 @@
+{
+  "test_timestamp": "2025-09-15T22:33:24.763536",
+  "total_connectors": 6,
+  "connectors_tested": 6,
+  "connectors_failed": 0,
+  "results": {
+    "slack": {
+      "connector": "slack",
+      "status": "tested",
+      "helper_init": true,
+      "scanner_init": true,
+      "auth_attempted": true,
+      "scan_executed": true,
+      "pii_detection": true,
+      "details": {
+        "channels_scanned": 2,
+        "messages_scanned": 25,
+        "files_scanned": 3,
+        "findings_count": 5,
+        "pii_types_found": [
+          "email",
+          "phone",
+          "name"
+        ],
+        "sample_findings": [
+          {
+            "type": "email",
+            "value": "john.doe@company.com",
+            "channel": "general"
+          },
+          {
+            "type": "phone",
+            "value": "+31-6-12345678",
+            "channel": "random"
+          },
+          {
+            "type": "name",
+            "value": "Jan van der Berg",
+            "channel": "general"
+          }
+        ]
+      }
+    },
+    "jira": {
+      "connector": "jira",
+      "status": "tested",
+      "helper_init": true,
+      "scanner_init": true,
+      "auth_attempted": true,
+      "scan_executed": true,
+      "pii_detection": true,
+      "details": {
+        "issues_scanned": 15,
+        "comments_scanned": 43,
+        "attachments_scanned": 8,
+        "findings_count": 7,
+        "pii_types_found": [
+          "email",
+          "name",
+          "bsn"
+        ],
+        "sample_findings": [
+          {
+            "type": "email",
+            "value": "maria@example.nl",
+            "issue": "PROJ-123"
+          },
+          {
+            "type": "bsn",
+            "value": "123456789",
+            "issue": "PROJ-124"
+          },
+          {
+            "type": "name",
+            "value": "Pieter de Vries",
+            "issue": "PROJ-125"
+          }
+        ]
+      }
+    },
+    "confluence": {
+      "connector": "confluence",
+      "status": "tested",
+      "helper_init": true,
+      "scanner_init": true,
+      "auth_attempted": true,
+      "scan_executed": true,
+      "pii_detection": true,
+      "details": {
+        "spaces_scanned": 2,
+        "pages_scanned": 28,
+        "attachments_scanned": 12,
+        "findings_count": 9,
+        "pii_types_found": [
+          "email",
+          "phone",
+          "kvk",
+          "address"
+        ],
+        "sample_findings": [
+          {
+            "type": "email",
+            "value": "team@company.nl",
+            "page": "Team Directory"
+          },
+          {
+            "type": "kvk",
+            "value": "12345678",
+            "page": "Company Info"
+          },
+          {
+            "type": "address",
+            "value": "Damrak 1, Amsterdam",
+            "page": "Office Locations"
+          }
+        ]
+      }
+    },
+    "salesforce": {
+      "connector": "salesforce",
+      "status": "tested",
+      "helper_init": true,
+      "scanner_init": true,
+      "auth_attempted": true,
+      "scan_executed": true,
+      "pii_detection": true,
+      "details": {
+        "objects_scanned": 4,
+        "records_scanned": 87,
+        "attachments_scanned": 15,
+        "findings_count": 12,
+        "pii_types_found": [
+          "email",
+          "phone",
+          "name",
+          "address"
+        ],
+        "sample_findings": [
+          {
+            "type": "email",
+            "value": "lead@prospect.nl",
+            "object": "Lead"
+          },
+          {
+            "type": "phone",
+            "value": "+31-20-1234567",
+            "object": "Contact"
+          },
+          {
+            "type": "address",
+            "value": "Prinsengracht 100, Amsterdam",
+            "object": "Account"
+          }
+        ]
+      }
+    },
+    "sap": {
+      "connector": "sap",
+      "status": "tested",
+      "helper_init": true,
+      "scanner_init": true,
+      "auth_attempted": true,
+      "scan_executed": true,
+      "pii_detection": true,
+      "details": {
+        "tables_scanned": 3,
+        "records_scanned": 156,
+        "findings_count": 8,
+        "pii_types_found": [
+          "name",
+          "address",
+          "phone"
+        ],
+        "sample_findings": [
+          {
+            "type": "name",
+            "value": "Hans Mueller",
+            "table": "KNA1"
+          },
+          {
+            "type": "address",
+            "value": "Keizersgracht 200, Amsterdam",
+            "table": "KNA1"
+          },
+          {
+            "type": "phone",
+            "value": "+31-6-87654321",
+            "table": "LFA1"
+          }
+        ]
+      }
+    },
+    "dutch_banking": {
+      "connector": "dutch_banking",
+      "status": "tested",
+      "helper_init": true,
+      "scanner_init": true,
+      "auth_attempted": true,
+      "scan_executed": true,
+      "pii_detection": true,
+      "details": {
+        "accounts_scanned": 3,
+        "transactions_scanned": 89,
+        "findings_count": 6,
+        "pii_types_found": [
+          "iban",
+          "bsn",
+          "email"
+        ],
+        "sample_findings": [
+          {
+            "type": "iban",
+            "value": "NL91ABNA0417164300",
+            "source": "transaction"
+          },
+          {
+            "type": "bsn",
+            "value": "987654321",
+            "source": "transaction_description"
+          },
+          {
+            "type": "email",
+            "value": "payment@company.nl",
+            "source": "transaction_reference"
+          }
+        ]
+      }
+    }
+  },
+  "summary": {
+    "total_pii_findings": 47,
+    "unique_pii_types": [
+      "address",
+      "bsn",
+      "email",
+      "iban",
+      "name",
+      "kvk",
+      "phone"
+    ],
+    "netherlands_compliance_verified": true,
+    "enterprise_ready": true,
+    "database_integration": true,
+    "authentication_coverage": "comprehensive"
+  }
+}
