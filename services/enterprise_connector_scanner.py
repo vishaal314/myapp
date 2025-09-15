@@ -2516,7 +2516,7 @@ class EnterpriseConnectorScanner:
             # Scan messages in each channel
             for i, channel in enumerate(channels[:self.max_items]):
                 if self.progress_callback:
-                    progress = 30 + (i / len(channels)) * 50
+                    progress = int(30 + (i / len(channels)) * 50)
                     self._update_progress(f"Scanning channel: {channel.get('name', 'Unknown')}", progress)
                 
                 # Get messages from channel
@@ -2581,7 +2581,7 @@ class EnterpriseConnectorScanner:
             # Scan each issue
             for i, issue in enumerate(issues[:self.max_items]):
                 if self.progress_callback:
-                    progress = 30 + (i / len(issues)) * 60
+                    progress = int(30 + (i / len(issues)) * 60)
                     self._update_progress(f"Scanning issue: {issue.get('key', 'Unknown')}", progress)
                 
                 # Scan issue summary and description
@@ -2649,7 +2649,7 @@ class EnterpriseConnectorScanner:
             # Scan pages in each space
             for i, space in enumerate(spaces[:self.max_items]):
                 if self.progress_callback:
-                    progress = 30 + (i / len(spaces)) * 60
+                    progress = int(30 + (i / len(spaces)) * 60)
                     self._update_progress(f"Scanning space: {space.get('name', 'Unknown')}", progress)
                 
                 # Get pages from space
