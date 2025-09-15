@@ -75,15 +75,8 @@ class MultiTenantService:
     
     def _init_tenant_schema(self) -> None:
         """Initialize database schema for multi-tenancy."""
-        conn = None
-        cursor = None
         try:
-            # Configure SSL mode based on environment
-            ssl_mode = 'prefer'  # Default to prefer for development
-            if self.db_url and 'localhost' not in self.db_url and '127.0.0.1' not in self.db_url:
-                ssl_mode = 'require'  # Use require for production/cloud databases
-            
-            conn = psycopg2.connect(self.db_url, sslmode=ssl_mode)
+            conn = psycopg2.connect(self.db_url, sslmode='require')
             cursor = conn.cursor()
             
             # Create tenants table for organization management
@@ -143,37 +136,17 @@ class MultiTenantService:
                 logger.info(f"Tenant isolation columns may already exist: {str(e)}")
             
             # Initialize Row Level Security (RLS) for tenant isolation
-            try:
-                self._init_row_level_security(cursor)
-                logger.info("Row Level Security initialized successfully")
-            except Exception as rls_error:
-                logger.warning(f"Row Level Security initialization skipped: {rls_error}")
-                logger.info("Proceeding with basic tenant isolation (database still functional)")
+            self._init_row_level_security(cursor)
             
             conn.commit()
+            cursor.close()
+            conn.close()
+            
             logger.info("Multi-tenant database schema initialized successfully with RLS")
             
         except Exception as e:
             logger.error(f"Failed to initialize tenant schema: {str(e)}")
-            if conn:
-                try:
-                    conn.rollback()
-                    logger.info("Database transaction rolled back due to error")
-                except Exception as rollback_error:
-                    logger.warning(f"Failed to rollback transaction: {rollback_error}")
             raise RuntimeError(f"Multi-tenant schema initialization failed: {str(e)}")
-        finally:
-            # Ensure resources are properly cleaned up
-            if cursor:
-                try:
-                    cursor.close()
-                except Exception as e:
-                    logger.warning(f"Error closing cursor: {e}")
-            if conn:
-                try:
-                    conn.close()
-                except Exception as e:
-                    logger.warning(f"Error closing connection: {e}")
     
     def _init_row_level_security(self, cursor) -> None:
         """
@@ -274,12 +247,7 @@ class MultiTenantService:
             if not admin_bypass and not self.validate_tenant_access(organization_id):
                 raise PermissionError(f"Access denied to organization {organization_id}")
             
-            # Configure SSL mode based on environment (same logic as _init_tenant_schema)
-            ssl_mode = 'prefer'  # Default to prefer for development
-            if self.db_url and 'localhost' not in self.db_url and '127.0.0.1' not in self.db_url:
-                ssl_mode = 'require'  # Use require for production/cloud databases
-                
-            conn = psycopg2.connect(self.db_url, sslmode=ssl_mode)
+            conn = psycopg2.connect(self.db_url, sslmode='require')
             conn.autocommit = True  # Use autocommit for SET commands to avoid transaction issues
             cursor = conn.cursor()
             
@@ -347,9 +315,7 @@ class MultiTenantService:
     def _load_tenant_configs(self) -> None:
         """Load tenant configurations from database."""
         try:
-            # Use prefer for development, require for production
-            ssl_mode = 'prefer' if (self.db_url and ('localhost' in self.db_url or '127.0.0.1' in self.db_url)) else 'require'
-            conn = psycopg2.connect(self.db_url, sslmode=ssl_mode)
+            conn = psycopg2.connect(self.db_url, sslmode='require')
             cursor = conn.cursor()
             
             cursor.execute("""

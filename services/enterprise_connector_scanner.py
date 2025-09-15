@@ -38,12 +38,6 @@ from utils.gdpr_rules import get_region_rules, evaluate_risk_level
 from utils.netherlands_gdpr import detect_nl_violations
 from utils.comprehensive_gdpr_validator import validate_comprehensive_gdpr_compliance
 
-# Import helper classes for collaboration platforms
-from services.enterprise_collaboration_helpers import (
-    SlackHelpers, JiraHelpers, ConfluenceHelpers,
-    assess_pii_risk, is_netherlands_specific_pii, should_scan_file, should_scan_attachment
-)
-
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -69,11 +63,7 @@ class EnterpriseConnectorScanner:
         'teams': 'Microsoft Teams',
         'gmail': 'Gmail',
         'google_drive': 'Google Drive',
-        'google_docs': 'Google Docs/Sheets',
-        # New enterprise collaboration scanners
-        'slack': 'Slack Workspace (Channels, Messages, Files)',
-        'jira': 'Jira Content Scanner (Issues, Comments, Attachments)',
-        'confluence': 'Confluence Scanner (Spaces, Pages, Attachments)'
+        'google_docs': 'Google Docs/Sheets'
     }
     
     # Microsoft Graph API endpoints
@@ -94,17 +84,6 @@ class EnterpriseConnectorScanner:
     SAP_ODATA_BASE = "https://{host}:{port}/sap/opu/odata/SAP"
     SAP_HR_SERVICE = "/ZHR_PRIVACY_SRV"
     SAP_FIN_SERVICE = "/ZFIN_PRIVACY_SRV"
-    
-    # Slack API endpoints
-    SLACK_API_BASE = "https://slack.com/api"
-    
-    # Jira API endpoints  
-    JIRA_API_BASE = "https://{domain}/rest/api/3"
-    JIRA_CONTENT_API = "https://{domain}/rest/api/3/search"
-    
-    # Confluence API endpoints
-    CONFLUENCE_API_BASE = "https://{domain}/rest/api"
-    CONFLUENCE_CONTENT_API = "https://{domain}/rest/api/content"
     
     def __init__(self, 
                  connector_type: str,
@@ -169,11 +148,7 @@ class EnterpriseConnectorScanner:
             'microsoft_graph': {'calls_per_minute': 10000, 'calls_per_hour': 600000},
             'google_workspace': {'calls_per_minute': 1000, 'calls_per_hour': 100000},
             'exact_online': {'calls_per_minute': 60, 'calls_per_hour': 5000},
-            'dutch_banking': {'calls_per_minute': 100, 'calls_per_hour': 10000},
-            # New enterprise collaboration service limits
-            'slack': {'calls_per_minute': 100, 'calls_per_hour': 6000},  # Slack API Tier 3 limits
-            'jira': {'calls_per_minute': 300, 'calls_per_hour': 18000},  # Jira Cloud API limits  
-            'confluence': {'calls_per_minute': 300, 'calls_per_hour': 18000}  # Confluence Cloud API limits
+            'dutch_banking': {'calls_per_minute': 100, 'calls_per_hour': 10000}
         }
         self.api_call_history = []
         self.last_api_call = None
@@ -191,18 +166,6 @@ class EnterpriseConnectorScanner:
             'User-Agent': 'DataGuardian-Enterprise-Scanner/1.0',
             'Accept': 'application/json'
         })
-        
-        # Initialize collaboration platform helpers
-        self.slack_helper = None
-        self.jira_helper = None
-        self.confluence_helper = None
-        
-        if self.connector_type == 'slack':
-            self.slack_helper = SlackHelpers(credentials)
-        elif self.connector_type == 'jira':
-            self.jira_helper = JiraHelpers(credentials)
-        elif self.connector_type == 'confluence':
-            self.confluence_helper = ConfluenceHelpers(credentials)
         
         # Netherlands-specific configuration
         self.netherlands_config = {
@@ -1057,128 +1020,6 @@ class EnterpriseConnectorScanner:
         self.access_token = os.getenv('ABN_AMRO_DEMO_TOKEN', 'demo-token-placeholder')
         return True
     
-    # New authentication methods for collaboration platforms
-    
-    def _authenticate_slack(self) -> bool:
-        """Authenticate with Slack API."""
-        if self.slack_helper:
-            return self.slack_helper.authenticate()
-        return False
-    
-    def _authenticate_jira(self) -> bool:
-        """Authenticate with Jira API."""
-        if self.jira_helper:
-            return self.jira_helper.authenticate()
-        return False
-    
-    def _authenticate_confluence(self) -> bool:
-        """Authenticate with Confluence API."""
-        if self.confluence_helper:
-            return self.confluence_helper.authenticate()
-        return False
-    
-    # Helper methods for Slack scanning
-    
-    def _get_slack_channels(self) -> List[Dict]:
-        """Get list of Slack channels."""
-        if self.slack_helper:
-            return self.slack_helper.get_channels()
-        return []
-    
-    def _get_slack_messages(self, channel_id: str) -> List[Dict]:
-        """Get messages from a Slack channel."""
-        if self.slack_helper:
-            return self.slack_helper.get_messages(channel_id)
-        return []
-    
-    def _get_slack_file_content(self, file_id: str) -> Optional[str]:
-        """Get content of a Slack file."""
-        if self.slack_helper:
-            return self.slack_helper.get_file_content(file_id)
-        return None
-    
-    def _should_scan_file(self, file_info: Dict) -> bool:
-        """Check if file should be scanned."""
-        return should_scan_file(file_info)
-    
-    # Helper methods for Jira scanning
-    
-    def _get_jira_issues(self, jql_query: str) -> List[Dict]:
-        """Get Jira issues using JQL."""
-        if self.jira_helper:
-            return self.jira_helper.get_issues(jql_query, self.max_items)
-        return []
-    
-    def _get_jira_comments(self, issue_key: str) -> List[Dict]:
-        """Get comments for a Jira issue."""
-        if self.jira_helper:
-            return self.jira_helper.get_comments(issue_key)
-        return []
-    
-    def _get_jira_attachments(self, issue_key: str) -> List[Dict]:
-        """Get attachments for a Jira issue."""
-        if self.jira_helper:
-            return self.jira_helper.get_attachments(issue_key)
-        return []
-    
-    def _get_jira_attachment_content(self, attachment_id: str) -> Optional[str]:
-        """Get content of a Jira attachment."""
-        if self.jira_helper:
-            return self.jira_helper.get_attachment_content(attachment_id)
-        return None
-    
-    def _should_scan_attachment(self, attachment_info: Dict) -> bool:
-        """Check if attachment should be scanned."""
-        return should_scan_attachment(attachment_info)
-    
-    # Helper methods for Confluence scanning
-    
-    def _get_confluence_spaces(self) -> List[Dict]:
-        """Get list of Confluence spaces."""
-        if self.confluence_helper:
-            return self.confluence_helper.get_spaces()
-        return []
-    
-    def _get_confluence_pages(self, space_key: str) -> List[Dict]:
-        """Get pages from a Confluence space."""
-        if self.confluence_helper:
-            return self.confluence_helper.get_pages(space_key)
-        return []
-    
-    def _get_confluence_page_content(self, page_id: str) -> Optional[str]:
-        """Get content of a Confluence page."""
-        if self.confluence_helper:
-            return self.confluence_helper.get_page_content(page_id)
-        return None
-    
-    def _get_confluence_attachments(self, page_id: str) -> List[Dict]:
-        """Get attachments for a Confluence page."""
-        if self.confluence_helper:
-            return self.confluence_helper.get_attachments(page_id)
-        return []
-    
-    def _get_confluence_attachment_content(self, attachment_id: str) -> Optional[str]:
-        """Get content of a Confluence attachment."""
-        if self.confluence_helper:
-            return self.confluence_helper.get_attachment_content(attachment_id)
-        return None
-    
-    def _extract_text_from_confluence_content(self, html_content: str) -> str:
-        """Extract text from Confluence HTML content."""
-        if self.confluence_helper:
-            return self.confluence_helper.extract_text_from_content(html_content)
-        return html_content
-    
-    # Helper methods for risk assessment
-    
-    def _assess_pii_risk(self, pii_findings: List[Dict]) -> str:
-        """Assess risk level of PII findings."""
-        return assess_pii_risk(pii_findings)
-    
-    def _is_netherlands_specific_pii(self, pii_finding: Dict) -> bool:
-        """Check if PII is Netherlands-specific."""
-        return is_netherlands_specific_pii(pii_finding)
-    
     def _perform_connector_scan(self, scan_config: Dict) -> Dict[str, Any]:
         """Perform the actual scanning based on connector type."""
         scan_results = {
@@ -1204,15 +1045,6 @@ class EnterpriseConnectorScanner:
                 scan_results.update(self._scan_salesforce(scan_config))
             elif self.connector_type == 'sap':
                 scan_results.update(self._scan_sap(scan_config))
-            # New enterprise collaboration scanners
-            elif self.connector_type == 'slack':
-                scan_results.update(self._scan_slack(scan_config))
-            elif self.connector_type == 'jira':
-                scan_results.update(self._scan_jira_content(scan_config))
-            elif self.connector_type == 'confluence':
-                scan_results.update(self._scan_confluence(scan_config))
-            else:
-                logger.warning(f"Unknown connector type: {self.connector_type}")
             
             return scan_results
             
@@ -2490,208 +2322,6 @@ class EnterpriseConnectorScanner:
         
         logger.info(f"Progress ({percentage}%): {message}")
     
-    def _scan_slack(self, scan_config: Dict) -> Dict[str, Any]:
-        """Scan Slack workspace for PII in channels, messages, and files."""
-        results = {
-            'channels_scanned': 0,
-            'messages_scanned': 0,
-            'files_scanned': 0,
-            'slack_findings': []
-        }
-        
-        try:
-            # Authenticate with Slack API
-            if not self._authenticate_slack():
-                logger.error("Slack authentication failed")
-                return results
-            
-            self._update_progress("Retrieving Slack channels...", 10)
-            
-            # Get list of channels
-            channels = self._get_slack_channels()
-            results['channels_scanned'] = len(channels)
-            
-            self._update_progress("Scanning Slack messages...", 30)
-            
-            # Scan messages in each channel
-            for i, channel in enumerate(channels[:self.max_items]):
-                if self.progress_callback:
-                    progress = int(30 + (i / len(channels)) * 50)
-                    self._update_progress(f"Scanning channel: {channel.get('name', 'Unknown')}", progress)
-                
-                # Get messages from channel
-                messages = self._get_slack_messages(channel['id'])
-                results['messages_scanned'] += len(messages)
-                
-                # Scan messages for PII
-                for message in messages:
-                    message_text = message.get('text', '')
-                    if message_text:
-                        pii_findings = identify_pii_in_text(message_text)
-                        
-                        if pii_findings:
-                            finding = {
-                                'type': 'slack_message',
-                                'channel_id': channel['id'],
-                                'channel_name': channel.get('name', 'Unknown'),
-                                'message_id': message.get('ts'),
-                                'user': message.get('user'),
-                                'timestamp': message.get('ts'),
-                                'pii_types': list(set([pii['type'] for pii in pii_findings])),
-                                'pii_count': len(pii_findings),
-                                'risk_level': self._assess_pii_risk(pii_findings),
-                                'content_preview': message_text[:200] + "..." if len(message_text) > 200 else message_text,
-                                'netherlands_specific': any(self._is_netherlands_specific_pii(pii) for pii in pii_findings)
-                            }
-                            results['slack_findings'].append(finding)
-                            self.findings.append(finding)
-            
-            self._update_progress("Slack scan completed", 100)
-            
-        except Exception as e:
-            logger.error(f"Error scanning Slack: {str(e)}")
-            results['error'] = str(e)
-        
-        return results
-    
-    def _scan_jira_content(self, scan_config: Dict) -> Dict[str, Any]:
-        """Scan Jira issues, comments, and attachments for PII."""
-        results = {
-            'issues_scanned': 0,
-            'comments_scanned': 0,
-            'attachments_scanned': 0,
-            'jira_findings': []
-        }
-        
-        try:
-            # Authenticate with Jira API
-            if not self._authenticate_jira():
-                logger.error("Jira authentication failed")
-                return results
-            
-            self._update_progress("Retrieving Jira issues...", 10)
-            
-            # Get list of issues using JQL
-            jql_query = scan_config.get('jql_query', 'project is not EMPTY ORDER BY updated DESC')
-            issues = self._get_jira_issues(jql_query)
-            results['issues_scanned'] = len(issues)
-            
-            self._update_progress("Scanning Jira content...", 30)
-            
-            # Scan each issue
-            for i, issue in enumerate(issues[:self.max_items]):
-                if self.progress_callback:
-                    progress = int(30 + (i / len(issues)) * 60)
-                    self._update_progress(f"Scanning issue: {issue.get('key', 'Unknown')}", progress)
-                
-                # Scan issue summary and description
-                issue_fields = issue.get('fields', {})
-                content_to_scan = []
-                
-                if issue_fields.get('summary'):
-                    content_to_scan.append(('summary', issue_fields['summary']))
-                
-                if issue_fields.get('description'):
-                    content_to_scan.append(('description', issue_fields['description']))
-                
-                # Scan issue content
-                for content_type, content_text in content_to_scan:
-                    if content_text:
-                        pii_findings = identify_pii_in_text(content_text)
-                        
-                        if pii_findings:
-                            finding = {
-                                'type': f'jira_issue_{content_type}',
-                                'issue_key': issue.get('key'),
-                                'issue_id': issue.get('id'),
-                                'project': issue_fields.get('project', {}).get('key', 'Unknown'),
-                                'content_type': content_type,
-                                'pii_types': list(set([pii['type'] for pii in pii_findings])),
-                                'pii_count': len(pii_findings),
-                                'risk_level': self._assess_pii_risk(pii_findings),
-                                'content_preview': content_text[:200] + "..." if len(content_text) > 200 else content_text,
-                                'netherlands_specific': any(self._is_netherlands_specific_pii(pii) for pii in pii_findings)
-                            }
-                            results['jira_findings'].append(finding)
-                            self.findings.append(finding)
-            
-            self._update_progress("Jira content scan completed", 100)
-            
-        except Exception as e:
-            logger.error(f"Error scanning Jira content: {str(e)}")
-            results['error'] = str(e)
-        
-        return results
-    
-    def _scan_confluence(self, scan_config: Dict) -> Dict[str, Any]:
-        """Scan Confluence spaces, pages, and attachments for PII."""
-        results = {
-            'spaces_scanned': 0,
-            'pages_scanned': 0,
-            'attachments_scanned': 0,
-            'confluence_findings': []
-        }
-        
-        try:
-            # Authenticate with Confluence API
-            if not self._authenticate_confluence():
-                logger.error("Confluence authentication failed")
-                return results
-            
-            self._update_progress("Retrieving Confluence spaces...", 10)
-            
-            # Get list of spaces
-            spaces = self._get_confluence_spaces()
-            results['spaces_scanned'] = len(spaces)
-            
-            self._update_progress("Scanning Confluence pages...", 30)
-            
-            # Scan pages in each space
-            for i, space in enumerate(spaces[:self.max_items]):
-                if self.progress_callback:
-                    progress = int(30 + (i / len(spaces)) * 60)
-                    self._update_progress(f"Scanning space: {space.get('name', 'Unknown')}", progress)
-                
-                # Get pages from space
-                pages = self._get_confluence_pages(space['key'])
-                results['pages_scanned'] += len(pages)
-                
-                # Scan pages for PII
-                for page in pages:
-                    page_content = self._get_confluence_page_content(page['id'])
-                    
-                    if page_content:
-                        # Extract text content from HTML/markup
-                        text_content = self._extract_text_from_confluence_content(page_content)
-                        
-                        if text_content:
-                            pii_findings = identify_pii_in_text(text_content)
-                            
-                            if pii_findings:
-                                finding = {
-                                    'type': 'confluence_page',
-                                    'space_key': space['key'],
-                                    'space_name': space.get('name', 'Unknown'),
-                                    'page_id': page['id'],
-                                    'page_title': page.get('title', 'Unknown'),
-                                    'page_url': page.get('_links', {}).get('webui', ''),
-                                    'pii_types': list(set([pii['type'] for pii in pii_findings])),
-                                    'pii_count': len(pii_findings),
-                                    'risk_level': self._assess_pii_risk(pii_findings),
-                                    'content_preview': text_content[:200] + "..." if len(text_content) > 200 else text_content,
-                                    'netherlands_specific': any(self._is_netherlands_specific_pii(pii) for pii in pii_findings)
-                                }
-                                results['confluence_findings'].append(finding)
-                                self.findings.append(finding)
-            
-            self._update_progress("Confluence scan completed", 100)
-            
-        except Exception as e:
-            logger.error(f"Error scanning Confluence: {str(e)}")
-            results['error'] = str(e)
-        
-        return results
-
     def get_supported_connectors(self) -> Dict[str, str]:
         """Get list of supported enterprise connectors."""
         return self.CONNECTOR_TYPES.copy()

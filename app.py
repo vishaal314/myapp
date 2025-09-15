@@ -91,7 +91,7 @@ except ImportError as e:
     logging.warning(f"Failed to import activity tracker: {e}")
     ACTIVITY_TRACKER_AVAILABLE = False
     # Create a fallback ScannerType enum to prevent unbound variable errors
-    class ScannerTypeFallback:
+    class ScannerType:
         CODE = "code"
         BLOB = "blob"
         IMAGE = "image"
@@ -103,9 +103,6 @@ except ImportError as e:
         SUSTAINABILITY = "sustainability"
         API = "api"
         ENTERPRISE_CONNECTOR = "enterprise_connector"
-    
-    # Use fallback as ScannerType when tracker is not available
-    ScannerType = ScannerTypeFallback
 
 # Enterprise integration - non-breaking import
 try:
@@ -194,100 +191,101 @@ def get_html_report_generator():
             return generate_html_report_fallback
 
 # Use the wrapper to ensure consistent typing - define with proper type annotation
-generate_html_report: Any = get_html_report_generator()
+generate_html_report = get_html_report_generator()
 
 # Activity tracking imports - Consolidated and Fixed
-if ACTIVITY_TRACKER_AVAILABLE:
-    try:
-        from utils.activity_tracker import (
-            get_activity_tracker,
-            track_scan_completed as activity_track_completed,
-            track_scan_failed as activity_track_failed,
-            ActivityType
-        )
+try:
+    from utils.activity_tracker import (
+        get_activity_tracker,
+        track_scan_completed as activity_track_completed,
+        track_scan_failed as activity_track_failed,
+        ActivityType, 
+        ScannerType
+    )
+    
+    # ScannerType is now imported directly to avoid alias conflicts
+    ACTIVITY_TRACKING_AVAILABLE = True
+    from typing import Dict, Any
+    
+    # Compatibility wrapper functions with proper signatures
+    def track_scan_completed_wrapper_safe(scanner_type, user_id, session_id, findings_count=0, files_scanned=0, compliance_score=0, **kwargs):
+        """Safe wrapper for scan completion tracking"""
+        try:
+            username = st.session_state.get('username', user_id)
+            return activity_track_completed(
+                session_id=session_id,
+                user_id=user_id,
+                username=username,
+                scanner_type=scanner_type,
+                findings_count=findings_count,
+                files_scanned=files_scanned,
+                compliance_score=compliance_score,
+                details=kwargs
+            )
+        except Exception as e:
+            logger.warning(f"Activity tracking failed: {e}")
+            return None
+    
+    def track_scan_failed_wrapper_safe(scanner_type, user_id, session_id, error_message, **kwargs):
+        """Safe wrapper for scan failure tracking"""
+        try:
+            username = st.session_state.get('username', user_id)
+            return activity_track_failed(
+                session_id=session_id,
+                user_id=user_id,
+                username=username,
+                scanner_type=scanner_type,
+                error_message=error_message,
+                details=kwargs
+            )
+        except Exception as e:
+            logger.warning(f"Activity tracking failed: {e}")
+            return None
+    
+    def get_session_id():
+        """Get or create session ID"""
+        import streamlit as st
+        if 'session_id' not in st.session_state:
+            st.session_state.session_id = str(uuid.uuid4())
+        return st.session_state.session_id
+    
+    def get_user_id():
+        """Get current user ID"""
+        import streamlit as st
+        return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
+    
+    def get_organization_id():
+        """Get current organization ID for multi-tenant isolation"""
+        import streamlit as st
+        enterprise_user = st.session_state.get('enterprise_user')
+        if enterprise_user and hasattr(enterprise_user, 'organization_id'):
+            return enterprise_user.organization_id
+        return st.session_state.get('organization_id', 'default_org')
         
-        # ScannerType already imported above, no need to reimport
-        ACTIVITY_TRACKING_AVAILABLE = True
-        from typing import Dict, Any
-        
-        # Compatibility wrapper functions with proper signatures
-        def track_scan_completed_wrapper_safe(scanner_type, user_id, session_id, findings_count=0, files_scanned=0, compliance_score=0, **kwargs):
-            """Safe wrapper for scan completion tracking"""
-            try:
-                username = st.session_state.get('username', user_id)
-                return activity_track_completed(
-                    session_id=session_id,
-                    user_id=user_id,
-                    username=username,
-                    scanner_type=scanner_type,
-                    findings_count=findings_count,
-                    files_scanned=files_scanned,
-                    compliance_score=compliance_score,
-                    details=kwargs
-                )
-            except Exception as e:
-                logger.warning(f"Activity tracking failed: {e}")
-                return None
-        
-        def track_scan_failed_wrapper_safe(scanner_type, user_id, session_id, error_message, **kwargs):
-            """Safe wrapper for scan failure tracking"""
-            try:
-                username = st.session_state.get('username', user_id)
-                return activity_track_failed(
-                    session_id=session_id,
-                    user_id=user_id,
-                    username=username,
-                    scanner_type=scanner_type,
-                    error_message=error_message,
-                    details=kwargs
-                )
-            except Exception as e:
-                logger.warning(f"Activity tracking failed: {e}")
-                return None
-        
-        def get_session_id():
-            """Get or create session ID"""
-            import streamlit as st
-            if 'session_id' not in st.session_state:
-                st.session_state.session_id = str(uuid.uuid4())
-            return st.session_state.session_id
-        
-        def get_user_id():
-            """Get current user ID"""
-            import streamlit as st
-            return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
-        
-        def get_organization_id():
-            """Get current organization ID for multi-tenant isolation"""
-            import streamlit as st
-            enterprise_user = st.session_state.get('enterprise_user')
-            if enterprise_user and hasattr(enterprise_user, 'organization_id'):
-                return enterprise_user.organization_id
-            return st.session_state.get('organization_id', 'default_org')
-            
-    except ImportError:
-        # Fallback if imports fail within the available tracker block
-        ACTIVITY_TRACKING_AVAILABLE = False
-else:
-    # Fallback definitions for activity tracking when tracker not available
+except ImportError:
+    # Fallback definitions for activity tracking
     ACTIVITY_TRACKING_AVAILABLE = False
     
-    def track_scan_completed_wrapper_safe(*args, **kwargs): pass
-    def track_scan_failed_wrapper_safe(*args, **kwargs): pass
+    def track_scan_completed_wrapper(**kwargs): pass
+    def track_scan_failed_wrapper(**kwargs): pass
     
-    # Ensure ScannerType is available in fallback case
-    if 'ScannerType' not in globals():
-        # Define fallback class if not already defined
-        class ScannerTypeFallback:
-            DATABASE = "database"
-            API = "api"
-            WEBSITE = "website"
-            DPIA = "dpia"
-            AI_MODEL = "ai_model"
-            SOC2 = "soc2"
-            SUSTAINABILITY = "sustainability"
-        
-        ScannerType = ScannerTypeFallback
+    # Define consistent ScannerType fallback with all scanner types
+    class ScannerType:
+        DOCUMENT = "document"
+        IMAGE = "image" 
+        WEBSITE = "website"
+        CODE = "code"
+        DATABASE = "database"
+        DPIA = "dpia"
+        AI_MODEL = "ai_model"
+        SOC2 = "soc2"
+        SUSTAINABILITY = "sustainability"
+        ENTERPRISE = "enterprise"
+        REPOSITORY = "repository"
+        BLOB = "blob"
+        COOKIE = "cookie"
+        API = "api"
+        CONNECTORS_E2E = "connectors_e2e"
     
     def get_session_id(): 
         """Fallback session ID"""
@@ -298,45 +296,27 @@ else:
     def get_user_id(): 
         """Fallback user ID"""
         return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
-    
-    def get_organization_id(): 
-        """Fallback organization ID"""
-        return st.session_state.get('organization_id', 'default_org')
 
 # Global variable definitions to avoid "possibly unbound" errors
-# Initialize all global variables with defaults at module level
-user_id: Optional[str] = None
-session_id: Optional[str] = None
-
-# SSL configuration globals (always initialized to prevent unbound errors)
-ssl_mode: str = 'prefer'
-ssl_cert_path: Optional[str] = None
-ssl_key_path: Optional[str] = None
-ssl_ca_path: Optional[str] = None
-
-# Helper functions to get session variables safely
-def get_current_user_id() -> str:
-    """Get current user ID from session state"""
-    return st.session_state.get('user_id', st.session_state.get('username', 'anonymous'))
-
-def get_current_session_id() -> str:
-    """Get current session ID from session state"""
-    if 'session_id' not in st.session_state:
-        st.session_state['session_id'] = str(uuid.uuid4())
-    return st.session_state['session_id']
-
 def ensure_global_variables():
     """Ensure all required global variables are defined"""
     global user_id, session_id, ssl_mode, ssl_cert_path, ssl_key_path, ssl_ca_path
     
-    # Reassign from session state if available
-    user_id = st.session_state.get('user_id', user_id)
-    session_id = st.session_state.get('session_id', session_id)
+    # Initialize session variables if they don't exist
+    if 'user_id' not in globals():
+        user_id = None
+    if 'session_id' not in globals(): 
+        session_id = None
     
-    # Ensure session_id is set
-    if session_id is None:
-        session_id = str(uuid.uuid4())
-        st.session_state['session_id'] = session_id
+    # Initialize SSL variables with defaults
+    if 'ssl_mode' not in globals():
+        ssl_mode = 'prefer'
+    if 'ssl_cert_path' not in globals():
+        ssl_cert_path = None
+    if 'ssl_key_path' not in globals():
+        ssl_key_path = None  
+    if 'ssl_ca_path' not in globals():
+        ssl_ca_path = None
 
 # Initialize global variables
 ensure_global_variables()
@@ -2319,58 +2299,6 @@ def render_dashboard():
                     'energy': '🌱 Energy Scanner',
                     'green': '🌱 Green Scanner',
                     
-                    # 11. Enterprise Connector Scanner (all variations)
-                    'enterprise': '🏢 Enterprise Connector Scanner',
-                    'enterprise_connector': '🏢 Enterprise Connector Scanner',
-                    'connector': '🏢 Enterprise Connector Scanner',
-                    'connectors_e2e': '🏢 Enterprise Connectors',
-                    'connector_e2e': '🏢 Enterprise Connectors',
-                    'connector_test': '🏢 Enterprise Connectors',
-                    'enterprise_e2e': '🏢 Enterprise Connectors',
-                    
-                    # Microsoft 365 Connectors
-                    'microsoft365': '🏢 Microsoft 365',
-                    'microsoft_365': '🏢 Microsoft 365',
-                    'ms365': '🏢 Microsoft 365',
-                    'office365': '🏢 Office 365',
-                    'office_365': '🏢 Office 365',
-                    'outlook': '📧 Outlook Scanner',
-                    'exchange': '📧 Exchange Scanner',
-                    'sharepoint': '📁 SharePoint Scanner',
-                    'onedrive': '☁️ OneDrive Scanner',
-                    'one_drive': '☁️ OneDrive Scanner',
-                    'teams': '💬 Teams Scanner',
-                    
-                    # Google Workspace Connectors
-                    'google_workspace': '🏢 Google Workspace',
-                    'google_drive': '☁️ Google Drive Scanner',
-                    'drive': '☁️ Google Drive Scanner',
-                    'gmail': '📧 Gmail Scanner',
-                    'google_docs': '📄 Google Docs Scanner',
-                    'google_sheets': '📊 Google Sheets Scanner',
-                    'google_slides': '📽️ Google Slides Scanner',
-                    'google_calendar': '📅 Google Calendar Scanner',
-                    
-                    # Exact Online Connectors
-                    'exact_online': '💼 Exact Online Scanner',
-                    'exact': '💼 Exact Online Scanner',
-                    'accounting': '💼 Accounting Scanner',
-                    'erp': '💼 ERP Scanner',
-                    
-                    # Additional Cloud Storage Connectors
-                    'dropbox': '☁️ Dropbox Scanner',
-                    'box': '☁️ Box Scanner',
-                    'aws_s3': '☁️ AWS S3 Scanner',
-                    'azure_storage': '☁️ Azure Storage Scanner',
-                    'cloud_storage': '☁️ Cloud Storage Scanner',
-                    
-                    # Additional enterprise services
-                    'slack': '💬 Slack Scanner',
-                    'salesforce': '⚡ Salesforce Scanner',
-                    'hubspot': '📈 HubSpot Scanner',
-                    'jira': '🎫 Jira Scanner',
-                    'confluence': '📖 Confluence Scanner',
-                    
                     # Additional scanner types
                     'cookie': '🍪 Cookie Scanner',
                     'tracking': '🍪 Tracking Scanner',
@@ -3506,7 +3434,7 @@ def execute_code_scan(region, username, uploaded_files, repo_url, directory_path
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper_safe(
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.CODE,
             user_id=user_id,
             session_id=session_id,
@@ -4153,7 +4081,7 @@ def execute_image_scan(region, username, uploaded_files):
         from utils.activity_tracker import ScannerType
         
         # Track scan failure
-        track_scan_failed_wrapper_safe(
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.IMAGE,
             user_id=user_id,
             session_id=session_id,
@@ -4467,6 +4395,7 @@ def render_database_scanner_interface(region: str, username: str):
         password = st.text_input("Password", type="password")
         
         # SSL/TLS Configuration (Advanced) - Initialize variables at function start to avoid scope issues
+        ssl_mode = "Auto-detect"  # Default value
         # Initialize SSL variables at function scope to avoid "possibly unbound" errors
         ssl_mode = "Auto-detect"
         ssl_cert_path = ""
@@ -4665,21 +4594,13 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
     except Exception as e:
         # Track scan failure with safe error handling
         try:
-            # Ensure variables are defined for error tracking
-            if 'ScannerType' not in locals():
-                from utils.activity_tracker import ScannerType
-            if 'user_id' not in locals():
-                user_id = st.session_state.get('user_id', username)
-            if 'session_id' not in locals():
-                session_id = st.session_state.get('session_id', str(uuid.uuid4()))
-                
-            track_scan_failed_wrapper_safe(
+            track_scan_failed_wrapper(
                 scanner_type=ScannerType.DATABASE,
                 user_id=user_id,
                 session_id=session_id,
                 error_message=str(e)
             )
-        except Exception:
+        except (NameError, AttributeError):
             # Fallback if tracking variables are not available
             logger.warning(f"Activity tracking failed: {e}")
         st.error(f"Database scan failed: {str(e)}")
@@ -4821,7 +4742,7 @@ def execute_database_scan_cloud(region, username, connection_string):
     except Exception as e:
         # Track scan failure with safe error handling
         try:
-            track_scan_failed_wrapper_safe(
+            track_scan_failed_wrapper(
                 scanner_type=ScannerType.DATABASE,
                 user_id=user_id,
                 session_id=session_id,
@@ -5699,29 +5620,18 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         st.success("✅ Comprehensive API security scan completed!")
         
     except Exception as e:
-        # Track scan failure with safe error handling
-        try:
-            # Ensure variables are defined for error tracking
-            if 'ScannerType' not in locals():
-                from utils.activity_tracker import ScannerType
-            if 'user_id' not in locals():
-                user_id = st.session_state.get('user_id', username)
-            if 'session_id' not in locals():
-                session_id = st.session_state.get('session_id', str(uuid.uuid4()))
-                
-            track_scan_failed_wrapper_safe(
-                scanner_type=ScannerType.API,
-                user_id=user_id,
-                session_id=session_id,
-                error_message=str(e),
-                region=region,
-                details={
-                    'base_url': base_url if 'base_url' in locals() else 'unknown',
-                    'timeout': timeout if 'timeout' in locals() else 30
-                }
-            )
-        except Exception:
-            logger.warning(f"Activity tracking failed: {e}")
+        # Track scan failure
+        track_scan_failed_wrapper(
+            scanner_type=ScannerType.API,
+            user_id=user_id,
+            session_id=session_id,
+            error_message=str(e),
+            region=region,
+            details={
+                'base_url': base_url,
+                'timeout': timeout
+            }
+        )
         st.error(f"API scan failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -5731,11 +5641,6 @@ def render_enterprise_connector_interface(region: str, username: str):
     # Import required modules to avoid unbound variables
     from utils.activity_tracker import ScannerType
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     # Debug: Check current language and translations
     current_lang = st.session_state.get('language', 'en')
@@ -5793,13 +5698,10 @@ def render_enterprise_connector_interface(region: str, username: str):
         """))
     
     # Create tabs for different connector types
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         _('enterprise_tab_microsoft365', "🏢 Microsoft 365"), 
         _('enterprise_tab_exact_online', "🇳🇱 Exact Online"), 
         _('enterprise_tab_google_workspace', "📊 Google Workspace"),
-        _('enterprise_tab_slack', "💬 Slack"),
-        _('enterprise_tab_jira', "🎫 Jira"),
-        _('enterprise_tab_confluence', "📖 Confluence"),
         _('enterprise_tab_salesforce', "💼 Salesforce CRM"),
         _('enterprise_tab_sap', "🏭 SAP ERP"),
         _('enterprise_tab_dutch_banking', "🏦 Dutch Banking")
@@ -5815,32 +5717,18 @@ def render_enterprise_connector_interface(region: str, username: str):
         render_google_workspace_connector(region, username)
     
     with tab4:
-        render_slack_connector(region, username)
-    
-    with tab5:
-        render_jira_connector(region, username)
-    
-    with tab6:
-        render_confluence_connector(region, username)
-    
-    with tab7:
         render_salesforce_connector(region, username)
     
-    with tab8:
+    with tab5:
         render_sap_connector(region, username)
     
-    with tab9:
+    with tab6:
         render_dutch_banking_connector(region, username)
 
 def render_microsoft365_connector(region: str, username: str):
     """Microsoft 365 connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     from utils.activity_tracker import ScannerType
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.microsoft365_integration', '🏢 Microsoft 365 Integration'))
     st.write(_('scan.microsoft365_integration_description', 'Scan SharePoint, OneDrive, Exchange, and Teams for PII with Netherlands specialization.'))
@@ -6015,12 +5903,6 @@ def render_microsoft365_connector(region: str, username: str):
 def render_exact_online_connector(region: str, username: str):
     """Exact Online connector interface - Netherlands specialization"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
-    from utils.activity_tracker import ScannerType
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.exact_online_integration', '🇳🇱 Exact Online Integration'))
     st.write(_('scan.exact_online_integration_description', 'Netherlands-specialized ERP scanning with BSN validation and KvK verification.'))
@@ -6144,12 +6026,6 @@ def render_exact_online_connector(region: str, username: str):
 def render_google_workspace_connector(region: str, username: str):
     """Google Workspace connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
-    from utils.activity_tracker import ScannerType
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.google_workspace_integration', '📊 Google Workspace Integration'))
     st.write(_('scan.google_workspace_integration_description', 'Scan Google Drive, Gmail, and Docs for PII with enterprise-grade accuracy.'))
@@ -6243,12 +6119,6 @@ def render_google_workspace_connector(region: str, username: str):
 def render_dutch_banking_connector(region: str, username: str):
     """Dutch banking connector interface (PSD2 APIs)"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
-    from utils.activity_tracker import ScannerType
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader(_('scan.dutch_banking_integration', '🏦 Dutch Banking Integration'))
     st.write(_('scan.dutch_banking_integration_description', 'PSD2-compliant integration with major Dutch banks for transaction analysis.'))
@@ -6268,412 +6138,10 @@ def render_dutch_banking_connector(region: str, username: str):
     if st.button("🚀 Demo Banking Scan"):
         st.success("✅ Demo banking scan completed - PSD2 integration coming soon!")
 
-def render_slack_connector(region: str, username: str):
-    """Slack workspace connector interface"""
-    from services.enterprise_connector_scanner import EnterpriseConnectorScanner
-    from utils.activity_tracker import ScannerType
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
-    
-    st.subheader(_('scan.slack_integration', '💬 Slack Workspace Integration'))
-    st.write(_('scan.slack_integration_description', 'Scan Slack channels, messages, and shared files for PII with enterprise-grade security and Netherlands specialization.'))
-    
-    # Competitive advantage highlight
-    st.success("🎯 **Enterprise Revenue Driver**: Slack integration enables comprehensive collaboration platform scanning. Critical for enterprise deals targeting communication data compliance.")
-    
-    # Authentication setup
-    st.markdown(f"### {_('scan.slack_authentication', 'Slack Authentication')}")
-    
-    auth_method = st.radio(
-        _('scan.authentication_method', 'Authentication Method'),
-        [_('scan.bot_token', 'Bot Token'), _('scan.user_token', 'User Token'), _('scan.demo_mode', 'Demo Mode')],
-        help="Choose authentication method for Slack API access"
-    )
-    
-    credentials = {}
-    
-    if auth_method == _('scan.bot_token', 'Bot Token'):
-        credentials['bot_token'] = st.text_input("Slack Bot Token (xoxb-)", type="password", help="Bot token from Slack app configuration")
-        st.info("📋 **Required Bot Scopes**: channels:read, chat:read, files:read, users:read")
-        
-    elif auth_method == _('scan.user_token', 'User Token'):
-        credentials['access_token'] = st.text_input("Slack User Token (xoxp-)", type="password", help="User token from Slack OAuth flow")
-        st.info("📋 **Required User Scopes**: channels:read, chat:read, files:read")
-    
-    else:  # Demo Mode
-        st.success("✅ Demo mode enabled - using sample Netherlands Slack workspace data")
-        credentials = {'access_token': 'slack_demo_token'}
-    
-    # Scan configuration
-    st.markdown(f"### {_('scan.scan_configuration', 'Scan Configuration')}")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        scan_channels = st.checkbox("💬 Public Channels", value=True, help="Scan public channel messages")
-        scan_dms = st.checkbox("💭 Direct Messages", value=False, help="Scan direct messages (requires user permissions)")
-    with col2:
-        scan_files = st.checkbox("📎 Shared Files", value=True, help="Scan uploaded files and attachments")
-        scan_private = st.checkbox("🔒 Private Channels", value=False, help="Scan private channels (if bot has access)")
-    
-    # Netherlands-specific options
-    st.markdown("### Netherlands Specialization")
-    col1, col2 = st.columns(2)
-    with col1:
-        detect_bsn = st.checkbox("🔍 BSN Detection", value=True, help="Detect BSN numbers in messages and files")
-        detect_kvk = st.checkbox("🏢 KvK Detection", value=True, help="Detect KvK company numbers")
-    with col2:
-        detect_iban = st.checkbox("💳 IBAN Detection", value=True, help="Detect Dutch IBAN banking details")
-        uavg_compliance = st.checkbox("⚖️ UAVG Compliance Analysis", value=True, help="Netherlands privacy law compliance")
-    
-    if st.button("🚀 Start Slack Scan", type="primary"):
-        try:
-            scanner = EnterpriseConnectorScanner(
-                connector_type='slack',
-                credentials=credentials,
-                region=region
-            )
-            
-            scan_config = {
-                'scan_channels': scan_channels,
-                'scan_dms': scan_dms,
-                'scan_files': scan_files,
-                'scan_private': scan_private,
-                'detect_bsn': detect_bsn,
-                'detect_kvk': detect_kvk,
-                'detect_iban': detect_iban,
-                'uavg_compliance': uavg_compliance
-            }
-            
-            with st.spinner("Scanning Slack workspace..."):
-                scan_results = scanner.scan_enterprise_source(scan_config)
-            
-            if scan_results.get('success'):
-                # Store results in aggregator database
-                try:
-                    from services.results_aggregator import ResultsAggregator
-                    aggregator = ResultsAggregator()
-                    
-                    complete_result = {
-                        **scan_results,
-                        'scan_type': 'enterprise connector',
-                        'total_pii_found': scan_results.get('pii_instances_found', 0),
-                        'high_risk_count': scan_results.get('high_risk_findings', 0),
-                        'region': region,
-                        'files_scanned': scan_results.get('total_items_scanned', 0),
-                        'username': username,
-                        'user_id': st.session_state.get('user_id', username),
-                        'connector_type': 'Slack'
-                    }
-                    
-                    stored_scan_id = aggregator.save_scan_result(
-                        username=username,
-                        result=complete_result
-                    )
-                    logger.info(f"Slack Connector: Successfully stored scan result with ID: {stored_scan_id}")
-                    
-                except Exception as store_error:
-                    logger.error(f"Slack Connector: FAILED to store scan result in aggregator: {store_error}")
-                
-                display_enterprise_scan_results(scan_results, 'Slack')
-                
-                # Highlight Netherlands-specific findings
-                if scan_results.get('bsn_instances', 0) > 0:
-                    st.warning(f"⚠️ {scan_results['bsn_instances']} BSN instances found in Slack - UAVG compliance review required")
-                
-                if scan_results.get('kvk_instances', 0) > 0:
-                    st.info(f"🏢 {scan_results['kvk_instances']} KvK numbers detected in workspace")
-            else:
-                st.error(f"Slack scan failed: {scan_results.get('error', 'Unknown error')}")
-        
-        except Exception as e:
-            st.error(f"Slack connector failed: {str(e)}")
-
-def render_jira_connector(region: str, username: str):
-    """Jira project connector interface"""
-    from services.enterprise_connector_scanner import EnterpriseConnectorScanner
-    from utils.activity_tracker import ScannerType
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
-    
-    st.subheader(_('scan.jira_integration', '🎫 Jira Content Integration'))
-    st.write(_('scan.jira_integration_description', 'Scan Jira issues, comments, and attachments for PII with enterprise project management focus and Netherlands specialization.'))
-    
-    # Competitive advantage highlight
-    st.success("🎯 **Enterprise Revenue Driver**: Jira integration enables comprehensive project data scanning. Essential for development teams and enterprise compliance workflows.")
-    
-    # Authentication setup
-    st.markdown(f"### {_('scan.jira_authentication', 'Jira Authentication')}")
-    
-    auth_method = st.radio(
-        _('scan.authentication_method', 'Authentication Method'),
-        [_('scan.api_token', 'API Token'), _('scan.basic_auth', 'Username & Password'), _('scan.demo_mode', 'Demo Mode')],
-        help="Choose authentication method for Jira API access"
-    )
-    
-    credentials = {}
-    
-    if auth_method == _('scan.api_token', 'API Token'):
-        col1, col2 = st.columns(2)
-        with col1:
-            credentials['domain'] = st.text_input("Jira Domain", value="your-company.atlassian.net", help="Your Jira Cloud domain")
-            credentials['username'] = st.text_input("Username/Email", help="Your Jira account email")
-        with col2:
-            credentials['api_token'] = st.text_input("API Token", type="password", help="API token from Jira account settings")
-        
-        st.info("🔑 **Generate API Token**: Account Settings → Security → Create and manage API tokens")
-        
-    elif auth_method == _('scan.basic_auth', 'Username & Password'):
-        col1, col2 = st.columns(2)
-        with col1:
-            credentials['domain'] = st.text_input("Jira Domain", value="your-company.atlassian.net")
-            credentials['username'] = st.text_input("Username")
-        with col2:
-            credentials['password'] = st.text_input("Password", type="password")
-    
-    else:  # Demo Mode
-        st.success("✅ Demo mode enabled - using sample Netherlands Jira project data")
-        credentials = {'domain': 'demo.atlassian.net', 'username': 'demo', 'api_token': 'demo_token'}
-    
-    # Scan configuration
-    st.markdown(f"### {_('scan.scan_configuration', 'Scan Configuration')}")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        scan_issues = st.checkbox("🎫 Issues & Descriptions", value=True, help="Scan issue titles and descriptions")
-        scan_comments = st.checkbox("💭 Comments", value=True, help="Scan issue comments and discussions")
-    with col2:
-        scan_attachments = st.checkbox("📎 Attachments", value=True, help="Scan attached files and documents")
-        scan_custom_fields = st.checkbox("🔧 Custom Fields", value=True, help="Scan custom field values")
-    
-    # Project selection
-    project_filter = st.text_input("Project Filter (optional)", placeholder="e.g., PROJ,DEV,TEST", help="Comma-separated project keys. Leave empty to scan all projects")
-    
-    # Netherlands-specific options
-    st.markdown("### Netherlands Specialization")
-    col1, col2 = st.columns(2)
-    with col1:
-        detect_bsn = st.checkbox("🔍 BSN Detection", value=True, help="Detect BSN numbers in issues and attachments")
-        detect_kvk = st.checkbox("🏢 KvK Detection", value=True, help="Detect KvK company numbers")
-    with col2:
-        detect_iban = st.checkbox("💳 IBAN Detection", value=True, help="Detect Dutch IBAN banking details")
-        uavg_compliance = st.checkbox("⚖️ UAVG Compliance Analysis", value=True, help="Netherlands privacy law compliance")
-    
-    if st.button("🚀 Start Jira Scan", type="primary"):
-        try:
-            scanner = EnterpriseConnectorScanner(
-                connector_type='jira',
-                credentials=credentials,
-                region=region
-            )
-            
-            scan_config = {
-                'scan_issues': scan_issues,
-                'scan_comments': scan_comments,
-                'scan_attachments': scan_attachments,
-                'scan_custom_fields': scan_custom_fields,
-                'project_filter': project_filter.split(',') if project_filter else [],
-                'detect_bsn': detect_bsn,
-                'detect_kvk': detect_kvk,
-                'detect_iban': detect_iban,
-                'uavg_compliance': uavg_compliance
-            }
-            
-            with st.spinner("Scanning Jira projects..."):
-                scan_results = scanner.scan_enterprise_source(scan_config)
-            
-            if scan_results.get('success'):
-                # Store results in aggregator database
-                try:
-                    from services.results_aggregator import ResultsAggregator
-                    aggregator = ResultsAggregator()
-                    
-                    complete_result = {
-                        **scan_results,
-                        'scan_type': 'enterprise connector',
-                        'total_pii_found': scan_results.get('pii_instances_found', 0),
-                        'high_risk_count': scan_results.get('high_risk_findings', 0),
-                        'region': region,
-                        'files_scanned': scan_results.get('total_items_scanned', 0),
-                        'username': username,
-                        'user_id': st.session_state.get('user_id', username),
-                        'connector_type': 'Jira'
-                    }
-                    
-                    stored_scan_id = aggregator.save_scan_result(
-                        username=username,
-                        result=complete_result
-                    )
-                    logger.info(f"Jira Connector: Successfully stored scan result with ID: {stored_scan_id}")
-                    
-                except Exception as store_error:
-                    logger.error(f"Jira Connector: FAILED to store scan result in aggregator: {store_error}")
-                
-                display_enterprise_scan_results(scan_results, 'Jira')
-                
-                # Highlight Netherlands-specific findings
-                if scan_results.get('bsn_instances', 0) > 0:
-                    st.warning(f"⚠️ {scan_results['bsn_instances']} BSN instances found in Jira - UAVG compliance review required")
-                
-                if scan_results.get('kvk_instances', 0) > 0:
-                    st.info(f"🏢 {scan_results['kvk_instances']} KvK numbers detected in projects")
-            else:
-                st.error(f"Jira scan failed: {scan_results.get('error', 'Unknown error')}")
-        
-        except Exception as e:
-            st.error(f"Jira connector failed: {str(e)}")
-
-def render_confluence_connector(region: str, username: str):
-    """Confluence wiki connector interface"""
-    from services.enterprise_connector_scanner import EnterpriseConnectorScanner
-    from utils.activity_tracker import ScannerType
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
-    
-    st.subheader(_('scan.confluence_integration', '📖 Confluence Wiki Integration'))
-    st.write(_('scan.confluence_integration_description', 'Scan Confluence spaces, pages, and attachments for PII with enterprise documentation focus and Netherlands specialization.'))
-    
-    # Competitive advantage highlight
-    st.success("🎯 **Enterprise Revenue Driver**: Confluence integration enables comprehensive wiki and documentation scanning. Essential for knowledge management compliance.")
-    
-    # Authentication setup
-    st.markdown(f"### {_('scan.confluence_authentication', 'Confluence Authentication')}")
-    
-    auth_method = st.radio(
-        _('scan.authentication_method', 'Authentication Method'),
-        [_('scan.api_token', 'API Token'), _('scan.basic_auth', 'Username & Password'), _('scan.demo_mode', 'Demo Mode')],
-        help="Choose authentication method for Confluence API access"
-    )
-    
-    credentials = {}
-    
-    if auth_method == _('scan.api_token', 'API Token'):
-        col1, col2 = st.columns(2)
-        with col1:
-            credentials['domain'] = st.text_input("Confluence Domain", value="your-company.atlassian.net", help="Your Confluence Cloud domain")
-            credentials['username'] = st.text_input("Username/Email", help="Your Confluence account email")
-        with col2:
-            credentials['api_token'] = st.text_input("API Token", type="password", help="API token from Confluence account settings")
-        
-        st.info("🔑 **Generate API Token**: Account Settings → Security → Create and manage API tokens")
-        
-    elif auth_method == _('scan.basic_auth', 'Username & Password'):
-        col1, col2 = st.columns(2)
-        with col1:
-            credentials['domain'] = st.text_input("Confluence Domain", value="your-company.atlassian.net")
-            credentials['username'] = st.text_input("Username")
-        with col2:
-            credentials['password'] = st.text_input("Password", type="password")
-    
-    else:  # Demo Mode
-        st.success("✅ Demo mode enabled - using sample Netherlands Confluence wiki data")
-        credentials = {'domain': 'demo.atlassian.net', 'username': 'demo', 'api_token': 'demo_token'}
-    
-    # Scan configuration
-    st.markdown(f"### {_('scan.scan_configuration', 'Scan Configuration')}")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        scan_pages = st.checkbox("📄 Pages & Content", value=True, help="Scan page content and titles")
-        scan_comments = st.checkbox("💭 Comments", value=True, help="Scan page comments and discussions")
-    with col2:
-        scan_attachments = st.checkbox("📎 Attachments", value=True, help="Scan attached files and documents")
-        scan_blog_posts = st.checkbox("📝 Blog Posts", value=False, help="Scan Confluence blog posts")
-    
-    # Space selection
-    space_filter = st.text_input("Space Filter (optional)", placeholder="e.g., TEAM,DOCS,PROJ", help="Comma-separated space keys. Leave empty to scan all spaces")
-    
-    # Netherlands-specific options
-    st.markdown("### Netherlands Specialization")
-    col1, col2 = st.columns(2)
-    with col1:
-        detect_bsn = st.checkbox("🔍 BSN Detection", value=True, help="Detect BSN numbers in pages and attachments")
-        detect_kvk = st.checkbox("🏢 KvK Detection", value=True, help="Detect KvK company numbers")
-    with col2:
-        detect_iban = st.checkbox("💳 IBAN Detection", value=True, help="Detect Dutch IBAN banking details")
-        uavg_compliance = st.checkbox("⚖️ UAVG Compliance Analysis", value=True, help="Netherlands privacy law compliance")
-    
-    if st.button("🚀 Start Confluence Scan", type="primary"):
-        try:
-            scanner = EnterpriseConnectorScanner(
-                connector_type='confluence',
-                credentials=credentials,
-                region=region
-            )
-            
-            scan_config = {
-                'scan_pages': scan_pages,
-                'scan_comments': scan_comments,
-                'scan_attachments': scan_attachments,
-                'scan_blog_posts': scan_blog_posts,
-                'space_filter': space_filter.split(',') if space_filter else [],
-                'detect_bsn': detect_bsn,
-                'detect_kvk': detect_kvk,
-                'detect_iban': detect_iban,
-                'uavg_compliance': uavg_compliance
-            }
-            
-            with st.spinner("Scanning Confluence wiki..."):
-                scan_results = scanner.scan_enterprise_source(scan_config)
-            
-            if scan_results.get('success'):
-                # Store results in aggregator database
-                try:
-                    from services.results_aggregator import ResultsAggregator
-                    aggregator = ResultsAggregator()
-                    
-                    complete_result = {
-                        **scan_results,
-                        'scan_type': 'enterprise connector',
-                        'total_pii_found': scan_results.get('pii_instances_found', 0),
-                        'high_risk_count': scan_results.get('high_risk_findings', 0),
-                        'region': region,
-                        'files_scanned': scan_results.get('total_items_scanned', 0),
-                        'username': username,
-                        'user_id': st.session_state.get('user_id', username),
-                        'connector_type': 'Confluence'
-                    }
-                    
-                    stored_scan_id = aggregator.save_scan_result(
-                        username=username,
-                        result=complete_result
-                    )
-                    logger.info(f"Confluence Connector: Successfully stored scan result with ID: {stored_scan_id}")
-                    
-                except Exception as store_error:
-                    logger.error(f"Confluence Connector: FAILED to store scan result in aggregator: {store_error}")
-                
-                display_enterprise_scan_results(scan_results, 'Confluence')
-                
-                # Highlight Netherlands-specific findings
-                if scan_results.get('bsn_instances', 0) > 0:
-                    st.warning(f"⚠️ {scan_results['bsn_instances']} BSN instances found in Confluence - UAVG compliance review required")
-                
-                if scan_results.get('kvk_instances', 0) > 0:
-                    st.info(f"🏢 {scan_results['kvk_instances']} KvK numbers detected in wiki pages")
-            else:
-                st.error(f"Confluence scan failed: {scan_results.get('error', 'Unknown error')}")
-        
-        except Exception as e:
-            st.error(f"Confluence connector failed: {str(e)}")
-
 def render_salesforce_connector(region: str, username: str):
     """Salesforce CRM connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     from utils.activity_tracker import ScannerType
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader("💼 Salesforce CRM Integration")
     st.write("Scan Salesforce Accounts, Contacts, and Leads for PII with Netherlands BSN/KvK specialization.")
@@ -6794,11 +6262,6 @@ def render_sap_connector(region: str, username: str):
     """SAP ERP connector interface"""
     from services.enterprise_connector_scanner import EnterpriseConnectorScanner
     from utils.activity_tracker import ScannerType
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     st.subheader("🏭 SAP ERP Integration")
     st.write("Scan SAP HR, Finance, and Master Data modules for PII with Netherlands BSN detection in PA0002, KNA1, LFA1.")
@@ -7219,13 +6682,6 @@ def render_ai_model_scanner_interface(region: str, username: str):
 
 def render_model_analysis_interface(region: str, username: str):
     """Render the traditional model analysis interface"""
-    # Import required modules to avoid unbound variables
-    from utils.activity_tracker import ScannerType
-    import uuid
-    
-    # Initialize variables at function start to avoid UnboundLocalError
-    user_id = st.session_state.get('user_id', username)
-    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     # Model source selection
     st.subheader("Model Source")
@@ -7812,30 +7268,19 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             st.success("✅ AI Model analysis completed!")
         
     except Exception as e:
-        # Track scan failure with safe error handling
-        try:
-            # Ensure variables are defined for error tracking
-            if 'ScannerType' not in locals():
-                from utils.activity_tracker import ScannerType
-            if 'user_id' not in locals():
-                user_id = st.session_state.get('user_id', username)
-            if 'session_id' not in locals():
-                session_id = st.session_state.get('session_id', str(uuid.uuid4()))
-                
-            track_scan_failed_wrapper_safe(
-                scanner_type=ScannerType.AI_MODEL,
-                user_id=user_id,
-                session_id=session_id,
-                error_message=str(e),
-                region=region,
-                details={
-                    'model_source': model_source if 'model_source' in locals() else 'unknown',
-                    'model_type': model_type if 'model_type' in locals() else 'unknown',
-                    'framework': framework if 'framework' in locals() else 'unknown'
-                }
-            )
-        except Exception:
-            logger.warning(f"Activity tracking failed: {e}")
+        # Track scan failure
+        track_scan_failed_wrapper(
+            scanner_type=ScannerType.AI_MODEL,
+            user_id=user_id,
+            session_id=session_id,
+            error_message=str(e),
+            region=region,
+            details={
+                'model_source': model_source,
+                'model_type': model_type,
+                'framework': framework
+            }
+        )
         st.error(f"AI Model analysis failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -8204,7 +7649,7 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper_safe(
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.SOC2,
             user_id=user_id,
             session_id=session_id,
@@ -8839,22 +8284,20 @@ def execute_website_scan(region, username, url, scan_config):
         findings_count = len(scan_results["findings"])
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
         
-        # Track successful completion with safe wrapper
-        track_scan_completed_wrapper_safe(
-            scanner_type=ScannerType.WEBSITE,
-            user_id=user_id,
+        # Track successful completion
+        track_scan_completed(
             session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.WEBSITE,
             findings_count=findings_count,
             files_scanned=scan_results["pages_scanned"],
             compliance_score=scan_results["compliance_score"],
-            scan_type="Website Scanner",
+            duration_ms=scan_duration,
             region=region,
-            file_count=scan_results["pages_scanned"],
-            total_pii_found=findings_count,
-            high_risk_count=high_risk_count,
-            result_data={
+            details={
                 'scan_id': scan_results["scan_id"],
-                'duration_ms': scan_duration,
+                'high_risk_count': high_risk_count,
                 'url': url,
                 'pages_scanned': scan_results["pages_scanned"],
                 'cookies_found': len(scan_results["cookies_found"]),
@@ -8868,7 +8311,7 @@ def execute_website_scan(region, username, url, scan_config):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper_safe(
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.WEBSITE,
             user_id=user_id,
             session_id=session_id,
@@ -9758,22 +9201,20 @@ def execute_enhanced_dpia_scan(region, username, responses):
         findings_count = len(scan_results["findings"])
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
         
-        # Track successful completion with safe wrapper
-        track_scan_completed_wrapper_safe(
-            scanner_type=ScannerType.DPIA,
-            user_id=user_id,
+        # Track successful completion
+        track_scan_completed(
             session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.DPIA,
             findings_count=findings_count,
             files_scanned=1,  # DPIA is a single assessment
             compliance_score=min(100, max(0, 100 - (scan_results["risk_score"] * 10))),
-            scan_type="DPIA Scanner",
+            duration_ms=scan_duration,
             region=region,
-            file_count=1,
-            total_pii_found=findings_count,
-            high_risk_count=high_risk_count,
-            result_data={
+            details={
                 'scan_id': scan_results["scan_id"],
-                'duration_ms': scan_duration,
+                'high_risk_count': high_risk_count,
                 'project_name': responses.get('project_name', 'Unknown'),
                 'risk_score': scan_results["risk_score"],
                 'risk_level': scan_results["risk_level"],
@@ -9789,7 +9230,7 @@ def execute_enhanced_dpia_scan(region, username, responses):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper_safe(
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.DPIA,
             user_id=user_id,
             session_id=session_id,
@@ -10513,22 +9954,20 @@ def execute_sustainability_scan(region, username, scan_params):
         findings_count = len(scan_results["findings"])
         high_risk_count = sum(1 for f in scan_results["findings"] if f.get('severity') in ['Critical', 'High'])
         
-        # Track successful completion with safe wrapper
-        track_scan_completed_wrapper_safe(
-            scanner_type=ScannerType.SUSTAINABILITY,
-            user_id=user_id,
+        # Track successful completion
+        track_scan_completed(
             session_id=session_id,
+            user_id=user_id,
+            username=username,
+            scanner_type=ScannerType.SUSTAINABILITY,
             findings_count=findings_count,
             files_scanned=len(code_bloat_findings) + len(unused_resources),
             compliance_score=scan_results.get('compliance_score', 75),
-            scan_type="Sustainability Scanner",
+            duration_ms=scan_duration,
             region=region,
-            file_count=len(code_bloat_findings) + len(unused_resources),
-            total_pii_found=findings_count,
-            high_risk_count=high_risk_count,
-            result_data={
+            details={
                 'scan_id': scan_results["scan_id"],
-                'duration_ms': scan_duration,
+                'high_risk_count': high_risk_count,
                 'analysis_type': scan_params['analysis_type'],
                 'source_type': scan_params['source_type'],
                 'emissions_region': scan_params.get('emissions_region', 'us-east-1'),
@@ -10543,7 +9982,7 @@ def execute_sustainability_scan(region, username, scan_params):
         
     except Exception as e:
         # Track scan failure
-        track_scan_failed_wrapper_safe(
+        track_scan_failed_wrapper(
             scanner_type=ScannerType.SUSTAINABILITY,
             user_id=user_id,
             session_id=session_id,
@@ -10559,10 +9998,578 @@ def execute_sustainability_scan(region, username, scan_params):
         import traceback
         st.code(traceback.format_exc())
 
-# NOTE: generate_html_report is already defined above through get_html_report_generator()
-# This duplicate definition is removed to prevent "obscured declaration" warnings
-
-
+def generate_html_report(scan_results):
+    """Generate enhanced HTML report using unified translation system"""
+    
+    # Use unified HTML report generator
+    from services.unified_html_report_generator import generate_unified_html_report
+    return generate_unified_html_report(scan_results)
+    source_type = scan_results.get('source_type', 'unknown')
+    scan_type = scan_results.get('scan_type', 'Code Analysis')
+    
+    # For upload files source type, ensure proper data handling
+    if source_type == 'upload_files' or source_type == 'Upload Files':
+        # Handle uploaded files data structure
+        files_scanned = scan_results.get('files_scanned', len(scan_results.get('uploaded_files', [])))
+        if files_scanned == 0 and 'uploaded_files' in scan_results:
+            files_scanned = len(scan_results['uploaded_files'])
+        
+        # Use appropriate source description
+        source_description = t('report.uploaded_files', 'Uploaded Files')
+        repository_info = f"{files_scanned} uploaded files"
+    elif source_type == 'repository' or source_type == 'Repository URL':
+        repository_info = scan_results.get('repository_url', scan_results.get('repo_url', 'Unknown Repository'))
+        source_description = t('report.repository', 'Repository')
+        files_scanned = scan_results.get('files_scanned', 0)
+    else:
+        repository_info = scan_results.get('repository_url', scan_results.get('repo_url', scan_results.get('source', 'Unknown Source')))
+        source_description = t('report.source', 'Source')
+        files_scanned = scan_results.get('files_scanned', 0)
+    
+    # Extract enhanced metrics based on scanner type
+    if scan_results.get('scan_type') == 'Comprehensive Sustainability Scanner':
+        files_scanned = scan_results.get('files_scanned', 156)
+        lines_analyzed = scan_results.get('lines_analyzed', 45720)
+        region = scan_results.get('emissions_region', 'eu-west-1 (Netherlands)')
+        
+        # Sustainability-specific content with translations
+        sustainability_metrics = f"""
+        <div class="sustainability-metrics">
+            <h2>🌍 {t('report.sustainability_report', 'Environmental Impact Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.co2_footprint', 'CO₂ Footprint')}</h3>
+                    <p class="metric-value">{scan_results.get('emissions', {}).get('total_co2_kg_month', 0)} kg/month</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.energy_usage', 'Energy Usage')}</h3>
+                    <p class="metric-value">{scan_results.get('emissions', {}).get('total_energy_kwh_month', 0)} kWh/month</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.waste_cost', 'Waste Cost')}</h3>
+                    <p class="metric-value">${scan_results.get('resources', {}).get('total_waste_cost', 0):.2f}/month</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.sustainability_score', 'Sustainability Score')}</h3>
+                    <p class="metric-value">{scan_results.get('metrics', {}).get('sustainability_score', 0)}/100</p>
+                </div>
+            </div>
+        </div>
+        """
+        
+        # Quick wins section with translations
+        quick_wins_html = f"""
+        <div class="quick-wins">
+            <h2>⚡ {t('technical_terms.recommendations', 'Quick Wins')}</h2>
+            <ul>
+                <li>{t('report.terminate_zombie_vm', 'Terminate zombie VM')} (saves 29.8 kg CO₂e/month)</li>
+                <li>{t('report.delete_orphaned_snapshots', 'Delete orphaned snapshots')} (saves 5.2 kg CO₂e/month)</li>
+                <li>{t('report.remove_unused_dependencies', 'Remove unused dependencies')} (saves 0.6 kg CO₂e/month)</li>
+            </ul>
+            <p><strong>{t('report.total_quick_wins_impact', 'Total Quick Wins Impact')}:</strong> 35.6 kg CO₂e/month + €238.82/month</p>
+        </div>
+        """
+        
+    elif scan_results.get('scan_type') == 'GDPR-Compliant Code Scanner':
+        files_scanned = scan_results.get('files_scanned', 0)
+        lines_analyzed = scan_results.get('lines_analyzed', scan_results.get('total_lines', 0))
+        region = scan_results.get('region', 'Global')
+        
+        # GDPR-specific content with translations
+        gdpr_metrics = f"""
+        <div class="gdpr-metrics">
+            <h2>⚖️ {t('report.gdpr_compliance_report', 'GDPR Compliance Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('technical_terms.compliance_score', 'Compliance Score')}</h3>
+                    <p class="metric-value">{scan_results.get('compliance_score', 85)}%</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.certification', 'Certification')}</h3>
+                    <p class="metric-value">{scan_results.get('certification_type', 'N/A')}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('technical_terms.high_risk', 'High Risk Processing')}</h3>
+                    <p class="metric-value">{'Yes' if scan_results.get('high_risk_processing') else 'No'}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('technical_terms.data_breach', 'Breach Notification')}</h3>
+                    <p class="metric-value">{'Required' if scan_results.get('breach_notification_required') else 'Not Required'}</p>
+                </div>
+            </div>
+        </div>
+        """
+        
+        # Netherlands UAVG compliance section
+        if scan_results.get('netherlands_uavg'):
+            uavg_html = """
+            <div class="uavg-compliance">
+                <h2>🇳🇱 Netherlands UAVG Compliance</h2>
+                <p><strong>Data Residency:</strong> EU/Netherlands compliant</p>
+                <p><strong>BSN Detection:</strong> Monitored for Dutch social security numbers</p>
+                <p><strong>Breach Notification:</strong> 72-hour AP notification framework ready</p>
+                <p><strong>Minor Consent:</strong> Under-16 parental consent verification</p>
+            </div>
+            """
+        else:
+            uavg_html = ""
+        
+        # GDPR Principles breakdown with translations
+        principles = scan_results.get('gdpr_principles', {})
+        gdpr_principles_html = f"""
+        <div class="gdpr-principles">
+            <h2>📋 {t('report.gdpr_principles_assessment', 'GDPR Principles Assessment')}</h2>
+            <table>
+                <tr><th>{t('report.principle', 'Principle')}</th><th>{t('report.violations_detected', 'Violations Detected')}</th><th>{t('report.status', 'Status')}</th></tr>
+                <tr><td>{t('technical_terms.lawfulness', 'Lawfulness, Fairness, Transparency')}</td><td>{principles.get('lawfulness', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('lawfulness', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.data_minimization', 'Data Minimization')}</td><td>{principles.get('data_minimization', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('data_minimization', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.accuracy', 'Accuracy')}</td><td>{principles.get('accuracy', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('accuracy', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.storage_limitation', 'Storage Limitation')}</td><td>{principles.get('storage_limitation', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('storage_limitation', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.integrity_confidentiality', 'Integrity & Confidentiality')}</td><td>{principles.get('integrity_confidentiality', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('integrity_confidentiality', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.transparency', 'Transparency')}</td><td>{principles.get('transparency', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('transparency', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+                <tr><td>{t('technical_terms.accountability', 'Accountability')}</td><td>{principles.get('accountability', 0)}</td><td>{'⚠️ ' + t('report.review_required', 'Review Required') if principles.get('accountability', 0) > 0 else '✅ ' + t('report.compliant', 'Compliant')}</td></tr>
+            </table>
+        </div>
+        """
+        
+        sustainability_metrics = gdpr_metrics + uavg_html + gdpr_principles_html
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'GDPR Website Privacy Compliance Scanner':
+        files_scanned = scan_results.get('pages_scanned', 1)  # Ensure at least 1 page scanned
+        lines_analyzed = "Website Content"
+        region = scan_results.get('region', 'Global')
+        
+        # Website-specific content with translations
+        website_metrics = f"""
+        <div class="website-metrics">
+            <h2>🌐 {t('report.website_compliance_report', 'Website Privacy Compliance Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('technical_terms.compliance_score', 'Compliance Score')}</h3>
+                    <p class="metric-value">{scan_results.get('compliance_score', 85)}%</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.risk_level', 'Risk Level')}</h3>
+                    <p class="metric-value">{scan_results.get('risk_level', 'Unknown')}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.trackers_detected', 'Trackers Detected')}</h3>
+                    <p class="metric-value">{len(scan_results.get('trackers_detected', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.gdpr_violations', 'GDPR Violations')}</h3>
+                    <p class="metric-value">{len(scan_results.get('gdpr_violations', []))}</p>
+                </div>
+            </div>
+        </div>
+        """
+        
+        # Cookie consent analysis
+        consent_found = scan_results.get('consent_mechanism', {}).get('found', False)
+        dark_patterns = scan_results.get('dark_patterns', [])
+        
+        # Generate dark patterns HTML separately to avoid f-string nesting issues
+        dark_patterns_html = ""
+        if dark_patterns:
+            pattern_items = []
+            for dp in dark_patterns:
+                pattern_type = dp.get('type', 'Unknown')
+                pattern_desc = dp.get('description', 'No description')
+                pattern_items.append(f"<li><strong>{pattern_type}</strong>: {pattern_desc}</li>")
+            dark_patterns_html = f'<div class="dark-patterns"><h3>{t("report.dark_pattern_violations", "Dark Pattern Violations")}:</h3><ul>{"".join(pattern_items)}</ul></div>'
+        
+        cookie_analysis = f"""
+        <div class="cookie-analysis">
+            <h2>🍪 {t('report.cookie_consent_analysis', 'Cookie Consent Analysis')}</h2>
+            <p><strong>{t('report.consent_mechanism', 'Consent Mechanism')}:</strong> {'✅ ' + t('report.found', 'Found') if consent_found else '❌ ' + t('report.missing', 'Missing')}</p>
+            <p><strong>{t('report.dark_patterns_detected', 'Dark Patterns Detected')}:</strong> {len(dark_patterns)}</p>
+            {dark_patterns_html}
+        </div>
+        """
+        
+        # Tracker analysis
+        trackers = scan_results.get('trackers_detected', [])
+        tracker_analysis = f"""
+        <div class="tracker-analysis">
+            <h2>🎯 {t('report.third_party_tracker_analysis', 'Third-Party Tracker Analysis')}</h2>
+            <table>
+                <tr><th>{t('report.tracker_name', 'Tracker Name')}</th><th>{t('report.type', 'Type')}</th><th>{t('report.gdpr_risk', 'GDPR Risk')}</th><th>{t('report.data_transfer', 'Data Transfer')}</th></tr>
+                {"".join([f"<tr><td>{t.get('name', 'Unknown')}</td><td>{t.get('type', 'Unknown')}</td><td>{t.get('gdpr_risk', 'Unknown')}</td><td>{t.get('data_transfer', 'Unknown')}</td></tr>" for t in trackers[:10]])}
+            </table>
+        </div>
+        """
+        
+        # GDPR Compliance Section
+        gdpr_compliance = f"""
+        <div class="gdpr-compliance" style="background: #f8fafc; border-radius: 10px; padding: 25px; margin: 20px 0;">
+            <h2 style="color: #1e40af; margin-bottom: 20px;">⚖️ {t('report.gdpr_compliance_report', 'GDPR Compliance Analysis')}</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h3 style="color: #059669;">✅ {t('report.gdpr_articles_assessed', 'GDPR Articles Assessed')}</h3>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>Article 4(11)</strong> - {t('report.definition_of_consent', 'Definition of consent')}</li>
+                        <li><strong>Article 6(1)(a)</strong> - {t('report.consent_as_legal_basis', 'Consent as legal basis')}</li>
+                        <li><strong>Article 7</strong> - {t('report.conditions_for_consent', 'Conditions for consent')}</li>
+                        <li><strong>Article 7(3)</strong> - {t('report.withdrawal_of_consent', 'Withdrawal of consent')}</li>
+                        <li><strong>Article 12-14</strong> - {t('report.transparent_information', 'Transparent information')}</li>
+                        <li><strong>Article 44-49</strong> - {t('report.international_transfers', 'International transfers')}</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #dc2626;">🚨 {t('report.compliance_status', 'Compliance Status')}</h3>
+                    <p><strong>{t('report.overall_score', 'Overall Score')}:</strong> <span style="font-size: 24px; color: {'#059669' if scan_results.get('compliance_score', 85) >= 80 else '#dc2626'};">{scan_results.get('compliance_score', 85)}%</span></p>
+                    <p><strong>{t('report.risk_level', 'Risk Level')}:</strong> <span style="color: {'#059669' if scan_results.get('risk_level') == 'Low' else '#dc2626'};">{scan_results.get('risk_level', 'Unknown')}</span></p>
+                    <p><strong>{t('report.total_violations', 'Total Violations')}:</strong> {len(scan_results.get('gdpr_violations', []))}</p>
+                    <p><strong>{t('report.dark_patterns', 'Dark Patterns')}:</strong> {len(scan_results.get('dark_patterns', []))}</p>
+                </div>
+            </div>
+            
+            <h3 style="color: #1e40af; margin-top: 25px;">📋 {t('report.gdpr_checklist', 'GDPR Checklist')}</h3>
+            <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <p>{'✅' if scan_results.get('consent_mechanism', {}).get('found') else '❌'} <strong>{t('report.consent_mechanism', 'Consent Mechanism')}</strong></p>
+                        <p>{'✅' if scan_results.get('privacy_policy_status') else '❌'} <strong>{t('technical_terms.privacy_notice', 'Privacy Policy')}</strong></p>
+                        <p>{'✅' if scan_results.get('gdpr_rights_available') else '❌'} <strong>{t('report.data_subject_rights', 'Data Subject Rights')}</strong></p>
+                    </div>
+                    <div>
+                        <p>{'✅' if len(scan_results.get('dark_patterns', [])) == 0 else '❌'} <strong>{t('report.no_dark_patterns', 'No Dark Patterns')}</strong></p>
+                        <p>{'✅' if len([t for t in scan_results.get('trackers_detected', []) if t.get('requires_consent')]) == 0 else '❌'} <strong>{t('report.consent_for_tracking', 'Consent for Tracking')}</strong></p>
+                        <p>{'✅' if len([t for t in scan_results.get('trackers_detected', []) if t.get('data_transfer') == 'Non-EU']) == 0 else '❌'} <strong>{t('report.no_non_eu_transfers', 'No Non-EU Transfers')}</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """
+        
+        # Netherlands compliance
+        if scan_results.get('netherlands_compliance'):
+            nl_violations = [v for v in scan_results.get('gdpr_violations', []) if 'Dutch' in v.get('description', '')]
+            nl_compliance = f"""
+            <div class="nl-compliance" style="background: #fef3c7; border-radius: 10px; padding: 25px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                <h2 style="color: #92400e;">🇳🇱 {t('report.netherlands_ap_authority_compliance', 'Netherlands AP Authority Compliance')}</h2>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                    <h3 style="color: #92400e;">{t('report.dutch_privacy_law_requirements', 'Dutch Privacy Law (UAVG) Requirements')}</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <p><strong>{t('report.region', 'Region')}:</strong> Netherlands</p>
+                            <p><strong>{t('report.applicable_law', 'Applicable Law')}:</strong> UAVG (Dutch GDPR)</p>
+                            <p><strong>{t('report.authority', 'Authority')}:</strong> Autoriteit Persoonsgegevens (AP)</p>
+                        </div>
+                        <div>
+                            <p><strong>{t('report.dutch_specific_violations', 'Dutch-Specific Violations')}:</strong> {len(nl_violations)}</p>
+                            <p><strong>{t('report.reject_all_button', 'Reject All Button')}:</strong> {'✅ ' + t('report.found', 'Found') if not any('REJECT_ALL' in dp.get('type', '') for dp in dark_patterns) else '❌ ' + t('report.missing_required_since_2022', 'Missing (Required since 2022)')}</p>
+                            <p><strong>Google Analytics:</strong> {'⚠️ ' + t('report.detected_requires_anonymization', 'Detected - Requires anonymization') if any('Google Analytics' in t.get('name', '') for t in scan_results.get('trackers_detected', [])) else '✅ ' + t('report.not_detected', 'Not detected')}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="color: #92400e;">🏛️ {t('report.dutch_business_compliance', 'Dutch Business Compliance')}</h3>
+                <div style="background: white; padding: 15px; border-radius: 8px;">
+                    <p>{'✅' if not any('MISSING_DUTCH_IMPRINT' in v.get('type', '') for v in scan_results.get('gdpr_violations', [])) else '❌'} <strong>Colofon (Imprint)</strong> - {t('report.business_details_page', 'Business details page')}</p>
+                    <p>{'✅' if not any('MISSING_KVK_NUMBER' in v.get('type', '') for v in scan_results.get('gdpr_violations', [])) else '❌'} <strong>KvK Number</strong> - {t('report.chamber_of_commerce_registration', 'Chamber of Commerce registration')}</p>
+                    <p>{'✅' if len([dp for dp in dark_patterns if dp.get('type') == 'PRE_TICKED_MARKETING']) == 0 else '❌'} <strong>{t('report.no_pre_ticked_marketing', 'No Pre-ticked Marketing')}</strong> - {t('report.forbidden_under_dutch_law', 'Forbidden under Dutch law')}</p>
+                </div>
+            </div>
+            """
+        else:
+            nl_compliance = ""
+        
+        sustainability_metrics = website_metrics + cookie_analysis + tracker_analysis + gdpr_compliance + nl_compliance
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'Document Scanner':
+        files_scanned = scan_results.get('files_scanned', len(scan_results.get('findings', [])))
+        lines_analyzed = scan_results.get('lines_analyzed', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # Document scanner specific content
+        document_metrics = f"""
+        <div class="document-metrics">
+            <h2>📄 {t('report.document_scanner_report', 'Document Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.documents_scanned', 'Documents Scanned')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.pii_instances', 'PII Instances')}</h3>
+                    <p class="metric-value">{len(scan_results.get('findings', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.highest_risk', 'Highest Risk')}</h3>
+                    <p class="metric-value">{max([f.get('severity', 'Low') for f in scan_results.get('findings', [])], default='Low')}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('technical_terms.compliance_score', 'Compliance Score')}</h3>
+                    <p class="metric-value">{scan_results.get('compliance_score', 85)}%</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = document_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'Image Scanner':
+        files_scanned = scan_results.get('files_scanned', len(scan_results.get('findings', [])))
+        lines_analyzed = scan_results.get('lines_analyzed', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # Image scanner specific content
+        image_metrics = f"""
+        <div class="image-metrics">
+            <h2>🖼️ {t('report.image_scanner_report', 'Image Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.images_scanned', 'Images Scanned')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.text_extracted', 'Text Extracted')}</h3>
+                    <p class="metric-value">{scan_results.get('text_extracted', 'Yes')}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.pii_detected', 'PII Detected')}</h3>
+                    <p class="metric-value">{len(scan_results.get('findings', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('technical_terms.compliance_score', 'Compliance Score')}</h3>
+                    <p class="metric-value">{scan_results.get('compliance_score', 90)}%</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = image_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'Database Scanner':
+        files_scanned = scan_results.get('tables_scanned', 0)
+        lines_analyzed = scan_results.get('records_analyzed', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # Database scanner specific content
+        database_metrics = f"""
+        <div class="database-metrics">
+            <h2>🗄️ {t('report.database_scanner_report', 'Database Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.tables_scanned', 'Tables Scanned')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.records_analyzed', 'Records Analyzed')}</h3>
+                    <p class="metric-value">{lines_analyzed:,}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.sensitive_data_found', 'Sensitive Data Found')}</h3>
+                    <p class="metric-value">{len(scan_results.get('findings', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('technical_terms.compliance_score', 'Compliance Score')}</h3>
+                    <p class="metric-value">{scan_results.get('compliance_score', 75)}%</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = database_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') in ['Comprehensive API Security Scanner', 'API Scanner']:
+        files_scanned = scan_results.get('endpoints_scanned', 0)
+        lines_analyzed = scan_results.get('api_calls_analyzed', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # API scanner specific content
+        api_metrics = f"""
+        <div class="api-metrics">
+            <h2>🔌 {t('report.api_scanner_report', 'API Security Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.endpoints_scanned', 'Endpoints Scanned')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.vulnerabilities_found', 'Vulnerabilities Found')}</h3>
+                    <p class="metric-value">{len(scan_results.get('findings', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.security_score', 'Security Score')}</h3>
+                    <p class="metric-value">{scan_results.get('security_score', 80)}%</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.risk_level', 'Risk Level')}</h3>
+                    <p class="metric-value">{scan_results.get('risk_level', 'Medium')}</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = api_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'AI Model Scanner':
+        files_scanned = scan_results.get('files_scanned', 1)
+        lines_analyzed = scan_results.get('lines_analyzed', scan_results.get('total_lines', 0))
+        region = scan_results.get('region', 'Global')
+        
+        # AI Model scanner specific content
+        ai_metrics = f"""
+        <div class="ai-metrics">
+            <h2>🤖 {t('report.ai_model_scanner_report', 'AI Model Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.model_files_analyzed', 'Model Files Analyzed')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.privacy_issues', 'Privacy Issues')}</h3>
+                    <p class="metric-value">{len([f for f in scan_results.get('findings', []) if 'privacy' in f.get('type', '').lower()])}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.bias_detected', 'Bias Detected')}</h3>
+                    <p class="metric-value">{len([f for f in scan_results.get('findings', []) if 'bias' in f.get('type', '').lower()])}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.ai_act_compliance', 'AI Act Compliance')}</h3>
+                    <p class="metric-value">{scan_results.get('ai_act_compliance_score', 85)}%</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = ai_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'SOC2 Scanner':
+        files_scanned = scan_results.get('controls_evaluated', 0)
+        lines_analyzed = scan_results.get('evidence_reviewed', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # SOC2 scanner specific content
+        soc2_metrics = f"""
+        <div class="soc2-metrics">
+            <h2>🛡️ {t('report.soc2_scanner_report', 'SOC2 Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.controls_evaluated', 'Controls Evaluated')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.compliance_gaps', 'Compliance Gaps')}</h3>
+                    <p class="metric-value">{len(scan_results.get('findings', []))}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.soc2_score', 'SOC2 Score')}</h3>
+                    <p class="metric-value">{scan_results.get('soc2_score', 78)}%</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.readiness_level', 'Readiness Level')}</h3>
+                    <p class="metric-value">{scan_results.get('readiness_level', 'Partial')}</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = soc2_metrics
+        quick_wins_html = ""
+        
+    elif scan_results.get('scan_type') == 'DPIA Scanner':
+        files_scanned = scan_results.get('assessments_completed', 1)
+        lines_analyzed = scan_results.get('questions_answered', 0)
+        region = scan_results.get('region', 'Global')
+        
+        # DPIA scanner specific content
+        dpia_metrics = f"""
+        <div class="dpia-metrics">
+            <h2>📋 {t('report.dpia_scanner_report', 'DPIA Scanner Analysis')}</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{t('report.assessments_completed', 'Assessments Completed')}</h3>
+                    <p class="metric-value">{files_scanned}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.high_risk_processing', 'High Risk Processing')}</h3>
+                    <p class="metric-value">{len([f for f in scan_results.get('findings', []) if f.get('severity') == 'High'])}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.dpia_score', 'DPIA Score')}</h3>
+                    <p class="metric-value">{scan_results.get('dpia_score', 82)}%</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.recommendations', 'Recommendations')}</h3>
+                    <p class="metric-value">{len(scan_results.get('recommendations', []))}</p>
+                </div>
+            </div>
+        </div>
+        """
+        sustainability_metrics = dpia_metrics
+        quick_wins_html = ""
+        
+    else:
+        files_scanned = scan_results.get('files_scanned', 0)
+        lines_analyzed = scan_results.get('lines_analyzed', scan_results.get('total_lines', 0))
+        region = scan_results.get('region', 'Global')
+        sustainability_metrics = ""
+        quick_wins_html = ""
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>DataGuardian Pro - {scan_results['scan_type']} Report</title>
+        <style>
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; color: #333; }}
+            .header {{ background: linear-gradient(135deg, #1f77b4, #2196F3); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }}
+            .summary {{ margin: 20px 0; padding: 25px; background: #f8f9fa; border-radius: 10px; border-left: 5px solid #28a745; }}
+            .sustainability-metrics {{ margin: 30px 0; padding: 25px; background: #e8f5e8; border-radius: 10px; }}
+            .metrics-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }}
+            .metric-card {{ background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+            .metric-value {{ font-size: 24px; font-weight: bold; color: #1f77b4; margin: 10px 0; }}
+            .quick-wins {{ margin: 30px 0; padding: 25px; background: #fff3cd; border-radius: 10px; border-left: 5px solid #ffc107; }}
+            .finding {{ margin: 15px 0; padding: 20px; border-left: 4px solid #dc3545; background: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+            .finding.high {{ border-left-color: #fd7e14; }}
+            .finding.medium {{ border-left-color: #ffc107; }}
+            .finding.low {{ border-left-color: #28a745; }}
+            table {{ width: 100%; border-collapse: collapse; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+            th, td {{ padding: 15px; border: 1px solid #dee2e6; text-align: left; }}
+            th {{ background: #6c757d; color: white; font-weight: 600; }}
+            .footer {{ margin-top: 40px; padding: 20px; background: #6c757d; color: white; text-align: center; border-radius: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🛡️ {t('report.dataGuardian_pro', 'DataGuardian Pro')} {t('report.gdpr_compliance_report', 'Comprehensive Report')}</h1>
+            <p><strong>{t('report.scan_type', 'Scan Type')}:</strong> {scan_results['scan_type']}</p>
+            <p><strong>{t('report.scan_id', 'Scan ID')}:</strong> {scan_results['scan_id'][:8]}...</p>
+            <p><strong>{t('report.generated_on', 'Generated')}:</strong> {scan_results['timestamp']}</p>
+            <p><strong>{t('report.region', 'Region')}:</strong> {region}</p>
+        </div>
+        
+        <div class="summary">
+            <h2>📊 {t('report.executive_summary', 'Executive Summary')}</h2>
+            <p><strong>{t('report.files_scanned', 'Pages Scanned' if scan_results.get('scan_type') == 'GDPR Website Privacy Compliance Scanner' else 'Files Scanned')}:</strong> {files_scanned:,}</p>
+            <p><strong>{t('report.total_findings', 'Total Findings')}:</strong> {len(scan_results.get('findings', []))}</p>
+            <p><strong>{t('report.lines_analyzed', 'Content Analysis' if scan_results.get('scan_type') == 'GDPR Website Privacy Compliance Scanner' else 'Lines Analyzed')}:</strong> {lines_analyzed if isinstance(lines_analyzed, str) else f"{lines_analyzed:,}"}</p>
+            <p><strong>{t('report.critical', 'Critical Issues')}:</strong> {len([f for f in scan_results.get('findings', []) if f.get('severity') == 'Critical'])}</p>
+            <p><strong>{t('technical_terms.high_risk', 'High Risk Issues')}:</strong> {len([f for f in scan_results.get('findings', []) if f.get('severity') == 'High'])}</p>
+        </div>
+        
+        {sustainability_metrics}
+        {quick_wins_html}
+        
+        <div class="findings">
+            <h2>🔍 {t('report.detailed_findings', 'Detailed Findings')}</h2>
+            {generate_findings_html(scan_results.get('findings', []))}
+        </div>
+        
+        <div class="footer">
+            <p>{t('report.generated_by', 'Generated by')} {t('report.dataGuardian_pro', 'DataGuardian Pro')} - {t('report.privacy_compliance_platform', 'Enterprise Privacy & Sustainability Compliance Platform')}</p>
+            <p>Report ID: {scan_results['scan_id']} | {t('report.generated_on', 'Generated')}: {scan_results['timestamp']}</p>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
 
 def generate_findings_html(findings):
     """Generate enhanced HTML for findings section with comprehensive data"""
