@@ -4447,7 +4447,6 @@ def render_database_scanner_interface(region: str, username: str):
         password = st.text_input("Password", type="password")
         
         # SSL/TLS Configuration (Advanced) - Initialize variables at function start to avoid scope issues
-        ssl_mode = "Auto-detect"  # Default value
         # Initialize SSL variables at function scope to avoid "possibly unbound" errors
         ssl_mode = "Auto-detect"
         ssl_cert_path = ""
@@ -7181,6 +7180,13 @@ def render_ai_model_scanner_interface(region: str, username: str):
 
 def render_model_analysis_interface(region: str, username: str):
     """Render the traditional model analysis interface"""
+    # Import required modules to avoid unbound variables
+    from utils.activity_tracker import ScannerType
+    import uuid
+    
+    # Initialize variables at function start to avoid UnboundLocalError
+    user_id = st.session_state.get('user_id', username)
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
     
     # Model source selection
     st.subheader("Model Source")
