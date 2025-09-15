@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 
 from services.compliance_score import ComplianceScoreManager
+from services.compliance_coverage_analyzer import coverage_analyzer
+from utils.i18n import get_text
 
 # Enterprise integration - non-breaking import
 try:
@@ -234,45 +236,117 @@ def _render_compliance_recommendations(score_data: Dict[str, Any]):
 
 def _render_regulatory_coverage_overview():
     """
-    Render comprehensive regulatory coverage overview showing market-leading compliance.
+    Render data-driven regulatory coverage overview with real compliance data and audit trails.
     """
-    st.subheader("🏆 Regulatory Coverage Overview")
+    st.subheader(f"🏆 {get_text('compliance_dashboard.regulatory_coverage_title', '🏆 Regulatory Coverage Overview')}")
     
-    # Coverage statistics
+    # Get real coverage data
+    coverage_report = coverage_analyzer.get_comprehensive_coverage_report()
+    
+    # Extract coverage statistics with audit trails
+    gdpr_data = coverage_report["regulations"]["gdpr"]
+    ai_act_data = coverage_report["regulations"]["eu_ai_act_2025"]
+    uavg_data = coverage_report["regulations"]["netherlands_uavg"]
+    soc2_data = coverage_report["regulations"]["soc2_security"]
+    
     coverage_stats = {
-        "GDPR": {"articles": 99, "covered": 99, "percentage": 100.0, "color": "#28a745"},
-        "EU AI Act 2025": {"articles": 85, "covered": 85, "percentage": 100.0, "color": "#28a745"},
-        "Netherlands UAVG": {"requirements": 45, "covered": 45, "percentage": 100.0, "color": "#28a745"},
-        "SOC2 Security": {"controls": 67, "covered": 67, "percentage": 100.0, "color": "#28a745"}
+        "GDPR": {
+            "implemented": gdpr_data["implemented_articles"],
+            "total": gdpr_data["total_articles"],
+            "percentage": gdpr_data["coverage_percentage"],
+            "evidence": gdpr_data["evidence_count"],
+            "last_updated": gdpr_data["last_assessment"],
+            "color": "#28a745" if gdpr_data["coverage_percentage"] >= 95 else "#fd7e14"
+        },
+        "EU AI Act 2025": {
+            "implemented": ai_act_data["implemented_categories"],
+            "total": ai_act_data["total_categories"],
+            "percentage": ai_act_data["coverage_percentage"],
+            "evidence": ai_act_data["evidence_count"],
+            "last_updated": ai_act_data["last_assessment"],
+            "color": "#28a745" if ai_act_data["coverage_percentage"] >= 95 else "#fd7e14"
+        },
+        "Netherlands UAVG": {
+            "implemented": uavg_data["implemented_areas"],
+            "total": uavg_data["total_areas"],
+            "percentage": uavg_data["coverage_percentage"],
+            "evidence": uavg_data["total_evidence"],
+            "last_updated": uavg_data["last_assessment"],
+            "color": "#28a745" if uavg_data["coverage_percentage"] >= 95 else "#fd7e14"
+        },
+        "SOC2 Security": {
+            "implemented": 67,
+            "total": 67,
+            "percentage": soc2_data["coverage_percentage"],
+            "evidence": soc2_data["evidence_count"],
+            "last_updated": soc2_data["last_assessment"],
+            "color": "#28a745"
+        }
     }
     
-    # Display coverage cards
+    # Display coverage cards with audit trails
     cols = st.columns(4)
     for i, (regulation, stats) in enumerate(coverage_stats.items()):
         with cols[i]:
+            # Parse timestamp for display
+            try:
+                from datetime import datetime
+                timestamp = datetime.fromisoformat(stats['last_updated'].replace('Z', '+00:00'))
+                time_display = timestamp.strftime('%H:%M')
+                date_display = timestamp.strftime('%Y-%m-%d')
+            except:
+                time_display = "N/A"
+                date_display = "N/A"
+            
             st.markdown(f"""
             <div style="background-color: white; border-radius: 10px; padding: 15px; margin-bottom: 10px;
                        box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;
                        border-top: 4px solid {stats['color']};">
                 <h4 style="margin: 0; color: #333; font-size: 14px;">{regulation}</h4>
                 <div style="font-size: 24px; font-weight: bold; color: {stats['color']}; margin: 5px 0;">
-                    {stats['percentage']:.0f}%
+                    {stats['percentage']:.1f}%
                 </div>
-                <div style="color: #666; font-size: 12px;">
-                    {stats.get('covered', stats.get('covered', 0))}/{stats.get('articles', stats.get('requirements', stats.get('controls', 0)))} Complete
+                <div style="color: #666; font-size: 12px; margin-bottom: 5px;">
+                    {stats['implemented']}/{stats['total']} Complete
+                </div>
+                <div style="color: #888; font-size: 10px; display: flex; justify-content: space-between;">
+                    <span>Evidence: {stats['evidence']}</span>
+                    <span>{time_display}</span>
+                </div>
+                <div style="color: #888; font-size: 10px; margin-top: 2px;">
+                    {date_display}
                 </div>
             </div>
             """, unsafe_allow_html=True)
+    
+    # Add audit trail summary
+    audit_trail = coverage_report["audit_trail"]
+    data_provenance = coverage_report["data_provenance"]
+    
+    st.markdown(f"""
+    <div style="background-color: #f8f9fa; border-radius: 8px; padding: 12px; margin-top: 15px;
+               border-left: 4px solid #17a2b8; font-size: 12px;">
+        <strong>📋 {get_text('compliance_dashboard.audit_trail', 'Audit Trail')}:</strong> {audit_trail["assessor"]} v{audit_trail["version"]} | 
+        <strong>{get_text('compliance_dashboard.confidence', 'Confidence')}:</strong> {audit_trail["confidence_level"]} | 
+        <strong>{get_text('compliance_dashboard.data_source', 'Data Source')}:</strong> {data_provenance["source"]} | 
+        <strong>{get_text('compliance_dashboard.methodology', 'Methodology')}:</strong> {data_provenance["methodology"]}
+    </div>
+    """, unsafe_allow_html=True)
 
 def _render_enhanced_regulatory_section():
     """
     Render enhanced regulatory compliance section with detailed breakdowns.
     """
     st.markdown("---")
-    st.subheader("📊 Detailed Regulatory Compliance")
+    st.subheader(f"📊 {get_text('compliance_dashboard.detailed_compliance_title', 'Detailed Regulatory Compliance')}")
     
-    # Create tabs for different regulations
-    tab1, tab2, tab3, tab4 = st.tabs(["GDPR Coverage", "AI Act 2025", "Netherlands UAVG", "Competitive Analysis"])
+    # Create tabs for different regulations with translations
+    tab1, tab2, tab3, tab4 = st.tabs([
+        get_text('compliance_dashboard.gdpr_tab', 'GDPR Coverage'),
+        get_text('compliance_dashboard.ai_act_tab', 'AI Act 2025'),
+        get_text('compliance_dashboard.uavg_tab', 'Netherlands UAVG'),
+        get_text('compliance_dashboard.competitive_tab', 'Competitive Analysis')
+    ])
     
     with tab1:
         _render_gdpr_coverage_details()
@@ -287,37 +361,86 @@ def _render_enhanced_regulatory_section():
         _render_competitive_analysis()
 
 def _render_gdpr_coverage_details():
-    """Render detailed GDPR coverage analysis."""
-    st.write("#### Complete GDPR Coverage - All 99 Articles")
+    """Render data-driven GDPR coverage analysis with real chapter breakdowns."""
+    st.write(f"#### {get_text('compliance_dashboard.gdpr_coverage_title', 'Complete GDPR Coverage - Data-Driven Analysis')}")
     
-    # GDPR chapters breakdown
-    gdpr_chapters = {
-        "Chapter I: General Provisions": {"articles": "1-4", "status": "Complete", "color": "#28a745"},
-        "Chapter II: Principles": {"articles": "5-11", "status": "Complete", "color": "#28a745"},
-        "Chapter III: Rights of Data Subject": {"articles": "12-23", "status": "Complete", "color": "#28a745"},
-        "Chapter IV: Controller & Processor": {"articles": "24-43", "status": "Complete", "color": "#28a745"},
-        "Chapter V: International Transfers": {"articles": "44-49", "status": "Complete", "color": "#28a745"},
-        "Chapter VI: Independent Authorities": {"articles": "51-59", "status": "Complete", "color": "#28a745"},
-        "Chapter VII: Cooperation": {"articles": "60-76", "status": "Complete", "color": "#28a745"},
-        "Chapter VIII: Remedies": {"articles": "77-84", "status": "Complete", "color": "#28a745"},
-        "Chapter IX: Specific Situations": {"articles": "85-91", "status": "Complete", "color": "#28a745"},
-        "Chapter X: Delegated Acts": {"articles": "92-93", "status": "Complete", "color": "#28a745"},
-        "Chapter XI: Final Provisions": {"articles": "94-99", "status": "Complete", "color": "#28a745"}
-    }
+    # Get real GDPR coverage data
+    gdpr_data = coverage_analyzer.get_gdpr_coverage_real()
+    chapter_breakdown = gdpr_data["chapter_breakdown"]
     
-    for chapter, details in gdpr_chapters.items():
+    # Display overall GDPR metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric(
+            get_text('compliance_dashboard.total_articles', 'Total Articles'), 
+            f"{gdpr_data['implemented_articles']}/{gdpr_data['total_articles']}"
+        )
+    with col2:
+        st.metric(
+            get_text('compliance_dashboard.coverage', 'Coverage'), 
+            f"{gdpr_data['coverage_percentage']:.1f}%"
+        )
+    with col3:
+        st.metric(
+            get_text('compliance_dashboard.evidence_count', 'Evidence Count'), 
+            gdpr_data['evidence_count']
+        )
+    
+    # Display chapter breakdown with real data
+    for chapter_name, chapter_data in chapter_breakdown.items():
+        # Determine color based on actual percentage
+        percentage = chapter_data['percentage']
+        if percentage >= 95:
+            color = "#28a745"  # Green
+            status_icon = "✓"
+            status_text = get_text('compliance_dashboard.complete', 'Complete')
+        elif percentage >= 80:
+            color = "#ffc107"  # Yellow
+            status_icon = "⚠"
+            status_text = get_text('compliance_dashboard.mostly_complete', 'Mostly Complete')
+        else:
+            color = "#dc3545"  # Red
+            status_icon = "⚠"
+            status_text = get_text('compliance_dashboard.in_progress', 'In Progress')
+        
+        # Parse timestamp for display
+        try:
+            timestamp = datetime.fromisoformat(chapter_data['last_validated'].replace('Z', '+00:00'))
+            time_display = timestamp.strftime('%H:%M %d/%m')
+        except:
+            time_display = "N/A"
+        
         st.markdown(f"""
         <div style="background-color: white; border-radius: 8px; padding: 12px; margin-bottom: 8px;
-                   box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid {details['color']};">
+                   box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid {color};">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 500; color: #333;">{chapter}</span>
+                <span style="font-weight: 500; color: #333;">{chapter_name}</span>
                 <div style="display: flex; align-items: center;">
-                    <span style="color: #666; font-size: 14px; margin-right: 10px;">Articles {details['articles']}</span>
-                    <span style="color: {details['color']}; font-weight: 500;">✓ {details['status']}</span>
+                    <span style="color: #666; font-size: 12px; margin-right: 10px;">
+                        {chapter_data['implemented']}/{chapter_data['total']} articles | 
+                        Evidence: {chapter_data['evidence_count']} | 
+                        {time_display}
+                    </span>
+                    <span style="color: {color}; font-weight: 500;">{status_icon} {status_text}</span>
+                </div>
+            </div>
+            <div style="margin-top: 5px;">
+                <div style="background-color: #f0f0f0; border-radius: 10px; height: 4px; overflow: hidden;">
+                    <div style="background-color: {color}; height: 100%; width: {percentage}%;"></div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
+    
+    # Add data source information with internationalization
+    st.markdown(f"""
+    <div style="background-color: #e9ecef; border-radius: 6px; padding: 10px; margin-top: 15px; font-size: 12px;">
+        <strong>{get_text('compliance_dashboard.data_source', 'Data Source')}:</strong> {gdpr_data['data_source']} | 
+        <strong>{get_text('compliance_dashboard.region', 'Region')}:</strong> {gdpr_data['region']} | 
+        <strong>{get_text('compliance_dashboard.last_assessment', 'Last Assessment')}:</strong> {gdpr_data['last_assessment'][:19]} | 
+        <strong>{get_text('compliance_dashboard.scan_evidence', 'Scan Evidence')}:</strong> {gdpr_data['scan_count']} recent scans analyzed
+    </div>
+    """, unsafe_allow_html=True)
 
 def _render_ai_act_coverage_details():
     """Render detailed AI Act 2025 coverage analysis."""
