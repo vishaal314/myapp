@@ -2299,6 +2299,58 @@ def render_dashboard():
                     'energy': '🌱 Energy Scanner',
                     'green': '🌱 Green Scanner',
                     
+                    # 11. Enterprise Connector Scanner (all variations)
+                    'enterprise': '🏢 Enterprise Connector Scanner',
+                    'enterprise_connector': '🏢 Enterprise Connector Scanner',
+                    'connector': '🏢 Enterprise Connector Scanner',
+                    'connectors_e2e': '🏢 Enterprise Connectors',
+                    'connector_e2e': '🏢 Enterprise Connectors',
+                    'connector_test': '🏢 Enterprise Connectors',
+                    'enterprise_e2e': '🏢 Enterprise Connectors',
+                    
+                    # Microsoft 365 Connectors
+                    'microsoft365': '🏢 Microsoft 365',
+                    'microsoft_365': '🏢 Microsoft 365',
+                    'ms365': '🏢 Microsoft 365',
+                    'office365': '🏢 Office 365',
+                    'office_365': '🏢 Office 365',
+                    'outlook': '📧 Outlook Scanner',
+                    'exchange': '📧 Exchange Scanner',
+                    'sharepoint': '📁 SharePoint Scanner',
+                    'onedrive': '☁️ OneDrive Scanner',
+                    'one_drive': '☁️ OneDrive Scanner',
+                    'teams': '💬 Teams Scanner',
+                    
+                    # Google Workspace Connectors
+                    'google_workspace': '🏢 Google Workspace',
+                    'google_drive': '☁️ Google Drive Scanner',
+                    'drive': '☁️ Google Drive Scanner',
+                    'gmail': '📧 Gmail Scanner',
+                    'google_docs': '📄 Google Docs Scanner',
+                    'google_sheets': '📊 Google Sheets Scanner',
+                    'google_slides': '📽️ Google Slides Scanner',
+                    'google_calendar': '📅 Google Calendar Scanner',
+                    
+                    # Exact Online Connectors
+                    'exact_online': '💼 Exact Online Scanner',
+                    'exact': '💼 Exact Online Scanner',
+                    'accounting': '💼 Accounting Scanner',
+                    'erp': '💼 ERP Scanner',
+                    
+                    # Additional Cloud Storage Connectors
+                    'dropbox': '☁️ Dropbox Scanner',
+                    'box': '☁️ Box Scanner',
+                    'aws_s3': '☁️ AWS S3 Scanner',
+                    'azure_storage': '☁️ Azure Storage Scanner',
+                    'cloud_storage': '☁️ Cloud Storage Scanner',
+                    
+                    # Additional enterprise services
+                    'slack': '💬 Slack Scanner',
+                    'salesforce': '⚡ Salesforce Scanner',
+                    'hubspot': '📈 HubSpot Scanner',
+                    'jira': '🎫 Jira Scanner',
+                    'confluence': '📖 Confluence Scanner',
+                    
                     # Additional scanner types
                     'cookie': '🍪 Cookie Scanner',
                     'tracking': '🍪 Tracking Scanner',
