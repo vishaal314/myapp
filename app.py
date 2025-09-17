@@ -90,8 +90,8 @@ try:
 except ImportError as e:
     logging.warning(f"Failed to import activity tracker: {e}")
     ACTIVITY_TRACKER_AVAILABLE = False
-    # Create a fallback ScannerType enum to prevent unbound variable errors
-    class ScannerType:
+    # Create a fallback ScannerType class to prevent unbound variable errors
+    class ScannerTypeFallback:
         CODE = "code"
         BLOB = "blob"
         IMAGE = "image"
@@ -103,6 +103,7 @@ except ImportError as e:
         SUSTAINABILITY = "sustainability"
         API = "api"
         ENTERPRISE_CONNECTOR = "enterprise_connector"
+    ScannerType = ScannerTypeFallback
 
 # Enterprise integration - non-breaking import
 try:
@@ -111,7 +112,7 @@ try:
 except ImportError:
     ENTERPRISE_ACTIONS_AVAILABLE = False
     # Define a fallback function to avoid "possibly unbound" error
-    def show_enterprise_actions(*args, **kwargs):
+    def show_enterprise_actions(scan_result: Dict[str, Any], scan_type: str = "code", username: str = "unknown") -> None:
         """Fallback function when enterprise actions are not available"""
         return None
 
@@ -4394,8 +4395,6 @@ def render_database_scanner_interface(region: str, username: str):
         
         password = st.text_input("Password", type="password")
         
-        # SSL/TLS Configuration (Advanced) - Initialize variables at function start to avoid scope issues
-        ssl_mode = "Auto-detect"  # Default value
         # Initialize SSL variables at function scope to avoid "possibly unbound" errors
         ssl_mode = "Auto-detect"
         ssl_cert_path = ""
@@ -4431,7 +4430,7 @@ def render_database_scanner_interface(region: str, username: str):
                 st.error("Please fill in all required fields")
                 return
             
-            # Prepare SSL parameters - variables now properly scoped
+            # Prepare SSL parameters
             ssl_params = {}
             if ssl_mode and ssl_mode != "Auto-detect":
                 ssl_params['ssl_mode'] = ssl_mode
