@@ -91,7 +91,7 @@ except ImportError as e:
     logging.warning(f"Failed to import activity tracker: {e}")
     ACTIVITY_TRACKER_AVAILABLE = False
     # Create a fallback ScannerType class to prevent unbound variable errors
-    class ScannerTypeFallback:
+    class ScannerType:
         CODE = "code"
         BLOB = "blob"
         IMAGE = "image"
@@ -103,7 +103,6 @@ except ImportError as e:
         SUSTAINABILITY = "sustainability"
         API = "api"
         ENTERPRISE_CONNECTOR = "enterprise_connector"
-    ScannerType = ScannerTypeFallback
 
 # Enterprise integration - non-breaking import
 try:
@@ -116,11 +115,11 @@ except ImportError:
         """Fallback function when enterprise actions are not available"""
         return None
 
-def generate_html_report_fallback(scan_results: Dict[str, Any]) -> str:
+def generate_html_report_fallback(scan_result: Dict[str, Any]) -> str:
     """Simple HTML report generator for AI Model scans"""
     # Build the findings HTML separately to avoid f-string issues
     findings_html = ""
-    for finding in scan_results.get('findings', []):
+    for finding in scan_result.get('findings', []):
         severity_class = finding.get('severity', 'low').lower()
         findings_html += f'''<div class="finding {severity_class}">
         <h4>{finding.get('type', 'Unknown Finding')}</h4>
@@ -147,23 +146,23 @@ def generate_html_report_fallback(scan_results: Dict[str, Any]) -> str:
 <body>
     <div class="header">
         <h1>AI Model Analysis Report</h1>
-        <p>Generated on {scan_results.get('timestamp', 'Unknown')}</p>
+        <p>Generated on {scan_result.get('timestamp', 'Unknown')}</p>
     </div>
     
     <div class="section">
         <h2>Model Information</h2>
-        <div class="metric"><strong>Framework:</strong> {scan_results.get('model_framework', 'Multi-Framework')}</div>
-        <div class="metric"><strong>AI Act Status:</strong> {scan_results.get('ai_act_compliance', 'Assessment Complete')}</div>
-        <div class="metric"><strong>Compliance Score:</strong> {scan_results.get('compliance_score', 85)}/100</div>
-        <div class="metric"><strong>Files Analyzed:</strong> {scan_results.get('files_scanned', 0)}</div>
-        <div class="metric"><strong>Total Findings:</strong> {scan_results.get('total_pii_found', 0)}</div>
+        <div class="metric"><strong>Framework:</strong> {scan_result.get('model_framework', 'Multi-Framework')}</div>
+        <div class="metric"><strong>AI Act Status:</strong> {scan_result.get('ai_act_compliance', 'Assessment Complete')}</div>
+        <div class="metric"><strong>Compliance Score:</strong> {scan_result.get('compliance_score', 85)}/100</div>
+        <div class="metric"><strong>Files Analyzed:</strong> {scan_result.get('files_scanned', 0)}</div>
+        <div class="metric"><strong>Total Findings:</strong> {scan_result.get('total_pii_found', 0)}</div>
     </div>
     
     <div class="section">
         <h2>Risk Analysis</h2>
-        <div class="metric"><strong>High Risk:</strong> {scan_results.get('high_risk_count', 0)} findings</div>
-        <div class="metric"><strong>Medium Risk:</strong> {scan_results.get('medium_risk_count', 0)} findings</div>
-        <div class="metric"><strong>Low Risk:</strong> {scan_results.get('low_risk_count', 0)} findings</div>
+        <div class="metric"><strong>High Risk:</strong> {scan_result.get('high_risk_count', 0)} findings</div>
+        <div class="metric"><strong>Medium Risk:</strong> {scan_result.get('medium_risk_count', 0)} findings</div>
+        <div class="metric"><strong>Low Risk:</strong> {scan_result.get('low_risk_count', 0)} findings</div>
     </div>
     
     <div class="section">
@@ -191,7 +190,7 @@ def get_html_report_generator():
             # Use our standardized fallback
             return generate_html_report_fallback
 
-# Use the wrapper to ensure consistent typing - define with proper type annotation
+# Use the wrapper to ensure consistent typing - define with proper type annotation  
 generate_html_report = get_html_report_generator()
 
 # Activity tracking imports - Consolidated and Fixed
@@ -200,11 +199,10 @@ try:
         get_activity_tracker,
         track_scan_completed as activity_track_completed,
         track_scan_failed as activity_track_failed,
-        ActivityType, 
-        ScannerType
+        ActivityType
     )
     
-    # ScannerType is now imported directly to avoid alias conflicts
+    # Use the already defined ScannerType from the global import
     ACTIVITY_TRACKING_AVAILABLE = True
     from typing import Dict, Any
     
@@ -4593,15 +4591,23 @@ def execute_database_scan(region, username, db_type, host, port, database, usern
     except Exception as e:
         # Track scan failure with safe error handling
         try:
+            # Use globally defined ScannerType to avoid unbound errors
+            from utils.activity_tracker import ScannerType as LocalScannerType
+            scanner_type_ref = LocalScannerType.DATABASE
+        except ImportError:
+            # Use fallback ScannerType if activity tracker is not available
+            scanner_type_ref = ScannerType.DATABASE
+        
+        try:
             track_scan_failed_wrapper(
-                scanner_type=ScannerType.DATABASE,
+                scanner_type=scanner_type_ref,
                 user_id=user_id,
                 session_id=session_id,
                 error_message=str(e)
             )
         except (NameError, AttributeError):
             # Fallback if tracking variables are not available
-            logger.warning(f"Activity tracking failed: {e}")
+            logging.warning(f"Activity tracking failed: {e}")
         st.error(f"Database scan failed: {str(e)}")
 
 def execute_database_scan_cloud(region, username, connection_string):
@@ -4741,15 +4747,23 @@ def execute_database_scan_cloud(region, username, connection_string):
     except Exception as e:
         # Track scan failure with safe error handling
         try:
+            # Use globally defined ScannerType to avoid unbound errors
+            from utils.activity_tracker import ScannerType as LocalScannerType
+            scanner_type_ref = LocalScannerType.DATABASE
+        except ImportError:
+            # Use fallback ScannerType if activity tracker is not available
+            scanner_type_ref = ScannerType.DATABASE
+        
+        try:
             track_scan_failed_wrapper(
-                scanner_type=ScannerType.DATABASE,
+                scanner_type=scanner_type_ref,
                 user_id=user_id,
                 session_id=session_id,
                 error_message=str(e)
             )
         except (NameError, AttributeError):
             # Fallback if tracking variables are not available
-            logger.warning(f"Activity tracking failed: {e}")
+            logging.warning(f"Activity tracking failed: {e}")
         st.error(f"Cloud database scan failed: {str(e)}")
 
 def render_api_scanner_interface(region: str, username: str):
@@ -5120,16 +5134,16 @@ def generate_api_html_report(scan_results):
 
 def execute_api_scan(region, username, base_url, endpoints, timeout):
     """Execute comprehensive API scanning with detailed findings analysis"""
+    # Initialize variables at function start to avoid unbound errors
+    session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+    user_id = st.session_state.get('user_id', username)
+    
     try:
         import requests
         import time
         import json
         from services.api_scanner import APIScanner
         from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
-        
-        # Get session information
-        session_id = st.session_state.get('session_id', str(uuid.uuid4()))
-        user_id = st.session_state.get('user_id', username)
         
         # Track scan start
         scan_start_time = datetime.now()
@@ -5619,18 +5633,30 @@ def execute_api_scan(region, username, base_url, endpoints, timeout):
         st.success("✅ Comprehensive API security scan completed!")
         
     except Exception as e:
-        # Track scan failure
-        track_scan_failed_wrapper(
-            scanner_type=ScannerType.API,
-            user_id=user_id,
-            session_id=session_id,
-            error_message=str(e),
-            region=region,
-            details={
-                'base_url': base_url,
-                'timeout': timeout
-            }
-        )
+        # Track scan failure with safe error handling
+        try:
+            # Use globally defined ScannerType to avoid unbound errors
+            from utils.activity_tracker import ScannerType as LocalScannerType
+            scanner_type_ref = LocalScannerType.API
+        except ImportError:
+            # Use fallback ScannerType if activity tracker is not available
+            scanner_type_ref = ScannerType.API
+        
+        try:
+            track_scan_failed_wrapper(
+                scanner_type=scanner_type_ref,
+                user_id=user_id,
+                session_id=session_id,
+                error_message=str(e),
+                region=region,
+                details={
+                    'base_url': base_url,
+                    'timeout': timeout
+                }
+            )
+        except (NameError, AttributeError):
+            # Fallback if tracking is not available
+            logging.warning(f"API scan tracking failed: {e}")
         st.error(f"API scan failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -7267,19 +7293,31 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             st.success("✅ AI Model analysis completed!")
         
     except Exception as e:
-        # Track scan failure
-        track_scan_failed_wrapper(
-            scanner_type=ScannerType.AI_MODEL,
-            user_id=user_id,
-            session_id=session_id,
-            error_message=str(e),
-            region=region,
-            details={
-                'model_source': model_source,
-                'model_type': model_type,
-                'framework': framework
-            }
-        )
+        # Track scan failure with safe error handling
+        try:
+            # Use globally defined ScannerType to avoid unbound errors
+            from utils.activity_tracker import ScannerType as LocalScannerType
+            scanner_type_ref = LocalScannerType.AI_MODEL
+        except ImportError:
+            # Use fallback ScannerType if activity tracker is not available
+            scanner_type_ref = ScannerType.AI_MODEL
+        
+        try:
+            track_scan_failed_wrapper(
+                scanner_type=scanner_type_ref,
+                user_id=user_id,
+                session_id=session_id,
+                error_message=str(e),
+                region=region,
+                details={
+                    'model_source': model_source,
+                    'model_type': model_type,
+                    'framework': framework
+                }
+            )
+        except (NameError, AttributeError):
+            # Fallback if tracking is not available
+            logging.warning(f"AI Model scan tracking failed: {e}")
         st.error(f"AI Model analysis failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -7647,19 +7685,31 @@ def execute_soc2_scan(region, username, repo_url, repo_source, branch, soc2_type
             st.success("✅ SOC2 compliance assessment completed!")
         
     except Exception as e:
-        # Track scan failure
-        track_scan_failed_wrapper(
-            scanner_type=ScannerType.SOC2,
-            user_id=user_id,
-            session_id=session_id,
-            error_message=str(e),
-            region=region,
-            details={
-                'repo_url': repo_url,
-                'repo_source': repo_source,
-                'soc2_type': soc2_type
-            }
-        )
+        # Track scan failure with safe error handling
+        try:
+            # Use globally defined ScannerType to avoid unbound errors
+            from utils.activity_tracker import ScannerType as LocalScannerType
+            scanner_type_ref = LocalScannerType.SOC2
+        except ImportError:
+            # Use fallback ScannerType if activity tracker is not available
+            scanner_type_ref = ScannerType.SOC2
+        
+        try:
+            track_scan_failed_wrapper(
+                scanner_type=scanner_type_ref,
+                user_id=user_id,
+                session_id=session_id,
+                error_message=str(e),
+                region=region,
+                details={
+                    'repo_url': repo_url,
+                    'repo_source': repo_source,
+                    'soc2_type': soc2_type
+                }
+            )
+        except (NameError, AttributeError):
+            # Fallback if tracking is not available
+            logging.warning(f"SOC2 scan tracking failed: {e}")
         st.error(f"SOC2 assessment failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -8309,18 +8359,30 @@ def execute_website_scan(region, username, url, scan_config):
         st.success(f"✅ Multi-page GDPR website privacy compliance scan completed! ({scan_results['pages_scanned']} pages analyzed)")
         
     except Exception as e:
-        # Track scan failure
-        track_scan_failed_wrapper(
-            scanner_type=ScannerType.WEBSITE,
-            user_id=user_id,
-            session_id=session_id,
-            error_message=str(e),
-            region=region,
-            details={
-                'url': url,
-                'scan_config': scan_config
-            }
-        )
+        # Track scan failure with safe error handling
+        try:
+            # Use globally defined ScannerType to avoid unbound errors
+            from utils.activity_tracker import ScannerType as LocalScannerType
+            scanner_type_ref = LocalScannerType.WEBSITE
+        except ImportError:
+            # Use fallback ScannerType if activity tracker is not available
+            scanner_type_ref = ScannerType.WEBSITE
+        
+        try:
+            track_scan_failed_wrapper(
+                scanner_type=scanner_type_ref,
+                user_id=user_id,
+                session_id=session_id,
+                error_message=str(e),
+                region=region,
+                details={
+                    'url': url,
+                    'scan_config': scan_config
+                }
+            )
+        except (NameError, AttributeError):
+            # Fallback if tracking is not available
+            logging.warning(f"Website scan tracking failed: {e}")
         st.error(f"Multi-page GDPR website scan failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -9228,18 +9290,30 @@ def execute_enhanced_dpia_scan(region, username, responses):
         st.session_state.dpia_completed = True
         
     except Exception as e:
-        # Track scan failure
-        track_scan_failed_wrapper(
-            scanner_type=ScannerType.DPIA,
-            user_id=user_id,
-            session_id=session_id,
-            error_message=str(e),
-            region=region,
-            details={
-                'project_name': responses.get('project_name', 'Unknown'),
-                'data_controller': responses.get('data_controller', 'Unknown')
-            }
-        )
+        # Track scan failure with safe error handling
+        try:
+            # Use globally defined ScannerType to avoid unbound errors
+            from utils.activity_tracker import ScannerType as LocalScannerType
+            scanner_type_ref = LocalScannerType.DPIA
+        except ImportError:
+            # Use fallback ScannerType if activity tracker is not available
+            scanner_type_ref = ScannerType.DPIA
+        
+        try:
+            track_scan_failed_wrapper(
+                scanner_type=scanner_type_ref,
+                user_id=user_id,
+                session_id=session_id,
+                error_message=str(e),
+                region=region,
+                details={
+                    'project_name': responses.get('project_name', 'Unknown'),
+                    'data_controller': responses.get('data_controller', 'Unknown')
+                }
+            )
+        except (NameError, AttributeError):
+            # Fallback if tracking is not available
+            logging.warning(f"DPIA scan tracking failed: {e}")
         st.error(f"DPIA assessment failed: {str(e)}")
 
 def generate_dpia_findings(risk_assessment, responses, region):
@@ -9980,19 +10054,31 @@ def execute_sustainability_scan(region, username, scan_params):
         st.success("✅ Comprehensive sustainability analysis completed!")
         
     except Exception as e:
-        # Track scan failure
-        track_scan_failed_wrapper(
-            scanner_type=ScannerType.SUSTAINABILITY,
-            user_id=user_id,
-            session_id=session_id,
-            error_message=str(e),
-            region=region,
-            details={
-                'analysis_type': scan_params['analysis_type'],
-                'source_type': scan_params['source_type'],
-                'emissions_region': scan_params.get('emissions_region', 'us-east-1')
-            }
-        )
+        # Track scan failure with safe error handling
+        try:
+            # Use globally defined ScannerType to avoid unbound errors
+            from utils.activity_tracker import ScannerType as LocalScannerType
+            scanner_type_ref = LocalScannerType.SUSTAINABILITY
+        except ImportError:
+            # Use fallback ScannerType if activity tracker is not available
+            scanner_type_ref = ScannerType.SUSTAINABILITY
+        
+        try:
+            track_scan_failed_wrapper(
+                scanner_type=scanner_type_ref,
+                user_id=user_id,
+                session_id=session_id,
+                error_message=str(e),
+                region=region,
+                details={
+                    'analysis_type': scan_params['analysis_type'],
+                    'source_type': scan_params['source_type'],
+                    'emissions_region': scan_params.get('emissions_region', 'us-east-1')
+                }
+            )
+        except (NameError, AttributeError):
+            # Fallback if tracking is not available
+            logging.warning(f"Sustainability scan tracking failed: {e}")
         st.error(f"Sustainability scan failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
