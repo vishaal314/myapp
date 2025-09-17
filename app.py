@@ -2298,6 +2298,13 @@ def render_dashboard():
                     'energy': '🌱 Energy Scanner',
                     'green': '🌱 Green Scanner',
                     
+                    # 11. Enterprise Connector Scanner (Fix for Unknown Scanner issue)
+                    'enterprise connector': '🔗 Enterprise Connector',
+                    'enterprise_connector': '🔗 Enterprise Connector',
+                    'enterprise-connector': '🔗 Enterprise Connector',
+                    'connector': '🔗 Connector Scanner',
+                    'integration': '🔗 Integration Scanner',
+                    
                     # Additional scanner types
                     'cookie': '🍪 Cookie Scanner',
                     'tracking': '🍪 Tracking Scanner',
