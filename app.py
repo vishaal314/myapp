@@ -2606,15 +2606,15 @@ def render_scanner_interface_safe():
         st.error("License validation required to access scanners.")
         return
     
-    # Scanner type selection with Dutch translations
+    # Scanner type selection with Dutch translations - Enterprise Connector prominently positioned
     scanner_options = {
+        f"🏢 {_('scan.enterprise', 'Enterprise Connector')}": _('scan.enterprise_description', 'Microsoft 365, Exact Online, Google Workspace integration for automated PII scanning'),
         f"🔍 {_('scan.code', 'Code')}": _('scan.code_description', 'Scan source code repositories for PII, secrets, and GDPR compliance'),
         f"📄 {_('scan.blob', 'Document')}": _('scan.document_description', 'Analyze PDF, DOCX, TXT files for sensitive information'),
         f"🖼️ {_('scan.image', 'Image')}": _('scan.image_description', 'OCR-based PII detection in images and documents'),
         f"🗄️ {_('scan.database', 'Database')}": _('scan.database_description', 'Scan database tables and columns for PII data'),
         f"🌐 {_('scan.website', 'Website')}": _('scan.website_description', 'Privacy policy and web compliance analysis'),
         f"🔌 {_('scan.api', 'API')}": _('scan.api_description', 'REST API security and PII exposure analysis'),
-        f"🏢 {_('scan.enterprise', 'Enterprise Connector')}": _('scan.enterprise_description', 'Microsoft 365, Exact Online, Google Workspace integration for automated PII scanning'),
         f"🤖 {_('scan.ai_model', 'AI Model')}": _('scan.ai_model_description', 'ML model privacy risks and bias detection'),
         f"🛡️ {_('scan.soc2', 'SOC2')}": _('scan.soc2_description', 'SOC2 compliance assessment with TSC mapping'),
         f"📋 {_('scan.dpia', 'DPIA')}": _('scan.dpia_description', 'Data Protection Impact Assessment workflow'),
