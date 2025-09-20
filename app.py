@@ -732,7 +732,7 @@ def render_landing_page():
                 _('landing.scanner.enterprise_f3', 'Google Workspace scanning'),
                 _('landing.scanner.enterprise_f4', 'Automated enterprise PII detection')
             ],
-            "color": "#2C3E50"
+            "color": "#E91E63"
         },
         {
             "icon": "🔍", 
@@ -744,7 +744,7 @@ def render_landing_page():
                 _('landing.scanner.code_f3', 'GDPR Article compliance'),
                 _('landing.scanner.code_f4', 'Real-time security scanning')
             ],
-            "color": "#34495E"
+            "color": "#4CAF50"
         },
         {
             "icon": "📄", 
@@ -756,7 +756,7 @@ def render_landing_page():
                 _('landing.scanner.document_f3', 'Privacy data detection'),
                 _('landing.scanner.document_f4', 'Compliance reporting')
             ],
-            "color": "#3498DB"
+            "color": "#FF9800"
         },
         {
             "icon": "🖼️", 
@@ -768,7 +768,7 @@ def render_landing_page():
                 _('landing.scanner.image_f3', 'Image metadata analysis'),
                 _('landing.scanner.image_f4', 'GDPR compliance check')
             ],
-            "color": "#5D6D7E"
+            "color": "#9C27B0"
         },
         {
             "icon": "🗄️", 
@@ -780,7 +780,7 @@ def render_landing_page():
                 _('landing.scanner.database_f3', 'PII column identification'),
                 _('landing.scanner.database_f4', 'Data protection compliance')
             ],
-            "color": "#1B4F72"
+            "color": "#3F51B5"
         },
         {
             "icon": "🌐", 
@@ -792,7 +792,7 @@ def render_landing_page():
                 _('landing.scanner.website_f3', 'Netherlands AP rules'),
                 _('landing.scanner.website_f4', 'GDPR Article compliance')
             ],
-            "color": "#2874A6"
+            "color": "#2196F3"
         },
         {
             "icon": "🤖", 
@@ -804,7 +804,7 @@ def render_landing_page():
                 _('landing.scanner.ai_f3', 'Data leakage assessment'),
                 _('landing.scanner.ai_f4', 'Model explainability')
             ],
-            "color": "#85929E"
+            "color": "#FF5722"
         },
         {
             "icon": "📋", 
@@ -816,7 +816,7 @@ def render_landing_page():
                 _('landing.scanner.dpia_f3', 'Netherlands UAVG compliance'),
                 _('landing.scanner.dpia_f4', 'Professional reporting')
             ],
-            "color": "#566573"
+            "color": "#795548"
         },
         {
             "icon": "🛡️", 
@@ -828,7 +828,7 @@ def render_landing_page():
                 _('landing.scanner.soc2_f3', 'Compliance gap analysis'),
                 _('landing.scanner.soc2_f4', 'Readiness assessment')
             ],
-            "color": "#17202A"
+            "color": "#607D8B"
         },
         {
             "icon": "🔗", 
@@ -840,7 +840,7 @@ def render_landing_page():
                 _('landing.scanner.api_f3', 'Authentication testing'),
                 _('landing.scanner.api_f4', 'GDPR compliance validation')
             ],
-            "color": "#2E4057"
+            "color": "#00BCD4"
         },
         {
             "icon": "🌱", 
@@ -852,7 +852,7 @@ def render_landing_page():
                 _('landing.scanner.sustainability_f3', 'Waste resource detection'),
                 _('landing.scanner.sustainability_f4', 'Sustainability scoring')
             ],
-            "color": "#4A5568"
+            "color": "#4CAF50"
         }
     ]
     
