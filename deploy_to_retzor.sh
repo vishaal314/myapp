@@ -5,7 +5,7 @@
 set -e
 
 # Server Configuration (Update these as needed)
-DOMAIN="vm.retzor.com"  # Using your provided domain
+DOMAIN="dataguardianpro.nl"  # Your registered domain
 EMAIL="vishaalnoord7@gmail.com"  # Using your email for SSL
 SERVER_IP="45.81.35.202"
 
@@ -23,9 +23,9 @@ print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 
-echo "🚀 DataGuardian Pro - Retzor Server Deployment"
-echo "=============================================="
-echo "Domain: $DOMAIN"
+echo "🚀 DataGuardian Pro - Production Deployment"
+echo "==========================================="
+echo "Domain: $DOMAIN (Netherlands)"
 echo "Server IP: $SERVER_IP"
 echo "SSL Email: $EMAIL"
 echo ""
