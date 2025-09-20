@@ -1,0 +1,7 @@
+ENVIRONMENT=production
+DATABASE_URL=postgresql://dataguardian:temppass123@localhost:5432/dataguardian_prod
+POSTGRES_PASSWORD=temppass123
+REDIS_URL=redis://localhost:6379/0
+DOMAIN_NAME=dataguardianpro.nl
+OPENAI_API_KEY=your_openai_api_key_here
+STRIPE_SECRET_KEY=sk_live_your_stripe_key_here
