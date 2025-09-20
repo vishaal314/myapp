@@ -3,9 +3,10 @@
 
 echo "🔧 Setting up DataGuardian Pro environment file..."
 
-# Your actual API keys (replace with your real values)
-OPENAI_KEY="${OPENAI_API_KEY:-your_openai_api_key_here}"
-STRIPE_KEY="${STRIPE_SECRET_KEY:-sk_live_your_stripe_key_here}"
+# Using actual API keys from Replit environment
+OPENAI_KEY="$OPENAI_API_KEY"
+STRIPE_KEY="$STRIPE_SECRET_KEY"
+MASTER_KEY="$DATAGUARDIAN_MASTER_KEY"
 
 # Stop the service first
 systemctl stop dataguardian 2>/dev/null || true
@@ -19,7 +20,7 @@ REDIS_URL=redis://localhost:6379/0
 DOMAIN_NAME=dataguardianpro.nl
 OPENAI_API_KEY=${OPENAI_KEY}
 STRIPE_SECRET_KEY=${STRIPE_KEY}
-DATAGUARDIAN_MASTER_KEY=dg_$(openssl rand -hex 32)
+DATAGUARDIAN_MASTER_KEY=${MASTER_KEY}
 JWT_SECRET=$(openssl rand -base64 32)
 EOF
 
