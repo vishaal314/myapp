@@ -720,8 +720,20 @@ def render_landing_page():
     </div>
     """, unsafe_allow_html=True)
     
-    # All 10 scanners in modern card grid layout
+    # All 11 scanners in modern card grid layout - Enterprise Connector featured prominently
     scanners = [
+        {
+            "icon": "🏢", 
+            "title": _('landing.scanner.enterprise_title', 'Enterprise Connector'),
+            "description": _('landing.scanner.enterprise_desc', 'Microsoft 365, Exact Online, Google Workspace integration for automated PII scanning'),
+            "features": [
+                _('landing.scanner.enterprise_f1', 'Microsoft 365 integration'),
+                _('landing.scanner.enterprise_f2', 'Exact Online (Netherlands)'),
+                _('landing.scanner.enterprise_f3', 'Google Workspace scanning'),
+                _('landing.scanner.enterprise_f4', 'Automated enterprise PII detection')
+            ],
+            "color": "#E91E63"
+        },
         {
             "icon": "🔍", 
             "title": _('landing.scanner.code_title', 'Code Scanner'),
