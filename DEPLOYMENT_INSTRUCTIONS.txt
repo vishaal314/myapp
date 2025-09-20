@@ -1,0 +1,51 @@
+🚀 DataGuardian Pro Production Deployment Instructions
+
+1. EDIT THE SETUP SCRIPT WITH YOUR REAL API KEYS:
+   
+   Before uploading, edit setup_env_file.sh lines 6-7:
+   
+   Replace:
+   OPENAI_KEY="${OPENAI_API_KEY:-your_openai_api_key_here}"
+   STRIPE_KEY="${STRIPE_SECRET_KEY:-sk_live_your_stripe_key_here}"
+   
+   With your actual keys:
+   OPENAI_KEY="sk-proj-your_actual_openai_key_here"
+   STRIPE_KEY="sk_live_your_actual_stripe_key_here"
+
+2. UPLOAD FILES TO PRODUCTION SERVER:
+   
+   scp setup_env_file.sh dataguardian_env_config.txt root@45.81.35.202:/opt/
+
+3. RUN THE SETUP ON PRODUCTION SERVER:
+   
+   ssh root@45.81.35.202
+   cd /opt
+   chmod +x setup_env_file.sh
+   ./setup_env_file.sh
+
+4. INSTALL MISSING DEPENDENCIES:
+   
+   sudo -u dataguardian python3 -m venv /opt/dataguardian/venv
+   sudo -u dataguardian /opt/dataguardian/venv/bin/pip install streamlit psycopg2-binary redis python-dotenv requests pandas plotly
+
+5. CREATE STREAMLIT CONFIG:
+   
+   mkdir -p /opt/dataguardian/.streamlit
+   cat > /opt/dataguardian/.streamlit/config.toml << 'EOF'
+   [server]
+   headless = true
+   address = "0.0.0.0"
+   port = 5000
+   EOF
+   chown -R dataguardian:dataguardian /opt/dataguardian/.streamlit
+
+6. START THE SERVICE:
+   
+   systemctl start dataguardian
+   systemctl status dataguardian
+   
+7. GENERATE SSL CERTIFICATE:
+   
+   certbot --nginx -d dataguardianpro.nl
+
+✅ Your DataGuardian Pro will be live at https://dataguardianpro.nl
