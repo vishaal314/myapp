@@ -33,7 +33,7 @@ import streamlit as st
 if 'page_configured' not in st.session_state:
     st.set_page_config(
         page_title="DataGuardian Pro",
-        page_icon="🛡️",
+        page_icon="static/dataguardian_logo_simple.svg",
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -690,17 +690,14 @@ def render_landing_page():
             # Silent fail for IP geolocation - not critical for app functionality
             pass
     
-    # Main landing page content with translations
-    st.markdown(f"""
+    # Main landing page content with professional logo
+    st.markdown("""
     <div style="text-align: center; padding: 2rem 0;">
-        <h1 style="color: #1f77b4; font-size: 3rem; margin-bottom: 0.5rem;">
-            🛡️ {_('app.title', 'DataGuardian Pro')}
-        </h1>
-        <h2 style="color: #666; font-weight: 300; margin-bottom: 2rem;">
-            {_('app.subtitle', 'Enterprise Privacy Compliance Platform')}
-        </h2>
+        <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 1.5rem;">
+            <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjgwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMjgwIDYwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ic2hpZWxkX2dyYWRpZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNiODJmNiIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMWU0MGFmIiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxmaWx0ZXIgaWQ9InNoYWRvdyIgeD0iLTEwJSIgeT0iLTEwJSIgd2lkdGg9IjEyMCUiIGhlaWdodD0iMTIwJSI+CiAgICAgIDxmZURyb3BTaGFkb3cgZHg9IjAiIGR5PSIyIiBzdGREZXZpYXRpb249IjMiIGZsb29kLWNvbG9yPSIjMGYxNzJhIiBmbG9vZC1vcGFjaXR5PSIwLjE1Ii8+CiAgICA8L2ZpbHRlcj4KICA8L2RlZnM+CiAgCiAgPCEtLSBDb21wYWN0IFNoaWVsZCBTaGFwZSAtLT4KICA8cGF0aCBkPSJNMzAgOEMzMCA4IDUyIDEyIDUyIDEyQzUyIDEyIDUyIDI4IDUyIDI4QzUyIDQwIDQ0IDQ4IDMwIDUyQzE2IDQ4IDggNDAgOCAyOEM4IDI4IDggMTIgOCAxMkM4IDEyIDMwIDggMzAgOFoiIGZpbGw9InVybCgjc2hpZWxkX2dyYWRpZW50KSIgZmlsdGVyPSJ1cmwoI3NoYWRvdykiIC8+CiAgCiAgPCEtLSBMb2NrIEljb24gLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTksIDIwKSI+CiAgICA8IS0tIExvY2sgQm9keSAtLT4KICAgIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxNiIgcng9IjIiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjkiIC8+CiAgICAKICAgIDwhLS0gTG9jayBTaGFja2xlIC0tPgogICAgPHBhdGggZD0iTTYgMCBWLTUgQzYgLTkgMTEgLTkgMTYgLTlDMjEgLTkgMTYgLTUgMTYgMCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIgLz4KICAgIAogICAgPCEtLSBEYXRhIEVsZW1lbnRzIC0tPgogICAgPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjEuNSIgcng9IjAuNSIgZmlsbD0iIzFlNDBhZiIgLz4KICAgIDxyZWN0IHg9IjQiIHk9IjciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxLjUiIHJ4PSIwLjUiIGZpbGw9IiMxZTQwYWYiIC8+CiAgICA8cmVjdCB4PSI0IiB5PSIxMCIgd2lkdGg9IjgiIGhlaWdodD0iMS41IiByeD0iMC41IiBmaWxsPSIjMWU0MGFmIiAvPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxMC41IiByPSIyIiBmaWxsPSIjZjU5ZTBiIiAvPgogIDwvZz4KICA8IS0tIENvbXBhbnkgVGV4dCAtLT4KICA8dGV4dCB4PSI2NSIgeT0iMjUiIGZpbGw9IiMxZTQwYWYiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZm9udC13ZWlnaHQ9ImJvbGQiPkRhdGFHdWFyZGlhbjwvdGV4dD4KICA8dGV4dCB4PSIxOTAiIHk9IjI1IiBmaWxsPSIjM2I4MmY2IiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZvbnQtd2VpZ2h0PSJib2xkIj5Qcm88L3RleHQ+CiAgCiAgPCEtLSBUYWdsaW5lIC0tPgogIDx0ZXh0IHg9IjY1IiB5PSI0MiIgZmlsbD0iIzY0NzQ4YiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0ibm9ybWFsIj5FbnRlcnByaXNlIFByaXZhY3kgQ29tcGxpYW5jZSBQbGF0Zm9ybTwvdGV4dD4KICA8IS0tIE5ldGhlcmxhbmRzIEJhZGdlIC0tPgogIDxjaXJjbGUgY3g9IjI0NSIgY3k9IjE4IiByPSI4IiBmaWxsPSIjMDI4NGM3IiAvPgogIDx0ZXh0IHg9IjI0NSIgeT0iMjIiIGZpbGw9IndoaXRlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iNyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPk5MPC90ZXh0PgogIDwhLS0gUHJvIEJhZGdlIC0tPgogIDxjaXJjbGUgY3g9IjI2MCIgY3k9IjE4IiByPSI4IiBmaWxsPSIjZjU5ZTBiIiAvPgogIDx0ZXh0IHg9IjI2MCIgeT0iMjIiIGZpbGw9IndoaXRlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPlBSTzwvdGV4dD4KPC9zdmc+" alt="DataGuardian Pro" style="height: 60px;" />
+        </div>
         <p style="font-size: 1.2rem; color: #444; max-width: 800px; margin: 0 auto;">
-            {_('app.tagline', 'Detect, Manage, and Report Privacy Compliance with AI-powered Precision')}
+            Detect, Manage, and Report Privacy Compliance with AI-powered Precision
         </p>
     </div>
     """, unsafe_allow_html=True)
