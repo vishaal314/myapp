@@ -1,0 +1,440 @@
+root@vishaalnoord7:/opt# ./check_service_status.sh
+🔍 Checking DataGuardian Service Status...
+===========================================
+📊 Service Status:
+● dataguardian.service - DataGuardian Pro - Privacy Compliance Platform
+     Loaded: loaded (/etc/systemd/system/dataguardian.service; enabled; vendor preset: enabled)
+     Active: active (running) since Sat 2025-09-20 23:52:30 CEST; 18h ago
+   Main PID: 1132837 (streamlit)
+      Tasks: 4 (limit: 2220)
+     Memory: 52.7M
+        CPU: 2.801s
+     CGroup: /system.slice/dataguardian.service
+             └─1132837 /opt/dataguardian/venv/bin/python3 /opt/dataguardian/venv/bin/streamlit run app.py --server.port 5000 --server.address 0.0.0.0 --server.headless true
+
+Sep 20 23:52:30 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro - Privacy Compliance Platform.
+Sep 20 23:52:31 vishaalnoord7.retzor.com dataguardian[1132837]:   You can now view your Streamlit app in your browser.
+Sep 20 23:52:31 vishaalnoord7.retzor.com dataguardian[1132837]:   URL: http://localhost:5000
+
+📋 Recent Logs (last 20 lines):
+Sep 20 23:34:32 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed to load environment files: No such file or directory
+Sep 20 23:34:32 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed to run 'start' task: No such file or directory
+Sep 20 23:34:32 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed with result 'resources'.
+Sep 20 23:34:32 vishaalnoord7.retzor.com systemd[1]: Failed to start DataGuardian Pro - Privacy Compliance Platform.
+Sep 20 23:34:42 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Scheduled restart job, restart counter is at 23.
+Sep 20 23:34:42 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro - Privacy Compliance Platform.
+Sep 20 23:34:42 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed to load environment files: No such file or directory
+Sep 20 23:34:42 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed to run 'start' task: No such file or directory
+Sep 20 23:34:42 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed with result 'resources'.
+Sep 20 23:34:42 vishaalnoord7.retzor.com systemd[1]: Failed to start DataGuardian Pro - Privacy Compliance Platform.
+Sep 20 23:34:52 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Scheduled restart job, restart counter is at 24.
+Sep 20 23:34:52 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro - Privacy Compliance Platform.
+Sep 20 23:34:52 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed to load environment files: No such file or directory
+Sep 20 23:34:52 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed to run 'start' task: No such file or directory
+Sep 20 23:34:52 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed with result 'resources'.
+Sep 20 23:34:52 vishaalnoord7.retzor.com systemd[1]: Failed to start DataGuardian Pro - Privacy Compliance Platform.
+Sep 20 23:34:53 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro - Privacy Compliance Platform.
+Sep 20 23:52:30 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro - Privacy Compliance Platform.
+Sep 20 23:52:31 vishaalnoord7.retzor.com dataguardian[1132837]:   You can now view your Streamlit app in your browser.
+Sep 20 23:52:31 vishaalnoord7.retzor.com dataguardian[1132837]:   URL: http://localhost:5000
+
+🌐 Port 5000 Status:
+tcp        0      0 0.0.0.0:5000            0.0.0.0:*               LISTEN      1132837/python3
+
+🔐 Environment File Check:
+-rw------- 1 dataguardian dataguardian 319 Sep 20 23:52 /opt/dataguardian/.env
+Environment file contents (API keys hidden):
+ENVIRONMENT=production
+DATABASE_URL=postgresql://dataguardian:temppass123@localhost:5432/dataguardian_prod
+POSTGRES_PASSWORD=temppass123
+REDIS_URL=redis://localhost:6379/0
+DOMAIN_NAME=dataguardianpro.nl
+OPENAI_API_KEY=***HIDDEN***
+STRIPE_SECRET_KEY=
+DATAGUARDIAN_MASTER_KEY=
+JWT_SECRET=P6EmmA2lyd3hkN6hVN3dnUXUx31WsVjj47fQTYqJgk8=
+
+📁 DataGuardian Directory:
+total 19080
+drwxr-xr-x 40 dataguardian dataguardian   24576 Sep 20 23:37  .
+drwxrwxrwx  4 root         root            4096 Sep 21 18:41  ..
+drwxr-xr-x  3 dataguardian dataguardian    4096 Apr 18 00:07  .config
+drwxr-xr-x  2 dataguardian dataguardian    4096 Apr 29 01:19  .disabled_pages
+-rw-r--r--  1 dataguardian dataguardian    1050 Sep  8 23:32  .dockerignore
+-rw-------  1 dataguardian dataguardian     319 Sep 20 23:52  .env
+-rw-r--r--  1 dataguardian dataguardian    1315 Jul 14 20:19  .env.example
+drwxr-xr-x  7 dataguardian dataguardian    4096 Sep 20 15:41  .git
+drwxr-xr-x  3 dataguardian dataguardian    4096 Apr 19 14:58  .github
+-rw-r--r--  1 dataguardian dataguardian     769 Aug  9 12:51  .gitignore
+-rw-r--r--  1 dataguardian dataguardian      44 Jul 31 21:35  .license_key
+drwxr-xr-x  3 dataguardian dataguardian    4096 Apr 17 23:58  .local
+drwxr-xr-x  3 dataguardian dataguardian    4096 Sep 13 23:51  .pytest_cache
+-rw-r--r--  1 dataguardian dataguardian    1692 Sep 20 15:33  .replit
+-rw-r--r--  1 dataguardian dataguardian      44 Aug 31 00:11  .settings_key
+drwxr-xr-x  2 dataguardian dataguardian    4096 May 18 12:13  .streamlit
+-rw-r--r--  1 dataguardian dataguardian    5839 Jul 21 08:00  ACTIVITYTRACKER_INTEGRATION_SUMMARY.md
+-rw-r--r--  1 dataguardian dataguardian    8179 Jul 21 08:00  AI_ACT_2025_MARKET_LAUNCH_STRATEGY.md
+-rw-r--r--  1 dataguardian dataguardian   14338 Jul 21 08:00  AI_ACT_DIRECT_OUTREACH_CAMPAIGN.md
+-rw-r--r--  1 dataguardian dataguardian    8339 Jul 21 08:00  AI_ACT_LANDING_PAGE_CONTENT.md
+-rw-r--r--  1 dataguardian dataguardian    9523 Jul 21 08:00  AI_ACT_WEBINAR_SERIES_PLAN.md
+-rw-r--r--  1 dataguardian dataguardian   13827 Jul 26 23:51  AI_DIFFERENTIATORS_TECHNICAL_DEEP_DIVE.md
+-rw-r--r--  1 dataguardian dataguardian   15773 Sep  8 19:51  AI_MODEL_SCANNER_ARCHITECTURE_DESIGN.md
+-rw-r--r--  1 dataguardian dataguardian   16135 Sep  8 21:32  AI_Model_Scanner_Architecture_Diagram.txt
+-rw-r--r--  1 dataguardian dataguardian    9641 Jul 27 00:33  AUTOMATED_TEST_SUITE_SUMMARY.md
+-rw-r--r--  1 dataguardian dataguardian    6786 Jul 21 08:00  BUDGET_NL_HOSTING.md
+-rw-r--r--  1 dataguardian dataguardian    5815 Aug 21 19:30  CHEAP_HOSTING_OPTIONS.md
+-rw-r--r--  1 dataguardian dataguardian   21299 Aug  2 00:21  CODE_REVIEW_6_TIER_PRICING_IMPLEMENTATION.md
+-rw-r--r--  1 dataguardian dataguardian    9708 Jul 21 08:00  CODE_REVIEW_ACTIVITYTRACKER_INTEGRATION_FINAL.md
+-rw-r--r--  1 dataguardian dataguardian   15263 Jul 21 08:00  CODE_REVIEW_AI_ACT_2025_CALCULATOR_FINAL.md
+-rw-r--r--  1 dataguardian dataguardian   10605 Jul 21 08:00  CODE_REVIEW_AI_ACT_CALCULATOR_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian    6575 Aug 19 10:51  CODE_REVIEW_AI_MODEL_HTML_REPORT_E2E.md
+-rw-r--r--  1 dataguardian dataguardian    9349 Jul 28 21:56  CODE_REVIEW_CODE_SCANNER_CONFIGURATION_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   11136 Jul 29 23:19  CODE_REVIEW_COMPLETE_SYSTEM_ANALYSIS_JULY_29_2025.md
+-rw-r--r--  1 dataguardian dataguardian   12672 Aug 17 10:18  CODE_REVIEW_COMPLIANCE_CERTIFICATE_GENERATION_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian    8819 Aug 12 00:15  CODE_REVIEW_COMPREHENSIVE_AUGUST_11_2025.md
+-rw-r--r--  1 dataguardian dataguardian   17147 Jul 21 08:00  CODE_REVIEW_COMPREHENSIVE_FINAL.md
+-rw-r--r--  1 dataguardian dataguardian   11633 Jul 21 08:00  CODE_REVIEW_COMPREHENSIVE_JULY_19_2025.md
+-rw-r--r--  1 dataguardian dataguardian    9222 Jul 21 08:00  CODE_REVIEW_COMPREHENSIVE_SYSTEM_ANALYSIS.md
+-rw-r--r--  1 dataguardian dataguardian    8741 Jul 30 00:26  CODE_REVIEW_COOKIE_DETECTION_FIXES_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   10527 Aug  2 01:00  CODE_REVIEW_COST_SAVINGS_INTEGRATION.md
+-rw-r--r--  1 dataguardian dataguardian   11756 Jul 21 08:00  CODE_REVIEW_CURRENT_STATUS.md
+-rw-r--r--  1 dataguardian dataguardian   17677 Jul 21 08:00  CODE_REVIEW_DASHBOARD_ACTIVITY_LOGGING.md
+-rw-r--r--  1 dataguardian dataguardian    7289 Aug 16 20:52  CODE_REVIEW_DASHBOARD_RECENT_CHANGES_AUGUST_16_2025.md
+-rw-r--r--  1 dataguardian dataguardian    8046 Jul 21 08:00  CODE_REVIEW_DOWNLOAD_FIXES_FINAL.md
+-rw-r--r--  1 dataguardian dataguardian    9207 Jul 21 08:00  CODE_REVIEW_DOWNLOAD_REPORTS_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian    5923 Jul 21 08:00  CODE_REVIEW_DUTCH_REPORT_TRANSLATION_FIXES.md
+-rw-r--r--  1 dataguardian dataguardian   18647 Jul 26 23:56  CODE_REVIEW_DUTCH_TRANSLATION_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   16488 Jul 21 08:00  CODE_REVIEW_E2E_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   11701 Jul 21 08:00  CODE_REVIEW_ENHANCED_DPIA_IMPLEMENTATION.md
+-rw-r--r--  1 dataguardian dataguardian    9409 Jul 21 08:00  CODE_REVIEW_FINAL_PRODUCTION_ASSESSMENT.md
+-rw-r--r--  1 dataguardian dataguardian    8095 Jul 28 21:09  CODE_REVIEW_INTELLIGENT_SCANNING_IMPLEMENTATION.md
+-rw-r--r--  1 dataguardian dataguardian    4164 Jul 21 08:00  CODE_REVIEW_LANGUAGE_SWITCHING_CALLBACK_FIX.md
+-rw-r--r--  1 dataguardian dataguardian    5660 Jul 21 08:00  CODE_REVIEW_LANGUAGE_SWITCHING_FIX.md
+-rw-r--r--  1 dataguardian dataguardian   12563 Aug  9 12:59  CODE_REVIEW_LARGE_REPOSITORY_OPTIMIZATION_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   13902 Jul 21 08:00  CODE_REVIEW_LICENSE_INTEGRATION_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   10349 Jul 21 08:00  CODE_REVIEW_LICENSE_INTEGRATION_FINAL.md
+-rw-r--r--  1 dataguardian dataguardian   12834 Jul 31 22:04  CODE_REVIEW_LICENSE_SYSTEM_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   12575 Jul 21 08:00  CODE_REVIEW_NEW_FEATURES_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   15794 Jul 21 08:00  CODE_REVIEW_OVERALL_SYSTEM_IMPACT.md
+-rw-r--r--  1 dataguardian dataguardian   16061 Jul 21 08:00  CODE_REVIEW_PAYMENT_ACCESS_PRICING.md
+-rw-r--r--  1 dataguardian dataguardian   15506 Jul 21 08:00  CODE_REVIEW_PAYMENT_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian    9521 Jul 21 08:00  CODE_REVIEW_PAYMENT_SYSTEM_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   12502 Jul 21 08:00  CODE_REVIEW_PERFORMANCE_OPTIMIZATION.md
+-rw-r--r--  1 dataguardian dataguardian   15383 Jul 31 23:36  CODE_REVIEW_PREMIUM_PRICING_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   15217 Jul 31 23:33  CODE_REVIEW_PREMIUM_PRICING_FEATURES.md
+-rw-r--r--  1 dataguardian dataguardian   19133 Jul 30 19:00  CODE_REVIEW_PRIVACY_RIGHTS_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   35210 Jul 30 19:06  CODE_REVIEW_SCANNER_REPORTS_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   16762 Jul 27 00:20  CODE_REVIEW_SCANNER_REPORTS_TRANSLATIONS_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   14433 Jul 26 23:38  CODE_REVIEW_SCAN_REPORTS_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   10723 Jul 21 08:00  CODE_REVIEW_SCAN_RESULTS_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   13450 Jul 21 08:00  CODE_REVIEW_SETTINGS_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian    9421 Aug  3 01:12  CODE_REVIEW_SUSTAINABILITY_EURO_CONVERSION.md
+-rw-r--r--  1 dataguardian dataguardian   12464 Jul 27 00:15  CODE_REVIEW_UNIFIED_SYSTEMS_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian    8108 Sep  6 15:34  COMPLETE_DEPLOYMENT_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian   11307 Sep 15 21:25  COMPLIANCE_COVERAGE_DOCUMENTATION.md
+-rw-r--r--  1 dataguardian dataguardian   17207 Jul 30 21:26  COMPREHENSIVE_ADDITIONAL_IMPROVEMENTS_COMPLETED.md
+-rw-r--r--  1 dataguardian dataguardian    9498 Aug 21 19:52  CONTABO_SETUP_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian    5146 Aug  2 00:56  COST_SAVINGS_INTEGRATION_COMPLETED.md
+-rw-r--r--  1 dataguardian dataguardian    6694 Aug 12 00:21  CRITICAL_FIXES_COMPLETED_AUGUST_11.md
+-rw-r--r--  1 dataguardian dataguardian   14338 Jul 30 21:08  CRITICAL_FIXES_CONTENT_ENHANCEMENT_COMPLETED.md
+-rw-r--r--  1 dataguardian dataguardian    7970 Jul 31 21:53  CRITICAL_FIXES_PRODUCTION_READY_SUMMARY.md
+-rw-r--r--  1 dataguardian dataguardian   11936 Jul 21 08:00  CURRENT_ARCHITECTURE_ANALYSIS.md
+-rw-r--r--  1 dataguardian dataguardian   12832 Jul 21 08:00  CURRENT_PRICING_COMPETITIVE_ANALYSIS.md
+-rw-r--r--  1 dataguardian dataguardian    3356 Jul 21 08:00  CUSTOMER_PAIN_POINT_SOLUTIONS.md
+-rw-r--r--  1 dataguardian dataguardian    3334 Aug 24 21:42  DASHBOARD_CODE_REVIEW_AUGUST_24.md
+-rw-r--r--  1 dataguardian dataguardian   21049 Sep  2 00:35  DATAGUARDIAN_PRO_SCANNER_DOCUMENTATION.md
+-rw-r--r--  1 dataguardian dataguardian   21404 Jul 30 18:52  DATA_SUBJECT_RIGHTS_IMPLEMENTATION.md
+-rw-r--r--  1 dataguardian dataguardian    5621 Sep  7 21:18  DEPLOYMENT_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian    9719 Sep 10 19:35  DEPLOYMENT_MANUAL.md
+-rw-r--r--  1 dataguardian dataguardian   12241 Jul 31 23:39  DEPLOYMENT_MODELS_PRICING_STRATEGY.md
+-rw-r--r--  1 dataguardian dataguardian    5089 Jul 21 08:00  DEPLOYMENT_STATUS.md
+-rw-r--r--  1 dataguardian dataguardian    9770 Jul 21 08:00  DEPLOYMENT_STRATEGY_RECOMMENDATION.md
+-rw-r--r--  1 dataguardian dataguardian    6926 Jul 21 08:00  DETAILED_RAILWAY_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian   11258 Sep 10 19:36  DOCKER_DEPLOYMENT_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian    2233 Jul 21 08:00  DOCKER_DESKTOP_SETUP_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian   20050 Jul 21 08:00  DPIA_SCANNER_IMPROVEMENT_SUGGESTIONS.md
+-rw-r--r--  1 dataguardian dataguardian   14505 Jul 30 18:51  DPO_PROCEDURES.md
+-rw-r--r--  1 dataguardian dataguardian    7973 Jul 21 08:00  DUTCH_HOSTING_PROVIDERS.md
+-rw-r--r--  1 dataguardian dataguardian     898 Jul 14 22:53 'DataGuardian Pro.spec'
+-rw-r--r--  1 dataguardian dataguardian    4602 Jul 21 08:00  DataGuardian-Pro-Standalone-README.md
+drwxr-xr-x 12 dataguardian dataguardian    4096 Jul 21 08:00  DataGuardian-Pro-Standalone-Source
+-rw-r--r--  1 dataguardian dataguardian 1846243 Jul 14 22:55  DataGuardian-Pro-Windows-Distribution.zip
+-rw-r--r--  1 dataguardian dataguardian   49446 Sep 10 00:35  DataGuardian_Pro_Patent_Application_2_Predictive_Compliance_Engine.pdf
+-rw-r--r--  1 dataguardian dataguardian    1745 Sep  8 23:33  Dockerfile
+-rw-r--r--  1 dataguardian dataguardian   13122 Jul 21 08:00  ENHANCED_DPIA_PRICING_STRATEGY.md
+-rw-r--r--  1 dataguardian dataguardian   10106 Jul 31 23:28  ENHANCED_PRICING_STRATEGY_IMPLEMENTATION.md
+-rw-r--r--  1 dataguardian dataguardian    9867 Aug  9 10:18  ENTERPRISE_REPO_SCANNING_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian   12893 Jul 21 08:00  ENTERPRISE_SALES_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian   18544 Sep  3 00:01  EU_AI_ACT_PATENT_APPLICATION_DRAFT.md
+-rw-r--r--  1 dataguardian dataguardian    1460 Jul 21 08:00  EU_DEPLOYMENT_OPTIONS.md
+-rw-r--r--  1 dataguardian dataguardian   13119 Jul 30 18:47  GDPR_UAVG_COMPLIANCE_SELF_ASSESSMENT.md
+-rw-r--r--  1 dataguardian dataguardian   18269 Jul 21 08:00  GO_TO_MARKET_STRATEGY_NETHERLANDS.md
+-rw-r--r--  1 dataguardian dataguardian    7493 Sep 20 15:33  HETZNER_DEPLOYMENT_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian    4199 Aug 21 19:31  HETZNER_SETUP_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian   10253 Jul 21 08:00  IMMEDIATE_LEGAL_ACTION_PLAN.md
+-rw-r--r--  1 dataguardian dataguardian    8941 Jul 21 08:00  IMMEDIATE_NEXT_STEPS.md
+-rw-r--r--  1 dataguardian dataguardian    5947 Aug 23 22:38  IMPROVED_LINKEDIN_POSTS.md
+-rw-r--r--  1 dataguardian dataguardian   11034 Aug  9 10:20  LARGE_REPOSITORY_OPTIMIZATION_SUMMARY.md
+-rw-r--r--  1 dataguardian dataguardian   14175 Jul 21 08:00  LAUNCH_STRATEGY_CUSTOMER_OPPORTUNITIES.md
+-rw-r--r--  1 dataguardian dataguardian   15742 Jul 21 08:00  LEGAL_COMPLIANCE_ROADMAP.md
+-rw-r--r--  1 dataguardian dataguardian    9435 Jul 21 08:00  LICENSING_SYSTEM_IMPLEMENTATION_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian    9250 Aug 21 20:10  LINKEDIN_MARKETING_CONTENT.md
+-rw-r--r--  1 dataguardian dataguardian    5380 Jul 21 08:00  NETHERLANDS_DEPLOYMENT_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian    8452 Jul 21 08:00  NETHERLANDS_HOSTING_ANALYSIS.md
+-rw-r--r--  1 dataguardian dataguardian    8048 Sep  8 21:35  NETHERLANDS_PATENT_APPLICATION_AI_MODEL_SCANNER.md
+-rw-r--r--  1 dataguardian dataguardian   28536 Sep  8 21:48  NETHERLANDS_PATENT_APPLICATION_COMPLETE.md
+-rw-r--r--  1 dataguardian dataguardian    4375 Jul 21 08:00  NL_LANGUAGE_NAVIGATION_FIX.md
+-rw-r--r--  1 dataguardian dataguardian    5157 Jul 21 08:00  NL_LANGUAGE_UI_FIX_COMPLETE.md
+-rw-r--r--  1 dataguardian dataguardian    6991 Jul 21 08:00  NL_LANGUAGE_UI_TEST_REPORT.md
+-rw-r--r--  1 dataguardian dataguardian   23978 Jul 21 08:00  PAIN_POINT_SOLUTION_STRATEGY.md
+-rw-r--r--  1 dataguardian dataguardian    1299 Sep  8 21:50  PATENT_ABSTRACT_SUMMARY.txt
+-rw-r--r--  1 dataguardian dataguardian    6350 Sep  9 00:59  PATENT_CONCLUSIONS.md
+-rw-r--r--  1 dataguardian dataguardian    5109 Sep  9 00:59  PATENT_DESCRIPTION.md
+-rw-r--r--  1 dataguardian dataguardian    9784 Sep  9 01:00  PATENT_DRAWINGS.md
+-rw-r--r--  1 dataguardian dataguardian    4985 Sep  9 01:00  PATENT_EXTRACT.md
+-rw-r--r--  1 dataguardian dataguardian    3720 Sep  8 21:50  PATENT_FILING_CHECKLIST.md
+-rw-r--r--  1 dataguardian dataguardian   15137 Sep  2 23:35  PATENT_PORTFOLIO_DOCUMENTATION.md
+-rw-r--r--  1 dataguardian dataguardian    2529 Jul 21 08:00  PAYMENT_FIXES_SUMMARY.md
+-rw-r--r--  1 dataguardian dataguardian    8371 Aug 16 20:58  PAYMENT_INTEGRATION_ANALYSIS_NEW_USER_FLOW.md
+-rw-r--r--  1 dataguardian dataguardian    5427 Jul 21 08:00  PAYMENT_TESTING_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian    7977 Jul 21 08:00  PERFORMANCE_OPTIMIZATION_COMPLETE.md
+-rw-r--r--  1 dataguardian dataguardian    5884 Aug 24 14:33  POLISHED_CODE_SCANNER_POST.md
+-rw-r--r--  1 dataguardian dataguardian    9087 Jul 31 23:22  PRICING_ANALYSIS_COMPETITIVENESS_REVIEW.md
+-rw-r--r--  1 dataguardian dataguardian    9736 Jul 21 08:00  PRICING_IMPLEMENTATION_STEPS.md
+-rw-r--r--  1 dataguardian dataguardian    9726 Jul 21 08:00  PRIORITY_IMPLEMENTATION_PLAN.md
+-rw-r--r--  1 dataguardian dataguardian   10582 Jul 30 18:49  PRIVACY_POLICY.md
+-rw-r--r--  1 dataguardian dataguardian    4864 Jul 22 23:16  PRIVACY_VERIFICATION_RESULTS.md
+-rw-r--r--  1 dataguardian dataguardian    5827 Jul 21 08:00  PRIVACY_VIOLATIONS_FIXED.md
+-rw-r--r--  1 dataguardian dataguardian    7898 Sep  9 01:02  Patent_Conclusions.pdf
+-rw-r--r--  1 dataguardian dataguardian    6732 Sep  9 01:02  Patent_Description.pdf
+-rw-r--r--  1 dataguardian dataguardian    6422 Sep  9 01:02  Patent_Drawings.pdf
+-rw-r--r--  1 dataguardian dataguardian    6413 Sep  9 01:02  Patent_Extract.pdf
+-rw-r--r--  1 dataguardian dataguardian      93 Aug 21 15:12  Procfile
+-rw-r--r--  1 dataguardian dataguardian    7126 Sep  9 18:16  Professional_Patent_Drawings.pdf
+-rw-r--r--  1 dataguardian dataguardian    3054 Jul 21 08:00  RAILWAY_DEPLOYMENT.md
+-rw-r--r--  1 dataguardian dataguardian    7998 Aug 21 15:12  RAILWAY_DEPLOYMENT_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian    1994 Jul 21 08:00  RAILWAY_QUICK_REFERENCE.md
+-rw-r--r--  1 dataguardian dataguardian    2366 Aug 21 15:13  RAILWAY_QUICK_START.md
+-rw-r--r--  1 dataguardian dataguardian    6085 Jul 21 08:00  README.md
+-rw-r--r--  1 dataguardian dataguardian    6739 Jul 21 08:00  REPLIT_DEPLOYMENT_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian    4169 Aug  9 12:51  REPOSITORY_CLEANUP_SUMMARY.md
+-rw-r--r--  1 dataguardian dataguardian   11512 Jul 21 08:00  RETZOR_DEPLOYMENT_GUIDE.md
+-rw-r--r--  1 dataguardian dataguardian       0 Apr 23 22:57 'Repository URL not provided'
+-rw-r--r--  1 dataguardian dataguardian   23302 Jul 31 23:51  SAAS_CLOUD_ARCHITECTURE_DETAILED.md
+-rw-r--r--  1 dataguardian dataguardian   13981 Jul 31 23:52  SAAS_IMPLEMENTATION_SUMMARY.md
+-rw-r--r--  1 dataguardian dataguardian    4893 Aug  9 23:11  SCANNER_ACTIVITY_TRACKING_AUDIT_COMPLETE.md
+-rw-r--r--  1 dataguardian dataguardian   20541 Aug  9 13:12  SCANNER_CODE_REVIEWS_COMPREHENSIVE.md
+-rw-r--r--  1 dataguardian dataguardian   18786 Jul 22 23:23  SCANNER_DOCUMENTATION_2025.md
+-rw-r--r--  1 dataguardian dataguardian   12749 Aug 24 14:27  SCANNER_LINKEDIN_POSTS.md
+-rw-r--r--  1 dataguardian dataguardian   11994 Jul 21 08:00  SECURITY_HARDENING_COMPLETE.md
+-rw-r--r--  1 dataguardian dataguardian    7068 Jul 21 08:00  SECURITY_HARDENING_REPORT.md
+-rw-r--r--  1 dataguardian dataguardian   15148 Jul 21 08:00  SIMPLE_DPIA_IMPROVEMENTS.md
+-rw-r--r--  1 dataguardian dataguardian    7348 Jul 21 08:00  STRATEGIC_APPROACH_CURRENT.md
+-rw-r--r--  1 dataguardian dataguardian    4816 Aug 19 10:25  STRATEGIC_NEXT_STEPS_FOR_25K_MRR.md
+-rw-r--r--  1 dataguardian dataguardian    4933 Jul 21 08:00  STRATEGIC_NEXT_STEPS_PRIORITY.md
+-rw-r--r--  1 dataguardian dataguardian    7505 Aug 11 23:37  STRIPE_PAYMENT_FLOW_VALIDATION_ANALYSIS.md
+-rw-r--r--  1 dataguardian dataguardian    3500 Sep  9 18:16  System_Architecture_Flowchart.pdf
+-rw-r--r--  1 dataguardian dataguardian   27630 Jul 21 08:00  TARGET_CUSTOMERS_BUSINESS_STRATEGY.md
+-rw-r--r--  1 dataguardian dataguardian    3019 Sep  9 18:16  Technical_Specifications.pdf
+-rw-r--r--  1 dataguardian dataguardian    8098 Jul 21 08:00  ULTRA_BUDGET_SETUP.md
+-rw-r--r--  1 dataguardian dataguardian    8022 Aug 21 20:11  VIRAL_LINKEDIN_POSTS.md
+-rw-r--r--  1 dataguardian dataguardian   13411 Jul 21 08:00  VPS_NL_DETAILED_SETUP.md
+-rw-r--r--  1 dataguardian dataguardian   16274 Jul 21 08:00  WINDOWS_DEPLOYMENT_GUIDE.md
+drwxr-xr-x  2 dataguardian dataguardian    4096 Sep 15 19:51  __pycache__
+drwxr-xr-x  3 dataguardian dataguardian    4096 May 18 12:13  access_control
+-rw-r--r--  1 dataguardian dataguardian     703 Sep  6 18:23  admin_license.json
+-rw-r--r--  1 dataguardian dataguardian  586471 Sep 20 15:28  app.py
+-rw-r--r--  1 dataguardian dataguardian  270876 May 18 01:04  app.py.bad
+-rw-r--r--  1 dataguardian dataguardian  345552 May 19 00:55  app.py.bak
+-rw-r--r--  1 dataguardian dataguardian  341123 May 19 01:22  app.py.bak2
+-rw-r--r--  1 dataguardian dataguardian    5883 Jul  4 23:45  app_broken.py
+-rw-r--r--  1 dataguardian dataguardian    1887 Jul  4 23:48  app_debug_working.py
+-rw-r--r--  1 dataguardian dataguardian     793 Jun 19 23:16  app_minimal.py
+-rw-r--r--  1 dataguardian dataguardian  431813 Jul  3 23:03  app_original_7627_lines.py
+-rw-r--r--  1 dataguardian dataguardian     590 Jul  4 23:44  app_simple.py
+-rw-r--r--  1 dataguardian dataguardian    7861 Jun 19 23:18  app_working.py
+drwxr-xr-x  3 dataguardian dataguardian   16384 Sep 20 13:34  attached_assets
+-rw-r--r--  1 dataguardian dataguardian    3388 Apr 20 02:40  azure-pipelines.yml
+-rw-r--r--  1 dataguardian dataguardian    5088 Sep  7 21:17  backup.sh
+drwxr-xr-x  2 dataguardian dataguardian    4096 Sep 20 23:04  backups
+drwxr-xr-x  3 dataguardian dataguardian    4096 May 18 12:13  billing
+-rw-r--r--  1 dataguardian dataguardian    4819 Jul 14 22:53  build_standalone_quick.py
+-rw-r--r--  1 dataguardian dataguardian    3274 Jul 14 22:45  build_windows_package.bat
+-rw-r--r--  1 dataguardian dataguardian    8764 Jul  2 23:45  capacity_analysis_report.py
+-rwxr-xr-x  1 dataguardian dataguardian    2065 Sep 10 00:28  check-deployment.sh
+-rw-r--r--  1 dataguardian dataguardian    7568 Jul 25 15:17  check_stripe_integration.py
+-rw-r--r--  1 dataguardian dataguardian   16046 Sep  6 18:50  clean_deploy_dataguardian.sh
+-rwxr-xr-x  1 dataguardian dataguardian    1247 Sep 10 00:27  cleanup-deployment.sh
+-rw-r--r--  1 dataguardian dataguardian   14140 Jul 21 08:00  code_review_ai_act_2025_calculator_comprehensive.md
+-rw-r--r--  1 dataguardian dataguardian   10095 Jul 21 08:00  code_review_ai_act_calculator_final.md
+-rw-r--r--  1 dataguardian dataguardian    8405 Jul 21 08:00  code_review_ai_model_scanner_ai_act_2025.md
+-rw-r--r--  1 dataguardian dataguardian    9150 Jul 21 08:00  code_review_ai_model_scanner_comprehensive.md
+-rw-r--r--  1 dataguardian dataguardian    7149 Jul 21 08:00  code_review_ai_model_scanner_risk_score_fix.md
+-rw-r--r--  1 dataguardian dataguardian   13030 Jul 21 08:00  code_review_all_scanners_e2e.md
+-rw-r--r--  1 dataguardian dataguardian    8815 Jul 21 08:00  code_review_architecture_alignment.md
+-rw-r--r--  1 dataguardian dataguardian   11636 Jul 21 08:00  code_review_code_scanner_e2e.md
+-rw-r--r--  1 dataguardian dataguardian   16188 Jul 21 08:00  code_review_comprehensive_system_analysis.md
+-rw-r--r--  1 dataguardian dataguardian    5258 Jul 21 08:00  code_review_dashboard_data_flow.md
+-rw-r--r--  1 dataguardian dataguardian   14188 Jul 21 08:00  code_review_dashboard_feature_comprehensive.md
+-rw-r--r--  1 dataguardian dataguardian    9441 Jul 21 08:00  code_review_dashboard_fixes.md
+-rw-r--r--  1 dataguardian dataguardian    7113 Jul 21 08:00  code_review_database_scanner_e2e.md
+-rw-r--r--  1 dataguardian dataguardian   10832 Jul 21 08:00  code_review_dpia_refactored.md
+-rw-r--r--  1 dataguardian dataguardian    6847 Jul 21 08:00  code_review_duplicate_removal_complete.md
+-rw-r--r--  1 dataguardian dataguardian    7599 Jul 21 08:00  code_review_dutch_language_comprehensive.md
+-rw-r--r--  1 dataguardian dataguardian   22847 Jul 21 08:00  code_review_dutch_language_support_comprehensive.md
+-rw-r--r--  1 dataguardian dataguardian   12432 Jul 21 08:00  code_review_enhanced_scanners_e2e.md
+-rw-r--r--  1 dataguardian dataguardian   11225 Jul 21 08:00  code_review_html_download_functionality.md
+-rw-r--r--  1 dataguardian dataguardian   20531 Jul 21 08:00  code_review_ideal_payment_e2e_comprehensive.md
+-rw-r--r--  1 dataguardian dataguardian    4962 Jul 21 08:00  code_review_image_scanner_e2e.md
+-rw-r--r--  1 dataguardian dataguardian    6929 Jul 21 08:00  code_review_modular_refactoring.md
+-rw-r--r--  1 dataguardian dataguardian   13311 Jul 21 08:00  code_review_overall_architecture.md
+-rw-r--r--  1 dataguardian dataguardian   17196 Jul 21 08:00  code_review_payment_final_assessment.md
+-rw-r--r--  1 dataguardian dataguardian   14372 Jul 21 08:00  code_review_payment_production_readiness.md
+-rw-r--r--  1 dataguardian dataguardian   10542 Jul 21 08:00  code_review_payment_security_complete.md
+-rw-r--r--  1 dataguardian dataguardian   15098 Jul 21 08:00  code_review_payment_stripe_ideal_integration.md
+-rw-r--r--  1 dataguardian dataguardian   11435 Jul 21 08:00  code_review_scanner_services_comprehensive.md
+-rw-r--r--  1 dataguardian dataguardian    6058 Jul 21 08:00  code_review_session_management_complete.md
+-rw-r--r--  1 dataguardian dataguardian    6328 Jul 21 08:00  code_review_simple_dpia.md
+-rw-r--r--  1 dataguardian dataguardian    8441 Jul 21 08:00  code_review_soc2_scanner_comprehensive.md
+-rw-r--r--  1 dataguardian dataguardian   12663 Jul 21 08:00  code_review_sustainability_e2e.md
+-rw-r--r--  1 dataguardian dataguardian    9594 Jul 21 08:00  code_review_sustainability_scanner.md
+-rw-r--r--  1 dataguardian dataguardian   15357 Jul 21 08:00  code_review_system_capacity_analysis.md
+-rw-r--r--  1 dataguardian dataguardian   11995 Jul 21 08:00  code_review_website_scanner_comprehensive.md
+-rw-r--r--  1 dataguardian dataguardian   12074 Jul 21 08:00  code_review_website_scanner_final.md
+-rw-r--r--  1 dataguardian dataguardian   13721 Aug 27 23:46  competitive_analysis_report.md
+-rw-r--r--  1 dataguardian dataguardian   10569 Sep 15 19:50  competitive_pricing_analysis.py
+drwxr-xr-x  3 dataguardian dataguardian    4096 Sep 15 22:05  components
+-rw-r--r--  1 dataguardian dataguardian   65227 Jun 25 00:24  comprehensive_dpia_assessment.py
+-rw-r--r--  1 dataguardian dataguardian  109458 Jun 25 00:17  comprehensive_dpia_assessment.py.broken
+drwxr-xr-x  3 dataguardian dataguardian    4096 Sep 15 19:49  config
+-rw-r--r--  1 dataguardian dataguardian    3199 Aug 21 19:52  contabo-docker-compose.yml
+-rw-r--r--  1 dataguardian dataguardian   10074 Aug 21 19:53  contabo-install.sh
+-rw-r--r--  1 dataguardian dataguardian    5568 Sep  9 01:02  convert_to_pdf.py
+-rw-r--r--  1 dataguardian dataguardian   29564 May 18 01:04  crash_resistant_dpia.py
+-rw-r--r--  1 dataguardian dataguardian    3145 Jul 17 23:46  create_default_license.py
+-rw-r--r--  1 dataguardian dataguardian    9041 Jul 14 22:55  create_distribution_package.py
+-rw-r--r--  1 dataguardian dataguardian   16595 Sep  9 18:15  create_patent_drawings.py
+-rw-r--r--  1 dataguardian dataguardian    9128 Jul 14 22:52  create_standalone_executable.py
+drwxr-xr-x  2 dataguardian dataguardian    4096 Jul 21 07:59  data
+drwxr-xr-x  2 dataguardian dataguardian    4096 Sep 13 21:18  database
+-rw-r--r--  1 dataguardian dataguardian       0 Sep  5 23:10  dataguardian-complete.tar
+-rw-r--r--  1 dataguardian dataguardian       0 Sep  5 23:10  dataguardian-complete.tar.gz
+-rw-r--r--  1 dataguardian dataguardian 1092801 Sep  6 18:50  dataguardian-pro-complete-fixed.tar.gz
+-rw-r--r--  1 dataguardian dataguardian 5321367 Sep  6 19:46  dataguardian-pro-complete-full.tar.gz
+-rw-r--r--  1 dataguardian dataguardian 2376146 Sep  6 15:35  dataguardian-pro-complete.tar.gz
+-rw-r--r--  1 dataguardian dataguardian       0 Sep  5 23:01  dataguardian-pro-deploy.tar.gz
+-rw-r--r--  1 dataguardian dataguardian    6338 Jul 14 22:46  dataguardian_installer.nsi
+-rw-r--r--  1 dataguardian dataguardian   21724 Sep 14 12:56  debug_forecast_report.html
+-rw-r--r--  1 dataguardian dataguardian    7057 Sep 13 22:32  debug_runtime_enforcement.py
+-rw-r--r--  1 dataguardian dataguardian   48153 Sep 10 19:48  deploy-setup.sh
+-rw-r--r--  1 dataguardian dataguardian   10557 Sep 10 23:07  deploy.sh
+-rw-r--r--  1 dataguardian dataguardian   22249 Sep  7 19:44  deploy_dataguardian_e2e.sh
+-rw-r--r--  1 dataguardian dataguardian   13279 Sep 16 00:52  deploy_native.sh
+-rw-r--r--  1 dataguardian dataguardian   17560 Sep 20 15:38  deploy_to_retzor.sh
+drwxr-xr-x  5 dataguardian dataguardian    4096 Sep  5 20:20  deployment
+-rw-r--r--  1 dataguardian dataguardian    2888 Sep 10 19:34  docker-compose.prod.yml
+-rw-r--r--  1 dataguardian dataguardian    2344 Jul 12 23:42  docker-compose.windows.yml
+-rw-r--r--  1 dataguardian dataguardian    2886 Aug 29 20:23  docker-compose.yml
+-rwxr-xr-x  1 dataguardian dataguardian    8529 Aug 29 20:24  docker-deployment-guide.sh
+drwxr-xr-x  2 dataguardian dataguardian    4096 Jul 21 08:00  docs
+-rw-r--r--  1 dataguardian dataguardian    3021 Sep  9 01:03  download_patents.py
+-rw-r--r--  1 dataguardian dataguardian   21710 Sep 14 13:00  download_reports_test.html
+-rw-r--r--  1 dataguardian dataguardian    4096 Jul 21 08:00  dpia_form_review.md
+-rw-r--r--  1 dataguardian dataguardian   30673 May 19 01:26  dpia_module.py
+-rw-r--r--  1 dataguardian dataguardian   22176 May 18 01:04  dpia_online_report.py
+-rw-r--r--  1 dataguardian dataguardian    2155 May 18 01:04  dpia_section.txt
+-rw-r--r--  1 dataguardian dataguardian    6401 May 18 01:04  dpia_simple_assessment.py
+-rw-r--r--  1 dataguardian dataguardian     140 Sep 20 15:28  dump.rdb
+-rw-r--r--  1 dataguardian dataguardian    4604 Jul 21 08:00  dutch_quality_fixes_summary.md
+-rw-r--r--  1 dataguardian dataguardian    6897 Sep 10 00:44  emergency-deployment-fix.sh
+-rw-r--r--  1 dataguardian dataguardian   45844 May 18 01:04  enhanced_dpia.py
+drwxr-xr-x  2 dataguardian dataguardian    4096 Jul 28 22:25  examples
+-rw-r--r--  1 dataguardian dataguardian    7818 Sep 13 22:33  final_runtime_enforcement_validation.py
+-rw-r--r--  1 dataguardian dataguardian    3026 Sep  6 18:19  fix_auth_clean.sh
+-rw-r--r--  1 dataguardian dataguardian    3126 Sep  6 18:16  fix_server_auth.sh
+-rw-r--r--  1 dataguardian dataguardian   21256 May 18 01:04  fixed_dpia_online_report.py
+-rw-r--r--  1 dataguardian dataguardian    1655 May 18 01:04  fixed_dpia_section.txt
+-rw-r--r--  1 dataguardian dataguardian   20290 Aug 28 00:24  gap_analysis_implementation_plan.md
+-rw-r--r--  1 dataguardian dataguardian   55259 Jun 22 18:33  gdpr_7step_dpia.py
+-rw-r--r--  1 dataguardian dataguardian    4421 Sep 10 00:35  generate_patent_pdf.py
+-rw-r--r--  1 dataguardian dataguardian  400623 May 15 21:25  generated-icon.png
+-rw-r--r--  1 dataguardian dataguardian    5929 Aug 29 10:13  hetzner-deploy.sh
+-rwxr-xr-x  1 dataguardian dataguardian   18327 Aug 29 20:29  hetzner-docker-deploy.sh
+-rw-r--r--  1 dataguardian dataguardian   28819 May 18 01:04  improved_dpia.py
+-rw-r--r--  1 dataguardian dataguardian    5093 Aug 29 20:23  init-db.sql
+-rw-r--r--  1 dataguardian dataguardian    2997 Jul 17 23:46  initialize_license.py
+drwxr-xr-x  2 dataguardian dataguardian    4096 Sep  1 21:52  legal
+-rw-r--r--  1 dataguardian dataguardian    2297 Sep 20 13:36  license.json
+-rw-r--r--  1 dataguardian dataguardian    1367 Sep  6 18:23  licenses.json
+drwxr-xr-x  2 dataguardian dataguardian    4096 Sep 20 23:04  logs
+-rwxr-xr-x  1 dataguardian dataguardian   28798 Sep 20 15:32  manual_hetzner_deploy.sh
+drwxr-xr-x  3 dataguardian dataguardian    4096 Aug  8 19:01  marketing
+drwxr-xr-x  2 dataguardian dataguardian    4096 Jul 23 00:00  marketing_exports
+-rw-r--r--  1 dataguardian dataguardian   12440 Jul 21 08:00  microservices_architecture_plan.md
+-rw-r--r--  1 dataguardian dataguardian   19622 Jul 21 08:00  microservices_implementation_guide.md
+-rw-r--r--  1 dataguardian dataguardian   81187 Jun 25 23:25  new_dpia.py
+-rw-r--r--  1 dataguardian dataguardian    5416 Sep 12 23:43  nginx.conf
+-rw-r--r--  1 dataguardian dataguardian    5133 Sep 10 19:34  nginx.conf.template
+-rw-r--r--  1 dataguardian dataguardian     282 Aug 21 15:12  nixpacks.toml
+drwxr-xr-x  3 dataguardian dataguardian    4096 Sep  6 21:01  pages
+-rw-r--r--  1 dataguardian dataguardian   28998 Sep 10 00:34  patent_application_predictive_compliance.html
+drwxr-xr-x  2 dataguardian dataguardian    4096 Sep  5 20:09  patent_proofs
+-rw-r--r--  1 dataguardian dataguardian   11444 Jul 21 08:00  performance_capabilities_analysis.md
+-rw-r--r--  1 dataguardian dataguardian   10990 Jul  2 23:50  performance_optimization_plan.py
+-rw-r--r--  1 dataguardian dataguardian     944 Sep 10 19:34  production.env.template
+-rw-r--r--  1 dataguardian dataguardian     700 Sep  8 23:33  production_requirements.txt
+-rw-r--r--  1 dataguardian dataguardian   19103 Sep  9 18:16  professional_patent_drawings.py
+-rw-r--r--  1 dataguardian dataguardian   91705 Sep 13 23:59  pyproject.toml
+-rw-r--r--  1 dataguardian dataguardian    4988 Sep  5 22:34  quick_deploy.sh
+-rw-r--r--  1 dataguardian dataguardian     824 Aug 21 15:13  railway-requirements.txt
+-rw-r--r--  1 dataguardian dataguardian     176 Aug 21 15:12  railway.json
+-rw-r--r--  1 dataguardian dataguardian     191 Aug  8 19:58  railway.toml
+-rw-r--r--  1 dataguardian dataguardian   10174 Sep  1 23:59  replit.md
+-rw-r--r--  1 dataguardian dataguardian     293 Sep 15 00:10  replit.nix
+drwxr-xr-x  3 dataguardian dataguardian    4096 Sep 13 19:04  reports
+drwxr-xr-x  2 dataguardian dataguardian    4096 Sep 13 21:18  repositories
+-rw-r--r--  1 dataguardian dataguardian   13770 Jul 21 08:00  requirements_validation_comprehensive.md
+-rw-r--r--  1 dataguardian dataguardian    5954 Sep  7 21:17  restore.sh
+-rw-r--r--  1 dataguardian dataguardian    1278 Jul 14 22:45  run_dataguardian.bat
+-rw-r--r--  1 dataguardian dataguardian   93868 May 18 12:53  scan_checkpoint_39442a68f0.json
+-rw-r--r--  1 dataguardian dataguardian   93870 May 18 12:53  scan_checkpoint_39de26c3e9.json
+-rw-r--r--  1 dataguardian dataguardian    3620 Sep  6 23:18  scan_checkpoint_40895f0ec0.json
+drwxr-xr-x  2 dataguardian dataguardian    4096 Sep  6 20:18  scripts
+-rw-r--r--  1 dataguardian dataguardian    1150 Sep 20 13:36  secure_users.json
+-rw-r--r--  1 dataguardian dataguardian    8128 Sep  6 18:26  server_license_fix.sh
+drwxr-xr-x  4 dataguardian dataguardian    4096 Sep 16 00:44  services
+-rw-r--r--  1 dataguardian dataguardian    5715 Jul 14 22:54  simple_build.py
+-rw-r--r--  1 dataguardian dataguardian   56524 Jun 29 23:46  simple_dpia.py
+-rw-r--r--  1 dataguardian dataguardian   11495 May 18 01:04  simplified_dpia.py
+drwx------  2 dataguardian dataguardian    4096 Sep 20 23:04  ssl
+drwxr-xr-x  4 dataguardian dataguardian    4096 Sep 20 15:11  static
+-rw-r--r--  1 dataguardian dataguardian   19238 May 18 01:04  static_dpia.py
+-rw-r--r--  1 dataguardian dataguardian    5365 Jul 25 15:16  stripe_monitoring_guide.md
+-rw-r--r--  1 dataguardian dataguardian    6457 Jul 21 08:00  system_status_ai_act_integration_review.md
+-rw-r--r--  1 dataguardian dataguardian    7802 Jul 21 08:00  system_status_comprehensive_review.md
+drwxr-xr-x  2 dataguardian dataguardian    4096 Jul 21 08:00  terraform
+-rw-r--r--  1 dataguardian dataguardian   21726 Sep 14 12:53  test_clean_forecast_report.html
+-rw-r--r--  1 dataguardian dataguardian    7035 Aug  2 00:55  test_cost_savings_integration.py
+-rw-r--r--  1 dataguardian dataguardian   15166 Aug  3 01:07  test_dashboard_fixes.py
+-rw-r--r--  1 dataguardian dataguardian    7495 Jun 19 23:58  test_document_scanner_integration.py
+-rw-r--r--  1 dataguardian dataguardian   14431 Jun 10 23:21  test_download_functionality.py
+-rw-r--r--  1 dataguardian dataguardian   28874 Sep 14 12:42  test_forecast_report.html
+-rw-r--r--  1 dataguardian dataguardian    8184 Jul 28 22:23  test_ideal_payment.py
+-rw-r--r--  1 dataguardian dataguardian     808 Jun 19 23:43  test_landing_page.py
+-rw-r--r--  1 dataguardian dataguardian    4412 Jul 17 23:32  test_license_integration_complete.py
+-rw-r--r--  1 dataguardian dataguardian    4543 Jul  2 23:53  test_optimizations.py
+drwxr-xr-x  2 dataguardian dataguardian    4096 Sep  7 15:26  test_samples
+-rw-r--r--  1 dataguardian dataguardian    7245 Jun 26 23:50  test_simple_dpia.py
+drwxr-xr-x  3 dataguardian dataguardian    4096 Sep 16 00:44  tests
+drwxr-xr-x  2 dataguardian dataguardian    4096 Sep 16 00:44  translations
+-rw-r--r--  1 dataguardian dataguardian   14354 May 18 01:04  ultra_simple_dpia.py
+-rw-r--r--  1 dataguardian dataguardian 1228800 Sep 20 13:37  usage_analytics.db
+-rw-r--r--  1 dataguardian dataguardian     485 Sep 14 18:42  user_licenses.json
+-rw-r--r--  1 dataguardian dataguardian    5198 Jul  4 20:09  users.json
+drwxr-xr-x  4 dataguardian dataguardian    4096 Sep 14 23:52  utils
+-rw-r--r--  1 dataguardian dataguardian  535076 Sep 13 23:59  uv.lock
+drwxrwxr-x  7 dataguardian dataguardian    4096 Sep 20 23:05  venv
+-rw-r--r--  1 dataguardian dataguardian    5968 Jul 22 23:16  verification_scan.py
+-rw-r--r--  1 dataguardian dataguardian    9157 Aug 29 09:47  video_production_guide.md
+-rw-r--r--  1 dataguardian dataguardian    7723 Aug 29 09:40  video_script.md
+-rw-r--r--  1 dataguardian dataguardian    8585 Aug 29 09:48  voiceover_timing_script.md
