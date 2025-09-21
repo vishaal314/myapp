@@ -423,7 +423,7 @@ def _(key, default=None):
 
 @profile_function("main_application")
 def main():
-    """Main application entry point with comprehensive error handling and performance optimization"""
+    """Main application entry point"""
     
     with monitor_performance("main_app_initialization"):
         try:
