@@ -1,0 +1,77 @@
+root@vishaalnoord7:/opt# ./check_app_status.sh
+🔍 Checking DataGuardian Application Status...
+==============================================
+📊 Service Status:
+● dataguardian.service - DataGuardian Pro - Privacy Compliance Platform
+     Loaded: loaded (/etc/systemd/system/dataguardian.service; enabled; vendor preset: enabled)
+     Active: active (running) since Sun 2025-09-21 18:53:02 CEST; 3h 26min ago
+   Main PID: 1152332 (streamlit)
+      Tasks: 12 (limit: 2220)
+     Memory: 184.4M
+        CPU: 14.367s
+     CGroup: /system.slice/dataguardian.service
+             └─1152332 /opt/dataguardian/venv/bin/python3 /opt/dataguardian/venv/bin/streamlit run app.py --server.port 5000 --server.address 0.0.0.0 --server.headless true
+
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     page.run()
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/venv/lib/python3.11/site-packages/streamlit/navigation/page.py", line 300, in run
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     exec(code, module.__dict__)  # noqa: S102
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/app.py", line 64, in <module>
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     from utils.session_optimizer import get_streamlit_session, get_session_optimizer
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/utils/session_optimizer.py", line 14, in <module>
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     import psutil
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]: ModuleNotFoundError: No module named 'psutil'
+Sep 21 20:35:23 vishaalnoord7.retzor.com dataguardian[1152332]: 2025-09-21 20:35:23,511 - scanner_log_dashboard - INFO - Scanner log dashboard accessed
+
+📋 Recent Application Logs:
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/venv/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:     _mpa_v1(self._main_script_path)
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/venv/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:     page.run()
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/venv/lib/python3.11/site-packages/streamlit/navigation/page.py", line 300, in run
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:     exec(code, module.__dict__)  # noqa: S102
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/app.py", line 64, in <module>
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:     from utils.session_optimizer import get_streamlit_session, get_session_optimizer
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/utils/session_optimizer.py", line 14, in <module>
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]:     import psutil
+Sep 21 20:34:16 vishaalnoord7.retzor.com dataguardian[1152332]: ModuleNotFoundError: No module named 'psutil'
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]: 2025-09-21 20:35:20.671 Uncaught app execution
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]: Traceback (most recent call last):
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/venv/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     result = func()
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:              ^^^^^^
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/venv/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     _mpa_v1(self._main_script_path)
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/venv/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     page.run()
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/venv/lib/python3.11/site-packages/streamlit/navigation/page.py", line 300, in run
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     exec(code, module.__dict__)  # noqa: S102
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/app.py", line 64, in <module>
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     from utils.session_optimizer import get_streamlit_session, get_session_optimizer
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:   File "/opt/dataguardian/utils/session_optimizer.py", line 14, in <module>
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]:     import psutil
+Sep 21 20:35:20 vishaalnoord7.retzor.com dataguardian[1152332]: ModuleNotFoundError: No module named 'psutil'
+Sep 21 20:35:23 vishaalnoord7.retzor.com dataguardian[1152332]: 2025-09-21 20:35:23,511 - scanner_log_dashboard - INFO - Scanner log dashboard accessed
+
+🌐 Testing Application Response:
+Testing HTTPS...
+HTTPS Response: 200
+Testing HTTP backup...
+HTTP Response: 200
+
+🔍 Testing Python Dependencies:
+Testing psutil import...
+❌ psutil is MISSING - This is the problem!
+
+📁 Virtual Environment Status:
+lrwxrwxrwx 1 dataguardian dataguardian    7 Sep 20 23:04 python -> python3
+lrwxrwxrwx 1 dataguardian dataguardian   16 Sep 20 23:04 python3 -> /usr/bin/python3
+lrwxrwxrwx 1 dataguardian dataguardian    7 Sep 20 23:04 python3.11 -> python3
+
+Installed packages:
+openai                    1.108.1
+pandas                    2.3.2
+streamlit                 1.49.1
+stripe                    12.5.1
