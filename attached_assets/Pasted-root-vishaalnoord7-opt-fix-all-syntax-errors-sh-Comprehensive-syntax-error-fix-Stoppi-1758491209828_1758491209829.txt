@@ -1,0 +1,71 @@
+root@vishaalnoord7:/opt# ./fix_all_syntax_errors.sh
+🔧 Comprehensive syntax error fix...
+⏹️ Stopping DataGuardian service...
+💾 Creating comprehensive backup...
+🔧 Fixing ALL syntax errors...
+🔍 Scanning for syntax errors...
+
+🔧 Applying Fix 1: Extra closing parentheses...
+Found 22 st.metric calls with extra closing parentheses
+  Fixing: st.metric("PII/Secrets Found", len(all_findings))
+  Fixing: st.metric("Total Findings", len(scan_results.get("findings", []))
+  Fixing: st.metric("BSN Instances", scan_results.get('bsn_instances', 0))
+  Fixing: st.metric("KvK Numbers", scan_results.get('kvk_instances', 0))
+  Fixing: st.metric("Netherlands PII", scan_results.get('netherlands_specific_findings', 0))
+  Fixing: st.metric("TSC Criteria", len(criteria))
+  Fixing: st.metric("Pages Scanned", scan_results.get('pages_scanned', 0))
+  Fixing: st.metric("Lines Analyzed", scan_results.get('lines_analyzed', 0))
+  Fixing: st.metric("Total Findings", scan_results.get('total_findings', 0))
+  Fixing: st.metric("Critical Issues", scan_results.get('critical_findings', 0))
+  Fixing: st.metric("Sitemap URLs", len(scan_results.get('sitemap_urls', []))
+  Fixing: st.metric("Trackers Found", len(scan_results['trackers_detected']))
+  Fixing: st.metric("GDPR Violations", len(scan_results['gdpr_violations']))
+  Fixing: st.metric("Dark Patterns", len(scan_results['dark_patterns']))
+  Fixing: st.metric("Risk Factors", len(scan_results['risk_factors']))
+  Fixing: st.metric("Recommendations", len(scan_results['recommendations']))
+  Fixing: st.metric("Total Downloads", usage_stats.get('total_downloads', 0))
+  Fixing: st.metric("Error", "—"))
+  Fixing: st.metric("Report Downloads", usage_stats.get('reports_generated', 0))
+  Fixing: st.metric("Error", "—"))
+  Fixing: st.metric("Document Downloads", usage_stats.get('scans_completed', 0))
+  Fixing: st.metric("Error", "—"))
+
+🔧 Applying Fix 2: Missing closing parentheses...
+Line 1422: Missing 1 closing parenthesis: st.metric(
+  Fixed to: st.metric()
+Line 5802: Missing 1 closing parenthesis: st.metric(
+  Fixed to: st.metric()
+Line 5808: Missing 1 closing parenthesis: st.metric(
+  Fixed to: st.metric()
+Line 5814: Missing 1 closing parenthesis: st.metric(
+  Fixed to: st.metric()
+Line 5820: Missing 1 closing parenthesis: st.metric(
+  Fixed to: st.metric()
+Line 7672: Missing 1 closing parenthesis: st.metric("Content Quality", f"{content_score}%",
+  Fixed to: st.metric("Content Quality", f"{content_score}%",)
+Line 7677: Missing 1 closing parenthesis: st.metric("SEO Score", f"{seo_score}%",
+  Fixed to: st.metric("SEO Score", f"{seo_score}%",)
+Line 7682: Missing 1 closing parenthesis: st.metric("Accessibility", f"{accessibility_score}%",
+  Fixed to: st.metric("Accessibility", f"{accessibility_score}%",)
+Line 7688: Missing 1 closing parenthesis: st.metric("Page Size", f"{content_size_mb:.1f} MB",
+  Fixed to: st.metric("Page Size", f"{content_size_mb:.1f} MB",)
+
+🔧 Applying Fix 3: General unmatched parentheses...
+Line 2862: Fixed double parentheses
+  From: st.metric("Total Findings", len(scan_results.get("findings", []))
+  To:   st.metric("Total Findings", len(scan_results.get("findings", [])
+Line 6470: Fixed double parentheses
+  From: st.metric(_('interface.files_scanned', 'Files Scanned'), scan_results.get("files_scanned", 0))
+  To:   st.metric(_('interface.files_scanned', 'Files Scanned'), scan_results.get("files_scanned", 0)
+Line 6497: Fixed double parentheses
+  From: st.metric(_('interface.total_findings', 'Total Findings'), len(all_findings))
+  To:   st.metric(_('interface.total_findings', 'Total Findings'), len(all_findings)
+Line 7585: Fixed double parentheses
+  From: st.metric("Sitemap URLs", len(scan_results.get('sitemap_urls', []))
+  To:   st.metric("Sitemap URLs", len(scan_results.get('sitemap_urls', [])
+
+✅ Applied 35 syntax fixes
+✅ Comprehensive syntax fix applied
+🔍 Performing thorough Python syntax check...
+Sorry: IndentationError: unexpected indent (app.py, line 1423)❌ Syntax still has issues, restoring backup
+🔄 Restored from: /opt/dataguardian/app.py.comprehensive.backup.20250921_234622
