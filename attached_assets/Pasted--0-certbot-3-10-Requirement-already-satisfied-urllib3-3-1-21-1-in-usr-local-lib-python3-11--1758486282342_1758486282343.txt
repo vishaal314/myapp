@@ -1,0 +1,42 @@
+.0->certbot) (3.10)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.11/dist-packages (from requests>=2.25.1->acme>=5.0.0->certbot) (2.5.0)
+Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.11/dist-packages (from requests>=2.25.1->acme>=5.0.0->certbot) (2025.8.3)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+✅ Verifying certbot installation...
+certbot 5.0.0
+✅ Certbot installed successfully!
+🔐 Generating SSL certificate for dataguardianpro.nl...
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Certificate not yet due for renewal
+Deploying certificate
+Successfully deployed certificate for dataguardianpro.nl to /etc/nginx/sites-enabled/dataguardian
+Congratulations! You have successfully enabled HTTPS on https://dataguardianpro.nl
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+✅ SSL certificate generated successfully!
+🌐 Testing HTTPS access...
+✅ HTTPS Test: SUCCESS! (200 OK)
+
+🎉 DataGuardian Pro is now live at:
+🔒 HTTPS: https://dataguardianpro.nl (PRIMARY)
+🔓 HTTP:  http://dataguardianpro.nl:5000 (BACKUP)
+
+🔄 SSL Certificate will auto-renew every 90 days
+🔄 Setting up SSL auto-renewal...
+
+📋 Certificate Status:
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Found the following certs:
+  Certificate Name: dataguardianpro.nl
+    Serial Number: 5b384e30923d80f697c62ed13c3c5599c47
+    Key Type: RSA
+    Domains: dataguardianpro.nl
+    Expiry Date: 2025-12-09 22:01:47+00:00 (VALID: 79 days)
+    Certificate Path: /etc/letsencrypt/live/dataguardianpro.nl/fullchain.pem
+    Private Key Path: /etc/letsencrypt/live/dataguardianpro.nl/privkey.pem
