@@ -1,0 +1,364 @@
+#!/bin/bash
+# Production DataGuardian Pro Deployment
+# Runs on production server with uploaded files
+
+set -e
+
+echo "🏭 DataGuardian Pro - PRODUCTION DEPLOYMENT"
+echo "==========================================="
+echo "Deploying DataGuardian Pro on production server"
+echo ""
+
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
+}
+
+check_command() {
+    if [ $? -ne 0 ]; then
+        log "❌ $1 FAILED"
+        exit 1
+    fi
+    log "✅ $1"
+}
+
+INSTALL_DIR="/opt/dataguardian"
+VENV_DIR="$INSTALL_DIR/venv"
+SERVICE_USER="dataguardian"
+SERVICE_NAME="dataguardian"
+
+log "Starting production deployment..."
+
+# Check if we have an uploaded package to extract
+if [ -f "/tmp/dataguardian_complete.tar.gz" ]; then
+    log "Found uploaded package, extracting..."
+    cd "$INSTALL_DIR"
+    tar -xzf /tmp/dataguardian_complete.tar.gz
+    chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+    rm -f /tmp/dataguardian_complete.tar.gz
+    check_command "Package extraction"
+elif [ -f "$INSTALL_DIR/app.py" ]; then
+    log "Found existing app.py, proceeding with current files..."
+else
+    log "❌ No DataGuardian source files found!"
+    log "Please upload the source files first:"
+    echo ""
+    echo "From your Replit environment, run:"
+    echo "  tar --exclude='attached_assets' --exclude='reports' --exclude='marketing*' \\"
+    echo "      --exclude='logs' --exclude='*.log' --exclude='__pycache__' \\"
+    echo "      --exclude='.git' --exclude='*.pyc' \\"
+    echo "      -czf dataguardian_complete.tar.gz ."
+    echo ""
+    echo "Then upload it:"
+    echo "  scp dataguardian_complete.tar.gz root@vishaalnoord7:/tmp/"
+    echo ""
+    echo "Then run this script again."
+    exit 1
+fi
+
+# 1. SYSTEM SETUP
+log "=== SYSTEM SETUP ==="
+apt-get update -y >/dev/null 2>&1
+apt-get install -y python3.11 python3.11-venv python3.11-dev python3-pip \
+    postgresql postgresql-contrib redis-server nginx curl wget git \
+    build-essential libpq-dev tesseract-ocr poppler-utils \
+    libssl-dev libffi-dev libjpeg-dev libpng-dev zlib1g-dev \
+    libxml2-dev libxslt1-dev supervisor fail2ban >/dev/null 2>&1
+check_command "System packages"
+
+# 2. USER SETUP
+if ! id "$SERVICE_USER" &>/dev/null; then
+    useradd -r -s /bin/bash -d "$INSTALL_DIR" "$SERVICE_USER"
+    check_command "Service user creation"
+fi
+
+mkdir -p "$INSTALL_DIR"
+chown "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+chmod 755 "$INSTALL_DIR"
+check_command "Directory setup"
+
+# 3. VERIFY ESSENTIAL FILES
+log "=== VERIFYING APPLICATION FILES ==="
+essential_files=(
+    "$INSTALL_DIR/app.py"
+)
+
+# Check if we have the main app file
+if [ -f "$INSTALL_DIR/app.py" ]; then
+    log "✅ Found app.py"
+else
+    log "❌ Missing app.py - application files not properly transferred"
+    exit 1
+fi
+
+# Create minimal required directories if they don't exist
+mkdir -p "$INSTALL_DIR/utils" "$INSTALL_DIR/services" "$INSTALL_DIR/components" \
+         "$INSTALL_DIR/config" "$INSTALL_DIR/.streamlit" "$INSTALL_DIR/data" \
+         "$INSTALL_DIR/translations" "$INSTALL_DIR/static"
+
+# 4. PYTHON ENVIRONMENT
+log "=== PYTHON ENVIRONMENT ==="
+cd "$INSTALL_DIR"
+python3.11 -m venv "$VENV_DIR"
+chown -R "$SERVICE_USER:$SERVICE_USER" "$VENV_DIR"
+"$VENV_DIR/bin/pip" install --upgrade pip setuptools wheel >/dev/null 2>&1
+check_command "Python virtual environment"
+
+log "Installing Python packages..."
+"$VENV_DIR/bin/pip" install \
+    streamlit==1.44.0 pandas numpy plotly redis psycopg2-binary \
+    bcrypt pyjwt requests beautifulsoup4 pillow reportlab \
+    pypdf2 pytesseract opencv-python-headless trafilatura \
+    tldextract openai anthropic stripe aiohttp cryptography \
+    pyyaml python-whois memory-profiler psutil cachetools \
+    joblib authlib python-jose python3-saml dnspython \
+    mysql-connector-python textract pdfkit svglib weasyprint \
+    flask >/dev/null 2>&1
+check_command "Python packages installation"
+
+# 5. DATABASE SETUP
+log "=== DATABASE SETUP ==="
+systemctl start postgresql redis-server >/dev/null 2>&1
+systemctl enable postgresql redis-server >/dev/null 2>&1
+
+# Database configuration
+sudo -u postgres psql -c "DROP DATABASE IF EXISTS dataguardian;" >/dev/null 2>&1 || true
+sudo -u postgres psql -c "DROP USER IF EXISTS dataguardian;" >/dev/null 2>&1 || true
+sudo -u postgres psql -c "CREATE DATABASE dataguardian;" >/dev/null 2>&1
+sudo -u postgres psql -c "CREATE USER dataguardian WITH PASSWORD 'dataguardian_secure_2025';" >/dev/null 2>&1
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE dataguardian TO dataguardian;" >/dev/null 2>&1
+sudo -u postgres psql -c "ALTER USER dataguardian CREATEDB SUPERUSER;" >/dev/null 2>&1
+
+# Create basic database schema
+sudo -u postgres psql -d dataguardian -c "
+CREATE TABLE IF NOT EXISTS scan_results (
+    id SERIAL PRIMARY KEY,
+    scan_id VARCHAR(255) UNIQUE,
+    username VARCHAR(255),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    scan_type VARCHAR(100),
+    region VARCHAR(50),
+    file_count INTEGER DEFAULT 0,
+    total_pii_found INTEGER DEFAULT 0,
+    high_risk_count INTEGER DEFAULT 0,
+    result JSONB
+);
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE,
+    email VARCHAR(255),
+    password_hash VARCHAR(255),
+    role VARCHAR(50) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS license_data (
+    id SERIAL PRIMARY KEY,
+    license_key VARCHAR(255) UNIQUE,
+    user_id INTEGER REFERENCES users(id),
+    plan VARCHAR(100),
+    status VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+" >/dev/null 2>&1
+
+# Redis memory setting
+echo 'vm.overcommit_memory = 1' >> /etc/sysctl.conf
+sysctl vm.overcommit_memory=1 >/dev/null 2>&1
+
+check_command "Database setup"
+
+# 6. CONFIGURATION
+log "=== CONFIGURATION ==="
+
+# Environment variables
+cat > "$INSTALL_DIR/.env" << 'ENV_EOF'
+DATABASE_URL=postgresql://dataguardian:dataguardian_secure_2025@localhost/dataguardian
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=dataguardian
+POSTGRES_USER=dataguardian
+POSTGRES_PASSWORD=dataguardian_secure_2025
+REDIS_URL=redis://localhost:6379/0
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+JWT_SECRET=dataguardian_jwt_secret_2025_production_secure_random_key_32_chars
+DATAGUARDIAN_MASTER_KEY=dataguardian_master_key_2025_secure
+ENCRYPTION_KEY=dataguardian_encryption_key_2025_secure
+PYTHONPATH=/opt/dataguardian
+STREAMLIT_SERVER_HEADLESS=true
+STREAMLIT_SERVER_PORT=5000
+STREAMLIT_SERVER_ADDRESS=0.0.0.0
+OPENAI_API_KEY=
+STRIPE_SECRET_KEY=
+LICENSE_CHECK_ENABLED=true
+LICENSE_STRICT_MODE=false
+LOG_LEVEL=INFO
+ENV_EOF
+chown "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR/.env"
+chmod 600 "$INSTALL_DIR/.env"
+
+# Streamlit configuration
+cat > "$INSTALL_DIR/.streamlit/config.toml" << 'STREAMLIT_EOF'
+[server]
+headless = true
+address = "0.0.0.0"
+port = 5000
+maxUploadSize = 200
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+showErrorDetails = false
+
+[theme]
+primaryColor = "#1f77b4"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"
+font = "sans serif"
+
+[logger]
+level = "info"
+STREAMLIT_EOF
+chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR/.streamlit"
+check_command "Configuration files"
+
+# 7. SERVICE SETUP
+log "=== SERVICE SETUP ==="
+
+# Systemd service
+cat > "/etc/systemd/system/$SERVICE_NAME.service" << SERVICE_EOF
+[Unit]
+Description=DataGuardian Pro - Enterprise Privacy Compliance Platform
+After=network.target postgresql.service redis-server.service
+Wants=postgresql.service redis-server.service
+Requires=postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User=$SERVICE_USER
+Group=$SERVICE_USER
+WorkingDirectory=$INSTALL_DIR
+Environment=PATH=$VENV_DIR/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=$INSTALL_DIR
+EnvironmentFile=$INSTALL_DIR/.env
+ExecStartPre=/bin/sleep 5
+ExecStart=$VENV_DIR/bin/streamlit run app.py --server.port 5000 --server.address 0.0.0.0 --server.headless true
+Restart=always
+RestartSec=10
+TimeoutStartSec=60
+StandardOutput=journal
+StandardError=journal
+KillMode=mixed
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+SERVICE_EOF
+
+# Nginx configuration
+cat > "/etc/nginx/sites-available/dataguardian" << 'NGINX_EOF'
+server {
+    listen 80;
+    server_name localhost;
+    client_max_body_size 200M;
+
+    # Security headers
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+        proxy_send_timeout 86400;
+        proxy_connect_timeout 60;
+    }
+}
+NGINX_EOF
+
+ln -sf /etc/nginx/sites-available/dataguardian /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t >/dev/null 2>&1 && systemctl restart nginx >/dev/null 2>&1
+check_command "Web server setup"
+
+# Set file permissions
+chmod 750 "$INSTALL_DIR"
+find "$INSTALL_DIR" -name "*.py" -exec chmod 644 {} \;
+find "$INSTALL_DIR" -type d -exec chmod 755 {} \;
+chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+
+# 8. START SERVICES
+log "=== STARTING SERVICES ==="
+systemctl daemon-reload
+systemctl enable "$SERVICE_NAME" >/dev/null 2>&1
+systemctl start "$SERVICE_NAME"
+check_command "Service startup"
+
+# Wait for initialization
+log "Waiting for application to start..."
+sleep 25
+
+# 9. VALIDATION
+log "=== VALIDATION ==="
+
+# Check service status
+if systemctl is-active --quiet "$SERVICE_NAME"; then
+    log "✅ DataGuardian service is running"
+else
+    log "❌ DataGuardian service failed to start"
+    systemctl status "$SERVICE_NAME" --no-pager -l
+    journalctl -u "$SERVICE_NAME" --no-pager -l | tail -20
+    exit 1
+fi
+
+# HTTP validation
+for i in {1..15}; do
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000 2>/dev/null || echo "000")
+    if [ "$HTTP_CODE" = "200" ]; then
+        log "✅ Application responding (HTTP 200)"
+        break
+    else
+        log "⚠️ Application not ready (HTTP $HTTP_CODE) - attempt $i/15"
+        if [ $i -eq 15 ]; then
+            log "❌ Application failed to respond properly"
+            echo ""
+            echo "🔧 Troubleshooting:"
+            echo "   systemctl status $SERVICE_NAME"
+            echo "   journalctl -u $SERVICE_NAME -f"
+            echo "   curl -v http://localhost:5000"
+            exit 1
+        fi
+        sleep 4
+    fi
+done
+
+echo ""
+echo "🎉 PRODUCTION DEPLOYMENT SUCCESSFUL!"
+echo "===================================="
+echo "✅ DataGuardian Pro deployed on production server"
+echo "✅ All services configured and running"
+echo "✅ Application responding correctly"
+echo ""
+echo "🌐 Access your application:"
+echo "   http://localhost:5000"
+echo ""
+echo "🔧 Service management:"
+echo "   systemctl status/start/stop/restart $SERVICE_NAME"
+echo "   journalctl -u $SERVICE_NAME -f"
+echo ""
+echo "📁 Installation directory: $INSTALL_DIR"
+echo ""
+log "Production deployment completed successfully!"
