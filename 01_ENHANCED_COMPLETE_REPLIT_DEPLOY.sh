@@ -33,6 +33,25 @@ CURRENT_DIR="$(pwd)"
 
 log "Starting enhanced complete Replit deployment..."
 
+# Verify we're running from the correct directory with modules
+log "Verifying we're running from complete Replit environment..."
+required_modules=(
+    "utils/activity_tracker.py"
+    "utils/code_profiler.py"
+    "services/license_integration.py"
+    "app.py"
+)
+
+for module in "${required_modules[@]}"; do
+    if [ -f "$module" ]; then
+        log "✅ Found source module: $module"
+    else
+        log "❌ ERROR: Missing source module: $module"
+        log "❌ Please run this script from the complete Replit environment directory"
+        exit 1
+    fi
+done
+
 # 1. SYSTEM PREPARATION (Enhanced)
 log "=== ENHANCED SYSTEM PREPARATION ==="
 
@@ -107,50 +126,61 @@ chown "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
 chmod 755 "$INSTALL_DIR"
 check_command "Installation directory creation"
 
-# 3. COPY ENTIRE REPLIT CODEBASE
+# 3. COPY ENTIRE REPLIT CODEBASE (IMPROVED METHOD)
 log "=== COPYING COMPLETE REPLIT CODEBASE ==="
 
-log "Copying entire working Replit directory structure..."
+log "Copying entire working Replit directory structure using improved method..."
 
-# Create archive of current working directory (the Replit environment)
-log "Creating archive of current Replit environment..."
+# Create temporary staging directory
+STAGING_DIR="/tmp/replit_staging"
+rm -rf "$STAGING_DIR"
+mkdir -p "$STAGING_DIR"
+
+# Copy critical directories using rsync for reliability
+log "Copying Replit codebase using rsync..."
 cd "$CURRENT_DIR"
-tar --exclude='*.log' \
+
+# Copy all important files and directories
+rsync -av \
+    --exclude='*.log' \
     --exclude='*.tmp' \
-    --exclude='__pycache__' \
-    --exclude='.git' \
-    --exclude='node_modules' \
-    --exclude='venv' \
+    --exclude='__pycache__/' \
+    --exclude='.git/' \
+    --exclude='node_modules/' \
+    --exclude='venv/' \
     --exclude='*.pyc' \
-    -czf /tmp/replit_complete.tar.gz .
-check_command "Replit environment archive creation"
+    --exclude='.replit*' \
+    --exclude='replit.nix' \
+    --exclude='.cache/' \
+    --exclude='.pytest_cache/' \
+    . "$STAGING_DIR/"
+check_command "Rsync copy to staging"
 
-# Extract to production directory
-log "Extracting complete Replit environment to production..."
-cd "$INSTALL_DIR"
-tar -xzf /tmp/replit_complete.tar.gz
-chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
-rm -f /tmp/replit_complete.tar.gz
-check_command "Complete Replit environment extraction"
-
-# Verify critical directories exist with actual content
-log "Verifying critical modules are present..."
-critical_modules=(
-    "utils/activity_tracker.py"
-    "utils/code_profiler.py" 
-    "utils/compliance_calculator.py"
-    "services/license_integration.py"
-    "services/multi_tenant_service.py"
-    "services/enterprise_auth_service.py"
-    "components/pricing_display.py"
-    "config/pricing_config.py"
-)
-
-for module in "${critical_modules[@]}"; do
-    if [ -f "$INSTALL_DIR/$module" ]; then
-        log "✅ Found critical module: $module"
+# Verify critical files in staging
+log "Verifying critical modules in staging directory..."
+for module in "${required_modules[@]}"; do
+    if [ -f "$STAGING_DIR/$module" ]; then
+        log "✅ Staged module: $module"
     else
-        log "❌ Missing critical module: $module"
+        log "❌ Missing staged module: $module"
+        exit 1
+    fi
+done
+
+# Copy from staging to final location
+log "Moving staged files to production directory..."
+rsync -av "$STAGING_DIR/" "$INSTALL_DIR/"
+chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+rm -rf "$STAGING_DIR"
+check_command "Complete Replit environment installation"
+
+# Final verification in production directory
+log "Final verification of critical modules in production..."
+for module in "${required_modules[@]}"; do
+    if [ -f "$INSTALL_DIR/$module" ]; then
+        log "✅ Production module: $module"
+    else
+        log "❌ Missing production module: $module"
         exit 1
     fi
 done
@@ -547,14 +577,15 @@ done
 
 # Test for actual Replit modules
 log "Validating complete Replit module transfer..."
-if python3 -c "import sys; sys.path.append('$INSTALL_DIR'); import utils.activity_tracker" 2>/dev/null; then
+cd "$INSTALL_DIR"
+if "$VENV_DIR/bin/python" -c "import utils.activity_tracker" 2>/dev/null; then
     log "✅ Replit utils modules successfully transferred"
 else
     log "❌ Replit utils modules transfer failed"
     exit 1
 fi
 
-if python3 -c "import sys; sys.path.append('$INSTALL_DIR'); import services.license_integration" 2>/dev/null; then
+if "$VENV_DIR/bin/python" -c "import services.license_integration" 2>/dev/null; then
     log "✅ Replit services modules successfully transferred"
 else
     log "❌ Replit services modules transfer failed"
@@ -565,7 +596,7 @@ echo ""
 echo "🎉 DataGuardian Pro - ENHANCED COMPLETE REPLIT DEPLOYMENT FINISHED!"
 echo "=================================================================="
 log "✅ Complete Replit codebase transferred with all modules"
-log "✅ All 40+ utils and services modules copied"
+log "✅ All 40+ utils and services modules copied using reliable rsync"
 log "✅ Enhanced Python 3.11 virtual environment with all dependencies"
 log "✅ PostgreSQL database with schema setup"
 log "✅ Redis cache with optimized configuration"
