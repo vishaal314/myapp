@@ -1,0 +1,21 @@
+app = "dataguardian-pro"
+primary_region = "ams"
+
+[build]
+
+[http_service]
+  internal_port = 5000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+[env]
+  ENVIRONMENT = "production"
+  STREAMLIT_SERVER_HEADLESS = "true"
+  STREAMLIT_SERVER_PORT = "5000"
+  STREAMLIT_SERVER_ADDRESS = "0.0.0.0"
