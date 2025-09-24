@@ -31,6 +31,7 @@ log "Starting production deployment..."
 # Check if we have an uploaded package to extract
 if [ -f "/opt/GdprComplianceTool.zip" ]; then
     log "Found GdprComplianceTool.zip in /opt, extracting..."
+    mkdir -p "$INSTALL_DIR"
     cd "$INSTALL_DIR"
     unzip -q -o /opt/GdprComplianceTool.zip
     chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
