@@ -209,14 +209,14 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_DB=0
 JWT_SECRET=dataguardian_jwt_secret_2025_production_secure_random_key_32_chars
-DATAGUARDIAN_MASTER_KEY=dataguardian_master_key_2025_secure
+DATAGUARDIAN_MASTER_KEY=gQJ6WV5FxDgGWj-vQqRzHqS4CIUOGFaXRqsGXNLJHbU=
 ENCRYPTION_KEY=dataguardian_encryption_key_2025_secure
 PYTHONPATH=/opt/dataguardian
 STREAMLIT_SERVER_HEADLESS=true
 STREAMLIT_SERVER_PORT=5000
 STREAMLIT_SERVER_ADDRESS=0.0.0.0
-OPENAI_API_KEY=
-STRIPE_SECRET_KEY=
+OPENAI_API_KEY=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
+STRIPE_SECRET_KEY=sk_test_51RArxBFSlkdgMbJE03jAVsOp0Cp3KabXxuqlWtpKQgD82MPBRFJGhM7ghzPFYpNnzjlEoPqSC6uY7mzlWUY7RICb00Avj3sJx7
 LICENSE_CHECK_ENABLED=true
 LICENSE_STRICT_MODE=false
 LOG_LEVEL=INFO
@@ -230,23 +230,34 @@ cat > "$INSTALL_DIR/.streamlit/config.toml" << 'STREAMLIT_EOF'
 headless = true
 address = "0.0.0.0"
 port = 5000
-maxUploadSize = 200
-enableCORS = false
-enableXsrfProtection = true
+folderWatchBlacklist = [".*", "*/reports/*", "*/temp_*/*"]
 
 [browser]
 gatherUsageStats = false
-showErrorDetails = false
+serverAddress = "localhost"
 
 [theme]
-primaryColor = "#1f77b4"
-backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f0f2f6"
-textColor = "#262730"
+primaryColor = "#4267B2"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F5"
+textColor = "#1E293B"
 font = "sans serif"
 
+[ui]
+hideTopBar = true
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"
+
+[global]
+developmentMode = false
+
+[runner]
+fastReruns = true
+
 [logger]
-level = "info"
+level = "error"
 STREAMLIT_EOF
 chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR/.streamlit"
 check_command "Configuration files"
