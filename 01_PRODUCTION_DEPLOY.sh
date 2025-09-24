@@ -29,7 +29,14 @@ SERVICE_NAME="dataguardian"
 log "Starting production deployment..."
 
 # Check if we have an uploaded package to extract
-if [ -f "/opt/dataguardian_complete.zip" ]; then
+if [ -f "/opt/GdprComplianceTool.zip" ]; then
+    log "Found GdprComplianceTool.zip in /opt, extracting..."
+    cd "$INSTALL_DIR"
+    unzip -q -o /opt/GdprComplianceTool.zip
+    chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+    rm -f /opt/GdprComplianceTool.zip
+    check_command "ZIP package extraction"
+elif [ -f "/opt/dataguardian_complete.zip" ]; then
     log "Found ZIP package in /opt, extracting..."
     cd "$INSTALL_DIR"
     unzip -q -o /opt/dataguardian_complete.zip
