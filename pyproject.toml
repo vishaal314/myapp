@@ -52,6 +52,7 @@ dependencies = [
     "pytest>=8.4.2",
     "python3-saml>=1.16.0",
     "pycryptodome>=3.22.0",
+    "markdown2>=2.5.4",
 ]
 
 [[tool.uv.index]]
