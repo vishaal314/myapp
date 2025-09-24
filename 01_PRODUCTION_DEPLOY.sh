@@ -29,15 +29,29 @@ SERVICE_NAME="dataguardian"
 log "Starting production deployment..."
 
 # Check if we have an uploaded package to extract
-if [ -f "/tmp/dataguardian_complete.zip" ]; then
-    log "Found uploaded ZIP package, extracting..."
+if [ -f "/opt/dataguardian_complete.zip" ]; then
+    log "Found ZIP package in /opt, extracting..."
+    cd "$INSTALL_DIR"
+    unzip -q -o /opt/dataguardian_complete.zip
+    chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+    rm -f /opt/dataguardian_complete.zip
+    check_command "ZIP package extraction"
+elif [ -f "/tmp/dataguardian_complete.zip" ]; then
+    log "Found ZIP package in /tmp, extracting..."
     cd "$INSTALL_DIR"
     unzip -q -o /tmp/dataguardian_complete.zip
     chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
     rm -f /tmp/dataguardian_complete.zip
     check_command "ZIP package extraction"
+elif [ -f "/opt/dataguardian_complete.tar.gz" ]; then
+    log "Found TAR package in /opt, extracting..."
+    cd "$INSTALL_DIR"
+    tar -xzf /opt/dataguardian_complete.tar.gz
+    chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+    rm -f /opt/dataguardian_complete.tar.gz
+    check_command "TAR package extraction"
 elif [ -f "/tmp/dataguardian_complete.tar.gz" ]; then
-    log "Found uploaded TAR package, extracting..."
+    log "Found TAR package in /tmp, extracting..."
     cd "$INSTALL_DIR"
     tar -xzf /tmp/dataguardian_complete.tar.gz
     chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
@@ -54,15 +68,15 @@ else
     echo "   2. Select 'Download as zip'"
     echo "   3. Save as 'dataguardian_complete.zip'"
     echo ""
-    echo "📤 Then upload it:"
-    echo "   scp dataguardian_complete.zip root@vishaalnoord7:/tmp/"
+    echo "📤 Then place it in /opt:"
+    echo "   scp dataguardian_complete.zip root@vishaalnoord7:/opt/"
     echo ""
     echo "🔧 Alternative (manual tar):"
     echo "   tar --exclude='attached_assets' --exclude='reports' --exclude='marketing*' \\"
     echo "       --exclude='logs' --exclude='*.log' --exclude='__pycache__' \\"
     echo "       --exclude='.git' --exclude='*.pyc' \\"
     echo "       -czf dataguardian_complete.tar.gz ."
-    echo "   scp dataguardian_complete.tar.gz root@vishaalnoord7:/tmp/"
+    echo "   scp dataguardian_complete.tar.gz root@vishaalnoord7:/opt/"
     echo ""
     echo "Then run this script again."
     exit 1
