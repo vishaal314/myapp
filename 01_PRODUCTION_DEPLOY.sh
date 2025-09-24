@@ -29,27 +29,40 @@ SERVICE_NAME="dataguardian"
 log "Starting production deployment..."
 
 # Check if we have an uploaded package to extract
-if [ -f "/tmp/dataguardian_complete.tar.gz" ]; then
-    log "Found uploaded package, extracting..."
+if [ -f "/tmp/dataguardian_complete.zip" ]; then
+    log "Found uploaded ZIP package, extracting..."
+    cd "$INSTALL_DIR"
+    unzip -q -o /tmp/dataguardian_complete.zip
+    chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+    rm -f /tmp/dataguardian_complete.zip
+    check_command "ZIP package extraction"
+elif [ -f "/tmp/dataguardian_complete.tar.gz" ]; then
+    log "Found uploaded TAR package, extracting..."
     cd "$INSTALL_DIR"
     tar -xzf /tmp/dataguardian_complete.tar.gz
     chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
     rm -f /tmp/dataguardian_complete.tar.gz
-    check_command "Package extraction"
+    check_command "TAR package extraction"
 elif [ -f "$INSTALL_DIR/app.py" ]; then
     log "Found existing app.py, proceeding with current files..."
 else
     log "❌ No DataGuardian source files found!"
     log "Please upload the source files first:"
     echo ""
-    echo "From your Replit environment, run:"
-    echo "  tar --exclude='attached_assets' --exclude='reports' --exclude='marketing*' \\"
-    echo "      --exclude='logs' --exclude='*.log' --exclude='__pycache__' \\"
-    echo "      --exclude='.git' --exclude='*.pyc' \\"
-    echo "      -czf dataguardian_complete.tar.gz ."
+    echo "🎯 RECOMMENDED: Use Replit's ZIP export feature:"
+    echo "   1. In your Replit workspace, go to the file menu (3 dots)"
+    echo "   2. Select 'Download as zip'"
+    echo "   3. Save as 'dataguardian_complete.zip'"
     echo ""
-    echo "Then upload it:"
-    echo "  scp dataguardian_complete.tar.gz root@vishaalnoord7:/tmp/"
+    echo "📤 Then upload it:"
+    echo "   scp dataguardian_complete.zip root@vishaalnoord7:/tmp/"
+    echo ""
+    echo "🔧 Alternative (manual tar):"
+    echo "   tar --exclude='attached_assets' --exclude='reports' --exclude='marketing*' \\"
+    echo "       --exclude='logs' --exclude='*.log' --exclude='__pycache__' \\"
+    echo "       --exclude='.git' --exclude='*.pyc' \\"
+    echo "       -czf dataguardian_complete.tar.gz ."
+    echo "   scp dataguardian_complete.tar.gz root@vishaalnoord7:/tmp/"
     echo ""
     echo "Then run this script again."
     exit 1
