@@ -33,7 +33,15 @@ if [ -f "/opt/GdprComplianceTool.zip" ]; then
     log "Found GdprComplianceTool.zip in /opt, extracting..."
     mkdir -p "$INSTALL_DIR"
     cd "$INSTALL_DIR"
+    
+    # Extract with verbose output to understand structure
+    log "Extracting ZIP contents..."
     unzip -q -o /opt/GdprComplianceTool.zip
+    
+    # Debug: Show what was extracted
+    log "Extracted files structure:"
+    find "$INSTALL_DIR" -name "*.py" -type f | head -5
+    
     chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
     rm -f /opt/GdprComplianceTool.zip
     check_command "ZIP package extraction"
@@ -111,17 +119,51 @@ chown "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
 chmod 755 "$INSTALL_DIR"
 check_command "Directory setup"
 
-# 3. VERIFY ESSENTIAL FILES
+# 3. VERIFY AND ORGANIZE APPLICATION FILES
 log "=== VERIFYING APPLICATION FILES ==="
-essential_files=(
-    "$INSTALL_DIR/app.py"
-)
 
-# Check if we have the main app file
-if [ -f "$INSTALL_DIR/app.py" ]; then
-    log "✅ Found app.py"
+# Find app.py files after extraction - could be in subdirectories
+APP_PY_LOCATION=$(find "$INSTALL_DIR" -name "app.py" -type f | head -1)
+
+if [ -n "$APP_PY_LOCATION" ]; then
+    APP_SOURCE_DIR=$(dirname "$APP_PY_LOCATION")
+    log "✅ Found app.py at: $APP_SOURCE_DIR"
+    
+    # If app.py is in a subdirectory, move all files to the root
+    if [ "$APP_SOURCE_DIR" != "$INSTALL_DIR" ]; then
+        log "Moving application files from $APP_SOURCE_DIR to $INSTALL_DIR"
+        
+        # Create backup and move files
+        mv "$INSTALL_DIR" "$INSTALL_DIR.bak" 2>/dev/null || true
+        mkdir -p "$INSTALL_DIR"
+        
+        # Move all files from the source directory to install directory
+        if [ -d "$APP_SOURCE_DIR" ]; then
+            cp -r "$APP_SOURCE_DIR"/* "$INSTALL_DIR/" 2>/dev/null || true
+            cp -r "$APP_SOURCE_DIR"/.* "$INSTALL_DIR/" 2>/dev/null || true
+        fi
+        
+        # Clean up backup if move was successful
+        if [ -f "$INSTALL_DIR/app.py" ]; then
+            rm -rf "$INSTALL_DIR.bak" 2>/dev/null || true
+            log "✅ Application files reorganized successfully"
+        else
+            log "❌ Failed to reorganize files, restoring backup"
+            rm -rf "$INSTALL_DIR"
+            mv "$INSTALL_DIR.bak" "$INSTALL_DIR"
+            exit 1
+        fi
+    fi
 else
     log "❌ Missing app.py - application files not properly transferred"
+    log "Checking extraction contents..."
+    find "$INSTALL_DIR" -name "*.py" -type f | head -10
+    exit 1
+fi
+
+# Final verification
+if [ ! -f "$INSTALL_DIR/app.py" ]; then
+    log "❌ app.py still not found after reorganization"
     exit 1
 fi
 

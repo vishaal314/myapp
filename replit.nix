@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.unzip
     pkgs.redis
     pkgs.libstdcxx5
     pkgs.glibc
