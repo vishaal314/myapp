@@ -133,24 +133,41 @@ if [ -n "$APP_PY_LOCATION" ]; then
     if [ "$APP_SOURCE_DIR" != "$INSTALL_DIR" ]; then
         log "Moving application files from $APP_SOURCE_DIR to $INSTALL_DIR"
         
-        # Create backup and move files
-        mv "$INSTALL_DIR" "$INSTALL_DIR.bak" 2>/dev/null || true
-        mkdir -p "$INSTALL_DIR"
+        # Create temporary directory for reorganization
+        TEMP_DIR="/tmp/dataguardian_reorg_$$"
+        mkdir -p "$TEMP_DIR"
         
-        # Move all files from the source directory to install directory
+        # Copy all files from source directory to temp directory
         if [ -d "$APP_SOURCE_DIR" ]; then
-            cp -r "$APP_SOURCE_DIR"/* "$INSTALL_DIR/" 2>/dev/null || true
-            cp -r "$APP_SOURCE_DIR"/.* "$INSTALL_DIR/" 2>/dev/null || true
+            cp -r "$APP_SOURCE_DIR"/* "$TEMP_DIR/" 2>/dev/null || true
+            # Copy hidden files too (like .streamlit)
+            find "$APP_SOURCE_DIR" -name ".*" -type f -exec cp {} "$TEMP_DIR/" \; 2>/dev/null || true
+            find "$APP_SOURCE_DIR" -name ".*" -type d -exec cp -r {} "$TEMP_DIR/" \; 2>/dev/null || true
         fi
         
-        # Clean up backup if move was successful
-        if [ -f "$INSTALL_DIR/app.py" ]; then
-            rm -rf "$INSTALL_DIR.bak" 2>/dev/null || true
-            log "✅ Application files reorganized successfully"
+        # Verify app.py was copied to temp directory
+        if [ -f "$TEMP_DIR/app.py" ]; then
+            # Clear the install directory and move files from temp
+            rm -rf "$INSTALL_DIR"/*
+            cp -r "$TEMP_DIR"/* "$INSTALL_DIR/" 2>/dev/null || true
+            
+            # Copy hidden files and directories
+            find "$TEMP_DIR" -name ".*" -type f -exec cp {} "$INSTALL_DIR/" \; 2>/dev/null || true
+            find "$TEMP_DIR" -name ".*" -type d -exec cp -r {} "$INSTALL_DIR/" \; 2>/dev/null || true
+            
+            # Clean up temp directory
+            rm -rf "$TEMP_DIR"
+            
+            # Final verification
+            if [ -f "$INSTALL_DIR/app.py" ]; then
+                log "✅ Application files reorganized successfully"
+            else
+                log "❌ Failed to reorganize files - app.py missing after move"
+                exit 1
+            fi
         else
-            log "❌ Failed to reorganize files, restoring backup"
-            rm -rf "$INSTALL_DIR"
-            mv "$INSTALL_DIR.bak" "$INSTALL_DIR"
+            log "❌ Failed to copy files to temporary directory"
+            rm -rf "$TEMP_DIR"
             exit 1
         fi
     fi
