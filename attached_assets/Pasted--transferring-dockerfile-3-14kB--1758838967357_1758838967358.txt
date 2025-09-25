@@ -1,0 +1,31 @@
+=> => transferring dockerfile: 3.14kB                                                                                                                                                                        0.0s
+ => [dataguardian internal] load metadata for docker.io/library/python:3.11-slim                                                                                                                              0.4s
+ => [dataguardian internal] load .dockerignore                                                                                                                                                                0.0s
+ => => transferring context: 2B                                                                                                                                                                               0.0s
+ => [dataguardian  1/16] FROM docker.io/library/python:3.11-slim@sha256:a0939570b38cddeb861b8e75d20b1c8218b21562b18f301171904b544e8cf228                                                                      0.0s
+ => [dataguardian internal] load build context                                                                                                                                                                0.1s
+ => => transferring context: 22.38kB                                                                                                                                                                          0.1s
+ => CACHED [dataguardian  2/16] WORKDIR /app                                                                                                                                                                  0.0s
+ => CANCELED [dataguardian  3/16] RUN apt-get update && apt-get install -y     build-essential     curl     git     libpq-dev     postgresql-client     tesseract-ocr     libtesseract-dev     poppler-utils  0.6s
+ => CACHED [dataguardian  4/16] COPY production_requirements.txt requirements.txt                                                                                                                             0.0s
+ => CACHED [dataguardian  5/16] RUN pip install --no-cache-dir --upgrade pip==23.3.1 &&     pip install --no-cache-dir -r requirements.txt &&     pip cache purge                                             0.0s
+ => ERROR [dataguardian  6/16] COPY .streamlit/ .streamlit/                                                                                                                                                   0.0s
+------
+ > [dataguardian  6/16] COPY .streamlit/ .streamlit/:
+------
+failed to solve: failed to compute cache key: failed to calculate checksum of ref 5120338b-e449-4c56-b6c1-2d88c58e01df::ypmm4zoywika2dgk0cx74hbow: "/.streamlit": not found
+🚀 Starting containers with fixed permissions...
+[+] Running 5/5
+ ✔ Network dataguardian_dataguardian-network  Created                                                                                                                                                         0.2s
+ ✔ Container dataguardian-redis-1             Started                                                                                                                                                         0.8s
+ ✔ Container dataguardian-postgres-1          Healthy                                                                                                                                                        11.4s
+ ✔ Container dataguardian-dataguardian-1      Started                                                                                                                                                        11.7s
+ ✔ Container dataguardian-nginx-1             Started                                                                                                                                                        12.2s
+⏳ Waiting for services to initialize...
+📊 Checking container status...
+NAME                          IMAGE                       COMMAND                  SERVICE             CREATED             STATUS                         PORTS
+dataguardian-dataguardian-1   dataguardian-dataguardian   "streamlit run app.p…"   dataguardian        27 seconds ago      Up 16 seconds (healthy)        0.0.0.0:5000->5000/tcp, :::5000->5000/tcp
+dataguardian-nginx-1          nginx:alpine                "/docker-entrypoint.…"   nginx               27 seconds ago      Restarting (1) 4 seconds ago
+dataguardian-postgres-1       postgres:16                 "docker-entrypoint.s…"   postgres            27 seconds ago      Up 27 seconds (healthy)        0.0.0.0:5432->5432/tcp, :::5432->5432/tcp
+dataguardian-redis-1          redis:7.2.4-alpine          "docker-entrypoint.s…"   redis               27 seconds ago      Restarting (1) 9 seconds ago
+🧪 Testing application access...
