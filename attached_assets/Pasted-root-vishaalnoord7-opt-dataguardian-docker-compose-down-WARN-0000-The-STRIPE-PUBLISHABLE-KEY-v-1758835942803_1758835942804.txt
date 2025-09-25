@@ -1,0 +1,49 @@
+root@vishaalnoord7:/opt/dataguardian# docker-compose down
+WARN[0000] The "STRIPE_PUBLISHABLE_KEY" variable is not set. Defaulting to a blank string.
+WARN[0000] The "STRIPE_SECRET_KEY" variable is not set. Defaulting to a blank string.
+WARN[0000] The "JWT_SECRET" variable is not set. Defaulting to a blank string.
+WARN[0000] The "ENCRYPTION_KEY" variable is not set. Defaulting to a blank string.
+[+] Running 5/5
+ ✔ Container dataguardian-nginx               Removed                                                                                                                                                         0.0s
+ ✔ Container dataguardian-pro                 Removed                                                                                                                                                         0.0s
+ ✔ Container dataguardian-redis               Removed                                                                                                                                                         0.0s
+ ✔ Container dataguardian-postgres            Removed                                                                                                                                                         0.0s
+ ✔ Network dataguardian_dataguardian-network  Removed                                                                                                                                                         0.2s
+root@vishaalnoord7:/opt/dataguardian# docker-compose up -d
+WARN[0000] The "STRIPE_PUBLISHABLE_KEY" variable is not set. Defaulting to a blank string.
+WARN[0000] The "STRIPE_SECRET_KEY" variable is not set. Defaulting to a blank string.
+WARN[0000] The "JWT_SECRET" variable is not set. Defaulting to a blank string.
+WARN[0000] The "ENCRYPTION_KEY" variable is not set. Defaulting to a blank string.
+[+] Running 4/5
+ ✔ Network dataguardian_dataguardian-network  Created                                                                                                                                                         0.1s
+ ✔ Container dataguardian-redis               Started                                                                                                                                                         0.9s
+ ⠿ Container dataguardian-postgres            Starting                                                                                                                                                        1.0s
+ ✔ Container dataguardian-pro                 Created                                                                                                                                                         0.1s
+ ✔ Container dataguardian-nginx               Created                                                                                                                                                         0.1s
+Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint dataguardian-postgres (71825418b77df46b0cce21df0e915ab27fb344c01a8a6d51c99aff202bb8ef47): failed to bind host port for 0.0.0.0:5432:172.20.0.3:5432/tcp: address already in use
+root@vishaalnoord7:/opt/dataguardian# sudo pkill postgres
+root@vishaalnoord7:/opt/dataguardian# sudo pkill redis-server
+root@vishaalnoord7:/opt/dataguardian# sudo netstat -tulpn | grep :5432
+root@vishaalnoord7:/opt/dataguardian# sudo netstat -tulpn | grep :6379
+tcp        0      0 0.0.0.0:6379            0.0.0.0:*               LISTEN      1336285/docker-prox
+tcp6       0      0 :::6379                 :::*                    LISTEN      1336292/docker-prox
+root@vishaalnoord7:/opt/dataguardian# sudo systemctl stop postgresql
+root@vishaalnoord7:/opt/dataguardian# sudo systemctl stop redis-server
+root@vishaalnoord7:/opt/dataguardian# sudo systemctl disable postgresql
+Synchronizing state of postgresql.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install disable postgresql
+Removed /etc/systemd/system/multi-user.target.wants/postgresql.service.
+root@vishaalnoord7:/opt/dataguardian# sudo systemctl disable redis-server
+Synchronizing state of redis-server.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install disable redis-server
+root@vishaalnoord7:/opt/dataguardian# sudo pkill redis-server
+root@vishaalnoord7:/opt/dataguardian# docker-compose up -d
+WARN[0000] The "STRIPE_PUBLISHABLE_KEY" variable is not set. Defaulting to a blank string.
+WARN[0000] The "STRIPE_SECRET_KEY" variable is not set. Defaulting to a blank string.
+WARN[0000] The "JWT_SECRET" variable is not set. Defaulting to a blank string.
+WARN[0000] The "ENCRYPTION_KEY" variable is not set. Defaulting to a blank string.
+[+] Running 1/2
+ ✔ Container dataguardian-redis     Running                                                                                                                                                                   0.0s
+ ⠦ Container dataguardian-postgres  Starting                                                                                                                                                                  0.6s
+Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint dataguardian-postgres (10c041d5a061cf96e59e107947f6d0906708ffe11ec46f450e127e658950ea50): failed to bind host port for 0.0.0.0:5432:172.20.0.3:5432/tcp: address already in use
+root@vishaalnoord7:/opt/dataguardian#
