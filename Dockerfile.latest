@@ -35,10 +35,6 @@ COPY translations/ translations/
 COPY config/ config/
 COPY static/ static/
 
-# Create necessary directories with proper permissions
-RUN mkdir -p logs reports data temp attached_assets && \
-    chmod 755 logs reports data temp attached_assets
-
 # Set environment variables (matching Replit exactly)
 ENV ENVIRONMENT=production
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -66,6 +62,12 @@ ENV JWT_SECRET=dataguardian_jwt_secret_2025_production
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash --uid 1000 dataguardian && \
     chown -R dataguardian:dataguardian /app
+
+# Create necessary directories with proper permissions AFTER user creation
+RUN mkdir -p logs reports data temp attached_assets && \
+    chown -R dataguardian:dataguardian logs reports data temp attached_assets && \
+    chmod 755 logs reports data temp attached_assets
+
 USER dataguardian
 
 # Create user-specific Streamlit config
