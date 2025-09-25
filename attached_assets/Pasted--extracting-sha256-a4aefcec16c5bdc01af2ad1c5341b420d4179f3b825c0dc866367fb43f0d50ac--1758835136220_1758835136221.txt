@@ -1,0 +1,24 @@
+ => => extracting sha256:a4aefcec16c5bdc01af2ad1c5341b420d4179f3b825c0dc866367fb43f0d50ac                                                              0.0s
+ => [dataguardian internal] load build context                                                                                                        61.9s
+ => => transferring context: 1.74GB                                                                                                                   61.8s
+ => [dataguardian 2/9] WORKDIR /app                                                                                                                    0.5s
+ => [dataguardian 3/9] RUN apt-get update && apt-get install -y     build-essential     curl     git     libpq-dev     postgresql-client     tesser  119.7s
+ => [dataguardian 4/9] COPY production_requirements.txt requirements.txt                                                                               0.1s
+ => [dataguardian 5/9] RUN pip install --no-cache-dir --upgrade pip &&     pip install --no-cache-dir -r requirements.txt &&     pip cache purge &&  123.5s
+ => [dataguardian 6/9] COPY . .                                                                                                                       25.4s
+ => [dataguardian 7/9] RUN mkdir -p logs reports data temp                                                                                             0.7s
+ => [dataguardian 8/9] RUN useradd --create-home --shell /bin/bash dataguardian &&     chown -R dataguardian:dataguardian /app                        63.3s
+ => [dataguardian 9/9] RUN mkdir -p ~/.streamlit &&     echo '[server]\nheadless = true\naddress = "0.0.0.0"\nport = 5000\nenableCORS = false\nenable  0.5s
+ => [dataguardian] exporting to image                                                                                                                 57.3s
+ => => exporting layers                                                                                                                               57.2s
+ => => writing image sha256:1c2e0c9c4d0b3e5e97de3fbab1a464de8a007e076e428e45e9f18a3d13e31e29                                                           0.0s
+ => => naming to docker.io/library/dataguardian-dataguardian                                                                                           0.0s
+[+] Running 5/7oot root  17767 Sep 25 22:31 soc2_display.py
+ ✔ Network dataguardian_dataguardian-network  Created                                                                                                  0.2s
+ ✔ Volume "dataguardian_postgres_data"        Created                                                                                                  0.0s
+ ✔ Volume "dataguardian_redis_data"           Created                                                                                                  0.0s
+ ⠿ Container dataguardian-postgres            Starting                                                                                                 1.4s
+ ⠿ Container dataguardian-redis               Starting                                                                                                 1.4s
+ ✔ Container dataguardian-pro                 Created                                                                                                  0.1s
+ ✔ Container dataguardian-nginx               Created                                                                                                  0.1s
+Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint dataguardian-redis (cd2d4b11fe719519ba3bac5414f706bd687d6eeceb39ac730b4787c210e38b8a): failed to bind host port for 0.0.0.0:6379:172.20.0.3:6379/tcp: address already in use
