@@ -1,0 +1,36 @@
+dataguardian-postgres-1  | CREATE TABLE
+dataguardian-postgres-1  | CREATE TABLE
+dataguardian-postgres-1  | CREATE TABLE
+dataguardian-postgres-1  | CREATE TABLE
+dataguardian-postgres-1  | CREATE TABLE
+dataguardian-postgres-1  | CREATE TABLE
+dataguardian-postgres-1  | CREATE TABLE
+dataguardian-postgres-1  | CREATE TABLE
+dataguardian-postgres-1  | CREATE TABLE
+dataguardian-postgres-1  | CREATE TABLE
+dataguardian-postgres-1  | psql:/docker-entrypoint-initdb.d/database_schema.sql:175: ERROR:  there is no unique or exclusion constraint matching the ON CONFLICT specification
+dataguardian-postgres-1  | 2025-09-25 21:51:05.597 UTC [62] ERROR:  there is no unique or exclusion constraint matching the ON CONFLICT specification
+dataguardian-postgres-1  | 2025-09-25 21:51:05.597 UTC [62] STATEMENT:  INSERT INTO pii_types (name, pattern, description, risk_level) VALUES
+dataguardian-postgres-1  |      ('Email', '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', 'Email addresses', 'medium'),
+dataguardian-postgres-1  |      ('Phone', '\+?[1-9]\d{1,14}', 'Phone numbers', 'medium'),
+dataguardian-postgres-1  |      ('BSN', '\d{9}', 'Dutch BSN numbers', 'high'),
+dataguardian-postgres-1  |      ('Credit Card', '\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}', 'Credit card numbers', 'high'),
+dataguardian-postgres-1  |      ('IBAN', '[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}', 'International Bank Account Number', 'high')
+dataguardian-postgres-1  |      ON CONFLICT (name) DO NOTHING;
+dataguardian-postgres-1  |
+dataguardian-postgres-1  |
+dataguardian-postgres-1  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+dataguardian-postgres-1  |
+dataguardian-postgres-1  |
+dataguardian-postgres-1  | 2025-09-25 21:51:06.728 UTC [1] LOG:  starting PostgreSQL 16.10 (Debian 16.10-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+dataguardian-postgres-1  | 2025-09-25 21:51:06.729 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+dataguardian-postgres-1  | 2025-09-25 21:51:06.729 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+dataguardian-postgres-1  | 2025-09-25 21:51:06.759 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+dataguardian-postgres-1  | 2025-09-25 21:51:06.773 UTC [28] LOG:  database system was interrupted; last known up at 2025-09-25 21:51:04 UTC
+dataguardian-postgres-1  | 2025-09-25 21:51:07.120 UTC [28] LOG:  database system was not properly shut down; automatic recovery in progress
+dataguardian-postgres-1  | 2025-09-25 21:51:07.146 UTC [28] LOG:  redo starts at 0/14F2AD8
+dataguardian-postgres-1  | 2025-09-25 21:51:07.211 UTC [28] LOG:  invalid record length at 0/1977288: expected at least 24, got 0
+dataguardian-postgres-1  | 2025-09-25 21:51:07.213 UTC [28] LOG:  redo done at 0/1976930 system usage: CPU: user: 0.02 s, system: 0.03 s, elapsed: 0.06 s
+dataguardian-postgres-1  | 2025-09-25 21:51:07.222 UTC [26] LOG:  checkpoint starting: end-of-recovery immediate wait
+dataguardian-postgres-1  | 2025-09-25 21:51:07.388 UTC [26] LOG:  checkpoint complete: wrote 1001 buffers (6.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.044 s, sync=0.115 s, total=0.169 s; sync files=382, longest=0.009 s, average=0.001 s; distance=4626 kB, estimate=4626 kB; lsn=0/1977288, redo lsn=0/1977288
+dataguardian-postgres-1  | 2025-09-25 21:51:07.397 UTC [1] LOG:  database system is ready to accept connections
