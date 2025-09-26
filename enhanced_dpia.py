@@ -42,6 +42,8 @@ def extract_text_from_document(uploaded_file):
     Extract text from an uploaded document.
     Supports PDF, DOCX, TXT, etc.
     """
+    file_path = None
+    temp_dir = None
     try:
         # Create a temp directory if it doesn't exist
         temp_dir = os.path.join(os.getcwd(), "temp_" + str(uuid.uuid4()))
@@ -102,8 +104,8 @@ def extract_text_from_document(uploaded_file):
                 return ""
         
         else:
-                from services.enhanced_document_processor import enhanced_processor as textract_replacement
             try:
+                from services.enhanced_document_processor import enhanced_processor as textract_replacement
                 # import textract  # Replaced with enhanced_document_processor
                 text = textract_replacement.process(file_path).decode('utf-8')
                 return text
@@ -117,8 +119,10 @@ def extract_text_from_document(uploaded_file):
     finally:
         # Clean up temporary file
         try:
-            os.remove(file_path)
-            os.rmdir(temp_dir)
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
+            if temp_dir and os.path.exists(temp_dir):
+                os.rmdir(temp_dir)
         except:
             pass
 
