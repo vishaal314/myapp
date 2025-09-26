@@ -31,7 +31,8 @@ def save_assessment_to_db(assessment_results):
     try:
         # Normally we'd save to a real database here
         scan_id = assessment_results.get('scan_id', str(uuid.uuid4()))
-        results_aggregator.save_scan_result(assessment_results)
+        username = assessment_results.get('username', 'anonymous')
+        results_aggregator.save_scan_result(username, assessment_results)
         return True
     except Exception as e:
         st.error(f"Database error: {str(e)}")
