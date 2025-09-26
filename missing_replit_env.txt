@@ -1,0 +1,17 @@
+# Replit-specific environment variables (currently missing on server):
+export REPL_OWNER=vishaalnoord7
+export REPL_ID=4da867be-fdc8-4d7a-b11d-ce3fa352f4b9
+export REPL_SLUG=dataguardian-pro
+export REPL_LANGUAGE=python
+export REPL_IMAGE=python:3.11
+export REPLIT_DEV_DOMAIN=dataguardianpro.nl
+export REPLIT_DB_URL=postgresql://localhost:5433/dataguardian
+export HOME=/app
+export LANG=en_US.UTF-8
+export PRYBAR_FILE=/app/main.py
+
+# System environment variables for compatibility
+export ENVIRONMENT=production
+export PYTHONPATH=/app
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONUNBUFFERED=1

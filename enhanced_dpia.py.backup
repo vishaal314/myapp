@@ -72,9 +72,8 @@ def extract_text_from_document(uploaded_file):
                 
         elif ext in ['.docx', '.doc']:
             try:
-                from services.enhanced_document_processor import enhanced_processor as textract_replacement
-                # import textract  # Replaced with enhanced_document_processor
-                text = textract_replacement.process(file_path).decode('utf-8')
+                import textract
+                text = textract.process(file_path).decode('utf-8')
                 return text
             except Exception as e:
                 st.warning(f"Error extracting text from document: {str(e)}")
@@ -102,10 +101,9 @@ def extract_text_from_document(uploaded_file):
                 return ""
         
         else:
-                from services.enhanced_document_processor import enhanced_processor as textract_replacement
             try:
-                # import textract  # Replaced with enhanced_document_processor
-                text = textract_replacement.process(file_path).decode('utf-8')
+                import textract
+                text = textract.process(file_path).decode('utf-8')
                 return text
             except Exception as e:
                 st.warning(f"Unsupported file type or error extracting text: {str(e)}")

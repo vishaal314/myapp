@@ -1,7 +1,10 @@
+# DataGuardian Pro Production Requirements - Conflict Free
+# =======================================================
+
 # Core Web Framework
 streamlit>=1.28.0
 
-# AI/ML Dependencies
+# AI/ML Dependencies  
 anthropic>=0.7.0
 openai>=1.3.0
 
@@ -21,7 +24,7 @@ beautifulsoup4>=4.12.0
 trafilatura>=1.6.0
 tldextract>=3.4.0
 
-# Document Processing (PDF focus, no textract conflicts)
+# Document Processing (NO TEXTRACT - conflict resolved)
 pypdf2>=3.0.1
 reportlab>=4.0.0
 pdfkit>=1.0.0
@@ -35,23 +38,23 @@ authlib>=1.2.1
 # Payment Processing
 stripe>=6.0.0
 
-# Visualization
+# Visualization & Plotting
 plotly>=5.17.0
 
-# System Monitoring
+# System Monitoring & Performance
 psutil>=5.9.0
 memory-profiler>=0.60.0
 cachetools>=5.3.0
 
-# Utilities
+# Utilities & Configuration
 dnspython>=2.4.0
 pyyaml>=6.0.1
 
-# Testing
+# Testing Framework
 pytest>=7.4.0
 pytest-cov>=4.1.0
 
-# OCR and Image Processing (primary document processing)
+# OCR and Image Processing (REPLACES textract functionality)
 pytesseract>=0.3.10
 opencv-python-headless>=4.8.0
 
@@ -60,39 +63,42 @@ python-jose>=3.3.0
 python-multipart>=0.0.6
 joblib>=1.3.0
 
-# Text and Document Processing (textract alternative)
+# Text Processing & Documents
 markdown2>=2.4.0
 
-# Document Generation and Processing
+# Document Generation & Export
 weasyprint>=60.0
 svglib>=1.5.1
 
 # Web Framework Extensions
 flask>=2.3.0
 
-# Security
+# Security & Identity
 python-whois>=0.8.0
 pycryptodome>=3.19.0
 
-# SAML Authentication
+# Enterprise Authentication
 python3-saml>=1.15.0
 
-# Database Support
+# Database Support (Multi-vendor)
 mysql-connector-python>=8.2.0
 psycopg2-pool>=1.1
 
-# Enterprise AI/ML
+# Enterprise AI/ML Processing
 onnx>=1.15.0
 onnxruntime>=1.16.0
 
-# Advanced ML (optional - only if needed)
-torch>=2.1.0
-tensorflow>=2.14.0
+# Advanced ML (Optional - comment out if causing issues)
+# torch>=2.1.0
+# tensorflow>=2.14.0
 
-# Enterprise Monitoring
+# Enterprise Monitoring & Profiling
 py-spy>=0.3.14
 
-# Document extraction WITHOUT textract (PyPDF2 + pytesseract covers our needs)
-# textract removed to resolve beautifulsoup4 conflict
-# Alternative: PyMuPDF for advanced PDF processing if needed
-# pymupdf>=1.23.0  # Uncomment if advanced PDF features needed
+# Additional document processing (Alternative to textract)
+python-docx>=0.8.11
+openpyxl>=3.1.0
+xlrd>=2.0.1
+
+# File type detection
+python-magic>=0.4.27

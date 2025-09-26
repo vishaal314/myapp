@@ -13,8 +13,7 @@ except ImportError:
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable
 import PyPDF2
-# import textract  # Replaced with enhanced_document_processor
-from services.enhanced_document_processor import enhanced_processor as textract
+import textract
 from utils.pii_detection import identify_pii_in_text
 from utils.gdpr_rules import get_region_rules, evaluate_risk_level
 from utils.netherlands_gdpr import detect_nl_violations
