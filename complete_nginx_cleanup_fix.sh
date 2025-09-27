@@ -1,4 +1,4 @@
-#!/bin/bash
+complete_nginx_cleanup_fix#!/bin/bash
 # Complete Nginx Cleanup Fix
 # Systematically finds and removes ALL $nonexistent variable references
 # Then creates clean proxy configuration for DataGuardian Pro
