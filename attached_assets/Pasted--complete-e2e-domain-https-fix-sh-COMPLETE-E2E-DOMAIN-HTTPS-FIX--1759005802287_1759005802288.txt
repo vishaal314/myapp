@@ -1,0 +1,192 @@
+ ./complete_e2e_domain_https_fix.sh
+🚀 COMPLETE E2E DOMAIN HTTPS FIX
+===============================
+Comprehensive fix for dataguardianpro.nl with complete testing suite
+
+🔧 PART 1: Environment setup and prerequisites
+=============================================
+✅ Running as root
+✅ DataGuardian Pro found at: /opt/dataguardian
+📦 Installing required packages...
+✅ Required packages installed
+🚀 Starting comprehensive E2E domain HTTPS fix...
+
+🌐 DNS VERIFICATION WITH BLOCKING
+===============================
+🔍 Testing DNS resolution for dataguardianpro.nl...
+⏰ Will wait up to 300 seconds for DNS propagation
+
+🧪 DNS Test Attempt 1/10:
+   dig A record: 45.81.35.202
+   dig any record: 45.81.35.202
+   nslookup result: 45.81.35.202
+✅ DNS Resolution: SUCCESS! dataguardianpro.nl → 45.81.35.202
+🧪 Testing www subdomain...
+✅ www.dataguardianpro.nl → 45.81.35.202 (Perfect!)
+✅ DNS verification completed successfully
+
+🌐 NGINX CONFIGURATION WITH RATE LIMITING FIX
+==============================================
+🛑 Stopping Nginx for reconfiguration...
+📝 Creating rate limiting configuration...
+✅ Rate limiting configuration created
+📝 Creating correct Nginx configuration for dataguardianpro.nl...
+✅ Nginx configuration created
+🧪 Testing Nginx configuration...
+✅ Nginx configuration: VALID
+
+🔍 SERVICE VERIFICATION
+====================
+📊 Checking DataGuardian service...
+✅ DataGuardian service: RUNNING
+🧪 Testing local app connectivity...
+✅ Local app (port 5000): 200
+📊 Checking Nginx service...
+❌ Nginx service: NOT RUNNING
+🔧 Starting Nginx service...
+✅ Nginx service: NOW RUNNING
+🔌 Checking port connectivity...
+✅ Port 5000: LISTENING
+✅ Port 80: LISTENING
+✅ All services verification: PASSED
+
+🔥 FIREWALL CONFIGURATION
+=======================
+✅ Firewall configured
+
+🔐 SSL CERTIFICATE PHASE
+======================
+
+🔐 SSL CERTIFICATE SETUP
+=======================
+🔧 Preparing for SSL certificate request...
+📋 Requesting SSL certificate for dataguardianpro.nl and www.dataguardianpro.nl...
+❌ SSL certificate: FAILED TO OBTAIN
+🔍 Certbot error log:
+certbot.errors.MissingCommandlineFlag: Missing command line flag or config entry for this setting:
+You have an existing certificate that contains a portion of the domains you requested (ref: /etc/letsencrypt/renewal/dataguardianpro.nl.conf)
+
+It contains these names: dataguardianpro.nl
+
+You requested these names for the new certificate: dataguardianpro.nl, www.dataguardianpro.nl.
+
+Do you want to expand and replace this existing certificate with the new certificate?
+
+(You can set this with the --expand flag)
+2025-09-27 22:31:29,409:ERROR:certbot._internal.log:Missing command line flag or config entry for this setting:
+You have an existing certificate that contains a portion of the domains you requested (ref: /etc/letsencrypt/renewal/dataguardianpro.nl.conf)
+
+It contains these names: dataguardianpro.nl
+
+You requested these names for the new certificate: dataguardianpro.nl, www.dataguardianpro.nl.
+
+Do you want to expand and replace this existing certificate with the new certificate?
+
+(You can set this with the --expand flag)
+⚠️  SSL certificate setup failed - continuing with HTTP
+
+🔄 FINAL SERVICE RESTART
+======================
+
+🧪 COMPREHENSIVE E2E TESTING SUITE
+=================================
+🔍 Running comprehensive test suite...
+
+📊 TEST SUITE 1: Service Status
+==============================
+✅ TEST 1.1: DataGuardian service running
+✅ TEST 1.2: Nginx service running
+✅ TEST 1.3: Redis service running
+
+🔌 TEST SUITE 2: Port Connectivity
+===============================
+✅ TEST 2.1: Port 5000 listening
+✅ TEST 2.2: Port 80 listening
+⚠️  TEST 2.3: Port 443 not listening (no SSL)
+
+🌐 TEST SUITE 3: HTTP Connectivity
+===============================
+✅ TEST 3.1: Local Streamlit (5000): 200
+✅ TEST 3.2: Local Nginx (80): 200
+✅ TEST 3.3: Domain HTTP: 200
+
+🔐 TEST SUITE 4: HTTPS Connectivity
+===============================
+❌ TEST 4.1: Domain HTTPS: 000000
+❌ TEST 4.2: WWW HTTPS: 000000
+
+🐍 TEST SUITE 5: App Functionality
+==============================
+✅ TEST 5.1: App.py import working
+✅ TEST 5.2: App content detection (1 elements found)
+
+🌐 TEST SUITE 6: DNS Resolution
+============================
+✅ TEST 6.1: DNS A record: dataguardianpro.nl → 45.81.35.202
+✅ TEST 6.2: DNS www record: www.dataguardianpro.nl → 45.81.35.202
+
+🔐 TEST SUITE 7: SSL Certificate
+============================
+✅ TEST 7.1: SSL certificate domain validation
+ℹ️  TEST 7.2: SSL certificate expires: Dec  9 22:01:47 2025 GMT
+
+📊 TEST RESULTS SUMMARY
+======================
+✅ PASS: DataGuardian service
+✅ PASS: Nginx service
+✅ PASS: Redis service
+✅ PASS: Port 5000
+✅ PASS: Port 80
+⚠️  WARN: Port 443
+✅ PASS: Local Streamlit
+✅ PASS: Local Nginx
+✅ PASS: Domain HTTP
+❌ FAIL: Domain HTTPS
+❌ FAIL: WWW HTTPS
+✅ PASS: App.py import
+✅ PASS: App content
+✅ PASS: DNS A record
+✅ PASS: DNS www record
+✅ PASS: SSL cert domain
+ℹ️  INFO: SSL expiry Dec  9 22:01:47 2025 GMT
+
+⚠️  SOME TESTS FAILED - See summary above
+
+⚠️  Some tests failed - see detailed results above
+
+📊 COMPLETE E2E DOMAIN HTTPS FIX - FINAL STATUS
+==============================================
+
+✅ PARTIAL SUCCESS - HTTP WORKING
+===============================
+
+✅ DNS: Working
+✅ Nginx: Fixed and working
+✅ HTTP: Fully functional
+⚠️  SSL: Certificate setup failed
+
+🌐 CURRENT ACCESS:
+   📍 HTTP: http://dataguardianpro.nl
+   📍 Direct: http://45.81.35.202:5000
+
+🔧 FOR HTTPS:
+   Run: certbot --nginx -d dataguardianpro.nl -d www.dataguardianpro.nl
+
+📋 CONFIGURATION SUMMARY:
+=========================
+   🌐 Domain: dataguardianpro.nl
+   📍 Server IP: 45.81.35.202
+   📂 Installation: /opt/dataguardian
+   🌐 Web Server: Nginx (rate limiting fixed)
+   🔐 SSL: Let's Encrypt
+   🖥️  Service: systemctl status dataguardian
+
+🎯 MANAGEMENT COMMANDS:
+======================
+   🔄 Restart all: systemctl restart dataguardian nginx
+   📊 Check status: systemctl status dataguardian nginx
+   📄 View logs: journalctl -u dataguardian -f
+   🧪 Test again: curl http://dataguardianpro.nl
+
+✅ COMPLETE E2E DOMAIN HTTPS FIX COMPLETED!
+All issues addressed with comprehensive testing suite
