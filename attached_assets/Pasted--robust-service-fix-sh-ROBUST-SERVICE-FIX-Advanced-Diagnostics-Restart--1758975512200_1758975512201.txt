@@ -1,0 +1,93 @@
+./robust_service_fix.sh
+🔧 ROBUST SERVICE FIX - Advanced Diagnostics & Restart
+=====================================================
+Targeting: Health check failures, false negative process detection
+
+🔍 PART 1: Advanced service diagnostics
+=======================================
+📊 Process Detection (Multiple Methods):
+   Method 1 (ps aux): Streamlit=0, Redis=0
+   Method 2 (pgrep): Streamlit=0, Redis=0
+   Method 3 (pidof): Python=0, Redis=0
+   Method 4 (ss): Port 5000=0, Port 6379=0
+✅ Diagnostic data collected
+
+🧠 PART 2: Intelligent service restart logic
+===========================================
+🔴 Streamlit: No processes detected - needs restart
+🔴 Redis: No processes detected - needs restart
+
+🛑 PART 3: Aggressive service cleanup & restart
+==============================================
+🧹 Cleaning up any stale processes...
+No streamlit processes to kill
+No redis processes to kill
+No app.py processes to kill
+✅ Cleanup completed
+
+🔴 PART 4: Redis restart with fallbacks
+======================================
+🔧 Starting Redis server...
+   Trying method 1: redis-server daemon...
+⚠️  Redis: Started but connection test failed
+
+🖥️  PART 5: Streamlit restart with fallbacks
+===========================================
+🔧 Starting Streamlit server...
+   Trying method 1: nohup background...
+   Trying method 2: direct background...
+./robust_service_fix.sh: line 213: streamlit: command not found
+   Trying method 3: python direct...
+./robust_service_fix.sh: line 227: python: command not found
+✅ Streamlit startup attempts completed
+
+🩺 PART 6: Comprehensive health verification
+===========================================
+⏳ Waiting for services to fully initialize...
+🔍 Running comprehensive health checks...
+📊 Final Process Count:
+   Streamlit processes: 0
+   Redis processes: 0
+
+🌐 HTTP Connectivity Tests:
+   Attempt 1: HTTP 000000
+   Waiting 10 seconds before retry...
+   Attempt 2: HTTP 000000
+   Waiting 10 seconds before retry...
+   Attempt 3: HTTP 000000
+   Waiting 10 seconds before retry...
+   Attempt 4: HTTP 000000
+   Waiting 10 seconds before retry...
+   Attempt 5: HTTP 000000
+
+🔴 Redis Connectivity Tests:
+❌ Redis method 1: FAIL
+❌ Redis method 2: FAIL
+
+📊 FINAL ROBUST SERVICE STATUS
+==============================
+
+⚠️  ADVANCED TROUBLESHOOTING NEEDED
+=================================
+
+❌ No processes detected after restart attempts
+❌ HTTP Status: 000000
+
+🔍 Advanced Diagnostics:
+   📋 Check logs: tail -f streamlit_robust.log
+   🔍 Memory usage: free -h
+   💾 Disk space: df -h
+   🔧 Python path: which python
+   📦 Streamlit install: pip show streamlit
+
+📋 LOG FILES CREATED:
+====================
+📄 Streamlit: streamlit_robust.log
+📄 Process ID: streamlit.pid
+
+📄 Recent Streamlit Log (last 10 lines):
+nohup: failed to run command 'streamlit': No such file or directory
+
+✅ ROBUST SERVICE FIX COMPLETE!
+Multiple restart methods attempted with comprehensive diagnostics
+root@vishaalnoord7:/opt/dataguardian#
