@@ -1,0 +1,262 @@
+root@vishaalnoord7:/opt/dataguardian# sudo ./setup_domain_https.sh
+🌐 DATAGUARDIAN PRO DOMAIN & HTTPS SETUP
+========================================
+Configuring dataguardianpro.nl with SSL certificates
+
+🔧 PART 1: System preparation
+============================
+✅ Running as root
+📦 Updating system packages...
+📦 Installing required packages...
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+certbot is already the newest version (1.21.0-1build1).
+python3-certbot-nginx is already the newest version (1.21.0-1).
+curl is already the newest version (7.81.0-1ubuntu1.20).
+nginx is already the newest version (1.18.0-6ubuntu14.7).
+ufw is already the newest version (0.36.1-4ubuntu0.1).
+wget is already the newest version (1.21.2-2ubuntu1.1).
+The following packages were automatically installed and are no longer required:
+  libio-pty-perl libipc-run-perl linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic
+  linux-image-5.15.0-153-generic linux-modules-5.15.0-153-generic linux-modules-extra-5.15.0-153-generic postgresql-17
+  postgresql-client-17 postgresql-common-dev
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 1 not upgraded.
+✅ System packages installed
+
+🔥 PART 2: Firewall configuration
+==============================
+🔧 Configuring UFW firewall...
+Firewall is active and enabled on system startup
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Firewall reloaded
+✅ Firewall configured
+📊 Firewall status:
+Status: active
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW       Anywhere
+80/tcp                     ALLOW       Anywhere
+443/tcp                    ALLOW       Anywhere
+5000                       ALLOW       Anywhere
+22                         ALLOW       Anywhere
+5000/tcp                   ALLOW       Anywhere
+22/tcp (v6)                ALLOW       Anywhere (v6)
+80/tcp (v6)                ALLOW       Anywhere (v6)
+443/tcp (v6)               ALLOW       Anywhere (v6)
+5000 (v6)                  ALLOW       Anywhere (v6)
+22 (v6)                    ALLOW       Anywhere (v6)
+5000/tcp (v6)              ALLOW       Anywhere (v6)
+
+
+🌐 PART 3: Nginx configuration
+===========================
+📝 Creating nginx configuration for dataguardianpro.nl...
+🧪 Testing nginx configuration...
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+✅ Nginx configuration is valid
+Synchronizing state of nginx.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable nginx
+✅ Nginx configured and started
+
+🔍 PART 4: DNS verification
+========================
+🔍 Checking DNS resolution for dataguardianpro.nl...
+⚠️  DNS resolution: dataguardianpro.nl → FAIL
+💡 Expected: 45.81.35.202
+💡 DNS propagation may take up to 24-48 hours
+🌐 Testing HTTP access...
+✅ HTTP access working: http://dataguardianpro.nl
+
+🔐 PART 5: SSL certificate setup
+==============================
+🔧 Setting up Let's Encrypt SSL certificate...
+⚠️  Skipping SSL setup - domain not yet accessible
+💡 Run this script again after DNS propagation completes
+
+⚙️  PART 6: Streamlit configuration update
+=======================================
+📝 Updating Streamlit configuration for domain usage...
+🔄 Restarting Streamlit with domain configuration...
+✅ Streamlit restarted for domain usage (PID: 2154771)
+
+🔄 PART 7: Automatic SSL renewal setup
+====================================
+⚙️  Setting up automatic SSL certificate renewal...
+✅ Automatic SSL renewal configured
+
+🏁 PART 8: Final verification & status
+====================================
+🧪 Running final verification tests...
+📍 DNS: dataguardianpro.nl → FAIL
+🌐 HTTP: 502
+🔐 HTTPS: 000000
+🖥️  Streamlit: 0 process(es) running
+
+📊 DOMAIN & HTTPS SETUP STATUS
+==============================
+
+⏳ DNS PROPAGATION IN PROGRESS
+=============================
+
+✅ Server: Configured and ready
+✅ SSL Setup: Prepared
+⏳ DNS: Propagating (24-48 hours)
+
+💡 NEXT STEPS:
+   1. Wait for DNS propagation
+   2. Re-run: sudo ./setup_domain_https.sh
+   3. Domain will be live with HTTPS
+
+📋 CONFIGURATION SUMMARY:
+========================
+   🌐 Domain: dataguardianpro.nl
+   📍 Server IP: 45.81.35.202
+   🔐 SSL: Let's Encrypt
+   🌐 Web Server: Nginx
+   🖥️  Backend: Streamlit on port 5000
+   🔄 Auto-renewal: Configured
+
+✅ DOMAIN & HTTPS SETUP COMPLETE!
+DataGuardian Pro is configured for production with professional domain
+root@vishaalnoord7:/opt/dataguardian# sudo ./setup_domain_https.sh
+🌐 DATAGUARDIAN PRO DOMAIN & HTTPS SETUP
+========================================
+Configuring dataguardianpro.nl with SSL certificates
+
+🔧 PART 1: System preparation
+============================
+✅ Running as root
+📦 Updating system packages...
+📦 Installing required packages...
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+certbot is already the newest version (1.21.0-1build1).
+python3-certbot-nginx is already the newest version (1.21.0-1).
+curl is already the newest version (7.81.0-1ubuntu1.20).
+nginx is already the newest version (1.18.0-6ubuntu14.7).
+ufw is already the newest version (0.36.1-4ubuntu0.1).
+wget is already the newest version (1.21.2-2ubuntu1.1).
+The following packages were automatically installed and are no longer required:
+  libio-pty-perl libipc-run-perl linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic
+  linux-image-5.15.0-153-generic linux-modules-5.15.0-153-generic linux-modules-extra-5.15.0-153-generic postgresql-17
+  postgresql-client-17 postgresql-common-dev
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 1 not upgraded.
+✅ System packages installed
+
+🔥 PART 2: Firewall configuration
+==============================
+🔧 Configuring UFW firewall...
+Firewall is active and enabled on system startup
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Firewall reloaded
+✅ Firewall configured
+📊 Firewall status:
+Status: active
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW       Anywhere
+80/tcp                     ALLOW       Anywhere
+443/tcp                    ALLOW       Anywhere
+5000                       ALLOW       Anywhere
+22                         ALLOW       Anywhere
+5000/tcp                   ALLOW       Anywhere
+22/tcp (v6)                ALLOW       Anywhere (v6)
+80/tcp (v6)                ALLOW       Anywhere (v6)
+443/tcp (v6)               ALLOW       Anywhere (v6)
+5000 (v6)                  ALLOW       Anywhere (v6)
+22 (v6)                    ALLOW       Anywhere (v6)
+5000/tcp (v6)              ALLOW       Anywhere (v6)
+
+
+🌐 PART 3: Nginx configuration
+===========================
+📝 Creating nginx configuration for dataguardianpro.nl...
+🧪 Testing nginx configuration...
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+✅ Nginx configuration is valid
+Synchronizing state of nginx.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable nginx
+✅ Nginx configured and started
+
+🔍 PART 4: DNS verification
+========================
+🔍 Checking DNS resolution for dataguardianpro.nl...
+⚠️  DNS resolution: dataguardianpro.nl → FAIL
+💡 Expected: 45.81.35.202
+💡 DNS propagation may take up to 24-48 hours
+🌐 Testing HTTP access...
+⚠️  HTTP access status: 502
+💡 This is normal if DNS hasn't propagated yet
+
+🔐 PART 5: SSL certificate setup
+==============================
+🔧 Setting up Let's Encrypt SSL certificate...
+⚠️  Skipping SSL setup - domain not yet accessible
+💡 Run this script again after DNS propagation completes
+
+⚙️  PART 6: Streamlit configuration update
+=======================================
+📝 Updating Streamlit configuration for domain usage...
+🔄 Restarting Streamlit with domain configuration...
+✅ Streamlit restarted for domain usage (PID: 2159198)
+
+🔄 PART 7: Automatic SSL renewal setup
+====================================
+⚙️  Setting up automatic SSL certificate renewal...
+✅ Automatic SSL renewal configured
+
+🏁 PART 8: Final verification & status
+====================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
