@@ -1,0 +1,100 @@
+root@vishaalnoord7:/opt/dataguardian# curl -I https://www.dataguardianpro.nl
+HTTP/2 200
+server: nginx/1.18.0 (Ubuntu)
+date: Sat, 27 Sep 2025 21:28:51 GMT
+content-type: text/html
+content-length: 1837
+vary: Accept-Encoding
+accept-ranges: bytes
+etag: "70f2930f74b49c0569581936c2e172adf41ab5fe7a05207635185874312535bc704f71711def311231ee06e01f0ec1dcb0732be04566cc583a95f9d0f5362dc4"
+last-modified: Sat, 27 Sep 2025 12:32:31 GMT
+cache-control: no-cache
+vary: Accept-Encoding
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+x-frame-options: DENY
+x-content-type-options: nosniff
+x-xss-protection: 1; mode=block
+referrer-policy: strict-origin-when-cross-origin
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' wss: ws:;
+
+root@vishaalnoord7:/opt/dataguardian# ./fix_nginx_proxy_issue.sh
+🔧 NGINX PROXY FIX FOR EXTERNAL SERVER
+=====================================
+Fixing: App works on localhost:5000 but https://www.dataguardianpro.nl shows nothing
+
+🔍 STEP 1: CONFIRM THE PROBLEM
+=============================
+🧪 Testing local Streamlit app...
+   ✅ localhost:5000 → 200 (should be 200)
+🧪 Testing domain HTTPS...
+   ⚠️  https://www.dataguardianpro.nl → 200 (gets response but shows nothing)
+
+✅ PROBLEM CONFIRMED: Nginx proxy not forwarding to localhost:5000
+
+🔍 STEP 2: ANALYZE CURRENT NGINX CONFIG
+======================================
+🔍 Checking current Nginx configuration...
+✅ Found Nginx config: /etc/nginx/sites-enabled/dataguardianpro.nl
+✅ Proxy directive found for port 5000
+🔍 Current proxy configuration:
+    location / {
+        # Specific rate limiting for main app
+        limit_req zone=general burst=10 nodelay;
+
+        # Proxy to Streamlit application
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+
+        # WebSocket and HTTP upgrade headers
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+--
+
+        # Additional security for login
+        add_header X-Content-Type-Options nosniff always;
+        add_header X-Frame-Options DENY always;
+
+        proxy_pass http://127.0.0.1:5000/login;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+--
+
+    # API endpoints with higher rate limits
+    location /api/ {
+        limit_req zone=api burst=50 nodelay;
+
+        proxy_pass http://127.0.0.1:5000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+--
+
+    # Health check endpoint (minimal processing)
+    location /health {
+        access_log off;
+
+        proxy_pass http://127.0.0.1:5000/health;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 5s;
+        proxy_send_timeout 5s;
+
+🔧 STEP 3: CREATE CORRECTED NGINX CONFIG
+=======================================
+📁 Backing up current config...
+✅ Backup created
+📝 Creating corrected Nginx configuration...
+✅ New Nginx configuration created with proper proxy settings
+
+🧪 STEP 4: TEST & APPLY CONFIGURATION
+====================================
+🔍 Testing new Nginx configuration...
+❌ Nginx configuration has errors:
+nginx: [emerg] "client_header_timeout" directive is not allowed here in /etc/nginx/sites-enabled/dataguardianpro.nl:73
+nginx: configuration file /etc/nginx/nginx.conf test failed
