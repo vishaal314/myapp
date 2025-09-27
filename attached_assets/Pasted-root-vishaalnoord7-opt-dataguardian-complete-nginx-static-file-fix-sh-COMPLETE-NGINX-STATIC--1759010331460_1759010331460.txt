@@ -1,0 +1,73 @@
+root@vishaalnoord7:/opt/dataguardian# ./complete_nginx_static_file_fix.sh
+🔧 COMPLETE NGINX STATIC FILE FIX
+=================================
+Issue: https://www.dataguardianpro.nl serves static file (1837 bytes) instead of Streamlit app
+Fix: Remove syntax errors and static file conflicts
+
+🔍 STEP 1: DIAGNOSIS - STATIC FILE vs PROXY
+==========================================
+🧪 Analyzing current HTTPS response...
+   📊 Response size: 1837 bytes
+   📋 Content type: text/htmlnosniff
+   🏷️  Has ETag: 1 (1=static file, 0=dynamic)
+❌ CONFIRMED: Serving static file instead of Streamlit app
+   ✅ Local Streamlit: 200
+
+🔍 STEP 2: FIND AND REMOVE STATIC FILE CONFLICTS
+===============================================
+🔍 Checking for static HTML files that might be served...
+   📄 Found: /usr/share/nginx/html/index.html (612 bytes)
+ℹ️  No obvious static file conflicts found
+
+🔍 STEP 3: FIX NGINX CONFIGURATION SYNTAX ERRORS
+===============================================
+📁 Backing up current Nginx configuration...
+✅ Backup created
+📝 Creating syntax-correct Nginx configuration...
+✅ Clean Nginx configuration created (no syntax errors)
+
+🔍 STEP 4: REMOVE RATE LIMITING CONFLICTS
+=======================================
+✅ Rate limiting config found: /etc/nginx/conf.d/rate_limiting.conf
+✅ Rate limiting zones properly defined
+
+🧪 STEP 5: TEST AND APPLY CONFIGURATION
+=====================================
+🔍 Testing Nginx configuration syntax...
+❌ Configuration still has syntax errors:
+nginx: [warn] "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/dataguardianpro.nl/fullchain.pem"
+nginx: [warn] "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/dataguardianpro.nl/fullchain.pem"
+nginx: [emerg] unknown "nonexistent" variable
+nginx: configuration file /etc/nginx/nginx.conf test failed
+
+🔄 Restoring backup configuration...
+root@vishaalnoord7:/opt/dataguardian# ./simple_nginx_proxy_fix.sh
+🔧 SIMPLE NGINX PROXY FIX
+=========================
+Issue: Domain serves 1837-byte static file instead of proxying to Streamlit
+Fix: Simple, clean nginx configuration with direct proxy
+
+🔍 STEP 1: CONFIRM CURRENT ISSUE
+===============================
+🧪 Current status check...
+   ✅ Local Streamlit: 200
+   📊 Domain response size: 1837 bytes
+   📊 Domain status: 200
+❌ CONFIRMED: Domain serving 1837-byte static file
+
+🔧 STEP 2: CREATE SIMPLE NGINX CONFIGURATION
+===========================================
+📁 Backing up current configuration...
+✅ Backup created
+📝 Creating simple nginx configuration...
+✅ Simple nginx configuration created
+
+🧪 STEP 3: TEST CONFIGURATION
+============================
+🔍 Testing nginx configuration...
+❌ Nginx configuration has issues:
+nginx: [warn] "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/dataguardianpro.nl/fullchain.pem"
+nginx: [warn] "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/letsencrypt/live/dataguardianpro.nl/fullchain.pem"
+nginx: [emerg] unknown "nonexistent" variable
+nginx: configuration file /etc/nginx/nginx.conf test failed
+❌ Critical errors found - restoring backup
