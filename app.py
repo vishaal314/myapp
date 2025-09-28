@@ -748,4 +748,4 @@ if __name__ == "__main__":
         main()
     
     # Log performance completion
-    logger.info("✅ DataGuardian Pro application completed successfully")
+    print("✅ DataGuardian Pro application completed successfully")
