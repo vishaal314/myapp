@@ -1,0 +1,28 @@
+oot@vishaalnoord7:/opt/dataguardian#  systemctl status nginx dataguardian
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
+     Active: active (running) since Sun 2025-09-28 16:23:48 CEST; 3min 20s ago
+       Docs: man:nginx(8)
+    Process: 2183797 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+    Process: 2183798 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+   Main PID: 2183799 (nginx)
+      Tasks: 3 (limit: 2220)
+     Memory: 5.4M
+        CPU: 240ms
+     CGroup: /system.slice/nginx.service
+             ├─2183799 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             ├─2183800 "nginx: worker process" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" >
+             └─2183801 "nginx: worker process" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" >
+
+Sep 28 16:23:48 vishaalnoord7.retzor.com systemd[1]: Starting A high performance web server and a reverse proxy server.>
+Sep 28 16:23:48 vishaalnoord7.retzor.com nginx[2183797]: nginx: [warn] conflicting server name "dataguardianpro.nl" on >
+Sep 28 16:23:48 vishaalnoord7.retzor.com nginx[2183797]: nginx: [warn] conflicting server name "www.dataguardianpro.nl">
+Sep 28 16:23:48 vishaalnoord7.retzor.com nginx[2183798]: nginx: [warn] conflicting server name "dataguardianpro.nl" on >
+Sep 28 16:23:48 vishaalnoord7.retzor.com nginx[2183798]: nginx: [warn] conflicting server name "www.dataguardianpro.nl">
+Sep 28 16:23:48 vishaalnoord7.retzor.com systemd[1]: Started A high performance web server and a reverse proxy server.
+
+● dataguardian.service - DataGuardian Pro Enterprise Privacy Compliance Platform
+     Loaded: loaded (/etc/systemd/system/dataguardian.service; enabled; vendor preset: enabled)
+     Active: activating (auto-restart) (Result: exit-code) since Sun 2025-09-28 16:27:04 CEST; 5s ago
+    Process: 2183963 ExecStart=/usr/bin/python3 -m streamlit run app.py --server.port 5000 --server.address 0.0.0.0 --s>
+   Main PID: 2183963 (code=exited, status=1/FAIL

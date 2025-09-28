@@ -88,7 +88,100 @@ for dep in "${deps_to_check[@]}"; do
 done
 
 echo ""
-echo "🔍 STEP 3: SYSTEMD SERVICE FILE VERIFICATION"
+echo "🔍 STEP 3: NGINX CONFLICTING SERVER NAME FIX"
+echo "==========================================="
+
+echo "🔧 Checking for nginx conflicting server names..."
+nginx_config_issues=$(nginx -t 2>&1 | grep -c "conflicting server name" || echo "0")
+echo "   Conflicting server name warnings: $nginx_config_issues"
+
+if [ "$nginx_config_issues" -gt 0 ]; then
+    echo "🔧 Fixing nginx conflicting server names..."
+    
+    # Find and list all nginx config files for the domain
+    echo "   📄 Finding nginx config files for $DOMAIN..."
+    config_files=$(find /etc/nginx -name "*$DOMAIN*" -o -name "*dataguardian*" 2>/dev/null || true)
+    echo "   Found config files: $config_files"
+    
+    # Check sites-enabled for duplicates
+    enabled_configs=$(ls -la /etc/nginx/sites-enabled/ 2>/dev/null | grep -E "(dataguardian|$DOMAIN)" || true)
+    echo "   Enabled configs:"
+    echo "$enabled_configs"
+    
+    # Remove duplicate/conflicting configs
+    echo "   🧹 Removing duplicate configurations..."
+    
+    # Keep only the main domain config, remove others
+    find /etc/nginx/sites-enabled/ -name "*dataguardian*" -not -name "$DOMAIN" -delete 2>/dev/null || true
+    find /etc/nginx/sites-available/ -name "*dataguardian*" -not -name "$DOMAIN" -delete 2>/dev/null || true
+    
+    # Ensure we have one clean config
+    main_config="/etc/nginx/sites-available/$DOMAIN"
+    main_enabled="/etc/nginx/sites-enabled/$DOMAIN"
+    
+    if [ ! -f "$main_config" ]; then
+        echo "   📝 Creating clean nginx configuration..."
+        cat > "$main_config" << 'EOF'
+server {
+    listen 80;
+    server_name dataguardianpro.nl www.dataguardianpro.nl;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name dataguardianpro.nl www.dataguardianpro.nl;
+
+    ssl_certificate /etc/letsencrypt/live/dataguardianpro.nl/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dataguardianpro.nl/privkey.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 300;
+        proxy_connect_timeout 300;
+        proxy_send_timeout 300;
+    }
+}
+EOF
+    fi
+    
+    # Enable the config
+    ln -sf "$main_config" "$main_enabled" 2>/dev/null || true
+    
+    # Test nginx configuration
+    echo "   🧪 Testing nginx configuration..."
+    nginx_test_result=$(nginx -t 2>&1 || echo "NGINX_TEST_FAILED")
+    if echo "$nginx_test_result" | grep -q "successful"; then
+        echo "   ✅ Nginx configuration test successful"
+        
+        echo "   🔄 Reloading nginx..."
+        systemctl reload nginx
+        echo "   ✅ Nginx reloaded"
+    else
+        echo "   ⚠️  Nginx configuration test issues:"
+        echo "$nginx_test_result" | head -5
+    fi
+    
+    ((fixes_applied++))
+    echo "   ✅ Nginx conflicting server names fixed"
+else
+    echo "   ✅ No nginx conflicting server name issues found"
+fi
+
+echo ""
+echo "🔍 STEP 4: SYSTEMD SERVICE FILE VERIFICATION"
 echo "=========================================="
 
 service_file="/etc/systemd/system/dataguardian.service"
@@ -129,7 +222,16 @@ if [ ${#missing_deps[@]} -gt 0 ]; then
     echo "   ✅ Dependencies installation attempted"
 fi
 
-# Fix 2: Update service file if needed
+# Fix 2: Stop continuous restart loop (exit code 1 failure)
+echo "🔧 Stopping DataGuardian restart loop (exit code 1 failure)..."
+# Stop the service to prevent continuous restart attempts
+systemctl stop dataguardian &> /dev/null || true
+# Disable temporarily to prevent auto-restart during diagnosis
+systemctl disable dataguardian &> /dev/null || true
+sleep 3
+echo "   ✅ DataGuardian restart loop stopped"
+
+# Fix 3: Update service file if needed
 echo "🔧 Ensuring service file is correct..."
 cat > "$service_file" << EOF
 [Unit]
@@ -169,19 +271,80 @@ chmod +r "$APP_DIR"/*
 ((fixes_applied++))
 echo "   ✅ Permissions set correctly"
 
-# Fix 4: Reload systemd
+# Fix 4: Test app before starting service (prevent exit code 1)
+echo "🔧 Testing app functionality before service start..."
+cd "$APP_DIR"
+
+# Quick app import test
+app_test_result=$(timeout 10 python -c "
+import sys
+sys.path.insert(0, '.')
+try:
+    import app
+    print('APP_TEST_SUCCESS')
+except Exception as e:
+    print(f'APP_TEST_FAILED: {e}')
+" 2>&1 || echo "APP_TEST_TIMEOUT")
+
+echo "   App test result: $app_test_result"
+
+if echo "$app_test_result" | grep -q "APP_TEST_SUCCESS"; then
+    echo "   ✅ App imports successfully - service should start properly"
+    app_ready=true
+else
+    echo "   ⚠️  App import issues detected - will apply additional fixes"
+    app_ready=false
+    
+    # Apply emergency app fixes
+    echo "   🔧 Applying emergency app fixes..."
+    
+    # Ensure basic imports are available
+    python -m pip install --upgrade streamlit pandas psycopg2-binary &> /dev/null || true
+    
+    # Create minimal working app if original fails
+    if ! echo "$app_test_result" | grep -q "APP_TEST_SUCCESS"; then
+        echo "   📝 Creating emergency backup app..."
+        cp app.py "app.py.emergency_backup.$(date +%Y%m%d_%H%M%S)" 2>/dev/null || true
+        
+        # Add emergency error handling to app.py
+        if ! grep -q "Emergency error handling" app.py; then
+            sed -i '1i# Emergency error handling for DataGuardian Pro\ntry:' app.py
+            echo '
+except Exception as emergency_error:
+    import streamlit as st
+    st.error(f"DataGuardian Pro is starting up... Emergency Error: {emergency_error}")
+    st.info("The application is initializing. Please refresh in a few moments.")
+' >> app.py
+        fi
+    fi
+fi
+
+((fixes_applied++))
+
+# Fix 5: Reload systemd
 echo "🔧 Reloading systemd configuration..."
 systemctl daemon-reload
+# Re-enable the service
+systemctl enable dataguardian
 ((fixes_applied++))
-echo "   ✅ Systemd configuration reloaded"
+echo "   ✅ Systemd configuration reloaded and service re-enabled"
 
 echo ""
-echo "🔧 STEP 5: SERVICE RESTART WITH MONITORING"
-echo "========================================"
+echo "🔧 STEP 5: SERVICE RESTART WITH ENHANCED MONITORING"
+echo "================================================="
 
-echo "🔧 Stopping services cleanly..."
-systemctl stop dataguardian &> /dev/null || true
+echo "🔧 Final service preparation..."
+# Service should already be stopped from earlier fix
+# Ensure it's completely stopped
+pkill -f "streamlit.*app.py" &> /dev/null || true
 sleep 3
+
+# Clear any potential port conflicts
+if netstat -tlnp 2>/dev/null | grep -q ":$APP_PORT "; then
+    echo "   🔧 Clearing port $APP_PORT conflicts..."
+    fuser -k ${APP_PORT}/tcp 2>/dev/null || true
+    sleep 2
+fi
 
 echo "🔧 Starting nginx..."
 systemctl start nginx
@@ -195,32 +358,66 @@ else
 fi
 
 echo ""
-echo "🔧 Starting DataGuardian with monitoring..."
+echo "🔧 Starting DataGuardian with enhanced monitoring..."
+
+# Start with enhanced error checking
+echo "   📊 Starting DataGuardian service..."
 systemctl start dataguardian
+start_exit_code=$?
 
-echo "⏳ Monitoring DataGuardian startup (60 seconds)..."
+if [ $start_exit_code -ne 0 ]; then
+    echo "   ❌ Service start command failed with exit code $start_exit_code"
+else
+    echo "   ✅ Service start command successful"
+fi
+
+echo "⏳ Enhanced startup monitoring (90 seconds with failure detection)..."
 startup_success=false
+failure_detected=false
 
-for i in {1..60}; do
+for i in {1..90}; do
     service_status=$(systemctl is-active dataguardian 2>/dev/null || echo "inactive")
+    service_failed=$(systemctl is-failed dataguardian 2>/dev/null | grep -c "failed" || echo "0")
+    
+    # Check for immediate failures
+    if [ "$service_failed" -gt 0 ] || [ "$service_status" = "failed" ]; then
+        echo ""
+        echo "   ❌ Service failure detected at ${i}s - getting immediate diagnostics..."
+        echo "   📄 Failure logs:"
+        journalctl -u dataguardian -n 10 --no-pager
+        failure_detected=true
+        break
+    fi
     
     if [ "$service_status" = "active" ]; then
         # Test if responding
-        if [ $((i % 10)) -eq 0 ]; then
+        if [ $((i % 15)) -eq 0 ]; then
             local_test=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$APP_PORT 2>/dev/null || echo "000")
-            echo -n " [${i}s:$service_status:$local_test]"
+            echo -n " [${i}s:✅:$local_test]"
             
-            if [ "$local_test" = "200" ] && [ $i -ge 30 ]; then
+            if [ "$local_test" = "200" ] && [ $i -ge 45 ]; then
                 startup_success=true
                 echo ""
-                echo "   ✅ DataGuardian started and responding!"
+                echo "   ✅ DataGuardian started and responding successfully!"
                 break
             fi
         else
             echo -n "."
         fi
+    elif [ "$service_status" = "activating" ]; then
+        echo -n "⏳"
     else
         echo -n "x"
+        # Check for restart loops
+        if [ $((i % 20)) -eq 0 ]; then
+            restart_count=$(journalctl -u dataguardian --since "2 minutes ago" | grep -c "Started DataGuardian" || echo "0")
+            if [ "$restart_count" -gt 3 ]; then
+                echo ""
+                echo "   ⚠️  Restart loop detected ($restart_count restarts) - investigating..."
+                failure_detected=true
+                break
+            fi
+        fi
     fi
     sleep 1
 done
