@@ -1,0 +1,320 @@
+root@vishaalnoord7:/opt/dataguardian# ./dataguardian_service_fix.sh
+🔧 DATAGUARDIAN SERVICE DIAGNOSTIC & FIX
+========================================
+Issue: DataGuardian service failing to start
+Symptoms: 502 errors, nginx running but backend not responding
+
+🔍 STEP 1: COMPREHENSIVE SERVICE DIAGNOSIS
+========================================
+📊 Current service status:
+   Nginx: active
+   DataGuardian: activating
+inactive
+
+📄 DataGuardian service detailed status:
+● dataguardian.service - DataGuardian Pro Enterprise Privacy Compliance Platform
+     Loaded: loaded (/etc/systemd/system/dataguardian.service; enabled; vendor preset: enabled)
+     Active: activating (auto-restart) (Result: exit-code) since Sun 2025-09-28 16:31:40 CEST; 9s ago
+    Process: 2184054 ExecStart=/usr/bin/python3 -m streamlit run app.py --server.port 5000 --server.address 0.0.0.0 --server.headless true (code=exited, status=1/FAILURE)
+   Main PID: 2184054 (code=exited, status=1/FAILURE)
+        CPU: 51ms
+
+📄 Recent DataGuardian service logs:
+Sep 28 16:31:10 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Main process exited, code=exited, status=1/FAILURE
+Sep 28 16:31:10 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed with result 'exit-code'.
+Sep 28 16:31:20 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Scheduled restart job, restart counter is at 43.
+Sep 28 16:31:20 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:31:20 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:31:20 vishaalnoord7.retzor.com python3[2184047]: /usr/bin/python3: No module named streamlit
+Sep 28 16:31:20 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Main process exited, code=exited, status=1/FAILURE
+Sep 28 16:31:20 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed with result 'exit-code'.
+Sep 28 16:31:30 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Scheduled restart job, restart counter is at 44.
+Sep 28 16:31:30 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:31:30 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:31:30 vishaalnoord7.retzor.com python3[2184051]: /usr/bin/python3: No module named streamlit
+Sep 28 16:31:30 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Main process exited, code=exited, status=1/FAILURE
+Sep 28 16:31:30 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed with result 'exit-code'.
+Sep 28 16:31:40 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Scheduled restart job, restart counter is at 45.
+Sep 28 16:31:40 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:31:40 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:31:40 vishaalnoord7.retzor.com python3[2184054]: /usr/bin/python3: No module named streamlit
+Sep 28 16:31:40 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Main process exited, code=exited, status=1/FAILURE
+Sep 28 16:31:40 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed with result 'exit-code'.
+
+🔍 STEP 2: PYTHON AND APP VERIFICATION
+=====================================
+🐍 Testing Python installation:
+   Python: Python 3.11.13
+   Python3: Python 3.11.13
+
+📋 Testing app.py import:
+   App import result: Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/opt/dataguardian/app.py", line 29, in <module>
+    import streamlit as st
+ModuleNotFoundError: No module named 'streamlit'
+APP_IMPORT_FAILED
+   ❌ App import failed - showing error details:
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/opt/dataguardian/app.py", line 29, in <module>
+    import streamlit as st
+ModuleNotFoundError: No module named 'streamlit'
+
+🧪 Testing manual app execution (5 seconds):
+   Manual execution result:
+Traceback (most recent call last):
+  File "/opt/dataguardian/app.py", line 29, in <module>
+    import streamlit as st
+ModuleNotFoundError: No module named 'streamlit'
+
+📦 Checking critical dependencies:
+   ❌ streamlit: missing or broken
+   ✅ pandas: installed
+   ✅ psycopg2: installed
+   ✅ bcrypt: installed
+   ❌ PyJWT: missing or broken
+
+🔍 STEP 3: NGINX CONFLICTING SERVER NAME FIX
+===========================================
+🔧 Checking for nginx conflicting server names...
+   Conflicting server name warnings: 2
+🔧 Fixing nginx conflicting server names...
+   📄 Finding nginx config files for dataguardianpro.nl...
+   Found config files: /etc/nginx/sites-available/dataguardian-live
+/etc/nginx/sites-available/dataguardian
+/etc/nginx/sites-available/dataguardian-pro
+/etc/nginx/sites-available/dataguardianpro.nl
+/etc/nginx/sites-enabled/dataguardian-live
+/etc/nginx/sites-enabled/dataguardian
+/etc/nginx/sites-enabled/dataguardianpro.nl
+   Enabled configs:
+lrwxrwxrwx 1 root root   39 Sep 27 20:02 dataguardian -> /etc/nginx/sites-available/dataguardian
+lrwxrwxrwx 1 root root   44 Sep 27 20:06 dataguardian-live -> /etc/nginx/sites-available/dataguardian-live
+lrwxrwxrwx 1 root root   45 Sep 28 13:57 dataguardianpro.nl -> /etc/nginx/sites-available/dataguardianpro.nl
+   🧹 Removing duplicate configurations...
+   🧪 Testing nginx configuration...
+   ✅ Nginx configuration test successful
+   🔄 Reloading nginx...
+   ✅ Nginx reloaded
+   ✅ Nginx conflicting server names fixed
+
+🔍 STEP 4: SYSTEMD SERVICE FILE VERIFICATION
+==========================================
+📄 Current service file content:
+--- SERVICE FILE ---
+[Unit]
+Description=DataGuardian Pro Enterprise Privacy Compliance Platform
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/dataguardian
+Environment=PYTHONPATH=/opt/dataguardian
+Environment=STREAMLIT_SERVER_HEADLESS=true
+Environment=STREAMLIT_SERVER_PORT=5000
+Environment=STREAMLIT_SERVER_ADDRESS=0.0.0.0
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/python3 -m streamlit run app.py --server.port 5000 --server.address 0.0.0.0 --server.headless true
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+--- END SERVICE FILE ---
+
+🔍 Service file analysis:
+   ✅ Python path present in service file
+   ✅ Working directory correctly set
+
+🔧 STEP 4: APPLY FIXES BASED ON DIAGNOSIS
+=======================================
+🔧 Installing missing dependencies...
+   Installing streamlit...
+   ⚠️  Warning: streamlit installation issue
+   Installing PyJWT...
+   ✅ Dependencies installation attempted
+🔧 Stopping DataGuardian restart loop (exit code 1 failure)...
+   ✅ DataGuardian restart loop stopped
+🔧 Ensuring service file is correct...
+   ✅ Service file updated with correct configuration
+🔧 Setting proper permissions...
+   ✅ Permissions set correctly
+🔧 Testing app functionality before service start...
+   App test result: APP_TEST_FAILED: No module named 'streamlit'
+   ⚠️  App import issues detected - will apply additional fixes
+   🔧 Applying emergency app fixes...
+   📝 Creating emergency backup app...
+🔧 Reloading systemd configuration...
+Created symlink /etc/systemd/system/multi-user.target.wants/dataguardian.service → /etc/systemd/system/dataguardian.service.
+   ✅ Systemd configuration reloaded and service re-enabled
+
+🔧 STEP 5: SERVICE RESTART WITH ENHANCED MONITORING
+=================================================
+🔧 Final service preparation...
+🔧 Starting nginx...
+   ✅ Nginx started successfully
+
+🔧 Starting DataGuardian with enhanced monitoring...
+   📊 Starting DataGuardian service...
+   ✅ Service start command successful
+⏳ Enhanced startup monitoring (90 seconds with failure detection)...
+./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+../dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x./dataguardian_service_fix.sh: line 383: [: 0
+0: integer expression expected
+x
+   ⚠️  Restart loop detected (10 restarts) - investigating...
+
+   ⚠️  DataGuardian startup monitoring completed
+
+📊 Final service status:
+   Nginx: active
+   DataGuardian: activating
+inactive
+
+❌ DataGuardian still not running - showing recent logs:
+Sep 28 16:31:50 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:31:51 vishaalnoord7.retzor.com python3[2184085]: /usr/bin/python3: No module named streamlit
+Sep 28 16:31:51 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Main process exited, code=exited, status=1/FAILURE
+Sep 28 16:31:51 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed with result 'exit-code'.
+Sep 28 16:31:58 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:32:10 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:32:10 vishaalnoord7.retzor.com python3[2184242]: /usr/bin/python3: No module named streamlit
+Sep 28 16:32:10 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Main process exited, code=exited, status=1/FAILURE
+Sep 28 16:32:10 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed with result 'exit-code'.
+Sep 28 16:32:20 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Scheduled restart job, restart counter is at 1.
+Sep 28 16:32:20 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:32:20 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro Enterprise Privacy Compliance Platform.
+Sep 28 16:32:20 vishaalnoord7.retzor.com python3[2184304]: /usr/bin/python3: No module named streamlit
+Sep 28 16:32:20 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Main process exited, code=exited, status=1/FAILURE
+Sep 28 16:32:20 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Failed with result 'exit-code'.
+
+🧪 STEP 6: FINAL TESTING
+======================
+🧪 Testing applications after fixes...
+🔍 Local application test (3 attempts)...
+   Attempt 1: ❌ 000000
+   Attempt 2: ❌ 000000
+   Attempt 3: ❌ 000000
+🔍 Domain application test (3 attempts)...
+   Attempt 1: ❌ 502
+   Attempt 2: ❌ 502
+   Attempt 3: ❌ 502
+
+📊 DIAGNOSIS & FIX RESULTS
+=========================
+✅ Fixes applied: 5 improvements (+1)
+✅ Nginx service: RUNNING (+1)
+❌ DataGuardian service: NOT RUNNING (+0)
+❌ Local application: NOT WORKING (0/3 success) (+0)
+❌ Domain application: NOT WORKING (0/3 success) (+0)
+❌ Overall functionality: NOT OPERATIONAL (+0)
+
+📊 DIAGNOSTIC & FIX SCORE: 2/6
+
+⚠️  ADDITIONAL DEBUGGING NEEDED
+==============================
+
+📊 Current progress: 2/6
+
+🔧 MANUAL DEBUGGING STEPS:
+   1. Check detailed logs: journalctl -u dataguardian -n 50
+   2. Test manual run: cd /opt/dataguardian && python app.py
+   3. Check app errors: cd /opt/dataguardian && python -c 'import app'
+   4. Verify dependencies: python -m pip list | grep streamlit
+   5. Check port usage: netstat -tlnp | grep :5000
+
+🎯 USEFUL COMMANDS:
+==================
+   📊 Service status: systemctl status nginx dataguardian
+   🔄 Restart services: systemctl restart dataguardian nginx
+   📄 Live logs: journalctl -u dataguardian -f
+   🧪 Test app: cd /opt/dataguardian && python -c 'import app; print("OK")'
+   🔍 Quick test: curl -I https://www.dataguardianpro.nl
+
+✅ DATAGUARDIAN SERVICE DIAGNOSTIC & FIX COMPLETED!
+root@vishaalnoord7:/opt/dataguardian# systemctl status nginx dataguardian
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
+     Active: active (running) since Sun 2025-09-28 16:23:48 CEST; 10min ago
+       Docs: man:nginx(8)
+   Main PID: 2183799 (nginx)
+      Tasks: 3 (limit: 2220)
+     Memory: 5.7M
+        CPU: 400ms
+     CGroup: /system.slice/nginx.service
+             ├─2183799 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             ├─2184123 "nginx: worker process" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" >
+             └─2184124 "nginx: worker process" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" >
+
+Sep 28 16:23:48 vishaalnoord7.retzor.com systemd[1]: Starting A high performance web server and a reverse proxy server.>
+Sep 28 16:23:48 vishaalnoord7.retzor.com nginx[2183797]: nginx: [warn] conflicting server name "dataguardianpro.nl" on >
+Sep 28 16:23:48 vishaalnoord7.retzor.com nginx[2183797]: nginx: [warn] conflicting server name "www.dataguardianpro.nl">
+Sep 28 16:23:48 vishaalnoord7.retzor.com nginx[2183798]: nginx: [warn] conflicting server name "dataguardianpro.nl" on >
+Sep 28 16:23:48 vishaalnoord7.retzor.com nginx[2183798]: nginx: [warn] conflicting server name "www.dataguardianpro.nl">
+Sep 28 16:23:48 vishaalnoord7.retzor.com systemd[1]: Started A high performance web server and a reverse proxy server.
+Sep 28 16:31:53 vishaalnoord7.retzor.com systemd[1]: Reloading A high performance web server and a reverse proxy server>
+Sep 28 16:31:53 vishaalnoord7.retzor.com systemd[1]: Reloaded A high performance web server and a reverse proxy server.
+
+● dataguardian.service - DataGuardian Pro Enterprise Privacy Compliance Platform
+     Loaded: loaded (/etc/systemd/system/dataguardian.service; enabled; vendor preset: enabled)
+     Active: activating (auto-restart) (Result: exit-code) since Sun 2025-09-28 16:34:24 CEST; 7s ago
+    Process: 2184443 ExecStart=/usr/bin/python3 -m streamlit run app.py --server.port 5000 --server.address 0.0.0.0 --s>
+   Main PID: 2184443 (code=exited, status=1/FAILURE)
+        CPU: 85ms
+
+[2]+  Stopped                 systemctl status nginx dataguardian
+root@vishaalnoord7:/opt/dataguardian#  cd /opt/dataguardian && python -c 'import app'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/opt/dataguardian/app.py", line 4
+    """
+    ^
+IndentationError: expected an indented block after 'try' statement on line 2
+root@vishaalnoord7:/opt/dataguardian#  cd /opt/dataguardian && python -c 'import app'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/opt/dataguardian/app.py", line 4
+    """
+    ^
+IndentationError: expected an indented block after 'try' statement on line 2
