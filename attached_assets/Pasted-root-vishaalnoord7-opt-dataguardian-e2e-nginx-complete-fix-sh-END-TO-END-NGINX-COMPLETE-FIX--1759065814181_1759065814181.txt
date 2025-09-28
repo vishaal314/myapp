@@ -1,0 +1,161 @@
+root@vishaalnoord7:/opt/dataguardian# ./e2e_nginx_complete_fix.sh
+🔧 END-TO-END NGINX COMPLETE FIX
+================================
+Issue: nginx reads backup files with  causing persistent errors
+Fix: Remove ALL problematic files and create completely clean configuration
+
+🔍 STEP 1: CURRENT STATE DIAGNOSIS
+=================================
+   ✅ Local Streamlit: 200
+   📊 Domain status: 200
+   📊 Domain size: 1837 bytes
+❌ CONFIRMED: Still serving 1837-byte static file
+
+🔍 STEP 2: FIND ALL PROBLEMATIC FILES
+====================================
+🔍 Searching for ALL files with  references...
+❌ FOUND 3 files with  references:
+   📄 /etc/nginx/sites-available/dataguardianpro.nl.cleanup-backup.20250928_000840
+      76:        try_files $nonexistent @backend;
+      118:        try_files $nonexistent @backend;
+   📄 /etc/nginx/sites-enabled/dataguardianpro.nl.simple-backup.20250927_235759.cleanup-backup.20250928_000840
+      76:        try_files $nonexistent @backend;
+      118:        try_files $nonexistent @backend;
+   📄 /etc/nginx/sites-enabled/dataguardianpro.nl.final-backup.20250928_000337.cleanup-backup.20250928_000840
+      76:        try_files $nonexistent @backend;
+      118:        try_files $nonexistent @backend;
+
+🗑️  STEP 3: AGGRESSIVE CLEANUP - REMOVE PROBLEMATIC FILES
+=======================================================
+🗑️  Removing ALL files containing ...
+📁 Created backup directory: /tmp/nginx-problematic-files-backup-20250928_135748
+   🗑️  Removing: /etc/nginx/sites-available/dataguardianpro.nl.cleanup-backup.20250928_000840
+   ✅ Removed: /etc/nginx/sites-available/dataguardianpro.nl.cleanup-backup.20250928_000840
+   🗑️  Removing: /etc/nginx/sites-enabled/dataguardianpro.nl.simple-backup.20250927_235759.cleanup- backup.20250928_000840
+   ✅ Removed: /etc/nginx/sites-enabled/dataguardianpro.nl.simple-backup.20250927_235759.cleanup-backup.20250928_000840
+   🗑️  Removing: /etc/nginx/sites-enabled/dataguardianpro.nl.final-backup.20250928_000337.cleanup-b ackup.20250928_000840
+   ✅ Removed: /etc/nginx/sites-enabled/dataguardianpro.nl.final-backup.20250928_000337.cleanup-backup.20250928_000840
+✅ Removed 3 problematic files
+📁 Backups saved to: /tmp/nginx-problematic-files-backup-20250928_135748
+
+🧹 STEP 4: CLEAN UP NGINX DIRECTORIES
+====================================
+🧹 Cleaning up nginx backup files...
+✅ Nginx directories cleaned
+
+🔧 STEP 5: CREATE COMPLETELY FRESH CONFIGURATION
+==============================================
+📝 Creating fresh nginx configuration at /etc/nginx/sites-available/dataguardianpro.nl...
+✅ Fresh configuration created
+🔗 Enabling site configuration...
+✅ Site enabled
+
+🧪 STEP 6: TEST FRESH CONFIGURATION
+==================================
+🔍 Testing fresh nginx configuration...
+Nginx test output:
+nginx: [warn] conflicting server name "dataguardianpro.nl" on 0.0.0.0:80, ignored
+nginx: [warn] conflicting server name "www.dataguardianpro.nl" on 0.0.0.0:80, ignored
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+✅ SUCCESS: Fresh configuration is valid!
+
+🔄 STEP 7: APPLY FRESH CONFIGURATION
+==================================
+🛑 Stopping nginx for clean restart...
+Terminated
+root@vishaalnoord7:/opt/dataguardian# ./complete_domain_verification.sh
+🔧 COMPLETE DOMAIN VERIFICATION
+===============================
+Final steps to verify DataGuardian Pro is accessible via HTTPS domain
+
+🔍 STEP 1: VERIFY NGINX CONFIGURATION
+====================================
+🔍 Testing nginx configuration...
+✅ Nginx configuration is valid
+✅  variable errors: RESOLVED
+
+🔄 STEP 2: RESTART NGINX
+=======================
+🔄 Restarting nginx to ensure fresh configuration...
+✅ Nginx restarted successfully
+
+🔍 STEP 3: VERIFY DATAGUARDIAN SERVICE
+=====================================
+🔍 Checking DataGuardian service...
+✅ DataGuardian service is running
+
+🧪 STEP 4: TEST LOCAL APPLICATION
+===============================
+🔍 Testing local application on port 5000...
+✅ Local application responding: 200
+
+🧪 STEP 5: TEST DOMAIN HTTPS
+==========================
+⏳ Waiting 10 seconds for services to stabilize...
+🔍 Testing HTTPS domain: https://www.dataguardianpro.nl...
+   📊 Domain status: 200
+   📊 Response size: 1837 bytes
+✅ Domain HTTPS responding successfully
+⚠️  Response size might indicate static content
+
+🔍 STEP 6: CONTENT VERIFICATION
+==============================
+🔍 Checking content from https://www.dataguardianpro.nl...
+📄 Content sample:
+--- START ---
+<!--
+ Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022-2025)
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+--- END ---
+   🎯 Dynamic content indicators: 1
+⚠️  Content may not be from Streamlit application
+
+🧪 STEP 7: COMPREHENSIVE TEST
+============================
+🌐 Testing all domain variants...
+   🔄 HTTP redirect: 200 (should be 301)
+   🔐 HTTPS main: 200
+   🌐 HTTPS www: 200
+
+📊 FINAL RESULTS
+===============
+📊 Success Score: 3/5
+
+✅ SIGNIFICANT PROGRESS - MINOR ISSUES REMAIN
+============================================
+
+✅ Major components working: 3/5
+
+⚠️  Remaining issues:
+   - Domain may be serving static content
+   - Content may not be from Streamlit
+
+💡 RECOMMENDATIONS:
+   1. Try accessing https://www.dataguardianpro.nl in browser
+   2. Clear browser cache completely
+   3. Wait 5-10 minutes for full propagation
+   4. Check browser developer console for errors
+
+🎯 VERIFICATION COMMANDS:
+========================
+   🔍 Test domain: curl -I https://www.dataguardianpro.nl
+   📄 Get content: curl -s https://www.dataguardianpro.nl | head -20
+   📊 Check services: systemctl status nginx dataguardian
+   🔄 Restart all: systemctl restart nginx dataguardian
+   📄 View logs: tail -f /var/log/nginx/error.log
+
+✅ DOMAIN VERIFICATION COMPLETED!
+DataGuardian Pro should now be fully accessible via HTTPS!
