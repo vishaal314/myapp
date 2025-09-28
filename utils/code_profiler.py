@@ -427,6 +427,18 @@ class PerformanceProfiler:
         """Enable profiling"""
         self.profiling_enabled = True
         logger.info("Profiling enabled")
+    
+    def log_performance(self, operation_name: str, duration: float = None, memory_used: float = None):
+        """Log performance for an operation"""
+        try:
+            if duration is not None:
+                logger.info(f"Performance Log [{operation_name}]: {duration:.3f}s")
+            if memory_used is not None:
+                logger.info(f"Memory Log [{operation_name}]: {memory_used:.1f}MB")
+            else:
+                logger.info(f"Performance Log [{operation_name}]")
+        except Exception as e:
+            logger.error(f"Error logging performance: {e}")
 
 # Global profiler instance
 profiler = PerformanceProfiler()
