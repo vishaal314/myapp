@@ -1,0 +1,66 @@
+root@vishaalnoord7:/opt/dataguardian# ./e2e_nginx_complete_fix.sh
+🔧 END-TO-END NGINX COMPLETE FIX
+================================
+Issue: nginx reads backup files with  causing persistent errors
+Fix: Remove ALL problematic files and create completely clean configuration
+
+🔍 STEP 1: CURRENT STATE DIAGNOSIS
+=================================
+   ✅ Local Streamlit: 200
+   📊 Domain status: 200
+   📊 Domain size: 1837 bytes
+❌ CONFIRMED: Still serving 1837-byte static file
+
+🔍 STEP 2: FIND ALL PROBLEMATIC FILES
+====================================
+🔍 Searching for ALL files with  references...
+❌ FOUND 3 files with  references:
+   📄 /etc/nginx/sites-available/dataguardianpro.nl.cleanup-backup.20250928_000840
+      76:        try_files $nonexistent @backend;
+      118:        try_files $nonexistent @backend;
+   📄 /etc/nginx/sites-enabled/dataguardianpro.nl.simple-backup.20250927_235759.cleanup-backup.20250928_000840
+      76:        try_files $nonexistent @backend;
+      118:        try_files $nonexistent @backend;
+   📄 /etc/nginx/sites-enabled/dataguardianpro.nl.final-backup.20250928_000337.cleanup-backup.20250928_000840
+      76:        try_files $nonexistent @backend;
+      118:        try_files $nonexistent @backend;
+
+🗑️  STEP 3: AGGRESSIVE CLEANUP - REMOVE PROBLEMATIC FILES
+=======================================================
+🗑️  Removing ALL files containing ...
+📁 Created backup directory: /tmp/nginx-problematic-files-backup-20250928_135748
+   🗑️  Removing: /etc/nginx/sites-available/dataguardianpro.nl.cleanup-backup.20250928_000840
+   ✅ Removed: /etc/nginx/sites-available/dataguardianpro.nl.cleanup-backup.20250928_000840
+   🗑️  Removing: /etc/nginx/sites-enabled/dataguardianpro.nl.simple-backup.20250927_235759.cleanup- backup.20250928_000840
+   ✅ Removed: /etc/nginx/sites-enabled/dataguardianpro.nl.simple-backup.20250927_235759.cleanup-backup.20250928_000840
+   🗑️  Removing: /etc/nginx/sites-enabled/dataguardianpro.nl.final-backup.20250928_000337.cleanup-b ackup.20250928_000840
+   ✅ Removed: /etc/nginx/sites-enabled/dataguardianpro.nl.final-backup.20250928_000337.cleanup-backup.20250928_000840
+✅ Removed 3 problematic files
+📁 Backups saved to: /tmp/nginx-problematic-files-backup-20250928_135748
+
+🧹 STEP 4: CLEAN UP NGINX DIRECTORIES
+====================================
+🧹 Cleaning up nginx backup files...
+✅ Nginx directories cleaned
+
+🔧 STEP 5: CREATE COMPLETELY FRESH CONFIGURATION
+==============================================
+📝 Creating fresh nginx configuration at /etc/nginx/sites-available/dataguardianpro.nl...
+✅ Fresh configuration created
+🔗 Enabling site configuration...
+✅ Site enabled
+
+🧪 STEP 6: TEST FRESH CONFIGURATION
+==================================
+🔍 Testing fresh nginx configuration...
+Nginx test output:
+nginx: [warn] conflicting server name "dataguardianpro.nl" on 0.0.0.0:80, ignored
+nginx: [warn] conflicting server name "www.dataguardianpro.nl" on 0.0.0.0:80, ignored
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+✅ SUCCESS: Fresh configuration is valid!
+
+🔄 STEP 7: APPLY FRESH CONFIGURATION
+==================================
+🛑 Stopping nginx for clean restart...
+Terminated
