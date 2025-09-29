@@ -2,27 +2,37 @@
 headless = true
 address = "0.0.0.0"
 port = 5000
-enableCORS = true
-enableXsrfProtection = true
+enableCORS = false
+enableXsrfProtection = false
 maxUploadSize = 1000
+enableStaticServing = true
 
 [browser]
 gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 5000
 
 [theme]
-primaryColor = "#0066CC"
+primaryColor = "#4267B2"
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
+secondaryBackgroundColor = "#F0F2F5"
+textColor = "#1E293B"
 font = "sans serif"
+
+[global]
+developmentMode = false
+showWarningOnDirectExecution = false
 
 [runner]
 fastReruns = true
 magicEnabled = true
+installTracer = false
+fixMatplotlib = true
 
 [client]
-showErrorDetails = false
+showErrorDetails = true
 toolbarMode = "minimal"
 
-[logger]
-level = "error"
+[ui]
+hideTopBar = false
+hideSidebarNav = false

@@ -207,10 +207,6 @@ class PerformanceProfiler:
             return wrapper
         return decorator
     
-    def profile(self, operation_name: str):
-        """Context manager for profiling code blocks"""
-        return ProfileContext(self, operation_name)
-
     def _record_slow_function(self, name: str, execution_time: float, args: tuple, kwargs: dict):
         """Record slow function execution"""
         slow_record = {
@@ -427,18 +423,6 @@ class PerformanceProfiler:
         """Enable profiling"""
         self.profiling_enabled = True
         logger.info("Profiling enabled")
-    
-    def log_performance(self, operation_name: str, duration: float = None, memory_used: float = None):
-        """Log performance for an operation"""
-        try:
-            if duration is not None:
-                logger.info(f"Performance Log [{operation_name}]: {duration:.3f}s")
-            if memory_used is not None:
-                logger.info(f"Memory Log [{operation_name}]: {memory_used:.1f}MB")
-            else:
-                logger.info(f"Performance Log [{operation_name}]")
-        except Exception as e:
-            logger.error(f"Error logging performance: {e}")
 
 # Global profiler instance
 profiler = PerformanceProfiler()
@@ -454,54 +438,6 @@ def profile_function(func_name: str = None):
 def profile_database_query(query: str, params: tuple = None):
     """Decorator to profile database query performance"""
     return profiler.profile_database_query(query, params)
-
-# Profile Context Manager for profiling code blocks
-class ProfileContext:
-    """Context manager for profiling code blocks"""
-    
-    def __init__(self, profiler: PerformanceProfiler, operation_name: str):
-        self.profiler = profiler
-        self.operation_name = operation_name
-        self.start_time = None
-        self.start_memory = None
-    
-    def __enter__(self):
-        self.start_time = time.time()
-        try:
-            self.start_memory = psutil.Process().memory_info().rss
-        except:
-            self.start_memory = 0
-        return self
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.start_time:
-            execution_time = time.time() - self.start_time
-            
-            try:
-                memory_used = psutil.Process().memory_info().rss - self.start_memory
-            except:
-                memory_used = 0
-            
-            # Record the operation performance
-            stats = self.profiler.function_stats[self.operation_name]
-            stats['call_count'] += 1
-            stats['total_time'] += execution_time
-            stats['avg_time'] = stats['total_time'] / stats['call_count']
-            stats['min_time'] = min(stats['min_time'], execution_time)
-            stats['max_time'] = max(stats['max_time'], execution_time)
-            
-            # Store recent call data
-            stats['recent_calls'].append({
-                'timestamp': datetime.now().isoformat(),
-                'execution_time': execution_time,
-                'memory_used': memory_used,
-            })
-            
-            # Check for slow execution
-            if execution_time > self.profiler.slow_threshold:
-                self.profiler._record_slow_function(self.operation_name, execution_time, (), {})
-            
-            logger.info(f"Performance Monitor [{self.operation_name}]: {execution_time:.3f}s, Memory: {memory_used/1024/1024:.1f}MB")
 
 # Performance monitoring context manager
 class PerformanceMonitor:
