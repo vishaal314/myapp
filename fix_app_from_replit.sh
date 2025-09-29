@@ -1,4 +1,4 @@
-#!/bin/bash
+ #!/bin/bash
 # FIX APP FROM REPLIT - Replace broken app.py with working Replit version
 # Addresses: AttributeError 'PerformanceProfiler' object has no attribute 'profile'
 # Solution: Deploy working app.py from Replit with complete compatibility fixes
