@@ -1,0 +1,120 @@
+root@vishaalnoord7:~# ./final_comprehensive_check.sh
+🔍 FINAL COMPREHENSIVE CHECK
+===========================
+
+📊 STEP 1: SERVICE STATUS
+=====================
+active
+✅ Nginx: RUNNING
+active
+✅ DataGuardian: RUNNING
+active
+✅ Redis: RUNNING
+
+📄 STEP 2: LATEST DATAGUARDIAN LOGS (LAST 30 LINES)
+==============================================
+Sep 30 23:44:51 vishaalnoord7.retzor.com dataguardian[2265186]: 2025-09-30 23:44:51.841 "runner.fixMatplotlib" is not a valid config option. If you previously had this config option set, it may have been removed.
+Sep 30 23:44:51 vishaalnoord7.retzor.com dataguardian[2265186]: 2025-09-30 23:44:51.841 "ui.hideSidebarNav" is not a valid config option. If you previously had this config option set, it may have been removed.
+Sep 30 23:44:51 vishaalnoord7.retzor.com dataguardian[2265186]:   You can now view your Streamlit app in your browser.
+Sep 30 23:44:51 vishaalnoord7.retzor.com dataguardian[2265186]:   URL: http://localhost:5000
+Oct 01 00:02:46 vishaalnoord7.retzor.com systemd[1]: Stopping DataGuardian Pro - Replit Environment...
+Oct 01 00:02:46 vishaalnoord7.retzor.com dataguardian[2265186]:   Stopping...
+Oct 01 00:02:46 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Deactivated successfully.
+Oct 01 00:02:46 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro - Replit Environment.
+Oct 01 00:02:46 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Consumed 1.552s CPU time.
+Oct 01 00:02:47 vishaalnoord7.retzor.com systemd[1]: Starting DataGuardian Pro - Replit Environment...
+Oct 01 00:02:47 vishaalnoord7.retzor.com dataguardian[2265799]: /opt/dataguardian
+Oct 01 00:02:47 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro - Replit Environment.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]: 2025-10-01 00:02:48.530 "runner.installTracer" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]: 2025-10-01 00:02:48.530 "runner.fixMatplotlib" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]: 2025-10-01 00:02:48.530 "ui.hideSidebarNav" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]:   You can now view your Streamlit app in your browser.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]:   URL: http://localhost:5000
+Oct 01 00:13:58 vishaalnoord7.retzor.com dataguardian[2265800]:   Stopping...
+Oct 01 00:13:58 vishaalnoord7.retzor.com systemd[1]: Stopping DataGuardian Pro - Replit Environment...
+Oct 01 00:13:59 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Deactivated successfully.
+Oct 01 00:13:59 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro - Replit Environment.
+Oct 01 00:13:59 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Consumed 1.411s CPU time.
+Oct 01 00:13:59 vishaalnoord7.retzor.com systemd[1]: Starting DataGuardian Pro - Replit Environment...
+Oct 01 00:13:59 vishaalnoord7.retzor.com dataguardian[2266119]: /opt/dataguardian
+Oct 01 00:13:59 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro - Replit Environment.
+Oct 01 00:14:00 vishaalnoord7.retzor.com dataguardian[2266120]: 2025-10-01 00:14:00.151 "runner.installTracer" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:14:00 vishaalnoord7.retzor.com dataguardian[2266120]: 2025-10-01 00:14:00.151 "runner.fixMatplotlib" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:14:00 vishaalnoord7.retzor.com dataguardian[2266120]: 2025-10-01 00:14:00.151 "ui.hideSidebarNav" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:14:00 vishaalnoord7.retzor.com dataguardian[2266120]:   You can now view your Streamlit app in your browser.
+Oct 01 00:14:00 vishaalnoord7.retzor.com dataguardian[2266120]:   URL: http://localhost:5000
+
+🔍 STEP 3: CHECK FOR INITIALIZATION MESSAGES
+=======================================
+Recent initialization patterns:
+
+🌐 STEP 4: TEST HTTP RESPONSE
+=========================
+HTTP Status Code:
+200
+
+Response content (first 100 chars):
+<!--
+ Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022-2025)
+
+ Licensed under the Apach
+
+Search for 'DataGuardian':
+
+Search for page title:
+    <title>Streamlit</title>
+
+🔍 STEP 5: CHECK NGINX CONFIGURATION
+===============================
+Current nginx config for dataguardianpro.nl:
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+
+        # Critical WebSocket headers
+        proxy_set_header Upgrade $http_upgrade;
+--
+    location /stream {
+        proxy_pass http://127.0.0.1:5000/stream;
+        proxy_http_version 1.1;
+
+WebSocket upgrade configuration:
+# WebSocket upgrade headers
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+
+🔍 STEP 6: CHECK PYTHON PROCESS
+=============================
+DataGuardian Python processes:
+root     2266120  0.3  3.1 291640 62764 ?        Ssl  00:13   0:01 /usr/bin/python3 -m streamlit run /opt/dataguardian/app.py --server.port 5000 --server.address 0.0.0.0 --server.headless true
+
+🔍 STEP 7: CHECK PORT 5000
+======================
+What's listening on port 5000:
+tcp        0      0 0.0.0.0:5000            0.0.0.0:*               LISTEN      2266120/python3
+
+🔍 STEP 8: TEST DIRECT STREAMLIT (BYPASS NGINX)
+===========================================
+Testing http://localhost:5000 directly:
+    <title>Streamlit</title>
+
+🔍 STEP 9: CHECK APP.PY FILE
+========================
+App.py exists:
+-rw-r--r-- 1 root root 573K Sep 29 05:59 app.py
+
+App.py first import line:
+import streamlit as st
+
+App.py DataGuardian references:
+26
+
+🔍 STEP 10: CHECK STREAMLIT CACHE
+==============================
+Streamlit cache directory:
+ls: cannot access '/root/.streamlit/cache': No such file or directory
+No cache directory
+
+✅ COMPREHENSIVE CHECK COMPLETE!
