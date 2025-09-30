@@ -58,27 +58,78 @@ import json
 import concurrent.futures
 from datetime import datetime
 
-# Performance optimization imports
-from utils.database_optimizer import get_optimized_db
-from utils.redis_cache import get_cache, get_scan_cache, get_session_cache, get_performance_cache
-from utils.session_optimizer import get_streamlit_session, get_session_optimizer
-from utils.code_profiler import get_profiler, profile_function, monitor_performance
+# Performance optimization imports - PROTECTED
+try:
+    from utils.database_optimizer import get_optimized_db
+    from utils.redis_cache import get_cache, get_scan_cache, get_session_cache, get_performance_cache
+    from utils.session_optimizer import get_streamlit_session, get_session_optimizer
+    from utils.code_profiler import get_profiler, profile_function, monitor_performance
+    PERFORMANCE_IMPORTS_OK = True
+except ImportError as e:
+    logging.warning(f"Performance imports failed: {e}")
+    PERFORMANCE_IMPORTS_OK = False
+    # Create fallback functions
+    def get_optimized_db(): return None
+    def get_cache(): return None
+    def get_scan_cache(): return None
+    def get_session_cache(): return None
+    def get_performance_cache(): return None
+    def get_streamlit_session(): return None
+    def get_session_optimizer(): return None
+    def get_profiler(): return None
+    def profile_function(name): return lambda f: f  # Decorator passthrough
+    def monitor_performance(func): return func  # Decorator passthrough
 
-# License management imports
-from services.license_integration import (
-    require_license_check, require_scanner_access, require_report_access,
-    track_scanner_usage, track_report_usage, track_download_usage,
-    show_license_sidebar, show_usage_dashboard, LicenseIntegration
-)
+# License management imports - PROTECTED
+try:
+    from services.license_integration import (
+        require_license_check, require_scanner_access, require_report_access,
+        track_scanner_usage, track_report_usage, track_download_usage,
+        show_license_sidebar, show_usage_dashboard, LicenseIntegration
+    )
+    LICENSE_IMPORTS_OK = True
+except ImportError as e:
+    logging.warning(f"License imports failed: {e}")
+    LICENSE_IMPORTS_OK = False
+    # Create fallback functions
+    def require_license_check(tier): return lambda f: f
+    def require_scanner_access(scanner): return lambda f: f
+    def require_report_access(): return lambda f: f
+    def track_scanner_usage(scanner): pass
+    def track_report_usage(format): pass
+    def track_download_usage(type): pass
+    def show_license_sidebar(): pass
+    def show_usage_dashboard(): pass
+    class LicenseIntegration: pass
 
-# Enterprise security imports
-from services.enterprise_auth_service import get_enterprise_auth_service, EnterpriseUser
-from services.multi_tenant_service import get_multi_tenant_service, TenantTier
-from services.encryption_service import get_encryption_service
+# Enterprise security imports - PROTECTED
+try:
+    from services.enterprise_auth_service import get_enterprise_auth_service, EnterpriseUser
+    from services.multi_tenant_service import get_multi_tenant_service, TenantTier
+    from services.encryption_service import get_encryption_service
+    ENTERPRISE_IMPORTS_OK = True
+except ImportError as e:
+    logging.warning(f"Enterprise imports failed: {e}")
+    ENTERPRISE_IMPORTS_OK = False
+    # Create fallback functions
+    def get_enterprise_auth_service(): return None
+    def get_multi_tenant_service(): return None
+    def get_encryption_service(): return None
+    class EnterpriseUser: pass
+    class TenantTier: pass
 
-# Pricing system imports
-from components.pricing_display import show_pricing_page, show_pricing_in_sidebar
-from config.pricing_config import get_pricing_config
+# Pricing system imports - PROTECTED
+try:
+    from components.pricing_display import show_pricing_page, show_pricing_in_sidebar
+    from config.pricing_config import get_pricing_config
+    PRICING_IMPORTS_OK = True
+except ImportError as e:
+    logging.warning(f"Pricing imports failed: {e}")
+    PRICING_IMPORTS_OK = False
+    # Create fallback functions
+    def show_pricing_page(): st.info("Pricing page unavailable")
+    def show_pricing_in_sidebar(): pass
+    def get_pricing_config(): return {}
 
 # Import HTML report generators with standardized signatures  
 from typing import Dict, Any, Union, Optional
