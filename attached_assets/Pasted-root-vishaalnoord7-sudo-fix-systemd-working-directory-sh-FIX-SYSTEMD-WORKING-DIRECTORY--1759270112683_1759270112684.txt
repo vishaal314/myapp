@@ -1,0 +1,165 @@
+root@vishaalnoord7:~# sudo ./fix_systemd_working_directory.sh
+🔧 FIX SYSTEMD WORKING DIRECTORY
+===============================
+
+🛑 STEP 1: STOP SERVICE
+===================
+   ✅ Service stopped
+
+🔧 STEP 2: UPDATE SYSTEMD SERVICE FILE
+===================================
+   ✅ Service file updated
+
+🔄 STEP 3: RELOAD SYSTEMD
+=====================
+   ✅ Systemd reloaded
+
+▶️  STEP 4: START SERVICE
+=====================
+   ✅ Service started
+
+🧪 STEP 5: VERIFY WORKING DIRECTORY
+===============================
+   Service status:
+active
+
+   Check logs for working directory:
+Oct 01 00:02:47 vishaalnoord7.retzor.com dataguardian[2265799]: /opt/dataguardian
+
+⏳ STEP 6: WAIT FOR APP INITIALIZATION (30 SECONDS)
+==============================================
+⏳ Waiting for DataGuardian Pro to initialize...
+..............................
+
+🧪 STEP 7: TEST IMPORTS AND CONTENT
+===============================
+   Test 1: HTTP Response
+      ✅ HTTP 200 OK
+   Test 2: Check for DataGuardian Pro content
+      ⚠️  DataGuardian content not found (may still be loading)
+   Test 3: Check recent logs for import errors
+      ✅ No import errors detected!
+
+🎯 FIX SYSTEMD WORKING DIRECTORY - RESULTS
+======================================
+✅ Service: RUNNING (+40)
+✅ HTTP Response: 200 OK (+20)
+⚠️  DataGuardian Content: Not detected
+
+📊 FINAL SCORE: 60/100
+
+✅ MAJOR IMPROVEMENT!
+===================
+
+Service is running and responding.
+If content not showing yet, wait 1-2 minutes for full initialization.
+
+Test in browser: https://dataguardianpro.nl
+
+🔍 USEFUL COMMANDS:
+===================
+   Status: systemctl status dataguardian
+   Logs: journalctl -u dataguardian -n 50 -f
+   Test: curl http://localhost:5000 | grep -i dataguardian
+   Restart: systemctl restart dataguardian
+
+✅ FIX COMPLETE!
+root@vishaalnoord7:~# sudo ./check_external_server_logs.sh
+🔍 CHECKING EXTERNAL SERVER LOGS
+===============================
+
+📄 LAST 50 LINES OF DATAGUARDIAN LOGS:
+====================================
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:            ^^^^^^^^^^^^^^^^^^^^
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:   File "/usr/local/lib/python3.11/dist-packages/streamlit/config.py", line 1922, in _secrets_files
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:     return get_config_files("secrets.toml")
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:   File "/usr/local/lib/python3.11/dist-packages/streamlit/config.py", line 2183, in get_config_files
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:     file_util.get_project_streamlit_file_path(file_name),
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:   File "/usr/local/lib/python3.11/dist-packages/streamlit/file_util.py", line 156, in get_project_streamlit_file_path
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:     return str(Path.cwd() / CONFIG_FOLDER_NAME / Path(*filepath))
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:                ^^^^^^^^^^
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:   File "/usr/lib/python3.11/pathlib.py", line 907, in cwd
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:     return cls(os.getcwd())
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]:                ^^^^^^^^^^^
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]: FileNotFoundError: [Errno 2] No such file or directory
+Sep 30 00:35:32 vishaalnoord7.retzor.com dataguardian[2236385]: 2025-09-30 00:35:32.579 ERROR 500 GET /_stcore/health (127.0.0.1) 5.36ms
+Sep 30 22:53:17 vishaalnoord7.retzor.com systemd[1]: Stopping DataGuardian Pro - Exact Replit Environment Match...
+Sep 30 22:53:17 vishaalnoord7.retzor.com dataguardian[2236385]:   Stopping...
+Sep 30 22:53:17 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Deactivated successfully.
+Sep 30 22:53:17 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro - Exact Replit Environment Match.
+Sep 30 22:53:17 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Consumed 6.832s CPU time.
+Sep 30 23:34:17 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro - Replit Environment.
+Sep 30 23:34:18 vishaalnoord7.retzor.com dataguardian[2264887]: 2025-09-30 23:34:18.861 "runner.installTracer" is not a valid config option. If you previously had this config option set, it may have been removed.
+Sep 30 23:34:18 vishaalnoord7.retzor.com dataguardian[2264887]: 2025-09-30 23:34:18.861 "runner.fixMatplotlib" is not a valid config option. If you previously had this config option set, it may have been removed.
+Sep 30 23:34:18 vishaalnoord7.retzor.com dataguardian[2264887]: 2025-09-30 23:34:18.861 "ui.hideSidebarNav" is not a valid config option. If you previously had this config option set, it may have been removed.
+Sep 30 23:34:18 vishaalnoord7.retzor.com dataguardian[2264887]:   You can now view your Streamlit app in your browser.
+Sep 30 23:34:18 vishaalnoord7.retzor.com dataguardian[2264887]:   URL: http://localhost:5000
+Sep 30 23:44:50 vishaalnoord7.retzor.com systemd[1]: Stopping DataGuardian Pro - Replit Environment...
+Sep 30 23:44:50 vishaalnoord7.retzor.com dataguardian[2264887]:   Stopping...
+Sep 30 23:44:50 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Deactivated successfully.
+Sep 30 23:44:50 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro - Replit Environment.
+Sep 30 23:44:50 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Consumed 1.715s CPU time.
+Sep 30 23:44:50 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro - Replit Environment.
+Sep 30 23:44:51 vishaalnoord7.retzor.com dataguardian[2265186]: 2025-09-30 23:44:51.841 "runner.installTracer" is not a valid config option. If you previously had this config option set, it may have been removed.
+Sep 30 23:44:51 vishaalnoord7.retzor.com dataguardian[2265186]: 2025-09-30 23:44:51.841 "runner.fixMatplotlib" is not a valid config option. If you previously had this config option set, it may have been removed.
+Sep 30 23:44:51 vishaalnoord7.retzor.com dataguardian[2265186]: 2025-09-30 23:44:51.841 "ui.hideSidebarNav" is not a valid config option. If you previously had this config option set, it may have been removed.
+Sep 30 23:44:51 vishaalnoord7.retzor.com dataguardian[2265186]:   You can now view your Streamlit app in your browser.
+Sep 30 23:44:51 vishaalnoord7.retzor.com dataguardian[2265186]:   URL: http://localhost:5000
+Oct 01 00:02:46 vishaalnoord7.retzor.com systemd[1]: Stopping DataGuardian Pro - Replit Environment...
+Oct 01 00:02:46 vishaalnoord7.retzor.com dataguardian[2265186]:   Stopping...
+Oct 01 00:02:46 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Deactivated successfully.
+Oct 01 00:02:46 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro - Replit Environment.
+Oct 01 00:02:46 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Consumed 1.552s CPU time.
+Oct 01 00:02:47 vishaalnoord7.retzor.com systemd[1]: Starting DataGuardian Pro - Replit Environment...
+Oct 01 00:02:47 vishaalnoord7.retzor.com dataguardian[2265799]: /opt/dataguardian
+Oct 01 00:02:47 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro - Replit Environment.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]: 2025-10-01 00:02:48.530 "runner.installTracer" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]: 2025-10-01 00:02:48.530 "runner.fixMatplotlib" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]: 2025-10-01 00:02:48.530 "ui.hideSidebarNav" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]:   You can now view your Streamlit app in your browser.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]:   URL: http://localhost:5000
+
+🔍 SEARCH FOR KEY INITIALIZATION MESSAGES:
+======================================
+
+Looking for 'Performance optimizations initialized':
+Sep 29 06:41:48 vishaalnoord7.retzor.com dataguardian[2217611]: 2025-09-29 06:41:48,571 - __main__ - INFO - Performance optimizations initialized successfully
+Sep 29 06:41:59 vishaalnoord7.retzor.com dataguardian[2217611]: 2025-09-29 06:41:59,134 - __main__ - INFO - Performance optimizations initialized successfully
+Sep 29 07:48:01 vishaalnoord7.retzor.com dataguardian[2219155]: 2025-09-29 07:48:01,831 - __main__ - INFO - Performance optimizations initialized successfully
+Sep 29 07:48:22 vishaalnoord7.retzor.com dataguardian[2219155]: 2025-09-29 07:48:22,732 - __main__ - INFO - Performance optimizations initialized successfully
+Sep 29 07:48:47 vishaalnoord7.retzor.com dataguardian[2219155]: 2025-09-29 07:48:47,646 - __main__ - INFO - Performance optimizations initialized successfully
+
+Looking for 'Successfully initialized translations':
+Sep 29 06:41:48 vishaalnoord7.retzor.com dataguardian[2217611]: INIT - Successfully initialized translations for: nl
+Sep 29 06:41:59 vishaalnoord7.retzor.com dataguardian[2217611]: INIT - Successfully initialized translations for: nl
+Sep 29 07:48:02 vishaalnoord7.retzor.com dataguardian[2219155]: INIT - Successfully initialized translations for: en
+Sep 29 07:48:22 vishaalnoord7.retzor.com dataguardian[2219155]: INIT - Successfully initialized translations for: en
+Sep 29 07:48:47 vishaalnoord7.retzor.com dataguardian[2219155]: INIT - Successfully initialized translations for: en
+
+Looking for 'System monitoring started':
+Sep 28 23:41:47 vishaalnoord7.retzor.com dataguardian[2203045]: 2025-09-28 23:41:47,433 - scanner.code_profiler - INFO - System monitoring started
+Sep 29 00:22:56 vishaalnoord7.retzor.com dataguardian[2205503]: 2025-09-29 00:22:56,842 - scanner.code_profiler - INFO - System monitoring started
+Sep 29 01:43:45 vishaalnoord7.retzor.com dataguardian[2206280]: 2025-09-29 01:43:45,554 - scanner.code_profiler - INFO - System monitoring started
+Sep 29 06:41:02 vishaalnoord7.retzor.com dataguardian[2217611]: 2025-09-29 06:41:02,451 - scanner.code_profiler - INFO - System monitoring started
+Sep 29 07:48:01 vishaalnoord7.retzor.com dataguardian[2219155]: 2025-09-29 07:48:01,463 - scanner.code_profiler - INFO - System monitoring started
+
+Looking for DataGuardian-specific logs:
+Oct 01 00:02:46 vishaalnoord7.retzor.com systemd[1]: Stopped DataGuardian Pro - Replit Environment.
+Oct 01 00:02:46 vishaalnoord7.retzor.com systemd[1]: dataguardian.service: Consumed 1.552s CPU time.
+Oct 01 00:02:47 vishaalnoord7.retzor.com systemd[1]: Starting DataGuardian Pro - Replit Environment...
+Oct 01 00:02:47 vishaalnoord7.retzor.com dataguardian[2265799]: /opt/dataguardian
+Oct 01 00:02:47 vishaalnoord7.retzor.com systemd[1]: Started DataGuardian Pro - Replit Environment.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]: 2025-10-01 00:02:48.530 "runner.installTracer" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]: 2025-10-01 00:02:48.530 "runner.fixMatplotlib" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]: 2025-10-01 00:02:48.530 "ui.hideSidebarNav" is not a valid config option. If you previously had this config option set, it may have been removed.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]:   You can now view your Streamlit app in your browser.
+Oct 01 00:02:48 vishaalnoord7.retzor.com dataguardian[2265800]:   URL: http://localhost:5000
+
+🔍 CHECK IF APP.PY IS ACTUALLY EXECUTING:
+=====================================
+
+Looking for app.py execution in logs:
+
+✅ LOG CHECK COMPLETE
