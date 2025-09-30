@@ -1,0 +1,122 @@
+root@vishaalnoord7:~# sudo ./COMPLETE_E2E_FIX.sh
+🚀 COMPLETE E2E FIX FOR DATAGUARDIAN PRO
+========================================
+
+This will:
+  1. Copy protected app.py from Replit
+  2. Rebuild Docker container
+  3. Verify DataGuardian Pro loads correctly
+
+📄 STEP 1: Backup current app.py
+==============================
+   ✅ Backed up to: app.py.backup.20251001_003957
+
+📥 STEP 2: Get protected app.py from Replit
+========================================
+
+⚠️  MANUAL STEP REQUIRED:
+
+Option A - Using scp (recommended):
+  On your LOCAL machine (not server), run:
+  scp /path/to/replit/app.py root@dataguardianpro.nl:/opt/dataguardian/app.py
+
+Option B - Using Replit web interface:
+  1. In Replit, select app.py
+  2. Click Download
+  3. Upload to server using scp or SFTP
+
+Option C - Direct paste:
+  1. Open app.py in Replit
+  2. Copy entire contents
+  3. On server: nano /opt/dataguardian/app.py
+  4. Replace entire file
+
+Press ENTER after you've updated app.py on the server...
+
+🔍 STEP 3: Verify app.py was updated
+=================================
+   ❌ Protected imports NOT found!
+   Make sure you copied the LATEST app.py from Replit
+root@vishaalnoord7:~#
+root@vishaalnoord7:~#
+root@vishaalnoord7:~#
+root@vishaalnoord7:~# sudo ./COMPLETE_E2E_FIX.sh
+🚀 COMPLETE E2E FIX FOR DATAGUARDIAN PRO
+========================================
+
+This will:
+  1. Copy protected app.py from Replit
+  2. Rebuild Docker container
+  3. Verify DataGuardian Pro loads correctly
+
+📄 STEP 1: Backup current app.py
+==============================
+   ✅ Backed up to: app.py.backup.20251001_004236
+
+📥 STEP 2: Get protected app.py from Replit
+========================================
+
+⚠️  MANUAL STEP REQUIRED:
+
+Option A - Using scp (recommended):
+  On your LOCAL machine (not server), run:
+  scp /path/to/replit/app.py root@dataguardianpro.nl:/opt/dataguardian/app.py
+
+Option B - Using Replit web interface:
+  1. In Replit, select app.py
+  2. Click Download
+  3. Upload to server using scp or SFTP
+
+Option C - Direct paste:
+  1. Open app.py in Replit
+  2. Copy entire contents
+  3. On server: nano /opt/dataguardian/app.py
+  4. Replace entire file
+
+Press ENTER after you've updated app.py on the server...
+
+🔍 STEP 3: Verify app.py was updated
+=================================
+   ✅ Protected imports detected in app.py
+
+🐳 STEP 4: Rebuild Docker container
+===============================
+   Stopping old container...
+dataguardian-container
+dataguardian-container
+   Rebuilding image (may take 2-3 minutes)...
+#9 32.62 Downloading pycparser-2.23-py3-none-any.whl (118 kB)
+#9 32.63    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 118.1/118.1 kB 66.5 MB/s eta 0:00:00
+#9 32.64 Downloading smmap-5.0.2-py3-none-any.whl (24 kB)
+#9 34.77 Installing collected packages: pytz, watchdog, urllib3, tzdata, typing-extensions, tornado, toml, tenacity, soupsieve, sniffio, smmap, six, rpds-py, redis, python-multipart, python-dotenv, pyparsing, pyjwt, pycparser, pyarrow, psycopg2-binary, protobuf, pillow, packaging, numpy, narwhals, MarkupSafe, lxml, kiwisolver, idna, h11, greenlet, fonttools, cycler, click, charset_normalizer, certifi, cachetools, blinker, bcrypt, attrs, aiofiles, sqlalchemy, requests, reportlab, referencing, python-dateutil, plotly, jinja2, httpcore, gitdb, contourpy, cffi, beautifulsoup4, anyio, pydeck, pandas, matplotlib, jsonschema-specifications, httpx, gitpython, cryptography, seaborn, jsonschema, altair, streamlit
+#9 84.88 Successfully installed MarkupSafe-3.0.3 aiofiles-24.1.0 altair-5.5.0 anyio-4.11.0 attrs-25.3.0 bcrypt-5.0.0 beautifulsoup4-4.14.2 blinker-1.9.0 cachetools-6.2.0 certifi-2025.8.3 cffi-2.0.0 charset_normalizer-3.4.3 click-8.3.0 contourpy-1.3.3 cryptography-46.0.1 cycler-0.12.1 fonttools-4.60.1 gitdb-4.0.12 gitpython-3.1.45 greenlet-3.2.4 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.10 jinja2-3.1.6 jsonschema-4.25.1 jsonschema-specifications-2025.9.1 kiwisolver-1.4.9 lxml-6.0.2 matplotlib-3.10.6 narwhals-2.6.0 numpy-2.3.3 packaging-25.0 pandas-2.3.3 pillow-11.3.0 plotly-6.3.0 protobuf-6.32.1 psycopg2-binary-2.9.10 pyarrow-21.0.0 pycparser-2.23 pydeck-0.9.1 pyjwt-2.10.1 pyparsing-3.2.5 python-dateutil-2.9.0.post0 python-dotenv-1.1.1 python-multipart-0.0.20 pytz-2025.2 redis-6.4.0 referencing-0.36.2 reportlab-4.4.4 requests-2.32.5 rpds-py-0.27.1 seaborn-0.13.2 six-1.17.0 smmap-5.0.2 sniffio-1.3.1 soupsieve-2.8 sqlalchemy-2.0.43 streamlit-1.50.0 tenacity-9.1.2 toml-0.10.2 tornado-6.5.2 typing-extensions-4.15.0 tzdata-2025.2 urllib3-2.5.0 watchdog-6.0.0
+#9 84.88 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+#9 85.12
+#9 85.12 [notice] A new release of pip is available: 24.0 -> 25.2
+#9 85.12 [notice] To update, run: pip install --upgrade pip
+#9 DONE 87.6s
+
+#10 exporting to image
+#10 exporting layers
+#10 exporting layers 17.1s done
+#10 writing image sha256:5b3722b81f794276a436c677fa80953d0f806ec463ce34fb18cd8a126a925601 0.0s done
+#10 naming to docker.io/library/dataguardian-pro done
+#10 DONE 17.2s
+
+ 1 warning found (use docker --debug to expand):
+ - JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 49)
+
+   Starting new container...
+3cd5e8f202170a100db2e20744291eccce56e5fe5b02fdb4f0eb7c9115f05812
+   ✅ Container started
+
+⏳ STEP 5: Wait for initialization (60 seconds)
+===========================================
+   Waiting for app to fully initialize...
+......... 10......... 20......... 30......... 40......... 50......... 60
+
+🧪 STEP 6: COMPREHENSIVE VERIFICATION
+==================================
+
+Test 1: Container Status
+   ✅ Container running
