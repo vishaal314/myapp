@@ -1,0 +1,72 @@
+
+✅ LOG CHECK COMPLETE
+root@vishaalnoord7:~# sudo ./fix_nginx_websocket.sh
+🔧 FIX NGINX WEBSOCKET CONFIGURATION
+====================================
+
+📝 STEP 1: BACKUP CURRENT NGINX CONFIG
+====================================
+   ✅ Backup created
+
+🔧 STEP 2: CREATE PROPER WEBSOCKET-ENABLED CONFIG
+=============================================
+   ✅ WebSocket-enabled config created
+
+🧪 STEP 3: TEST NGINX CONFIGURATION
+===============================
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+   ✅ Nginx configuration valid
+
+🔄 STEP 4: RELOAD NGINX
+===================
+   ✅ Nginx reloaded successfully
+
+🔄 STEP 5: RESTART DATAGUARDIAN (OPTIONAL)
+======================================
+   Restarting DataGuardian to ensure clean connection...
+   ✅ DataGuardian restarted
+
+⏳ STEP 6: WAIT FOR INITIALIZATION (30 SECONDS)
+===========================================
+⏳ Waiting for DataGuardian Pro to initialize with WebSocket...
+..............................
+
+🧪 STEP 7: COMPREHENSIVE VERIFICATION
+==================================
+   Test 1: HTTP Response
+      ✅ HTTP 200 OK
+   Test 2: DataGuardian Pro Content
+      ⚠️  DataGuardian content not found (checking logs...)
+   Test 3: Check Application Initialization in Logs
+      ⚠️  No initialization messages yet (may need more time)
+   Test 4: WebSocket Connection Status
+      ✅ No WebSocket errors
+
+🎯 FIX NGINX WEBSOCKET - FINAL RESULTS
+=====================================
+✅ Nginx: RUNNING (+20)
+✅ DataGuardian: RUNNING (+20)
+✅ HTTP Response: 200 OK (+15)
+⚠️  Content/Initialization: Not detected
+
+📊 FINAL SCORE: 55/100
+
+⚠️  PARTIAL SUCCESS
+=================
+
+WebSocket config applied but verification incomplete.
+
+Check logs: journalctl -u dataguardian -n 100
+Check nginx: tail -f /var/log/nginx/error.log
+
+🔍 USEFUL COMMANDS:
+===================
+   App status: systemctl status dataguardian
+   App logs: journalctl -u dataguardian -n 100 -f
+   Nginx logs: tail -f /var/log/nginx/error.log
+   Test content: curl http://localhost:5000 | grep -i dataguardian
+   Restart app: systemctl restart dataguardian
+   Reload nginx: systemctl reload nginx
+
+✅ WEBSOCKET FIX COMPLETE!
