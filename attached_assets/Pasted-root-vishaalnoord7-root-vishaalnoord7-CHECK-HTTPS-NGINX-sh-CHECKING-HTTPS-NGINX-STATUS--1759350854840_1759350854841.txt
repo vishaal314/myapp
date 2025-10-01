@@ -1,0 +1,69 @@
+root@vishaalnoord7:~#
+root@vishaalnoord7:~# ./CHECK_HTTPS_NGINX.sh
+🔍 CHECKING HTTPS/NGINX STATUS
+==============================
+
+Test 1: Is Nginx Running?
+=======================
+active
+✅ Nginx running
+
+Test 2: What Ports is Nginx Listening On?
+======================================
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      2269384/nginx: mast
+tcp6       0      0 :::80                   :::*                    LISTEN      2269384/nginx: mast
+
+Test 3: Nginx Config for dataguardianpro.nl
+=======================================
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name dataguardianpro.nl www.dataguardianpro.nl;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_buffering off;
+        proxy_read_timeout 300s;
+    }
+}
+
+Test 4: Is SSL Configured?
+=======================
+
+Test 5: Firewall Status
+===================
+80/tcp                     ALLOW       Anywhere
+443/tcp                    ALLOW       Anywhere
+80/tcp (v6)                ALLOW       Anywhere (v6)
+443/tcp (v6)               ALLOW       Anywhere (v6)
+
+Test 6: Try HTTPS Connection
+========================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (7) Failed to connect to dataguardianpro.nl port 443 after 43 ms: Connection refused
+
+Test 7: Try HTTP Connection
+=======================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0  1522    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+HTTP/1.1 200 OK
+Server: nginx/1.18.0 (Ubuntu)
+Date: Wed, 01 Oct 2025 20:33:42 GMT
+Content-Type: text/html
+Content-Length: 1522
+Connection: keep-alive
+Accept-Ranges: bytes
