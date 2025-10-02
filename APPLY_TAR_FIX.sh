@@ -13,7 +13,7 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-TAR_FILE="/tmp/dataguardian_deploy.tar.gz"
+TAR_FILE="/root/dataguardian_deploy.tar.gz"
 
 # Check if tar file exists
 if [ ! -f "$TAR_FILE" ]; then
@@ -22,15 +22,13 @@ if [ ! -f "$TAR_FILE" ]; then
     echo "📥 UPLOAD INSTRUCTIONS:"
     echo "======================"
     echo ""
-    echo "1. In Replit, run:"
-    echo "   bash create_deployment_tar.sh"
+    echo "1. Download dataguardian_deploy.tar.gz from Replit"
     echo ""
-    echo "2. Download the created tar file from Replit"
+    echo "2. Upload to this server:"
+    echo "   scp dataguardian_deploy.tar.gz root@dataguardianpro.nl:/root/"
     echo ""
-    echo "3. Upload to this server:"
-    echo "   scp dataguardian_deploy.tar.gz root@dataguardianpro.nl:/tmp/"
-    echo ""
-    echo "4. Then run this script again"
+    echo "3. Then run this script again from /root:"
+    echo "   cd /root && sudo ./APPLY_TAR_FIX.sh"
     exit 1
 fi
 
