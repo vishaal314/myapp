@@ -1,0 +1,124 @@
+root@vishaalnoord7:~# ./APPLY_TAR_FIX.sh
+🚀 E2E FIX FROM TAR FILE
+========================
+
+✅ Found: /root/dataguardian_deploy.tar.gz
+   Size: 1.1M
+
+Step 1: Backup Current Deployment
+=================================
+✅ Backup saved: /root/dataguardian_backup_20251002_231143.tar.gz
+
+Step 2: Extract New Files
+=======================
+✅ Files extracted to /opt/dataguardian
+✅ Verified: app.py exists
+✅ Verified: services/ exists
+
+Step 3: Stop Current Container
+============================
+dataguardian-container
+✅ Container stopped
+dataguardian-container
+✅ Container removed
+
+Step 4: Rebuild Docker Image
+==========================
+Building new image (30-60 seconds)...
+#9 DONE 228.6s
+
+#10 [6/9] COPY . .
+#10 DONE 9.8s
+
+#11 [7/9] RUN mkdir -p logs reports data temp
+#11 DONE 1.0s
+
+#12 [8/9] RUN useradd --create-home --shell /bin/bash dataguardian &&     chown -R dataguardian:dataguardian /app
+#12 DONE 18.0s
+
+#13 [9/9] RUN mkdir -p ~/.streamlit &&     echo '[server]\nheadless = true\naddress = "0.0.0.0"\nport = 5000\nenableCORS = false\nenableXsrfProtection = false\n\n[browser]\ngatherUsageStats = false\n\n[theme]\nbase = "light"' > ~/.streamlit/config.toml
+#13 DONE 0.5s
+
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 68.4s done
+#14 writing image sha256:ead5ea5074d7b2e45d8c627bea8054b778e3c67094778766cb3eb66632b40a2e 0.0s done
+#14 naming to docker.io/library/dataguardian-pro 0.0s done
+#14 DONE 68.5s
+
+Step 5: Start New Container
+========================
+73fac242896ab727e46ace61c017a86caeaf2b439a02f9c2bf4d7b5b69add833
+✅ Container started
+
+Step 6: Wait for Initialization
+=============================
+Waiting 45 seconds for app to start...
+.... 5.... 10.... 15.... 20.... 25.... 30.... 35.... 40.... 45
+
+Step 7: Verify Deployment
+=======================
+✅ Container: Running
+
+Testing HTTP...
+⚠️  HTTP: Checking response...
+<!--
+ Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022-2025)
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+Testing HTTPS...
+✅ HTTPS: Nginx proxy working
+
+Container logs (last 30 lines):
+2025-10-02 21:20:33.214 "runner.installTracer" is not a valid config option. If you previously had this config option set, it may have been removed.
+2025-10-02 21:20:33.214 "runner.fixMatplotlib" is not a valid config option. If you previously had this config option set, it may have been removed.
+2025-10-02 21:20:33.214 "ui.hideSidebarNav" is not a valid config option. If you previously had this config option set, it may have been removed.
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://localhost:5000
+
+
+Step 8: Cleanup
+=============
+✅ Removed temporary tar file
+
+⚠️  DEPLOYMENT NEEDS VERIFICATION
+================================
+
+The deployment completed but verification is inconclusive.
+Please test manually: https://dataguardianpro.nl
+
+Check logs for any errors:
+   docker logs dataguardian-container -f
+root@vishaalnoord7:~# docker logs dataguardian-container -f
+2025-10-02 21:20:33.214 "runner.installTracer" is not a valid config option. If you previously had this config option set, it may have been removed.
+2025-10-02 21:20:33.214 "runner.fixMatplotlib" is not a valid config option. If you previously had this config option set, it may have been removed.
+2025-10-02 21:20:33.214 "ui.hideSidebarNav" is not a valid config option. If you previously had this config option set, it may have been removed.
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://localhost:5000
+
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-02 21:23:44,582 - scanner.code_profiler - INFO - System monitoring started
+2025-10-02 21:23:45,285 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-02 21:23:46,401 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 1.113s, Memory: 2.4MB
