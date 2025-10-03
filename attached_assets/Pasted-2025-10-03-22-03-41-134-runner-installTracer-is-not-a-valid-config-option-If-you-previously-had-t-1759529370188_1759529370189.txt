@@ -1,0 +1,72 @@
+2025-10-03 22:03:41.134 "runner.installTracer" is not a valid config option. If you previously had this config option set, it may have been removed.
+2025-10-03 22:03:41.135 "runner.fixMatplotlib" is not a valid config option. If you previously had this config option set, it may have been removed.
+2025-10-03 22:03:41.135 "ui.hideSidebarNav" is not a valid config option. If you previously had this config option set, it may have been removed.
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://localhost:5000
+
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-03 22:07:11,578 - scanner.code_profiler - INFO - System monitoring started
+2025-10-03 22:07:12,230 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-03 22:07:12,864 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.631s, Memory: 2.8MB
+LANGUAGE CHANGE: nl -> en
+LANGUAGE SELECTOR - Changed language to: en
+SET_LANGUAGE - Setting language to: en
+INIT - Successfully initialized translations for: en
+2025-10-03 22:07:24,749 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-03 22:07:24,754 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.001s, Memory: 0.0MB
+2025-10-03 22:07:24,890 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-03 22:07:25,279 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.386s, Memory: 1.0MB
+2025-10-03 22:07:29,624 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-03 22:07:30,199 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-03 22:07:30,202 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.576s, Memory: 0.8MB
+INIT - Successfully initialized translations for: en
+2025-10-03 22:07:30,286 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-03 22:07:30,295 - utils.session_optimizer - INFO - Created session d1e750c6-ac5a-4080-a5cc-8c8a051d9d5d for user vishaal314
+2025-10-03 22:07:30,314 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+2025-10-03 22:07:30,321 - services.license_manager - INFO - License saved: DGP-ENT-2025-001
+2025-10-03 22:07:30,323 - services.license_manager - INFO - License saved: DGP-ENT-2025-001
+2025-10-03 22:07:30,334 - services.license_manager - INFO - License loaded: DGP-ENT-2025-001
+2025-10-03 22:07:31,932 - services.encryption_service - ERROR - Failed to initialize KMS providers: Failed to derive local KEK: Incorrect padding
+2025-10-03 22:07:31,933 - __main__ - ERROR - Error loading dashboard metrics: KMS initialization failed: Failed to derive local KEK: Incorrect padding
+2025-10-03 22:07:31,934 - services.encryption_service - ERROR - Failed to initialize KMS providers: Failed to derive local KEK: Incorrect padding
+2025-10-03 22:07:31,935 - __main__ - ERROR - Fallback dashboard failed: KMS initialization failed: Failed to derive local KEK: Incorrect padding
+2025-10-03 22:07:31,948 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 1.660s, Memory: 81.8MB
+2025-10-03 22:07:37,931 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-03 22:07:37,948 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+2025-10-03 22:07:37,962 - services.license_manager - INFO - License loaded: DGP-ENT-2025-001
+2025-10-03 22:07:37,991 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+SET_LANGUAGE - Setting language to: en
+INIT - Successfully initialized translations for: en
+2025-10-03 22:07:38,284 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.352s, Memory: 5.2MB
+2025-10-03 22:07:43,045 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-03 22:07:43,081 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+2025-10-03 22:07:43,105 - services.license_manager - INFO - License loaded: DGP-ENT-2025-001
+2025-10-03 22:07:43,129 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+2025-10-03 22:07:43,148 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.100s, Memory: 0.0MB
+2025-10-03 22:07:49,802 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-03 22:07:49,833 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+2025-10-03 22:07:49,853 - services.license_manager - INFO - License loaded: DGP-ENT-2025-001
+2025-10-03 22:07:49,878 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+2025-10-03 22:07:49,900 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.096s, Memory: 0.8MB
+2025-10-03 22:08:12,890 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-03 22:08:12,953 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+2025-10-03 22:08:12,968 - services.license_manager - INFO - License loaded: DGP-ENT-2025-001
+2025-10-03 22:08:13,002 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.110s, Memory: 0.5MB
+2025-10-03 22:08:13,001 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+2025-10-03 22:08:13,152 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-03 22:08:13,188 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+2025-10-03 22:08:13,208 - services.license_manager - INFO - License loaded: DGP-ENT-2025-001
+2025-10-03 22:08:13,238 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_1bfc0314036d89d7
+2025-10-03 22:08:13,466 - services.encryption_service - ERROR - Failed to initialize KMS providers: Failed to derive local KEK: Incorrect padding
+2025-10-03 22:08:13,466 - scanner.code_profiler - INFO - Activity tracked: d1e750c6-ac5a-4080-a5cc-8c8a051d9d5d - error
+2025-10-03 22:08:13,476 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.316s, Memory: 3.5MB
