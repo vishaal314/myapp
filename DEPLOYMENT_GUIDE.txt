@@ -1,0 +1,169 @@
+═══════════════════════════════════════════════════════════════
+  DataGuardian Pro - External Server Deployment Guide
+═══════════════════════════════════════════════════════════════
+
+📦 PACKAGE CONTENTS:
+  ✅ dataguardian_complete.tar.gz (1.1MB)
+  ✅ FIX_EXTERNAL_SERVER.sh (included in tar.gz)
+
+═══════════════════════════════════════════════════════════════
+  STEP 1: UPLOAD TO EXTERNAL SERVER
+═══════════════════════════════════════════════════════════════
+
+From your local machine:
+
+    scp dataguardian_complete.tar.gz root@dataguardianpro.nl:/tmp/
+
+═══════════════════════════════════════════════════════════════
+  STEP 2: EXTRACT ON EXTERNAL SERVER
+═══════════════════════════════════════════════════════════════
+
+SSH into server:
+
+    ssh root@dataguardianpro.nl
+
+Backup old installation:
+
+    mv /opt/dataguardian /opt/dataguardian.backup.$(date +%Y%m%d_%H%M%S)
+
+Extract new code:
+
+    mkdir -p /opt/dataguardian
+    cd /opt/dataguardian
+    tar -xzf /tmp/dataguardian_complete.tar.gz
+
+═══════════════════════════════════════════════════════════════
+  STEP 3: RUN FIX SCRIPT
+═══════════════════════════════════════════════════════════════
+
+Make script executable and run:
+
+    chmod +x /opt/dataguardian/FIX_EXTERNAL_SERVER.sh
+    sudo /opt/dataguardian/FIX_EXTERNAL_SERVER.sh
+
+Wait ~3 minutes for:
+  ✅ Fresh encryption keys generation
+  ✅ Redis startup
+  ✅ Old encrypted data cleanup
+  ✅ Docker rebuild
+  ✅ Container restart
+
+═══════════════════════════════════════════════════════════════
+  STEP 4: TEST IN INCOGNITO BROWSER (MANDATORY!)
+═══════════════════════════════════════════════════════════════
+
+⚠️  CRITICAL: You MUST use INCOGNITO mode!
+
+Why?
+  ❌ Your regular browser cached the old error page
+  ❌ Regular tabs will ALWAYS show 'stats' error (cached)
+  ✅ Incognito bypasses ALL cache
+  ✅ Shows actual server state
+
+How to test:
+
+  1. CLOSE ALL browser tabs for dataguardianpro.nl
+  2. Press Ctrl+Shift+N (Chrome/Edge) or Ctrl+Shift+P (Firefox)
+  3. Open INCOGNITO/PRIVATE window
+  4. Visit: https://dataguardianpro.nl
+  5. Login: vishaal314 / password123
+  6. Try Code Scanner: https://github.com/rijdendetreinen/gotrain
+
+Expected results:
+  ✅ Dashboard loads
+  ✅ NO 'stats' error
+  ✅ NO encryption errors
+  ✅ All scanners work
+
+═══════════════════════════════════════════════════════════════
+  WHAT THE FIX SCRIPT DOES
+═══════════════════════════════════════════════════════════════
+
+Phase 1: Generate fresh encryption keys
+  → New DATAGUARDIAN_MASTER_KEY (32-byte base64)
+  → New JWT_SECRET
+  → Preserves OPENAI_API_KEY and STRIPE_SECRET_KEY
+
+Phase 2: Start Redis
+  → redis-server --port 6379 --bind 127.0.0.1
+  → FLUSHALL (clear cache)
+
+Phase 3: Clear old encrypted data (FIXES "Incorrect padding")
+  → UPDATE scan_results SET encrypted_payload = NULL;
+  → UPDATE certificates SET encrypted_report = NULL;
+  → UPDATE api_credentials SET encrypted_credentials = NULL;
+
+Phase 4: Clear Python cache
+  → Delete all .pyc files
+  → Remove __pycache__ directories
+
+Phase 5: Rebuild Docker
+  → docker build --no-cache -t dataguardian-pro .
+
+Phase 6: Start container
+  → docker run --network host --env-file /root/.dataguardian_env
+
+Phase 7: Wait 60 seconds for initialization
+
+Phase 8: Automatic verification
+  → Check for 'stats' errors (should be NONE)
+  → Check for encryption errors (should be NONE)
+  → Verify Streamlit started
+
+═══════════════════════════════════════════════════════════════
+  TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+If you STILL see 'stats' error after following steps above:
+
+  ❌ You are NOT using incognito mode
+  ❌ Your browser cache is showing old error page
+  ✅ Check server logs - they show NO 'stats' error
+  ✅ The error is ONLY in browser cache
+
+To verify server is working:
+
+    docker logs dataguardian-container 2>&1 | tail -50
+
+You should see:
+  ✅ "You can now view your Streamlit app in your browser"
+  ✅ NO "UnboundLocalError: cannot access local variable 'stats'"
+  ✅ NO "Incorrect padding" errors
+
+═══════════════════════════════════════════════════════════════
+  MONITOR LOGS
+═══════════════════════════════════════════════════════════════
+
+Real-time logs:
+
+    docker logs dataguardian-container -f
+
+Check for specific errors:
+
+    docker logs dataguardian-container 2>&1 | grep -i "stats\|padding\|error"
+
+Should show:
+  ✅ NO 'stats' errors
+  ✅ NO 'padding' errors
+  ✅ Normal application startup
+
+═══════════════════════════════════════════════════════════════
+  FILES INCLUDED IN PACKAGE
+═══════════════════════════════════════════════════════════════
+
+  app.py                         - Main Streamlit application
+  services/                      - All scanner services
+  components/                    - UI components
+  utils/                         - Utility functions
+  FIX_EXTERNAL_SERVER.sh        - Automated fix script
+
+═══════════════════════════════════════════════════════════════
+  SUMMARY
+═══════════════════════════════════════════════════════════════
+
+1. Upload: scp dataguardian_complete.tar.gz root@dataguardianpro.nl:/tmp/
+2. Extract: cd /opt/dataguardian && tar -xzf /tmp/dataguardian_complete.tar.gz
+3. Fix: sudo ./FIX_EXTERNAL_SERVER.sh
+4. Test: INCOGNITO browser → https://dataguardianpro.nl
+
+═══════════════════════════════════════════════════════════════
