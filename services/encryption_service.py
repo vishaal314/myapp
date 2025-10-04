@@ -75,6 +75,11 @@ class LocalKMSProvider(KMSProvider):
             )
         
         try:
+            # Add padding if needed for base64 decoding
+            missing_padding = len(master_key_b64) % 4
+            if missing_padding:
+                master_key_b64 += '=' * (4 - missing_padding)
+            
             master_key = base64.urlsafe_b64decode(master_key_b64)
             if len(master_key) != 32:
                 raise ValueError("Master key must be 32 bytes (256 bits)")
