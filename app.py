@@ -92,7 +92,7 @@ except ImportError as e:
     logging.warning(f"License imports failed: {e}")
     LICENSE_IMPORTS_OK = False
     # Create fallback functions
-    def require_license_check(tier): return lambda f: f
+    def require_license_check(): return True
     def require_scanner_access(scanner): return lambda f: f
     def require_report_access(): return lambda f: f
     def track_scanner_usage(scanner): pass
