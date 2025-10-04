@@ -1,37 +1,13 @@
 {
-  "admin": {
-    "user_id": "admin_001",
-    "username": "admin",
-    "password_hash": "$2b$12$3GapITdv0EUEhbFx6meQ8u4L5NdkQzJMXwsfbkjdxTTAz/Bh6Bzdu",
-    "role": "admin",
-    "email": "admin@dataguardian.pro",
-    "active": true,
-    "created_at": "2025-07-14T18:21:11.699873",
-    "last_login": "2025-09-06T18:08:19.762426",
-    "failed_attempts": 0,
-    "locked_until": null
-  },
-  "demo": {
-    "user_id": "demo_001",
-    "username": "demo",
-    "password_hash": "$2b$12$Cxd9hlfBbtwQV2Kkbtuwp.XhAmkH9u6.F53PhD7lwtfh6VdEf/sy.",
-    "role": "viewer",
-    "email": "demo@dataguardian.pro",
-    "active": true,
-    "created_at": "2025-07-14T18:21:11.961644",
-    "last_login": null,
-    "failed_attempts": 0,
-    "locked_until": null
-  },
   "vishaal314": {
-    "user_id": "vishaal314_1bfc0314036d89d7",
+    "user_id": "vishaal314_ef2cd703a99bf4e4",
     "username": "vishaal314",
-    "password_hash": "$2b$12$GjSahW11pLdbrZ.mGn/OTuBGn055OVJ4mHeyMGq7sASJNBSXaDpMi",
+    "password_hash": "$2b$12$Sc4Hcizvf0N1RdaiI87yte.0X6MHNqpOcxokXn5JhoO6WHQSOqLiS",
     "role": "admin",
-    "email": "vishaal314@gmail.com",
+    "email": "vishaal@dataguardianpro.nl",
     "active": true,
-    "created_at": "2025-07-14T20:59:05.844027",
-    "last_login": "2025-10-04T19:25:39.355296",
+    "created_at": "2025-10-04T19:44:08.110212",
+    "last_login": null,
     "failed_attempts": 0,
     "locked_until": null
   }
