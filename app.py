@@ -93,7 +93,7 @@ except ImportError as e:
     LICENSE_IMPORTS_OK = False
     # Create fallback functions
     def require_license_check(): return True
-    def require_scanner_access(scanner): return lambda f: f
+    def require_scanner_access(scanner, region=None): return True
     def require_report_access(): return lambda f: f
     def track_scanner_usage(scanner): pass
     def track_report_usage(format): pass
