@@ -2,6 +2,7 @@
 ################################################################################
 # FINAL E2E FIX - Complete DataGuardian Pro Deployment
 # Fixes: Database auth, schema initialization, config package, environment
+# Assumes: Files already in /opt/dataguardian
 ################################################################################
 
 set -e
@@ -88,24 +89,37 @@ else
     echo "⚠️  Warning: Some schema elements may already exist (this is OK)"
 fi
 
-# Step 4: Extract latest code
+# Step 4: Extract latest code from local tar file
 echo ""
-echo "📦 Step 4/7: Extracting latest code..."
+echo "📦 Step 4/7: Extracting code from local archive..."
 cd "$APP_DIR"
-if [ -f "/tmp/dataguardian_complete.tar.gz" ]; then
-    tar -xzf /tmp/dataguardian_complete.tar.gz --overwrite
-    echo "✅ Code extracted"
+if [ -f "$APP_DIR/dataguardian_complete.tar.gz" ]; then
+    tar -xzf "$APP_DIR/dataguardian_complete.tar.gz" --overwrite
+    echo "✅ Code extracted from $APP_DIR/dataguardian_complete.tar.gz"
 else
-    echo "❌ ERROR: /tmp/dataguardian_complete.tar.gz not found!"
-    echo "Please run: scp dataguardian_complete.tar.gz root@dataguardianpro.nl:/tmp/"
+    echo "❌ ERROR: dataguardian_complete.tar.gz not found in $APP_DIR"
+    echo "Please ensure the file is uploaded to /opt/dataguardian/"
     exit 1
 fi
 
 # Step 5: Set environment variables
 echo ""
 echo "🔐 Step 5/7: Setting environment variables..."
-MASTER_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
-JWT_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+if [ -f "$ENV_FILE" ]; then
+    echo "Environment file exists, preserving existing keys..."
+    source "$ENV_FILE"
+fi
+
+# Generate new keys only if they don't exist
+if [ -z "$DATAGUARDIAN_MASTER_KEY" ]; then
+    MASTER_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+else
+    MASTER_KEY="$DATAGUARDIAN_MASTER_KEY"
+fi
+
+if [ -z "$JWT_SECRET" ]; then
+    JWT_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+fi
 
 cat > "$ENV_FILE" << EOF
 DATAGUARDIAN_MASTER_KEY=$MASTER_KEY
