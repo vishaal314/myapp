@@ -1,0 +1,302 @@
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/enterprise_actions.py', wd=3, mask=IN_OPEN, cookie=0, name='enterprise_actions.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/enterprise_actions.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_actions.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/enterprise_actions.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_actions.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/i18n.py', wd=1, mask=IN_OPEN, cookie=0, name='i18n.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/i18n.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='i18n.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/i18n.py', wd=8, mask=IN_OPEN, cookie=0, name='i18n.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/gdpr_report_generator.py', wd=1, mask=IN_OPEN, cookie=0, name='gdpr_report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/i18n.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='i18n.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/gdpr_report_generator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='gdpr_report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/gdpr_report_generator.py', wd=7, mask=IN_OPEN, cookie=0, name='gdpr_report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/gdpr_report_generator.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='gdpr_report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_generator.py', wd=1, mask=IN_OPEN, cookie=0, name='report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_generator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_generator.py', wd=7, mask=IN_OPEN, cookie=0, name='report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_generator.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/improved_report_download.py', wd=1, mask=IN_OPEN, cookie=0, name='improved_report_download.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/improved_report_download.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='improved_report_download.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/improved_report_download.py', wd=7, mask=IN_OPEN, cookie=0, name='improved_report_download.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/dsar_automation.py', wd=1, mask=IN_OPEN, cookie=0, name='dsar_automation.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/improved_report_download.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='improved_report_download.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/dsar_automation.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='dsar_automation.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/dsar_automation.py', wd=7, mask=IN_OPEN, cookie=0, name='dsar_automation.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/dsar_automation.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='dsar_automation.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=7, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=7, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+INFO:__main__:Performance optimizations initialized successfully
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=11, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=11, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=11, mask=IN_CREATE, cookie=0, name='en.json'>
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=11, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:__main__:Enterprise integration not available (development mode)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=11, mask=IN_MODIFY, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=11, mask=IN_CLOSE_WRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=7, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+2025-10-05 22:37:15,333 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.048s, Memory: 0.0MB
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=7, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=7, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+INFO:__main__:Performance optimizations initialized successfully
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=11, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=11, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=11, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=11, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=7, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:__main__:Enterprise integration not available (development mode)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=8, mask=IN_OPEN, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=1, mask=IN_OPEN, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+INFO:utils.secure_auth_enhanced:User vishaal314 authenticated successfully
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_MODIFY, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+2025-10-05 22:37:19,172 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.488s, Memory: 0.0MB
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_MODIFY, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_WRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=7, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=7, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+INFO:__main__:Performance optimizations initialized successfully
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=11, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=11, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=11, mask=IN_OPEN, cookie=0, name='en.json'>
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=11, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=7, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:__main__:Enterprise integration not available (development mode)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+INFO:utils.session_optimizer:Created session f32467e5-dc0c-4602-92b8-15377a54a578 for user vishaal314
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=11, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=1, mask=IN_OPEN, cookie=0, name='results_aggregator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=11, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=11, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=11, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=7, mask=IN_OPEN, cookie=0, name='results_aggregator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='results_aggregator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='results_aggregator.py'>
+INFO:services.encryption_service:Local KMS provider initialized
+WARNING:services.encryption_service:boto3 not available for AWS KMS integration
+INFO:services.encryption_service:Key management initialized
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=1, mask=IN_OPEN, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=8, mask=IN_OPEN, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_auth_enhanced.py'>
+INFO:services.multi_tenant_service:Tenant isolation columns may already exist: relation "scans" does not exist
+
+INFO:services.multi_tenant_service:Initializing Row Level Security for tenant isolation
+ERROR:services.multi_tenant_service:Failed to initialize Row Level Security: current transaction is aborted, commands ignored until end of transaction block
+
+WARNING:services.multi_tenant_service:Continuing without RLS - manual configuration may be required
+INFO:services.multi_tenant_service:Multi-tenant database schema initialized successfully with RLS
+ERROR:services.multi_tenant_service:Failed to load tenant configs: relation "tenants" does not exist
+LINE 4:             FROM tenants WHERE status = 'active'
+                         ^
+
+ERROR:services.multi_tenant_service:Failed to create tenant default_org: relation "tenants" does not exist
+LINE 2:             INSERT INTO tenants
+                                ^
+
+ERROR:services.multi_tenant_service:Failed to create default tenant: Tenant creation failed: relation "tenants" does not exist
+LINE 2:             INSERT INTO tenants
+                                ^
+
+INFO:services.multi_tenant_service:Multi-tenant service initialized with organization isolation
+INFO:services.results_aggregator:Multi-tenant service initialized for secure tenant isolation
+DEBUG:services.multi_tenant_service:Secure connection established for organization system_admin
+DEBUG:services.results_aggregator:Created performance index: idx_scans_username_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_organization_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_scan_type
+DEBUG:services.results_aggregator:Created performance index: idx_scans_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_composite
+DEBUG:services.results_aggregator:Migration note: column "organization_id" of relation "scans" already exists
+
+ERROR:services.results_aggregator:Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+ERROR:services.results_aggregator:Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+WARNING:services.results_aggregator:Non-strict mode: falling back to file-based storage
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CREATE, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_MODIFY, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_WRITE, cookie=0, name='scans.json'>
+INFO:services.results_aggregator:File-based storage initialized for non-strict mode
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+INFO:__main__:Dashboard: Retrieved 0 total scans for user vishaal314
+INFO:__main__:Dashboard: No scans found for user vishaal314, getting all recent scans
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+INFO:__main__:Dashboard: Raw aggregator returned 0 scans for user vishaal314
+INFO:__main__:Dashboard: Processing 0 completed scans from aggregator
+INFO:services.multi_tenant_service:Tenant isolation columns may already exist: relation "scans" does not exist
+
+INFO:services.multi_tenant_service:Initializing Row Level Security for tenant isolation
+ERROR:services.multi_tenant_service:Failed to initialize Row Level Security: current transaction is aborted, commands ignored until end of transaction block
+
+WARNING:services.multi_tenant_service:Continuing without RLS - manual configuration may be required
+INFO:services.multi_tenant_service:Multi-tenant database schema initialized successfully with RLS
+ERROR:services.multi_tenant_service:Failed to load tenant configs: relation "tenants" does not exist
+LINE 4:             FROM tenants WHERE status = 'active'
+                         ^
+
+ERROR:services.multi_tenant_service:Failed to create tenant default_org: relation "tenants" does not exist
+LINE 2:             INSERT INTO tenants
+                                ^
+
+ERROR:services.multi_tenant_service:Failed to create default tenant: Tenant creation failed: relation "tenants" does not exist
+LINE 2:             INSERT INTO tenants
+                                ^
+
+INFO:services.multi_tenant_service:Multi-tenant service initialized with organization isolation
+INFO:services.results_aggregator:Multi-tenant service initialized for secure tenant isolation
+DEBUG:services.multi_tenant_service:Secure connection established for organization system_admin
+DEBUG:services.results_aggregator:Created performance index: idx_scans_username_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_organization_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_scan_type
+DEBUG:services.results_aggregator:Created performance index: idx_scans_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_composite
+DEBUG:services.results_aggregator:Migration note: column "organization_id" of relation "scans" already exists
+
+ERROR:services.results_aggregator:Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+Error retrieving user scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+Error retrieving user scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+ERROR:services.results_aggregator:Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+WARNING:services.results_aggregator:Non-strict mode: falling back to file-based storage
+INFO:services.results_aggregator:File-based storage initialized for non-strict mode
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+INFO:__main__:Dashboard: Direct database query found 0 total scans for user vishaal314
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+INFO:__main__:Dashboard: No user-specific scans, using 0 total scans from database
+INFO:__main__:Dashboard: Manual date filtering found 0 scans within 30 days
+INFO:__main__:Dashboard: Activity tracker found 0 total activities, 0 completed scans
+INFO:__main__:Dashboard: Found 0 total activities, 0 today in activity tracker
+INFO:__main__:Dashboard: Combining 0 aggregator scans + 0 today's activities
+INFO:__main__:Dashboard DISPLAY: Showing metrics - Scans: 0, PII: 0, Compliance: 94.5%, Issues: 0
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+INFO:services.multi_tenant_service:Tenant isolation columns may already exist: relation "scans" does not exist
+
+INFO:services.multi_tenant_service:Initializing Row Level Security for tenant isolation
+ERROR:services.multi_tenant_service:Failed to initialize Row Level Security: current transaction is aborted, commands ignored until end of transaction block
+
+WARNING:services.multi_tenant_service:Continuing without RLS - manual configuration may be required
+INFO:services.multi_tenant_service:Multi-tenant database schema initialized successfully with RLS
+ERROR:services.multi_tenant_service:Failed to load tenant configs: relation "tenants" does not exist
+LINE 4:             FROM tenants WHERE status = 'active'
+                         ^
+
+ERROR:services.multi_tenant_service:Failed to create tenant default_org: relation "tenants" does not exist
+LINE 2:             INSERT INTO tenants
+                                ^
+
+ERROR:services.multi_tenant_service:Failed to create default tenant: Tenant creation failed: relation "tenants" does not exist
+LINE 2:             INSERT INTO tenants
+                                ^
+
+INFO:services.multi_tenant_service:Multi-tenant service initialized with organization isolation
+INFO:services.results_aggregator:Multi-tenant service initialized for secure tenant isolation
+DEBUG:services.multi_tenant_service:Secure connection established for organization system_admin
+DEBUG:services.results_aggregator:Created performance index: idx_scans_username_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_organization_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_scan_type
+DEBUG:services.results_aggregator:Created performance index: idx_scans_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_composite
+DEBUG:services.results_aggregator:Migration note: column "organization_id" of relation "scans" already exists
+
+ERROR:services.results_aggregator:Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+ERROR:services.results_aggregator:Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+WARNING:services.results_aggregator:Non-strict mode: falling back to file-based storage
+INFO:services.results_aggregator:File-based storage initialized for non-strict mode
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+INFO:__main__:Dashboard: Fresh aggregator returned 0 scans for recent activity display
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+INFO:__main__:Dashboard: No user-specific scans, using 0 total recent scans from all users
+INFO:__main__:Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-05 22:37:22,558 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 3.237s, Memory: 84.8MB
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=7, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0,
