@@ -1,41 +1,49 @@
-🚀 DataGuardian Pro Production Deployment Instructions
+╔════════════════════════════════════════════════════════════════╗
+║  DataGuardian Pro - ULTIMATE SERVER FIX                        ║
+║  Complete deployment in 3 simple steps (90 seconds)            ║
+╚════════════════════════════════════════════════════════════════╝
 
-✅ API KEYS ALREADY CONFIGURED - No manual editing needed!
+┌────────────────────────────────────────────────────────────────┐
+│ STEP 1: UPLOAD FILES TO SERVER                                │
+└────────────────────────────────────────────────────────────────┘
 
-1. UPLOAD FILES TO PRODUCTION SERVER:
-   
-   scp setup_env_file.sh deploy_with_keys.sh dataguardian_env_config.txt root@45.81.35.202:/opt/
+From your local machine, run these 2 commands:
 
-2. RUN THE DEPLOYMENT ON PRODUCTION SERVER:
-   
-   ssh root@45.81.35.202
-   cd /opt
-   chmod +x deploy_with_keys.sh setup_env_file.sh
-   ./deploy_with_keys.sh
+scp dataguardian_complete.tar.gz root@dataguardianpro.nl:/tmp/
+scp ULTIMATE_FIX_SERVER.sh root@dataguardianpro.nl:/opt/dataguardian/
 
-3. INSTALL MISSING DEPENDENCIES:
-   
-   sudo -u dataguardian python3 -m venv /opt/dataguardian/venv
-   sudo -u dataguardian /opt/dataguardian/venv/bin/pip install streamlit psycopg2-binary redis python-dotenv requests pandas plotly
+┌────────────────────────────────────────────────────────────────┐
+│ STEP 2: RUN THE FIX SCRIPT                                    │
+└────────────────────────────────────────────────────────────────┘
 
-4. CREATE STREAMLIT CONFIG:
-   
-   mkdir -p /opt/dataguardian/.streamlit
-   cat > /opt/dataguardian/.streamlit/config.toml << 'EOF'
-   [server]
-   headless = true
-   address = "0.0.0.0"
-   port = 5000
-   EOF
-   chown -R dataguardian:dataguardian /opt/dataguardian/.streamlit
+SSH into your server and run:
 
-5. START THE SERVICE:
-   
-   systemctl start dataguardian
-   systemctl status dataguardian
-   
-6. GENERATE SSL CERTIFICATE:
-   
-   certbot --nginx -d dataguardianpro.nl
+ssh root@dataguardianpro.nl
+cd /opt/dataguardian
+chmod +x ULTIMATE_FIX_SERVER.sh
+./ULTIMATE_FIX_SERVER.sh
 
-✅ Your DataGuardian Pro will be live at https://dataguardianpro.nl
+The script will:
+✓ Generate DATAGUARDIAN_MASTER_KEY and JWT_SECRET
+✓ Create /root/.dataguardian_env with all variables
+✓ Extract latest code
+✓ Clean Python cache
+✓ Stop old container
+✓ Rebuild Docker image (no cache)
+✓ Start new container with environment
+✓ Show deployment status
+
+┌────────────────────────────────────────────────────────────────┐
+│ STEP 3: TEST IN BROWSER                                       │
+└────────────────────────────────────────────────────────────────┘
+
+IMPORTANT: Use incognito mode to avoid cached errors!
+
+1. Close ALL browser tabs of dataguardianpro.nl
+2. Open NEW INCOGNITO window (Ctrl+Shift+N / Cmd+Shift+N)
+3. Visit: https://dataguardianpro.nl
+4. Login: vishaal314 / vishaal2024
+5. Click "🔍 New Scan" → Select any scanner
+6. Scanner should work without errors!
+
+Expected: No safe mode, all scanners working, no errors!
