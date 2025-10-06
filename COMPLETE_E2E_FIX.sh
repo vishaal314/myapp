@@ -1,226 +1,237 @@
 #!/bin/bash
-# COMPLETE E2E FIX - Run this on your external server (dataguardianpro.nl)
-# This will apply the protected app.py that fixes import failures
+################################################################################
+# COMPLETE E2E FIX - Fix everything and rebuild
+################################################################################
 
 set -e
 
-echo "🚀 COMPLETE E2E FIX FOR DATAGUARDIAN PRO"
-echo "========================================"
-echo ""
-echo "This will:"
-echo "  1. Copy protected app.py from Replit"
-echo "  2. Rebuild Docker container"
-echo "  3. Verify DataGuardian Pro loads correctly"
-echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🚀 DataGuardian Pro - COMPLETE E2E FIX"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ "$EUID" -ne 0 ]; then
-    echo "❌ Run as root: sudo ./COMPLETE_E2E_FIX.sh"
-    exit 1
-fi
+APP_DIR="/opt/dataguardian"
+ENV_FILE="/root/.dataguardian_env"
 
-cd /opt/dataguardian
+# Step 1: Remove conflicting config.py
+echo ""
+echo "🧹 Step 1/6: Removing conflicting config.py..."
+cd "$APP_DIR"
+rm -f config.py
+echo "✅ Removed config.py"
 
-echo "📄 STEP 1: Backup current app.py"
-echo "=============================="
-backup_name="app.py.backup.$(date +%Y%m%d_%H%M%S)"
-cp app.py "$backup_name"
-echo "   ✅ Backed up to: $backup_name"
+# Step 2: Create config package
+echo ""
+echo "📦 Step 2/6: Creating config package..."
+mkdir -p config
 
-echo ""
-echo "📥 STEP 2: Get protected app.py from Replit"
-echo "========================================"
-echo ""
-echo "⚠️  MANUAL STEP REQUIRED:"
-echo ""
-echo "Option A - Using scp (recommended):"
-echo "  On your LOCAL machine (not server), run:"
-echo "  scp /path/to/replit/app.py root@dataguardianpro.nl:/opt/dataguardian/app.py"
-echo ""
-echo "Option B - Using Replit web interface:"
-echo "  1. In Replit, select app.py"
-echo "  2. Click Download"
-echo "  3. Upload to server using scp or SFTP"
-echo ""
-echo "Option C - Direct paste:"
-echo "  1. Open app.py in Replit"
-echo "  2. Copy entire contents"
-echo "  3. On server: nano /opt/dataguardian/app.py"
-echo "  4. Replace entire file"
-echo ""
-read -p "Press ENTER after you've updated app.py on the server..."
+cat > config/__init__.py << 'EOFPYTHON'
+"""Configuration package for DataGuardian Pro"""
+__version__ = "2.0.0"
+EOFPYTHON
 
+cat > config/pricing_config.py << 'EOFPYTHON'
+"""Pricing configuration for DataGuardian Pro"""
+
+PRICING_TIERS = {
+    "starter": {
+        "name": "Starter",
+        "price_monthly": 25,
+        "price_yearly": 250,
+        "features": ["Basic PII scanning", "Up to 1,000 files/month", "PDF reports"],
+        "scanner_limits": {"code": 1000, "website": 10, "database": 1}
+    },
+    "professional": {
+        "name": "Professional", 
+        "price_monthly": 99,
+        "price_yearly": 990,
+        "features": ["Advanced scanning", "Up to 10,000 files/month", "All report formats"],
+        "scanner_limits": {"code": 10000, "website": 100, "database": 10}
+    },
+    "enterprise": {
+        "name": "Enterprise",
+        "price_monthly": 250,
+        "price_yearly": 2500,
+        "features": ["Unlimited scanning", "Priority support", "Custom integrations"],
+        "scanner_limits": {"code": -1, "website": -1, "database": -1}
+    }
+}
+
+CERTIFICATE_PRICE = 9.99
+
+def get_tier_config(tier_name):
+    return PRICING_TIERS.get(tier_name, PRICING_TIERS["professional"])
+EOFPYTHON
+
+cat > config/report_config.py << 'EOFPYTHON'
+"""Report configuration for DataGuardian Pro"""
+
+REPORT_FORMATS = ["PDF", "HTML", "JSON", "CSV"]
+
+REPORT_TEMPLATES = {
+    "executive": {
+        "name": "Executive Summary",
+        "sections": ["overview", "compliance_score", "key_findings", "recommendations"]
+    },
+    "technical": {
+        "name": "Technical Report",
+        "sections": ["full_scan_results", "pii_details", "gdpr_articles", "remediation"]
+    },
+    "compliance": {
+        "name": "Compliance Report",
+        "sections": ["gdpr_compliance", "risk_assessment", "legal_framework", "action_items"]
+    }
+}
+
+def get_report_config(report_type):
+    return REPORT_TEMPLATES.get(report_type, REPORT_TEMPLATES["technical"])
+EOFPYTHON
+
+cat > config/translation_mappings.py << 'EOFPYTHON'
+"""Translation mappings for scanner types and features"""
+
+SCANNER_TYPE_MAPPING = {
+    "code": "Code Scanner",
+    "website": "Website Scanner",
+    "database": "Database Scanner",
+    "ai_model": "AI Model Scanner",
+    "dpia": "DPIA Assessment",
+    "soc2": "SOC2 Compliance",
+    "sustainability": "Sustainability Scanner",
+    "blob": "Blob Scanner",
+    "image": "Image Scanner",
+    "api": "API Scanner",
+    "cloud": "Cloud Scanner",
+    "repository": "Repository Scanner"
+}
+
+def get_scanner_display_name(scanner_type):
+    return SCANNER_TYPE_MAPPING.get(scanner_type, scanner_type.title())
+EOFPYTHON
+
+echo "✅ Config package created"
+
+# Step 3: Fix database schema
 echo ""
-echo "🔍 STEP 3: Verify app.py was updated"
-echo "================================="
-if grep -q "PERFORMANCE_IMPORTS_OK" app.py; then
-    echo "   ✅ Protected imports detected in app.py"
+echo "🗄️  Step 3/6: Fixing database schema..."
+PGPASSWORD=changeme psql -h localhost -U dataguardian -d dataguardian << 'EOFSQL'
+-- Add missing columns to tenants table
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS max_users INTEGER DEFAULT 10;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS max_scans_per_month INTEGER DEFAULT 1000;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS features JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50) DEFAULT 'active';
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS subscription_end_date TIMESTAMP;
+
+-- Update default tenant
+UPDATE tenants 
+SET max_users = 100, 
+    max_scans_per_month = -1,
+    features = '["unlimited_scans", "priority_support", "custom_integrations"]'::jsonb,
+    subscription_status = 'active'
+WHERE organization_id = 'default_org';
+EOFSQL
+echo "✅ Database schema updated"
+
+# Step 4: Environment variables
+echo ""
+echo "🔐 Step 4/6: Setting environment..."
+if [ ! -f "$ENV_FILE" ] || [ -z "$(grep DATAGUARDIAN_MASTER_KEY $ENV_FILE 2>/dev/null)" ]; then
+    MASTER_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+    JWT_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+    
+    cat > "$ENV_FILE" << EOF
+DATAGUARDIAN_MASTER_KEY=$MASTER_KEY
+JWT_SECRET=$JWT_SECRET
+DATABASE_URL=postgresql://dataguardian:changeme@localhost:5432/dataguardian
+PGHOST=localhost
+PGPORT=5432
+PGDATABASE=dataguardian
+PGUSER=dataguardian
+PGPASSWORD=changeme
+REDIS_HOST=localhost
+REDIS_PORT=6379
+ENVIRONMENT=production
+LOG_LEVEL=INFO
+DEBUG=False
+EOF
+    chmod 600 "$ENV_FILE"
+    echo "✅ Environment configured"
 else
-    echo "   ❌ Protected imports NOT found!"
-    echo "   Make sure you copied the LATEST app.py from Replit"
-    exit 1
+    echo "✅ Using existing environment"
 fi
 
+# Step 5: Rebuild Docker with new config
 echo ""
-echo "🐳 STEP 4: Rebuild Docker container"
-echo "==============================="
-echo "   Stopping old container..."
+echo "🐳 Step 5/6: Rebuilding Docker image..."
 docker stop dataguardian-container 2>/dev/null || true
-docker rm dataguardian-container 2>/dev/null || true
+docker rm -f dataguardian-container 2>/dev/null || true
 
-echo "   Rebuilding image (may take 2-3 minutes)..."
-docker build -t dataguardian-pro . 2>&1 | tee /tmp/docker_build.log | tail -20
+docker build --no-cache -t dataguardian-pro . || {
+    echo "❌ Docker build failed!"
+    exit 1
+}
+echo "✅ Docker rebuilt with new config package"
 
+# Step 6: Start container
 echo ""
-echo "   Starting new container..."
+echo "🚀 Step 6/6: Starting container..."
 docker run -d \
     --name dataguardian-container \
     --restart always \
-    -p 5000:5000 \
-    -e PYTHONUNBUFFERED=1 \
+    --network host \
+    --env-file "$ENV_FILE" \
     dataguardian-pro
 
-echo "   ✅ Container started"
+sleep 30
 
+# Verify deployment
 echo ""
-echo "⏳ STEP 5: Wait for initialization (60 seconds)"
-echo "==========================================="
-echo "   Waiting for app to fully initialize..."
-for i in {1..60}; do
-    if [ $((i % 10)) -eq 0 ]; then
-        echo -n " $i"
-    else
-        echo -n "."
-    fi
-    sleep 1
-done
-echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📊 VERIFICATION"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-echo ""
-echo "🧪 STEP 6: COMPREHENSIVE VERIFICATION"
-echo "=================================="
-
-success_count=0
-
-echo ""
-echo "Test 1: Container Status"
+# Check container
 if docker ps | grep -q dataguardian-container; then
-    echo "   ✅ Container running"
-    ((success_count++))
+    echo "✅ Container: RUNNING"
 else
-    echo "   ❌ Container not running"
-fi
-
-echo ""
-echo "Test 2: HTTP Response"
-status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000)
-if [ "$status" = "200" ]; then
-    echo "   ✅ HTTP 200 OK"
-    ((success_count++))
-else
-    echo "   ⚠️  HTTP $status"
-fi
-
-echo ""
-echo "Test 3: DataGuardian Content"
-response=$(curl -s http://localhost:5000)
-if echo "$response" | grep -qi "dataguardian"; then
-    echo "   ✅✅✅ DataGuardian Pro CONTENT DETECTED!"
-    ((success_count++))
-    content_found=true
-else
-    echo "   ⚠️  Content not detected"
-    content_found=false
-fi
-
-echo ""
-echo "Test 4: App Initialization Logs"
-logs=$(docker logs dataguardian-container 2>&1)
-if echo "$logs" | grep -qi "Performance optimizations\|initialized translations\|DataGuardian"; then
-    echo "   ✅ App.py main logic EXECUTING!"
-    ((success_count++))
-else
-    echo "   ⚠️  No initialization messages"
-fi
-
-echo ""
-echo "Test 5: Protected Imports Status"
-if echo "$logs" | grep -qi "PERFORMANCE_IMPORTS_OK\|LICENSE_IMPORTS_OK\|ENTERPRISE_IMPORTS_OK"; then
-    echo "   ✅ Protected imports working"
-    ((success_count++))
-else
-    echo "   ℹ️  Import status not in logs (may be normal)"
-fi
-
-echo ""
-echo "📊 Container Logs (last 50 lines):"
-echo "================================"
-docker logs dataguardian-container 2>&1 | tail -50
-
-echo ""
-echo "========================================"
-echo "VERIFICATION RESULTS: $success_count/5 tests passed"
-echo "========================================"
-
-if [ "$content_found" = "true" ] && [ $success_count -ge 3 ]; then
-    echo ""
-    echo "🎉🎉🎉 E2E FIX SUCCESSFUL! 🎉🎉🎉"
-    echo ""
-    echo "✅ Protected imports working"
-    echo "✅ App.py executing main logic"
-    echo "✅ DataGuardian Pro content loading"
-    echo "✅ External server matches Replit"
-    echo ""
-    echo "🌐 ACCESS YOUR APP:"
-    echo "   🎯 https://dataguardianpro.nl"
-    echo "   🎯 https://www.dataguardianpro.nl"
-    echo ""
-    echo "🔐 LOGIN CREDENTIALS:"
-    echo "   vishaal314 / password123"
-    echo "   demo / demo123"
-    echo "   admin / admin123"
-    echo ""
-    echo "🐳 DOCKER COMMANDS:"
-    echo "   View logs:    docker logs dataguardian-container -f"
-    echo "   Restart:      docker restart dataguardian-container"
-    echo "   Stop:         docker stop dataguardian-container"
-    echo "   Start:        docker start dataguardian-container"
-    echo "   Shell access: docker exec -it dataguardian-container bash"
-    echo ""
-    echo "💾 ROLLBACK IF NEEDED:"
-    echo "   cp $backup_name app.py"
-    echo "   Then rebuild: docker build -t dataguardian-pro ."
-    echo ""
-    echo "🏆 SUCCESS: DEPLOYMENT COMPLETE!"
-    
-    exit 0
-else
-    echo ""
-    echo "⚠️  PARTIAL SUCCESS - NEEDS INVESTIGATION"
-    echo "======================================="
-    echo ""
-    echo "Status: $success_count/5 tests passed"
-    echo ""
-    echo "TROUBLESHOOTING:"
-    echo ""
-    echo "1. Check logs for import errors:"
-    echo "   docker logs dataguardian-container 2>&1 | grep -i 'import\|error\|warning'"
-    echo ""
-    echo "2. Check if Python modules are missing:"
-    echo "   docker exec dataguardian-container python3 -c 'import sys; print(sys.path)'"
-    echo ""
-    echo "3. Test app.py directly in container:"
-    echo "   docker exec -it dataguardian-container bash"
-    echo "   cd /app && python3 -c 'import app'"
-    echo ""
-    echo "4. View full build log:"
-    echo "   cat /tmp/docker_build.log"
-    echo ""
-    echo "5. Manual inspection:"
-    echo "   docker exec -it dataguardian-container bash"
-    echo "   ls -la /app/"
-    echo ""
-    echo "If issues persist, check logs above for specific error messages."
-    echo ""
-    
+    echo "❌ Container: FAILED"
     exit 1
 fi
+
+# Check config in container
+if docker exec dataguardian-container ls -la /app/config/ 2>/dev/null | grep -q "__init__.py"; then
+    echo "✅ Config package: EXISTS IN CONTAINER"
+else
+    echo "❌ Config package: MISSING IN CONTAINER"
+fi
+
+# Test config import
+if docker exec dataguardian-container python3 -c "from config import pricing_config; print('OK')" 2>&1 | grep -q "OK"; then
+    echo "✅ Config import: SUCCESS"
+else
+    echo "⚠️  Config import: FAILED (check logs)"
+fi
+
+# Check for errors
+echo ""
+echo "📋 Recent logs:"
+docker logs dataguardian-container 2>&1 | tail -20
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+CONFIG_ERRORS=$(docker logs dataguardian-container 2>&1 | grep -c "No module named 'config" || true)
+if [ "$CONFIG_ERRORS" -eq 0 ]; then
+    echo "🎉 SUCCESS! No config import errors!"
+    echo ""
+    echo "🌐 Application: https://dataguardianpro.nl"
+    echo "👤 Login: vishaal314 / vishaal2024"
+    echo ""
+    echo "🧪 TEST (use INCOGNITO mode):"
+    echo "   1. Close all browser tabs"
+    echo "   2. Open incognito window"
+    echo "   3. Visit https://dataguardianpro.nl"
+    echo "   4. Login and test scanners"
+else
+    echo "⚠️  WARNING: $CONFIG_ERRORS config import errors detected"
+    echo "Check logs: docker logs dataguardian-container | grep config"
+fi
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

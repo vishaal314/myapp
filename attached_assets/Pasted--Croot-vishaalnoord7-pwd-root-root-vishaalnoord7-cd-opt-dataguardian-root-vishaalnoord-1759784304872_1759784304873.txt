@@ -1,0 +1,162 @@
+
+^Croot@vishaalnoord7:~# pwd
+/root
+root@vishaalnoord7:~# cd /opt/dataguardian/
+root@vishaalnoord7:/opt/dataguardian# ./FIX_CONFIG_CONFLICT.sh
+🔧 Fixing config.py conflict...
+❌ Found conflicting config.py file (should be config/ directory)
+   Removing config.py...
+✅ Removed config.py
+❌ ERROR: config/ package directory missing!
+root@vishaalnoord7:/opt/dataguardian#
+root@vishaalnoord7:/opt/dataguardian#
+root@vishaalnoord7:/opt/dataguardian# ./CREATE_CONFIG_PACKAGE.sh
+📦 Creating config package...
+✅ Config package created
+total 24
+drwxr-xr-x 2 root root 4096 Oct  6 22:52 .
+drwxr-xr-x 6 root root 4096 Oct  6 22:52 ..
+-rw-r--r-- 1 root root   73 Oct  6 22:52 __init__.py
+-rw-r--r-- 1 root root 1026 Oct  6 22:52 pricing_config.py
+-rw-r--r-- 1 root root  693 Oct  6 22:52 report_config.py
+-rw-r--r-- 1 root root  600 Oct  6 22:52 translation_mappings.py
+
+🔄 Restarting container...
+dataguardian-container
+
+⏳ Waiting 20 seconds for startup...
+
+📋 Checking logs...
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=7, mask=IN_OPEN, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=7, mask=IN_OPEN, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=7, mask=IN_OPEN, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=7, mask=IN_OPEN, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=7, mask=IN_OPEN, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=7, mask=IN_OPEN, cookie=0, name='intelligent_scanner_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_scanner_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_scanner_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_scanner_manager.py'>
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ Config import still failing
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container 2>&1 | grep -i "config" | grep -E "ERROR|WARNING|No module"
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:services.multi_tenant_service:Continuing without RLS - manual configuration may be required
+ERROR:services.multi_tenant_service:Failed to load tenant configs: column "max_users" does not exist
+WARNING:services.multi_tenant_service:Continuing without RLS - manual configuration may be required
+ERROR:services.multi_tenant_service:Failed to load tenant configs: column "max_users" does not exist
+WARNING:services.multi_tenant_service:Continuing without RLS - manual configuration may be required
+ERROR:services.multi_tenant_service:Failed to load tenant configs: column "max_users" does not exist
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+root@vishaalnoord7:/opt/dataguardian# docker exec dataguardian-container ls -la /app/config/
+ls: cannot access '/app/config/': No such file or directory
+root@vishaalnoord7:/opt/dataguardian# docker exec dataguardian-container python3 -c "from config import pricing_config; print('OK')"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ImportError: cannot import name 'pricing_config' from 'config' (/app/config.py)
+root@vishaalnoord7:/opt/dataguardian# ./CHECK_CONFIG_ERRORS.sh
+🔍 Checking for config import errors...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 CONFIG-RELATED ERRORS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:services.multi_tenant_service:Continuing without RLS - manual configuration may be required
+ERROR:services.multi_tenant_service:Failed to load tenant configs: column "max_users" does not exist
+WARNING:services.multi_tenant_service:Continuing without RLS - manual configuration may be required
+ERROR:services.multi_tenant_service:Failed to load tenant configs: column "max_users" does not exist
+WARNING:services.multi_tenant_service:Continuing without RLS - manual configuration may be required
+ERROR:services.multi_tenant_service:Failed to load tenant configs: column "max_users" does not exist
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 IMPORT ERRORS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:License imports failed: No module named 'config.pricing_config'; 'config' is not a package
+WARNING:root:Pricing imports failed: No module named 'config.pricing_config'; 'config' is not a package
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 SAFE MODE INDICATORS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+No safe mode messages found
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 SUCCESS INDICATORS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  You can now view your Streamlit app in your browser.
+  You can now view your Streamlit app in your browser.
+INFO:services.encryption_service:Local KMS provider initialized
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 CONFIG FILES ON CONTAINER:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Config directory not accessible in container
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧪 PYTHON IMPORT TEST:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ImportError: cannot import name 'pricing_config' from 'config' (/app/config.py)
