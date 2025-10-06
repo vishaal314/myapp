@@ -1,0 +1,38 @@
+ => => extracting sha256:44350d10c02e7ab437e3fe5a05e3405115ece5972b2b9f7cd0d68d23c72d5833                          0.3s
+ => => extracting sha256:4dc2c3222cdbf7b5e9d5c68653d42c7289ddf2bfaa17b12c961014755b7d04dd                          3.3s
+ => => extracting sha256:b25238518c0cca0928b2117b90cee455c3fbdb7d605f92131e5cc92fbfb5b468                          0.0s
+ => [internal] load build context                                                                                  0.4s
+ => => transferring context: 6.66MB                                                                                0.4s
+ => [2/9] WORKDIR /app                                                                                             0.4s
+ => [3/9] RUN apt-get update && apt-get install -y     build-essential     curl     git     libpq-dev     postg  120.3s
+ => [4/9] COPY production_requirements.txt requirements.txt                                                        0.2s
+ => [5/9] RUN pip install --no-cache-dir --upgrade pip &&     pip install --no-cache-dir -r requirements.txt &&  380.3s
+ => [6/9] COPY . .                                                                                                 0.4s
+ => [7/9] RUN mkdir -p logs reports data temp                                                                      0.7s
+ => [8/9] RUN useradd --create-home --shell /bin/bash dataguardian &&     chown -R dataguardian:dataguardian /app  1.5s
+ => [9/9] RUN mkdir -p ~/.streamlit &&     echo '[server]\nheadless = true\naddress = "0.0.0.0"\nport = 5000\nena  0.5s
+ => exporting to image                                                                                            46.3s
+ => => exporting layers                                                                                           46.2s
+ => => writing image sha256:2d378b9879fd7c7c31d0f878a7885e6c6d502727273251f223dd95a31971bb81                       0.0s
+ => => naming to docker.io/library/dataguardian-pro                                                                0.0s
+✅ Docker rebuilt
+
+🚀 Step 5/5: Starting container...
+a59568a9b1fdc639c036750c63f18857f4a25556f20ff420f3863eeadbb78e30
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 DEPLOYMENT STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+a59568a9b1fd   dataguardian-pro   "streamlit run app.p…"   31 seconds ago   Up 30 seconds (healthy)             dataguardian-container
+✅ Container RUNNING
+
+📋 Recent Logs:
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 Application: https://dataguardianpro.nl
+👤 Login: vishaal314 / vishaal2024
