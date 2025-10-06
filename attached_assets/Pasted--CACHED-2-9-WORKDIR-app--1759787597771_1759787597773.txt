@@ -1,0 +1,754 @@
+ => CACHED [2/9] WORKDIR /app                                                                                                                                                                                 0.0s
+ => [internal] load build context                                                                                                                                                                             0.1s
+ => => transferring context: 25.44kB                                                                                                                                                                          0.1s
+ => [3/9] RUN apt-get update && apt-get install -y     build-essential     curl     git     libpq-dev     postgresql-client     tesseract-ocr     && rm -rf /var/lib/apt/lists/*                            108.4s
+ => [4/9] COPY production_requirements.txt requirements.txt                                                                                                                                                   0.1s
+ => [5/9] RUN pip install --no-cache-dir --upgrade pip &&     pip install --no-cache-dir -r requirements.txt &&     pip cache purge &&     apt-get clean &&     rm -rf /var/lib/apt/lists/* /tmp/* /var/tm  214.1s
+ => [6/9] COPY . .                                                                                                                                                                                            0.4s
+ => [7/9] RUN mkdir -p logs reports data temp                                                                                                                                                                 0.5s
+ => [8/9] RUN useradd --create-home --shell /bin/bash dataguardian &&     chown -R dataguardian:dataguardian /app                                                                                             1.8s
+ => [9/9] RUN mkdir -p ~/.streamlit &&     echo '[server]\nheadless = true\naddress = "0.0.0.0"\nport = 5000\nenableCORS = false\nenableXsrfProtection = false\n\n[browser]\ngatherUsageStats = false\n\n[th  0.6s
+ => exporting to image                                                                                                                                                                                       47.0s
+ => => exporting layers                                                                                                                                                                                      46.9s
+ => => writing image sha256:7d66dab7aa3442eaf9f37133ccd48ab1d10c1d02703d34f10f165d332b2f86d0                                                                                                                  0.0s
+ => => naming to docker.io/library/dataguardian-pro                                                                                                                                                           0.0s
+✅ Docker rebuilt
+
+🚀 Fix 4/4: Starting container...
+0235cdf416c368d8ab24b75e2a6932de0a3877538e95efb1e12be271fb7f44b9
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 COMPREHENSIVE VERIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Container: RUNNING
+✅ PricingTier import: SUCCESS
+✅ get_pricing_config import: SUCCESS
+✅ Database columns: COMPLETE
+✅ Default organization: EXISTS
+✅ App mode: NORMAL
+✅ Streamlit: STARTED
+
+📋 Recent logs:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎉 ALL ERRORS FIXED! DEPLOYMENT SUCCESSFUL!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 Application: https://dataguardianpro.nl
+👤 Login: vishaal314 / vishaal2024
+
+🧪 FINAL TEST:
+   1. Close ALL browser tabs
+   2. Open INCOGNITO window (Ctrl+Shift+N)
+   3. Visit https://dataguardianpro.nl
+   4. Login and test ALL scanners
+
+✅ Application working same as Replit!
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container -f
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+2025-10-06 21:51:09,144 - scanner.code_profiler - INFO - System monitoring started
+WARNING:root:License imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/pricing_config.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_auth_service.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_auth_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_auth_service.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_auth_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/multi_tenant_service.py', wd=8, mask=IN_OPEN, cookie=0, name='multi_tenant_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/multi_tenant_service.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='multi_tenant_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/encryption_service.py', wd=8, mask=IN_OPEN, cookie=0, name='encryption_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/encryption_service.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='encryption_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/__init__.py', wd=3, mask=IN_OPEN, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/__init__.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name='components'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components', wd=3, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='components'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components', wd=3, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+WARNING:root:Pricing imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/activity_tracker.py', wd=9, mask=IN_OPEN, cookie=0, name='activity_tracker.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/activity_tracker.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='activity_tracker.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/enterprise_actions.py', wd=3, mask=IN_OPEN, cookie=0, name='enterprise_actions.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/enterprise_actions.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_actions.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/event_bus.py', wd=9, mask=IN_OPEN, cookie=0, name='event_bus.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/event_bus.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='event_bus.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/gdpr_report_generator.py', wd=8, mask=IN_OPEN, cookie=0, name='gdpr_report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/gdpr_report_generator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='gdpr_report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/i18n.py', wd=9, mask=IN_OPEN, cookie=0, name='i18n.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/i18n.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='i18n.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/report_config.py', wd=7, mask=IN_OPEN, cookie=0, name='report_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/report_config.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='report_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/improved_report_download.py', wd=8, mask=IN_OPEN, cookie=0, name='improved_report_download.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/improved_report_download.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='improved_report_download.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_generator.py', wd=8, mask=IN_OPEN, cookie=0, name='report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_generator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='report_generator.py'>
+INFO:__main__:Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations', wd=1, mask=IN_CREATE|IN_ISDIR, cookie=0, name='translations'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CREATE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_MODIFY, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_WRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name='translations'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations', wd=12, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='translations'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations', wd=12, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/dsar_automation.py', wd=8, mask=IN_OPEN, cookie=0, name='dsar_automation.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/dsar_automation.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='dsar_automation.py'>
+DEBUG:__main__:Enterprise integration not available (development mode)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/app.py', wd=1, mask=IN_OPEN, cookie=0, name='app.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/app.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='app.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/code_profiler.py', wd=9, mask=IN_OPEN, cookie=0, name='code_profiler.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/code_profiler.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='code_profiler.py'>
+2025-10-06 21:51:10,659 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.803s, Memory: 1.7MB
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name='utils'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils', wd=9, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/scanners', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name='scanners'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/scanners', wd=2, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/scanners', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='scanners'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/scanners', wd=2, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='utils'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils', wd=9, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/scanners', wd=9, mask=IN_ISDIR|IN_OPEN, cookie=0, name='scanners'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/scanners', wd=11, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/scanners', wd=9, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='scanners'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/scanners', wd=11, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/__init__.py', wd=9, mask=IN_OPEN, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/__init__.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/__init__.py', wd=1, mask=IN_OPEN, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/repository_cache.py', wd=9, mask=IN_OPEN, cookie=0, name='repository_cache.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/repository_cache.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='repository_cache.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/__init__.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/centralized_logger.py', wd=9, mask=IN_OPEN, cookie=0, name='centralized_logger.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/centralized_logger.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='centralized_logger.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/repository_cache.py', wd=1, mask=IN_OPEN, cookie=0, name='repository_cache.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/repository_cache.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='repository_cache.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/centralized_logger.py', wd=1, mask=IN_OPEN, cookie=0, name='centralized_logger.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/centralized_logger.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='centralized_logger.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/database_optimizer.py', wd=9, mask=IN_OPEN, cookie=0, name='database_optimizer.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/database_optimizer.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='database_optimizer.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/redis_cache.py', wd=9, mask=IN_OPEN, cookie=0, name='redis_cache.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/database_optimizer.py', wd=1, mask=IN_OPEN, cookie=0, name='database_optimizer.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/database_optimizer.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='database_optimizer.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/redis_cache.py', wd=1, mask=IN_OPEN, cookie=0, name='redis_cache.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/redis_cache.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='redis_cache.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/redis_cache.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='redis_cache.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/session_optimizer.py', wd=9, mask=IN_OPEN, cookie=0, name='session_optimizer.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/session_optimizer.py', wd=1, mask=IN_OPEN, cookie=0, name='session_optimizer.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/session_optimizer.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='session_optimizer.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/session_optimizer.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='session_optimizer.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/code_profiler.py', wd=9, mask=IN_OPEN, cookie=0, name='code_profiler.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/code_profiler.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='code_profiler.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name='services'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=8, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/code_profiler.py', wd=1, mask=IN_OPEN, cookie=0, name='code_profiler.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/code_profiler.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='code_profiler.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='services'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_templates', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name='report_templates'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_templates', wd=2, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_templates', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='report_templates'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=8, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_templates', wd=8, mask=IN_ISDIR|IN_OPEN, cookie=0, name='report_templates'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_templates', wd=10, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_templates', wd=8, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='report_templates'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_templates', wd=10, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_templates', wd=2, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name='services'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=8, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='services'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=8, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name='services'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=8, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='services'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=8, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_manager.py', wd=8, mask=IN_OPEN, cookie=0, name='license_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_manager.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name='config'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config', wd=7, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_manager.py', wd=1, mask=IN_OPEN, cookie=0, name='license_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='config'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config', wd=7, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/__init__.py', wd=1, mask=IN_OPEN, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/__init__.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/__init__.py', wd=7, mask=IN_OPEN, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/__init__.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/pricing_config.py', wd=7, mask=IN_OPEN, cookie=0, name='pricing_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/pricing_config.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_auth_service.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_auth_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_auth_service.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_auth_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/pricing_config.py', wd=1, mask=IN_OPEN, cookie=0, name='pricing_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/pricing_config.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/multi_tenant_service.py', wd=8, mask=IN_OPEN, cookie=0, name='multi_tenant_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/multi_tenant_service.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='multi_tenant_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_manager.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/encryption_service.py', wd=8, mask=IN_OPEN, cookie=0, name='encryption_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/encryption_service.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='encryption_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_auth_service.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_auth_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_auth_service.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_auth_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/multi_tenant_service.py', wd=1, mask=IN_OPEN, cookie=0, name='multi_tenant_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/multi_tenant_service.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='multi_tenant_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/encryption_service.py', wd=1, mask=IN_OPEN, cookie=0, name='encryption_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/encryption_service.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='encryption_service.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name='components'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components', wd=3, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name='components'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/activity_tracker.py', wd=1, mask=IN_OPEN, cookie=0, name='activity_tracker.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/activity_tracker.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='activity_tracker.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/__init__.py', wd=1, mask=IN_OPEN, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/__init__.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components', wd=3, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/__init__.py', wd=3, mask=IN_OPEN, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/event_bus.py', wd=1, mask=IN_OPEN, cookie=0, name='event_bus.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/__init__.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='__init__.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/event_bus.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='event_bus.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/activity_tracker.py', wd=9, mask=IN_OPEN, cookie=0, name='activity_tracker.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/activity_tracker.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='activity_tracker.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/event_bus.py', wd=9, mask=IN_OPEN, cookie=0, name='event_bus.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/event_bus.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='event_bus.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/enterprise_actions.py', wd=3, mask=IN_OPEN, cookie=0, name='enterprise_actions.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/enterprise_actions.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_actions.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/enterprise_actions.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_actions.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/i18n.py', wd=1, mask=IN_OPEN, cookie=0, name='i18n.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/i18n.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='i18n.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/enterprise_actions.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_actions.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/i18n.py', wd=9, mask=IN_OPEN, cookie=0, name='i18n.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/i18n.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='i18n.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/gdpr_report_generator.py', wd=1, mask=IN_OPEN, cookie=0, name='gdpr_report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/gdpr_report_generator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='gdpr_report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/gdpr_report_generator.py', wd=8, mask=IN_OPEN, cookie=0, name='gdpr_report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/gdpr_report_generator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='gdpr_report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/report_config.py', wd=1, mask=IN_OPEN, cookie=0, name='report_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/report_config.py', wd=7, mask=IN_OPEN, cookie=0, name='report_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/report_config.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='report_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/config/report_config.py', wd=7, mask=IN_CLOSE_NOWRITE, cookie=0, name='report_config.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_generator.py', wd=8, mask=IN_OPEN, cookie=0, name='report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_generator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_generator.py', wd=1, mask=IN_OPEN, cookie=0, name='report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/improved_report_download.py', wd=8, mask=IN_OPEN, cookie=0, name='improved_report_download.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/improved_report_download.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='improved_report_download.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/dsar_automation.py', wd=8, mask=IN_OPEN, cookie=0, name='dsar_automation.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/report_generator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='report_generator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/dsar_automation.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='dsar_automation.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/improved_report_download.py', wd=1, mask=IN_OPEN, cookie=0, name='improved_report_download.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/improved_report_download.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='improved_report_download.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/dsar_automation.py', wd=1, mask=IN_OPEN, cookie=0, name='dsar_automation.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/dsar_automation.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='dsar_automation.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+WARNING:root:License imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+WARNING:root:Pricing imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+INFO:__main__:Performance optimizations initialized successfully
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CREATE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_MODIFY, cookie=0, name='en.json'>
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_WRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:__main__:Enterprise integration not available (development mode)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=9, mask=IN_OPEN, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=1, mask=IN_OPEN, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app', wd=1, mask=IN_ISDIR|IN_OPEN, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app', wd=1, mask=IN_CLOSE_NOWRITE|IN_ISDIR, cookie=0, name=''>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_MODIFY, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_MODIFY, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_WRITE, cookie=0, name='secure_users.json'>
+INFO:utils.secure_auth_enhanced:User vishaal314 authenticated successfully
+2025-10-06 21:51:14,986 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.611s, Memory: 0.0MB
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+WARNING:root:License imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+WARNING:root:Pricing imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+INFO:__main__:Performance optimizations initialized successfully
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:__main__:Enterprise integration not available (development mode)
+INFO:utils.session_optimizer:Created session 81cdbb04-71ab-4ddc-917d-f7be681c50eb for user vishaal314
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=8, mask=IN_OPEN, cookie=0, name='results_aggregator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=1, mask=IN_OPEN, cookie=0, name='results_aggregator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='results_aggregator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='results_aggregator.py'>
+INFO:services.encryption_service:Local KMS provider initialized
+WARNING:services.encryption_service:boto3 not available for AWS KMS integration
+INFO:services.encryption_service:Key management initialized
+INFO:services.multi_tenant_service:Initializing Row Level Security for tenant isolation
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=1, mask=IN_OPEN, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=9, mask=IN_OPEN, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_auth_enhanced.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/secure_auth_enhanced.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_auth_enhanced.py'>
+INFO:services.multi_tenant_service:Row Level Security policies created successfully
+INFO:services.multi_tenant_service:Multi-tenant database schema initialized successfully with RLS
+ERROR:services.multi_tenant_service:Failed to load tenant configs: column "max_storage_gb" does not exist
+LINE 3:                    max_storage_gb, features, compliance_regi...
+                           ^
+
+ERROR:services.multi_tenant_service:Failed to create tenant default_org: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+ERROR:services.multi_tenant_service:Failed to create default tenant: Tenant creation failed: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+INFO:services.multi_tenant_service:Multi-tenant service initialized with organization isolation
+INFO:services.results_aggregator:Multi-tenant service initialized for secure tenant isolation
+DEBUG:services.multi_tenant_service:Secure connection established for organization system_admin
+DEBUG:services.results_aggregator:Created performance index: idx_scans_username_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_organization_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_scan_type
+DEBUG:services.results_aggregator:Created performance index: idx_scans_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_composite
+DEBUG:services.results_aggregator:Migration note: column "organization_id" of relation "scans" already exists
+
+ERROR:services.results_aggregator:Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+ERROR:services.results_aggregator:Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+WARNING:services.results_aggregator:Non-strict mode: falling back to file-based storage
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CREATE, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_MODIFY, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_WRITE, cookie=0, name='scans.json'>
+INFO:services.results_aggregator:File-based storage initialized for non-strict mode
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+INFO:__main__:Dashboard: Retrieved 0 total scans for user vishaal314
+INFO:__main__:Dashboard: No scans found for user vishaal314, getting all recent scans
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+INFO:__main__:Dashboard: Raw aggregator returned 0 scans for user vishaal314
+INFO:__main__:Dashboard: Processing 0 completed scans from aggregator
+INFO:services.multi_tenant_service:Initializing Row Level Security for tenant isolation
+INFO:services.multi_tenant_service:Row Level Security policies created successfully
+INFO:services.multi_tenant_service:Multi-tenant database schema initialized successfully with RLS
+ERROR:services.multi_tenant_service:Failed to load tenant configs: column "max_storage_gb" does not exist
+LINE 3:                    max_storage_gb, features, compliance_regi...
+                           ^
+
+ERROR:services.multi_tenant_service:Failed to create tenant default_org: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+ERROR:services.multi_tenant_service:Failed to create default tenant: Tenant creation failed: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+INFO:services.multi_tenant_service:Multi-tenant service initialized with organization isolation
+INFO:services.results_aggregator:Multi-tenant service initialized for secure tenant isolation
+DEBUG:services.multi_tenant_service:Secure connection established for organization system_admin
+DEBUG:services.results_aggregator:Created performance index: idx_scans_username_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_organization_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_scan_type
+DEBUG:services.results_aggregator:Created performance index: idx_scans_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_composite
+DEBUG:services.results_aggregator:Migration note: column "organization_id" of relation "scans" already exists
+
+ERROR:services.results_aggregator:Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+ERROR:services.results_aggregator:Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+WARNING:services.results_aggregator:Non-strict mode: falling back to file-based storage
+INFO:services.results_aggregator:File-based storage initialized for non-strict mode
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving user scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+INFO:__main__:Dashboard: Direct database query found 0 total scans for user vishaal314
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving user scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+INFO:__main__:Dashboard: No user-specific scans, using 0 total scans from database
+INFO:__main__:Dashboard: Manual date filtering found 0 scans within 30 days
+INFO:__main__:Dashboard: Activity tracker found 0 total activities, 0 completed scans
+INFO:__main__:Dashboard: Found 0 total activities, 0 today in activity tracker
+INFO:__main__:Dashboard: Combining 0 aggregator scans + 0 today's activities
+INFO:__main__:Dashboard DISPLAY: Showing metrics - Scans: 0, PII: 0, Compliance: 94.5%, Issues: 0
+INFO:services.multi_tenant_service:Initializing Row Level Security for tenant isolation
+INFO:services.multi_tenant_service:Row Level Security policies created successfully
+INFO:services.multi_tenant_service:Multi-tenant database schema initialized successfully with RLS
+ERROR:services.multi_tenant_service:Failed to load tenant configs: column "max_storage_gb" does not exist
+LINE 3:                    max_storage_gb, features, compliance_regi...
+                           ^
+
+ERROR:services.multi_tenant_service:Failed to create tenant default_org: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+ERROR:services.multi_tenant_service:Failed to create default tenant: Tenant creation failed: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+INFO:services.multi_tenant_service:Multi-tenant service initialized with organization isolation
+INFO:services.results_aggregator:Multi-tenant service initialized for secure tenant isolation
+DEBUG:services.multi_tenant_service:Secure connection established for organization system_admin
+DEBUG:services.results_aggregator:Created performance index: idx_scans_username_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_organization_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_scan_type
+DEBUG:services.results_aggregator:Created performance index: idx_scans_timestamp
+DEBUG:services.results_aggregator:Created performance index: idx_scans_composite
+DEBUG:services.results_aggregator:Migration note: column "organization_id" of relation "scans" already exists
+
+ERROR:services.results_aggregator:Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+ERROR:services.results_aggregator:Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+WARNING:services.results_aggregator:Non-strict mode: falling back to file-based storage
+INFO:services.results_aggregator:File-based storage initialized for non-strict mode
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+INFO:__main__:Dashboard: Fresh aggregator returned 0 scans for recent activity display
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+WARNING:services.multi_tenant_service:Access denied: Unknown organization default_org
+ERROR:services.multi_tenant_service:Failed to get secure connection for organization default_org: Access denied to organization default_org
+ERROR:services.results_aggregator:Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+INFO:__main__:Dashboard: No user-specific scans, using 0 total recent scans from all users
+INFO:__main__:Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-06 21:51:18,439 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 3.315s, Memory: 82.8MB
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_OPEN, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/data/scans.json', wd=2, mask=IN_CLOSE_NOWRITE, cookie=0, name='scans.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+WARNING:root:License imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+WARNING:root:Pricing imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+INFO:__main__:Performance optimizations initialized successfully
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:__main__:Enterprise integration not available (development mode)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_connector_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_connector_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_connector_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_connector_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_connector_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_connector_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_connector_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_connector_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_errors.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_errors.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/pii_detection.py', wd=1, mask=IN_OPEN, cookie=0, name='pii_detection.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/pii_detection.py', wd=9, mask=IN_OPEN, cookie=0, name='pii_detection.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/pii_detection.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pii_detection.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/pii_detection.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='pii_detection.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/gdpr_rules.py', wd=9, mask=IN_OPEN, cookie=0, name='gdpr_rules.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/gdpr_rules.py', wd=1, mask=IN_OPEN, cookie=0, name='gdpr_rules.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/gdpr_rules.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='gdpr_rules.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/gdpr_rules.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='gdpr_rules.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/netherlands_gdpr.py', wd=9, mask=IN_OPEN, cookie=0, name='netherlands_gdpr.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/netherlands_gdpr.py', wd=1, mask=IN_OPEN, cookie=0, name='netherlands_gdpr.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/netherlands_gdpr.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='netherlands_gdpr.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/netherlands_gdpr.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='netherlands_gdpr.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/comprehensive_gdpr_validator.py', wd=9, mask=IN_OPEN, cookie=0, name='comprehensive_gdpr_validator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/comprehensive_gdpr_validator.py', wd=1, mask=IN_OPEN, cookie=0, name='comprehensive_gdpr_validator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/comprehensive_gdpr_validator.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='comprehensive_gdpr_validator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/comprehensive_gdpr_validator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='comprehensive_gdpr_validator.py'>
+SET_LANGUAGE - Setting language to: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+2025-10-06 21:51:23,204 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.379s, Memory: 3.9MB
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=8, mask=IN_OPEN, cookie=0, name='results_aggregator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='results_aggregator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=1, mask=IN_OPEN, cookie=0, name='results_aggregator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/results_aggregator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='results_aggregator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/pii_detection.py', wd=9, mask=IN_OPEN, cookie=0, name='pii_detection.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/pii_detection.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='pii_detection.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/pii_detection.py', wd=1, mask=IN_OPEN, cookie=0, name='pii_detection.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/pii_detection.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pii_detection.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/gdpr_rules.py', wd=9, mask=IN_OPEN, cookie=0, name='gdpr_rules.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/gdpr_rules.py', wd=1, mask=IN_OPEN, cookie=0, name='gdpr_rules.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/gdpr_rules.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='gdpr_rules.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/gdpr_rules.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='gdpr_rules.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/netherlands_gdpr.py', wd=9, mask=IN_OPEN, cookie=0, name='netherlands_gdpr.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/netherlands_gdpr.py', wd=1, mask=IN_OPEN, cookie=0, name='netherlands_gdpr.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/netherlands_gdpr.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='netherlands_gdpr.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/netherlands_gdpr.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='netherlands_gdpr.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/comprehensive_gdpr_validator.py', wd=9, mask=IN_OPEN, cookie=0, name='comprehensive_gdpr_validator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/comprehensive_gdpr_validator.py', wd=1, mask=IN_OPEN, cookie=0, name='comprehensive_gdpr_validator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/comprehensive_gdpr_validator.py', wd=9, mask=IN_CLOSE_NOWRITE, cookie=0, name='comprehensive_gdpr_validator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/utils/comprehensive_gdpr_validator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='comprehensive_gdpr_validator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_connector_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_connector_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_connector_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_connector_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_connector_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_connector_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_connector_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_connector_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+WARNING:root:License imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+WARNING:root:Pricing imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+INFO:__main__:Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:__main__:Enterprise integration not available (development mode)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+2025-10-06 21:51:27,119 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.080s, Memory: 0.0MB
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+WARNING:root:License imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+WARNING:root:Pricing imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+INFO:__main__:Performance optimizations initialized successfully
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:__main__:Enterprise integration not available (development mode)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+2025-10-06 21:51:51,245 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.027s, Memory: 0.0MB
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+WARNING:root:License imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+WARNING:root:Pricing imports failed: cannot import name 'BillingCycle' from 'config.pricing_config' (/app/config/pricing_config.py)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_OPEN, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/pricing_display.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='pricing_display.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_OPEN, cookie=0, name='download_reports.py'>
+INFO:__main__:Performance optimizations initialized successfully
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+INIT - Successfully initialized translations for: nl
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/download_reports.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='download_reports.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:__main__:Enterprise integration not available (development mode)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_OPEN, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/enterprise_orchestrator.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='enterprise_orchestrator.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_OPEN, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/secure_users.json', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='secure_users.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_OPEN, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/en.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='en.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_OPEN, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/translations/nl.json', wd=12, mask=IN_CLOSE_NOWRITE, cookie=0, name='nl.json'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/intelligent_scanner_wrapper.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_scanner_wrapper.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/intelligent_scanner_wrapper.py', wd=3, mask=IN_OPEN, cookie=0, name='intelligent_scanner_wrapper.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/intelligent_scanner_wrapper.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_scanner_wrapper.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/components/intelligent_scanner_wrapper.py', wd=3, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_scanner_wrapper.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_scanner_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_scanner_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_scanner_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_scanner_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_errors.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_errors.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:git.cmd:Popen(['git', 'version'], cwd=/app, stdin=None, shell=False, universal_newlines=False)
+DEBUG:git.cmd:Popen(['git', 'version'], cwd=/app, stdin=None, shell=False, universal_newlines=False)
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_errors.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_errors.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_errors.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_errors.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_errors.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_errors.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_errors.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_errors.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_errors.log', wd=4, mask=IN_OPEN, cookie=0, name='dataguardian_errors.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+2025-10-06 21:51:52,073 - scanner.code_profiler - INFO - Activity tracked: 81cdbb04-71ab-4ddc-917d-f7be681c50eb - error
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_OPEN, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/license_integration.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='license_integration.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+2025-10-06 21:51:52,088 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.563s, Memory: 2.5MB
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/logs/dataguardian_scanner.log', wd=4, mask=IN_MODIFY, cookie=0, name='dataguardian_scanner.log'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_repo_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_repo_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_blob_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_blob_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_image_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_image_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_website_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_website_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_db_scanner.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_db_scanner.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=1, mask=IN_OPEN, cookie=0, name='intelligent_scanner_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=1, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_scanner_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=8, mask=IN_OPEN, cookie=0, name='intelligent_scanner_manager.py'>
+DEBUG:watchdog.observers.inotify_buffer:in-event <InotifyEvent: src_path=b'/app/services/intelligent_scanner_manager.py', wd=8, mask=IN_CLOSE_NOWRITE, cookie=0, name='intelligent_scanner_manager.py'>
