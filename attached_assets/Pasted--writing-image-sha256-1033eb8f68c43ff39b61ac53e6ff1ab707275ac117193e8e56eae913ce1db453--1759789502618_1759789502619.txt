@@ -1,0 +1,299 @@
+ => => writing image sha256:1033eb8f68c43ff39b61ac53e6ff1ab707275ac117193e8e56eae913ce1db453                                                                                                                  0.0s
+ => => naming to docker.io/library/dataguardian-pro                                                                                                                                                           0.0s
+✅ Docker rebuilt with license included
+
+🚀 Starting container...
+213362ca0aef05dad76e8f6d25dee37391a8ca4e0819428aea8bdd697f67f165
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 VERIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Container: RUNNING
+✅ No license errors
+✅ Streamlit: STARTED
+
+🔍 Verifying license inside container...
+✅ License file in container: 2342 bytes
+✅ License type: "license_type": "enterprise"
+
+📋 Recent logs:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎉 LICENSE INSTALLED! ENTERPRISE ACCESS GRANTED!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 License Details:
+   License ID: DGP-ENT-2025-PROD-001
+   Type: Enterprise
+   User: vishaal314
+   Scans: 99,999/month
+   Features: ALL (12 scanners)
+   Regions: Global
+   Valid Until: 2035-10-06
+
+🌐 Application: https://dataguardianpro.nl
+👤 Login: vishaal314 / vishaal2024
+
+🧪 FINAL TEST:
+   1. Close ALL browser tabs
+   2. Open INCOGNITO window (Ctrl+Shift+N)
+   3. Visit https://dataguardianpro.nl
+   4. Login - Should go directly to Dashboard
+   5. Test ALL 12 scanners - ALL should work!
+
+✅ Full enterprise access activated!
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container -f
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+2025-10-06 22:21:28,912 - scanner.code_profiler - INFO - System monitoring started
+2025-10-06 22:21:29,751 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-06 22:21:29,965 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.211s, Memory: 1.3MB
+2025-10-06 22:21:34,816 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-06 22:21:35,375 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-06 22:21:35,379 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.559s, Memory: 0.0MB
+2025-10-06 22:21:35,494 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-06 22:21:35,511 - utils.session_optimizer - INFO - Created session 61ae5d6a-016d-4781-8ec2-b4c9d45557f5 for user vishaal314
+2025-10-06 22:21:35,523 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-06 22:21:35,540 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-06 22:21:37,880 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-06 22:21:37,881 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-06 22:21:37,881 - services.encryption_service - INFO - Key management initialized
+2025-10-06 22:21:37,963 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-06 22:21:37,995 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-06 22:21:37,999 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-06 22:21:38,026 - services.multi_tenant_service - ERROR - Failed to load tenant configs: column "max_storage_gb" does not exist
+LINE 3:                    max_storage_gb, features, compliance_regi...
+                           ^
+
+2025-10-06 22:21:38,048 - services.multi_tenant_service - ERROR - Failed to create tenant default_org: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:21:38,048 - services.multi_tenant_service - ERROR - Failed to create default tenant: Tenant creation failed: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:21:38,054 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-06 22:21:38,055 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-06 22:21:38,124 - services.results_aggregator - ERROR - Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:21:38,125 - services.results_aggregator - ERROR - Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:21:38,125 - services.results_aggregator - WARNING - Non-strict mode: falling back to file-based storage
+2025-10-06 22:21:38,129 - services.results_aggregator - INFO - File-based storage initialized for non-strict mode
+2025-10-06 22:21:38,130 - services.multi_tenant_service - WARNING - Access denied: Unknown organization default_org
+2025-10-06 22:21:38,130 - services.multi_tenant_service - ERROR - Failed to get secure connection for organization default_org: Access denied to organization default_org
+2025-10-06 22:21:38,131 - services.results_aggregator - ERROR - Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+2025-10-06 22:21:38,132 - __main__ - INFO - Dashboard: Retrieved 0 total scans for user vishaal314
+2025-10-06 22:21:38,133 - __main__ - INFO - Dashboard: No scans found for user vishaal314, getting all recent scans
+2025-10-06 22:21:38,133 - services.multi_tenant_service - WARNING - Access denied: Unknown organization default_org
+2025-10-06 22:21:38,133 - services.multi_tenant_service - ERROR - Failed to get secure connection for organization default_org: Access denied to organization default_org
+2025-10-06 22:21:38,134 - services.results_aggregator - ERROR - Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+2025-10-06 22:21:38,135 - __main__ - INFO - Dashboard: Raw aggregator returned 0 scans for user vishaal314
+2025-10-06 22:21:38,136 - __main__ - INFO - Dashboard: Processing 0 completed scans from aggregator
+2025-10-06 22:21:38,192 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-06 22:21:38,219 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-06 22:21:38,229 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-06 22:21:38,276 - services.multi_tenant_service - ERROR - Failed to load tenant configs: column "max_storage_gb" does not exist
+LINE 3:                    max_storage_gb, features, compliance_regi...
+                           ^
+
+2025-10-06 22:21:38,323 - services.multi_tenant_service - ERROR - Failed to create tenant default_org: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:21:38,324 - services.multi_tenant_service - ERROR - Failed to create default tenant: Tenant creation failed: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:21:38,324 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-06 22:21:38,325 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-06 22:21:38,363 - services.results_aggregator - ERROR - Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:21:38,364 - services.results_aggregator - ERROR - Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:21:38,365 - services.results_aggregator - WARNING - Non-strict mode: falling back to file-based storage
+2025-10-06 22:21:38,365 - services.results_aggregator - INFO - File-based storage initialized for non-strict mode
+2025-10-06 22:21:38,366 - services.multi_tenant_service - WARNING - Access denied: Unknown organization default_org
+2025-10-06 22:21:38,366 - services.multi_tenant_service - ERROR - Failed to get secure connection for organization default_org: Access denied to organization default_org
+2025-10-06 22:21:38,367 - services.results_aggregator - ERROR - Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving user scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+2025-10-06 22:21:38,369 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314
+2025-10-06 22:21:38,369 - services.multi_tenant_service - WARNING - Access denied: Unknown organization default_org
+2025-10-06 22:21:38,370 - services.multi_tenant_service - ERROR - Failed to get secure connection for organization default_org: Access denied to organization default_org
+2025-10-06 22:21:38,370 - services.results_aggregator - ERROR - Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving user scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+2025-10-06 22:21:38,372 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database
+2025-10-06 22:21:38,373 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-06 22:21:38,373 - __main__ - INFO - Dashboard: Activity tracker found 0 total activities, 0 completed scans
+2025-10-06 22:21:38,374 - __main__ - INFO - Dashboard: Found 0 total activities, 0 today in activity tracker
+2025-10-06 22:21:38,374 - __main__ - INFO - Dashboard: Combining 0 aggregator scans + 0 today's activities
+2025-10-06 22:21:38,374 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 0, PII: 0, Compliance: 94.5%, Issues: 0
+2025-10-06 22:21:38,418 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-06 22:21:38,436 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-06 22:21:38,438 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-06 22:21:38,478 - services.multi_tenant_service - ERROR - Failed to load tenant configs: column "max_storage_gb" does not exist
+LINE 3:                    max_storage_gb, features, compliance_regi...
+                           ^
+
+2025-10-06 22:21:38,527 - services.multi_tenant_service - ERROR - Failed to create tenant default_org: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:21:38,528 - services.multi_tenant_service - ERROR - Failed to create default tenant: Tenant creation failed: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:21:38,534 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-06 22:21:38,535 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-06 22:21:38,576 - services.results_aggregator - ERROR - Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:21:38,577 - services.results_aggregator - ERROR - Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:21:38,578 - services.results_aggregator - WARNING - Non-strict mode: falling back to file-based storage
+2025-10-06 22:21:38,578 - services.results_aggregator - INFO - File-based storage initialized for non-strict mode
+2025-10-06 22:21:38,579 - services.multi_tenant_service - WARNING - Access denied: Unknown organization default_org
+2025-10-06 22:21:38,579 - services.multi_tenant_service - ERROR - Failed to get secure connection for organization default_org: Access denied to organization default_org
+2025-10-06 22:21:38,580 - services.results_aggregator - ERROR - Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+2025-10-06 22:21:38,582 - __main__ - INFO - Dashboard: Fresh aggregator returned 0 scans for recent activity display
+2025-10-06 22:21:38,583 - services.multi_tenant_service - WARNING - Access denied: Unknown organization default_org
+2025-10-06 22:21:38,583 - services.multi_tenant_service - ERROR - Failed to get secure connection for organization default_org: Access denied to organization default_org
+2025-10-06 22:21:38,584 - services.results_aggregator - ERROR - Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving recent scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+2025-10-06 22:21:38,586 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total recent scans from all users
+2025-10-06 22:21:38,586 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-06 22:21:38,596 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 3.099s, Memory: 83.1MB
+2025-10-06 22:21:42,258 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-06 22:21:42,312 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-06 22:21:42,330 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-06 22:21:42,354 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+SET_LANGUAGE - Setting language to: nl
+INIT - Successfully initialized translations for: nl
+2025-10-06 22:21:42,646 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.385s, Memory: 4.9MB
+2025-10-06 22:21:45,733 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-06 22:21:45,767 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-06 22:21:45,777 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-06 22:21:45,802 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-06 22:21:45,858 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.119s, Memory: 0.0MB
+2025-10-06 22:22:06,393 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-06 22:22:06,448 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-06 22:22:06,471 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-06 22:22:06,488 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-06 22:22:06,514 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.097s, Memory: 0.5MB
+2025-10-06 22:22:06,683 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-06 22:22:06,704 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-06 22:22:06,724 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-06 22:22:07,235 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-06 22:22:07,252 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-06 22:22:07,255 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-06 22:22:07,287 - services.multi_tenant_service - ERROR - Failed to load tenant configs: column "max_storage_gb" does not exist
+LINE 3:                    max_storage_gb, features, compliance_regi...
+                           ^
+
+2025-10-06 22:22:07,329 - services.multi_tenant_service - ERROR - Failed to create tenant default_org: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:22:07,330 - services.multi_tenant_service - ERROR - Failed to create default tenant: Tenant creation failed: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:22:07,331 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-06 22:22:07,332 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-06 22:22:07,381 - services.results_aggregator - ERROR - Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:22:07,382 - services.results_aggregator - ERROR - Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:22:07,382 - services.results_aggregator - WARNING - Non-strict mode: falling back to file-based storage
+2025-10-06 22:22:07,383 - services.results_aggregator - INFO - File-based storage initialized for non-strict mode
+2025-10-06 22:22:07,384 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-06 22:22:12,379 - services.intelligent_website_scanner - INFO - Discovered 111 pages, selected 5 for scanning
+2025-10-06 22:22:13,314 - scanner.website_scanner - INFO - Scanning page: https://ns.nl/reisinformatie/actuele-situatie-op-het-spoor
+2025-10-06 22:22:13,329 - scanner.website_scanner - INFO - Scanning page: https://ns.nl/reisinformatie
+2025-10-06 22:22:13,341 - scanner.website_scanner - INFO - Scanning page: https://ns.nl/reisinformatie/reizen-met-ov-chipkaart
+2025-10-06 22:22:13,372 - scanner.website_scanner - INFO - Scanning page: https://ns.nl/reisinformatie/fiets-in-de-trein.html
+2025-10-06 22:22:18,375 - scanner.website_scanner - INFO - Scanning page: https://www.ns.nl/over-ns/dossier/hogesnelheidslijn/hsl-binnenland.html
+2025-10-06 22:22:20,425 - services.intelligent_website_scanner - INFO - Intelligent website scan completed: 19 findings in 12.0s
+2025-10-06 22:22:20,425 - services.intelligent_website_scanner - INFO - Scanned 5/5 pages (100.0% coverage)
+2025-10-06 22:22:20,428 - services.intelligent_scanner_manager - INFO - Intelligent website scan completed: intelligent_scan_c0f2db17
+2025-10-06 22:22:20,429 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-06 22:22:20,433 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-06 22:22:20,473 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-06 22:22:20,511 - utils.compliance_calculator - INFO - Compliance score calculated: 0.0% (Critical: 0, High: 15, Medium: 4, Low: 0) for scan web_scan_7fecc570
+2025-10-06 22:22:20,514 - utils.compliance_calculator - INFO - Compliance score retrieved from cache: 0.0%
+2025-10-06 22:22:20,841 - app - INFO - Performance optimizations initialized successfully
+2025-10-06 22:22:20,896 - root - INFO - Added 38 missing translation keys to nl.json
+2025-10-06 22:22:20,979 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-06 22:22:20,994 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-06 22:22:20,996 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-06 22:22:21,023 - services.multi_tenant_service - ERROR - Failed to load tenant configs: column "max_storage_gb" does not exist
+LINE 3:                    max_storage_gb, features, compliance_regi...
+                           ^
+
+2025-10-06 22:22:21,054 - services.multi_tenant_service - ERROR - Failed to create tenant default_org: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:22:21,055 - services.multi_tenant_service - ERROR - Failed to create default tenant: Tenant creation failed: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:22:21,055 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-06 22:22:21,055 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-06 22:22:21,099 - services.results_aggregator - ERROR - Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:22:21,099 - services.results_aggregator - ERROR - Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:22:21,099 - services.results_aggregator - WARNING - Non-strict mode: falling back to file-based storage
+2025-10-06 22:22:21,100 - services.results_aggregator - INFO - File-based storage initialized for non-strict mode
+2025-10-06 22:22:21,100 - services.multi_tenant_service - WARNING - Access denied: Unknown organization default_org
+2025-10-06 22:22:21,100 - services.multi_tenant_service - ERROR - Failed to get secure connection for organization default_org: Access denied to organization default_org
+2025-10-06 22:22:21,100 - services.results_aggregator - ERROR - Secure database connection error for organization default_org: Secure connection failed: Access denied to organization default_org
+Error retrieving user scans: Secure database connection required for enterprise security compliance: Secure connection failed: Access denied to organization default_org
+2025-10-06 22:22:21,102 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-06 22:22:21,153 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-06 22:22:21,169 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-06 22:22:21,171 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-06 22:22:21,211 - services.multi_tenant_service - ERROR - Failed to load tenant configs: column "max_storage_gb" does not exist
+LINE 3:                    max_storage_gb, features, compliance_regi...
+                           ^
+
+2025-10-06 22:22:21,255 - services.multi_tenant_service - ERROR - Failed to create tenant default_org: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:22:21,256 - services.multi_tenant_service - ERROR - Failed to create default tenant: Tenant creation failed: column "max_storage_gb" of relation "tenants" does not exist
+LINE 4:              max_storage_gb, features, compliance_regions, d...
+                     ^
+
+2025-10-06 22:22:21,264 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-06 22:22:21,265 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-06 22:22:21,316 - services.results_aggregator - ERROR - Error creating database tables: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:22:21,317 - services.results_aggregator - ERROR - Error initializing database: Database initialization required for enterprise security compliance: current transaction is aborted, commands ignored until end of transaction block
+
+2025-10-06 22:22:21,317 - services.results_aggregator - WARNING - Non-strict mode: falling back to file-based storage
+2025-10-06 22:22:21,318 - services.results_aggregator - INFO - File-based storage initialized for non-strict mode
+2025-10-06 22:22:21,319 - services.multi_tenant_service - WARNING - Access denied: Unknown organization default_org
+2025-10-06 22:22:21,319 - services.multi_tenant_service - ERROR - Failed to get secure connection for organization default_org: Access denied to organization default_org
+2025-10-06 22:22:21,320 - services.results_aggregator - ERROR - Secure database connection error for organization default_org: Secur
