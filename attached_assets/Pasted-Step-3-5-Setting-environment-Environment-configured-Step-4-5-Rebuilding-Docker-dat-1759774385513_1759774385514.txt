@@ -1,0 +1,54 @@
+Step 3/5: Setting environment...
+✅ Environment configured
+
+🐳 Step 4/5: Rebuilding Docker...
+dataguardian-container
+dataguardian-container
+[+] Building 422.3s (13/13) FINISHED                                                                     docker:default
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 1.78kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.11-slim                                                1.5s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 2B                                                                                    0.0s
+ => [1/9] FROM docker.io/library/python:3.11-slim@sha256:9bffe4353b925a1656688797ebc68f9c525e79b1d377a764d232182a  0.0s
+ => => resolve docker.io/library/python:3.11-slim@sha256:9bffe4353b925a1656688797ebc68f9c525e79b1d377a764d232182a  0.0s
+ => [internal] load build context                                                                                  0.2s
+ => => transferring context: 1.76MB                                                                                0.2s
+ => CACHED [2/9] WORKDIR /app                                                                                      0.0s
+ => [3/9] RUN apt-get update && apt-get install -y     build-essential     curl     git     libpq-dev     postg  119.8s
+ => [4/9] COPY production_requirements.txt requirements.txt                                                        0.1s
+ => [5/9] RUN pip install --no-cache-dir --upgrade pip &&     pip install --no-cache-dir -r requirements.txt &&  297.4s
+ => [6/9] COPY . .                                                                                                 0.4s
+ => [7/9] RUN mkdir -p logs reports data temp                                                                      0.7s
+ => [8/9] RUN useradd --create-home --shell /bin/bash dataguardian &&     chown -R dataguardian:dataguardian /app  1.4s
+ => ERROR [9/9] RUN mkdir -p ~/.streamlit &&     echo '[server]\nheadless = true\naddress = "0.0.0.0"\nport = 500  0.6s
+------
+ > [9/9] RUN mkdir -p ~/.streamlit &&     echo '[server]\nheadless = true\naddress = "0.0.0.0"\nport = 5000\nenableCORS = false\nenableXsrfProtection = false\n\n[browser]\ngatherUsageStats = false\n\n[theme]\nbase = "light"' > ~/.streamlit/config.toml:
+0.553 mkdir: cannot create directory ‘/home/dataguardian/.streamlit’: No space left on device
+------
+Dockerfile:46
+--------------------
+  45 |     # Create Streamlit config
+  46 | >>> RUN mkdir -p ~/.streamlit && \
+  47 | >>>     echo '[server]\n\
+  48 | >>> headless = true\n\
+  49 | >>> address = "0.0.0.0"\n\
+  50 | >>> port = 5000\n\
+  51 | >>> enableCORS = false\n\
+  52 | >>> enableXsrfProtection = false\n\
+  53 | >>> \n\
+  54 | >>> [browser]\n\
+  55 | >>> gatherUsageStats = false\n\
+  56 | >>> \n\
+  57 | >>> [theme]\n\
+  58 | >>> base = "light"' > ~/.streamlit/config.toml
+  59 |
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c mkdir -p ~/.streamlit &&     echo '[server]\\nheadless = true\\naddress = \"0.0.0.0\"\\nport = 5000\\nenableCORS = false\\nenableXsrfProtection = false\\n\\n[browser]\\ngatherUsageStats = false\\n\\n[theme]\\nbase = \"light\"' > ~/.streamlit/config.toml" did not complete successfully: exit code: 1
+root@vishaalnoord7:/opt/dataguardian# df -k
+Filesystem     1K-blocks     Used Available Use% Mounted on
+tmpfs             201084      792    200292   1% /run
+/dev/vda2       30884636 28301708    993852  97% /
+tmpfs            1005416     1084   1004332   1% /dev/shm
+tmpfs               5120        0      5120   0% /run/lock
+tmpfs             201080        8    201072   1% /run/user/0
