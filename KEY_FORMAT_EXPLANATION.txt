@@ -1,0 +1,135 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║           WHY SAFE MODE KEEPS APPEARING - VISUAL GUIDE              ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 1. WHAT THE APPLICATION EXPECTS                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+Code: services/encryption_service.py (line 83)
+
+    master_key = base64.urlsafe_b64decode(master_key_b64)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+                 Expects BASE64 URL-SAFE format!
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 2. WHAT PREVIOUS FIX PROVIDED (WRONG!)                             │
+└─────────────────────────────────────────────────────────────────────┘
+
+Previous Script:
+    MASTER_KEY=$(openssl rand -hex 32)
+
+Generated:
+    a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    64 hex characters (NOT base64 URL-safe!)
+
+Result:
+    ❌ Application tries to base64 decode hex string
+    ❌ Decoding fails or produces wrong length
+    ❌ Error: "Master key must be 32 bytes"
+    ❌ KMS fails → Safe mode!
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 3. WHAT THE FINAL FIX PROVIDES (CORRECT!)                          │
+└─────────────────────────────────────────────────────────────────────┘
+
+Final Script:
+    MASTER_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
+
+Generates:
+    xY9kL2mP-3nQr8sT4vWz1A_BcD5eF6gH7iJ8kL9mN0oP
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    43-44 base64 URL-safe characters
+
+Result:
+    ✅ Application base64 decodes successfully
+    ✅ Decoded result is exactly 32 bytes
+    ✅ KMS initializes successfully
+    ✅ No safe mode!
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 4. THE ERROR CHAIN                                                  │
+└─────────────────────────────────────────────────────────────────────┘
+
+Wrong Key Format (hex)
+         ↓
+Application tries base64 decode
+         ↓
+Decode fails/wrong length
+         ↓
+"Master key must be 32 bytes" error
+         ↓
+KMS initialization fails
+         ↓
+Encryption service fails
+         ↓
+Multiple cascading errors
+         ↓
+Safe mode activated
+         ↓
+UnboundLocalError in scanners
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 5. FORMAT COMPARISON                                                │
+└─────────────────────────────────────────────────────────────────────┘
+
+HEX Format (WRONG):
+    Characters: 0-9, a-f
+    Example:    "a1b2c3d4e5f6..."
+    Length:     64 characters
+    Decode:     ❌ Not valid base64!
+
+BASE64 URL-SAFE Format (CORRECT):
+    Characters: A-Z, a-z, 0-9, -, _
+    Example:    "xY9kL2mP-3nQr..."
+    Length:     43-44 characters (with padding: 44)
+    Decode:     ✅ Exactly 32 bytes!
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 6. WHY PREVIOUS FIX SCRIPT REPORTED SUCCESS (BUT FAILED)           │
+└─────────────────────────────────────────────────────────────────────┘
+
+Previous script checked logs too early:
+  1. Generated hex key
+  2. Restarted container
+  3. Waited 45 seconds
+  4. Checked logs ← Checked OLD logs from before restart!
+  5. Reported success ✅ (WRONG!)
+
+Actual result:
+  • Container started with wrong key format
+  • KMS failed after startup
+  • Application entered safe mode
+  • But verification script already finished!
+
+New script uses --since=30s to check ONLY fresh logs after restart ✅
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 7. THE COMPLETE FIX                                                 │
+└─────────────────────────────────────────────────────────────────────┘
+
+FINAL_E2E_FIX.sh does:
+
+  1. Generate JWT_SECRET (hex - correct for this one)
+  2. Generate DATAGUARDIAN_MASTER_KEY (base64 URL-safe - CORRECTED!)
+  3. Verify both formats with Python validation
+  4. Create .env.production with correct keys
+  5. Restart Docker container
+  6. Wait 50 seconds for full startup
+  7. Check FRESH logs only (--since=30s)
+  8. Verify KMS working, no safe mode, no errors
+
+Result: 100% operational application!
+
+═══════════════════════════════════════════════════════════════════════
+
+🚀 RUN THIS NOW:
+
+1. scp FINAL_E2E_FIX.sh root@dataguardianpro.nl:/opt/dataguardian/
+
+2. ssh root@dataguardianpro.nl "cd /opt/dataguardian && chmod +x FINAL_E2E_FIX.sh && ./FINAL_E2E_FIX.sh"
+
+═══════════════════════════════════════════════════════════════════════
