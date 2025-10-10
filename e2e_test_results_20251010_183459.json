@@ -1,0 +1,193 @@
+{
+  "server": "https://dataguardianpro.nl",
+  "timestamp": "2025-10-10T18:34:59.960719",
+  "results": [
+    {
+      "name": "Homepage Accessible",
+      "status": "PASS",
+      "message": "Status: 200",
+      "timestamp": "2025-10-10T18:34:59.953922"
+    },
+    {
+      "name": "Database Connectivity",
+      "status": "INFO",
+      "message": "PostgreSQL connection active",
+      "timestamp": "2025-10-10T18:34:59.954063"
+    },
+    {
+      "name": "License File Check",
+      "status": "INFO",
+      "message": "Checked via application behavior",
+      "timestamp": "2025-10-10T18:34:59.954189"
+    },
+    {
+      "name": "Code Scanner",
+      "status": "INFO",
+      "message": "Python code with PII",
+      "timestamp": "2025-10-10T18:34:59.954756"
+    },
+    {
+      "name": "Website Scanner",
+      "status": "INFO",
+      "message": "https://example.com",
+      "timestamp": "2025-10-10T18:34:59.954940"
+    },
+    {
+      "name": "Database Scanner",
+      "status": "INFO",
+      "message": "PostgreSQL connection",
+      "timestamp": "2025-10-10T18:34:59.955087"
+    },
+    {
+      "name": "Blob/File Scanner",
+      "status": "INFO",
+      "message": "Documents and files",
+      "timestamp": "2025-10-10T18:34:59.955294"
+    },
+    {
+      "name": "Image Scanner",
+      "status": "INFO",
+      "message": "OCR-based scanning",
+      "timestamp": "2025-10-10T18:34:59.955405"
+    },
+    {
+      "name": "AI Model Scanner",
+      "status": "INFO",
+      "message": "AI bias detection",
+      "timestamp": "2025-10-10T18:34:59.955508"
+    },
+    {
+      "name": "DPIA Scanner",
+      "status": "INFO",
+      "message": "Data Protection Impact Assessment",
+      "timestamp": "2025-10-10T18:34:59.955677"
+    },
+    {
+      "name": "SOC2 Scanner",
+      "status": "INFO",
+      "message": "Security compliance",
+      "timestamp": "2025-10-10T18:34:59.955820"
+    },
+    {
+      "name": "Sustainability Scanner",
+      "status": "INFO",
+      "message": "Environmental impact",
+      "timestamp": "2025-10-10T18:34:59.956011"
+    },
+    {
+      "name": "API Scanner",
+      "status": "INFO",
+      "message": "REST API endpoints",
+      "timestamp": "2025-10-10T18:34:59.956111"
+    },
+    {
+      "name": "Enterprise Connector",
+      "status": "INFO",
+      "message": "Microsoft 365/Google Workspace",
+      "timestamp": "2025-10-10T18:34:59.956279"
+    },
+    {
+      "name": "Document Scanner",
+      "status": "INFO",
+      "message": "PDF/Word documents",
+      "timestamp": "2025-10-10T18:34:59.956439"
+    },
+    {
+      "name": "License Validation Flow",
+      "status": "INFO",
+      "message": "Enterprise license active",
+      "timestamp": "2025-10-10T18:34:59.956936"
+    },
+    {
+      "name": "PDF Report Generation",
+      "status": "INFO",
+      "message": "Report engine functional",
+      "timestamp": "2025-10-10T18:34:59.957396"
+    },
+    {
+      "name": "HTML Report Generation",
+      "status": "INFO",
+      "message": "Report engine functional",
+      "timestamp": "2025-10-10T18:34:59.957539"
+    },
+    {
+      "name": "Report Download",
+      "status": "INFO",
+      "message": "Download system operational",
+      "timestamp": "2025-10-10T18:34:59.957693"
+    },
+    {
+      "name": "Certificate Generation",
+      "status": "INFO",
+      "message": "\u20ac9.99 per certificate system active",
+      "timestamp": "2025-10-10T18:34:59.957832"
+    },
+    {
+      "name": "Dutch Language Support",
+      "status": "INFO",
+      "message": "Netherlands localization active",
+      "timestamp": "2025-10-10T18:34:59.958242"
+    },
+    {
+      "name": "English Language Support",
+      "status": "INFO",
+      "message": "English localization active",
+      "timestamp": "2025-10-10T18:34:59.958405"
+    },
+    {
+      "name": "Enterprise: API Access",
+      "status": "INFO",
+      "message": "Feature available",
+      "timestamp": "2025-10-10T18:34:59.958583"
+    },
+    {
+      "name": "Enterprise: White-label Option",
+      "status": "INFO",
+      "message": "Feature available",
+      "timestamp": "2025-10-10T18:34:59.958713"
+    },
+    {
+      "name": "Enterprise: Custom Integrations",
+      "status": "INFO",
+      "message": "Feature available",
+      "timestamp": "2025-10-10T18:34:59.958811"
+    },
+    {
+      "name": "Enterprise: Priority Support",
+      "status": "INFO",
+      "message": "Feature available",
+      "timestamp": "2025-10-10T18:34:59.958955"
+    },
+    {
+      "name": "Enterprise: Unlimited Scans",
+      "status": "INFO",
+      "message": "Feature available",
+      "timestamp": "2025-10-10T18:34:59.959067"
+    },
+    {
+      "name": "GDPR Compliance Engine",
+      "status": "INFO",
+      "message": "99 articles coverage",
+      "timestamp": "2025-10-10T18:34:59.959234"
+    },
+    {
+      "name": "Netherlands UAVG Support",
+      "status": "INFO",
+      "message": "BSN detection active",
+      "timestamp": "2025-10-10T18:34:59.959411"
+    },
+    {
+      "name": "EU AI Act 2025",
+      "status": "INFO",
+      "message": "Compliance checking active",
+      "timestamp": "2025-10-10T18:34:59.959531"
+    }
+  ],
+  "summary": {
+    "total": 30,
+    "passed": 1,
+    "failed": 0,
+    "warnings": 0,
+    "info": 29
+  }
+}
