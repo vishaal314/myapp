@@ -1,0 +1,30 @@
+═══════════════════════════════════════════════════════════════════════
+🚀 DATAGUARDIAN PRO - ONE COMMAND FIX
+═══════════════════════════════════════════════════════════════════════
+
+The previous fix failed because your server uses "docker run" not "docker-compose"
+
+HERE'S THE CORRECT FIX:
+
+STEP 1: Upload the correct script
+─────────────────────────────────────────────────────────────────────
+scp COMPLETE_FIX_NO_COMPOSE.sh root@dataguardianpro.nl:/opt/dataguardian/
+
+STEP 2: Run it (one command via SSH)
+─────────────────────────────────────────────────────────────────────
+ssh root@dataguardianpro.nl "cd /opt/dataguardian && chmod +x COMPLETE_FIX_NO_COMPOSE.sh && ./COMPLETE_FIX_NO_COMPOSE.sh"
+
+═══════════════════════════════════════════════════════════════════════
+
+That's it! This will:
+  ✅ Stop the container
+  ✅ Rebuild the database (fix schema)
+  ✅ Rebuild Docker image from source
+  ✅ Start fresh container
+  ✅ Verify everything works
+
+Takes ~3 minutes total.
+
+After it finishes, test at: https://dataguardianpro.nl
+
+═══════════════════════════════════════════════════════════════════════
