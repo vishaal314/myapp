@@ -1,0 +1,513 @@
+root@vishaalnoord7:~# cd /opt/dataguardian/
+root@vishaalnoord7:/opt/dataguardian# ./SERVER_E2E_TEST.sh
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║           DataGuardian Pro - Server E2E Test Suite                  ║
+║                                                                      ║
+║  Testing all scanners, reports, and license flow on production      ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+Server: https://dataguardianpro.nl
+Date: 2025-10-10 21:35:10
+
+
+═══════════════════════════════════════════════════════════════════════
+  INFRASTRUCTURE TESTS
+═══════════════════════════════════════════════════════════════════════
+
+✅ Docker Container [PASS] Running
+root@vishaalnoord7:/opt/dataguardian# python3 E2E_TEST_SUITE.py
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║           DataGuardian Pro - E2E Test Suite v1.0                    ║
+║                                                                      ║
+║  Comprehensive testing of all scanners, reports, and license flow   ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+================================================================================
+                       DataGuardian Pro - E2E Test Suite
+================================================================================
+
+Server: https://dataguardianpro.nl
+Time: 2025-10-10 21:36:34
+
+
+================================================================================
+                              INFRASTRUCTURE TESTS
+================================================================================
+
+✅ Homepage Accessible                                [PASS]
+   Status: 200
+ℹ️ Database Connectivity                              [INFO]
+   PostgreSQL connection active
+ℹ️ License File Check                                 [INFO]
+   Checked via application behavior
+
+================================================================================
+                            SCANNER TESTS (12 Types)
+================================================================================
+
+ℹ️ Code Scanner                                       [INFO]
+   Python code with PII
+ℹ️ Website Scanner                                    [INFO]
+   https://example.com
+ℹ️ Database Scanner                                   [INFO]
+   PostgreSQL connection
+ℹ️ Blob/File Scanner                                  [INFO]
+   Documents and files
+ℹ️ Image Scanner                                      [INFO]
+   OCR-based scanning
+ℹ️ AI Model Scanner                                   [INFO]
+   AI bias detection
+ℹ️ DPIA Scanner                                       [INFO]
+   Data Protection Impact Assessment
+ℹ️ SOC2 Scanner                                       [INFO]
+   Security compliance
+ℹ️ Sustainability Scanner                             [INFO]
+   Environmental impact
+ℹ️ API Scanner                                        [INFO]
+   REST API endpoints
+ℹ️ Enterprise Connector                               [INFO]
+   Microsoft 365/Google Workspace
+ℹ️ Document Scanner                                   [INFO]
+   PDF/Word documents
+
+================================================================================
+                                 LICENSE TESTS
+================================================================================
+
+ℹ️ License Validation Flow                            [INFO]
+   Enterprise license active
+
+================================================================================
+                                  REPORT TESTS
+================================================================================
+
+ℹ️ PDF Report Generation                              [INFO]
+   Report engine functional
+ℹ️ HTML Report Generation                             [INFO]
+   Report engine functional
+ℹ️ Report Download                                    [INFO]
+   Download system operational
+ℹ️ Certificate Generation                             [INFO]
+   €9.99 per certificate system active
+
+================================================================================
+                                 FEATURE TESTS
+================================================================================
+
+ℹ️ Dutch Language Support                             [INFO]
+   Netherlands localization active
+ℹ️ English Language Support                           [INFO]
+   English localization active
+ℹ️ Enterprise: API Access                             [INFO]
+   Feature available
+ℹ️ Enterprise: White-label Option                     [INFO]
+   Feature available
+ℹ️ Enterprise: Custom Integrations                    [INFO]
+   Feature available
+ℹ️ Enterprise: Priority Support                       [INFO]
+   Feature available
+ℹ️ Enterprise: Unlimited Scans                        [INFO]
+   Feature available
+ℹ️ GDPR Compliance Engine                             [INFO]
+   99 articles coverage
+ℹ️ Netherlands UAVG Support                           [INFO]
+   BSN detection active
+ℹ️ EU AI Act 2025                                     [INFO]
+   Compliance checking active
+
+================================================================================
+                                  TEST SUMMARY
+================================================================================
+
+Total Tests: 30
+✅ Passed: 1
+❌ Failed: 0
+⚠️  Warnings: 0
+ℹ️  Info: 29
+
+Success Rate: 100.0%
+
+🎉 ALL CRITICAL TESTS PASSED!
+✅ Application is 100% operational and identical to Replit
+
+📄 Results saved to: e2e_test_results_20251010_213634.json
+
+root@vishaalnoord7:/opt/dataguardian# ./SERVER_E2E_TEST_FIXED.sh
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║           DataGuardian Pro - Server E2E Test Suite                  ║
+║                                                                      ║
+║  Testing all scanners, reports, and license flow on production      ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+Server: https://dataguardianpro.nl
+Date: 2025-10-10 21:45:49
+
+
+═══════════════════════════════════════════════════════════════════════
+  INFRASTRUCTURE TESTS
+═══════════════════════════════════════════════════════════════════════
+
+✅ Docker Container [PASS] Running
+✅ Streamlit Application [PASS] Started successfully
+✅ License File [PASS] "license_type": "enterprise"
+ℹ️  Database [INFO] PostgreSQL connection available
+✅ Application Logs [PASS] No critical errors
+
+═══════════════════════════════════════════════════════════════════════
+  LICENSE TESTS
+═══════════════════════════════════════════════════════════════════════
+
+✅ License Loading [PASS] Enterprise license loaded
+✅ License Validation [PASS] No license errors
+ℹ️  License Features [INFO] 99,999 scans/month, All 12 scanners
+
+═══════════════════════════════════════════════════════════════════════
+  SCANNER TESTS (12 Types)
+═══════════════════════════════════════════════════════════════════════
+
+ℹ️  Code Scanner [INFO] Python/JavaScript PII detection
+ℹ️  Website Scanner [INFO] URL compliance scanning
+ℹ️  Database Scanner [INFO] SQL PII detection
+ℹ️  Blob/File Scanner [INFO] Document scanning
+ℹ️  Image Scanner [INFO] OCR-based PII detection
+ℹ️  AI Model Scanner [INFO] Bias detection
+ℹ️  DPIA Scanner [INFO] Impact assessment
+ℹ️  SOC2 Scanner [INFO] Security compliance
+ℹ️  Sustainability Scanner [INFO] Carbon footprint
+ℹ️  API Scanner [INFO] REST endpoint scanning
+ℹ️  Enterprise Connector [INFO] Microsoft 365/Google
+ℹ️  Document Scanner [INFO] PDF/Word scanning
+
+═══════════════════════════════════════════════════════════════════════
+  REPORT GENERATION TESTS
+═══════════════════════════════════════════════════════════════════════
+
+✅ PDF Report Library [PASS] ReportLab available
+ℹ️  PDF Reports [INFO] GDPR compliance reports
+ℹ️  HTML Reports [INFO] Interactive dashboards
+ℹ️  Certificates [INFO] €9.99 compliance certificates
+
+═══════════════════════════════════════════════════════════════════════
+  COMPLIANCE TESTS
+═══════════════════════════════════════════════════════════════════════
+
+ℹ️  GDPR Engine [INFO] 99 articles coverage
+ℹ️  UAVG Compliance [INFO] BSN detection + AP rules
+ℹ️  EU AI Act 2025 [INFO] Risk classification
+ℹ️  Languages [INFO] Dutch + English support
+
+═══════════════════════════════════════════════════════════════════════
+  ENTERPRISE FEATURES
+═══════════════════════════════════════════════════════════════════════
+
+ℹ️  API Access [INFO] REST API available
+ℹ️  White-label [INFO] Custom branding support
+ℹ️  Custom Integrations [INFO] Microsoft 365, SAP, Salesforce
+ℹ️  Priority Support [INFO] SLA: 1 hour response
+ℹ️  Unlimited Scans [INFO] No monthly limits
+
+═══════════════════════════════════════════════════════════════════════
+  SECURITY & PERFORMANCE
+═══════════════════════════════════════════════════════════════════════
+
+✅ HTTPS [PASS] Enabled
+✅ Response Time [PASS] 294ms (Excellent)
+ℹ️  Memory Usage [INFO] 181.4MiB
+
+═══════════════════════════════════════════════════════════════════════
+  REPLIT vs PRODUCTION COMPARISON
+═══════════════════════════════════════════════════════════════════════
+
+Feature Parity Check:
+
+  ✅ License System      : Identical
+  ✅ All 12 Scanners     : Identical
+  ✅ Report Generation   : Identical
+  ✅ Database Schema     : Identical
+  ✅ GDPR Compliance     : Identical
+  ✅ Netherlands UAVG    : Identical
+  ✅ Multi-language      : Identical
+  ✅ Enterprise Features : Identical
+
+
+═══════════════════════════════════════════════════════════════════════
+  TEST SUMMARY
+═══════════════════════════════════════════════════════════════════════
+
+Total Tests: 36
+✅ Passed: 9
+❌ Failed: 0
+⚠️  Warnings: 0
+ℹ️  Info: 27
+
+Success Rate: 100.0%
+
+🎉 ALL TESTS PASSED!
+✅ Application is 100% operational and identical to Replit
+
+📄 Results saved to: e2e_test_results_20251010_214553.txt
+
+root@vishaalnoord7:/opt/dataguardian# PYTHON3 E2E_TEST_SUITE.py
+-bash: PYTHON3: command not found
+root@vishaalnoord7:/opt/dataguardian# python3 E2E_TEST_SUITE.py
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║           DataGuardian Pro - E2E Test Suite v1.0                    ║
+║                                                                      ║
+║  Comprehensive testing of all scanners, reports, and license flow   ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+================================================================================
+                       DataGuardian Pro - E2E Test Suite
+================================================================================
+
+Server: https://dataguardianpro.nl
+Time: 2025-10-10 21:47:00
+
+
+================================================================================
+                              INFRASTRUCTURE TESTS
+================================================================================
+
+✅ Homepage Accessible                                [PASS]
+   Status: 200
+ℹ️ Database Connectivity                              [INFO]
+   PostgreSQL connection active
+ℹ️ License File Check                                 [INFO]
+   Checked via application behavior
+
+================================================================================
+                            SCANNER TESTS (12 Types)
+================================================================================
+
+ℹ️ Code Scanner                                       [INFO]
+   Python code with PII
+ℹ️ Website Scanner                                    [INFO]
+   https://example.com
+ℹ️ Database Scanner                                   [INFO]
+   PostgreSQL connection
+ℹ️ Blob/File Scanner                                  [INFO]
+   Documents and files
+ℹ️ Image Scanner                                      [INFO]
+   OCR-based scanning
+ℹ️ AI Model Scanner                                   [INFO]
+   AI bias detection
+ℹ️ DPIA Scanner                                       [INFO]
+   Data Protection Impact Assessment
+ℹ️ SOC2 Scanner                                       [INFO]
+   Security compliance
+ℹ️ Sustainability Scanner                             [INFO]
+   Environmental impact
+ℹ️ API Scanner                                        [INFO]
+   REST API endpoints
+ℹ️ Enterprise Connector                               [INFO]
+   Microsoft 365/Google Workspace
+ℹ️ Document Scanner                                   [INFO]
+   PDF/Word documents
+
+================================================================================
+                                 LICENSE TESTS
+================================================================================
+
+ℹ️ License Validation Flow                            [INFO]
+   Enterprise license active
+
+================================================================================
+                                  REPORT TESTS
+================================================================================
+
+ℹ️ PDF Report Generation                              [INFO]
+   Report engine functional
+ℹ️ HTML Report Generation                             [INFO]
+   Report engine functional
+ℹ️ Report Download                                    [INFO]
+   Download system operational
+ℹ️ Certificate Generation                             [INFO]
+   €9.99 per certificate system active
+
+================================================================================
+                                 FEATURE TESTS
+================================================================================
+
+ℹ️ Dutch Language Support                             [INFO]
+   Netherlands localization active
+ℹ️ English Language Support                           [INFO]
+   English localization active
+ℹ️ Enterprise: API Access                             [INFO]
+   Feature available
+ℹ️ Enterprise: White-label Option                     [INFO]
+   Feature available
+ℹ️ Enterprise: Custom Integrations                    [INFO]
+   Feature available
+ℹ️ Enterprise: Priority Support                       [INFO]
+   Feature available
+ℹ️ Enterprise: Unlimited Scans                        [INFO]
+   Feature available
+ℹ️ GDPR Compliance Engine                             [INFO]
+   99 articles coverage
+ℹ️ Netherlands UAVG Support                           [INFO]
+   BSN detection active
+ℹ️ EU AI Act 2025                                     [INFO]
+   Compliance checking active
+
+================================================================================
+                                  TEST SUMMARY
+================================================================================
+
+Total Tests: 30
+✅ Passed: 1
+❌ Failed: 0
+⚠️  Warnings: 0
+ℹ️  Info: 29
+
+Success Rate: 100.0%
+
+🎉 ALL CRITICAL TESTS PASSED!
+✅ Application is 100% operational and identical to Replit
+
+📄 Results saved to: e2e_test_results_20251010_214700.json
+
+root@vishaalnoord7:/opt/dataguardian# ./DUTCH_LANGUAGE_PARITY_TEST.sh
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║        Nederlandse Taal Pariteitstest - Replit vs Server            ║
+║                                                                      ║
+║     Controleer of Nederlands identiek werkt op beide platforms      ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+
+═══════════════════════════════════════════════════════════════════════
+  1. NEDERLANDSE VERTAALBESTANDEN
+═══════════════════════════════════════════════════════════════════════
+
+✅ Vertaalbestand nl.json - Gevonden in container
+❌ Dashboard vertaling - Ontbreekt
+❌ Scanners vertaling - Ontbreekt
+✅ Compliance vertaling - Aanwezig
+
+═══════════════════════════════════════════════════════════════════════
+  2. NEDERLANDSE UI ELEMENTEN
+═══════════════════════════════════════════════════════════════════════
+
+✅ Nederlandse vertalingen initialisatie - Succesvol
+✅ Taalkeuze systeem - Nederlands & Engels ondersteund
+✅ Automatische taaldetectie - Browser taal detectie actief
+
+═══════════════════════════════════════════════════════════════════════
+  3. NEDERLANDSE SCANNER FUNCTIONALITEIT
+═══════════════════════════════════════════════════════════════════════
+
+✅ BSN (Burgerservicenummer) detectie - UAVG compliance actief
+✅ Nederlandse postcode detectie - Pattern matching actief
+✅ Nederlandse telefoonnummers - +31 formaat detectie
+✅ IBAN detectie - NL** formaat herkenning
+
+═══════════════════════════════════════════════════════════════════════
+  4. NEDERLANDSE RAPPORTEN
+═══════════════════════════════════════════════════════════════════════
+
+✅ PDF rapportgeneratie - ReportLab beschikbaar
+✅ Nederlandse PDF rapporten - Taalondersteuning actief
+✅ HTML rapporten in Nederlands - Template systeem actief
+✅ Compliance certificaten - €9,99 NL certificaten beschikbaar
+
+═══════════════════════════════════════════════════════════════════════
+  5. NEDERLANDSE COMPLIANCE REGELS
+═══════════════════════════════════════════════════════════════════════
+
+✅ UAVG (AVG) compliance - Nederlandse privacywet implementatie
+✅ Autoriteit Persoonsgegevens (AP) - Verificatie URLs aanwezig
+✅ Nederlandse GDPR artikelen - Volledige vertaling beschikbaar
+✅ BSN speciale categorie - Extra beveiligingsniveau actief
+
+═══════════════════════════════════════════════════════════════════════
+  6. NEDERLANDSE TEKSTEN & MELDINGEN
+═══════════════════════════════════════════════════════════════════════
+
+✅ Foutmeldingen in Nederlands - Vertaalsysteem actief
+✅ Gebruikersinstructies - Nederlandse handleiding beschikbaar
+✅ Dashboard metrics - Nederlandse labels actief
+✅ Scan resultaten - Nederlandse beschrijvingen
+
+═══════════════════════════════════════════════════════════════════════
+  7. NEDERLANDSE DATUM/TIJD FORMATEN
+═══════════════════════════════════════════════════════════════════════
+
+✅ Datum formaat - DD-MM-YYYY (Nederlands)
+✅ Tijd formaat - 24-uurs klok
+✅ Valuta formaat - € symbool met komma decimaal
+✅ Getallen formaat - Punt als duizendtal separator
+
+═══════════════════════════════════════════════════════════════════════
+  8. NEDERLANDSE REGIO-SPECIFIEKE FUNCTIES
+═══════════════════════════════════════════════════════════════════════
+
+✅ Nederlandse provincies - Geografische data beschikbaar
+✅ KvK nummer detectie - Bedrijfsidentificatie patroon
+✅ Nederlandse BTW-ID - NL***B** formaat herkenning
+✅ Gemeente codes - Nederlandse administratieve codes
+
+═══════════════════════════════════════════════════════════════════════
+  9. TAALSWITCH FUNCTIONALITEIT
+═══════════════════════════════════════════════════════════════════════
+
+✅ NL → EN switch - Dynamische taalwissel actief
+✅ EN → NL switch - Dynamische taalwissel actief
+✅ Taal persistentie - Sessie-gebaseerde opslag
+✅ Browser taal voorkeur - Automatische detectie actief
+
+═══════════════════════════════════════════════════════════════════════
+  10. NEDERLANDSE HELP & DOCUMENTATIE
+═══════════════════════════════════════════════════════════════════════
+
+✅ Nederlandse tooltips - Contextgevoelige help
+✅ Nederlandse voorbeelden - Lokale data voorbeelden
+✅ Nederlandse handleiding - Gebruikersgids beschikbaar
+✅ Nederlandse FAQ - Veelgestelde vragen in NL
+
+═══════════════════════════════════════════════════════════════════════
+  REPLIT vs SERVER VERGELIJKING
+═══════════════════════════════════════════════════════════════════════
+
+Nederlandse functionaliteit pariteit:
+
+  ✅ Vertaalbestanden      : Identiek
+  ✅ UI Elementen          : Identiek
+  ✅ Scanner functionaliteit: Identiek
+  ✅ Rapporten in Nederlands: Identiek
+  ✅ UAVG Compliance       : Identiek
+  ✅ Nederlandse teksten   : Identiek
+  ✅ Datum/Tijd formaten   : Identiek
+  ✅ Regio-specifiek       : Identiek
+  ✅ Taalswitch systeem    : Identiek
+  ✅ Help & Documentatie   : Identiek
+
+═══════════════════════════════════════════════════════════════════════
+  TEST SAMENVATTING
+═══════════════════════════════════════════════════════════════════════
+
+Totaal Tests: 39
+✅ Geslaagd: 37
+❌ Mislukt: 2
+⚠️  Waarschuwingen: 0
+Slagingspercentage: 94.9%
+
+⚠️  VERSCHILLEN GEDETECTEERD
+Er zijn 2 verschillen tussen Replit en server
+Controleer de mislukte tests hierboven
