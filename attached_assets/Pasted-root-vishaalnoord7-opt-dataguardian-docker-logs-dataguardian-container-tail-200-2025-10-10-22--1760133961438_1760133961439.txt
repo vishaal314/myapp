@@ -1,0 +1,53 @@
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container | tail -200
+2025-10-10 22:04:22,619 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-10 22:04:26,717 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-10 22:04:27,267 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-10 22:04:27,375 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-10 22:04:27,387 - utils.session_optimizer - INFO - Created session c400121e-0ef0-46af-a2ee-c1bba06da446 for user vishaal314
+2025-10-10 22:04:27,404 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-10 22:04:27,409 - services.license_manager - ERROR - Failed to save license: [Errno 30] Read-only file system: 'license.json'
+2025-10-10 22:04:27,419 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-10 22:04:29,943 - services.encryption_service - ERROR - Failed to initialize KMS providers: Failed to derive local KEK: Master key must be 32 bytes (256 bits)
+2025-10-10 22:04:29,943 - __main__ - ERROR - Error loading dashboard metrics: KMS initialization failed: Failed to derive local KEK: Master key must be 32 bytes (256 bits)
+2025-10-10 22:04:29,944 - services.encryption_service - ERROR - Failed to initialize KMS providers: Failed to derive local KEK: Master key must be 32 bytes (256 bits)
+2025-10-10 22:04:29,945 - __main__ - ERROR - Fallback dashboard failed: KMS initialization failed: Failed to derive local KEK: Master key must be 32 bytes (256 bits)
+2025-10-10 22:04:35,669 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-10 22:04:35,718 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-10 22:04:35,734 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-10 22:04:35,756 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-10 22:04:41,939 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-10 22:04:41,979 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-10 22:04:41,994 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-10 22:04:42,019 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-10 22:04:58,225 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-10 22:04:58,261 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-10 22:04:58,300 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-10 22:04:58,329 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-10 22:04:58,358 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-10 22:04:58,535 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-10 22:04:58,554 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-10 22:04:58,573 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-10 22:04:58,977 - services.encryption_service - ERROR - Failed to initialize KMS providers: Failed to derive local KEK: Master key must be 32 bytes (256 bits)
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+2025-10-10 22:04:21,828 - scanner.code_profiler - INFO - System monitoring started
+INIT - Successfully initialized translations for: en
+2025-10-10 22:04:23,631 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 1.008s, Memory: 1.7MB
+INIT - Successfully initialized translations for: en
+2025-10-10 22:04:27,270 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.550s, Memory: 0.0MB
+INIT - Successfully initialized translations for: en
+2025-10-10 22:04:29,963 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 2.585s, Memory: 81.2MB
+INIT - Successfully initialized translations for: en
+SET_LANGUAGE - Setting language to: en
+INIT - Successfully initialized translations for: en
+2025-10-10 22:04:36,011 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.340s, Memory: 4.6MB
+INIT - Successfully initialized translations for: en
+2025-10-10 22:04:42,072 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.131s, Memory: 0.0MB
+INIT - Successfully initialized translations for: en
+INIT - Successfully initialized translations for: en
+2025-10-10 22:04:58,360 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.132s, Memory: 0.5MB
+2025-10-10 22:04:58,978 - scanner.code_profiler - INFO - Activity tracked: c400121e-0ef0-46af-a2ee-c1bba06da446 - error
+2025-10-10 22:04:58,983 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.644s, Memory: 3.2MB
