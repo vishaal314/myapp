@@ -1,0 +1,79 @@
+root@vishaalnoord7:/opt/dataguardian# cd /root
+root@vishaalnoord7:~# ./EXTERNAL_SERVER_COMPLETE_FIX_WITH_REDIS.sh
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║    DataGuardian Pro - COMPLETE FIX + REDIS VERIFICATION             ║
+║    Fixes: Scan Results & History + Redis Cache Check                ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+Step 1: Backup Original File
+✅ Backup created
+
+Step 2: Apply Code Fix
+❌ Pattern not found or replacement failed
+root@vishaalnoord7:~# cd /opt/dataguardian/
+root@vishaalnoord7:/opt/dataguardian# ./EXTERNAL_SERVER_COMPLETE_FIX_WITH_REDIS.sh
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║    DataGuardian Pro - COMPLETE FIX + REDIS VERIFICATION             ║
+║    Fixes: Scan Results & History + Redis Cache Check                ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+Step 1: Backup Original File
+✅ Backup created
+
+Step 2: Apply Code Fix
+❌ Pattern not found or replacement failed
+root@vishaalnoord7:/opt/dataguardian# ./EXTERNAL_SERVER_COMPLETE_FIX.sh
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║         DataGuardian Pro - EXTERNAL SERVER COMPLETE FIX             ║
+║         Fixes: Scan Results & History Empty Display                 ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+Step 1: Backup Original File
+✅ Backup created
+
+Step 2: Apply Code Fix
+❌ Pattern not found or replacement failed
+root@vishaalnoord7:/opt/dataguardian# cd /root
+root@vishaalnoord7:~# ./EXTERNAL_SERVER_COMPLETE_FIX.sh
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║         DataGuardian Pro - EXTERNAL SERVER COMPLETE FIX             ║
+║         Fixes: Scan Results & History Empty Display                 ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+Step 1: Backup Original File
+✅ Backup created
+
+Step 2: Apply Code Fix
+❌ Pattern not found or replacement failed
+root@vishaalnoord7:~# ./EXTERNAL_SERVER_COMPLETE_FIX_WITH_REDIS.sh
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║    DataGuardian Pro - COMPLETE FIX + REDIS VERIFICATION             ║
+║    Fixes: Scan Results & History + Redis Cache Check                ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+Step 1: Backup Original File
+✅ Backup created
+
+Step 2: Apply Code Fix
+❌ Pattern not found or replacement failed
+root@vishaalnoord7:~#
