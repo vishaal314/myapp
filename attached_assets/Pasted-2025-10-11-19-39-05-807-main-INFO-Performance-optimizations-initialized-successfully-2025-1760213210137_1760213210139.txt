@@ -1,0 +1,719 @@
+2025-10-11 19:39:05,807 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:39:06,256 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-11 19:39:06,463 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:39:06,480 - utils.session_optimizer - INFO - Created session ff093721-b80b-4a7e-82e6-4d805227ebe3 for user vishaal314
+2025-10-11 19:39:06,538 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:39:06,556 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:39:06,654 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:39:06,682 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:39:06,685 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:39:06,723 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:39:06,724 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:39:06,724 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:39:06,783 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:39:06,885 - __main__ - INFO - Dashboard: Retrieved 0 total scans for user vishaal314
+2025-10-11 19:39:06,885 - __main__ - INFO - Dashboard: No scans found for user vishaal314, getting all recent scans
+2025-10-11 19:39:06,970 - __main__ - INFO - Dashboard: Raw aggregator returned 0 scans for user vishaal314
+2025-10-11 19:39:06,971 - __main__ - INFO - Dashboard: Processing 0 completed scans from aggregator
+2025-10-11 19:39:07,020 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:39:07,032 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:39:07,038 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:39:07,105 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:39:07,106 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:39:07,107 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:39:07,173 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:39:07,257 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314
+2025-10-11 19:39:07,337 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database
+2025-10-11 19:39:07,337 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-11 19:39:07,338 - __main__ - INFO - Dashboard: Activity tracker found 4 total activities, 2 completed scans
+2025-10-11 19:39:07,338 - __main__ - INFO - Dashboard: Found 2 total activities, 2 today in activity tracker
+2025-10-11 19:39:07,338 - __main__ - INFO - Dashboard: Combining 0 aggregator scans + 2 today's activities
+2025-10-11 19:39:07,338 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 2, PII: 3, Compliance: 94.5%, Issues: 0
+2025-10-11 19:39:07,387 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:39:07,409 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:39:07,413 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:39:07,468 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:39:07,469 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:39:07,469 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:39:07,547 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:39:07,654 - __main__ - INFO - Dashboard: Fresh aggregator returned 0 scans for recent activity display
+2025-10-11 19:39:07,774 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total recent scans from all users
+2025-10-11 19:39:07,774 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-11 19:39:07,775 - __main__ - INFO - Dashboard: Processing 1 scans for Recent Scan Activity display
+2025-10-11 19:39:07,775 - __main__ - INFO - Dashboard: Processing scan 1: Code Scanner from 2025-10-11T19:38:17
+2025-10-11 19:39:07,776 - __main__ - INFO - Dashboard: Raw scan type from database: 'code scanner'
+2025-10-11 19:39:07,776 - __main__ - INFO - Dashboard: Full scan data keys: ['timestamp', 'scan_type', 'total_pii_found', 'file_count', 'region', 'result']
+2025-10-11 19:39:07,777 - __main__ - INFO - Dashboard: Scan type 'code scanner' mapped to '💻 Code Scanner'
+2025-10-11 19:39:07,777 - __main__ - INFO - Dashboard: Generated 1 activity records for display
+2025-10-11 19:39:07.780 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-11 19:40:33,694 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:40:33,730 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:40:33,748 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:40:33,810 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:40:33,826 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:40:33,828 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:40:33,870 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:40:33,871 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:40:33,871 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:40:33,954 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:40:37,453 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:40:37,482 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:40:37,497 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:40:37,558 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:40:37,571 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:40:37,573 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:40:37,608 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:40:37,608 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:40:37,609 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:40:37,691 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:40:44,354 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:40:47,202 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:40:47,845 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-11 19:40:47,981 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:40:48,012 - utils.session_optimizer - INFO - Created session dce7edf9-255f-4cf6-88be-b458f1500d52 for user vishaal314
+2025-10-11 19:40:48,026 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:40:48,034 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:40:48,079 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:40:48,089 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:40:48,091 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:40:48,163 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:40:48,163 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:40:48,163 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:40:48,277 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:40:48,365 - __main__ - INFO - Dashboard: Retrieved 0 total scans for user vishaal314
+2025-10-11 19:40:48,365 - __main__ - INFO - Dashboard: No scans found for user vishaal314, getting all recent scans
+2025-10-11 19:40:48,455 - __main__ - INFO - Dashboard: Raw aggregator returned 0 scans for user vishaal314
+2025-10-11 19:40:48,456 - __main__ - INFO - Dashboard: Processing 0 completed scans from aggregator
+2025-10-11 19:40:48,540 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:40:48,569 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:40:48,573 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:40:48,658 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:40:48,658 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:40:48,658 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:40:48,735 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:40:48,849 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314
+2025-10-11 19:40:48,956 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database
+2025-10-11 19:40:48,957 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-11 19:40:48,957 - __main__ - INFO - Dashboard: Activity tracker found 4 total activities, 2 completed scans
+2025-10-11 19:40:48,957 - __main__ - INFO - Dashboard: Found 2 total activities, 2 today in activity tracker
+2025-10-11 19:40:48,957 - __main__ - INFO - Dashboard: Combining 0 aggregator scans + 2 today's activities
+2025-10-11 19:40:48,957 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 2, PII: 3, Compliance: 94.5%, Issues: 0
+2025-10-11 19:40:49,020 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:40:49,042 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:40:49,045 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:40:49,101 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:40:49,102 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:40:49,103 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:40:49,177 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:40:49,293 - __main__ - INFO - Dashboard: Fresh aggregator returned 0 scans for recent activity display
+2025-10-11 19:40:49,392 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total recent scans from all users
+2025-10-11 19:40:49,392 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-11 19:40:49,393 - __main__ - INFO - Dashboard: Processing 1 scans for Recent Scan Activity display
+2025-10-11 19:40:49,393 - __main__ - INFO - Dashboard: Processing scan 1: Code Scanner from 2025-10-11T19:38:17
+2025-10-11 19:40:49,394 - __main__ - INFO - Dashboard: Raw scan type from database: 'code scanner'
+2025-10-11 19:40:49,394 - __main__ - INFO - Dashboard: Full scan data keys: ['timestamp', 'scan_type', 'total_pii_found', 'file_count', 'region', 'result']
+2025-10-11 19:40:49,394 - __main__ - INFO - Dashboard: Scan type 'code scanner' mapped to '💻 Code Scanner'
+2025-10-11 19:40:49,395 - __main__ - INFO - Dashboard: Generated 1 activity records for display
+2025-10-11 19:40:49.397 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-11 19:40:55,268 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:40:55,292 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:40:55,308 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:40:55,598 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:40:55,620 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:40:55,623 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:40:55,683 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:40:55,684 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:40:55,684 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:40:55,837 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:41:02,847 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:41:02,885 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:41:02,899 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:41:02,970 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:41:02,987 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:41:03,026 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:41:03,082 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:41:03,084 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:41:03,084 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:41:03,194 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:41:06,312 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:41:06,361 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:41:06,371 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:41:06,450 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:41:06,476 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:41:06,478 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:41:06,523 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:41:06,524 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:41:06,524 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:41:06,607 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:41:06,716 - __main__ - INFO - Dashboard: Retrieved 0 total scans for user vishaal314
+2025-10-11 19:41:06,716 - __main__ - INFO - Dashboard: No scans found for user vishaal314, getting all recent scans
+2025-10-11 19:41:06,814 - __main__ - INFO - Dashboard: Raw aggregator returned 0 scans for user vishaal314
+2025-10-11 19:41:06,815 - __main__ - INFO - Dashboard: Processing 0 completed scans from aggregator
+2025-10-11 19:41:06,863 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:41:06,899 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:41:06,904 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:41:06,952 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:41:06,953 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:41:06,954 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:41:07,047 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:41:07,128 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314
+2025-10-11 19:41:07,217 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database
+2025-10-11 19:41:07,218 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-11 19:41:07,218 - __main__ - INFO - Dashboard: Activity tracker found 4 total activities, 2 completed scans
+2025-10-11 19:41:07,219 - __main__ - INFO - Dashboard: Found 2 total activities, 2 today in activity tracker
+2025-10-11 19:41:07,219 - __main__ - INFO - Dashboard: Combining 0 aggregator scans + 2 today's activities
+2025-10-11 19:41:07,220 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 2, PII: 3, Compliance: 94.5%, Issues: 0
+2025-10-11 19:41:07,278 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:41:07,298 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:41:07,301 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:41:07,345 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:41:07,346 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:41:07,347 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:41:07,437 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:41:07,503 - __main__ - INFO - Dashboard: Fresh aggregator returned 0 scans for recent activity display
+2025-10-11 19:41:07,576 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total recent scans from all users
+2025-10-11 19:41:07,577 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-11 19:41:07,577 - __main__ - INFO - Dashboard: Processing 1 scans for Recent Scan Activity display
+2025-10-11 19:41:07,577 - __main__ - INFO - Dashboard: Processing scan 1: Code Scanner from 2025-10-11T19:38:17
+2025-10-11 19:41:07,578 - __main__ - INFO - Dashboard: Raw scan type from database: 'code scanner'
+2025-10-11 19:41:07,578 - __main__ - INFO - Dashboard: Full scan data keys: ['timestamp', 'scan_type', 'total_pii_found', 'file_count', 'region', 'result']
+2025-10-11 19:41:07,578 - __main__ - INFO - Dashboard: Scan type 'code scanner' mapped to '💻 Code Scanner'
+2025-10-11 19:41:07,579 - __main__ - INFO - Dashboard: Generated 1 activity records for display
+2025-10-11 19:41:07.581 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-11 19:50:47,402 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:50:51,327 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:50:51,714 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-11 19:50:51,785 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:50:51,806 - utils.session_optimizer - INFO - Created session fa10951f-4df8-411e-bfbd-4fe35cdd5de8 for user vishaal314
+2025-10-11 19:50:51,849 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:50:51,856 - services.license_manager - ERROR - Failed to save license: [Errno 30] Read-only file system: 'license.json'
+2025-10-11 19:50:51,866 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:50:53,693 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-11 19:50:53,694 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-11 19:50:53,695 - services.encryption_service - INFO - Key management initialized
+2025-10-11 19:50:53,763 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:50:53,786 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:50:53,788 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:50:53,856 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:50:53,856 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:50:53,857 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:50:53,940 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:50:54,029 - __main__ - INFO - Dashboard: Retrieved 0 total scans for user vishaal314
+2025-10-11 19:50:54,029 - __main__ - INFO - Dashboard: No scans found for user vishaal314, getting all recent scans
+2025-10-11 19:50:54,123 - __main__ - INFO - Dashboard: Raw aggregator returned 0 scans for user vishaal314
+2025-10-11 19:50:54,124 - __main__ - INFO - Dashboard: Processing 0 completed scans from aggregator
+2025-10-11 19:50:54,190 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:50:54,215 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:50:54,228 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:50:54,314 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:50:54,314 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:50:54,314 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:50:54,404 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:50:54,507 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314
+2025-10-11 19:50:54,611 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database
+2025-10-11 19:50:54,611 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-11 19:50:54,611 - __main__ - INFO - Dashboard: Activity tracker found 0 total activities, 0 completed scans
+2025-10-11 19:50:54,611 - __main__ - INFO - Dashboard: Found 0 total activities, 0 today in activity tracker
+2025-10-11 19:50:54,612 - __main__ - INFO - Dashboard: Combining 0 aggregator scans + 0 today's activities
+2025-10-11 19:50:54,612 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 0, PII: 0, Compliance: 94.5%, Issues: 0
+2025-10-11 19:50:54,691 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:50:54,743 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:50:54,748 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:50:54,803 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:50:54,803 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:50:54,804 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:50:54,891 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:50:55,008 - __main__ - INFO - Dashboard: Fresh aggregator returned 0 scans for recent activity display
+2025-10-11 19:50:55,118 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total recent scans from all users
+2025-10-11 19:50:55,118 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-11 19:51:00,368 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:51:00,409 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:00,428 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:51:00,480 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:05,561 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:51:05,600 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:05,622 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:51:05,643 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:10,658 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:51:10,713 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:10,737 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:51:10,778 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:15,982 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:51:16,010 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:16,026 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:51:16,034 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:51:16,165 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:16,181 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:51:16,214 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:16,596 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:51:16,621 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:51:16,624 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:51:16,673 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:51:16,673 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:51:16,674 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:51:16,756 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:51:16,758 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-11 19:51:16,758 - utils.event_bus - INFO - EventBus: Initialized global event bus
+2025-10-11 19:51:16,870 - utils.repository_cache - INFO - Cache HIT for https://github.com/JerBouma/FinanceDatabase/tree/main/.github (saved clone operation)
+2025-10-11 19:51:16,871 - utils.repository_cache - INFO - Cache HIT for scan result https://github.com/JerBouma/FinanceDatabase/tree/main/.github (smart)
+2025-10-11 19:51:16,871 - services.intelligent_repo_scanner - INFO - Using cached scan result for https://github.com/JerBouma/FinanceDatabase/tree/main/.github
+2025-10-11 19:51:16,873 - services.intelligent_scanner_manager - INFO - Intelligent repository scan completed: intelligent_scan_7685cf56
+2025-10-11 19:51:16,929 - services.results_aggregator - INFO - Encrypted scan result code_scan_d6986ef81ec8_1760212276 for secure storage in organization default_org
+2025-10-11 19:51:17,024 - services.results_aggregator - ERROR - Error storing scan result: column "region" of relation "scans" does not exist
+LINE 3: ...        (scan_id, username, timestamp, scan_type, region, fi...
+                                                             ^
+
+2025-10-11 19:51:17,025 - components.intelligent_scanner_wrapper - ERROR - Failed to save code scan result to database: Failed to store scan result securely: column "region" of relation "scans" does not exist
+LINE 3: ...        (scan_id, username, timestamp, scan_type, region, fi...
+                                                             ^
+
+2025-10-11 19:51:17,026 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-11 19:51:17,027 - services.license_manager - ERROR - Failed to save license: [Errno 30] Read-only file system: 'license.json'
+2025-10-11 19:51:17,048 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:17,094 - utils.compliance_calculator - INFO - Compliance score calculated: 85.0% (Critical: 0, High: 0, Medium: 3, Low: 0) for scan code_scan_d6986ef81ec8_1760212276
+2025-10-11 19:51:17,378 - app - INFO - Performance optimizations initialized successfully
+2025-10-11 19:51:17,518 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:51:17,534 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:51:17,536 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:51:17,572 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:51:17,573 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:51:17,573 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:51:17,640 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:51:17,734 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-11 19:51:17,795 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:51:17,822 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:51:17,825 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:51:17,882 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:51:17,882 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:51:17,882 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:51:17,999 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:51:18,101 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-11 19:51:23,406 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:51:23,427 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:23,442 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:51:23,518 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:51:23,546 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:51:23,548 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:51:23,591 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:51:23,592 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:51:23,592 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:51:23,656 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 19:51:27,824 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 19:51:27,868 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 19:51:27,883 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 19:51:27,954 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 19:51:27,974 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 19:51:27,976 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 19:51:28,029 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 19:51:28,029 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 19:51:28,029 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 19:51:28,100 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:04:00,081 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:04:03,134 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:04:03,685 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-11 20:04:03,816 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:04:03,834 - utils.session_optimizer - INFO - Created session f2f1207f-ea22-4288-9a7b-b88c87b27c1a for user vishaal314
+2025-10-11 20:04:03,849 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:03,860 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:04:03,926 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:04:03,952 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:04:03,955 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:04:03,994 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:04:03,994 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:04:03,995 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:04:04,078 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:04:04,204 - __main__ - INFO - Dashboard: Retrieved 0 total scans for user vishaal314
+2025-10-11 20:04:04,204 - __main__ - INFO - Dashboard: No scans found for user vishaal314, getting all recent scans
+2025-10-11 20:04:04,322 - __main__ - INFO - Dashboard: Raw aggregator returned 0 scans for user vishaal314
+2025-10-11 20:04:04,322 - __main__ - INFO - Dashboard: Processing 0 completed scans from aggregator
+2025-10-11 20:04:04,383 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:04:04,407 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:04:04,410 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:04:04,472 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:04:04,472 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:04:04,473 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:04:04,537 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:04:04,645 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314
+2025-10-11 20:04:04,758 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database
+2025-10-11 20:04:04,759 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-11 20:04:04,759 - __main__ - INFO - Dashboard: Activity tracker found 2 total activities, 1 completed scans
+2025-10-11 20:04:04,759 - __main__ - INFO - Dashboard: Found 1 total activities, 1 today in activity tracker
+2025-10-11 20:04:04,759 - __main__ - INFO - Dashboard: Combining 0 aggregator scans + 1 today's activities
+2025-10-11 20:04:04,759 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 1, PII: 3, Compliance: 94.5%, Issues: 0
+2025-10-11 20:04:04,818 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:04:04,843 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:04:04,846 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:04:04,901 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:04:04,901 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:04:04,902 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:04:04,997 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:04:05,094 - __main__ - INFO - Dashboard: Fresh aggregator returned 0 scans for recent activity display
+2025-10-11 20:04:05,187 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total recent scans from all users
+2025-10-11 20:04:05,187 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-11 20:04:05,187 - __main__ - INFO - Dashboard: Processing 1 scans for Recent Scan Activity display
+2025-10-11 20:04:05,187 - __main__ - INFO - Dashboard: Processing scan 1: Code Scanner from 2025-10-11T19:51:17
+2025-10-11 20:04:05,188 - __main__ - INFO - Dashboard: Raw scan type from database: 'code scanner'
+2025-10-11 20:04:05,188 - __main__ - INFO - Dashboard: Full scan data keys: ['timestamp', 'scan_type', 'total_pii_found', 'file_count', 'region', 'result']
+2025-10-11 20:04:05,188 - __main__ - INFO - Dashboard: Scan type 'code scanner' mapped to '💻 Code Scanner'
+2025-10-11 20:04:05,188 - __main__ - INFO - Dashboard: Generated 1 activity records for display
+2025-10-11 20:04:05.191 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-11 20:04:11,266 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:04:11,287 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:11,305 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:04:11,322 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:22,813 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:04:22,856 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:22,871 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:04:22,897 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:45,854 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:04:45,889 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:45,904 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:04:45,958 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:48,055 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:04:48,079 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:48,094 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:04:48,140 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:48,904 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-11 20:04:48,904 - services.license_manager - ERROR - Failed to save license: [Errno 30] Read-only file system: 'license.json'
+2025-10-11 20:04:48,931 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:49,198 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-11 20:04:49,244 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:04:49,271 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:04:49,274 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:04:49,336 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:04:49,336 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:04:49,337 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:04:49,406 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:04:49,449 - services.results_aggregator - INFO - Encrypted scan result 5f496732-cd9c-4016-9fe9-9c6a0fd8a53b for secure storage in organization default_org
+2025-10-11 20:04:49,519 - services.results_aggregator - ERROR - Error storing scan result: column "region" of relation "scans" does not exist
+LINE 3: ...        (scan_id, username, timestamp, scan_type, region, fi...
+                                                             ^
+
+2025-10-11 20:04:49,519 - __main__ - ERROR - Document Scanner: FAILED to store scan result in aggregator: Failed to store scan result securely: column "region" of relation "scans" does not exist
+LINE 3: ...        (scan_id, username, timestamp, scan_type, region, fi...
+                                                             ^
+
+2025-10-11 20:04:49,541 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:49.721 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-11 20:04:49.741 Serialization of dataframe to Arrow table was unsuccessful. Applying automatic fixes for column types to make the dataframe Arrow-compatible.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/streamlit/dataframe_util.py", line 822, in convert_pandas_df_to_arrow_bytes
+    table = pa.Table.from_pandas(df)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pyarrow/table.pxi", line 4795, in pyarrow.lib.Table.from_pandas
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 637, in dataframe_to_arrays
+    arrays = [convert_column(c, f)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 637, in <listcomp>
+    arrays = [convert_column(c, f)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 625, in convert_column
+    raise e
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 619, in convert_column
+    result = pa.array(col, type=type_, from_pandas=True, safe=safe)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pyarrow/array.pxi", line 365, in pyarrow.lib.array
+  File "pyarrow/array.pxi", line 91, in pyarrow.lib._ndarray_to_array
+  File "pyarrow/error.pxi", line 92, in pyarrow.lib.check_status
+pyarrow.lib.ArrowInvalid: ("Could not convert 'N/A' with type str: tried to convert to int64", 'Conversion failed for column Element with type object')
+2025-10-11 20:04:49,816 - services.gdpr_report_generator - ERROR - Error generating PDF report: [Errno 13] Permission denied: 'reports/gdpr_report_5f496732-cd9c-4016-9fe9-9c6a0fd8a53b_20251011_200449.pdf'
+2025-10-11 20:04:49,840 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:49,849 - services.usage_analytics - INFO - Usage event tracked: report_downloaded for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:49,903 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:04:49,923 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:04:49,926 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:04:49,966 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:04:49,966 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:04:49,966 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:04:50,046 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:04:50,178 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-11 20:04:50,190 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:04:50,200 - services.usage_analytics - INFO - Usage event tracked: report_downloaded for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:05:02,787 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:05:02,841 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:05:02,868 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:05:02,893 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:05:16,760 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:05:16,805 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:05:16,813 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:05:16,843 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:05:16,861 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:05:16,863 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:05:16,909 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:05:16,909 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:05:16,910 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:05:17,006 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:05:20,884 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:05:20,967 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:05:20,990 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:05:21,088 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:05:21,111 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:05:21,121 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:05:21,174 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:05:21,174 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:05:21,174 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:05:21,248 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:05:24,041 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:05:24,071 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:05:24,092 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:05:24,181 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:05:24,208 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:05:24,219 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:05:24,300 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:05:24,301 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:05:24,301 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:05:24,384 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:05:24,502 - __main__ - INFO - Dashboard: Retrieved 0 total scans for user vishaal314
+2025-10-11 20:05:24,502 - __main__ - INFO - Dashboard: No scans found for user vishaal314, getting all recent scans
+2025-10-11 20:05:24,582 - __main__ - INFO - Dashboard: Raw aggregator returned 0 scans for user vishaal314
+2025-10-11 20:05:24,582 - __main__ - INFO - Dashboard: Processing 0 completed scans from aggregator
+2025-10-11 20:05:24,639 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:05:24,661 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:05:24,665 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:05:24,746 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:05:24,747 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:05:24,747 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:05:24,840 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:05:24,943 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314
+2025-10-11 20:05:25,042 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database
+2025-10-11 20:05:25,043 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-11 20:05:25,043 - __main__ - INFO - Dashboard: Activity tracker found 4 total activities, 2 completed scans
+2025-10-11 20:05:25,044 - __main__ - INFO - Dashboard: Found 2 total activities, 2 today in activity tracker
+2025-10-11 20:05:25,044 - __main__ - INFO - Dashboard: Combining 0 aggregator scans + 2 today's activities
+2025-10-11 20:05:25,044 - __main__ - INFO - Dashboard: Calculated compliance from 1 scores: 85.0%
+2025-10-11 20:05:25,045 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 2, PII: 12, Compliance: 85.0%, Issues: 0
+2025-10-11 20:05:25,110 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:05:25,127 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:05:25,130 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:05:25,182 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:05:25,183 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:05:25,183 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:05:25,251 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:05:25,335 - __main__ - INFO - Dashboard: Fresh aggregator returned 0 scans for recent activity display
+2025-10-11 20:05:25,436 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total recent scans from all users
+2025-10-11 20:05:25,436 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-11 20:05:25,436 - __main__ - INFO - Dashboard: Processing 2 scans for Recent Scan Activity display
+2025-10-11 20:05:25,437 - __main__ - INFO - Dashboard: Processing scan 1: Document Scanner from 2025-10-11T20:04:49
+2025-10-11 20:05:25,437 - __main__ - INFO - Dashboard: Raw scan type from database: 'document scanner'
+2025-10-11 20:05:25,437 - __main__ - INFO - Dashboard: Full scan data keys: ['timestamp', 'scan_type', 'total_pii_found', 'file_count', 'region', 'result']
+2025-10-11 20:05:25,437 - __main__ - INFO - Dashboard: Scan type 'document scanner' mapped to '📄 Document Scanner'
+2025-10-11 20:05:25,438 - __main__ - INFO - Dashboard: Processing scan 2: Code Scanner from 2025-10-11T19:51:17
+2025-10-11 20:05:25,438 - __main__ - INFO - Dashboard: Raw scan type from database: 'code scanner'
+2025-10-11 20:05:25,438 - __main__ - INFO - Dashboard: Full scan data keys: ['timestamp', 'scan_type', 'total_pii_found', 'file_count', 'region', 'result']
+2025-10-11 20:05:25,439 - __main__ - INFO - Dashboard: Scan type 'code scanner' mapped to '💻 Code Scanner'
+2025-10-11 20:05:25,439 - __main__ - INFO - Dashboard: Generated 2 activity records for display
+2025-10-11 20:05:25.442 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-11 20:05:30,095 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:05:30,158 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:05:30,198 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:05:30,312 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:05:30,327 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:05:30,330 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:05:30,384 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:05:30,385 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:05:30,385 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:05:30,448 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:05:35,980 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:05:36,007 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:05:36,022 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:05:36,107 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:05:36,142 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:05:36,146 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:05:36,208 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:05:36,209 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:05:36,210 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:05:36,339 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:05:39,672 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:05:39,718 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:05:39,736 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:05:39,986 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:05:39,997 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:05:39,999 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:05:40,036 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:05:40,037 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:05:40,037 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:05:40,118 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-11 20:05:45,584 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 20:05:45,608 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 20:05:45,625 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 20:05:45,690 - services.multi_tenant_service - INFO - Initializing Row Level Security for tenant isolation
+2025-10-11 20:05:45,715 - services.multi_tenant_service - INFO - Row Level Security policies created successfully
+2025-10-11 20:05:45,718 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-11 20:05:45,772 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-11 20:05:45,772 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-11 20:05:45,772 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-11 20:05:45,851 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+INIT - Successfully initialized translations for: nl
+2025-10-11 19:51:10,792 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.131s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 19:51:16,041 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.055s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 19:51:16,868 - scanner.code_scanner - INFO - Successfully compiled 24 secret patterns, 51 comment patterns, 6 AI Act patterns, and 8 UAVG patterns
+Error retrieving user scans: column "region" does not exist
+LINE 2:             SELECT scan_id, timestamp, scan_type, region, fi...
+                                                          ^
+
+Error retrieving user scans: column "region" does not exist
+LINE 2:             SELECT scan_id, timestamp, scan_type, region, fi...
+                                                          ^
+
+2025-10-11 19:51:18,107 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 2.066s, Memory: 28.0MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2025-09-11 19:51:23.774429 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+2025-10-11 19:51:23,782 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.374s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2025-09-11 19:51:28.261848 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+2025-10-11 19:51:28,274 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.448s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 20:04:00,118 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.034s, Memory: 0.0MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 20:04:03,689 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.553s, Memory: 0.0MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2024-10-11 20:04:04.199870 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+Querying scans since: 2025-09-11 20:04:04.301158 for user: None
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+Error retrieving user scans: column "region" does not exist
+LINE 2:             SELECT scan_id, timestamp, scan_type, region, fi...
+                                                          ^
+
+Error retrieving user scans: column "region" does not exist
+LINE 2:             SELECT scan_id, timestamp, scan_type, region, fi...
+                                                          ^
+
+Querying scans since: 2025-09-11 20:04:05.091030 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+Querying scans since: 2025-09-11 20:04:05.184441 for user: None
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+2025-10-11 20:04:05,208 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 1.387s, Memory: 2.6MB
+INIT - Successfully initialized translations for: nl
+SET_LANGUAGE - Setting language to: nl
+INIT - Successfully initialized translations for: nl
+2025-10-11 20:04:11,426 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.157s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 20:04:22,906 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.090s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 20:04:45,969 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.113s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+Error retrieving user scans: column "region" does not exist
+LINE 2:             SELECT scan_id, timestamp, scan_type, region, fi...
+                                                          ^
+
+2025-10-11 20:04:50,213 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 2.155s, Memory: 16.1MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 20:05:02,902 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.114s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2025-09-11 20:05:17.107431 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+2025-10-11 20:05:17,112 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.350s, Memory: -27.2MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2025-09-11 20:05:21.363059 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+2025-10-11 20:05:21,370 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.481s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2024-10-11 20:05:24.498014 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+Querying scans since: 2025-09-11 20:05:24.577948 for user: None
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+Error retrieving user scans: column "region" does not exist
+LINE 2:             SELECT scan_id, timestamp, scan_type, region, fi...
+                                                          ^
+
+Error retrieving user scans: column "region" does not exist
+LINE 2:             SELECT scan_id, timestamp, scan_type, region, fi...
+                                                          ^
+
+Querying scans since: 2025-09-11 20:05:25.331413 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+Querying scans since: 2025-09-11 20:05:25.433355 for user: None
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+2025-10-11 20:05:25,466 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 1.420s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2025-09-11 20:05:30.536521 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+2025-10-11 20:05:30,550 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.438s, Memory: 0.0MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2025-09-11 20:05:36.437485 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+2025-10-11 20:05:36,446 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.464s, Memory: 0.0MB
+INIT - Successfully initialized translations for: nl
+Error retrieving user scans: column "region" does not exist
+LINE 2:             SELECT scan_id, timestamp, scan_type, region, fi...
+                                                          ^
+
+2025-10-11 20:05:40,418 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.744s, Memory: 8.0MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2025-09-11 20:05:45.961962 for user: vishaal314
+Error retrieving recent scans: column "region" does not exist
+LINE 2: ...    SELECT scan_id, username, timestamp, scan_type, region,
+                                                               ^
+
+2025-10-11 20:05:45,969 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.382s, Memory: 0.5MB
