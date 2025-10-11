@@ -292,8 +292,8 @@ class ResultsAggregator:
             # Store encrypted result in database with organization_id for tenant isolation
             cursor.execute("""
             INSERT INTO scans 
-            (scan_id, username, timestamp, scan_type, region, file_count, total_pii_found, high_risk_count, result_json, organization_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (scan_id, username, timestamp, scan_type, file_count, total_pii_found, high_risk_count, result_json, organization_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (scan_id) DO UPDATE SET
             timestamp = EXCLUDED.timestamp,
             result_json = EXCLUDED.result_json,
@@ -306,7 +306,6 @@ class ResultsAggregator:
                 username,
                 datetime.now(),
                 scan_type,
-                region,
                 file_count,
                 total_pii,
                 high_risk,
