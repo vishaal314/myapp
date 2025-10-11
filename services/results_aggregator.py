@@ -488,7 +488,7 @@ class ResultsAggregator:
             
             # Query the scans table for the most recent scans for this user
             cursor.execute("""
-            SELECT scan_id, timestamp, scan_type, region, file_count, total_pii_found, high_risk_count
+            SELECT scan_id, timestamp, scan_type, file_count, total_pii_found, high_risk_count
             FROM scans
             WHERE username = %s
             ORDER BY timestamp DESC
@@ -592,7 +592,7 @@ class ResultsAggregator:
             # Optimized query with LIMIT for large datasets and proper indexing
             if username:
                 cursor.execute("""
-                    SELECT scan_id, username, timestamp, scan_type, region, 
+                    SELECT scan_id, username, timestamp, scan_type, 
                            file_count, total_pii_found, high_risk_count, result_json
                     FROM scans 
                     WHERE username = %s AND organization_id = %s AND timestamp >= %s
@@ -601,7 +601,7 @@ class ResultsAggregator:
                 """, (username, organization_id, cutoff_date, limit))
             else:
                 cursor.execute("""
-                    SELECT scan_id, username, timestamp, scan_type, region, 
+                    SELECT scan_id, username, timestamp, scan_type, 
                            file_count, total_pii_found, high_risk_count, result_json
                     FROM scans 
                     WHERE organization_id = %s AND timestamp >= %s
@@ -793,7 +793,7 @@ class ResultsAggregator:
             
             cursor = conn.cursor()
             cursor.execute("""
-            SELECT scan_id, username, timestamp, scan_type, region, 
+            SELECT scan_id, username, timestamp, scan_type, 
                    file_count, total_pii_found, high_risk_count, result_json
             FROM scans WHERE scan_id = %s
             """, (scan_id,))
