@@ -1,0 +1,78 @@
+oot@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container | tail -150
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-11 22:56:44,419 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:57:14,561 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:57:15,028 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-11 22:57:15,154 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:57:15,165 - utils.session_optimizer - INFO - Created session f226ab8d-6727-4004-9dd1-d2a1e89985a6 for user vishaal314
+2025-10-11 22:57:15,179 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:57:15,199 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-11 22:57:15,209 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 22:57:17,064 - services.encryption_service - ERROR - Failed to initialize KMS providers: Failed to derive local KEK: Master key must be 32 bytes (256 bits)
+2025-10-11 22:57:17,064 - __main__ - ERROR - Error loading dashboard metrics: KMS initialization failed: Failed to derive local KEK: Master key must be 32 bytes (256 bits)
+2025-10-11 22:57:17,065 - services.encryption_service - ERROR - Failed to initialize KMS providers: Failed to derive local KEK: Master key must be 32 bytes (256 bits)
+2025-10-11 22:57:17,065 - __main__ - ERROR - Fallback dashboard failed: KMS initialization failed: Failed to derive local KEK: Master key must be 32 bytes (256 bits)
+2025-10-11 22:57:24,825 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:57:24,864 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:57:24,897 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 22:57:24,941 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:57:37,191 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:57:37,283 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:57:37,324 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 22:57:37,356 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:57:47,297 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:57:47,346 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:57:47,364 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 22:57:47,379 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:57:55,328 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:57:55,370 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:57:55,387 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 22:57:55,430 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:58:10,679 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:58:10,710 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:58:10,725 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 22:58:10,757 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:58:20,281 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:58:20,333 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:58:20,345 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 22:58:20,365 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:58:26,332 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:58:26,378 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:58:26,404 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 22:58:26,436 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:58:26,468 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 22:58:26,674 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:58:26,685 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 22:58:26,719 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 22:58:27,071 - services.encryption_service - ERROR - Failed to initialize KMS providers: Failed to derive local KEK: Master key must be 32 bytes (256 bits)
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+2025-10-11 22:56:43,714 - scanner.code_profiler - INFO - System monitoring started
+INIT - Successfully initialized translations for: en
+2025-10-11 22:56:45,625 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 1.204s, Memory: 2.5MB
+INIT - Successfully initialized translations for: en
+2025-10-11 22:57:15,032 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.468s, Memory: 0.0MB
+INIT - Successfully initialized translations for: en
+2025-10-11 22:57:17,073 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 1.918s, Memory: 80.6MB
+INIT - Successfully initialized translations for: en
+SET_LANGUAGE - Setting language to: en
+INIT - Successfully initialized translations for: en
+2025-10-11 22:57:25,226 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.391s, Memory: 5.2MB
+INIT - Successfully initialized translations for: en
+2025-10-11 22:57:37,518 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.324s, Memory: 1.0MB
+INIT - Successfully initialized translations for: en
+2025-10-11 22:57:47,442 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.142s, Memory: 0.5MB
+INIT - Successfully initialized translations for: en
+2025-10-11 22:57:55,508 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.177s, Memory: 0.5MB
+INIT - Successfully initialized translations for: en
+2025-10-11 22:58:10,784 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.104s, Memory: 0.5MB
+INIT - Successfully initialized translations for: en
+2025-10-11 22:58:20,389 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.101s, Memory: 0.5MB
+INIT - Successfully initialized translations for: en
+2025-10-11 22:58:26,471 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.125s, Memory: 0.5MB
+INIT - Successfully initialized translations for: en
+2025-10-11 22:58:27,071 - scanner.code_profiler - INFO - Activity tracked: f226ab8d-6727-4004-9dd1-d2a1e89985a6 - error
+2025-10-11 22:58:27,077 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.439s, Memory: 3.8MB
