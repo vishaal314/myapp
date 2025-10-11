@@ -136,7 +136,11 @@ class MultiTenantService:
                 logger.info(f"Tenant isolation columns may already exist: {str(e)}")
             
             # Initialize Row Level Security (RLS) for tenant isolation
-            self._init_row_level_security(cursor)
+            # Allow disabling RLS for production deployments via environment variable
+            if os.getenv("DISABLE_RLS") != "1":
+                self._init_row_level_security(cursor)
+            else:
+                logger.warning("RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced")
             
             conn.commit()
             cursor.close()
