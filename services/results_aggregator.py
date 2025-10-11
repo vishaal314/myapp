@@ -552,19 +552,20 @@ class ResultsAggregator:
             print(f"Error retrieving user scans from file: {str(e)}")
             return []
 
-    def get_recent_scans(self, days: int = 30, username: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_recent_scans(self, days: int = 30, username: Optional[str] = None, organization_id: str = 'default_org') -> List[Dict[str, Any]]:
         """
         Get recent scans within the specified number of days.
         
         Args:
             days: Number of days to look back
             username: Optional username filter
+            organization_id: Organization ID for tenant isolation
             
         Returns:
             List of recent scan results
         """
         # Always try database first, even if use_file_storage is True
-        db_scans = self._get_recent_scans_db(days, username)
+        db_scans = self._get_recent_scans_db(days, username, organization_id)
         if db_scans is not None:
             return db_scans
             
