@@ -3735,7 +3735,11 @@ def display_scan_results(scan_results):
                 # Generate PDF report and provide download button
                 try:
                     from services.download_reports import generate_pdf_report
-                    from config.report_config import FILENAME_DATE_FORMAT
+                    try:
+                        from config.report_config import FILENAME_DATE_FORMAT
+                    except ImportError:
+                        FILENAME_DATE_FORMAT = "%Y%m%d_%H%M%S"
+                    
                     pdf_content = generate_pdf_report(scan_results)
                     
                     # Track report download when button is used
@@ -3758,7 +3762,11 @@ def display_scan_results(scan_results):
                 # Generate HTML report and provide download button
                 try:
                     from services.download_reports import generate_html_report
-                    from config.report_config import FILENAME_DATE_FORMAT
+                    try:
+                        from config.report_config import FILENAME_DATE_FORMAT
+                    except ImportError:
+                        FILENAME_DATE_FORMAT = "%Y%m%d_%H%M%S"
+                    
                     html_content = generate_html_report(scan_results)
                     
                     # Track report download when button is used
