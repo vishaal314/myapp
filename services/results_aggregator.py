@@ -140,13 +140,23 @@ class ResultsAggregator:
                     logger.debug(f"Index creation note: {index_error}")
             
             # Migration: Add organization_id column if it doesn't exist (for existing databases)
+            # Note: Check if column exists first to avoid transaction abort
             try:
-                cursor.execute('''
-                ALTER TABLE scans ADD COLUMN organization_id TEXT NOT NULL DEFAULT 'default_org'
-                ''')
-                logger.info("Added organization_id column to existing scans table")
+                cursor.execute("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name='scans' AND column_name='organization_id'
+                """)
+                if cursor.fetchone() is None:
+                    cursor.execute('''
+                    ALTER TABLE scans ADD COLUMN organization_id TEXT NOT NULL DEFAULT 'default_org'
+                    ''')
+                    logger.info("Added organization_id column to existing scans table")
+                else:
+                    logger.debug("Migration note: organization_id column already exists")
             except Exception as migration_error:
-                # Column might already exist, which is fine
+                # If check fails, rollback and continue
+                conn.rollback()
                 logger.debug(f"Migration note: {migration_error}")
             
             # Create optimized audit log table with performance indexes

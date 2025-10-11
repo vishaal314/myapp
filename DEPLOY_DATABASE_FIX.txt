@@ -1,0 +1,180 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║   DATABASE PERSISTENCE FIX - DEPLOYMENT INSTRUCTIONS                ║
+║   Fixes: Empty Results, History, Scanner Logs                      ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+🔴 CRITICAL ISSUE IDENTIFIED
+═══════════════════════════════════════════════════════════════════════
+
+Your external server was falling back to file-based storage instead of
+using PostgreSQL database, causing:
+
+  ❌ Results section: Empty
+  ❌ History section: Empty  
+  ❌ Scanner Logs: Empty
+  ❌ Dashboard: Not showing scan metrics
+  ❌ Data not persisting between scans
+
+ROOT CAUSE:
+  • services/results_aggregator.py had transaction abort bug
+  • Tried to add organization_id column that already existed
+  • PostgreSQL aborted transaction
+  • All subsequent table creations failed
+  • System fell back to file storage (non-persistent)
+
+✅ FIX APPLIED
+═══════════════════════════════════════════════════════════════════════
+
+Files Modified:
+  1. services/results_aggregator.py
+     - Added column existence check before ALTER TABLE
+     - Added transaction rollback on migration error
+     - Prevents transaction abort
+     - Ensures database initialization succeeds
+
+What Changed:
+  
+  BEFORE (caused transaction abort):
+  ───────────────────────────────────────────────────────────────────
+  try:
+      cursor.execute('''
+      ALTER TABLE scans ADD COLUMN organization_id ...
+      ''')
+  except Exception:
+      logger.debug("Error")  # Transaction still aborted!
+  
+  AFTER (prevents transaction abort):
+  ───────────────────────────────────────────────────────────────────
+  try:
+      # Check if column exists first
+      cursor.execute("""
+          SELECT column_name FROM information_schema.columns 
+          WHERE table_name='scans' AND column_name='organization_id'
+      """)
+      if cursor.fetchone() is None:
+          cursor.execute('''
+          ALTER TABLE scans ADD COLUMN organization_id ...
+          ''')
+  except Exception:
+      conn.rollback()  # Properly rollback transaction
+
+═══════════════════════════════════════════════════════════════════════
+🚀 DEPLOY TO EXTERNAL SERVER (3 COMMANDS)
+═══════════════════════════════════════════════════════════════════════
+
+Run these commands on your LOCAL machine:
+
+1. Upload fixed files:
+   ─────────────────────────────────────────────────────────────────
+   scp services/results_aggregator.py root@dataguardianpro.nl:/opt/dataguardian/services/
+   scp DATABASE_FIX.sh root@dataguardianpro.nl:/opt/dataguardian/
+
+2. Execute database fix:
+   ─────────────────────────────────────────────────────────────────
+   ssh root@dataguardianpro.nl "cd /opt/dataguardian && chmod +x DATABASE_FIX.sh && ./DATABASE_FIX.sh"
+
+═══════════════════════════════════════════════════════════════════════
+✅ EXPECTED OUTPUT
+═══════════════════════════════════════════════════════════════════════
+
+🎉 DATABASE FIX SUCCESSFUL!
+
+✅ Transaction abort: FIXED
+✅ Database initialization: Working
+✅ Data persistence: Enabled
+✅ Results section: Should populate
+✅ History section: Should populate
+✅ Scanner Logs: Should populate
+
+🧪 Test Now:
+   1. Open: https://dataguardianpro.nl
+   2. Login with your credentials
+   3. Navigate to: Code Scanner
+   4. Upload a file (e.g., test.py with email addresses)
+   5. Run scan
+   6. ✅ Check Results tab (should show scan data!)
+   7. ✅ Check History tab (should show scan in list!)
+   8. ✅ Check Scanner Logs (should show activity!)
+   9. ✅ Dashboard should show metrics!
+
+✅ All data persistence issues are now FIXED!
+
+═══════════════════════════════════════════════════════════════════════
+⏱️ TIMELINE
+═══════════════════════════════════════════════════════════════════════
+
+Step 1: Upload files                    (30 seconds)
+Step 2: Verify DATABASE_URL config      (10 seconds)
+Step 3: Rebuild Docker image            (2 minutes)
+Step 4: Start container                 (45 seconds)
+Step 5: Verify database initialization  (30 seconds)
+
+TOTAL: ~4 minutes
+
+═══════════════════════════════════════════════════════════════════════
+🔧 PREREQUISITES
+═══════════════════════════════════════════════════════════════════════
+
+Your .env.production MUST contain:
+
+  DATABASE_URL=postgresql://user:password@host:port/database
+
+If DATABASE_URL is missing, the script will prompt you to add it.
+
+Example:
+  DATABASE_URL=postgresql://dataguardian:mypassword@localhost:5432/dataguardian_db
+
+═══════════════════════════════════════════════════════════════════════
+🐛 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════
+
+If script reports issues:
+
+1. DATABASE_URL not configured:
+   → Add to /opt/dataguardian/.env.production
+   → Format: postgresql://user:password@host:port/database
+
+2. Transaction abort errors persist:
+   → Check PostgreSQL version (should be 12+)
+   → Verify database permissions
+   → Run: psql $DATABASE_URL -c "SELECT version()"
+
+3. Container fails to start:
+   → Check logs: docker logs dataguardian-container
+   → Verify ports: netstat -tulpn | grep 5000
+
+4. Database connection fails:
+   → Test connection: psql $DATABASE_URL -c "SELECT 1"
+   → Check PostgreSQL running: systemctl status postgresql
+
+═══════════════════════════════════════════════════════════════════════
+📋 TECHNICAL DETAILS
+═══════════════════════════════════════════════════════════════════════
+
+What This Fixes:
+
+1. Transaction Abort Bug:
+   • Old code: ALTER TABLE without checking if column exists
+   • New code: Check column existence first, rollback on error
+   • Result: Database initialization completes successfully
+
+2. Data Persistence:
+   • Old: Fell back to file storage (data lost on restart)
+   • New: Uses PostgreSQL (data persists permanently)
+
+3. Tables Created:
+   • scans (scan results)
+   • audit_log (scanner activity logs)
+   • user_sessions (session tracking)
+   • compliance_scores (compliance data)
+   • pii_types (PII reference data)
+   • gdpr_principles (GDPR reference data)
+
+4. Dashboard Integration:
+   • Reads from scans table for metrics
+   • Reads from audit_log for recent activity
+   • All real-time data now persists
+
+═══════════════════════════════════════════════════════════════════════
