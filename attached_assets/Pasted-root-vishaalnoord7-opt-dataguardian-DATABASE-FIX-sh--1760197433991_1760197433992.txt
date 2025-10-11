@@ -1,0 +1,88 @@
+root@vishaalnoord7:/opt/dataguardian# ./DATABASE_FIX.sh
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║      DataGuardian Pro - DATABASE PERSISTENCE FIX                    ║
+║      Fixes: Results, History, Scanner Logs Empty Issue             ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+Critical Issues Fixed:
+   1. ❌ Transaction abort in results_aggregator.py (organization_id column)
+   2. ❌ Database tables not created properly
+   3. ❌ Falling back to file-based storage (data not persisting)
+   4. ❌ Results, History, Scanner Logs sections empty
+   ✅ Solution: Fixed transaction handling + proper database init
+
+Step 1: Verify Database Configuration
+✅ DATABASE_URL configured
+✅ DATABASE_URL format valid (PostgreSQL)
+
+Step 2: Remove Old Container
+dataguardian-container
+✅ Old container removed
+
+Step 3: Rebuild Docker Image with Database Fix
+#6 [2/9] WORKDIR /app
+#6 CACHED
+
+#7 [3/9] RUN apt-get update && apt-get install -y     build-essential     curl     git     libpq-dev     postgresql-client     tesseract-ocr     && rm -rf /var/lib/apt/lists/*
+#7 CACHED
+
+#8 [4/9] COPY production_requirements.txt requirements.txt
+#8 CACHED
+
+#9 [5/9] RUN pip install --no-cache-dir --upgrade pip &&     pip install --no-cache-dir -r requirements.txt &&     pip cache purge &&     apt-get clean &&     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+#9 CACHED
+
+#10 [6/9] COPY . .
+#10 DONE 0.2s
+
+#11 [7/9] RUN mkdir -p logs reports data temp
+#11 DONE 0.6s
+
+#12 [8/9] RUN useradd --create-home --shell /bin/bash dataguardian &&     chown -R dataguardian:dataguardian /app
+#12 DONE 1.7s
+
+#13 [9/9] RUN mkdir -p ~/.streamlit &&     echo '[server]\nheadless = true\naddress = "0.0.0.0"\nport = 5000\nenableCORS = false\nenableXsrfProtection = false\n\n[browser]\ngatherUsageStats = false\n\n[theme]\nbase = "light"' > ~/.streamlit/config.toml
+#13 DONE 0.5s
+
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 0.4s done
+#14 writing image sha256:35f763562a915e8fcd839e5e5270123001f9e94967344bb57f338f9e34027162 done
+#14 naming to docker.io/library/dataguardian:latest 0.0s done
+#14 DONE 0.4s
+✅ Docker image rebuilt successfully
+
+Step 4: Start Container with Fixed Database
+9fe69ac4a66643b000868a9a43a389bc0457e3ed52e742dd5d7fcff989c427f3
+✅ Container started successfully
+
+⏳ Waiting for database initialization (45 seconds)...
+
+Step 5: Verify Database Fix
+
+✅ No transaction abort errors
+✅ Using database storage (not file-based)
+❌ Database initialization may have failed
+⚠️  Migration status unclear (check logs)
+✅ Container running
+✅ Streamlit started
+
+═══════════════════════════════════════════════════════════════════════
+⚠️  SOME ISSUES REMAIN
+
+Recent logs (last 50 lines):
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+
+Troubleshooting:
+1. Check DATABASE_URL format in .env.production
+2. Verify PostgreSQL is running: systemctl status postgresql
+3. Test database connection: psql $DATABASE_URL -c 'SELECT 1'
+4. Check full logs: docker logs dataguardian-container
