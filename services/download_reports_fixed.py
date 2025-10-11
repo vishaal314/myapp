@@ -6,8 +6,17 @@ from typing import Dict, Any
 import streamlit as st
 from services.gdpr_report_generator import generate_gdpr_report
 from utils.i18n import get_text
-from config.report_config import PDF_MAX_FINDINGS, FILENAME_DATE_FORMAT
-from config.translation_mappings import REPORT_TRANSLATION_MAPPINGS
+
+try:
+    from config.report_config import PDF_MAX_FINDINGS, FILENAME_DATE_FORMAT
+except ImportError:
+    PDF_MAX_FINDINGS = 10
+    FILENAME_DATE_FORMAT = "%Y%m%d_%H%M%S"
+
+try:
+    from config.translation_mappings import REPORT_TRANSLATION_MAPPINGS
+except ImportError:
+    REPORT_TRANSLATION_MAPPINGS = {}
 
 logger = logging.getLogger(__name__)
 
