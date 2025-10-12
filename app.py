@@ -1402,7 +1402,9 @@ def render_predictive_analytics():
         with status_container:
             with st.spinner("🔍 Analyzing scan history..."):
                 org_id = get_organization_id()
+                logger.info(f"Predictive Analytics: Requesting scans for user={username}, org={org_id}, limit=15")
                 scan_metadata = aggregator.get_user_scans(username, limit=15, organization_id=org_id)  # Fixed: Added organization_id
+                logger.info(f"Predictive Analytics: Retrieved {len(scan_metadata)} scan metadata records")
                 
                 # Enrich with detailed results for predictive analysis
                 scan_history = []
@@ -1429,6 +1431,7 @@ def render_predictive_analytics():
             st.info(f"📊 Analyzing {len(scan_history)} scans for predictive insights")
         
         if not scan_history:
+            logger.warning(f"Predictive Analytics: No scan history after enrichment (metadata count: {len(scan_metadata)})")
             st.warning("📊 No scan history found. Perform some scans first to generate predictive insights.")
             
             # Show demo predictions with sample data

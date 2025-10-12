@@ -1,0 +1,259 @@
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container | tail -150
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-12 12:39:06,489 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:39:10,351 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:39:10,874 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-12 12:39:10,954 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:39:10,970 - utils.session_optimizer - INFO - Created session 2f1f06a1-c7b1-4c03-97a1-ccb19d6f9245 for user vishaal314
+2025-10-12 12:39:10,983 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:39:10,987 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 12:39:10,992 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:39:13,304 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-12 12:39:13,306 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-12 12:39:13,306 - services.encryption_service - INFO - Key management initialized
+2025-10-12 12:39:16,501 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 12:39:16,674 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 12:39:18,550 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 12:39:18,551 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 12:39:18,551 - services.results_aggregator - INFO - Multi-tenant service initialized (cached globally)
+2025-10-12 12:39:18,551 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:39:24,006 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:39:24,905 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:39:24,943 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:39:24,967 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:39:25,144 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:39:25,195 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:39:25,205 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:39:25,219 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:39:30,514 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:39:33,959 - __main__ - INFO - Dashboard: Retrieved 70 total scans for user vishaal314
+2025-10-12 12:39:33,960 - __main__ - INFO - Dashboard: Raw aggregator returned 70 scans for user vishaal314
+2025-10-12 12:39:39,496 - __main__ - INFO - Dashboard: Retrieved 70 total scans for user vishaal314
+2025-10-12 12:39:39,508 - __main__ - INFO - Dashboard: Raw aggregator returned 70 scans for user vishaal314
+2025-10-12 12:39:39,512 - __main__ - INFO - Dashboard: Processing 70 completed scans from aggregator
+2025-10-12 12:39:39,513 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:39:44,256 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:39:45,928 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314 (org: default_org)
+2025-10-12 12:39:48,227 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database (org: default_org)
+2025-10-12 12:39:48,227 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-12 12:39:48,228 - __main__ - INFO - Dashboard: Activity tracker found 0 total activities, 0 completed scans
+2025-10-12 12:39:48,228 - __main__ - INFO - Dashboard: Found 0 total activities, 0 today in activity tracker
+2025-10-12 12:39:48,228 - __main__ - INFO - Dashboard: Combining 70 aggregator scans + 0 today's activities
+2025-10-12 12:39:48,228 - __main__ - INFO - Dashboard: Calculated compliance from 41 scores: 57.4%
+2025-10-12 12:39:48,229 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 70, PII: 2441, Compliance: 57.4%, Issues: 256
+2025-10-12 12:39:48,259 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:39:53,778 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:39:58,416 - __main__ - INFO - Dashboard: Fresh aggregator returned 22 scans for recent activity display
+2025-10-12 12:39:58,417 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-12 12:39:58,421 - __main__ - INFO - Dashboard: Processing 10 scans for Recent Scan Activity display
+2025-10-12 12:39:58,421 - __main__ - INFO - Dashboard: Processing scan 1: enterprise connector from 2025-09-14T22:49:13
+2025-10-12 12:39:58,422 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:39:58,422 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:39:58,422 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:39:58,422 - __main__ - INFO - Dashboard: Processing scan 2: enterprise connector from 2025-09-14T22:35:41
+2025-10-12 12:39:58,423 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:39:58,423 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:39:58,423 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:39:58,423 - __main__ - INFO - Dashboard: Processing scan 3: enterprise connector from 2025-09-14T22:19:25
+2025-10-12 12:39:58,424 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:39:58,424 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:39:58,424 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:39:58,424 - __main__ - INFO - Dashboard: Processing scan 4: enterprise connector from 2025-09-14T20:50:04
+2025-10-12 12:39:58,424 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:39:58,425 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:39:58,438 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:39:58,440 - __main__ - INFO - Dashboard: Processing scan 5: enterprise connector from 2025-09-14T20:45:01
+2025-10-12 12:39:58,449 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:39:58,462 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:39:58,465 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:39:58,466 - __main__ - INFO - Dashboard: Processing scan 6: enterprise connector from 2025-09-14T20:44:53
+2025-10-12 12:39:58,467 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:39:58,467 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:39:58,467 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:39:58,467 - __main__ - INFO - Dashboard: Processing scan 7: enterprise connector from 2025-09-14T20:44:35
+2025-10-12 12:39:58,468 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:39:58,468 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:39:58,468 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:39:58,468 - __main__ - INFO - Dashboard: Processing scan 8: enterprise connector from 2025-09-14T20:28:37
+2025-10-12 12:39:58,468 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:39:58,469 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:39:58,469 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:39:58,469 - __main__ - INFO - Dashboard: Processing scan 9: enterprise connector from 2025-09-14T20:28:15
+2025-10-12 12:39:58,469 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:39:58,470 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:39:58,470 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:39:58,471 - __main__ - INFO - Dashboard: Processing scan 10: enterprise connector from 2025-09-14T20:27:37
+2025-10-12 12:39:58,471 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:39:58,471 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:39:58,472 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:39:58,472 - __main__ - INFO - Dashboard: Generated 10 activity records for display
+2025-10-12 12:39:58.483 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 12:40:07,056 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:40:07,133 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:40:07,141 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:40:07,433 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:40:11,962 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:40:46,421 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:40:46,461 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:40:46,477 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:40:46,484 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:40:52,340 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:41:02.538 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 12:41:11,702 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:41:11,746 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:11,765 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:41:11,782 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:41:16,328 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:41:20.826 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 12:41:23,307 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:41:23,336 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:23,351 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:41:23,375 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:28,443 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:41:28,484 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:28,510 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:41:28,551 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:30,705 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:41:30,741 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:30,752 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:41:30,799 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:36,582 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:41:36,645 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:36,674 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:41:36,693 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:41:36,719 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:36,875 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:36,887 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:41:36,902 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:37,279 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:41:42,178 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:41:42,178 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-12 12:41:42,179 - utils.event_bus - INFO - EventBus: Initialized global event bus
+2025-10-12 12:41:42,275 - services.intelligent_repo_scanner - INFO - Parsed URL - Repo: https://github.com/nlweb-ai/NLWeb, Branch: main, Directory: code
+2025-10-12 12:41:42,278 - services.intelligent_repo_scanner - INFO - Executing git clone command: git clone --depth 1 --branch main --single-branch https://github.com/nlweb-ai/NLWeb /tmp/intelligent_repo_gh7tp6hu
+2025-10-12 12:41:46,640 - services.intelligent_repo_scanner - INFO - Git clone result - Return code: 0
+2025-10-12 12:41:46,640 - services.intelligent_repo_scanner - INFO - Git clone stderr: Cloning into '/tmp/intelligent_repo_gh7tp6hu'...
+
+2025-10-12 12:41:46,640 - services.intelligent_repo_scanner - INFO - Successfully cloned repository to /tmp/intelligent_repo_gh7tp6hu
+2025-10-12 12:41:46,649 - services.intelligent_repo_scanner - INFO - Repository analysis: 252 files, 195 code files, 6 infrastructure files, high risk level
+2025-10-12 12:41:46,650 - utils.repository_cache - INFO - Cached metadata for https://github.com/nlweb-ai/NLWeb/tree/main/code (252 files)
+2025-10-12 12:41:46,661 - services.intelligent_repo_scanner - INFO - Priority strategy: selected top 200 priority files
+2025-10-12 12:41:51,941 - services.intelligent_repo_scanner - INFO - Intelligent scan completed: 7 findings from 200 files
+2025-10-12 12:41:51,944 - utils.repository_cache - INFO - Cached scan result for https://github.com/nlweb-ai/NLWeb/tree/main/code (7 findings)
+2025-10-12 12:41:51,947 - services.intelligent_repo_scanner - INFO - Intelligent scan completed: 7 findings in 9.7s
+2025-10-12 12:41:51,947 - services.intelligent_repo_scanner - INFO - Coverage: 79.4% (200/252 files)
+2025-10-12 12:41:52,062 - services.intelligent_scanner_manager - INFO - Intelligent repository scan completed: intelligent_scan_838cd18d
+2025-10-12 12:41:52,069 - services.results_aggregator - INFO - Encrypted scan result code_scan_cb9bd144121d_1760272902 for secure storage in organization default_org
+2025-10-12 12:41:56,233 - services.results_aggregator - INFO - Successfully stored encrypted scan result code_scan_cb9bd144121d_1760272902 for organization default_org
+2025-10-12 12:41:56,233 - components.intelligent_scanner_wrapper - INFO - Code scan result saved to database with scan_type='code' for user vishaal314
+2025-10-12 12:41:56,234 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-12 12:41:56,241 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 12:41:56,262 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:41:56,308 - utils.compliance_calculator - INFO - Compliance score calculated: 45.0% (Critical: 0, High: 2, Medium: 5, Low: 0) for scan code_scan_cb9bd144121d_1760272902
+2025-10-12 12:41:56,597 - app - INFO - Performance optimizations initialized successfully
+2025-10-12 12:41:56,630 - root - ERROR - Failed to add missing translation keys: [Errno 2] No such file or directory: 'translations/nl.json'
+2025-10-12 12:41:56,644 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:42:01,133 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:42:01,697 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:42:01,752 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:42:01,774 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:42:01,802 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:42:04,854 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-12 12:42:06,705 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:42:11,662 - __main__ - INFO - Dashboard: Retrieved 71 total scans for user vishaal314
+2025-10-12 12:42:11,665 - __main__ - INFO - Dashboard: Raw aggregator returned 71 scans for user vishaal314
+2025-10-12 12:42:11,672 - __main__ - INFO - Dashboard: Processing 71 completed scans from aggregator
+2025-10-12 12:42:11,674 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:42:16,514 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:42:19,238 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314 (org: default_org)
+2025-10-12 12:42:21,319 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database (org: default_org)
+2025-10-12 12:42:21,320 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-12 12:42:21,320 - __main__ - INFO - Dashboard: Activity tracker found 2 total activities, 1 completed scans
+2025-10-12 12:42:21,321 - __main__ - INFO - Dashboard: Found 1 total activities, 1 today in activity tracker
+2025-10-12 12:42:21,321 - __main__ - INFO - Dashboard: Combining 71 aggregator scans + 1 today's activities
+2025-10-12 12:42:21,321 - __main__ - INFO - Dashboard: Calculated compliance from 41 scores: 57.4%
+2025-10-12 12:42:21,321 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 72, PII: 2455, Compliance: 57.4%, Issues: 256
+2025-10-12 12:42:21,330 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:42:26,916 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:42:30,396 - __main__ - INFO - Dashboard: Fresh aggregator returned 23 scans for recent activity display
+2025-10-12 12:42:30,396 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-12 12:42:30,403 - __main__ - INFO - Dashboard: Processing 10 scans for Recent Scan Activity display
+2025-10-12 12:42:30,410 - __main__ - INFO - Dashboard: Processing scan 1: code from 2025-10-12T12:41:53
+2025-10-12 12:42:30,411 - __main__ - INFO - Dashboard: Raw scan type from database: 'code'
+2025-10-12 12:42:30,412 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:42:30,413 - __main__ - INFO - Dashboard: Scan type 'code' mapped to '💻 Code Scanner'
+2025-10-12 12:42:30,413 - __main__ - INFO - Dashboard: Processing scan 2: enterprise connector from 2025-09-14T22:49:13
+2025-10-12 12:42:30,413 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:42:30,413 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:42:30,413 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:42:30,414 - __main__ - INFO - Dashboard: Processing scan 3: enterprise connector from 2025-09-14T22:35:41
+2025-10-12 12:42:30,414 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:42:30,414 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:42:30,414 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:42:30,414 - __main__ - INFO - Dashboard: Processing scan 4: enterprise connector from 2025-09-14T22:19:25
+2025-10-12 12:42:30,414 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:42:30,415 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:42:30,415 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:42:30,415 - __main__ - INFO - Dashboard: Processing scan 5: enterprise connector from 2025-09-14T20:50:04
+2025-10-12 12:42:30,415 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:42:30,415 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:42:30,415 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:42:30,416 - __main__ - INFO - Dashboard: Processing scan 6: enterprise connector from 2025-09-14T20:45:01
+2025-10-12 12:42:30,416 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:42:30,416 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:42:30,416 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:42:30,416 - __main__ - INFO - Dashboard: Processing scan 7: enterprise connector from 2025-09-14T20:44:53
+2025-10-12 12:42:30,417 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:42:30,417 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:42:30,417 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:42:30,417 - __main__ - INFO - Dashboard: Processing scan 8: enterprise connector from 2025-09-14T20:44:35
+2025-10-12 12:42:30,417 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:42:30,417 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:42:30,417 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:42:30,418 - __main__ - INFO - Dashboard: Processing scan 9: enterprise connector from 2025-09-14T20:28:37
+2025-10-12 12:42:30,418 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:42:30,418 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:42:30,418 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:42:30,418 - __main__ - INFO - Dashboard: Processing scan 10: enterprise connector from 2025-09-14T20:28:15
+2025-10-12 12:42:30,418 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:42:30,418 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:42:30,419 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:42:30,419 - __main__ - INFO - Dashboard: Generated 10 activity records for display
+2025-10-12 12:42:30.428 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 12:43:12,414 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:43:12,471 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:43:12,482 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:43:12,499 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:43:18,548 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:43:23.383 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 12:43:45,868 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:43:45,894 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:43:45,910 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:43:45,914 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 12:43:51,004 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:44:06,796 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:44:06,823 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:44:06,833 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:44:06,852 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+
+  You can now view your Streamlit app in your browser.
