@@ -1955,14 +1955,17 @@ def render_dashboard():
             fresh_aggregator = ResultsAggregator()
             fresh_aggregator.use_file_storage = False
             
+            # Get organization ID for tenant isolation
+            org_id = get_organization_id()
+            
             # Get absolute latest data with no caching
-            all_user_scans = fresh_aggregator.get_user_scans(username or 'anonymous', limit=50)
-            logger.info(f"Dashboard: Direct database query found {len(all_user_scans)} total scans for user {username}")
+            all_user_scans = fresh_aggregator.get_user_scans(username or 'anonymous', limit=50, organization_id=org_id)
+            logger.info(f"Dashboard: Direct database query found {len(all_user_scans)} total scans for user {username} (org: {org_id})")
             
             # If no user-specific scans, get all scans for accurate metrics
             if len(all_user_scans) == 0:
-                all_user_scans = fresh_aggregator.get_user_scans('all_users', limit=50)  # Get all users
-                logger.info(f"Dashboard: No user-specific scans, using {len(all_user_scans)} total scans from database")
+                all_user_scans = fresh_aggregator.get_user_scans('all_users', limit=50, organization_id=org_id)  # Get all users
+                logger.info(f"Dashboard: No user-specific scans, using {len(all_user_scans)} total scans from database (org: {org_id})")
             
             # Filter for recent scans (30 days) manually to ensure accuracy
             from datetime import datetime, timedelta
