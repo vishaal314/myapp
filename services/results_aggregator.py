@@ -296,11 +296,11 @@ class ResultsAggregator:
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (scan_id) DO UPDATE SET
             timestamp = EXCLUDED.timestamp,
-            result_json = EXCLUDED.result_json,
             region = EXCLUDED.region,
             file_count = EXCLUDED.file_count,
             total_pii_found = EXCLUDED.total_pii_found,
             high_risk_count = EXCLUDED.high_risk_count,
+            result_json = EXCLUDED.result_json,
             organization_id = EXCLUDED.organization_id
             """, (
                 scan_id,
