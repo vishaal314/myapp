@@ -18,6 +18,17 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Global cached multi-tenant service (singleton pattern for performance)
+_cached_multi_tenant_service = None
+
+def _get_cached_multi_tenant_service():
+    """Get or create cached multi-tenant service (singleton for performance)."""
+    global _cached_multi_tenant_service
+    if _cached_multi_tenant_service is None:
+        _cached_multi_tenant_service = MultiTenantService()
+        logger.info("Multi-tenant service initialized (cached globally)")
+    return _cached_multi_tenant_service
+
 class ResultsAggregator:
     """
     Aggregates and stores scan results in a PostgreSQL database with enterprise-grade security.
@@ -39,10 +50,10 @@ class ResultsAggregator:
         self.encryption_service = get_encryption_service()
         self.strict_enterprise_mode = os.environ.get('STRICT_ENTERPRISE_MODE', '0').lower() in ('1','true','yes')
         
-        # Initialize multi-tenant service for secure tenant isolation
+        # Use cached multi-tenant service for performance (prevents 8-second re-initialization)
         try:
-            self.multi_tenant_service = MultiTenantService()
-            logger.info("Multi-tenant service initialized for secure tenant isolation")
+            self.multi_tenant_service = _get_cached_multi_tenant_service()
+            logger.info("Using cached multi-tenant service for secure tenant isolation")
         except Exception as e:
             logger.error(f"Failed to initialize multi-tenant service: {str(e)}")
             raise RuntimeError(f"Multi-tenant service required for enterprise security compliance: {str(e)}")

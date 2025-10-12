@@ -1,0 +1,221 @@
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container | tail -150
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-12 12:00:45,797 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:00:50,009 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:00:50,448 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-12 12:00:50,570 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:00:50,583 - utils.session_optimizer - INFO - Created session c4909a11-2775-45b3-b368-ef31acd2795b for user vishaal314
+2025-10-12 12:00:50,618 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:00:50,628 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 12:00:50,637 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:00:52,637 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-12 12:00:52,637 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-12 12:00:52,637 - services.encryption_service - INFO - Key management initialized
+2025-10-12 12:00:54,846 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:00:54,906 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:00:54,925 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:00:54,953 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:00:56,859 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 12:00:57,084 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 12:00:58,866 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 12:00:58,866 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 12:00:58,867 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-12 12:01:01,482 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:01:01,537 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:01:01,557 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:01:04,923 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:01:05,921 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 12:01:06,251 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 12:01:08,928 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 12:01:08,928 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 12:01:08,929 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-12 12:01:17,840 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:01:36,929 - __main__ - INFO - Dashboard: Retrieved 70 total scans for user vishaal314
+2025-10-12 12:01:36,930 - __main__ - INFO - Dashboard: Raw aggregator returned 70 scans for user vishaal314
+2025-10-12 12:01:36,930 - __main__ - INFO - Dashboard: Processing 70 completed scans from aggregator
+2025-10-12 12:01:38,398 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:01:38,445 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:01:38,457 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:01:38,672 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:01:38,715 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:01:38,727 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:01:44,853 - __main__ - INFO - Dashboard: Retrieved 70 total scans for user vishaal314
+2025-10-12 12:01:44,853 - __main__ - INFO - Dashboard: Raw aggregator returned 70 scans for user vishaal314
+2025-10-12 12:01:46,195 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 12:01:46,525 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 12:01:47,481 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 12:01:47,743 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 12:01:48,966 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 12:01:48,966 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 12:01:48,967 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-12 12:01:49,734 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 12:01:49,734 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 12:01:49,734 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-12 12:01:55,665 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:01:57,585 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:02:01,062 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314
+2025-10-12 12:02:04,297 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database
+2025-10-12 12:02:04,298 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-12 12:02:04,298 - __main__ - INFO - Dashboard: Activity tracker found 0 total activities, 0 completed scans
+2025-10-12 12:02:04,298 - __main__ - INFO - Dashboard: Found 0 total activities, 0 today in activity tracker
+2025-10-12 12:02:04,298 - __main__ - INFO - Dashboard: Combining 70 aggregator scans + 0 today's activities
+2025-10-12 12:02:04,298 - __main__ - INFO - Dashboard: Calculated compliance from 41 scores: 57.4%
+2025-10-12 12:02:04,298 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 70, PII: 2441, Compliance: 57.4%, Issues: 256
+2025-10-12 12:02:07,637 - __main__ - INFO - Dashboard: Retrieved 70 total scans for user vishaal314
+2025-10-12 12:02:07,637 - __main__ - INFO - Dashboard: Raw aggregator returned 70 scans for user vishaal314
+2025-10-12 12:02:07,637 - __main__ - INFO - Dashboard: Processing 70 completed scans from aggregator
+2025-10-12 12:02:11,528 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 12:02:11,730 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 12:02:13,356 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 12:02:13,356 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 12:02:13,356 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-12 12:02:19,491 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:02:23,643 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314
+2025-10-12 12:02:25,734 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database
+2025-10-12 12:02:25,735 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-12 12:02:25,735 - __main__ - INFO - Dashboard: Activity tracker found 0 total activities, 0 completed scans
+2025-10-12 12:02:25,735 - __main__ - INFO - Dashboard: Found 0 total activities, 0 today in activity tracker
+2025-10-12 12:02:25,735 - __main__ - INFO - Dashboard: Combining 70 aggregator scans + 0 today's activities
+2025-10-12 12:02:25,735 - __main__ - INFO - Dashboard: Calculated compliance from 41 scores: 57.4%
+2025-10-12 12:02:25,736 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 70, PII: 2441, Compliance: 57.4%, Issues: 256
+2025-10-12 12:02:29,486 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 12:02:29,752 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 12:02:31,390 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 12:02:31,391 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 12:02:31,391 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-12 12:02:39,014 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:02:46,396 - __main__ - INFO - Dashboard: Fresh aggregator returned 22 scans for recent activity display
+2025-10-12 12:02:46,396 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-12 12:02:46,400 - __main__ - INFO - Dashboard: Processing 10 scans for Recent Scan Activity display
+2025-10-12 12:02:46,400 - __main__ - INFO - Dashboard: Processing scan 1: enterprise connector from 2025-09-14T22:49:13
+2025-10-12 12:02:46,400 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:02:46,401 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:02:46,401 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:02:46,401 - __main__ - INFO - Dashboard: Processing scan 2: enterprise connector from 2025-09-14T22:35:41
+2025-10-12 12:02:46,401 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:02:46,401 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:02:46,401 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:02:46,401 - __main__ - INFO - Dashboard: Processing scan 3: enterprise connector from 2025-09-14T22:19:25
+2025-10-12 12:02:46,402 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:02:46,402 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:02:46,402 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:02:46,402 - __main__ - INFO - Dashboard: Processing scan 4: enterprise connector from 2025-09-14T20:50:04
+2025-10-12 12:02:46,402 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:02:46,402 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:02:46,402 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:02:46,403 - __main__ - INFO - Dashboard: Processing scan 5: enterprise connector from 2025-09-14T20:45:01
+2025-10-12 12:02:46,403 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:02:46,403 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:02:46,403 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:02:46,403 - __main__ - INFO - Dashboard: Processing scan 6: enterprise connector from 2025-09-14T20:44:53
+2025-10-12 12:02:46,404 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:02:46,404 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:02:46,404 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:02:46,405 - __main__ - INFO - Dashboard: Processing scan 7: enterprise connector from 2025-09-14T20:44:35
+2025-10-12 12:02:46,405 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:02:46,405 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:02:46,405 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:02:46,405 - __main__ - INFO - Dashboard: Processing scan 8: enterprise connector from 2025-09-14T20:28:37
+2025-10-12 12:02:46,405 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:02:46,405 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:02:46,406 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:02:46,406 - __main__ - INFO - Dashboard: Processing scan 9: enterprise connector from 2025-09-14T20:28:15
+2025-10-12 12:02:46,406 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:02:46,406 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:02:46,406 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:02:46,406 - __main__ - INFO - Dashboard: Processing scan 10: enterprise connector from 2025-09-14T20:27:37
+2025-10-12 12:02:46,406 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-12 12:02:46,406 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-12 12:02:46,407 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-12 12:02:46,407 - __main__ - INFO - Dashboard: Generated 10 activity records for display
+2025-10-12 12:02:46.415 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 12:02:53,889 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:02:53,923 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:02:53,949 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:02:58,787 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 12:02:59,108 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 12:03:02,158 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 12:03:02,158 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 12:03:02,158 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-12 12:03:11,885 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:03:40.780 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 12:04:10,109 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:04:10,182 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:04:10,211 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:04:13,592 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 12:04:13,871 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 12:04:16,684 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 12:04:16,685 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 12:04:16,685 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-12 12:04:21,760 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 12:04:27.635 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 12:04:37,798 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 12:04:37,876 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 12:04:37,902 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 12:04:40,538 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 12:04:40,692 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 12:04:42,107 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 12:04:42,108 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 12:04:42,108 - services.results_aggregator - INFO - Multi-tenant service initialized for secure tenant isolation
+2025-10-12 12:04:55,317 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+2025-10-12 12:00:45,071 - scanner.code_profiler - INFO - System monitoring started
+INIT - Successfully initialized translations for: en
+2025-10-12 12:00:47,494 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 1.693s, Memory: 2.4MB
+INIT - Successfully initialized translations for: en
+2025-10-12 12:00:50,462 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.448s, Memory: 0.0MB
+INIT - Successfully initialized translations for: en
+INIT - Successfully initialized translations for: en
+SET_LANGUAGE - Setting language to: en
+INIT - Successfully initialized translations for: en
+2025-10-12 12:00:55,472 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.612s, Memory: 5.4MB
+INIT - Successfully initialized translations for: en
+Querying scans since: 2024-10-12 12:01:10.862559 for user: vishaal314
+Querying scans since: 2024-10-12 12:01:22.901220 for user: vishaal314
+Database returned 70 scan records
+Formatted 70 scans for return
+INIT - Successfully initialized translations for: en
+2025-10-12 12:01:38,463 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.049s, Memory: 0.5MB
+INIT - Successfully initialized translations for: en
+Database returned 70 scan records
+Formatted 70 scans for return
+2025-10-12 12:01:44,854 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 54.281s, Memory: 114.7MB
+Error retrieving user scans: tuple index out of range
+Querying scans since: 2024-10-12 12:02:01.130820 for user: vishaal314
+2025-10-12 12:02:04,302 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 62.808s, Memory: 15.2MB
+Database returned 70 scan records
+Formatted 70 scans for return
+Error retrieving user scans: tuple index out of range
+Querying scans since: 2025-09-12 12:02:43.132992 for user: vishaal314
+Database returned 22 scan records
+Formatted 22 scans for return
+2025-10-12 12:02:46,464 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 67.782s, Memory: 11.2MB
+INIT - Successfully initialized translations for: en
+Querying scans since: 2025-09-12 12:03:18.130633 for user: vishaal314
+Database returned 22 scan records
+Formatted 22 scans for return
+2025-10-12 12:03:40,802 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 46.908s, Memory: 2.6MB
+INIT - Successfully initialized translations for: en
+Querying scans since: 2025-09-12 12:04:25.209099 for user: vishaal314
+Database returned 22 scan records
+Formatted 22 scans for return
+2025-10-12 12:04:27,657 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 17.547s, Memory: 3.6MB
+INIT - Successfully initialized translations for: en
+Error retrieving user scans: tuple index out of range
+2025-10-12 12:05:00,540 - scanne
