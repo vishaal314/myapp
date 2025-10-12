@@ -491,10 +491,10 @@ class ResultsAggregator:
             cursor.execute("""
             SELECT scan_id, timestamp, scan_type, file_count, total_pii_found, high_risk_count
             FROM scans
-            WHERE username = %s
+            WHERE username = %s AND organization_id = %s
             ORDER BY timestamp DESC
             LIMIT %s
-            """, (username, limit))
+            """, (username, organization_id, limit))
             
             results = cursor.fetchall()
             cursor.close()
