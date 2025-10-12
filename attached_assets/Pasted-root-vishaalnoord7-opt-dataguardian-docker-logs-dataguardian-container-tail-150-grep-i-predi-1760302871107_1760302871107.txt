@@ -1,0 +1,111 @@
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container | tail -150 | grep -i predictive
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-12 20:10:40,484 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:56:38,617 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:56:39,300 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-12 20:56:39,398 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:56:39,419 - utils.session_optimizer - INFO - Created session 1b6309de-076d-41b3-abff-b5392bdab2ae for user vishaal314
+2025-10-12 20:56:39,436 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:56:39,446 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 20:56:39,461 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:56:41,398 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-12 20:56:41,398 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-12 20:56:41,399 - services.encryption_service - INFO - Key management initialized
+2025-10-12 20:56:44,012 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 20:56:44,166 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 20:56:45,674 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 20:56:45,675 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 20:56:45,675 - services.results_aggregator - INFO - Multi-tenant service initialized (cached globally)
+2025-10-12 20:56:45,675 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 20:56:49,159 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:56:49,188 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:56:49,206 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:56:49,231 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:56:50,932 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 20:56:55,759 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:56:55,800 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:56:55,830 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:56:55,874 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:57:00,837 - __main__ - INFO - Dashboard: Retrieved 72 total scans for user vishaal314
+2025-10-12 20:57:00,837 - __main__ - INFO - Dashboard: Raw aggregator returned 72 scans for user vishaal314
+2025-10-12 20:57:01,892 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:57:01,920 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:57:01,938 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:57:01,983 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:57:48,139 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:57:48,187 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:57:48,196 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:57:48,325 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:57:48,365 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:57:48,375 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:57:48,391 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:57:48,401 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-12 20:57:48,404 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 20:57:48,415 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:57:49,562 - services.fast_repo_scanner - ERROR - Clone failed: Cloning into '/tmp/fast_repo_6jtiee84'...
+warning: Could not find remote branch main to clone.
+fatal: Remote branch main not found in upstream origin
+
+2025-10-12 20:57:49,607 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:57:49.888 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 20:57:49,972 - root - INFO - Added 38 missing translation keys to nl.json
+2025-10-12 20:57:50,019 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 20:57:54,607 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 20:57:56,430 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-12 20:57:56,441 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-12 20:58:03,459 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:58:03,508 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:03,527 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:58:03,563 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:32,338 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:58:32,395 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:32,421 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:58:32,445 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:37,305 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:58:37,360 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:37,374 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:58:37,395 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:44,571 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:58:44,613 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:44,622 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:58:44,643 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:44,795 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:58:44,827 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:44,844 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:58:44,862 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:44,881 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-12 20:58:44,883 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 20:58:44,891 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:49.915 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 20:58:49,955 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:49.960 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-12 20:58:50,029 - services.gdpr_report_generator - INFO - Generated GDPR compliance report: reports/gdpr_report_34dc8733-1dc6-45de-a7a0-6db0b08493d1_20251012_205849.pdf
+2025-10-12 20:58:50,045 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:50,053 - services.usage_analytics - INFO - Usage event tracked: report_downloaded for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:58:50,058 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 20:59:00,091 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 20:59:01,249 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:59:01,289 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:59:01,297 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:59:01,332 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:59:01,843 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-12 20:59:20,915 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 20:59:20,948 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 20:59:20,967 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 20:59:21,203 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 20:59:25,325 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 20:59:27,097 - __main__ - INFO - Predictive Analytics: Prepared 0 scans for analysis
+2025-10-12 20:59:27,098 - __main__ - WARNING - Predictive Analytics: No scan history after enrichment (metadata count: 0)
+root@vishaalnoord7:/opt/dataguardian#
