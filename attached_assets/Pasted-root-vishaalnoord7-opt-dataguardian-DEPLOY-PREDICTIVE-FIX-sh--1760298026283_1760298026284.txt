@@ -1,0 +1,122 @@
+root@vishaalnoord7:/opt/dataguardian# ./DEPLOY_PREDICTIVE_FIX.sh
+════════════════════════════════════════════════════════════════
+  DEPLOY PREDICTIVE ANALYTICS FIX
+════════════════════════════════════════════════════════════════
+1️⃣  Backing up app.py...
+✅ Backed up
+
+2️⃣  Applying Predictive Analytics fix...
+✅ Fixed: Removed broken enrichment filter
+
+3️⃣  Rebuilding Docker image...
+#9 246.3   Building wheel for svglib (setup.py): finished with status 'done'
+#9 246.3   Created wheel for svglib: filename=svglib-1.5.1-py3-none-any.whl size=30948 sha256=0b650b74ee947469bb94f821ff9ba82e9cdc13e93f0356f0226e7edeeb57f667
+#9 246.4   Stored in directory: /tmp/pip-ephem-wheel-cache-q47a7yan/wheels/7e/01/0e/e6e336915d6e8448890a695770ba88fe030cc71060988016f6
+#9 246.4 Successfully built svglib
+#9 247.3 Installing collected packages: webencodings, pytz, py-spy, pdfkit, mpmath, flatbuffers, brotli, zopfli, xlrd, watchdog, urllib3, tzlocal, tzdata, typing-extensions, tqdm, tornado, toml, tld, tinyhtml5, tinycss2, tenacity, sympy, soupsieve, sniffio, smmap, six, rpds-py, regex, redis, pyyaml, python-multipart, python-magic, Pyphen, pypdf2, pyjwt, pygments, pydyf, pycryptodome, pycparser, pyasn1, pyarrow, psycopg2-binary, psutil, protobuf, propcache, pluggy, pillow, packaging, numpy, narwhals, mysql-connector-python, multidict, markupsafe, markdown2, lxml, joblib, jiter, itsdangerous, isodate, iniconfig, idna, humanfriendly, h11, frozenlist, fonttools, filelock, et-xmlfile, docstring-parser, dnspython, distro, coverage, click, charset_normalizer, certifi, cachetools, blinker, bcrypt, babel, attrs, annotated-types, aiohappyeyeballs, yarl, xmlsec, werkzeug, typing-inspection, rsa, requests, reportlab, referencing, python-docx, python-dateutil, pytest, pytesseract, pydantic-core, psycopg2-pool, plotly, openpyxl, opencv-python-headless, ml_dtypes, memory-profiler, lxml_html_clean, jinja2, httpcore, gitdb, ecdsa, cssselect2, courlan, coloredlogs, cffi, beautifulsoup4, anyio, aiosignal, weasyprint, svglib, stripe, requests-file, python3-saml, python-whois, python-jose, pytest-cov, pydeck, pydantic, pandas, onnxruntime, onnx, jsonschema-specifications, httpx, gitpython, flask, dateparser, cryptography, aiohttp, tldextract, openai, justext, jsonschema, htmldate, authlib, anthropic, trafilatura, altair, streamlit
+#9 347.5
+#9 347.5 Successfully installed Pyphen-0.17.2 aiohappyeyeballs-2.6.1 aiohttp-3.13.0 aiosignal-1.4.0 altair-5.5.0 annotated-types-0.7.0 anthropic-0.69.0 anyio-4.11.0 attrs-25.4.0 authlib-1.6.5 babel-2.17.0 bcrypt-5.0.0 beautifulsoup4-4.14.2 blinker-1.9.0 brotli-1.1.0 cachetools-6.2.1 certifi-2025.10.5 cffi-2.0.0 charset_normalizer-3.4.3 click-8.3.0 coloredlogs-15.0.1 courlan-1.3.2 coverage-7.10.7 cryptography-46.0.2 cssselect2-0.8.0 dateparser-1.2.2 distro-1.9.0 dnspython-2.8.0 docstring-parser-0.17.0 ecdsa-0.19.1 et-xmlfile-2.0.0 filelock-3.20.0 flask-3.1.2 flatbuffers-25.9.23 fonttools-4.60.1 frozenlist-1.8.0 gitdb-4.0.12 gitpython-3.1.45 h11-0.16.0 htmldate-1.9.3 httpcore-1.0.9 httpx-0.28.1 humanfriendly-10.0 idna-3.11 iniconfig-2.1.0 isodate-0.7.2 itsdangerous-2.2.0 jinja2-3.1.6 jiter-0.11.0 joblib-1.5.2 jsonschema-4.25.1 jsonschema-specifications-2025.9.1 justext-3.0.2 lxml-5.4.0 lxml_html_clean-0.4.3 markdown2-2.5.4 markupsafe-3.0.3 memory-profiler-0.61.0 ml_dtypes-0.5.3 mpmath-1.3.0 multidict-6.7.0 mysql-connector-python-9.4.0 narwhals-2.7.0 numpy-2.2.6 onnx-1.19.1 onnxruntime-1.23.1 openai-2.3.0 opencv-python-headless-4.12.0.88 openpyxl-3.1.5 packaging-25.0 pandas-2.3.3 pdfkit-1.0.0 pillow-11.3.0 plotly-6.3.1 pluggy-1.6.0 propcache-0.4.1 protobuf-6.32.1 psutil-7.1.0 psycopg2-binary-2.9.11 psycopg2-pool-1.2 py-spy-0.4.1 pyarrow-21.0.0 pyasn1-0.6.1 pycparser-2.23 pycryptodome-3.23.0 pydantic-2.12.0 pydantic-core-2.41.1 pydeck-0.9.1 pydyf-0.11.0 pygments-2.19.2 pyjwt-2.10.1 pypdf2-3.0.1 pytesseract-0.3.13 pytest-8.4.2 pytest-cov-7.0.0 python-dateutil-2.9.0.post0 python-docx-1.2.0 python-jose-3.5.0 python-magic-0.4.27 python-multipart-0.0.20 python-whois-0.9.6 python3-saml-1.16.0 pytz-2025.2 pyyaml-6.0.3 redis-6.4.0 referencing-0.36.2 regex-2025.9.18 reportlab-4.4.4 requests-2.32.5 requests-file-2.1.0 rpds-py-0.27.1 rsa-4.9.1 six-1.17.0 smmap-5.0.2 sniffio-1.3.1 soupsieve-2.8 streamlit-1.50.0 stripe-13.0.1 svglib-1.5.1 sympy-1.14.0 tenacity-9.1.2 tinycss2-1.4.0 tinyhtml5-2.0.0 tld-0.13.1 tldextract-5.3.0 toml-0.10.2 tornado-6.5.2 tqdm-4.67.1 trafilatura-2.0.0 typing-extensions-4.15.0 typing-inspection-0.4.2 tzdata-2025.2 tzlocal-5.3.1 urllib3-2.5.0 watchdog-6.0.0 weasyprint-66.0 webencodings-0.5.1 werkzeug-3.1.3 xlrd-2.0.2 xmlsec-1.3.16 yarl-1.22.0 zopfli-0.2.3.post1
+#9 347.5 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#9 351.5 WARNING: No matching packages
+#9 351.5 Files removed: 0 (0 bytes)
+#9 DONE 352.2s
+
+#10 [6/9] COPY . .
+#10 DONE 0.5s
+
+#11 [7/9] RUN mkdir -p logs reports data temp
+#11 DONE 0.7s
+
+#12 [8/9] RUN useradd --create-home --shell /bin/bash dataguardian &&     chown -R dataguardian:dataguardian /app
+#12 DONE 1.6s
+
+#13 [9/9] RUN mkdir -p ~/.streamlit &&     printf '%s\n'     '[server]'     'headless = true'     'address = "0.0.0.0"'     'port = 5000'     'enableCORS = false'     'enableXsrfProtection = false'     ''     '[browser]'     'gatherUsageStats = false'     ''     '[theme]'     'base = "light"'     > ~/.streamlit/config.toml
+#13 DONE 0.5s
+
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 48.5s done
+#14 writing image sha256:fc06583985050e8a02f0a5c74f33a8a548c73f36a6a52778fa06496fe2fc59ab 0.0s done
+#14 naming to docker.io/library/dataguardian:latest 0.0s done
+#14 DONE 48.5s
+✅ Built successfully
+
+4️⃣  Restarting container...
+dataguardian-container
+dataguardian-container
+8ddb6b9aa37cf037f9dbbe4b6fda4b2f5d862bb7a99b70645f56fc8ab0cd4d1c
+✅ Container started
+
+5️⃣  Waiting 45 seconds for startup...
+
+6️⃣  Verifying fix...
+
+════════════════════════════════════════════════════════════════
+  ✅ DEPLOYMENT COMPLETE!
+════════════════════════════════════════════════════════════════
+
+🎉 Predictive Analytics should now work with REAL data!
+
+Test it:
+  1. Visit: https://dataguardianpro.nl
+  2. Go to: Predictive Compliance Analytics
+  3. Expected: '📊 Analyzing 15 scans for predictive insights'
+  4. You will see: REAL predictions (NOT demo data)
+
+Log should show:
+  'Predictive Analytics: Retrieved 15 scan metadata records'
+  'Predictive Analytics: Prepared 15 scans for analysis'
+
+════════════════════════════════════════════════════════════════
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container | tail -150
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-12 19:38:19,916 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 19:38:23,548 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 19:38:24,069 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-12 19:38:24,159 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 19:38:24,168 - utils.session_optimizer - INFO - Created session 4d4e5e73-f903-491b-addd-cb56f9db9381 for user vishaal314
+2025-10-12 19:38:24,180 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 19:38:24,197 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 19:38:24,208 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 19:38:26,124 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-12 19:38:26,125 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-12 19:38:26,126 - services.encryption_service - INFO - Key management initialized
+2025-10-12 19:38:29,491 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 19:38:29,560 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 19:38:29,573 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 19:38:30,092 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 19:38:30,399 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 19:38:32,370 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 19:38:32,370 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 19:38:32,370 - services.results_aggregator - INFO - Multi-tenant service initialized (cached globally)
+2025-10-12 19:38:32,370 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 19:38:32,654 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 19:38:32,860 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 19:38:35,478 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 19:38:35,478 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 19:38:35,479 - services.results_aggregator - INFO - Multi-tenant service initialized (cached globally)
+2025-10-12 19:38:35,480 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 19:38:37,782 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 19:38:39,797 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 19:38:43,305 - __main__ - INFO - Predictive Analytics: Prepared 0 scans for analysis
+2025-10-12 19:38:43,307 - __main__ - WARNING - Predictive Analytics: No scan history after enrichment (metadata count: 0)
+2025-10-12 19:38:44,785 - __main__ - INFO - Dashboard: Retrieved 72 total scans for user vishaal314
+2025-10-12 19:38:44,785 - __main__ - INFO - Dashboard: Raw aggregator returned 72 scans for user vishaal314
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+2025-10-12 19:38:19,187 - scanner.code_profiler - INFO - System monitoring started
+INIT - Successfully initialized translations for: en
+2025-10-12 19:38:20,933 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 1.013s, Memory: 2.4MB
+INIT - Successfully initialized translations for: en
+2025-10-12 19:38:24,072 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.521s, Memory: 0.0MB
+INIT - Successfully initialized translations for: en
+INIT - Successfully initialized translations for: en
+Querying scans since: 2024-10-12 19:38:40.690698 for user: vishaal314
+Error retrieving user scans: tuple index out of range
+2025-10-12 19:38:43,745 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 14.235s, Memory: 12.0MB
+Database returned 72 scan records
+Formatted 72 scans for return
+2025-10-12 19:38:44,787 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 20.626s, Memory: 109.0MB
