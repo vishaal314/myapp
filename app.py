@@ -1401,9 +1401,10 @@ def render_predictive_analytics():
         
         with status_container:
             with st.spinner("🔍 Analyzing scan history..."):
-                org_id = get_organization_id()
+                # Use 'default_org' to match how scans are stored (same as Dashboard)
+                org_id = 'default_org'
                 logger.info(f"Predictive Analytics: Requesting scans for user={username}, org={org_id}, limit=15")
-                scan_metadata = aggregator.get_user_scans(username, limit=15, organization_id=org_id)  # Fixed: Added organization_id
+                scan_metadata = aggregator.get_user_scans(username, limit=15, organization_id=org_id)
                 logger.info(f"Predictive Analytics: Retrieved {len(scan_metadata)} scan metadata records")
                 
                 # Use metadata directly for predictive analysis (no enrichment needed)

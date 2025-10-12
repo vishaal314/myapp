@@ -1,0 +1,93 @@
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container | tail -150 | grep -i predictive
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-12 21:17:56,598 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:18:05,322 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:18:05,908 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-12 21:18:06,006 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:18:06,026 - utils.session_optimizer - INFO - Created session 816f4939-0dda-4158-8379-e26db60ccd29 for user vishaal314
+2025-10-12 21:18:06,059 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:18:06,070 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 21:18:06,080 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 21:18:07,728 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-12 21:18:07,728 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-12 21:18:07,728 - services.encryption_service - INFO - Key management initialized
+2025-10-12 21:18:10,690 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 21:18:10,864 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 21:18:12,280 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 21:18:12,281 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 21:18:12,281 - services.results_aggregator - INFO - Multi-tenant service initialized (cached globally)
+2025-10-12 21:18:12,281 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 21:18:17,122 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 21:18:24,691 - __main__ - INFO - Dashboard: Retrieved 72 total scans for user vishaal314
+2025-10-12 21:18:24,691 - __main__ - INFO - Dashboard: Raw aggregator returned 72 scans for user vishaal314
+2025-10-12 21:18:24,692 - __main__ - INFO - Dashboard: Processing 72 completed scans from aggregator
+2025-10-12 21:18:24,693 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 21:18:28,026 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:18:28,082 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:18:28,092 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 21:18:28,289 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 21:18:29,719 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 21:18:33,007 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 21:18:34,942 - __main__ - INFO - Predictive Analytics: Prepared 0 scans for analysis
+2025-10-12 21:18:34,943 - __main__ - WARNING - Predictive Analytics: No scan history after enrichment (metadata count: 0)
+2025-10-12 21:19:07,355 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:19:07,403 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:07,417 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 21:19:07,436 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:10,208 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:19:10,234 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:10,253 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 21:19:10,275 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:14,424 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:19:14,472 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:14,494 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 21:19:14,517 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:21,895 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:19:21,968 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:21,985 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 21:19:22,026 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:22,051 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:19:22,256 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:22,272 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 21:19:22,288 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:22,690 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 21:19:24,637 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:19:24,673 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:24,693 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 21:19:24,730 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:27,244 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 21:19:27,245 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-12 21:19:27,245 - utils.event_bus - INFO - EventBus: Initialized global event bus
+2025-10-12 21:19:27,476 - services.intelligent_repo_scanner - INFO - Parsed URL - Repo: https://github.com/nlweb-ai/NLWeb, Branch: main, Directory: code
+2025-10-12 21:19:27,477 - services.intelligent_repo_scanner - INFO - Executing git clone command: git clone --depth 1 --branch main --single-branch https://github.com/nlweb-ai/NLWeb /tmp/intelligent_repo_e482rh4m
+2025-10-12 21:19:30,987 - services.intelligent_repo_scanner - INFO - Git clone result - Return code: 0
+2025-10-12 21:19:30,987 - services.intelligent_repo_scanner - INFO - Git clone stderr: Cloning into '/tmp/intelligent_repo_e482rh4m'...
+
+2025-10-12 21:19:30,988 - services.intelligent_repo_scanner - INFO - Successfully cloned repository to /tmp/intelligent_repo_e482rh4m
+2025-10-12 21:19:31,001 - services.intelligent_repo_scanner - INFO - Repository analysis: 252 files, 195 code files, 6 infrastructure files, high risk level
+2025-10-12 21:19:31,003 - utils.repository_cache - INFO - Cached metadata for https://github.com/nlweb-ai/NLWeb/tree/main/code (252 files)
+2025-10-12 21:19:31,026 - services.intelligent_repo_scanner - INFO - Priority strategy: selected top 200 priority files
+2025-10-12 21:19:36,035 - services.intelligent_repo_scanner - INFO - Intelligent scan completed: 7 findings from 200 files
+2025-10-12 21:19:36,040 - utils.repository_cache - INFO - Cached scan result for https://github.com/nlweb-ai/NLWeb/tree/main/code (7 findings)
+2025-10-12 21:19:36,040 - services.intelligent_repo_scanner - INFO - Intelligent scan completed: 7 findings in 8.6s
+2025-10-12 21:19:36,040 - services.intelligent_repo_scanner - INFO - Coverage: 79.4% (200/252 files)
+2025-10-12 21:19:36,080 - services.intelligent_scanner_manager - INFO - Intelligent repository scan completed: intelligent_scan_0d30cc06
+2025-10-12 21:19:36,086 - services.results_aggregator - INFO - Encrypted scan result code_scan_9bf75e6b01d0_1760303967 for secure storage in organization default_org
+2025-10-12 21:19:39,450 - services.results_aggregator - INFO - Successfully stored encrypted scan result code_scan_9bf75e6b01d0_1760303967 for organization default_org
+2025-10-12 21:19:39,450 - components.intelligent_scanner_wrapper - INFO - Code scan result saved to database with scan_type='code' for user vishaal314
+2025-10-12 21:19:39,451 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-12 21:19:39,455 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 21:19:39,483 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:39,516 - utils.compliance_calculator - INFO - Compliance score calculated: 45.0% (Critical: 0, High: 2, Medium: 5, Low: 0) for scan code_scan_9bf75e6b01d0_1760303967
+2025-10-12 21:19:39,821 - app - INFO - Performance optimizations initialized successfully
+2025-10-12 21:19:39,848 - root - INFO - Added 38 missing translation keys to nl.json
+2025-10-12 21:19:39,876 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 21:19:43,699 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 21:19:43,727 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 21:19:43,754 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 21:19:43,784 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 21:19:45,277 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 21:19:48,535 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-12 21:19:48,897 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 21:19:50,565 - __main__ - INFO - Predictive Analytics: Prepared 0 scans for analysis
+2025-10-12 21:19:50,566 - __main__ - WARNING - Predictive Analytics: No scan history after enrichment (metadata count: 0)
