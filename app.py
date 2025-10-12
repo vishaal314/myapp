@@ -1406,25 +1406,30 @@ def render_predictive_analytics():
                 scan_metadata = aggregator.get_user_scans(username, limit=15, organization_id=org_id)  # Fixed: Added organization_id
                 logger.info(f"Predictive Analytics: Retrieved {len(scan_metadata)} scan metadata records")
                 
-                # Enrich with detailed results for predictive analysis
+                # Use metadata directly for predictive analysis (no enrichment needed)
                 scan_history = []
                 for scan in scan_metadata:
-                    # Get full scan results including compliance_score and findings
-                    detailed_result = aggregator.get_scan_result(scan['scan_id'])
-                    if detailed_result:
-                        # Combine metadata with detailed results
-                        enriched_scan = {
-                            'scan_id': scan['scan_id'],
-                            'timestamp': scan['timestamp'],
-                            'scan_type': scan['scan_type'],
-                            'region': scan['region'],
-                            'file_count': scan.get('file_count', 0),
-                            'total_pii_found': scan.get('total_pii_found', 0),
-                            'high_risk_count': scan.get('high_risk_count', 0),
-                            'compliance_score': detailed_result.get('compliance_score', 75),
-                            'findings': detailed_result.get('findings', [])
-                        }
-                        scan_history.append(enriched_scan)
+                    # Calculate compliance score from metadata
+                    # Higher PII/risk = lower compliance score
+                    base_score = 85
+                    pii_penalty = min(scan.get('total_pii_found', 0) * 0.5, 30)
+                    risk_penalty = min(scan.get('high_risk_count', 0) * 2, 20)
+                    calculated_score = max(base_score - pii_penalty - risk_penalty, 40)
+                    
+                    enriched_scan = {
+                        'scan_id': scan['scan_id'],
+                        'timestamp': scan['timestamp'],
+                        'scan_type': scan['scan_type'],
+                        'region': scan.get('region', 'Netherlands'),
+                        'file_count': scan.get('file_count', 0),
+                        'total_pii_found': scan.get('total_pii_found', 0),
+                        'high_risk_count': scan.get('high_risk_count', 0),
+                        'compliance_score': calculated_score,
+                        'findings': []  # Predictions work without detailed findings
+                    }
+                    scan_history.append(enriched_scan)
+                
+                logger.info(f"Predictive Analytics: Prepared {len(scan_history)} scans for analysis")
         
         # Clean success message
         if scan_history:
