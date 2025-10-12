@@ -292,11 +292,12 @@ class ResultsAggregator:
             # Store encrypted result in database with organization_id for tenant isolation
             cursor.execute("""
             INSERT INTO scans 
-            (scan_id, username, timestamp, scan_type, file_count, total_pii_found, high_risk_count, result_json, organization_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (scan_id, username, timestamp, scan_type, region, file_count, total_pii_found, high_risk_count, result_json, organization_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (scan_id) DO UPDATE SET
             timestamp = EXCLUDED.timestamp,
             result_json = EXCLUDED.result_json,
+            region = EXCLUDED.region,
             file_count = EXCLUDED.file_count,
             total_pii_found = EXCLUDED.total_pii_found,
             high_risk_count = EXCLUDED.high_risk_count,
@@ -306,6 +307,7 @@ class ResultsAggregator:
                 username,
                 datetime.now(),
                 scan_type,
+                region,
                 file_count,
                 total_pii,
                 high_risk,
@@ -591,7 +593,7 @@ class ResultsAggregator:
             # Optimized query with LIMIT for large datasets and proper indexing
             if username:
                 cursor.execute("""
-                    SELECT scan_id, username, timestamp, scan_type, 
+                    SELECT scan_id, username, timestamp, scan_type, region,
                            file_count, total_pii_found, high_risk_count, result_json
                     FROM scans 
                     WHERE username = %s AND organization_id = %s AND timestamp >= %s
@@ -600,7 +602,7 @@ class ResultsAggregator:
                 """, (username, organization_id, cutoff_date, limit))
             else:
                 cursor.execute("""
-                    SELECT scan_id, username, timestamp, scan_type, 
+                    SELECT scan_id, username, timestamp, scan_type, region,
                            file_count, total_pii_found, high_risk_count, result_json
                     FROM scans 
                     WHERE organization_id = %s AND timestamp >= %s
