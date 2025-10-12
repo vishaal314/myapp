@@ -1401,7 +1401,8 @@ def render_predictive_analytics():
         
         with status_container:
             with st.spinner("🔍 Analyzing scan history..."):
-                scan_metadata = aggregator.get_user_scans(username, limit=15)  # Reduced from 50 to 15 for speed
+                org_id = get_organization_id()
+                scan_metadata = aggregator.get_user_scans(username, limit=15, organization_id=org_id)  # Fixed: Added organization_id
                 
                 # Enrich with detailed results for predictive analysis
                 scan_history = []
