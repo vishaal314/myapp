@@ -1,0 +1,40 @@
+═══════════════════════════════════════════════════════════════
+root@vishaalnoord7:/opt/dataguardian#  docker logs dataguardian-container | grep 'Predictive Analytics'
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-12 14:01:33,222 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 14:01:48,242 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 14:01:48,857 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-12 14:01:48,956 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 14:01:48,970 - utils.session_optimizer - INFO - Created session 14b3b02f-e04a-4284-b86b-d682a8996971 for user vishaal314
+2025-10-12 14:01:48,977 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 14:01:48,983 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 14:01:48,988 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 14:01:51,174 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-12 14:01:51,174 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-12 14:01:51,174 - services.encryption_service - INFO - Key management initialized
+2025-10-12 14:01:54,166 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 14:01:54,344 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 14:01:56,223 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 14:01:56,224 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 14:01:56,224 - services.results_aggregator - INFO - Multi-tenant service initialized (cached globally)
+2025-10-12 14:01:56,224 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 14:02:00,603 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 14:02:09,861 - __main__ - INFO - Dashboard: Retrieved 72 total scans for user vishaal314
+2025-10-12 14:02:09,862 - __main__ - INFO - Dashboard: Raw aggregator returned 72 scans for user vishaal314
+2025-10-12 14:02:09,862 - __main__ - INFO - Dashboard: Processing 72 completed scans from aggregator
+2025-10-12 14:02:09,862 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 14:02:15,008 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 14:02:17,026 - __main__ - INFO - Dashboard: Direct database query found 0 total scans for user vishaal314 (org: default_org)
+2025-10-12 14:02:17,259 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 14:02:17,308 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 14:02:17,328 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 14:02:17,596 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 14:02:18,969 - __main__ - INFO - Dashboard: No user-specific scans, using 0 total scans from database (org: default_org)
+2025-10-12 14:02:18,970 - __main__ - INFO - Dashboard: Manual date filtering found 0 scans within 30 days
+2025-10-12 14:02:18,970 - __main__ - INFO - Dashboard: Activity tracker found 0 total activities, 0 completed scans
+2025-10-12 14:02:18,970 - __main__ - INFO - Dashboard: Found 0 total activities, 0 today in activity tracker
+2025-10-12 14:02:18,970 - __main__ - INFO - Dashboard: Combining 72 aggregator scans + 0 today's activities
+2025-10-12 14:02:18,970 - __main__ - INFO - Dashboard: Calculated compliance from 41 scores: 57.4%
+2025-10-12 14:02:18,970 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 72, PII: 2538, Compliance: 57.4%, Issues: 256
+2025-10-12 14:02:23,562 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 14:02:25,795 - __main__ - WARNING - Predictive Analytics: No scan history after enrichment (metadata count: 0)
