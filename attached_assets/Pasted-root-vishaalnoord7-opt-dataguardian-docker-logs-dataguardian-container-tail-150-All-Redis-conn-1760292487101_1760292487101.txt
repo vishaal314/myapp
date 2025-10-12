@@ -1,0 +1,47 @@
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container | tail -150
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-12 18:05:21,415 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 18:05:27,368 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 18:05:27,846 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-12 18:05:27,965 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 18:05:27,996 - utils.session_optimizer - INFO - Created session db82c75d-45c3-405a-9217-99dceac9d9c5 for user vishaal314
+2025-10-12 18:05:28,029 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 18:05:28,040 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-12 18:05:28,047 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 18:05:30,396 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-12 18:05:30,397 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-12 18:05:30,397 - services.encryption_service - INFO - Key management initialized
+2025-10-12 18:05:33,210 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-12 18:05:33,364 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-12 18:05:34,910 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-12 18:05:34,911 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-12 18:05:34,911 - services.results_aggregator - INFO - Multi-tenant service initialized (cached globally)
+2025-10-12 18:05:34,911 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 18:05:38,958 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-12 18:05:38,991 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-12 18:05:39,010 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-12 18:05:39,435 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-12 18:05:39,561 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 18:05:44,376 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-12 18:05:46,722 - __main__ - WARNING - Predictive Analytics: No scan history after enrichment (metadata count: 0)
+2025-10-12 18:05:49,943 - __main__ - INFO - Dashboard: Retrieved 72 total scans for user vishaal314
+2025-10-12 18:05:49,944 - __main__ - INFO - Dashboard: Raw aggregator returned 72 scans for user vishaal314
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+2025-10-12 18:05:20,795 - scanner.code_profiler - INFO - System monitoring started
+INIT - Successfully initialized translations for: en
+2025-10-12 18:05:22,806 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 1.387s, Memory: 2.4MB
+INIT - Successfully initialized translations for: en
+2025-10-12 18:05:27,850 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.481s, Memory: 0.0MB
+INIT - Successfully initialized translations for: en
+INIT - Successfully initialized translations for: en
+Querying scans since: 2024-10-12 18:05:42.807058 for user: vishaal314
+Error retrieving user scans: tuple index out of range
+2025-10-12 18:05:47,015 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 8.053s, Memory: 11.8MB
+Database returned 72 scan records
+Formatted 72 scans for return
+2025-10-12 18:05:49,945 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 21.979s, Memory: 107.8MB
+root@vishaalnoord7:/opt/dataguardian#
