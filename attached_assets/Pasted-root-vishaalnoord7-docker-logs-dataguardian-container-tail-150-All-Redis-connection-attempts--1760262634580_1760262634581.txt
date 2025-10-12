@@ -1,0 +1,83 @@
+root@vishaalnoord7:~# docker logs dataguardian-container | tail -150
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-11 23:20:28,175 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 23:20:34,589 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 23:20:35,140 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-11 23:20:35,243 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 23:20:35,254 - utils.session_optimizer - INFO - Created session dcc8ba94-21f4-40b7-87fb-2971a4d39839 for user vishaal314
+2025-10-11 23:20:35,265 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:35,272 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-11 23:20:35,280 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 23:20:37,355 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-11 23:20:37,358 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-11 23:20:37,359 - services.encryption_service - INFO - Key management initialized
+2025-10-11 23:20:37,359 - services.results_aggregator - ERROR - Failed to initialize multi-tenant service: DATABASE_URL environment variable required for multi-tenant service
+2025-10-11 23:20:37,360 - __main__ - ERROR - Error loading dashboard metrics: Multi-tenant service required for enterprise security compliance: DATABASE_URL environment variable required for multi-tenant service
+2025-10-11 23:20:37,362 - services.results_aggregator - ERROR - Failed to initialize multi-tenant service: DATABASE_URL environment variable required for multi-tenant service
+2025-10-11 23:20:37,363 - __main__ - ERROR - Fallback dashboard failed: Multi-tenant service required for enterprise security compliance: DATABASE_URL environment variable required for multi-tenant service
+2025-10-11 23:20:44,326 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 23:20:44,389 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:44,413 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 23:20:44,432 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:47,010 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 23:20:47,049 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:47,060 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 23:20:47,086 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:50,609 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 23:20:50,646 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:50,667 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 23:20:50,708 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:54,825 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 23:20:54,865 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:54,879 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 23:20:54,897 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 23:20:54,921 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:55,034 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:55,044 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-11 23:20:55,062 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-11 23:20:55,349 - services.results_aggregator - ERROR - Failed to initialize multi-tenant service: DATABASE_URL environment variable required for multi-tenant service
+2025-10-11 23:22:45,931 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-11 23:56:44.548 MediaFileHandler: Missing file .env
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/streamlit/runtime/memory_media_file_storage.py", line 140, in get_file
+    return self._files_by_id[file_id]
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+KeyError: '.env'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/streamlit/web/server/media_file_handler.py", line 95, in validate_absolute_path
+    self._storage.get_file(absolute_path)
+  File "/usr/local/lib/python3.11/site-packages/streamlit/runtime/memory_media_file_storage.py", line 142, in get_file
+    raise MediaFileStorageError(
+streamlit.runtime.media_file_storage.MediaFileStorageError: Bad filename '.env'. (No media file with id '.env')
+2025-10-12 00:25:27,548 - utils.session_optimizer - INFO - Removed session dcc8ba94-21f4-40b7-87fb-2971a4d39839
+2025-10-12 00:25:27,548 - utils.session_optimizer - INFO - Cleaned up 1 expired sessions
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+2025-10-11 23:20:27,562 - scanner.code_profiler - INFO - System monitoring started
+INIT - Successfully initialized translations for: nl
+2025-10-11 23:20:29,079 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.901s, Memory: 2.5MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 23:20:35,143 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.552s, Memory: 0.0MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 23:20:37,378 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 2.134s, Memory: 81.5MB
+INIT - Successfully initialized translations for: nl
+SET_LANGUAGE - Setting language to: nl
+INIT - Successfully initialized translations for: nl
+2025-10-11 23:20:44,733 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.403s, Memory: 5.4MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 23:20:47,099 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.088s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 23:20:50,726 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.115s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+INIT - Successfully initialized translations for: nl
+2025-10-11 23:20:54,923 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.095s, Memory: 1.0MB
+2025-10-11 23:20:55,350 - scanner.code_profiler - INFO - Activity tracked: dcc8ba94-21f4-40b7-87fb-2971a4d39839 - error
+2025-10-11 23:20:55,358 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.458s, Memory: 3.6MB
+INIT - Successfully initialized translations for: nl
+2025-10-11 23:22:45,995 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.063s, Memory: 0.5MB
