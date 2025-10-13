@@ -1,0 +1,287 @@
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container | tail -150
+All Redis connection attempts failed. Using in-memory fallback.
+2025-10-13 20:05:21,985 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:05:29,110 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:05:29,503 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-13 20:05:29,594 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:05:29,613 - utils.session_optimizer - INFO - Created session 37f4df1e-783d-4096-aa32-f488a0e6679f for user vishaal314
+2025-10-13 20:05:29,635 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:05:29,658 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-13 20:05:29,679 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:05:32,087 - services.encryption_service - INFO - Local KMS provider initialized
+2025-10-13 20:05:32,088 - services.encryption_service - WARNING - boto3 not available for AWS KMS integration
+2025-10-13 20:05:32,088 - services.encryption_service - INFO - Key management initialized
+2025-10-13 20:05:35,253 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:05:35,282 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:05:35,305 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:05:35,382 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-13 20:05:35,662 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-13 20:05:37,734 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-13 20:05:37,737 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-13 20:05:37,737 - services.results_aggregator - INFO - Multi-tenant service initialized (cached globally)
+2025-10-13 20:05:37,738 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-13 20:05:39,102 - services.multi_tenant_service - WARNING - RLS DISABLED via DISABLE_RLS environment variable - tenant isolation not enforced
+2025-10-13 20:05:39,305 - services.multi_tenant_service - INFO - Multi-tenant database schema initialized successfully with RLS
+2025-10-13 20:05:41,124 - services.multi_tenant_service - INFO - Loaded 1 tenant configurations
+2025-10-13 20:05:41,125 - services.multi_tenant_service - INFO - Multi-tenant service initialized with organization isolation
+2025-10-13 20:05:41,125 - services.results_aggregator - INFO - Multi-tenant service initialized (cached globally)
+2025-10-13 20:05:41,125 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-13 20:05:44,651 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-13 20:05:46,864 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-13 20:05:50,733 - __main__ - INFO - Predictive Analytics: Prepared 15 scans for analysis
+2025-10-13 20:05:53,029 - __main__ - INFO - Dashboard: Retrieved 73 total scans for user vishaal314
+2025-10-13 20:05:53,029 - __main__ - INFO - Dashboard: Raw aggregator returned 73 scans for user vishaal314
+2025-10-13 20:07:06,093 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:07:06,138 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:07:06,157 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:07:06,169 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-13 20:07:14,076 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-13 20:07:18,056 - __main__ - INFO - Predictive Analytics: Prepared 15 scans for analysis
+2025-10-13 20:07:30,170 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:07:30,214 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:07:30,234 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:07:30,266 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-13 20:07:35,030 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-13 20:07:38,194 - __main__ - INFO - Predictive Analytics: Prepared 15 scans for analysis
+2025-10-13 20:08:40,352 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:08:40,431 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:08:40,466 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:08:40,482 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-13 20:08:45,995 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-13 20:08:53.616 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-13 20:09:30,124 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:09:30,158 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:09:30,205 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:09:30,215 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-13 20:09:37,159 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-13 20:09:41.936 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-13 20:10:00,277 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:10:00,313 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:00,333 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:10:02.445 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-13 20:10:02.447 Serialization of dataframe to Arrow table was unsuccessful. Applying automatic fixes for column types to make the dataframe Arrow-compatible.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/streamlit/dataframe_util.py", line 822, in convert_pandas_df_to_arrow_bytes
+    table = pa.Table.from_pandas(df)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pyarrow/table.pxi", line 4795, in pyarrow.lib.Table.from_pandas
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 637, in dataframe_to_arrays
+    arrays = [convert_column(c, f)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 637, in <listcomp>
+    arrays = [convert_column(c, f)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 625, in convert_column
+    raise e
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 619, in convert_column
+    result = pa.array(col, type=type_, from_pandas=True, safe=safe)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pyarrow/array.pxi", line 365, in pyarrow.lib.array
+  File "pyarrow/array.pxi", line 91, in pyarrow.lib._ndarray_to_array
+  File "pyarrow/error.pxi", line 92, in pyarrow.lib.check_status
+pyarrow.lib.ArrowInvalid: ("Could not convert '0.000s' with type str: tried to convert to int64", 'Conversion failed for column Value with type object')
+2025-10-13 20:10:03.660 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-13 20:10:03.851 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-13 20:10:20,514 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:10:20,576 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:20,597 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:10:20,615 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:28,893 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:10:28,932 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:28,946 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:10:28,965 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:35,142 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:10:35,198 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:35,223 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:10:35,250 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:48,641 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:10:48,686 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:48,732 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:10:48,781 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:49,040 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:10:49,069 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:49,081 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:10:49,109 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:49,126 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-13 20:10:49,129 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-13 20:10:49,141 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:50,532 - services.fast_repo_scanner - ERROR - Clone failed: Cloning into '/tmp/fast_repo_bzdkfiqi'...
+fatal: repository 'https://github.com/nlweb-ai/NLWeb/tree/main/.github/workflows/' not found
+
+2025-10-13 20:10:50,555 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:10:50.725 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-13 20:10:50,786 - root - INFO - Added 38 missing translation keys to nl.json
+2025-10-13 20:10:50,813 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-13 20:10:58,635 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-13 20:11:04,380 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-13 20:11:04,384 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-13 20:11:15,767 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:11:15,807 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:11:15,817 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:11:15,853 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:13:33,258 - __main__ - INFO - Performance optimizations initialized successfully
+2025-10-13 20:13:33,299 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-13 20:13:33,314 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-13 20:13:33,328 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-13 20:13:39,821 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-13 20:14:08,143 - __main__ - INFO - Dashboard: Retrieved 73 total scans for user vishaal314
+2025-10-13 20:14:08,143 - __main__ - INFO - Dashboard: Raw aggregator returned 73 scans for user vishaal314
+2025-10-13 20:14:08,144 - __main__ - INFO - Dashboard: Processing 73 completed scans from aggregator
+2025-10-13 20:14:08,144 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-13 20:14:14,218 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-13 20:14:17,906 - __main__ - INFO - Dashboard: Direct database query found 50 total scans for user vishaal314 (org: default_org)
+2025-10-13 20:14:17,907 - __main__ - INFO - Dashboard: Manual date filtering found 20 scans within 30 days
+2025-10-13 20:14:17,907 - __main__ - INFO - Dashboard: Activity tracker found 2 total activities, 1 completed scans
+2025-10-13 20:14:17,907 - __main__ - INFO - Dashboard: Found 1 total activities, 1 today in activity tracker
+2025-10-13 20:14:17,907 - __main__ - INFO - Dashboard: Combining 73 aggregator scans + 1 today's activities
+2025-10-13 20:14:17,908 - __main__ - INFO - Dashboard: Calculated compliance from 42 scores: 57.3%
+2025-10-13 20:14:17,908 - __main__ - INFO - Dashboard DISPLAY: Showing metrics - Scans: 74, PII: 2549, Compliance: 57.3%, Issues: 258
+2025-10-13 20:14:17,918 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-13 20:14:26,276 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-13 20:14:37,045 - __main__ - INFO - Dashboard: Fresh aggregator returned 20 scans for recent activity display
+2025-10-13 20:14:37,046 - __main__ - INFO - Dashboard: Ensuring all scanner types update dashboard data properly
+2025-10-13 20:14:37,051 - __main__ - INFO - Dashboard: Processing 10 scans for Recent Scan Activity display
+2025-10-13 20:14:37,052 - __main__ - INFO - Dashboard: Processing scan 1: SOC2 Scanner from 2025-10-13T20:11:04
+2025-10-13 20:14:37,052 - __main__ - INFO - Dashboard: Raw scan type from database: 'soc2 scanner'
+2025-10-13 20:14:37,052 - __main__ - INFO - Dashboard: Full scan data keys: ['timestamp', 'scan_type', 'total_pii_found', 'file_count', 'region', 'result']
+2025-10-13 20:14:37,053 - __main__ - INFO - Dashboard: Scan type 'soc2 scanner' mapped to '🔐 SOC2 Scanner'
+2025-10-13 20:14:37,053 - __main__ - INFO - Dashboard: Processing scan 2: code from 2025-10-12T21:19:37
+2025-10-13 20:14:37,053 - __main__ - INFO - Dashboard: Raw scan type from database: 'code'
+2025-10-13 20:14:37,053 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-13 20:14:37,054 - __main__ - INFO - Dashboard: Scan type 'code' mapped to '💻 Code Scanner'
+2025-10-13 20:14:37,054 - __main__ - INFO - Dashboard: Processing scan 3: api from 2025-10-12T12:48:27
+2025-10-13 20:14:37,054 - __main__ - INFO - Dashboard: Raw scan type from database: 'api'
+2025-10-13 20:14:37,054 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-13 20:14:37,054 - __main__ - INFO - Dashboard: Scan type 'api' mapped to '🔗 API Scanner'
+2025-10-13 20:14:37,055 - __main__ - INFO - Dashboard: Processing scan 4: code from 2025-10-12T12:41:53
+2025-10-13 20:14:37,055 - __main__ - INFO - Dashboard: Raw scan type from database: 'code'
+2025-10-13 20:14:37,055 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-13 20:14:37,055 - __main__ - INFO - Dashboard: Scan type 'code' mapped to '💻 Code Scanner'
+2025-10-13 20:14:37,055 - __main__ - INFO - Dashboard: Processing scan 5: enterprise connector from 2025-09-14T22:49:13
+2025-10-13 20:14:37,056 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-13 20:14:37,056 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-13 20:14:37,056 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-13 20:14:37,056 - __main__ - INFO - Dashboard: Processing scan 6: enterprise connector from 2025-09-14T22:35:41
+2025-10-13 20:14:37,057 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-13 20:14:37,057 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-13 20:14:37,057 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-13 20:14:37,057 - __main__ - INFO - Dashboard: Processing scan 7: enterprise connector from 2025-09-14T22:19:25
+2025-10-13 20:14:37,057 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-13 20:14:37,058 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-13 20:14:37,058 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-13 20:14:37,058 - __main__ - INFO - Dashboard: Processing scan 8: enterprise connector from 2025-09-14T20:50:04
+2025-10-13 20:14:37,058 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-13 20:14:37,058 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-13 20:14:37,059 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-13 20:14:37,059 - __main__ - INFO - Dashboard: Processing scan 9: enterprise connector from 2025-09-14T20:45:01
+2025-10-13 20:14:37,059 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-13 20:14:37,059 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-13 20:14:37,060 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-13 20:14:37,060 - __main__ - INFO - Dashboard: Processing scan 10: enterprise connector from 2025-09-14T20:44:532025-10-13 20:14:37,060 - __main__ - INFO - Dashboard: Raw scan type from database: 'enterprise connector'
+2025-10-13 20:14:37,060 - __main__ - INFO - Dashboard: Full scan data keys: ['scan_id', 'username', 'timestamp', 'scan_type', 'region', 'file_count', 'total_pii_found', 'high_risk_count', 'result']
+2025-10-13 20:14:37,060 - __main__ - INFO - Dashboard: Scan type 'enterprise connector' mapped to '�  Enterprise Connector'
+2025-10-13 20:14:37,061 - __main__ - INFO - Dashboard: Generated 10 activity records for display
+2025-10-13 20:14:37.069 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+2025-10-13 20:05:21,259 - scanner.code_profiler - INFO - System monitoring started
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:05:22,900 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.912s, Memory: 2.7MB
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:05:29,507 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.393s, Memory: 0.0MB
+INIT - Successfully initialized translations for: nl
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2024-10-13 20:05:48.096440 for user: vishaal314
+2025-10-13 20:05:51,268 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 16.014s, Memory: 16.8MB
+Database returned 73 scan records
+Formatted 73 scans for return
+2025-10-13 20:05:53,043 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 23.447s, Memory: 113.3MB
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:07:18,397 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 12.303s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:07:38,666 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 8.484s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2025-09-13 20:08:49.756515 for user: vishaal314
+Database returned 20 scan records
+Formatted 20 scans for return
+2025-10-13 20:08:53,637 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 13.279s, Memory: 2.6MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2025-09-13 20:09:38.923296 for user: vishaal314
+Database returned 20 scan records
+Formatted 20 scans for return
+2025-10-13 20:09:41,946 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 11.820s, Memory: 2.6MB
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:10:00,384 - scanner.database_optimizer - ERROR - Failed to initialize optimized connection pool: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+        Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+        Is the server running on that host and accepting TCP/IP connections?
+
+2025-10-13 20:10:00,388 - scanner.database_optimizer - ERROR - Database connection error: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+        Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+        Is the server running on that host and accepting TCP/IP connections?
+
+2025-10-13 20:10:02,441 - scanner.database_optimizer - ERROR - Failed to initialize optimized connection pool: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+        Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+        Is the server running on that host and accepting TCP/IP connections?
+
+2025-10-13 20:10:02,442 - scanner.database_optimizer - ERROR - Database connection error: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+        Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+        Is the server running on that host and accepting TCP/IP connections?
+
+2025-10-13 20:10:03,864 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 3.585s, Memory: 1.0MB
+INIT - Successfully initialized translations for: nl
+SET_LANGUAGE - Setting language to: nl
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:10:20,918 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.402s, Memory: 3.9MB
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:10:28,983 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.088s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:10:35,277 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.134s, Memory: 0.0MB
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:10:48,841 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.194s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:11:04,393 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 15.348s, Memory: 5.2MB
+INIT - Successfully initialized translations for: nl
+2025-10-13 20:11:15,865 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.093s, Memory: 0.5MB
+INIT - Successfully initialized translations for: nl
+Querying scans since: 2024-10-13 20:13:43.404738 for user: vishaal314
+Database returned 73 scan records
+Formatted 73 scans for return
+Querying scans since: 2025-09-13 20:14:34.726430 for user: vishaal314
+Database returned 20 scan records
+Formatted 20 scans for return
+2025-10-13 20:14:37,112 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 63.846s, Memory: 11.9MB
