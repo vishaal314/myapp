@@ -176,9 +176,10 @@ class AWSKMSProvider(KMSProvider):
             self.ClientError = ClientError
             self.key_id = os.environ.get('AWS_KMS_KEY_ID')
             if not self.key_id:
-                logger.warning("AWS_KMS_KEY_ID not configured")
+                logger.debug("AWS_KMS_KEY_ID not configured (not needed for local KMS)")
         except ImportError:
-            logger.warning("boto3 not available for AWS KMS integration")
+            # boto3 optional - only needed for AWS KMS (not used with local KMS)
+            logger.debug("boto3 not available (not needed for local KMS)")
             self.kms_client = None
     
     def encrypt_dek(self, plaintext_key: bytes, key_id: str) -> bytes:
