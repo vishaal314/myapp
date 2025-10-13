@@ -500,7 +500,7 @@ class ResultsAggregator:
             
             # Query the scans table for the most recent scans for this user
             cursor.execute("""
-            SELECT scan_id, timestamp, scan_type, file_count, total_pii_found, high_risk_count
+            SELECT scan_id, timestamp, scan_type, region, file_count, total_pii_found, high_risk_count
             FROM scans
             WHERE username = %s AND organization_id = %s
             ORDER BY timestamp DESC
