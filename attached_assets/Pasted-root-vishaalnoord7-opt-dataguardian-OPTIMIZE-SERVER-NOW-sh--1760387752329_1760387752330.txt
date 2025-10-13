@@ -1,0 +1,90 @@
+root@vishaalnoord7:/opt/dataguardian# ./OPTIMIZE_SERVER_NOW.sh
+════════════════════════════════════════════════════════════════
+  DataGuardian Pro - Performance Optimization Script
+  Immediate fixes for dataguardianpro.nl
+════════════════════════════════════════════════════════════════
+
+1️⃣  Backing up current configuration...
+✅ Backup created
+
+2️⃣  Enabling Neon Connection Pooling...
+Current DATABASE_URL:
+
+Adding -pooler to hostname...
+New DATABASE_URL:
+✅ Pooling enabled
+
+3️⃣  Stopping current container...
+dataguardian-container
+dataguardian-container
+✅ Stopped
+
+4️⃣  Checking Docker image...
+⚠️  Image not found, using current directory to build
+[+] Building 5.8s (14/14) FINISHED                                                                                                                                                                  docker:default
+ => [internal] load build definition from Dockerfile                                                                                                                                                          0.1s
+ => => transferring dockerfile: 1.86kB                                                                                                                                                                        0.0s
+ => [internal] load metadata for docker.io/library/python:3.11-slim                                                                                                                                           1.5s
+ => [internal] load .dockerignore                                                                                                                                                                             0.0s
+ => => transferring context: 2B                                                                                                                                                                               0.0s
+ => [1/9] FROM docker.io/library/python:3.11-slim@sha256:5e9093a415c674b51e705d42dde4dd6aad8c132dab6ca3e81ecd5cbbe3689bd2                                                                                     0.0s
+ => [internal] load build context                                                                                                                                                                             0.1s
+ => => transferring context: 16.88kB                                                                                                                                                                          0.0s
+ => CACHED [2/9] WORKDIR /app                                                                                                                                                                                 0.0s
+ => CACHED [3/9] RUN apt-get update && apt-get install -y     build-essential     curl     git     libpq-dev     postgresql-client     tesseract-ocr     && rm -rf /var/lib/apt/lists/*                       0.0s
+ => CACHED [4/9] COPY production_requirements.txt requirements.txt                                                                                                                                            0.0s
+ => CACHED [5/9] RUN pip install --no-cache-dir --upgrade pip &&     pip install --no-cache-dir -r requirements.txt &&     pip cache purge &&     apt-get clean &&     rm -rf /var/lib/apt/lists/* /tmp/* /v  0.0s
+ => [6/9] COPY . .                                                                                                                                                                                            0.4s
+ => [7/9] RUN mkdir -p logs reports data temp                                                                                                                                                                 0.7s
+ => [8/9] RUN useradd --create-home --shell /bin/bash dataguardian &&     chown -R dataguardian:dataguardian /app                                                                                             1.7s
+ => [9/9] RUN mkdir -p ~/.streamlit &&     printf '%s\n'     '[server]'     'headless = true'     'address = "0.0.0.0"'     'port = 5000'     'enableCORS = false'     'enableXsrfProtection = false'     ''  0.6s
+ => exporting to image                                                                                                                                                                                        0.4s
+ => => exporting layers                                                                                                                                                                                       0.4s
+ => => writing image sha256:ef86e4d417c0840b9f2148f61071b51dea8263b565dde9698e482929a571d209                                                                                                                  0.0s
+ => => naming to docker.io/library/dataguardian:latest                                                                                                                                                        0.0s
+
+5️⃣  Deploying optimized container...
+f0b36e0de40be54129e35bc0fff7f7dfdf3a9ba191935d674a194a4e53a6d72e
+✅ Container deployed with:
+   - CPU limit: 1.5 cores
+   - RAM limit: 2 GB
+   - Connection pooling: ENABLED
+   - Auto-restart: ENABLED
+
+6️⃣  Waiting 45 seconds for startup...
+
+7️⃣  Verifying deployment...
+✅ Container running
+✅ No critical errors
+
+8️⃣  Testing database connection...
+
+9️⃣  Current resource usage:
+CONTAINER                CPU %     MEM USAGE / LIMIT
+dataguardian-container   0.00%     62.28MiB / 1.918GiB
+
+════════════════════════════════════════════════════════════════
+  ✅ OPTIMIZATION COMPLETE!
+════════════════════════════════════════════════════════════════
+
+📊 What changed:
+  1. ✅ Neon connection pooling enabled (10K connections vs 100)
+  2. ✅ Container CPU limited to 1.5 cores
+  3. ✅ Container RAM limited to 2 GB
+  4. ✅ Auto-restart enabled
+
+📈 Expected improvements:
+  - 80% reduction in connection overhead
+  - 3-5x faster query response times
+  - Better handling of traffic spikes
+  - No more OOM crashes
+
+🧪 Test your application:
+  Visit: https://dataguardianpro.nl
+  - Dashboard should load faster
+  - Predictive Analytics should work smoothly
+  - No more connection errors
+
+📋 Next steps (see PERFORMANCE_OPTIMIZATION_REPORT.md):
+  1. Add database indexes (run SQL in Neon console)
+  2. Configure Redis caching
