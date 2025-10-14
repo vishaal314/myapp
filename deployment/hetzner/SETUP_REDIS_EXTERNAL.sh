@@ -7,8 +7,6 @@
 #   2. SSH to server: ssh root@45.81.35.202
 #   3. Run: cd /opt/dataguardian && chmod +x SETUP_REDIS_EXTERNAL.sh && ./SETUP_REDIS_EXTERNAL.sh
 
-set -e  # Exit on error
-
 echo "════════════════════════════════════════════════════════════════"
 echo "🔴 Redis Setup for DataGuardian Pro External Server"
 echo "   Server: dataguardianpro.nl (45.81.35.202)"
@@ -17,6 +15,30 @@ echo "════════════════════════�
 
 # Change to application directory
 cd /opt/dataguardian || { echo "❌ Error: /opt/dataguardian directory not found"; exit 1; }
+
+# 0. Check and kill any process using port 6379
+echo ""
+echo "0️⃣  Checking for port conflicts..."
+PORT_PID=$(lsof -ti:6379 2>/dev/null)
+if [ -n "$PORT_PID" ]; then
+    echo "   ⚠️  Found process using port 6379 (PID: $PORT_PID)"
+    echo "   🔪 Killing process..."
+    kill -9 $PORT_PID 2>/dev/null || true
+    sleep 2
+    echo "   ✅ Port 6379 cleared"
+else
+    echo "   ✅ Port 6379 is available"
+fi
+
+# Also check for any Redis processes
+REDIS_PROCS=$(ps aux | grep -i redis-server | grep -v grep | awk '{print $2}')
+if [ -n "$REDIS_PROCS" ]; then
+    echo "   ⚠️  Found Redis processes: $REDIS_PROCS"
+    echo "   🔪 Stopping Redis processes..."
+    echo "$REDIS_PROCS" | xargs kill -9 2>/dev/null || true
+    sleep 2
+    echo "   ✅ Redis processes stopped"
+fi
 
 # 1. Stop existing containers
 echo ""
@@ -40,6 +62,9 @@ if [ $? -eq 0 ]; then
     echo "   ✅ Redis container started successfully"
 else
     echo "   ❌ Error: Failed to start Redis container"
+    # Show what might be using the port
+    echo "   🔍 Checking port 6379 status:"
+    lsof -i:6379 || echo "   No process found on port 6379"
     exit 1
 fi
 
@@ -56,6 +81,8 @@ if [ "$REDIS_PING" == "PONG" ]; then
     echo "   ✅ Redis connection successful: $REDIS_PING"
 else
     echo "   ❌ Error: Redis connection failed"
+    echo "   🔍 Container logs:"
+    docker logs dataguardian-redis --tail 20
     exit 1
 fi
 
@@ -91,6 +118,7 @@ if [ $? -eq 0 ]; then
     echo "   ✅ Main container started with Redis link"
 else
     echo "   ❌ Error: Failed to start main container"
+    docker logs dataguardian-container --tail 20
     exit 1
 fi
 
