@@ -1,4 +1,5 @@
-#!/bin/bash
+ on this
+ #!/bin/bash
 # FUNCTIONAL_VALIDATION.sh
 # Tests ACTUAL functionality (not just imports) - validates real features work
 
