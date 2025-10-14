@@ -168,7 +168,7 @@ echo "   Total Customer Capacity: ~$TOTAL_CUSTOMERS"
 echo ""
 echo "9️⃣  DATABASE STATISTICS:"
 echo "   ────────────────────────────────────────"
-if docker exec dataguardian-container python3 << 'DBSTATS' 2>/dev/null; then
+docker exec dataguardian-container python3 << 'DBSTATS' 2>/dev/null || echo "   ⚠️  Unable to query database"
 import sys
 sys.path.insert(0, '/app')
 from services.results_aggregator import ResultsAggregator
@@ -178,22 +178,21 @@ try:
     # Get scan count
     agg = ResultsAggregator()
     all_scans = agg.get_user_scans('vishaal314', limit=1000, organization_id='default_org')
-    print(f"Total Scans Stored: {len(all_scans)}")
+    print(f"   Total Scans Stored: {len(all_scans)}")
     
     # Calculate average size
     if all_scans:
         import sys
         avg_size = sys.getsizeof(str(all_scans)) / len(all_scans) / 1024  # KB
-        print(f"Avg Scan Size: {avg_size:.2f} KB")
+        print(f"   Avg Scan Size: {avg_size:.2f} KB")
         
         # Estimate capacity
         total_ram_mb = 8000  # Adjust based on server
         scans_per_gb = 1024 / avg_size * 1000
-        print(f"Scans per GB: ~{int(scans_per_gb)}")
+        print(f"   Scans per GB: ~{int(scans_per_gb)}")
 except Exception as e:
-    print(f"Error: {e}")
+    print(f"   Error: {e}")
 DBSTATS
-fi
 
 # 10. Performance Recommendations
 echo ""
