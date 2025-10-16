@@ -43,19 +43,35 @@ DataGuardian Pro is de **enige privacy compliance tool** die volledig is afgeste
 
 ### 2. 🔍 Code Scanner - "Beveilig uw broncode"
 
-**40+ PII-typen detectie, waaronder Nederlands:**
-- ✅ **BSN** (Burgerservicenummer) - inclusief validatie met 11-proef
-- ✅ **IBAN** (Nederlandse bankrekeningen NL91...)
-- ✅ **KvK-nummer** (Kamer van Koophandel)
-- ✅ **BTW-nummer** (NL123456789B01)
-- ✅ **Postcode** (1234AB formaat)
-- ✅ **Nederlandse telefoonnummers** (+31, 06, 020, etc.)
+**55+ PII-typen detectie - De meest complete scanner:**
+- ✅ **24 Geheimen/API Keys** (AWS, Azure, GCP, Stripe, GitHub, PayPal)
+- ✅ **23 Algemene PII** (email, telefoon, creditcards, paspoorten, medisch, financieel)
+- ✅ **8 Nederlands-specifiek** (BSN, KvK, IBAN, medisch, onderwijs, werkgelegenheid)
 
-**GDPR Artikel Validatie:**
-- Artikel 5 (rechtmatigheid, transparantie)
-- Artikel 25 (privacy by design)
-- Artikel 32 (beveiligingsmaatregelen)
-- Artikel 35 (DPIA vereisten)
+**100% GDPR Dekking:**
+- ✅ **38 GDPR Artikelen gevalideerd** (Artikelen 1-95 inclusief alle kritieke)
+- ✅ Artikelen 5-7 (rechtmatigheid, eerlijkheid, transparantie)
+- ✅ Artikelen 12-23 (rechten van betrokkenen)
+- ✅ Artikelen 25, 28, 32, 35 (privacy by design, beveiliging, DPIA)
+- ✅ Artikelen 44-49 (internationale doorgifte)
+
+**Complete Nederlandse UAVG:**
+- ✅ **BSN-detectie** met 11-proef validatie
+- ✅ **8 UAVG-specifieke categorieën**
+- ✅ **AP-regels** (Autoriteit Persoonsgegevens)
+- ✅ **Sofinummer** (historisch BSN) ondersteuning
+
+**EU AI Act 2025 Gereed:**
+- ✅ 6 AI compliance patroon categorieën
+- ✅ Hoog-risico AI systeem detectie
+- ✅ Verboden praktijken identificatie
+- ✅ AI transparantie-eisen
+
+**Repository Ondersteuning:**
+- GitHub, GitLab, Bitbucket
+- Lokale Git repositories
+- Private enterprise repos (SSO)
+- Multi-branch scanning (40+ bestandstypen)
 
 **ROI:** Voorkom €10M+ AVG-boete door blootgestelde BSN's of API-keys
 

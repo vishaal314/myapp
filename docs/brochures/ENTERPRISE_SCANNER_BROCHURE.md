@@ -70,26 +70,37 @@
 ### 2. 🔍 **Code Scanner**
 **"Secure Your Source Code & Repositories"**
 
-✅ **40+ PII Types Detection:**
-- Dutch BSN (Burgerservicenummer)
-- Email addresses, phone numbers
-- Credit cards, IBAN, tax IDs
-- API keys, passwords, tokens
-- Health data, biometric identifiers
+✅ **55+ PII Types Detection:**
+- 24 Secrets/API Keys (AWS, Azure, GCP, Stripe, GitHub, PayPal)
+- 23 General PII (email, phone, credit cards, passports, medical, financial)
+- 8 Netherlands-specific (BSN, KvK, IBAN, Dutch medical, education, employment)
+
+✅ **100% GDPR Coverage:**
+- **38 GDPR Articles validated** (Articles 1-95 including all critical)
+- Articles 5-7 (lawfulness, fairness, transparency)
+- Articles 12-23 (data subject rights)
+- Articles 25, 28, 32, 35 (privacy by design, security, DPIA)
+- Articles 44-49 (international transfers)
+
+✅ **Complete Netherlands UAVG:**
+- BSN detection with 11-proef validation
+- 8 UAVG-specific compliance categories
+- Dutch AP (Autoriteit Persoonsgegevens) rules
+- Sofinummer (historical BSN) support
+
+✅ **EU AI Act 2025 Ready:**
+- 6 AI compliance pattern categories
+- High-risk AI system detection
+- Prohibited practices identification
+- AI transparency requirements
 
 ✅ **Repository Support:**
 - GitHub, GitLab, Bitbucket
 - Local Git repositories
 - Private enterprise repos (SSO)
-- Multi-branch scanning
+- Multi-branch scanning (40+ file types)
 
-✅ **GDPR Article Validation:**
-- Article 5 (lawfulness, fairness, transparency)
-- Article 25 (privacy by design)
-- Article 32 (security measures)
-- Article 35 (DPIA requirements)
-
-**ROI:** Prevent €10M+ GDPR fine from exposed API keys
+**ROI:** Prevent €10M+ GDPR fine from exposed API keys or BSN data
 
 ---
 

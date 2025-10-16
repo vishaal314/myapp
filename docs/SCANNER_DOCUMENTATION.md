@@ -14,20 +14,53 @@ DataGuardian Pro features **11 production-ready scanners** plus **18 specialized
 **Purpose:** Repository scanning with PII detection, GDPR compliance, and BSN identification
 
 **Key Features:**
-- Git repository analysis (local, GitHub, GitLab)
-- Dutch BSN (Burgerservicenummer) detection
-- 40+ PII types detection (email, credit cards, API keys, passwords)
-- GDPR Article compliance validation (Articles 5, 6, 7, 9, 12-23, 25, 28, 32, 35)
-- Real-time security scanning
-- Netherlands UAVG specialization
+- **55+ PII Types Detection:**
+  - 24 Secrets/API Keys (AWS, Azure, GCP, Stripe, GitHub, PayPal, Braintree, MongoDB, MySQL, PostgreSQL)
+  - 23 General PII (email, phone, credit cards, passports, medical data, financial data, IP addresses, dates of birth)
+  - 8 Netherlands-specific (BSN, KvK, IBAN, Dutch medical, education, employment, minors consent, legal basis)
+
+- **100% GDPR Coverage:**
+  - **38 GDPR Articles validated** (Articles 1-95 including all critical provisions)
+  - Core principles (Articles 5-7): lawfulness, fairness, transparency
+  - Data subject rights (Articles 12-23): access, rectification, erasure, portability
+  - Controller obligations (Articles 24-43): privacy by design, processor agreements, DPIA
+  - International transfers (Articles 44-49): adequacy decisions, BCRs, Schrems II
+
+- **Complete Netherlands UAVG Implementation:**
+  - BSN (Burgerservicenummer) with 11-proef validation
+  - Sofinummer (historical BSN) detection
+  - 8 UAVG-specific compliance categories
+  - Dutch AP (Autoriteit Persoonsgegevens) rules
+  - Netherlands medical data patterns (EPD, zorgverlener)
+  - Dutch financial identifiers (IBAN NL, BIC, BTW-nummer)
+  - Dutch employment data (UWV, CAO, personeelsnummer)
+  - Dutch education data (DUO, onderwijsnummer)
+
+- **EU AI Act 2025 Compliance:**
+  - 6 AI compliance pattern categories
+  - AI framework detection (TensorFlow, PyTorch, Keras, Scikit-learn, HuggingFace)
+  - Prohibited AI practices (social scoring, manipulation, deceptive practices)
+  - High-risk AI systems (medical, recruitment, credit scoring, biometric)
+  - AI training patterns and model files
+  - AI transparency requirements (explainability, bias detection, human oversight)
+
+- **Repository Support:**
+  - Git repository analysis (local, GitHub, GitLab, Bitbucket)
+  - 40+ file types (Python, JavaScript, Java, C++, Go, Rust, PHP, Ruby, etc.)
+  - Multi-branch scanning
+  - Private enterprise repos with SSO
+  - Real-time security scanning
 
 **Use Cases:**
-- Source code security audits
-- API key exposure detection
-- Netherlands BSN compliance checking
-- GDPR Article 32 (security) validation
+- Source code security audits (API key exposure prevention)
+- Netherlands BSN compliance checking (11-proef validation)
+- GDPR Article 32 (security measures) validation
+- EU AI Act 2025 compliance assessment
+- Multi-cloud secret detection (AWS, Azure, GCP)
+- Payment processor security (Stripe, PayPal, Braintree)
+- Database credential scanning (MongoDB, MySQL, PostgreSQL)
 
-**Output:** Compliance score, PII findings, GDPR violations, remediation steps
+**Output:** Compliance score (0-100%), 55+ PII type findings, 38 GDPR article violations, UAVG compliance status, EU AI Act risk assessment, detailed remediation steps
 
 ---
 

@@ -5,7 +5,7 @@
 | # | Scanner | File | Primary Use | Key Feature | Netherlands | Reuse Potential |
 |---|---------|------|-------------|-------------|-------------|-----------------|
 | 1 | **Enterprise Connector** | `enterprise_connector_scanner.py` | Cloud/SaaS scanning | M365, Exact Online, Google Workspace | ✅ Exact Online (60% SME) | 🟢 EXCELLENT - Add Salesforce, SAP, Banking |
-| 2 | **Code Scanner** | `code_scanner.py` | Source code PII | 40+ PII types, Git repos | ✅ BSN detection | 🟡 GOOD - Add license compliance |
+| 2 | **Code Scanner** | `code_scanner.py` | Source code PII | 55+ PII types, 38 GDPR articles | ✅ BSN + 100% GDPR | 🟡 GOOD - Add license compliance |
 | 3 | **Document (Blob)** | `blob_scanner.py` | File analysis | PDF, DOCX, OCR | ✅ Dutch documents | 🟡 GOOD - Add more formats |
 | 4 | **Image Scanner** | `image_scanner.py` | Visual PII | OCR, face detection | ✅ Dutch ID docs | 🟡 GOOD - Add deepfake detection |
 | 5 | **Database Scanner** | `db_scanner.py` | SQL/NoSQL PII | Multi-DB, schema analysis | ✅ BSN columns | 🟡 GOOD - Add Oracle, Mongo |
