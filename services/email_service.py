@@ -23,8 +23,11 @@ class EmailService:
         # Email configuration from environment
         self.smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
         self.smtp_port = int(os.getenv('SMTP_PORT', '587'))
-        self.email_username = os.getenv('EMAIL_USERNAME')
-        self.email_password = os.getenv('EMAIL_PASSWORD')
+        
+        # Support multiple env var names for flexibility
+        self.email_username = os.getenv('EMAIL_USERNAME') or os.getenv('SMTP_USERNAME')
+        self.email_password = os.getenv('EMAIL_PASSWORD') or os.getenv('SMTP_PASSWORD')
+        
         self.from_email = os.getenv('FROM_EMAIL', 'billing@dataguardian.pro')
         self.from_name = os.getenv('FROM_NAME', 'DataGuardian Pro')
         
