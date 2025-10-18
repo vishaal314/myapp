@@ -131,9 +131,17 @@ def get_base_url() -> str:
     base_url = os.getenv('BASE_URL', os.getenv('REPLIT_URL'))
     
     if not base_url:
-        # Fallback for development
-        port = os.getenv('PORT', '5000')
-        base_url = f"http://localhost:{port}"
+        # Try to construct from Replit environment
+        replit_slug = os.getenv('REPL_SLUG')
+        replit_owner = os.getenv('REPL_OWNER')
+        
+        if replit_slug and replit_owner:
+            base_url = f"https://{replit_slug}.{replit_owner}.repl.co"
+        else:
+            # Last resort fallback - use localhost with warning
+            port = os.getenv('PORT', '5000')
+            base_url = f"http://localhost:{port}"
+            st.warning("⚠️ Using localhost URL - Set BASE_URL or REPLIT_URL environment variable for production")
     
     return base_url.rstrip('/')
 
