@@ -128,20 +128,26 @@ def calculate_vat(amount: int, country_code: str = "NL") -> dict:
 
 def get_base_url() -> str:
     """Get secure base URL from environment"""
-    base_url = os.getenv('BASE_URL', os.getenv('REPLIT_URL'))
+    # Priority 1: Explicitly set BASE_URL
+    base_url = os.getenv('BASE_URL')
     
     if not base_url:
-        # Try to construct from Replit environment
-        replit_slug = os.getenv('REPL_SLUG')
-        replit_owner = os.getenv('REPL_OWNER')
-        
-        if replit_slug and replit_owner:
-            base_url = f"https://{replit_slug}.{replit_owner}.repl.co"
+        # Priority 2: Use REPLIT_DEV_DOMAIN (the actual Replit URL)
+        replit_dev_domain = os.getenv('REPLIT_DEV_DOMAIN')
+        if replit_dev_domain:
+            base_url = f"https://{replit_dev_domain}"
         else:
-            # Last resort fallback - use localhost with warning
-            port = os.getenv('PORT', '5000')
-            base_url = f"http://localhost:{port}"
-            st.warning("⚠️ Using localhost URL - Set BASE_URL or REPLIT_URL environment variable for production")
+            # Priority 3: Try REPLIT_DOMAINS
+            replit_domains = os.getenv('REPLIT_DOMAINS')
+            if replit_domains:
+                # REPLIT_DOMAINS can be comma-separated, take the first one
+                first_domain = replit_domains.split(',')[0].strip()
+                base_url = f"https://{first_domain}"
+            else:
+                # Last resort fallback - use localhost with warning
+                port = os.getenv('PORT', '5000')
+                base_url = f"http://localhost:{port}"
+                st.warning("⚠️ Using localhost URL - Set BASE_URL environment variable for production")
     
     return base_url.rstrip('/')
 
