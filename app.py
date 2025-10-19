@@ -4476,13 +4476,32 @@ def render_database_scanner_interface(region: str, username: str):
         
         col1, col2 = st.columns(2)
         with col1:
-            host = st.text_input("Host", value="localhost", help="Use localhost for local databases or cloud endpoint for cloud databases")
+            host = st.text_input(
+                "Host ℹ️", 
+                value="localhost",
+                placeholder="localhost or 192.168.1.100 or db.example.com",
+                help="⚠️ For LOCAL databases: use 'localhost'\n"
+                     "⚠️ For REMOTE/NETWORK databases: use IP address (e.g., 192.168.1.100) or hostname (e.g., db.example.com)\n"
+                     "⚠️ Ensure the database port is open and reachable from this scanner"
+            )
             database = st.text_input("Database Name")
         with col2:
-            port = st.number_input("Port", value=5432 if db_type == "PostgreSQL" else 3306)
+            port = st.number_input("Port", value=5432 if db_type == "PostgreSQL" else 3306, min_value=1, max_value=65535)
             username_db = st.text_input("Username")
         
         password = st.text_input("Password", type="password")
+        
+        # Show network connectivity warning for remote hosts
+        if host and host not in ["localhost", "127.0.0.1", "::1", ""]:
+            st.info(
+                f"🌐 **Remote Database Detected: `{host}:{port}`**\n\n"
+                f"**Connection Checklist:**\n"
+                f"- ✅ Host `{host}` is reachable from this scanner\n"
+                f"- ✅ Port `{port}` is open in firewall\n"
+                f"- ✅ Database server allows remote connections\n"
+                f"- ✅ User has proper access permissions\n"
+                f"- ✅ Network connectivity is stable"
+            )
         
         # Initialize SSL variables at function scope to avoid "possibly unbound" errors
         ssl_mode = "Auto-detect"
@@ -4506,7 +4525,7 @@ def render_database_scanner_interface(region: str, username: str):
         if host and host != "localhost":
             cloud_patterns = ['.rds.amazonaws.com', '.database.windows.net', '.sql.goog', '.supabase.co', '.neon.tech']
             if any(pattern in host.lower() for pattern in cloud_patterns):
-                st.info("🌐 **Cloud database detected** - SSL will be automatically enabled for secure connection")
+                st.success("☁️ **Cloud database detected** - SSL will be automatically enabled for secure connection")
     
     if st.button("🚀 Start Database Scan", type="primary", use_container_width=True):
         if connection_method == "Connection String (Cloud)":

@@ -293,17 +293,95 @@ def render_database_scanner_config():
     """Database scanner configuration - extracted from app.py lines 3000-3500"""
     st.subheader("Database Scanner Configuration")
     
-    db_type = st.selectbox(
-        _("scan.database_type", "Database Type"),
-        ["PostgreSQL", "MySQL", "SQLite", "MongoDB", "Redis"],
-        key="db_type"
+    # Connection method selection
+    connection_method = st.radio(
+        _("scan.connection_method", "Connection Method") + " ℹ️",
+        ["Individual Parameters", "Connection String (Cloud)"],
+        key="db_connection_method",
+        help=_("scan.connection_method_help", "Use individual parameters for standard databases or connection string for cloud databases (Azure, AWS RDS, Google Cloud SQL)")
     )
     
-    db_host = st.text_input(_("scan.db_host", "Host"), value="localhost", key="db_host")
-    db_port = st.number_input(_("scan.db_port", "Port"), value=5432, key="db_port")
-    db_name = st.text_input(_("scan.db_name", "Database Name"), key="db_name")
-    db_user = st.text_input(_("scan.db_user", "Username"), key="db_user")
-    db_password = st.text_input(_("scan.db_password", "Password"), type="password", key="db_password")
+    if connection_method == "Individual Parameters":
+        # Database type selection
+        db_type = st.selectbox(
+            _("scan.database_type", "Database Type"),
+            ["PostgreSQL", "MySQL", "SQLite", "MongoDB", "Redis"],
+            key="db_type"
+        )
+        
+        # Host and Port in columns with helpful info
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            db_host = st.text_input(
+                _("scan.db_host", "Host") + " ℹ️",
+                value="localhost",
+                key="db_host",
+                placeholder="localhost or 192.168.1.100 or db.example.com",
+                help=_("scan.db_host_help", 
+                       "⚠️ For LOCAL databases: use 'localhost'\n"
+                       "⚠️ For REMOTE/NETWORK databases: use IP address (e.g., 192.168.1.100) or hostname (e.g., db.example.com)\n"
+                       "⚠️ Ensure port 5432 (PostgreSQL) or 3306 (MySQL) is open and reachable")
+            )
+        with col2:
+            default_port = 5432 if st.session_state.get("db_type") == "PostgreSQL" else 3306
+            db_port = st.number_input(
+                _("scan.db_port", "Port"),
+                value=default_port,
+                key="db_port",
+                min_value=1,
+                max_value=65535
+            )
+        
+        # Show network connectivity warning for remote hosts
+        if db_host and db_host not in ["localhost", "127.0.0.1", "::1"]:
+            st.info(
+                f"🌐 **Remote Database Detected**\n\n"
+                f"Make sure:\n"
+                f"- ✅ Host `{db_host}` is reachable from this scanner\n"
+                f"- ✅ Port `{db_port}` is open in firewall\n"
+                f"- ✅ Database allows remote connections\n"
+                f"- ✅ User has proper access permissions"
+            )
+        
+        # Database credentials
+        db_name = st.text_input(_("scan.db_name", "Database Name"), key="db_name")
+        
+        col_user, col_pass = st.columns(2)
+        with col_user:
+            db_user = st.text_input(_("scan.db_user", "Username"), key="db_user")
+        with col_pass:
+            db_password = st.text_input(_("scan.db_password", "Password"), type="password", key="db_password")
+        
+        # SSL/TLS configuration for cloud databases
+        with st.expander("🔒 SSL/TLS Configuration (Cloud Databases)"):
+            st.caption("Enable SSL/TLS for secure connections to cloud databases (Azure, AWS RDS, Google Cloud SQL)")
+            ssl_enabled = st.checkbox(_("scan.ssl_enabled", "Enable SSL/TLS"), key="db_ssl_enabled")
+            if ssl_enabled:
+                ssl_mode = st.selectbox(
+                    _("scan.ssl_mode", "SSL Mode"),
+                    ["require", "verify-ca", "verify-full"],
+                    key="db_ssl_mode",
+                    help="require: Encrypt connection | verify-ca: Verify CA certificate | verify-full: Verify hostname"
+                )
+    
+    else:
+        # Connection String method (for cloud databases)
+        st.info(
+            "📋 **Connection String Format Examples:**\n\n"
+            "**PostgreSQL:**\n"
+            "`postgresql://user:password@host:5432/database?sslmode=require`\n\n"
+            "**MySQL:**\n"
+            "`mysql://user:password@host:3306/database`\n\n"
+            "**Azure:**\n"
+            "`Server=host;Port=5432;Database=dbname;Uid=user;Pwd=password;SslMode=Required;`"
+        )
+        
+        connection_string = st.text_area(
+            _("scan.connection_string", "Connection String"),
+            key="db_connection_string",
+            height=100,
+            placeholder="postgresql://user:password@hostname:5432/database?sslmode=require"
+        )
 
 def render_api_scanner_config():
     """API scanner configuration - extracted from app.py lines 3500-4000"""
