@@ -24,7 +24,6 @@ except ValueError as e:
 # Pricing for each scan type (in cents EUR)
 SCAN_PRICES = {
     "Code Scan": 2300,  # €23.00
-    "Blob Scan": 1400,  # €14.00
     "Image Scan": 2800,  # €28.00
     "Database Scan": 4600,  # €46.00
     "API Scan": 1800,  # €18.00
@@ -46,7 +45,6 @@ VAT_RATES = {
 # Product names for each scan type
 SCAN_PRODUCTS = {
     "Code Scan": "DataGuardian Pro Code Scanner",
-    "Blob Scan": "DataGuardian Pro Blob Scanner",
     "Image Scan": "DataGuardian Pro Image Scanner",
     "Database Scan": "DataGuardian Pro Database Scanner",
     "API Scan": "DataGuardian Pro API Scanner",
@@ -59,7 +57,6 @@ SCAN_PRODUCTS = {
 # Descriptions for each scan type
 SCAN_DESCRIPTIONS = {
     "Code Scan": "Comprehensive code scanning for PII and secrets detection",
-    "Blob Scan": "Document scanning for PII and sensitive information",
     "Image Scan": "Image scanning for faces and visual identifiers",
     "Database Scan": "Database scanning for GDPR compliance",
     "API Scan": "API scanning for data exposure and compliance issues",

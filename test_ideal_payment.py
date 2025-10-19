@@ -69,7 +69,6 @@ def main():
         # Select scan type to test
         scan_options = {
             "Code Scan": "€23.00 + €4.83 VAT = €27.83",
-            "Blob Scan": "€14.00 + €2.94 VAT = €16.94", 
             "Image Scan": "€28.00 + €5.88 VAT = €33.88",
             "Database Scan": "€46.00 + €9.66 VAT = €55.66",
             "API Scan": "€18.00 + €3.78 VAT = €21.78",
