@@ -2156,7 +2156,6 @@ def render_dashboard():
                         'dpia': 'DPIA Scanner',
                         'sustainability': 'Sustainability Scanner',
                         'repository': 'Repository Scanner',
-                        'blob': 'Blob Scanner',
                         'cookie': 'Cookie Scanner',
                         # Special mappings for connectors e2e
                         'connectors_e2e': 'Connectors E2E',
@@ -2322,7 +2321,6 @@ def render_dashboard():
                     
                     # 3. Document Scanner (all variations)
                     'document': '📄 Document Scanner',
-                    'blob': '📄 Blob Scanner',
                     'pdf': '📄 PDF Scanner',
                     'text': '📄 Text Scanner',
                     'file': '📄 File Scanner',
