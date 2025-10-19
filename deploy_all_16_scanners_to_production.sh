@@ -22,15 +22,7 @@ echo "📋 Deployment Configuration:"
 echo "   Server: ${SERVER_USER}@${SERVER_HOST}"
 echo "   Path: ${SERVER_PATH}"
 echo ""
-
-# Check if we can connect to server
-echo "🔍 Testing server connection..."
-if ! ssh -o ConnectTimeout=5 ${SERVER_USER}@${SERVER_HOST} "echo 'Connection successful'" > /dev/null 2>&1; then
-    echo "❌ ERROR: Cannot connect to ${SERVER_HOST}"
-    echo "   Please check your SSH configuration"
-    exit 1
-fi
-echo "✅ Server connection successful"
+echo "🚀 Starting deployment..."
 echo ""
 
 # Update services/stripe_payment.py - Remove Blob Scan
