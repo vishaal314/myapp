@@ -66,16 +66,27 @@ def main():
             help="Use your real email to receive payment confirmation"
         )
         
-        # Select scan type to test
+        # Select scan type to test - All 16 scanners with correct pricing
         scan_options = {
-            "Code Scan": "€23.00 + €4.83 VAT = €27.83",
-            "Image Scan": "€28.00 + €5.88 VAT = €33.88",
-            "Database Scan": "€46.00 + €9.66 VAT = €55.66",
-            "API Scan": "€18.00 + €3.78 VAT = €21.78",
+            # Basic Scanners
             "Manual Upload": "€9.00 + €1.89 VAT = €10.89",
+            "API Scan": "€18.00 + €3.78 VAT = €21.78",
+            "Code Scan": "€23.00 + €4.83 VAT = €27.83",
+            "Website Scan": "€25.00 + €5.25 VAT = €30.25",
+            "Image Scan": "€28.00 + €5.88 VAT = €33.88",
+            "DPIA Scan": "€38.00 + €7.98 VAT = €45.98",
+            "Database Scan": "€46.00 + €9.66 VAT = €55.66",
+            # Advanced Scanners
             "Sustainability Scan": "€32.00 + €6.72 VAT = €38.72",
             "AI Model Scan": "€41.00 + €8.61 VAT = €49.61",
-            "SOC2 Scan": "€55.00 + €11.55 VAT = €66.55"
+            "SOC2 Scan": "€55.00 + €11.55 VAT = €66.55",
+            # Enterprise Connectors
+            "Google Workspace Scan": "€68.00 + €14.28 VAT = €82.28",
+            "Microsoft 365 Scan": "€75.00 + €15.75 VAT = €90.75",
+            "Enterprise Scan": "€89.00 + €18.69 VAT = €107.69",
+            "Salesforce Scan": "€92.00 + €19.32 VAT = €111.32",
+            "Exact Online Scan": "€125.00 + €26.25 VAT = €151.25",
+            "SAP Integration Scan": "€150.00 + €31.50 VAT = €181.50"
         }
         
         selected_scan = st.selectbox(
