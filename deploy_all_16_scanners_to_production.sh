@@ -17,12 +17,10 @@ echo ""
 SERVER_USER="${SERVER_USER:-root}"
 SERVER_HOST="${SERVER_HOST:-dataguardianpro.nl}"
 SERVER_PATH="${SERVER_PATH:-/opt/dataguardian}"
-BACKUP_DIR="/opt/dataguardian_backups/$(date +%Y%m%d_%H%M%S)"
 
 echo "📋 Deployment Configuration:"
 echo "   Server: ${SERVER_USER}@${SERVER_HOST}"
 echo "   Path: ${SERVER_PATH}"
-echo "   Backup: ${BACKUP_DIR}"
 echo ""
 
 # Check if we can connect to server
@@ -33,24 +31,6 @@ if ! ssh -o ConnectTimeout=5 ${SERVER_USER}@${SERVER_HOST} "echo 'Connection suc
     exit 1
 fi
 echo "✅ Server connection successful"
-echo ""
-
-# Create backup
-echo "💾 Creating backup of current production files..."
-ssh ${SERVER_USER}@${SERVER_HOST} << 'BACKUP_SCRIPT'
-BACKUP_DIR="/opt/dataguardian_backups/$(date +%Y%m%d_%H%M%S)"
-mkdir -p "${BACKUP_DIR}"
-cd /opt/dataguardian
-
-# Backup critical files
-cp app.py "${BACKUP_DIR}/app.py.backup" 2>/dev/null || true
-cp test_ideal_payment.py "${BACKUP_DIR}/test_ideal_payment.py.backup" 2>/dev/null || true
-cp pages/payment_test_ideal.py "${BACKUP_DIR}/payment_test_ideal.py.backup" 2>/dev/null || true
-cp services/stripe_payment.py "${BACKUP_DIR}/stripe_payment.py.backup" 2>/dev/null || true
-
-echo "✅ Backup created at ${BACKUP_DIR}"
-BACKUP_SCRIPT
-
 echo ""
 
 # Update services/stripe_payment.py - Remove Blob Scan
@@ -372,8 +352,6 @@ echo "   1. Clear browser cache (Ctrl+Shift+R)"
 echo "   2. Test payment page at https://dataguardianpro.nl/payment_test_ideal"
 echo "   3. Verify all 16 scanners appear in dropdown"
 echo "   4. Confirm Blob Scan is NOT present"
-echo ""
-echo "💾 Backup Location: ${BACKUP_DIR}"
 echo ""
 echo "🎉 All 16 scanners are now live on production!"
 echo ""

@@ -13,7 +13,6 @@
 3. ✅ **Updates correct pricing** (21% Netherlands VAT)
 4. ✅ **Rebuilds Docker containers** (no cache)
 5. ✅ **Restarts all services**
-6. ✅ **Creates automatic backup** before changes
 
 ---
 
@@ -44,11 +43,12 @@ export SERVER_PATH="/opt/dataguardian"   # Installation path
 ./deploy_all_16_scanners_to_production.sh
 ```
 
+**Note:** No backup is created. Make sure your Git repository is up to date if you need to rollback.
+
 ### Step 3: Monitor the Output
 
 The script will:
 - ✅ Test SSH connection
-- ✅ Create backup
 - ✅ Update all files
 - ✅ Verify changes
 - ✅ Rebuild Docker (no cache)
@@ -166,21 +166,18 @@ Open in browser:
 
 ## 🔄 Rollback Instructions
 
-If something goes wrong:
+If something goes wrong, use Git to revert changes:
 
 ```bash
 # Connect to server
 ssh root@dataguardianpro.nl
-
-# Find backup directory (created automatically)
-BACKUP_DIR=$(ls -td /opt/dataguardian_backups/* | head -1)
-echo "Using backup: $BACKUP_DIR"
-
-# Restore files
 cd /opt/dataguardian
-cp ${BACKUP_DIR}/app.py.backup app.py
-cp ${BACKUP_DIR}/stripe_payment.py.backup services/stripe_payment.py
-cp ${BACKUP_DIR}/test_ideal_payment.py.backup test_ideal_payment.py
+
+# Revert to previous commit
+git reset --hard HEAD~1
+
+# Or restore specific files
+git checkout HEAD~1 -- app.py services/stripe_payment.py test_ideal_payment.py
 
 # Rebuild and restart
 docker-compose down
@@ -242,11 +239,10 @@ docker-compose logs
 Pre-Deployment:
 - [ ] SSH access to dataguardianpro.nl working
 - [ ] Script is executable (`chmod +x deploy_all_16_scanners_to_production.sh`)
-- [ ] Server has enough disk space for backup
+- [ ] Git repository is committed (for rollback if needed)
 
 During Deployment:
 - [ ] Script completes without errors
-- [ ] Backup created successfully
 - [ ] Files updated and verified
 - [ ] Docker containers rebuilt
 - [ ] Services restarted
@@ -277,6 +273,7 @@ You'll know deployment succeeded when you see:
    ✅ test_ideal_payment.py updated
    ✅ Docker containers rebuilt (no cache)
    ✅ Services restarted
+   ℹ️  No backup created (use Git for rollback)
 
 🌐 Production URL: https://dataguardianpro.nl
 
@@ -289,10 +286,10 @@ You'll know deployment succeeded when you see:
 
 If you encounter issues:
 
-1. Check the backup directory: `/opt/dataguardian_backups/`
-2. Review Docker logs: `docker-compose logs`
-3. Verify file contents manually
-4. Use rollback instructions if needed
+1. Review Docker logs: `docker-compose logs`
+2. Verify file contents manually
+3. Use Git rollback instructions if needed
+4. Check container status: `docker-compose ps`
 
 ---
 

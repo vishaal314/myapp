@@ -11,11 +11,11 @@
 ```
 
 **What it does:**
-- ✅ Backs up current files
 - ✅ Removes Blob Scan from all locations
 - ✅ Adds all 16 scanners with correct pricing
 - ✅ Rebuilds Docker containers (no cache)
 - ✅ Restarts all services
+- ℹ️  No backup (use Git for rollback)
 
 **Time:** ~3-5 minutes
 
@@ -76,12 +76,11 @@
 
 ## 🔧 If Something Goes Wrong
 
-### Rollback:
+### Rollback (using Git):
 ```bash
 ssh root@dataguardianpro.nl
-BACKUP_DIR=$(ls -td /opt/dataguardian_backups/* | head -1)
 cd /opt/dataguardian
-cp ${BACKUP_DIR}/*.backup .
+git reset --hard HEAD~1
 docker-compose down && docker-compose build --no-cache && docker-compose up -d
 ```
 
