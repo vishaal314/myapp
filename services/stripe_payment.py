@@ -219,6 +219,18 @@ def create_checkout_session(scan_type: str, user_email: str, metadata: Optional[
         if country_code.upper() == "NL":
             payment_methods.append("ideal")
         
+        # Get current user from session state for auto-login after redirect
+        import streamlit as st
+        current_username = st.session_state.get('username', '')
+        
+        # Build success/cancel URLs with username for auto-restore session
+        success_url = f"{get_base_url()}?session_id={{CHECKOUT_SESSION_ID}}&payment_success=true"
+        cancel_url = f"{get_base_url()}?payment_cancelled=true"
+        
+        if current_username:
+            success_url += f"&user={current_username}"
+            cancel_url += f"&user={current_username}"
+        
         # Create a checkout session
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=payment_methods,
@@ -236,8 +248,8 @@ def create_checkout_session(scan_type: str, user_email: str, metadata: Optional[
                 },
             ],
             mode="payment",
-            success_url=f"{get_base_url()}?session_id={{CHECKOUT_SESSION_ID}}&payment_success=true",
-            cancel_url=f"{get_base_url()}?payment_cancelled=true",
+            success_url=success_url,
+            cancel_url=cancel_url,
             customer_email=user_email,
             metadata=safe_metadata,
             automatic_tax={
@@ -391,6 +403,13 @@ def handle_payment_callback(results_aggregator) -> None:
     """
     # Check for session_id in URL parameters - Streamlit 1.20.0+ uses query_params()
     query_params = st.query_params
+    
+    # Auto-restore user session if username passed in URL (prevents logout after payment)
+    username_from_url = query_params.get("user", None)
+    if username_from_url and not st.session_state.get("authenticated"):
+        st.session_state.username = username_from_url
+        st.session_state.authenticated = True
+        st.session_state.auto_restored = True  # Flag to show it was auto-restored
     
     session_id = query_params.get("session_id", None)
     
