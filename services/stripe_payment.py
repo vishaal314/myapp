@@ -2,6 +2,9 @@ import os
 import stripe
 import streamlit as st
 import re
+import secrets
+import hashlib
+import time
 from typing import Dict, Any, Optional
 
 # Initialize Stripe with proper validation
@@ -23,21 +26,28 @@ except ValueError as e:
 
 # Pricing for each scan type (in cents EUR)
 SCAN_PRICES = {
-    "Code Scan": 2300,  # €23.00
+    # Basic Scanners
+    "Manual Upload": 900,  # €9.00
     "Blob Scan": 1400,  # €14.00
+    "API Scan": 1800,  # €18.00
+    "Code Scan": 2300,  # €23.00
     "Image Scan": 2800,  # €28.00
     "Database Scan": 4600,  # €46.00
-    "API Scan": 1800,  # €18.00
-    "Manual Upload": 900,  # €9.00
+    "Website Scan": 2500,  # €25.00
+    "DPIA Scan": 3800,  # €38.00
+    
+    # Advanced Scanners
     "Sustainability Scan": 3200,  # €32.00
     "AI Model Scan": 4100,  # €41.00
     "SOC2 Scan": 5500,  # €55.00
+    
+    # Enterprise Connectors
+    "Google Workspace Scan": 6800,  # €68.00
+    "Microsoft 365 Scan": 7500,  # €75.00
     "Enterprise Scan": 8900,  # €89.00
+    "Salesforce Scan": 9200,  # €92.00
     "Exact Online Scan": 12500,  # €125.00
     "SAP Integration Scan": 15000,  # €150.00
-    "Microsoft 365 Scan": 7500,  # €75.00
-    "Google Workspace Scan": 6800,  # €68.00
-    "Salesforce Scan": 9200,  # €92.00
 }
 
 # VAT rates by country
@@ -51,41 +61,112 @@ VAT_RATES = {
 
 # Product names for each scan type
 SCAN_PRODUCTS = {
-    "Code Scan": "DataGuardian Pro Code Scanner",
+    "Manual Upload": "DataGuardian Pro Manual Upload Scanner",
     "Blob Scan": "DataGuardian Pro Blob Scanner",
+    "API Scan": "DataGuardian Pro API Scanner",
+    "Code Scan": "DataGuardian Pro Code Scanner",
     "Image Scan": "DataGuardian Pro Image Scanner",
     "Database Scan": "DataGuardian Pro Database Scanner",
-    "API Scan": "DataGuardian Pro API Scanner",
-    "Manual Upload": "DataGuardian Pro Manual Upload Scanner",
+    "Website Scan": "DataGuardian Pro Website Scanner",
+    "DPIA Scan": "DataGuardian Pro DPIA Assessment",
     "Sustainability Scan": "DataGuardian Pro Sustainability Scanner",
     "AI Model Scan": "DataGuardian Pro AI Model Scanner",
     "SOC2 Scan": "DataGuardian Pro SOC2 Scanner",
+    "Google Workspace Scan": "DataGuardian Pro Google Workspace Scanner",
+    "Microsoft 365 Scan": "DataGuardian Pro Microsoft 365 Scanner",
     "Enterprise Scan": "DataGuardian Pro Enterprise Scanner",
+    "Salesforce Scan": "DataGuardian Pro Salesforce Scanner",
     "Exact Online Scan": "DataGuardian Pro Exact Online Connector",
     "SAP Integration Scan": "DataGuardian Pro SAP Integration Scanner",
-    "Microsoft 365 Scan": "DataGuardian Pro Microsoft 365 Scanner",
-    "Google Workspace Scan": "DataGuardian Pro Google Workspace Scanner",
-    "Salesforce Scan": "DataGuardian Pro Salesforce Scanner",
 }
 
 # Descriptions for each scan type
 SCAN_DESCRIPTIONS = {
-    "Code Scan": "Comprehensive code scanning for PII and secrets detection",
+    "Manual Upload": "Manual file scanning for PII detection",
     "Blob Scan": "Document scanning for PII and sensitive information",
+    "API Scan": "API scanning for data exposure and compliance issues",
+    "Code Scan": "Comprehensive code scanning for PII and secrets detection",
     "Image Scan": "Image scanning for faces and visual identifiers",
     "Database Scan": "Database scanning for GDPR compliance",
-    "API Scan": "API scanning for data exposure and compliance issues",
-    "Manual Upload": "Manual file scanning for PII detection",
+    "Website Scan": "Website scanning for cookies, trackers, and privacy policy compliance",
+    "DPIA Scan": "Data Protection Impact Assessment for GDPR Article 35 compliance",
     "Sustainability Scan": "Cloud resource optimization and sustainability analysis",
     "AI Model Scan": "AI model auditing for bias and GDPR compliance",
     "SOC2 Scan": "SOC2 security and access control auditing",
+    "Google Workspace Scan": "Google Workspace organization scanning for data exposure",
+    "Microsoft 365 Scan": "Microsoft 365 tenant scanning for PII and compliance issues",
     "Enterprise Scan": "Advanced enterprise data scanning with full connector suite",
+    "Salesforce Scan": "Salesforce CRM data scanning for customer privacy compliance",
     "Exact Online Scan": "Direct integration scanning for Exact Online accounting data",
     "SAP Integration Scan": "SAP ERP system integration with GDPR compliance analysis",
-    "Microsoft 365 Scan": "Microsoft 365 tenant scanning for PII and compliance issues",
-    "Google Workspace Scan": "Google Workspace organization scanning for data exposure",
-    "Salesforce Scan": "Salesforce CRM data scanning for customer privacy compliance",
 }
+
+# Secure session token management
+def generate_session_token(username: str, expiry_hours: int = 1) -> str:
+    """
+    Generate a secure signed session token for payment redirects
+    
+    Args:
+        username: Username to encode in token
+        expiry_hours: Token validity in hours (default: 1)
+        
+    Returns:
+        Signed token string with format: timestamp:username:signature
+    """
+    # Get master secret from environment (REQUIRED for security)
+    secret = os.getenv('DATAGUARDIAN_MASTER_KEY')
+    if not secret:
+        raise ValueError("DATAGUARDIAN_MASTER_KEY environment variable not set - required for secure token generation")
+    
+    # Create token payload
+    timestamp = int(time.time())
+    expiry = timestamp + (expiry_hours * 3600)
+    payload = f"{expiry}:{username}"
+    
+    # Generate HMAC signature
+    signature = hashlib.sha256(f"{payload}:{secret}".encode()).hexdigest()
+    
+    # Return signed token
+    return f"{payload}:{signature}"
+
+def verify_session_token(token: str) -> Optional[str]:
+    """
+    Verify and extract username from signed session token
+    
+    Args:
+        token: Signed token string
+        
+    Returns:
+        Username if token is valid and not expired, None otherwise
+    """
+    try:
+        # Parse token
+        parts = token.split(':')
+        if len(parts) != 3:
+            return None
+        
+        expiry_str, username, signature = parts
+        expiry = int(expiry_str)
+        
+        # Check expiry
+        if time.time() > expiry:
+            return None
+        
+        # Verify signature
+        secret = os.getenv('DATAGUARDIAN_MASTER_KEY')
+        if not secret:
+            return None  # Cannot verify without secret
+        
+        payload = f"{expiry}:{username}"
+        expected_sig = hashlib.sha256(f"{payload}:{secret}".encode()).hexdigest()
+        
+        if signature != expected_sig:
+            return None
+        
+        return username
+        
+    except (ValueError, IndexError):
+        return None
 
 # Security and validation functions
 def validate_email(email: str) -> bool:
@@ -223,13 +304,15 @@ def create_checkout_session(scan_type: str, user_email: str, metadata: Optional[
         import streamlit as st
         current_username = st.session_state.get('username', '')
         
-        # Build success/cancel URLs with username for auto-restore session
+        # Build success/cancel URLs with secure signed token instead of username
         success_url = f"{get_base_url()}?session_id={{CHECKOUT_SESSION_ID}}&payment_success=true"
         cancel_url = f"{get_base_url()}?payment_cancelled=true"
         
+        # Generate secure session token for redirect (valid for 1 hour)
         if current_username:
-            success_url += f"&user={current_username}"
-            cancel_url += f"&user={current_username}"
+            session_token = generate_session_token(current_username)
+            success_url += f"&state={session_token}"
+            cancel_url += f"&state={session_token}"
         
         # Create a checkout session
         checkout_session = stripe.checkout.Session.create(
@@ -404,12 +487,20 @@ def handle_payment_callback(results_aggregator) -> None:
     # Check for session_id in URL parameters - Streamlit 1.20.0+ uses query_params()
     query_params = st.query_params
     
-    # Auto-restore user session if username passed in URL (prevents logout after payment)
-    username_from_url = query_params.get("user", None)
-    if username_from_url and not st.session_state.get("authenticated"):
-        st.session_state.username = username_from_url
-        st.session_state.authenticated = True
-        st.session_state.auto_restored = True  # Flag to show it was auto-restored
+    # Auto-restore user session using secure signed token (prevents logout after payment)
+    session_token = query_params.get("state", None)
+    if session_token and not st.session_state.get("authenticated"):
+        # Verify and extract username from signed token
+        username = verify_session_token(session_token)
+        if username:
+            st.session_state.username = username
+            st.session_state.authenticated = True
+            st.session_state.auto_restored = True  # Flag to show it was auto-restored
+            st.session_state.session_source = "secure_token"  # Track restoration method
+        else:
+            # Token invalid or expired
+            st.warning("Session token expired. Please log in again.")
+            return
     
     session_id = query_params.get("session_id", None)
     

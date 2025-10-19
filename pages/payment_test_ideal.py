@@ -92,23 +92,53 @@ with col1:
     )
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Scanner type dropdown with pricing
+    # Scanner type dropdown with pricing (all scanner types from platform)
     st.markdown("**Select Scanner to Test:**")
     
+    # Complete scanner pricing (base prices in EUR, VAT 21% for Netherlands)
+    # Matching SCAN_PRICES from services/stripe_payment.py
     scanner_options = {
-        "Code Scan": {"base": 23.00, "vat": 4.83, "total": 27.83},
-        "Blob Scan": {"base": 14.00, "vat": 2.94, "total": 16.94},
-        "Image Scan": {"base": 28.00, "vat": 5.88, "total": 33.88},
-        "Database Scan": {"base": 46.00, "vat": 9.66, "total": 55.66},
-        "API Scan": {"base": 18.00, "vat": 3.78, "total": 21.78},
-        "Manual Upload": {"base": 9.00, "vat": 1.89, "total": 10.89},
+        # Basic Scanners
+        "Manual Upload": {"base": 9.00, "vat": 1.89, "total": 10.89, "category": "Basic"},
+        "Blob Scan": {"base": 14.00, "vat": 2.94, "total": 16.94, "category": "Basic"},
+        "API Scan": {"base": 18.00, "vat": 3.78, "total": 21.78, "category": "Basic"},
+        "Code Scan": {"base": 23.00, "vat": 4.83, "total": 27.83, "category": "Basic"},
+        "Website Scan": {"base": 25.00, "vat": 5.25, "total": 30.25, "category": "Basic"},
+        "Image Scan": {"base": 28.00, "vat": 5.88, "total": 33.88, "category": "Basic"},
+        "DPIA Scan": {"base": 38.00, "vat": 7.98, "total": 45.98, "category": "Basic"},
+        "Database Scan": {"base": 46.00, "vat": 9.66, "total": 55.66, "category": "Basic"},
+        
+        # Advanced Scanners
+        "Sustainability Scan": {"base": 32.00, "vat": 6.72, "total": 38.72, "category": "Advanced"},
+        "AI Model Scan": {"base": 41.00, "vat": 8.61, "total": 49.61, "category": "Advanced"},
+        "SOC2 Scan": {"base": 55.00, "vat": 11.55, "total": 66.55, "category": "Advanced"},
+        
+        # Enterprise Connectors
+        "Google Workspace Scan": {"base": 68.00, "vat": 14.28, "total": 82.28, "category": "Enterprise"},
+        "Microsoft 365 Scan": {"base": 75.00, "vat": 15.75, "total": 90.75, "category": "Enterprise"},
+        "Enterprise Scan": {"base": 89.00, "vat": 18.69, "total": 107.69, "category": "Enterprise"},
+        "Salesforce Scan": {"base": 92.00, "vat": 19.32, "total": 111.32, "category": "Enterprise"},
+        "Exact Online Scan": {"base": 125.00, "vat": 26.25, "total": 151.25, "category": "Enterprise"},
+        "SAP Integration Scan": {"base": 150.00, "vat": 31.50, "total": 181.50, "category": "Enterprise"},
     }
     
-    # Create dropdown options with prices
-    scanner_display_options = [
-        f"{scanner} - €{pricing['base']:.2f} + €{pricing['vat']:.2f} VAT = €{pricing['total']:.2f}"
-        for scanner, pricing in scanner_options.items()
-    ]
+    # Create dropdown options with prices (grouped by category)
+    scanner_display_options = []
+    
+    # Group by category
+    basic_scanners = {k: v for k, v in scanner_options.items() if v['category'] == 'Basic'}
+    advanced_scanners = {k: v for k, v in scanner_options.items() if v['category'] == 'Advanced'}
+    enterprise_scanners = {k: v for k, v in scanner_options.items() if v['category'] == 'Enterprise'}
+    
+    # Add category headers and scanners
+    for scanner, pricing in basic_scanners.items():
+        scanner_display_options.append(f"{scanner} - €{pricing['base']:.2f} + €{pricing['vat']:.2f} VAT = €{pricing['total']:.2f}")
+    
+    for scanner, pricing in advanced_scanners.items():
+        scanner_display_options.append(f"{scanner} - €{pricing['base']:.2f} + €{pricing['vat']:.2f} VAT = €{pricing['total']:.2f}")
+    
+    for scanner, pricing in enterprise_scanners.items():
+        scanner_display_options.append(f"{scanner} - €{pricing['base']:.2f} + €{pricing['vat']:.2f} VAT = €{pricing['total']:.2f}")
     
     selected_scanner_display = st.selectbox(
         "Choose scan type:",
