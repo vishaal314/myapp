@@ -10,8 +10,11 @@ import os
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from services.stripe_payment import create_checkout_session, handle_payment_callback, calculate_scan_pricing
-from services.results_aggregator import results_aggregator
+from services.stripe_payment import create_checkout_session, handle_payment_callback
+from services.results_aggregator import ResultsAggregator
+
+# Initialize results aggregator
+results_aggregator = ResultsAggregator()
 
 # Page configuration
 st.set_page_config(
