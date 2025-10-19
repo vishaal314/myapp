@@ -28,7 +28,6 @@ except ValueError as e:
 SCAN_PRICES = {
     # Basic Scanners
     "Manual Upload": 900,  # €9.00
-    "Blob Scan": 1400,  # €14.00
     "API Scan": 1800,  # €18.00
     "Code Scan": 2300,  # €23.00
     "Image Scan": 2800,  # €28.00
@@ -62,7 +61,6 @@ VAT_RATES = {
 # Product names for each scan type
 SCAN_PRODUCTS = {
     "Manual Upload": "DataGuardian Pro Manual Upload Scanner",
-    "Blob Scan": "DataGuardian Pro Blob Scanner",
     "API Scan": "DataGuardian Pro API Scanner",
     "Code Scan": "DataGuardian Pro Code Scanner",
     "Image Scan": "DataGuardian Pro Image Scanner",
@@ -83,7 +81,6 @@ SCAN_PRODUCTS = {
 # Descriptions for each scan type
 SCAN_DESCRIPTIONS = {
     "Manual Upload": "Manual file scanning for PII detection",
-    "Blob Scan": "Document scanning for PII and sensitive information",
     "API Scan": "API scanning for data exposure and compliance issues",
     "Code Scan": "Comprehensive code scanning for PII and secrets detection",
     "Image Scan": "Image scanning for faces and visual identifiers",

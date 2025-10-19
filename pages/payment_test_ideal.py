@@ -100,7 +100,6 @@ with col1:
     scanner_options = {
         # Basic Scanners
         "Manual Upload": {"base": 9.00, "vat": 1.89, "total": 10.89, "category": "Basic"},
-        "Blob Scan": {"base": 14.00, "vat": 2.94, "total": 16.94, "category": "Basic"},
         "API Scan": {"base": 18.00, "vat": 3.78, "total": 21.78, "category": "Basic"},
         "Code Scan": {"base": 23.00, "vat": 4.83, "total": 27.83, "category": "Basic"},
         "Website Scan": {"base": 25.00, "vat": 5.25, "total": 30.25, "category": "Basic"},
