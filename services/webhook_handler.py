@@ -11,12 +11,16 @@ import logging
 from datetime import datetime
 from typing import Dict, Any, Optional
 import stripe
-import streamlit as st
 
-# Import new services
-from services.email_service import email_service
-from services.database_service import database_service
-from services.invoice_generator import invoice_generator
+# Import new services - handle both standalone and integrated imports
+try:
+    from email_service import email_service
+    from database_service import database_service
+    from invoice_generator import invoice_generator
+except ImportError:
+    from services.email_service import email_service
+    from services.database_service import database_service
+    from services.invoice_generator import invoice_generator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
