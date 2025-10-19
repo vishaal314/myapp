@@ -1,0 +1,444 @@
+root@vishaalnoord7:/opt/dataguardian# ./deploy_all_16_scanners_to_production.sh
+==========================================
+DataGuardian Pro - Production Deployment
+All 16 Scanners + Blob Scan Removal
+==========================================
+
+📋 Deployment Configuration:
+   Server: root@dataguardianpro.nl
+   Path: /opt/dataguardian
+
+🚀 Starting deployment...
+
+🔧 Updating services/stripe_payment.py (removing Blob Scan)...
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+root@dataguardianpro.nl's password:
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-75-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+New release '24.04.3 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+✅ services/stripe_payment.py updated
+
+🔧 Updating app.py (adding all 16 scanners to dropdown)...
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+root@dataguardianpro.nl's password:
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-75-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+New release '24.04.3 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+✅ app.py updated with all 16 scanners
+
+🔧 Updating test_ideal_payment.py (adding all 16 scanners)...
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+root@dataguardianpro.nl's password:
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-75-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+New release '24.04.3 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+⚠️  test_ideal_payment.py not found, skipping
+
+🔍 Verifying changes on production server...
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+root@dataguardianpro.nl's password:
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-75-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+New release '24.04.3 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+Checking services/stripe_payment.py...
+✅ Blob Scan removed from stripe_payment.py
+⚠️  Found 0 scanners (expected 16)
+
+Checking app.py...
+✅ All 16 scanners present in app.py
+
+🔄 Restarting Docker containers...
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+root@dataguardianpro.nl's password:
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-75-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+New release '24.04.3 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+Stopping containers...
+no configuration file provided: not found
+Rebuilding containers (no cache)...
+no configuration file provided: not found
+Starting containers...
+no configuration file provided: not found
+Waiting for services to start...
+
+Container status:
+no configuration file provided: not found
+
+Checking Streamlit health...
+✅ Streamlit is running
+
+==========================================
+✅ DEPLOYMENT COMPLETE
+==========================================
+
+📊 Summary:
+   ✅ Blob Scan removed from all files
+   ✅ All 16 scanners added to dropdowns
+   ✅ services/stripe_payment.py updated
+   ✅ app.py updated
+   ✅ test_ideal_payment.py updated
+   ✅ Docker containers rebuilt (no cache)
+   ✅ Services restarted
+
+🌐 Production URL: https://dataguardianpro.nl
+
+📋 Next Steps:
+   1. Clear browser cache (Ctrl+Shift+R)
+   2. Test payment page at https://dataguardianpro.nl/payment_test_ideal
+   3. Verify all 16 scanners appear in dropdown
+   4. Confirm Blob Scan is NOT present
+
+🎉 All 16 scanners are now live on production!
+
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container --tail 150
+2025-10-14 22:05:46,526 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.090s, Memory: 0.0MB
+2025-10-14 22:05:46,664 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:05:46,705 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:05:46,713 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:05:46,725 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:05:46,953 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-14 22:05:53,351 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-14 22:05:53,352 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-14 22:05:53,352 - utils.event_bus - INFO - EventBus: Initialized global event bus
+2025-10-14 22:05:53,455 - scanner.code_scanner - INFO - Successfully compiled 24 secret patterns, 51 comment patterns, 6 AI Act patterns, and 8 UAVG patterns
+2025-10-14 22:05:53,456 - services.intelligent_repo_scanner - INFO - Parsed URL - Repo: https://github.com/nlweb-ai/NLWeb, Branch: main, Directory: code
+2025-10-14 22:05:53,459 - services.intelligent_repo_scanner - INFO - Executing git clone command: git clone --depth 1 --branch main --single-branch https://github.com/nlweb-ai/NLWeb /tmp/intelligent_repo_flbk38ga
+2025-10-14 22:05:56,187 - services.intelligent_repo_scanner - INFO - Git clone result - Return code: 0
+2025-10-14 22:05:56,187 - services.intelligent_repo_scanner - INFO - Git clone stderr: Cloning into '/tmp/intelligent_repo_flbk38ga'...
+
+2025-10-14 22:05:56,187 - services.intelligent_repo_scanner - INFO - Successfully cloned repository to /tmp/intelligent_repo_flbk38ga
+2025-10-14 22:05:56,199 - services.intelligent_repo_scanner - INFO - Repository analysis: 256 files, 199 code files, 6 infrastructure files, high risk level
+2025-10-14 22:05:56,216 - utils.repository_cache - INFO - Cached metadata for https://github.com/nlweb-ai/NLWeb/tree/main/code (256 files)
+2025-10-14 22:05:56,233 - services.intelligent_repo_scanner - INFO - Priority strategy: selected top 200 priority files
+2025-10-14 22:06:01,055 - services.intelligent_repo_scanner - INFO - Intelligent scan completed: 7 findings from 200 files
+2025-10-14 22:06:01,058 - utils.repository_cache - INFO - Cached scan result for https://github.com/nlweb-ai/NLWeb/tree/main/code (7 findings)
+2025-10-14 22:06:01,059 - services.intelligent_repo_scanner - INFO - Intelligent scan completed: 7 findings in 7.6s
+2025-10-14 22:06:01,059 - services.intelligent_repo_scanner - INFO - Coverage: 78.1% (200/256 files)
+2025-10-14 22:06:01,109 - services.intelligent_scanner_manager - INFO - Intelligent repository scan completed: intelligent_scan_a557d774
+2025-10-14 22:06:01,115 - services.results_aggregator - INFO - Encrypted scan result code_scan_9caac5aeaa60_1760479553 for secure storage in organization default_org
+2025-10-14 22:06:04,736 - services.results_aggregator - INFO - Successfully stored encrypted scan result code_scan_9caac5aeaa60_1760479553 for organization default_org
+2025-10-14 22:06:04,736 - components.intelligent_scanner_wrapper - INFO - Code scan result saved to database with scan_type='code' for user vishaal314
+2025-10-14 22:06:04,737 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-14 22:06:04,739 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-14 22:06:04,775 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:06:04,808 - utils.compliance_calculator - INFO - Compliance score calculated: 45.0% (Critical: 0, High: 2, Medium: 5, Low: 0) for scan code_scan_9caac5aeaa60_1760479553
+2025-10-14 22:06:05,063 - app - INFO - Performance optimizations initialized successfully
+2025-10-14 22:06:05,099 - root - INFO - Added 38 missing translation keys to nl.json
+2025-10-14 22:06:05,111 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-14 22:06:09,450 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-14 22:06:13,289 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-14 22:06:13,292 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-14 22:06:17,784 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-14 22:06:19,550 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-14 22:06:19,554 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 32.887s, Memory: 4.9MB
+2025-10-14 22:06:23,297 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:06:23,358 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:06:23,375 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:06:23,397 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:06:23,422 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.122s, Memory: 0.0MB
+2025-10-14 22:26:14,338 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:26:14,390 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:14,418 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:14,450 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:14,485 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.140s, Memory: 0.5MB
+2025-10-14 22:26:24,740 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:26:24,763 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:24,774 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:24,809 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:24,817 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.074s, Memory: 0.3MB
+2025-10-14 22:26:31,539 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:26:31,597 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:31,618 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:31,634 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:31,643 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.097s, Memory: 0.5MB
+2025-10-14 22:26:33,361 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:26:33,405 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:33,422 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:33,449 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:34,704 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-14 22:26:34,705 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:34,712 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:35,158 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-14 22:26:35,159 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-14 22:26:40,177 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-14 22:26:40,181 - services.results_aggregator - INFO - Encrypted scan result 2beaee0b-63a2-4cc8-85c4-6d08d3053bf7 for secure storage in organization default_org
+2025-10-14 22:26:43,885 - services.results_aggregator - INFO - Successfully stored encrypted scan result 2beaee0b-63a2-4cc8-85c4-6d08d3053bf7 for organization default_org
+2025-10-14 22:26:43,885 - __main__ - INFO - Document Scanner: Successfully stored scan result with ID: 2beaee0b-63a2-4cc8-85c4-6d08d3053bf7
+2025-10-14 22:26:43,905 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:44.171 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-14 22:26:44.203 Serialization of dataframe to Arrow table was unsuccessful. Applying automatic fixes for column types to make the dataframe Arrow-compatible.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/streamlit/dataframe_util.py", line 822, in convert_pandas_df_to_arrow_bytes
+    table = pa.Table.from_pandas(df)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pyarrow/table.pxi", line 4795, in pyarrow.lib.Table.from_pandas
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 637, in dataframe_to_arrays
+    arrays = [convert_column(c, f)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 637, in <listcomp>
+    arrays = [convert_column(c, f)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 625, in convert_column
+    raise e
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 619, in convert_column
+    result = pa.array(col, type=type_, from_pandas=True, safe=safe)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pyarrow/array.pxi", line 365, in pyarrow.lib.array
+  File "pyarrow/array.pxi", line 91, in pyarrow.lib._ndarray_to_array
+  File "pyarrow/error.pxi", line 92, in pyarrow.lib.check_status
+pyarrow.lib.ArrowInvalid: ("Could not convert 'N/A' with type str: tried to convert to int64", 'Conversion failed for column Element with type object')
+2025-10-14 22:26:44,300 - services.gdpr_report_generator - INFO - Generated GDPR compliance report: reports/gdpr_report_2beaee0b-63a2-4cc8-85c4-6d08d3053bf7_20251014_222644.pdf
+2025-10-14 22:26:44,329 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:44,345 - services.usage_analytics - INFO - Usage event tracked: report_downloaded for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:44,362 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-14 22:26:48,855 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-14 22:26:53,008 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-14 22:26:53,051 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:53,059 - services.usage_analytics - INFO - Usage event tracked: report_downloaded for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:53,081 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 19.716s, Memory: 22.8MB
+2025-10-14 22:26:58,866 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:26:58,924 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:58,938 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:58,959 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:58,965 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.097s, Memory: 0.3MB
+2025-10-14 23:31:25,254 - utils.session_optimizer - INFO - Removed session 4963a174-c5b6-477d-b207-e8a02cef0f58
+2025-10-14 23:31:25,254 - utils.session_optimizer - INFO - Cleaned up 1 expired sessions
+2025-10-15 14:34:29.291 MediaFileHandler: Missing file .env
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/streamlit/runtime/memory_media_file_storage.py", line 140, in get_file
+    return self._files_by_id[file_id]
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+KeyError: '.env'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/streamlit/web/server/media_file_handler.py", line 95, in validate_absolute_path
+    self._storage.get_file(absolute_path)
+  File "/usr/local/lib/python3.11/site-packages/streamlit/runtime/memory_media_file_storage.py", line 142, in get_file
+    raise MediaFileStorageError(
+streamlit.runtime.media_file_storage.MediaFileStorageError: Bad filename '.env'. (No media file with id '.env')
+2025-10-16 17:44:05,385 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-16 17:44:06,273 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.882s, Memory: 1.4MB
+2025-10-18 13:53:53,886 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-18 13:53:54,605 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.718s, Memory: 0.0MB
+2025-10-18 18:12:06,726 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-18 18:12:07,227 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.500s, Memory: 0.0MB
+2025-10-18 18:12:13,772 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-18 18:12:13,829 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.051s, Memory: 0.0MB
+root@vishaalnoord7:/opt/dataguardian# docker logs dataguardian-container --tail 150
+2025-10-14 22:06:04,737 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-14 22:06:04,739 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-14 22:06:04,775 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:06:04,808 - utils.compliance_calculator - INFO - Compliance score calculated: 45.0% (Critical: 0, High: 2, Medium: 5, Low: 0) for scan code_scan_9caac5aeaa60_1760479553
+2025-10-14 22:06:05,063 - app - INFO - Performance optimizations initialized successfully
+2025-10-14 22:06:05,099 - root - INFO - Added 38 missing translation keys to nl.json
+2025-10-14 22:06:05,111 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-14 22:06:09,450 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-14 22:06:13,289 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-14 22:06:13,292 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-14 22:06:17,784 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-14 22:06:19,550 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-14 22:06:19,554 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 32.887s, Memory: 4.9MB
+2025-10-14 22:06:23,297 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:06:23,358 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:06:23,375 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:06:23,397 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:06:23,422 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.122s, Memory: 0.0MB
+2025-10-14 22:26:14,338 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:26:14,390 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:14,418 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:14,450 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:14,485 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.140s, Memory: 0.5MB
+2025-10-14 22:26:24,740 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:26:24,763 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:24,774 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:24,809 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:24,817 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.074s, Memory: 0.3MB
+2025-10-14 22:26:31,539 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:26:31,597 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:31,618 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:31,634 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:31,643 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.097s, Memory: 0.5MB
+2025-10-14 22:26:33,361 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:26:33,405 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:33,422 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:33,449 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:34,704 - utils.activity_tracker - INFO - Activity tracked: scan_started for user vishaal314
+2025-10-14 22:26:34,705 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:34,712 - services.usage_analytics - INFO - Usage event tracked: scan_completed for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:35,158 - utils.activity_tracker - INFO - Activity tracked: scan_completed for user vishaal314
+2025-10-14 22:26:35,159 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-14 22:26:40,177 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-14 22:26:40,181 - services.results_aggregator - INFO - Encrypted scan result 2beaee0b-63a2-4cc8-85c4-6d08d3053bf7 for secure storage in organization default_org
+2025-10-14 22:26:43,885 - services.results_aggregator - INFO - Successfully stored encrypted scan result 2beaee0b-63a2-4cc8-85c4-6d08d3053bf7 for organization default_org
+2025-10-14 22:26:43,885 - __main__ - INFO - Document Scanner: Successfully stored scan result with ID: 2beaee0b-63a2-4cc8-85c4-6d08d3053bf7
+2025-10-14 22:26:43,905 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:44.171 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-14 22:26:44.203 Serialization of dataframe to Arrow table was unsuccessful. Applying automatic fixes for column types to make the dataframe Arrow-compatible.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/streamlit/dataframe_util.py", line 822, in convert_pandas_df_to_arrow_bytes
+    table = pa.Table.from_pandas(df)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pyarrow/table.pxi", line 4795, in pyarrow.lib.Table.from_pandas
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 637, in dataframe_to_arrays
+    arrays = [convert_column(c, f)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 637, in <listcomp>
+    arrays = [convert_column(c, f)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 625, in convert_column
+    raise e
+  File "/usr/local/lib/python3.11/site-packages/pyarrow/pandas_compat.py", line 619, in convert_column
+    result = pa.array(col, type=type_, from_pandas=True, safe=safe)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pyarrow/array.pxi", line 365, in pyarrow.lib.array
+  File "pyarrow/array.pxi", line 91, in pyarrow.lib._ndarray_to_array
+  File "pyarrow/error.pxi", line 92, in pyarrow.lib.check_status
+pyarrow.lib.ArrowInvalid: ("Could not convert 'N/A' with type str: tried to convert to int64", 'Conversion failed for column Element with type object')
+2025-10-14 22:26:44,300 - services.gdpr_report_generator - INFO - Generated GDPR compliance report: reports/gdpr_report_2beaee0b-63a2-4cc8-85c4-6d08d3053bf7_20251014_222644.pdf
+2025-10-14 22:26:44,329 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:44,345 - services.usage_analytics - INFO - Usage event tracked: report_downloaded for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:44,362 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-14 22:26:48,855 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-14 22:26:53,008 - services.unified_html_report_generator - WARNING - Insufficient historical data for user unknown, using fallback
+2025-10-14 22:26:53,051 - services.usage_analytics - INFO - Usage event tracked: report_generated for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:53,059 - services.usage_analytics - INFO - Usage event tracked: report_downloaded for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:53,081 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 19.716s, Memory: 22.8MB
+2025-10-14 22:26:58,866 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-14 22:26:58,924 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:58,938 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-14 22:26:58,959 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-14 22:26:58,965 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.097s, Memory: 0.3MB
+2025-10-14 23:31:25,254 - utils.session_optimizer - INFO - Removed session 4963a174-c5b6-477d-b207-e8a02cef0f58
+2025-10-14 23:31:25,254 - utils.session_optimizer - INFO - Cleaned up 1 expired sessions
+2025-10-15 14:34:29.291 MediaFileHandler: Missing file .env
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/streamlit/runtime/memory_media_file_storage.py", line 140, in get_file
+    return self._files_by_id[file_id]
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+KeyError: '.env'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/streamlit/web/server/media_file_handler.py", line 95, in validate_absolute_path
+    self._storage.get_file(absolute_path)
+  File "/usr/local/lib/python3.11/site-packages/streamlit/runtime/memory_media_file_storage.py", line 142, in get_file
+    raise MediaFileStorageError(
+streamlit.runtime.media_file_storage.MediaFileStorageError: Bad filename '.env'. (No media file with id '.env')
+2025-10-16 17:44:05,385 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-16 17:44:06,273 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.882s, Memory: 1.4MB
+2025-10-18 13:53:53,886 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: en
+2025-10-18 13:53:54,605 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.718s, Memory: 0.0MB
+2025-10-18 18:12:06,726 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-18 18:12:07,227 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.500s, Memory: 0.0MB
+2025-10-18 18:12:13,772 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-18 18:12:13,829 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.051s, Memory: 0.0MB
+2025-10-19 18:25:27,647 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-19 18:25:28,148 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.492s, Memory: 0.0MB
+2025-10-19 18:25:30,587 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-19 18:25:31,168 - utils.secure_auth_enhanced - INFO - User vishaal314 authenticated successfully
+2025-10-19 18:25:31,173 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 0.583s, Memory: 0.0MB
+2025-10-19 18:25:31,337 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-19 18:25:31,356 - utils.session_optimizer - INFO - Created session 94340dd5-49e1-4416-a8f2-9fa6b8dcac14 for user vishaal314
+2025-10-19 18:25:31,391 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-19 18:25:31,400 - services.license_manager - INFO - License saved: DGP-ENT-2025-PROD-001
+2025-10-19 18:25:31,417 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-19 18:25:31,429 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+2025-10-19 18:25:36,255 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+2025-10-19 18:25:36,809 - __main__ - INFO - Performance optimizations initialized successfully
+INIT - Successfully initialized translations for: nl
+2025-10-19 18:25:36,839 - services.usage_analytics - INFO - Usage event tracked: user_login for user vishaal314_ef2cd703a99bf4e4
+2025-10-19 18:25:36,875 - services.license_manager - INFO - License loaded: DGP-ENT-2025-PROD-001
+2025-10-19 18:25:36,887 - services.results_aggregator - INFO - Using cached multi-tenant service for secure tenant isolation
+Querying scans since: 2024-10-19 18:25:37.691539 for user: vishaal314
+2025-10-19 18:25:41,898 - services.results_aggregator - INFO - ResultsAggregator initialized with enterprise security and tenant isolation
+Database returned 76 scan records
+Formatted 76 scans for return
+2025-10-19 18:25:44,040 - __main__ - INFO - Dashboard: Retrieved 76 total scans for user vishaal314
+2025-10-19 18:25:44,041 - __main__ - INFO - Dashboard: Raw aggregator returned 76 scans for user vishaal314
+2025-10-19 18:25:44,043 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 12.699s, Memory: 11.4MB
+2025-10-19 18:25:46,094 - scanner.code_profiler - INFO - Performance Monitor [main_app_initialization]: 9.282s, Memory: 23.5MB
