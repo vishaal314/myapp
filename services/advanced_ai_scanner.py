@@ -467,32 +467,66 @@ class AdvancedAIScanner:
         }
     
     def _assess_model_bias(self, model_file: Any, metadata: Dict[str, Any]) -> BiasAssessment:
-        """Assess model bias and fairness"""
+        """
+        Assess model bias and fairness using real fairness calculations.
         
-        # Simulated bias assessment (in production, would use actual fairness metrics)
-        demographic_parity = np.random.uniform(0.3, 0.9)
-        equalized_odds = np.random.uniform(0.4, 0.8)
-        calibration_score = np.random.uniform(0.6, 0.9)
-        fairness_through_awareness = np.random.uniform(0.5, 0.8)
+        Implements three approaches:
+        1. If metadata contains bias test results → Use those (most accurate)
+        2. If bias_test_data provided → Calculate real fairness metrics
+        3. Otherwise → Use static analysis based on model characteristics
+        """
         
+        # Approach 1: Use pre-computed bias metrics from metadata (if available)
+        if metadata and metadata.get('bias_test_results'):
+            bias_results = metadata['bias_test_results']
+            demographic_parity = bias_results.get('demographic_parity', 0.5)
+            equalized_odds = bias_results.get('equalized_odds', 0.5)
+            calibration_score = bias_results.get('calibration', 0.5)
+            fairness_through_awareness = bias_results.get('individual_fairness', 0.5)
+            
+        # Approach 2: Calculate real metrics from provided test data
+        elif metadata and metadata.get('bias_test_data'):
+            test_data = metadata['bias_test_data']
+            demographic_parity = self._calculate_demographic_parity(test_data)
+            equalized_odds = self._calculate_equalized_odds(test_data)
+            calibration_score = self._calculate_calibration_score(test_data)
+            fairness_through_awareness = self._calculate_individual_fairness(test_data)
+            
+        # Approach 3: Static analysis based on model characteristics
+        else:
+            bias_metrics = self._estimate_bias_from_model_characteristics(metadata)
+            demographic_parity = bias_metrics['demographic_parity']
+            equalized_odds = bias_metrics['equalized_odds']
+            calibration_score = bias_metrics['calibration']
+            fairness_through_awareness = bias_metrics['individual_fairness']
+        
+        # Calculate overall bias score (higher is better, 1.0 = perfect fairness)
         overall_bias_score = (demographic_parity + equalized_odds + calibration_score + fairness_through_awareness) / 4
         
-        # Identify potentially affected groups
+        # Identify potentially affected groups based on fairness thresholds
         affected_groups = []
         if demographic_parity < 0.8:
             affected_groups.extend(['Gender', 'Age groups'])
         if equalized_odds < 0.7:
             affected_groups.extend(['Ethnic minorities', 'Socioeconomic groups'])
+        if calibration_score < 0.7:
+            affected_groups.extend(['Religious groups', 'Disability status'])
+        if fairness_through_awareness < 0.7:
+            affected_groups.extend(['LGBTQ+', 'Geographic regions'])
         
-        # Generate mitigation recommendations
+        # Generate evidence-based mitigation recommendations
         mitigation_recommendations = []
-        if overall_bias_score < 0.7:
-            mitigation_recommendations.extend([
-                'Implement bias-aware training techniques',
-                'Diversify training dataset',
-                'Apply post-processing fairness constraints',
-                'Establish bias monitoring and detection system'
-            ])
+        if demographic_parity < 0.8:
+            mitigation_recommendations.append('Re-balance training dataset across protected attributes')
+        if equalized_odds < 0.7:
+            mitigation_recommendations.append('Apply equalized odds post-processing correction')
+        if calibration_score < 0.7:
+            mitigation_recommendations.append('Implement calibration techniques (Platt scaling, isotonic regression)')
+        if fairness_through_awareness < 0.7:
+            mitigation_recommendations.append('Add fairness constraints during model training')
+        if overall_bias_score < 0.6:
+            mitigation_recommendations.append('Conduct comprehensive bias audit with domain experts')
+            mitigation_recommendations.append('Establish ongoing bias monitoring system')
         
         return BiasAssessment(
             overall_bias_score=overall_bias_score,
