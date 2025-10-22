@@ -242,19 +242,20 @@ AI Model Scanner - Automated AI Compliance Assessment System
 225      model outputs, en embedded datasets.
          
          Stap 2 - Checksum Validatie:
-         Het officiële Nederlandse BSN checksum algoritme:
+         Het officiële Nederlandse BSN checksum algoritme (11-proef):
          
-230      checksum = Σ(digit_i × (9-i)) mod 11   voor i = 0 tot 8
+230      checksum = (digit_0 × 9) + (digit_1 × 8) + (digit_2 × 7) + 
+                    (digit_3 × 6) + (digit_4 × 5) + (digit_5 × 4) + 
+                    (digit_6 × 3) + (digit_7 × 2) - (digit_8 × 1)
          
          Waarbij:
-         - digit_i het cijfer is op positie i (0-indexed)
-         - (9-i) de wegingsfactor is die afneemt van 9 tot 1
-235      - De som modulo 11 wordt genomen
+         - digit_0 tot digit_8 zijn de 9 cijfers van het BSN nummer
+235      - Eerste 8 cijfers worden vermenigvuldigd met aflopende factoren (9 t/m 2)
+         - Het laatste cijfer (digit_8) wordt AFGETROKKEN na vermenigvuldiging met 1
+         - Deze formule implementeert de officiële Nederlandse 11-proef
          
          Validatie regel:
-         BSN is geldig als:
-         (checksum < 10 EN checksum == digit_9) OF
-240      (checksum == 10 EN digit_9 == 0)
+240      BSN is geldig als: checksum mod 11 == 0
          
          Stap 3 - Privacy Risico Assessment:
          Wanneer BSN nummers worden gedetecteerd, classificeert het systeem
