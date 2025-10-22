@@ -267,16 +267,32 @@ def _find_bsn_numbers(text: str) -> List[Dict[str, Any]]:
     return found
 
 def _is_valid_bsn(bsn: str) -> bool:
-    """Check if a number passes the BSN validation ("11 test")."""
+    """
+    Check if a number passes the BSN validation ("11 test").
+    
+    Official Dutch BSN 11-proef algorithm:
+    checksum = (digit_0 × 9) + (digit_1 × 8) + (digit_2 × 7) + (digit_3 × 6) + 
+               (digit_4 × 5) + (digit_5 × 4) + (digit_6 × 3) + (digit_7 × 2) - 
+               (digit_8 × 1)
+    
+    BSN is valid if: checksum mod 11 == 0
+    
+    Example: 111222333
+    = (1×9) + (1×8) + (1×7) + (2×6) + (2×5) + (2×4) + (3×3) + (3×2) - (3×1)
+    = 9 + 8 + 7 + 12 + 10 + 8 + 9 + 6 - 3
+    = 66 mod 11 = 0 ✓ VALID
+    """
     if not bsn.isdigit() or len(bsn) != 9:
         return False
     
-    # Apply the "11 test" for BSN
+    # Apply the official Dutch "11 test" for BSN
     total = 0
     for i in range(9):
         if i == 8:
-            total -= int(bsn[i]) * i
+            # Last digit is SUBTRACTED with factor 1
+            total -= int(bsn[i]) * 1
         else:
+            # First 8 digits use factors 9, 8, 7, 6, 5, 4, 3, 2
             total += int(bsn[i]) * (9 - i)
     
     return total % 11 == 0
