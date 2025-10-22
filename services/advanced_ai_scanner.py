@@ -466,6 +466,47 @@ class AdvancedAIScanner:
             'additional_obligations': systemic_risk
         }
     
+    def _validate_bias_test_data(self, test_data: Dict[str, Any]) -> Dict[str, bool]:
+        """
+        Validate schema of bias_test_data before metric execution.
+        
+        Returns dict of which metrics can be safely calculated.
+        """
+        validation = {
+            'demographic_parity': False,
+            'equalized_odds': False,
+            'calibration': False,
+            'individual_fairness': False
+        }
+        
+        # Check for demographic parity requirements
+        if 'predictions' in test_data and 'sensitive_attributes' in test_data:
+            validation['demographic_parity'] = True
+        
+        # Check for equalized odds requirements
+        if ('predictions' in test_data and 
+            'ground_truth' in test_data and 
+            'sensitive_attributes' in test_data):
+            validation['equalized_odds'] = True
+        
+        # Check for calibration requirements
+        if ('probabilities' in test_data and 
+            'ground_truth' in test_data and 
+            'sensitive_attributes' in test_data):
+            validation['calibration'] = True
+        elif validation['demographic_parity']:
+            # Can fallback to demographic parity
+            validation['calibration'] = True
+        
+        # Check for individual fairness requirements
+        if 'features' in test_data and 'predictions' in test_data:
+            validation['individual_fairness'] = True
+        elif validation['demographic_parity']:
+            # Can fallback to demographic parity
+            validation['individual_fairness'] = True
+        
+        return validation
+    
     def _assess_model_bias(self, model_file: Any, metadata: Dict[str, Any]) -> BiasAssessment:
         """
         Assess model bias and fairness using real fairness calculations.
@@ -483,17 +524,60 @@ class AdvancedAIScanner:
             equalized_odds = bias_results.get('equalized_odds', 0.5)
             calibration_score = bias_results.get('calibration', 0.5)
             fairness_through_awareness = bias_results.get('individual_fairness', 0.5)
+            logger.info("Using pre-computed bias test results from metadata")
             
         # Approach 2: Calculate real metrics from provided test data
         elif metadata and metadata.get('bias_test_data'):
             test_data = metadata['bias_test_data']
-            demographic_parity = self._calculate_demographic_parity(test_data)
-            equalized_odds = self._calculate_equalized_odds(test_data)
-            calibration_score = self._calculate_calibration_score(test_data)
-            fairness_through_awareness = self._calculate_individual_fairness(test_data)
+            
+            # Validate test data schema before processing
+            validation = self._validate_bias_test_data(test_data)
+            logger.info(f"Bias test data validation: {validation}")
+            
+            # Calculate each metric if valid, fallback to static analysis if not
+            if validation['demographic_parity']:
+                try:
+                    demographic_parity = self._calculate_demographic_parity(test_data)
+                except Exception as e:
+                    logger.error(f"Demographic parity calculation failed: {e}, using static analysis")
+                    demographic_parity = self._estimate_bias_from_model_characteristics(metadata)['demographic_parity']
+            else:
+                logger.warning("Demographic parity: Missing required fields (predictions, sensitive_attributes)")
+                demographic_parity = self._estimate_bias_from_model_characteristics(metadata)['demographic_parity']
+            
+            if validation['equalized_odds']:
+                try:
+                    equalized_odds = self._calculate_equalized_odds(test_data)
+                except Exception as e:
+                    logger.error(f"Equalized odds calculation failed: {e}, using static analysis")
+                    equalized_odds = self._estimate_bias_from_model_characteristics(metadata)['equalized_odds']
+            else:
+                logger.warning("Equalized odds: Missing required fields (predictions, ground_truth, sensitive_attributes)")
+                equalized_odds = self._estimate_bias_from_model_characteristics(metadata)['equalized_odds']
+            
+            if validation['calibration']:
+                try:
+                    calibration_score = self._calculate_calibration_score(test_data)
+                except Exception as e:
+                    logger.error(f"Calibration calculation failed: {e}, using static analysis")
+                    calibration_score = self._estimate_bias_from_model_characteristics(metadata)['calibration']
+            else:
+                logger.warning("Calibration: Missing required fields")
+                calibration_score = self._estimate_bias_from_model_characteristics(metadata)['calibration']
+            
+            if validation['individual_fairness']:
+                try:
+                    fairness_through_awareness = self._calculate_individual_fairness(test_data)
+                except Exception as e:
+                    logger.error(f"Individual fairness calculation failed: {e}, using static analysis")
+                    fairness_through_awareness = self._estimate_bias_from_model_characteristics(metadata)['individual_fairness']
+            else:
+                logger.warning("Individual fairness: Missing required fields (features, predictions)")
+                fairness_through_awareness = self._estimate_bias_from_model_characteristics(metadata)['individual_fairness']
             
         # Approach 3: Static analysis based on model characteristics
         else:
+            logger.info("Using static analysis for bias estimation (no test data provided)")
             bias_metrics = self._estimate_bias_from_model_characteristics(metadata)
             demographic_parity = bias_metrics['demographic_parity']
             equalized_odds = bias_metrics['equalized_odds']
@@ -555,25 +639,40 @@ class AdvancedAIScanner:
             # Get unique groups
             unique_groups = np.unique(sensitive_attr)
             if len(unique_groups) < 2:
+                logger.info("Demographic parity: Only one group found, returning default score")
                 return 0.8  # Default if only one group
             
             # Calculate positive prediction rate for each group
             rates = []
             for group in unique_groups:
                 mask = sensitive_attr == group
-                if np.sum(mask) > 0:
-                    positive_rate = np.mean(y_pred[mask] == 1)
+                group_size = np.sum(mask)
+                if group_size > 0:
+                    positive_rate = float(np.mean(y_pred[mask] == 1))
                     rates.append(positive_rate)
+                    logger.debug(f"Group {group}: positive rate = {positive_rate:.3f} (n={group_size})")
             
-            # Demographic parity = min(rates) / max(rates)
-            if len(rates) >= 2 and max(rates) > 0:
-                parity_ratio = min(rates) / max(rates)
-                return parity_ratio
-            else:
-                return 0.8  # Default
+            # Edge case: insufficient valid groups
+            if len(rates) < 2:
+                logger.warning("Demographic parity: Less than 2 groups with data")
+                return 0.7
+            
+            # Edge case: all predictions are negative (max rate = 0)
+            if max(rates) == 0:
+                logger.info("Demographic parity: All predictions negative across all groups (perfect parity)")
+                return 1.0  # Perfect parity if all groups have 0% positive rate
+            
+            # Edge case: all predictions are positive (min rate = 1.0)
+            if min(rates) == 1.0:
+                logger.info("Demographic parity: All predictions positive across all groups (perfect parity)")
+                return 1.0  # Perfect parity if all groups have 100% positive rate
+            
+            # Calculate demographic parity ratio
+            parity_ratio = min(rates) / max(rates)
+            return float(parity_ratio)
                 
-        except (KeyError, ValueError, ZeroDivisionError):
-            logger.warning("Could not calculate demographic parity from test data")
+        except (KeyError, ValueError, ZeroDivisionError) as e:
+            logger.warning(f"Could not calculate demographic parity from test data: {e}")
             return 0.7  # Conservative default
     
     def _calculate_equalized_odds(self, test_data: Dict[str, Any]) -> float:
@@ -593,10 +692,12 @@ class AdvancedAIScanner:
             
             unique_groups = np.unique(sensitive_attr)
             if len(unique_groups) < 2:
+                logger.info("Equalized odds: Only one group found, returning default score")
                 return 0.7  # Default
             
             tpr_list = []
             fpr_list = []
+            valid_groups = 0
             
             for group in unique_groups:
                 mask = sensitive_attr == group
@@ -604,26 +705,52 @@ class AdvancedAIScanner:
                 y_true_group = y_true[mask]
                 
                 # True Positive Rate
-                true_positives = np.sum((y_pred_group == 1) & (y_true_group == 1))
-                actual_positives = np.sum(y_true_group == 1)
-                tpr = true_positives / actual_positives if actual_positives > 0 else 0
-                tpr_list.append(tpr)
+                true_positives = int(np.sum((y_pred_group == 1) & (y_true_group == 1)))
+                actual_positives = int(np.sum(y_true_group == 1))
                 
                 # False Positive Rate
-                false_positives = np.sum((y_pred_group == 1) & (y_true_group == 0))
-                actual_negatives = np.sum(y_true_group == 0)
-                fpr = false_positives / actual_negatives if actual_negatives > 0 else 0
-                fpr_list.append(fpr)
+                false_positives = int(np.sum((y_pred_group == 1) & (y_true_group == 0)))
+                actual_negatives = int(np.sum(y_true_group == 0))
+                
+                # Skip groups that lack either positive or negative labels
+                if actual_positives == 0 or actual_negatives == 0:
+                    logger.warning(f"Equalized odds: Group {group} lacks positive or negative labels "
+                                 f"(pos={actual_positives}, neg={actual_negatives}), skipping")
+                    continue
+                
+                tpr = true_positives / actual_positives
+                fpr = false_positives / actual_negatives
+                tpr_list.append(float(tpr))
+                fpr_list.append(float(fpr))
+                valid_groups += 1
+                
+                logger.debug(f"Group {group}: TPR={tpr:.3f}, FPR={fpr:.3f}")
             
-            # Calculate ratios
-            tpr_ratio = min(tpr_list) / max(tpr_list) if max(tpr_list) > 0 else 0.5
-            fpr_ratio = min(fpr_list) / max(fpr_list) if max(fpr_list) > 0 else 0.5
+            # Edge case: insufficient valid groups after filtering
+            if valid_groups < 2:
+                logger.warning(f"Equalized odds: Only {valid_groups} valid groups after filtering, need at least 2")
+                return 0.6  # Penalize datasets with class imbalance
+            
+            # Edge case: all TPRs are 0 (no true positives in any group)
+            if max(tpr_list) == 0:
+                logger.info("Equalized odds: All TPRs are 0 (no true positives), using FPR only")
+                tpr_ratio = 1.0  # Perfect TPR equality (all zero)
+            else:
+                tpr_ratio = min(tpr_list) / max(tpr_list)
+            
+            # Edge case: all FPRs are 0 (no false positives in any group)
+            if max(fpr_list) == 0:
+                logger.info("Equalized odds: All FPRs are 0 (no false positives), using TPR only")
+                fpr_ratio = 1.0  # Perfect FPR equality (all zero)
+            else:
+                fpr_ratio = min(fpr_list) / max(fpr_list)
             
             # Average of TPR and FPR equality
-            return (tpr_ratio + fpr_ratio) / 2
+            result = (tpr_ratio + fpr_ratio) / 2
+            return float(result)
             
-        except (KeyError, ValueError, ZeroDivisionError):
-            logger.warning("Could not calculate equalized odds from test data")
+        except (KeyError, ValueError, ZeroDivisionError) as e:
+            logger.warning(f"Could not calculate equalized odds from test data: {e}")
             return 0.6  # Conservative default
     
     def _calculate_calibration_score(self, test_data: Dict[str, Any]) -> float:
@@ -638,44 +765,80 @@ class AdvancedAIScanner:
         """
         try:
             if 'probabilities' not in test_data:
-                # If no probabilities, use predictions
+                # If no probabilities, fallback to demographic parity
+                logger.info("Calibration: No probabilities provided, using demographic parity instead")
                 return self._calculate_demographic_parity(test_data)
             
-            y_prob = np.array(test_data['probabilities'])
+            y_prob = np.array(test_data['probabilities'], dtype=float)
             y_true = np.array(test_data['ground_truth'])
             sensitive_attr = np.array(test_data['sensitive_attributes'])
             
+            # Validate data
+            if len(y_prob) != len(y_true) or len(y_prob) != len(sensitive_attr):
+                logger.warning("Calibration: Mismatched array lengths")
+                return 0.65
+            
             unique_groups = np.unique(sensitive_attr)
             if len(unique_groups) < 2:
+                logger.info("Calibration: Only one group found, returning default score")
                 return 0.7
             
             # Bin probabilities into 10 bins
             bins = np.linspace(0, 1, 11)
             calibration_errors = []
+            bins_processed = 0
             
             for group in unique_groups:
                 mask = sensitive_attr == group
                 y_prob_group = y_prob[mask]
                 y_true_group = y_true[mask]
                 
+                if len(y_prob_group) < 10:
+                    logger.warning(f"Calibration: Group {group} has only {len(y_prob_group)} samples, skipping")
+                    continue
+                
                 # Calculate calibration error per bin
                 for i in range(len(bins) - 1):
                     bin_mask = (y_prob_group >= bins[i]) & (y_prob_group < bins[i+1])
-                    if np.sum(bin_mask) > 5:  # At least 5 samples per bin
-                        predicted_prob = np.mean(y_prob_group[bin_mask])
-                        actual_prob = np.mean(y_true_group[bin_mask])
-                        calibration_errors.append(abs(predicted_prob - actual_prob))
+                    bin_count = np.sum(bin_mask)
+                    
+                    if bin_count >= 5:  # At least 5 samples per bin
+                        predicted_prob = float(np.mean(y_prob_group[bin_mask]))
+                        actual_prob = float(np.mean(y_true_group[bin_mask]))
+                        
+                        # Check for NaN values
+                        if np.isnan(predicted_prob) or np.isnan(actual_prob):
+                            logger.warning(f"Calibration: NaN detected in bin {i} for group {group}, skipping")
+                            continue
+                        
+                        error = abs(predicted_prob - actual_prob)
+                        calibration_errors.append(error)
+                        bins_processed += 1
+                        logger.debug(f"Group {group}, Bin {i}: pred={predicted_prob:.3f}, actual={actual_prob:.3f}, error={error:.3f}")
             
-            # Lower calibration error = better
-            if calibration_errors:
-                avg_calibration_error = float(np.mean(calibration_errors))
-                calibration_score = max(0.0, 1.0 - avg_calibration_error)
-                return calibration_score
-            else:
-                return 0.7
+            # Edge case: no valid bins processed
+            if len(calibration_errors) == 0:
+                logger.warning("Calibration: No valid bins processed, data too sparse")
+                return 0.6  # Penalize sparse data
+            
+            # Edge case: very few bins (< 5 total across all groups)
+            if bins_processed < 5:
+                logger.warning(f"Calibration: Only {bins_processed} bins processed, results may be unreliable")
+            
+            # Calculate average calibration error (filter out any NaNs)
+            valid_errors = [e for e in calibration_errors if not np.isnan(e)]
+            if len(valid_errors) == 0:
+                logger.warning("Calibration: All errors are NaN")
+                return 0.6
+            
+            avg_calibration_error = float(np.mean(valid_errors))
+            calibration_score = max(0.0, 1.0 - avg_calibration_error)
+            
+            logger.debug(f"Calibration: {bins_processed} bins, avg error={avg_calibration_error:.3f}, score={calibration_score:.3f}")
+            return calibration_score
                 
-        except (KeyError, ValueError):
-            logger.warning("Could not calculate calibration score from test data")
+        except (KeyError, ValueError, TypeError) as e:
+            logger.warning(f"Could not calculate calibration score from test data: {e}")
             return 0.65  # Conservative default
     
     def _calculate_individual_fairness(self, test_data: Dict[str, Any]) -> float:
