@@ -668,8 +668,8 @@ class AdvancedAIScanner:
             
             # Lower calibration error = better
             if calibration_errors:
-                avg_calibration_error = np.mean(calibration_errors)
-                calibration_score = max(0, 1.0 - avg_calibration_error)
+                avg_calibration_error = float(np.mean(calibration_errors))
+                calibration_score = max(0.0, 1.0 - avg_calibration_error)
                 return calibration_score
             else:
                 return 0.7
