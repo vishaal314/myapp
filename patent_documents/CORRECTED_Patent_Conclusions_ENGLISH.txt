@@ -19,8 +19,11 @@ AI Model Scanner - Patent Claims
          demographic parity, equalized odds, calibration score, and individual
          fairness algorithms;
       
-      c) an EU AI Act compliance assessor that classifies models according to
- 20      Articles 5, 19-24, and 51-55;
+      c) an EU AI Act compliance assessor that analyzes 64 articles (56.6% coverage)
+ 20      according to Articles 4-94, including Articles 5 (prohibited
+         practices), 8-15 (high-risk requirements), 16-27 (obligations), 
+         38-46 (conformity assessment), 50 (transparency), 51-56 (GPAI), 
+         60-75 (governance), 85-94 (enforcement);
       
       wherein the system automatically generates compliance reports with penalty
       calculations up to EUR 35 million.
@@ -54,11 +57,12 @@ AI Model Scanner - Patent Claims
                                                                     PAGE 10 of 12
 
  50   
-      b) an Articles 19-24 validator for high-risk systems with penalty of EUR 15
-         million or 3% of global turnover;
+      b) an Articles 8-27 validator for high-risk systems (Art. 8-15:
+         requirements; Art. 16-27: provider/deployer obligations) with penalty of
+         EUR 15 million or 3% of global turnover;
       
-      c) an Articles 51-55 checker for General Purpose AI models with compute
- 55      threshold monitoring.
+      c) an Articles 51-56 checker for General Purpose AI models including
+ 55      compute threshold monitoring and Codes of Practice (Art. 54-56).
       
       
       Claim 4
