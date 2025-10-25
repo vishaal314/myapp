@@ -67,8 +67,8 @@ Datum:               22 oktober 2025
 
 BETALING
 Te betalen taksen:
-- Taks voor aanvraag van octrooi:    € 120
-- Totaal verschuldigd bedrag:         € 120
+- Taks voor aanvraag van octrooi:    EUR  120
+- Totaal verschuldigd bedrag:         EUR  120
 
 Naam betaler:        Vishaal Kumar
 Wijze van betaling:  Per bank
@@ -86,7 +86,7 @@ Prinses Beatrixlaan 2, Den Haag
 Postadres: Postbus 10366, 2501 HJ Den Haag
 Openingstijden: Elke werkdag 9.00-17.00 uur
 
-Let op: Na indiening ontvangt u binnen één maand bericht van Octrooicentrum Nederland.
+Let op: Na indiening ontvangt u binnen een maand bericht van Octrooicentrum Nederland.
 Bij geen bericht: neem contact op!
 
 ===== EINDE AANVRAAGFORMULIER =====

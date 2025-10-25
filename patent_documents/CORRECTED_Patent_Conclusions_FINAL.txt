@@ -32,14 +32,14 @@ AI Model Scanner - Patent Conclusies
  30   Het systeem volgens conclusie 1, waarbij de bias detectie-engine de
       volgende mathematische formules implementeert:
       
-      a) Demographic Parity: P(Y=1|A=0) ≈ P(Y=1|A=1) met een drempelwaarde van
+      a) Demographic Parity: P(Y=1|A=0) ~ P(Y=1|A=1) met een drempelwaarde van
          0.80;
  35   
-      b) Equalized Odds: TPR_A=0 ≈ TPR_A=1 EN FPR_A=0 ≈ FPR_A=1;
+      b) Equalized Odds: TPR_A=0 ~ TPR_A=1 EN FPR_A=0 ~ FPR_A=1;
       
-      c) Calibration Score: P(Y=1|Score=s,A=0) ≈ P(Y=1|Score=s,A=1);
+      c) Calibration Score: P(Y=1|Score=s,A=0) ~ P(Y=1|Score=s,A=1);
       
- 40   d) Individual Fairness: d(f(x1),f(x2)) ≤ L*d(x1,x2).
+ 40   d) Individual Fairness: d(f(x1),f(x2)) <= L*d(x1,x2).
       
       
       Conclusie 3
@@ -81,10 +81,10 @@ AI Model Scanner - Patent Conclusies
       
  75   a) 9-cijferige patronen identificeert in model training data;
       
-      b) officiële checksum validatie uitvoert conform Nederlandse specificaties
-         volgens de formule: checksum = (digit_0 × 9) + (digit_1 × 8) + 
-         (digit_2 × 7) + (digit_3 × 6) + (digit_4 × 5) + (digit_5 × 4) + 
- 80      (digit_6 × 3) + (digit_7 × 2) - (digit_8 × 1), waarbij BSN geldig is 
+      b) officiele checksum validatie uitvoert conform Nederlandse specificaties
+         volgens de formule: checksum = (digit_0  x  9) + (digit_1  x  8) + 
+         (digit_2  x  7) + (digit_3  x  6) + (digit_4  x  5) + (digit_5  x  4) + 
+ 80      (digit_6  x  3) + (digit_7  x  2) - (digit_8  x  1), waarbij BSN geldig is 
          als checksum mod 11 == 0;
       
       c) privacy risico assessment genereert conform GDPR Artikel 9;
@@ -124,7 +124,7 @@ AI Model Scanner - Patent Conclusies
       c) calibratie scores meet voor voorspellingsbetrouwbaarheid per
          demografische groep;
 115   
-      d) individuele eerlijkheid toetst via Lipschitz continuïteit met factor
+      d) individuele eerlijkheid toetst via Lipschitz continuiteit met factor
          L=1.0.
       
       
@@ -149,7 +149,7 @@ AI Model Scanner - Patent Conclusies
       
       Het systeem volgens conclusie 4, waarbij de Nederlandse specialisatie module:
 140   
-      a) BSN checksum algoritme implementeert volgens Nederlandse officiële
+      a) BSN checksum algoritme implementeert volgens Nederlandse officiele
          specificaties met de correcte formule waarbij de laatste digit (digit_8)
          met factor 1 wordt vermenigvuldigd en afgetrokken;
       
@@ -215,10 +215,10 @@ AI Model Scanner - Patent Conclusies
       
 200   Het systeem volgens conclusie 1, waarbij penalty berekeningen:
       
-      a) maximum straffen bepalen van €35 miljoen of 7% globale omzet voor Artikel
+      a) maximum straffen bepalen van EUR 35 miljoen of 7% globale omzet voor Artikel
          5 overtredingen;
       
-205   b) €15 miljoen of 3% globale omzet berekenen voor Artikelen 19-24
+205   b) EUR 15 miljoen of 3% globale omzet berekenen voor Artikelen 19-24
          overtredingen;
       
       c) Nederlandse UAVG multipliers toepassen voor regionale compliance
@@ -257,7 +257,7 @@ AI Model Scanner - Patent Conclusies
       c) EU AI Act compliance assessment procedures uitvoeren;
       
       d) Nederlandse specialisatie modules activeren met correcte BSN validatie
-         volgens officiële Nederlandse 11-proef algoritme;
+         volgens officiele Nederlandse 11-proef algoritme;
 245   
       e) real-time monitoring en rapportage functies verstrekken.
 

@@ -23,7 +23,7 @@ geverifieerd voor kwaliteitsmanagementsystemen, technische documentatie, en CE-m
 tot EUR 15 miljoen.
 
 Nederlandse specialisatie omvat BSN (Burgerservicenummer) detectie met 9-cijferige patroon herkenning 
-en officiële checksum validatie volgens Nederlandse specificaties. UAVG compliance wordt gecontroleerd 
+en officiele checksum validatie volgens Nederlandse specificaties. UAVG compliance wordt gecontroleerd 
 met Nederlandse Autoriteit Persoonsgegevens (AP) integratie, data residency vereisten, en regionale 
 penalty multipliers.
 

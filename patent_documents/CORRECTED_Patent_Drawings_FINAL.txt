@@ -62,10 +62,10 @@ AI Model Scanner - Patent Tekeningen
       |   Prohibited     |   High-Risk          |   General Purpose       |
       |   Practices      |   Systems            |   AI (GPAI)             |
       +------------------+----------------------+-------------------------+
-      | • Social Score   | • QMS Required       | • Foundation Model      |
- 60   | • Manipulation   | • Tech Docs          | • >1B Parameters        |
-      | • Subliminal     | • Record Keeping     | • Compute Limits        |
-      | • Biometric ID   | • CE Marking         | • Adversarial Test      |
+      | - Social Score   | - QMS Required       | - Foundation Model      |
+ 60   | - Manipulation   | - Tech Docs          | - >1B Parameters        |
+      | - Subliminal     | - Record Keeping     | - Compute Limits        |
+      | - Biometric ID   | - CE Marking         | - Adversarial Test      |
       +------------------+----------------------+-------------------------+
       | EUR 35M or 7%    | EUR 15M or 3%        | EUR 15M or 3%           |
  65   | Global Turnover  | Global Turnover      | Global Turnover         |
@@ -79,10 +79,10 @@ AI Model Scanner - Patent Tekeningen
       +-----------------------+----------------------+---------------------+
       |   BSN Detection       |   UAVG Compliance    |   Penalty Engine    |
  75   +-----------------------+----------------------+---------------------+
-      | • 9-digit BSN         | • AP Authority       | • EUR 35M Max       |
-      | • Checksum Valid      | • Data Residency     | • 7% Turnover       |
-      | • Privacy Risk        | • Local Rules        | • Risk Scaling      |
-      | • GDPR Art.9          | • NL Specific        | • Regional Multi    |
+      | - 9-digit BSN         | - AP Authority       | - EUR 35M Max       |
+      | - Checksum Valid      | - Data Residency     | - 7% Turnover       |
+      | - Privacy Risk        | - Local Rules        | - Risk Scaling      |
+      | - GDPR Art.9          | - NL Specific        | - Regional Multi    |
  80   +-----------------------+----------------------+---------------------+
       
       
@@ -156,8 +156,8 @@ AI Model Scanner - Patent Tekeningen
       
       +---------------------------------------------------------------------+
 145   | STEP 1: Model Upload                                                |
-      |   • Framework Detection (PyTorch/TensorFlow/ONNX/scikit-learn)      |
-      |   • File Validation (.pt, .pth, .h5, .pb, .onnx, .pkl, .joblib)     |
+      |   - Framework Detection (PyTorch/TensorFlow/ONNX/scikit-learn)      |
+      |   - File Validation (.pt, .pth, .h5, .pb, .onnx, .pkl, .joblib)     |
       +---------------------------------------------------------------------+
                                       |
 150                                   |
@@ -168,45 +168,45 @@ AI Model Scanner - Patent Tekeningen
 
       +---------------------------------------------------------------------+
       | STEP 2: Architecture Analysis                                       |
-155   |   • Parameter Count (threshold: <1M, 1M-100M, 100M-1B, >1B)         |
-      |   • Layer Configuration                                             |
-      |   • Model Complexity Classification                                 |
+155   |   - Parameter Count (threshold: <1M, 1M-100M, 100M-1B, >1B)         |
+      |   - Layer Configuration                                             |
+      |   - Model Complexity Classification                                 |
       +---------------------------------------------------------------------+
                                       |
 160                                   |
       +---------------------------------------------------------------------+
       | STEP 3: Bias Detection                                              |
-      |   • Demographic Parity (threshold: 0.80)                            |
-      |   • Equalized Odds (TPR & FPR comparison)                           |
-165   |   • Calibration Score (per demographic group)                       |
-      |   • Individual Fairness (Lipschitz continuity, L=1.0)               |
+      |   - Demographic Parity (threshold: 0.80)                            |
+      |   - Equalized Odds (TPR & FPR comparison)                           |
+165   |   - Calibration Score (per demographic group)                       |
+      |   - Individual Fairness (Lipschitz continuity, L=1.0)               |
       +---------------------------------------------------------------------+
                                       |
                                       |
 170   +---------------------------------------------------------------------+
       | STEP 4: EU AI Act Classification                                    |
-      |   • Article 5 Check (Prohibited Practices)                          |
-      |   • Articles 19-24 Validation (High-Risk Systems)                   |
-      |   • Articles 51-55 Assessment (GPAI Models)                         |
-175   |   • Penalty Calculation (EUR 35M / EUR 15M)                         |
+      |   - Article 5 Check (Prohibited Practices)                          |
+      |   - Articles 19-24 Validation (High-Risk Systems)                   |
+      |   - Articles 51-55 Assessment (GPAI Models)                         |
+175   |   - Penalty Calculation (EUR 35M / EUR 15M)                         |
       +---------------------------------------------------------------------+
                                       |
                                       |
       +---------------------------------------------------------------------+
 180   | STEP 5: Netherlands Compliance                                      |
-      |   • BSN Detection (9-digit pattern + checksum)                      |
-      |   • UAVG Validation (AP authority integration)                      |
-      |   • Regional Penalty Multipliers                                    |
-      |   • Dutch Language Support                                          |
+      |   - BSN Detection (9-digit pattern + checksum)                      |
+      |   - UAVG Validation (AP authority integration)                      |
+      |   - Regional Penalty Multipliers                                    |
+      |   - Dutch Language Support                                          |
 185   +---------------------------------------------------------------------+
                                       |
                                       |
       +---------------------------------------------------------------------+
       | STEP 6: Report Generation                                           |
-190   |   • PDF/HTML Output                                                 |
-      |   • Technical Documentation                                         |
-      |   • Remediation Recommendations                                     |
-      |   • Compliance Certificate (with AP stamp)                          |
+190   |   - PDF/HTML Output                                                 |
+      |   - Technical Documentation                                         |
+      |   - Remediation Recommendations                                     |
+      |   - Compliance Certificate (with AP stamp)                          |
       +---------------------------------------------------------------------+
 195   
       
@@ -222,16 +222,16 @@ AI Model Scanner - Patent Tekeningen
       |                                                                     |
       |  +--------------+      +--------------+      +--------------+    |
 205   |  |  Streamlit   |      |  PostgreSQL  |      |    Redis     |    |
-      |  |  Frontend    |◄----►|  Database    |◄----►|   Cache      |    |
+      |  |  Frontend    |<---->|  Database    |<---->|   Cache      |    |
       |  +--------------+      +--------------+      +--------------+    |
       |         |                                                          |
       |         |                                                          |
 210   |  +--------------------------------------------------------------+ |
       |  |         AI Model Scanner Services                            | |
-      |  |  • Multi-Framework Analyzer                                  | |
-      |  |  • Bias Detection Engine                                     | |
-      |  |  • EU AI Act Compliance Assessor                             | |
-215   |  |  • Netherlands Specialization Module                         | |
+      |  |  - Multi-Framework Analyzer                                  | |
+      |  |  - Bias Detection Engine                                     | |
+      |  |  - EU AI Act Compliance Assessor                             | |
+215   |  |  - Netherlands Specialization Module                         | |
       |  +--------------------------------------------------------------+ |
       |                                                                     |
       |  Docker Container (Horizontale Schaalvergroting)                   |
@@ -247,7 +247,7 @@ AI Model Scanner - Patent Tekeningen
       | Multi-Framework      |      Y       |    N     |    N     |   W    |
       | BSN Detection        |      Y       |    N     |    N     |   N    |
 230   | EU AI Act 2025       |      Y       |    W     |    W     |   W    |
-      | Cost (Annual)        |   €2.5K-25K  | €50K-500K|€75K-400K |€100K+  |
+      | Cost (Annual)        |   EUR 2.5K-25K  | EUR 50K-500K|EUR 75K-400K |EUR 100K+  |
       | Cost Savings         |   BASELINE   |   95%    |   96%    |  97%   |
       +---------------------------------------------------------------------+
       
@@ -260,9 +260,9 @@ AI Model Scanner - Patent Tekeningen
       |              PATENT VALUE PROPOSITION                               |
       +---------------------------------------------------------------------+
       |                                                                     |
-      |  Market Opportunity:     €447M (EU-wide AI compliance market)      |
+      |  Market Opportunity:     EUR 447M (EU-wide AI compliance market)      |
 245   |  Target Market:          1.8M EU companies using AI                |
-      |  Netherlands Market:     €23M (150,000 companies)                  |
+      |  Netherlands Market:     EUR 23M (150,000 companies)                  |
       |                                                                     |
       |  Penalty Prevention:     Up to EUR 35M per violation               |
       |  Cost Savings:           95% vs OneTrust/TrustArc                  |
@@ -276,7 +276,7 @@ AI Model Scanner - Patent Tekeningen
       |                                                                     |
 255   |  First-Mover Advantage:  EU AI Act enforced Feb 2025               |
       |  Patent Protection:      20 years (until 2045)                     |
-      |  Patent Value:           €1M - €2.5M                               |
+      |  Patent Value:           EUR 1M - EUR 2.5M                               |
       |                                                                     |
       +---------------------------------------------------------------------+
 260   
@@ -294,7 +294,7 @@ AI Model Scanner - Patent Tekeningen
          checksum = (digit_0 x 9) + (digit_1 x 8) + ... - (digit_8 x 1) Y CORRECT
          
       De laatste digit (digit_8) gebruikt factor 1, NIET factor (9-8)=1 via formule.
-275   Dit is het officiële Nederlandse BSN 11-proef algoritme.
+275   Dit is het officiele Nederlandse BSN 11-proef algoritme.
       
       =======================================================================
       EINDE TEKENINGEN EN FORMULES

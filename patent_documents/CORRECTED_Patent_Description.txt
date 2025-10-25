@@ -30,14 +30,14 @@ AI Model Scanner - Automated AI Compliance Assessment System
       De EU AI Act (Verordening 2024/1689) treedt in werking op 2 februari 2025
       en introduceert een uitgebreid regelgevend kader voor kunstmatige
       intelligentie systemen binnen de Europese Unie. De verordening classificeert
- 30   AI systemen in vier risico categorieën:
+ 30   AI systemen in vier risico categorieen:
       
       1. Verboden praktijken (Artikel 5): Sociale scoring, manipulatie,
          subliminal technieken, biometrische identificatie in publieke ruimtes.
          Penalty: EUR 35 miljoen of 7% van jaarlijkse globale omzet.
  35   
       2. Hoog-risico systemen (Artikelen 19-24): Biometrische identificatie,
-         kritische infrastructuur, onderwijs, werkgelegenheid, essentiële
+         kritische infrastructuur, onderwijs, werkgelegenheid, essentiele
          diensten, rechtshandhaving. Penalty: EUR 15 miljoen of 3% van jaarlijkse
          globale omzet.
  40   
@@ -90,7 +90,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          5, 19-24, en 51-55 met accurate penalty berekeningen;
  85   
       4. Nederlandse specialisatie verstrekt met BSN detectie algoritme inclusief
-         officiële 9-cijferige patroon herkenning en checksum validatie;
+         officiele 9-cijferige patroon herkenning en checksum validatie;
       
       5. Real-time compliance monitoring en automatische alerting implementeert
  90      bij regelgeving overtredingen;
@@ -129,7 +129,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
 120   3. ONNX Analyse:
          - Detecteert .onnx bestandsformaat met ONNX magic number verificatie
          - Laadt modellen met onnx.load() functie
-         - Creëert inference session met onnxruntime.InferenceSession()
+         - Creeert inference session met onnxruntime.InferenceSession()
          - Analyseert graph structuur en operator types
 125      - Berekent geschatte parameter count van model graph
       
@@ -147,7 +147,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
       algoritmen die discriminatoire patronen identificeren:
       
 140   1. Demographic Parity (Demografische Pariteit):
-         Formule: P(Y=1|A=0) ≈ P(Y=1|A=1)
+         Formule: P(Y=1|A=0) ~ P(Y=1|A=1)
          
          Waarbij Y de voorspelling is en A het beschermde attribuut (bijv. gender,
          etniciteit). Het systeem berekent de verhouding tussen positieve
@@ -159,7 +159,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
                                                                     PAGINA 4 van 8
 
       2. Equalized Odds (Gelijkwaardige Kansen):
-         Formule: TPR_A=0 ≈ TPR_A=1 EN FPR_A=0 ≈ FPR_A=1
+         Formule: TPR_A=0 ~ TPR_A=1 EN FPR_A=0 ~ FPR_A=1
 150      
          Waarbij TPR (True Positive Rate) en FPR (False Positive Rate) gelijk
          moeten zijn over beschermde groepen. Het systeem berekent:
@@ -170,7 +170,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          En verifieert of de verschillen tussen groepen <0.10 zijn.
       
       3. Calibration Score (Calibratie Score):
-160      Formule: P(Y=1|Score=s,A=0) ≈ P(Y=1|Score=s,A=1)
+160      Formule: P(Y=1|Score=s,A=0) ~ P(Y=1|Score=s,A=1)
          
          Het systeem analyseert of modellen goed gecalibreerd zijn over
          verschillende demografische groepen. Voor elke score s, moet de
@@ -178,27 +178,27 @@ AI Model Scanner - Automated AI Compliance Assessment System
 165      het beschermde attribuut A.
       
       4. Individual Fairness (Individuele Eerlijkheid):
-         Formule: d(f(x1),f(x2)) ≤ L*d(x1,x2)
+         Formule: d(f(x1),f(x2)) <= L*d(x1,x2)
          
 170      Waarbij d() een afstandsmetriek is, f() de model voorspelling functie,
          en L de Lipschitz constante. Het systeem verifieert dat vergelijkbare
-         individuen vergelijkbare voorspellingen ontvangen (Lipschitz continuïteit
+         individuen vergelijkbare voorspellingen ontvangen (Lipschitz continuiteit
          met L=1.0).
       
 175   
       C. EU AI ACT COMPLIANCE BEOORDELAAR
       
-      De compliance beoordelaar analyseert modellen conform drie hoofdcategorieën
+      De compliance beoordelaar analyseert modellen conform drie hoofdcategorieen
       van de EU AI Act:
 180   
       1. Artikel 5 - Verboden Praktijken:
          Het systeem detecteert:
          - Sociale scoring systemen die individuen classificeren op sociaal gedrag
-         - Manipulatieve AI die kwetsbare groepen beïnvloedt
+         - Manipulatieve AI die kwetsbare groepen beinvloedt
 185      - Subliminal technieken buiten bewust bewustzijn
          - Real-time biometrische identificatie in publieke ruimtes
          
-         Penalty berekening: MAX(EUR 35,000,000, 0.07 × jaarlijkse_globale_omzet)
+         Penalty berekening: MAX(EUR 35,000,000, 0.07  x  jaarlijkse_globale_omzet)
       
 190   2. Artikelen 19-24 - Hoog-Risico Systemen:
          Het systeem verifieert voor compliance met:
@@ -214,7 +214,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
 ===============================================================================
                                                                     PAGINA 5 van 8
 
-200      Penalty berekening: MAX(EUR 15,000,000, 0.03 × jaarlijkse_globale_omzet)
+200      Penalty berekening: MAX(EUR 15,000,000, 0.03  x  jaarlijkse_globale_omzet)
       
       3. Artikelen 51-55 - General Purpose AI (GPAI):
          Het systeem classificeert GPAI modellen op basis van:
@@ -224,7 +224,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          - Adversarial testing en red-teaming vereisten
          - Transparency obligations en model cards
          
-210      Penalty berekening: MAX(EUR 15,000,000, 0.03 × jaarlijkse_globale_omzet)
+210      Penalty berekening: MAX(EUR 15,000,000, 0.03  x  jaarlijkse_globale_omzet)
       
       
       D. NEDERLANDSE SPECIALISATIE MODULE
@@ -242,17 +242,17 @@ AI Model Scanner - Automated AI Compliance Assessment System
 225      model outputs, en embedded datasets.
          
          Stap 2 - Checksum Validatie:
-         Het officiële Nederlandse BSN checksum algoritme (11-proef):
+         Het officiele Nederlandse BSN checksum algoritme (11-proef):
          
-230      checksum = (digit_0 × 9) + (digit_1 × 8) + (digit_2 × 7) + 
-                    (digit_3 × 6) + (digit_4 × 5) + (digit_5 × 4) + 
-                    (digit_6 × 3) + (digit_7 × 2) - (digit_8 × 1)
+230      checksum = (digit_0  x  9) + (digit_1  x  8) + (digit_2  x  7) + 
+                    (digit_3  x  6) + (digit_4  x  5) + (digit_5  x  4) + 
+                    (digit_6  x  3) + (digit_7  x  2) - (digit_8  x  1)
          
          Waarbij:
          - digit_0 tot digit_8 zijn de 9 cijfers van het BSN nummer
 235      - Eerste 8 cijfers worden vermenigvuldigd met aflopende factoren (9 t/m 2)
          - Het laatste cijfer (digit_8) wordt AFGETROKKEN na vermenigvuldiging met 1
-         - Deze formule implementeert de officiële Nederlandse 11-proef
+         - Deze formule implementeert de officiele Nederlandse 11-proef
          
          Validatie regel:
 240      BSN is geldig als: checksum mod 11 == 0
@@ -288,9 +288,9 @@ AI Model Scanner - Automated AI Compliance Assessment System
 265      
          d) Regionale Penalty Multipliers:
             Het systeem past Nederlandse compliance multipliers toe:
-            - Nederland BSN detectie: 1.3× base penalty
-            - UAVG Article 62 overtredingen: 1.2× base penalty
-270         - Nederlandse AP Authority escalatie: 1.25× base penalty
+            - Nederland BSN detectie: 1.3 x  base penalty
+            - UAVG Article 62 overtredingen: 1.2 x  base penalty
+270         - Nederlandse AP Authority escalatie: 1.25 x  base penalty
       
       
       E. REAL-TIME MONITORING SYSTEEM
@@ -416,12 +416,12 @@ AI Model Scanner - Automated AI Compliance Assessment System
          volledig handmatige correcties.
 385   
       
-      INDUSTRIËLE TOEPASBAARHEID
+      INDUSTRIELE TOEPASBAARHEID
       
-      De uitvinding is toepasbaar in de volgende industrieën:
+      De uitvinding is toepasbaar in de volgende industrieen:
 390   
       - Financial Services: Kredietrisico modellen, fraud detectie, KYC/AML
-      - Healthcare: Diagnostische AI, patiënt triage systemen, treatment planning
+      - Healthcare: Diagnostische AI, patient triage systemen, treatment planning
       - Human Resources: CV screening, talent assessment, promotion algorithms
       - Government: Sociale uitkeringen, belasting fraude detectie, subsidies
 395   - E-commerce: Product recommendaties, dynamic pricing, customer segmentation
