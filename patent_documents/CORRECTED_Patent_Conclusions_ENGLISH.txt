@@ -1,7 +1,7 @@
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 CONCLUSIONS (CLAIMS)
 AI Model Scanner - Patent Claims
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 
                                                                      PAGE 9 of 12
 
@@ -31,14 +31,14 @@ AI Model Scanner - Patent Claims
       The system according to claim 1, wherein the bias detection engine
  30   implements the following mathematical formulas:
       
-      a) Demographic Parity: P(Y=1|A=0) ≈ P(Y=1|A=1) with a threshold value of
+      a) Demographic Parity: P(Y=1|A=0) ~ P(Y=1|A=1) with a threshold value of
          0.80;
       
- 35   b) Equalized Odds: TPR_A=0 ≈ TPR_A=1 AND FPR_A=0 ≈ FPR_A=1;
+ 35   b) Equalized Odds: TPR_A=0 ~ TPR_A=1 AND FPR_A=0 ~ FPR_A=1;
       
-      c) Calibration Score: P(Y=1|Score=s,A=0) ≈ P(Y=1|Score=s,A=1);
+      c) Calibration Score: P(Y=1|Score=s,A=0) ~ P(Y=1|Score=s,A=1);
       
-      d) Individual Fairness: d(f(x1),f(x2)) ≤ L*d(x1,x2).
+      d) Individual Fairness: d(f(x1),f(x2)) <= L*d(x1,x2).
  40   
       
       Claim 3
@@ -50,7 +50,7 @@ AI Model Scanner - Patent Claims
          EUR 35 million or 7% of global turnover;
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                     PAGE 10 of 12
 
  50   
@@ -81,9 +81,9 @@ AI Model Scanner - Patent Claims
  75   a) identifies 9-digit patterns in model training data;
       
       b) performs official checksum validation according to Netherlands
-         specifications using the formula: checksum = (digit_0 × 9) + (digit_1 × 8)
-         + (digit_2 × 7) + (digit_3 × 6) + (digit_4 × 5) + (digit_5 × 4) + 
- 80      (digit_6 × 3) + (digit_7 × 2) - (digit_8 × 1), wherein BSN is valid if
+         specifications using the formula: checksum = (digit_0 x 9) + (digit_1 x 8)
+         + (digit_2 x 7) + (digit_3 x 6) + (digit_4 x 5) + (digit_5 x 4) + 
+ 80      (digit_6 x 3) + (digit_7 x 2) - (digit_8 x 1), wherein BSN is valid if
          checksum mod 11 == 0;
       
       c) generates privacy risk assessment according to GDPR Article 9;
@@ -106,7 +106,7 @@ AI Model Scanner - Patent Claims
 100   d) deserializes scikit-learn models with joblib.load() validation.
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                     PAGE 11 of 12
 
       
@@ -163,7 +163,7 @@ AI Model Scanner - Patent Claims
       
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                     PAGE 12 of 12
 
 155   Claim 10
@@ -213,10 +213,10 @@ AI Model Scanner - Patent Claims
       
 200   The system according to claim 1, wherein penalty calculations:
       
-      a) determine maximum penalties of €35 million or 7% global turnover for
+      a) determine maximum penalties of EUR35 million or 7% global turnover for
          Article 5 violations;
       
-205   b) calculate €15 million or 3% global turnover for Articles 19-24 violations;
+205   b) calculate EUR15 million or 3% global turnover for Articles 19-24 violations;
       
       c) apply Netherlands UAVG multipliers for regional compliance requirements;
       
@@ -258,6 +258,6 @@ AI Model Scanner - Patent Claims
       e) provide real-time monitoring and reporting functions.
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 END OF CONCLUSIONS
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================

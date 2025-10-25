@@ -1,8 +1,8 @@
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 PATENT APPLICATION FORM
 AI Model Scanner - Application for Patent
 CORRECTED VERSION (Postal Code Fixed: 2012 BX)
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 
 APPLICATION NUMBER: NL2025003
 FILING DATE: 9 September 2025
@@ -10,7 +10,7 @@ STATUS: FINAL CORRECTED VERSION
 
 
 SECTION 1: APPLICANT INFORMATION
-─────────────────────────────────────────────────────────────────────────────
+-----------------------------------------------------------------------------
 
 Name:           Vishaal Kumar
 Address:        Bellevuelaan 275
@@ -22,7 +22,7 @@ Applicant Type: Individual (Natural Person)
 
 
 SECTION 2: INVENTOR INFORMATION
-─────────────────────────────────────────────────────────────────────────────
+-----------------------------------------------------------------------------
 
 Name:           Vishaal Kumar
 Residence:      HAARLEM, Nederland
@@ -30,7 +30,7 @@ Nationality:    Dutch
 
 
 SECTION 3: PATENT TITLE
-─────────────────────────────────────────────────────────────────────────────
+-----------------------------------------------------------------------------
 
 English Title:
 Automated Artificial Intelligence Model Compliance Assessment System for 
@@ -42,7 +42,7 @@ voor EU AI Act 2025
 
 
 SECTION 4: PATENT TYPE
-─────────────────────────────────────────────────────────────────────────────
+-----------------------------------------------------------------------------
 
 Patent Type:            Invention Patent (Octrooi)
 Technical Field:        Computer Systems, Artificial Intelligence, Compliance
@@ -51,13 +51,13 @@ IPC Classification:     G06N (Computing Arrangements Based on Specific
 
 
 SECTION 5: PRIORITY CLAIM
-─────────────────────────────────────────────────────────────────────────────
+-----------------------------------------------------------------------------
 
 Priority Claim:         No prior application
 
 
 SECTION 6: SUBMITTED DOCUMENTS
-─────────────────────────────────────────────────────────────────────────────
+-----------------------------------------------------------------------------
 
 1. Patent Application Form
 2. Patent Extract (Abstract) - 249 words
@@ -67,7 +67,7 @@ SECTION 6: SUBMITTED DOCUMENTS
 
 
 SECTION 7: DECLARATIONS
-─────────────────────────────────────────────────────────────────────────────
+-----------------------------------------------------------------------------
 
 I, Vishaal Kumar, declare that:
 
@@ -79,7 +79,7 @@ I, Vishaal Kumar, declare that:
 
 
 SECTION 8: CORRESPONDENCE ADDRESS
-─────────────────────────────────────────────────────────────────────────────
+-----------------------------------------------------------------------------
 
 Contact Person:     Vishaal Kumar
 Address:            Bellevuelaan 275
@@ -88,9 +88,9 @@ Email:              [As registered with RVO.nl]
 Phone:              [As registered with RVO.nl]
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 CERTIFICATION
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 
 I certify that all information provided in this application is true and correct
 to the best of my knowledge.
@@ -101,9 +101,9 @@ Date:               9 September 2025
 Place:              HAARLEM, Nederland
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 FOR OFFICIAL USE ONLY
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 
 Application Number:         1045290
 Filing Date:                9 September 2025
@@ -113,6 +113,6 @@ Response Deadline:          29 December 2025
 Status:                     Corrected - Postal Code Updated to 2012 BX
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 END OF APPLICATION FORM
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================

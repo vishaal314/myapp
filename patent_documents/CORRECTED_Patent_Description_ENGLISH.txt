@@ -1,7 +1,7 @@
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 PATENT DESCRIPTION
 AI Model Scanner - Automated AI Compliance Assessment System
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 
                                                                      PAGE 1 of 8
 
@@ -27,7 +27,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
       million or 7% of global annual turnover for violations. Current compliance
       assessment methods are manual, time-consuming, and prone to errors.
       
-      Existing solutions such as OneTrust, TrustArc, and IBM Watson OpenScale
+      Existing solutions such as commercial compliance software solutions
  30   provide partial compliance checking but lack automated bias detection,
       multi-framework support, and Netherlands-specific requirements. These
       enterprise solutions cost EUR 50,000-500,000 annually, creating barriers
@@ -48,7 +48,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
       The present invention solves these problems by providing an automated
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                      PAGE 2 of 8
 
  50   computer system comprising:
@@ -58,10 +58,10 @@ AI Model Scanner - Automated AI Compliance Assessment System
          ONNX (.onnx), and scikit-learn (.pkl, .joblib) frameworks;
  55   
       b) A bias detection engine implementing four mathematical fairness algorithms:
-         - Demographic Parity: P(Y=1|A=0) ≈ P(Y=1|A=1)
-         - Equalized Odds: TPR_A=0 ≈ TPR_A=1 AND FPR_A=0 ≈ FPR_A=1
-         - Calibration Score: P(Y=1|Score=s,A=0) ≈ P(Y=1|Score=s,A=1)
- 60      - Individual Fairness: d(f(x1),f(x2)) ≤ L*d(x1,x2)
+         - Demographic Parity: P(Y=1|A=0) ~ P(Y=1|A=1)
+         - Equalized Odds: TPR_A=0 ~ TPR_A=1 AND FPR_A=0 ~ FPR_A=1
+         - Calibration Score: P(Y=1|Score=s,A=0) ~ P(Y=1|Score=s,A=1)
+ 60      - Individual Fairness: d(f(x1),f(x2)) <= L*d(x1,x2)
       
       c) An EU AI Act compliance assessor that classifies models according to:
          - Article 5 (Prohibited Practices): EUR 35M or 7% penalty
@@ -97,7 +97,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          - Loading: tf.keras.models.load_model() for .h5
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                      PAGE 3 of 8
 
          - Parameter extraction: model.count_params()
@@ -128,30 +128,30 @@ AI Model Scanner - Automated AI Compliance Assessment System
       with deterministic calculations:
 120   
       Algorithm 1 - Demographic Parity:
-         Formula: P(Y=1|A=0) ≈ P(Y=1|A=1)
+         Formula: P(Y=1|A=0) ~ P(Y=1|A=1)
          Threshold: 0.80 (80% parity requirement)
          Calculation: Compare positive prediction rates between demographic groups
-125      Result: Pass if ratio ≥ 0.80, Fail otherwise
+125      Result: Pass if ratio >= 0.80, Fail otherwise
       
       Algorithm 2 - Equalized Odds:
-         Formula: TPR_A=0 ≈ TPR_A=1 AND FPR_A=0 ≈ FPR_A=1
+         Formula: TPR_A=0 ~ TPR_A=1 AND FPR_A=0 ~ FPR_A=1
          Metrics: True Positive Rate and False Positive Rate
 130      Calculation: Compare TPR and FPR across protected attributes
-         Result: Pass if both ratios ≥ 0.80
+         Result: Pass if both ratios >= 0.80
       
       Algorithm 3 - Calibration Score:
-         Formula: P(Y=1|Score=s,A=0) ≈ P(Y=1|Score=s,A=1)
+         Formula: P(Y=1|Score=s,A=0) ~ P(Y=1|Score=s,A=1)
 135      Purpose: Ensure prediction reliability across demographic groups
          Calculation: Binned calibration comparison at score thresholds
          Result: Pass if calibration difference < 0.10
       
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                      PAGE 4 of 8
 
 140   Algorithm 4 - Individual Fairness:
-         Formula: d(f(x1),f(x2)) ≤ L*d(x1,x2)
+         Formula: d(f(x1),f(x2)) <= L*d(x1,x2)
          Lipschitz constant: L=1.0
          Purpose: Similar individuals receive similar predictions
          Calculation: Distance preservation verification
@@ -199,7 +199,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                      PAGE 5 of 8
 
          Penalty: EUR 15 million or 3% of global annual turnover (whichever higher)
@@ -244,21 +244,21 @@ AI Model Scanner - Automated AI Compliance Assessment System
       digit_7 digit_8
       
       Calculate checksum:
-      checksum = (digit_0 × 9) + (digit_1 × 8) + (digit_2 × 7) + 
-230              (digit_3 × 6) + (digit_4 × 5) + (digit_5 × 4) + 
-                 (digit_6 × 3) + (digit_7 × 2) - (digit_8 × 1)
+      checksum = (digit_0 x 9) + (digit_1 x 8) + (digit_2 x 7) + 
+230              (digit_3 x 6) + (digit_4 x 5) + (digit_5 x 4) + 
+                 (digit_6 x 3) + (digit_7 x 2) - (digit_8 x 1)
       
       BSN is valid if and only if: checksum mod 11 == 0
       
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                      PAGE 6 of 8
 
 235   Validation example:
       BSN: 111222333
       Calculation:
-      = (1×9) + (1×8) + (1×7) + (2×6) + (2×5) + (2×4) + (3×3) + (3×2) - (3×1)
+      = (1x9) + (1x8) + (1x7) + (2x6) + (2x5) + (2x4) + (3x3) + (3x2) - (3x1)
       = 9 + 8 + 7 + 12 + 10 + 8 + 9 + 6 - 3
 240   = 66
       66 mod 11 = 0
@@ -285,8 +285,8 @@ AI Model Scanner - Automated AI Compliance Assessment System
       Base penalty from EU AI Act is multiplied by regional compliance factors:
       
       penalty = MAX(
-265               fixed_amount × regional_multiplier,
-                  revenue × percentage × regional_multiplier
+265               fixed_amount x regional_multiplier,
+                  revenue x percentage x regional_multiplier
                 )
       
       Where:
@@ -305,7 +305,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          b) Pattern matching: Anomaly detection using established baselines
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                      PAGE 7 of 8
 
          c) Alert generation: Immediate notification upon violations
@@ -357,7 +357,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          - JWT token authentication
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                      PAGE 8 of 8
 
 330      - Role-based access control
@@ -382,8 +382,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
       4. Netherlands Specialization: BSN detection and UAVG compliance unique to
 350      this system
       
-      5. Cost Savings: 95-97% cost reduction versus OneTrust (EUR 50K-500K),
-         TrustArc (EUR 75K-400K), and IBM Watson (EUR 100K+)
+      5. Cost Savings: 95-97% cost reduction versus commercial solutions (EUR 50K-500K+)
       
 355   6. Processing Speed: <30 seconds for standard models versus hours of manual
          assessment
@@ -413,6 +412,6 @@ AI Model Scanner - Automated AI Compliance Assessment System
 380      - Netherlands organizations subject to UAVG requirements
       
       
-      ═══════════════════════════════════════════════════════════════════════════
+      ===========================================================================
       END OF DESCRIPTION
-      ═══════════════════════════════════════════════════════════════════════════
+      ===========================================================================
