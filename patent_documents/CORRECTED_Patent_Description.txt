@@ -1,7 +1,7 @@
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 BESCHRIJVING (DESCRIPTION)
 AI Model Scanner - Automated AI Compliance Assessment System
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
 
                                                                     PAGINA 1 van 8
 
@@ -48,7 +48,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
  45      met >1 miljard parameters of significante compute capaciteit.
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                     PAGINA 2 van 8
 
       Probleem met Bestaande Oplossingen
@@ -99,7 +99,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          oplossingen (EUR 2,500-25,000 versus EUR 50,000-500,000).
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                     PAGINA 3 van 8
 
  95   Hoofdkenmerken van de Uitvinding
@@ -155,7 +155,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          een threshold van 0.80 valt (80% regel conform Amerikaanse EEOC richtlijnen).
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                     PAGINA 4 van 8
 
       2. Equalized Odds (Gelijkwaardige Kansen):
@@ -211,7 +211,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          - Artikel 15: Nauwkeurigheid, robuustheid en cybersecurity
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                     PAGINA 5 van 8
 
 200      Penalty berekening: MAX(EUR 15,000,000, 0.03 × jaarlijkse_globale_omzet)
@@ -267,7 +267,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          Het systeem verifieert Nederlandse specifieke vereisten:
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                     PAGINA 6 van 8
 
 250      a) Nederlandse Autoriteit Persoonsgegevens (AP) Integratie:
@@ -321,7 +321,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          - Model retraining aanbevelingen voor bias mitigation
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                     PAGINA 7 van 8
 
 300   
@@ -376,7 +376,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
       4. System Architecture:
 
 
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
                                                                     PAGINA 8 van 8
 
 350      - Database: PostgreSQL 16 met connection pooling
@@ -428,4 +428,4 @@ AI Model Scanner - Automated AI Compliance Assessment System
       - Education: Studenten assessment, toegangsbeslissingen, curriculum planning
       
       
-      ═══════════════════ EINDE BESCHRIJVING ═══════════════════
+      =================== EINDE BESCHRIJVING ===================
