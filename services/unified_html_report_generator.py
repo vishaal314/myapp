@@ -1199,9 +1199,68 @@ class UnifiedHTMLReportGenerator:
         """
 
     def _generate_ai_model_content(self, scan_result: Dict[str, Any]) -> str:
-        """Generate AI model-specific compliance content."""
+        """Generate AI model-specific compliance content with comprehensive EU AI Act coverage."""
         model_framework = scan_result.get('model_framework', 'Unknown')
         ai_act_compliance = scan_result.get('ai_act_compliance', 'Not assessed')
+        coverage_version = scan_result.get('coverage_version', '')
+        compliance_score = scan_result.get('compliance_score', scan_result.get('ai_model_compliance', 0))
+        articles_covered = scan_result.get('articles_covered', [])
+        
+        # Build comprehensive coverage section if available
+        comprehensive_html = ""
+        if coverage_version and '2.0' in str(coverage_version):
+            # Get Phase 2-10 data
+            annex_iii = scan_result.get('annex_iii_classification', {})
+            transparency = scan_result.get('transparency_compliance', {})
+            provider_deployer = scan_result.get('provider_deployer_obligations', {})
+            conformity = scan_result.get('conformity_assessment', {})
+            gpai = scan_result.get('gpai_compliance', {})
+            post_market = scan_result.get('post_market_monitoring', {})
+            ai_literacy = scan_result.get('ai_literacy', {})
+            enforcement = scan_result.get('enforcement_rights', {})
+            governance = scan_result.get('governance_structures', {})
+            
+            phase_cards = ""
+            phases = [
+                ("Annex III Classification", annex_iii),
+                ("Transparency (Art. 50)", transparency),
+                ("Provider/Deployer Obligations", provider_deployer),
+                ("Conformity Assessment", conformity),
+                ("GPAI Compliance (Art. 52-56)", gpai),
+                ("Post-Market Monitoring", post_market),
+                ("AI Literacy (Art. 4)", ai_literacy),
+                ("Enforcement & Rights", enforcement),
+                ("Governance Structures", governance)
+            ]
+            
+            for title, phase_data in phases:
+                if phase_data:
+                    status = phase_data.get('status', phase_data.get('compliant', 'assessed'))
+                    findings_count = phase_data.get('findings_count', len(phase_data.get('findings', [])))
+                    
+                    if status in ['compliant', 'complete', True, 'passed']:
+                        icon, color = '✅', '#10b981'
+                    elif status in ['partial', 'in_progress']:
+                        icon, color = '⚠️', '#f59e0b'
+                    else:
+                        icon, color = '🔍', '#6366f1'
+                    
+                    phase_cards += f"""
+                    <div class="metric-card" style="border-left: 4px solid {color};">
+                        <div class="metric-value" style="font-size: 14px;">{icon} {findings_count} findings</div>
+                        <div class="metric-label" style="font-size: 11px;">{title}</div>
+                    </div>
+                    """
+            
+            comprehensive_html = f"""
+            <div class="info-box success" style="margin-top: 20px; background: #f0fdf4; border: 2px solid #10b981; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #065f46; margin-bottom: 15px;">🎯 Comprehensive EU AI Act 2025 Coverage ({coverage_version})</h3>
+                <p style="margin-bottom: 15px;"><strong>Articles Analyzed:</strong> {len(articles_covered)} articles ({', '.join(map(str, articles_covered[:15]))}{"..." if len(articles_covered) > 15 else ""})</p>
+                <div class="metrics-grid">
+                    {phase_cards}
+                </div>
+            </div>
+            """
         
         return f"""
         <div class="scanner-specific">
@@ -1215,7 +1274,12 @@ class UnifiedHTMLReportGenerator:
                     <div class="metric-value">{ai_act_compliance}</div>
                     <div class="metric-label">AI Act 2025 Status</div>
                 </div>
+                <div class="metric-card">
+                    <div class="metric-value">{compliance_score}%</div>
+                    <div class="metric-label">Compliance Score</div>
+                </div>
             </div>
+            {comprehensive_html}
         </div>
         """
     
