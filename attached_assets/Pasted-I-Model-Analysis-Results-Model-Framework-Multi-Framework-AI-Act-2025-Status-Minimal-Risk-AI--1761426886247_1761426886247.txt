@@ -1,0 +1,60 @@
+I Model Analysis Results
+Model Framework
+
+Multi-Framework
+AI Act 2025 Status
+
+Minimal Risk AI System
+AI Model Compliance
+
+53.05%
+Risk Score
+
+40%
+-20% vs Industry
+Files Scanned
+
+31
+Lines Analyzed
+
+1,550
+Total Findings
+
+64
+AI Risk Level
+
+Minimal Risk AI System
+Critical Issues
+
+0
+High Risk Issues
+
+8
+Medium Risk Issues
+
+23
+Low Risk Issues
+
+33
+AI Model analysis failed: unhashable type: 'slice'
+
+Traceback (most recent call last):
+  File "/home/runner/workspace/app.py", line 7377, in execute_ai_model_scan
+    html_report = generate_html_report(scan_results)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app.py", line 10212, in generate_html_report
+    return generate_unified_html_report(scan_results)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/unified_html_report_generator.py", line 1350, in generate_unified_html_report
+    return generator.generate_html_report(scan_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/unified_html_report_generator.py", line 90, in generate_html_report
+    scanner_content = self._generate_scanner_specific_content(scan_result)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/unified_html_report_generator.py", line 706, in _generate_scanner_specific_content
+    return self._generate_ai_model_content(scan_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/unified_html_report_generator.py", line 1258, in _generate_ai_model_content
+    <p style="margin-bottom: 15px;"><strong>Articles Analyzed:</strong> {len(articles_covered)} articles ({', '.join(map(str, articles_covered[:15]))}{"..." if len(articles_covered) > 15 else ""})</p>
+                                                                                                                              ~~~~~~~~~~~~~~~~^^^^^
+TypeError: unhashable type: 'slice'

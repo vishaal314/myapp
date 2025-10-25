@@ -1252,10 +1252,15 @@ class UnifiedHTMLReportGenerator:
                     </div>
                     """
             
+            # Format articles list safely
+            articles_list = list(articles_covered) if articles_covered else []
+            articles_preview = ', '.join(map(str, articles_list[:15])) if articles_list else "Various articles"
+            articles_suffix = "..." if len(articles_list) > 15 else ""
+            
             comprehensive_html = f"""
             <div class="info-box success" style="margin-top: 20px; background: #f0fdf4; border: 2px solid #10b981; padding: 20px; border-radius: 8px;">
                 <h3 style="color: #065f46; margin-bottom: 15px;">🎯 Comprehensive EU AI Act 2025 Coverage ({coverage_version})</h3>
-                <p style="margin-bottom: 15px;"><strong>Articles Analyzed:</strong> {len(articles_covered)} articles ({', '.join(map(str, articles_covered[:15]))}{"..." if len(articles_covered) > 15 else ""})</p>
+                <p style="margin-bottom: 15px;"><strong>Articles Analyzed:</strong> {len(articles_list)} articles ({articles_preview}{articles_suffix})</p>
                 <div class="metrics-grid">
                     {phase_cards}
                 </div>
