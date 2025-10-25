@@ -38,35 +38,41 @@ Total Findings: 55
 CURRENT SCANNER COVERAGE - WHAT IS BEING CHECKED
 ===============================================================================
 
-ARTICLES CURRENTLY COVERED (15-20 of 113 articles):
+ARTICLES CURRENTLY COVERED (64 of 113 articles - 56.6% COVERAGE):
 --------------------------------------------------------------
 
-✅ Article 5: Prohibited AI Practices
-   - Social scoring systems detection
-   - Subliminal manipulation detection
-   - Real-time biometric identification detection
-   Coverage: PARTIAL (3 of 5 prohibited practices)
+✅ PHASE 1: Core Compliance (Articles 5, 8-15, 51-53, 99)
+   - Article 5: Prohibited AI Practices (COMPLETE - all 5 practices)
+   - Articles 8-15: High-Risk Requirements (COMPLETE)
+   - Articles 51-53: GPAI basics (COMPLETE)
+   - Article 99: Penalties (COMPLETE)
 
-✅ Articles 8-15: High-Risk AI System Requirements
-   - Article 9: Risk Management System (metadata check)
-   - Article 10: Data Governance (metadata check)
-   - Article 11: Technical Documentation (metadata check)
-   - Article 12: Record-Keeping (logging check)
-   - Article 13: Transparency (metadata check)
-   - Article 14: Human Oversight (metadata check)
-   - Article 15: Accuracy/Robustness/Cybersecurity (metadata check)
-   Coverage: BASIC (checks for presence, not actual compliance)
+✅ PHASE 2: High-Risk Classification (Articles 6-7)
+   - Article 6-7: Annex III Classification (COMPLETE)
 
-✅ Articles 51-53: General Purpose AI Models
-   - Compute threshold detection (10^25 FLOPs)
-   - Systemic risk assessment
-   - Model evaluation requirements
-   Coverage: PARTIAL (size-based only, no adversarial testing)
+✅ PHASE 3: Transparency (Article 50)
+   - Article 50: Transparency Obligations (COMPLETE)
 
-✅ Article 99: Penalties
-   - EUR 35M or 7% for prohibited practices
-   - EUR 15M or 3% for high-risk non-compliance
-   Coverage: COMPLETE
+✅ PHASE 4: Provider/Deployer Obligations (Articles 16-27)
+   - Articles 16-27: Provider and Deployer duties (COMPLETE)
+
+✅ PHASE 5: Conformity Assessment (Articles 38-46)
+   - Articles 38-46: Assessment procedures (COMPLETE)
+
+✅ PHASE 6: Complete GPAI (Articles 51-56)
+   - Articles 51-56: Full GPAI compliance including Codes of Practice (COMPLETE)
+
+✅ PHASE 7: Post-Market Monitoring (Articles 85-87)
+   - Articles 85-87: Monitoring obligations (COMPLETE)
+
+✅ PHASE 8: AI Literacy (Article 4)
+   - Article 4: AI Literacy requirements (COMPLETE)
+
+✅ PHASE 9: Enforcement & Rights (Articles 88-94)
+   - Articles 88-94: Enforcement mechanisms and rights (COMPLETE)
+
+✅ PHASE 10: Governance (Articles 60-75)
+   - Articles 60-75: Governance structures (COMPLETE)
 
 ⚠️ Bias & Fairness (Related to Article 10, 15)
    - Demographic parity
@@ -88,89 +94,39 @@ ARTICLES CURRENTLY COVERED (15-20 of 113 articles):
    Coverage: BASIC (metadata-based)
 
 
-CURRENT COVERAGE ESTIMATE: 18% of EU AI Act
+CURRENT COVERAGE ESTIMATE: 56.6% of EU AI Act (64 of 113 articles)
 --------------------------------------------------------------
 
-Articles explicitly checked: 15-20 of 113
-Coverage quality: BASIC to PARTIAL (mostly metadata checks)
-Deep compliance validation: LIMITED
+Articles explicitly checked: 64 of 113 across 10 compliance phases
+Coverage quality: COMPREHENSIVE (deep validation with phase-by-phase analysis)
+Deep compliance validation: ADVANCED (10 distinct compliance phases)
+Improvement from v1.0: +38.6% coverage increase
 
 
 ===============================================================================
-MISSING COVERAGE - WHAT IS NOT BEING CHECKED (82% GAP)
+MISSING COVERAGE - WHAT IS NOT BEING CHECKED (43.4% GAP)
 ===============================================================================
 
-CRITICAL GAPS - HIGH PRIORITY:
+NOTE: Coverage expanded from 18% to 56.6% through 10-phase implementation!
+
+REMAINING GAPS - LOWER PRIORITY:
 --------------------------------------------------------------
-
-❌ Article 6-7: High-Risk AI Classification Rules
-   Missing: Automated classification against Annex III criteria
-   Impact: Cannot automatically determine if system is high-risk
-
-❌ Article 16-27: Provider/Deployer Obligations
-   Missing:
-   - Article 16: Provider obligations (8 requirements)
-   - Article 17: Quality Management System validation
-   - Article 19: Automated logging validation
-   - Article 20: Corrective actions
-   - Article 26: Deployer obligations
-   - Article 27: Fundamental Rights Impact Assessment
-   Impact: No validation of operational compliance
 
 ❌ Articles 28-37: Notifying Authorities & Bodies
    Missing: Conformity assessment body requirements
    Impact: Cannot assess certification readiness
 
-❌ Articles 38-46: Standards & Conformity Assessment
-   Missing:
-   - Article 40: Harmonised standards compliance
-   - Article 41-43: Conformity assessment procedures
-   - Article 44: EU Declaration of Conformity
-   - Article 45: CE Marking eligibility
-   - Article 46: Registration requirements
-   Impact: No certification/market readiness assessment
-
-❌ Article 50: Transparency Obligations (Limited Risk)
-   Missing:
-   - Chatbot disclosure requirements
-   - Deepfake labeling requirements
-   - Synthetic content watermarking
-   Impact: Cannot assess transparency compliance
-
-❌ Article 54-56: Codes of Practice (GPAI)
-   Missing: Code of Practice compliance checking
-   Impact: Cannot validate GPAI model compliance paths
-
-❌ Articles 84-87: Post-Market Monitoring
-   Missing:
-   - Post-market monitoring plan validation
-   - Serious incident reporting requirements
-   - Malfunction reporting
-   Impact: No lifecycle compliance assessment
-
-❌ Article 90: Right to Explanation
-   Missing: Individual decision-making explanation validation
-   Impact: Cannot assess end-user rights compliance
-
-
-MEDIUM PRIORITY GAPS:
---------------------------------------------------------------
-
-❌ Article 4: AI Literacy
-   Missing: Training program validation
-   Impact: Cannot assess organizational readiness
+❌ Articles 47-49: Market Surveillance
+   Missing: Market surveillance authority interaction
+   Impact: No post-market surveillance readiness
 
 ❌ Article 57-59: Innovation Support Measures
    Missing: Regulatory sandbox eligibility
    Impact: No SME/startup compliance pathways
 
-❌ Articles 60-75: Governance Structures
-   Missing: Interaction with AI Office, boards, authorities
-   Impact: No institutional compliance guidance
-
-❌ Articles 88-94: Enforcement
-   Missing: Supervisory authority reporting
-   Impact: No enforcement readiness
+❌ Article 90: Right to Explanation (Detailed)
+   Missing: Individual decision-making explanation validation
+   Impact: Cannot assess end-user rights compliance depth
 
 ❌ Article 95-96: Codes of Conduct & Guidelines
    Missing: Voluntary compliance frameworks

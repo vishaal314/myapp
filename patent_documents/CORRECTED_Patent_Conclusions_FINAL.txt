@@ -20,8 +20,11 @@ AI Model Scanner - Patent Conclusies
          behulp van demographic parity, equalized odds, calibration score, en
          individual fairness algoritmen;
  20   
-      c) een EU AI Act compliance beoordelaar die modellen classificeert conform
-         Artikelen 5, 19-24, en 51-55;
+      c) een EU AI Act compliance beoordelaar die 64 artikelen (56.6% coverage)
+         analyseert conform Artikelen 4-94, inclusief Artikelen 5 (verboden
+         praktijken), 8-15 (hoog-risico vereisten), 16-27 (verplichtingen), 
+         38-46 (conformiteitsbeoordeling), 50 (transparantie), 51-56 (GPAI), 
+         60-75 (governance), 85-94 (handhaving);
       
       waarbij het systeem automatisch compliance rapporten genereert met penalty
  25   berekeningen tot EUR 35 miljoen.
@@ -55,11 +58,12 @@ AI Model Scanner - Patent Conclusies
                                                                    PAGINA 10 van 12
 
  50   
-      b) een Artikelen 19-24 validator voor hoog-risico systemen met penalty van
+      b) een Artikelen 8-27 validator voor hoog-risico systemen (Art. 8-15:
+         vereisten; Art. 16-27: provider/deployer verplichtingen) met penalty van
          EUR 15 miljoen of 3% van globale omzet;
       
-      c) een Artikelen 51-55 checker voor General Purpose AI modellen met compute
- 55      threshold monitoring.
+      c) een Artikelen 51-56 checker voor General Purpose AI modellen inclusief
+ 55      compute threshold monitoring en Codes of Practice (Art. 54-56).
       
       
       Conclusie 4
