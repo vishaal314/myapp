@@ -1204,7 +1204,17 @@ class UnifiedHTMLReportGenerator:
         ai_act_compliance = scan_result.get('ai_act_compliance', 'Not assessed')
         coverage_version = scan_result.get('coverage_version', '')
         compliance_score = scan_result.get('compliance_score', scan_result.get('ai_model_compliance', 0))
-        articles_covered = scan_result.get('articles_covered', [])
+        
+        # Extract articles_covered properly - it's a dictionary with stats
+        articles_covered_dict = scan_result.get('articles_covered', {})
+        if isinstance(articles_covered_dict, dict):
+            articles_covered = articles_covered_dict.get('articles_checked', [])
+            article_count = articles_covered_dict.get('article_count', len(articles_covered))
+            coverage_pct = articles_covered_dict.get('coverage_percentage', 0)
+        else:
+            articles_covered = []
+            article_count = 0
+            coverage_pct = 0
         
         # Build comprehensive coverage section if available
         comprehensive_html = ""
@@ -1252,15 +1262,18 @@ class UnifiedHTMLReportGenerator:
                     </div>
                     """
             
-            # Format articles list safely
-            articles_list = list(articles_covered) if articles_covered else []
-            articles_preview = ', '.join(map(str, articles_list[:15])) if articles_list else "Various articles"
-            articles_suffix = "..." if len(articles_list) > 15 else ""
+            # Format articles display safely
+            if articles_covered:
+                articles_preview = ', '.join(map(str, articles_covered[:15]))
+                articles_suffix = "..." if len(articles_covered) > 15 else ""
+                articles_display = f"{article_count} articles ({coverage_pct}% coverage): {articles_preview}{articles_suffix}"
+            else:
+                articles_display = "Multiple EU AI Act articles analyzed"
             
             comprehensive_html = f"""
             <div class="info-box success" style="margin-top: 20px; background: #f0fdf4; border: 2px solid #10b981; padding: 20px; border-radius: 8px;">
                 <h3 style="color: #065f46; margin-bottom: 15px;">🎯 Comprehensive EU AI Act 2025 Coverage ({coverage_version})</h3>
-                <p style="margin-bottom: 15px;"><strong>Articles Analyzed:</strong> {len(articles_list)} articles ({articles_preview}{articles_suffix})</p>
+                <p style="margin-bottom: 15px;"><strong>Articles Analyzed:</strong> {articles_display}</p>
                 <div class="metrics-grid">
                     {phase_cards}
                 </div>
