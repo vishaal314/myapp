@@ -65,8 +65,8 @@ AI Model Scanner - Automated AI Compliance Assessment System
       
       c) An EU AI Act compliance assessor that classifies models according to:
          - Article 5 (Prohibited Practices): EUR 35M or 7% penalty
-         - Articles 19-24 (High-Risk Systems): EUR 15M or 3% penalty
- 65      - Articles 51-55 (General Purpose AI): EUR 15M or 3% penalty
+         - Articles 8-15 (High-Risk Systems): EUR 15M or 3% penalty
+ 65      - Articles 51-53 (General Purpose AI): EUR 15M or 3% penalty
       
       d) A Netherlands specialization module with BSN detection and UAVG validation;
       
@@ -157,7 +157,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          Calculation: Distance preservation verification
 145      Result: Pass if Lipschitz condition satisfied
       
-      Bias score aggregation: 0-100 scale where lower scores indicate less bias.
+      Bias score aggregation: 0-1 scale where higher scores indicate better fairness (1.0 = perfect fairness, 0.0 = maximum bias).
       
       
 150   3. EU AI ACT COMPLIANCE ASSESSOR
@@ -177,7 +177,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
          
 165      Detection method: Pattern matching, use case analysis, model output analysis
       
-      Articles 19-24 - High-Risk AI Systems:
+      Articles 8-15 - High-Risk AI Systems:
          Requirements:
          - Quality Management System (Article 17)
 170      - Technical documentation (Article 11, Annex IV)
@@ -204,7 +204,7 @@ AI Model Scanner - Automated AI Compliance Assessment System
 
          Penalty: EUR 15 million or 3% of global annual turnover (whichever higher)
       
-      Articles 51-55 - General Purpose AI Models:
+      Articles 51-53 - General Purpose AI Models:
 190      Thresholds:
          - Foundation models with >1 billion parameters
          - Compute capacity >10^25 FLOPs
@@ -290,8 +290,8 @@ AI Model Scanner - Automated AI Compliance Assessment System
                 )
       
       Where:
-270      fixed_amount = EUR 35,000,000 (Article 5) or EUR 15,000,000 (Articles 19-24)
-         percentage = 7% (Article 5) or 3% (Articles 19-24)
+270      fixed_amount = EUR 35,000,000 (Article 5) or EUR 15,000,000 (Articles 8-15)
+         percentage = 7% (Article 5) or 3% (Articles 8-15)
          regional_multiplier = Netherlands enforcement factor (typically 1.0-1.5)
          revenue = Global annual turnover
       
