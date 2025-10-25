@@ -6934,11 +6934,16 @@ def render_model_analysis_interface(region: str, username: str):
     </div>
     """, unsafe_allow_html=True)
     
-    # Scan button
-    scan_enabled = uploaded_model is not None or repo_url or model_path
+    # Scan button with proper validation
+    # Validate inputs: uploaded_model exists OR repo_url is non-empty string OR model_path is non-empty string
+    has_uploaded_model = uploaded_model is not None
+    has_repo_url = repo_url and repo_url.strip()
+    has_model_path = model_path and model_path.strip()
+    scan_enabled = has_uploaded_model or has_repo_url or has_model_path
+    
     if st.button("🚀 Start AI Model Analysis", type="primary", use_container_width=True, disabled=not scan_enabled):
         if not scan_enabled:
-            st.error("Please upload a model file, provide a repository URL, or enter a model path.")
+            st.error("❌ Please provide at least one of: uploaded model file, repository URL, or model path.")
             return
             
         # Prepare AI Act configuration
@@ -7401,20 +7406,18 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
             st.success("✅ AI Model analysis completed!")
         
     except Exception as e:
-        # Track scan failure with safe error handling
+        # Track scan failure with safe error handling - fix for unbound variables
         try:
-            # Use globally defined ScannerType to avoid unbound errors
-            from utils.activity_tracker import ScannerType as LocalScannerType
-            scanner_type_ref = LocalScannerType.AI_MODEL
-        except ImportError:
-            # Use fallback ScannerType if activity tracker is not available
-            scanner_type_ref = ScannerType.AI_MODEL
-        
-        try:
-            track_scan_failed_wrapper(
-                scanner_type=scanner_type_ref,
-                user_id=user_id,
-                session_id=session_id,
+            from utils.activity_tracker import ScannerType, track_scan_failed
+            
+            # Safely get session/user info
+            safe_user_id = st.session_state.get('user_id', username)
+            safe_session_id = st.session_state.get('session_id', str(uuid.uuid4()))
+            
+            track_scan_failed(
+                scanner_type=ScannerType.AI_MODEL,
+                user_id=safe_user_id,
+                session_id=safe_session_id,
                 error_message=str(e),
                 region=region,
                 details={
@@ -7423,9 +7426,8 @@ def execute_ai_model_scan(region, username, model_source, uploaded_model, repo_u
                     'framework': framework
                 }
             )
-        except (NameError, AttributeError):
-            # Fallback if tracking is not available
-            logging.warning(f"AI Model scan tracking failed: {e}")
+        except Exception as tracking_error:
+            logging.warning(f"AI Model scan tracking failed: {tracking_error}")
         st.error(f"AI Model analysis failed: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
@@ -10607,26 +10609,52 @@ def generate_html_report(scan_results):
         lines_analyzed = scan_results.get('lines_analyzed', scan_results.get('total_lines', 0))
         region = scan_results.get('region', 'Global')
         
-        # AI Model scanner specific content
+        # AI Model scanner specific content - NOW WITH REAL METRICS FROM ADVANCED SCANNER
+        findings = scan_results.get('findings', [])
+        privacy_issues = len([f for f in findings if f.get('category') == 'Privacy' or 'privacy' in f.get('type', '').lower()])
+        bias_issues = len([f for f in findings if f.get('category') == 'Fairness' or 'bias' in f.get('type', '').lower()])
+        ai_act_issues = len([f for f in findings if f.get('category') == 'AI Act 2025' or 'ai_act' in str(f).lower()])
+        
+        # Use actual compliance score from advanced scanner (not hardcoded 85)
+        actual_compliance_score = scan_results.get('compliance_score', scan_results.get('ai_act_compliance_score', 0))
+        model_framework = scan_results.get('model_framework', 'Unknown')
+        risk_level = scan_results.get('ai_act_risk_level', 'Unknown')
+        
         ai_metrics = f"""
         <div class="ai-metrics">
-            <h2>🤖 {t('report.ai_model_scanner_report', 'AI Model Scanner Analysis')}</h2>
+            <h2>🤖 {t('report.ai_model_scanner_report', 'AI Model Scanner Analysis - EU AI Act 2025 Coverage')}</h2>
             <div class="metrics-grid">
                 <div class="metric-card">
-                    <h3>{t('report.model_files_analyzed', 'Model Files Analyzed')}</h3>
-                    <p class="metric-value">{files_scanned}</p>
+                    <h3>{t('report.model_framework', 'Model Framework')}</h3>
+                    <p class="metric-value">{model_framework}</p>
                 </div>
                 <div class="metric-card">
                     <h3>{t('report.privacy_issues', 'Privacy Issues')}</h3>
-                    <p class="metric-value">{len([f for f in scan_results.get('findings', []) if 'privacy' in f.get('type', '').lower()])}</p>
+                    <p class="metric-value">{privacy_issues}</p>
                 </div>
                 <div class="metric-card">
-                    <h3>{t('report.bias_detected', 'Bias Detected')}</h3>
-                    <p class="metric-value">{len([f for f in scan_results.get('findings', []) if 'bias' in f.get('type', '').lower()])}</p>
+                    <h3>{t('report.bias_detected', 'Bias & Fairness Issues')}</h3>
+                    <p class="metric-value">{bias_issues}</p>
                 </div>
                 <div class="metric-card">
-                    <h3>{t('report.ai_act_compliance', 'AI Act Compliance')}</h3>
-                    <p class="metric-value">{scan_results.get('ai_act_compliance_score', 85)}%</p>
+                    <h3>{t('report.ai_act_compliance', 'AI Act Compliance Score')}</h3>
+                    <p class="metric-value">{actual_compliance_score}%</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.ai_act_risk_level', 'AI Act Risk Level')}</h3>
+                    <p class="metric-value">{risk_level}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.ai_act_findings', 'AI Act Findings')}</h3>
+                    <p class="metric-value">{ai_act_issues}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.coverage_version', 'Coverage Version')}</h3>
+                    <p class="metric-value">{scan_results.get('coverage_version', 'Standard')}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>{t('report.total_findings', 'Total Findings')}</h3>
+                    <p class="metric-value">{len(findings)}</p>
                 </div>
             </div>
         </div>
