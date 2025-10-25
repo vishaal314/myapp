@@ -278,11 +278,12 @@ class AIModelScanner:
                     # CRITICAL FIX: Clone repository and find actual model files for comprehensive analysis
                     logging.info(f"Cloning repository for comprehensive analysis: {scan_result.get('repository_url', 'unknown')}")
                     
+                    import subprocess
+                    import shutil
+                    
+                    repo_url = scan_result.get('repository_url', '')
+                    
                     try:
-                        import subprocess
-                        import shutil
-                        
-                        repo_url = scan_result.get('repository_url', '')
                         if not repo_url:
                             raise ValueError("Repository URL is empty")
                         
