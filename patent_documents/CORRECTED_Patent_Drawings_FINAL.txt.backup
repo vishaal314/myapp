@@ -12,7 +12,7 @@ AI Model Scanner - Patent Tekeningen
  10   |         Patent-Pending EU AI Act 2025 Compliance                    |
       +---------------------------------------------------------------------+
                                       |
-                                      |
+                                      ▼
       +------------------+------------------+------------------------------+
  15   |   INPUT          |   ANALYSIS       |   OUTPUT                     |
       |   MODEL FILES    |   INTELLIGENCE   |   COMPLIANCE                 |
@@ -28,7 +28,7 @@ AI Model Scanner - Patent Tekeningen
       |  .pt .pth    |   .h5 .pb    |   .onnx      |   .pkl .joblib      |
       +--------------+--------------+--------------+---------------------+
                                       |
-                                      |
+                                      ▼
  30   | Parameter Count | Architecture Analysis | Complexity Classification |
       
       
@@ -41,7 +41,7 @@ AI Model Scanner - Patent Tekeningen
       |  Parity         |  Odds          |  Score           |  Fairness   |
  40   +-----------------+----------------+------------------+-------------+
       | P(Y=1|A=0) ~    | TPR_A=0 ~      | P(Y=1|Score=s,   | d(f(x1),    |
-      | P(Y=1|A=1)      | TPR_A=1        | A=0) ~ P(...)    | f(x2)) <=    |
+      | P(Y=1|A=1)      | TPR_A=1        | A=0) ~ P(...)    | f(x2)) ≤    |
       |                 |                |                  | L*d(x1,x2)  |
       +-----------------+----------------+------------------+-------------+
  45                           |
@@ -91,23 +91,23 @@ AI Model Scanner - Patent Tekeningen
  85   BIAS DETECTION ALGORITHMS:
       
       Formule 1 - Demographic Parity:
-         P(Y=1|A=0) ~ P(Y=1|A=1)
+         P(Y=1|A=0) ≈ P(Y=1|A=1)
          
  90   Formule 2 - Equalized Odds:
-         TPR_A=0 ~ TPR_A=1 EN FPR_A=0 ~ FPR_A=1
+         TPR_A=0 ≈ TPR_A=1 EN FPR_A=0 ≈ FPR_A=1
          
       Formule 3 - Calibration Score:
-         P(Y=1|Score=s,A=0) ~ P(Y=1|Score=s,A=1)
+         P(Y=1|Score=s,A=0) ≈ P(Y=1|Score=s,A=1)
          
  95   Formule 4 - Individual Fairness:
-         d(f(x1),f(x2)) <= L*d(x1,x2)
+         d(f(x1),f(x2)) ≤ L*d(x1,x2)
       
       
       BSN CHECKSUM VALIDATIE (GECORRIGEERD - Officieel Nederlands Algoritme):
 100   
-      checksum = (digit_0 x 9) + (digit_1 x 8) + (digit_2 x 7) + 
-                 (digit_3 x 6) + (digit_4 x 5) + (digit_5 x 4) + 
-                 (digit_6 x 3) + (digit_7 x 2) - (digit_8 x 1)
+      checksum = (digit_0 × 9) + (digit_1 × 8) + (digit_2 × 7) + 
+                 (digit_3 × 6) + (digit_4 × 5) + (digit_5 × 4) + 
+                 (digit_6 × 3) + (digit_7 × 2) - (digit_8 × 1)
 
 
 ===============================================================================
@@ -117,16 +117,16 @@ AI Model Scanner - Patent Tekeningen
 105   BSN is geldig als: checksum mod 11 == 0
       
       Voorbeeld: BSN 111222333
-         = (1x9) + (1x8) + (1x7) + (2x6) + (2x5) + (2x4) + (3x3) + (3x2) - (3x1)
+         = (1×9) + (1×8) + (1×7) + (2×6) + (2×5) + (2×4) + (3×3) + (3×2) - (3×1)
          = 9 + 8 + 7 + 12 + 10 + 8 + 9 + 6 - 3
-110      = 66 mod 11 = 0 Y GELDIG
+110      = 66 mod 11 = 0 ✓ GELDIG
       
       
       PENALTY CALCULATION:
       
 115   penalty = MAX(
-                  fixed_amount x regional_multiplier,
-                  revenue x percentage x regional_multiplier
+                  fixed_amount × regional_multiplier,
+                  revenue × percentage × regional_multiplier
                 )
       
 120   waarbij:
@@ -160,7 +160,7 @@ AI Model Scanner - Patent Tekeningen
       |   • File Validation (.pt, .pth, .h5, .pb, .onnx, .pkl, .joblib)     |
       +---------------------------------------------------------------------+
                                       |
-150                                   |
+150                                   ▼
 
 
 ===============================================================================
@@ -173,7 +173,7 @@ AI Model Scanner - Patent Tekeningen
       |   • Model Complexity Classification                                 |
       +---------------------------------------------------------------------+
                                       |
-160                                   |
+160                                   ▼
       +---------------------------------------------------------------------+
       | STEP 3: Bias Detection                                              |
       |   • Demographic Parity (threshold: 0.80)                            |
@@ -182,7 +182,7 @@ AI Model Scanner - Patent Tekeningen
       |   • Individual Fairness (Lipschitz continuity, L=1.0)               |
       +---------------------------------------------------------------------+
                                       |
-                                      |
+                                      ▼
 170   +---------------------------------------------------------------------+
       | STEP 4: EU AI Act Classification                                    |
       |   • Article 5 Check (Prohibited Practices)                          |
@@ -191,7 +191,7 @@ AI Model Scanner - Patent Tekeningen
 175   |   • Penalty Calculation (EUR 35M / EUR 15M)                         |
       +---------------------------------------------------------------------+
                                       |
-                                      |
+                                      ▼
       +---------------------------------------------------------------------+
 180   | STEP 5: Netherlands Compliance                                      |
       |   • BSN Detection (9-digit pattern + checksum)                      |
@@ -200,7 +200,7 @@ AI Model Scanner - Patent Tekeningen
       |   • Dutch Language Support                                          |
 185   +---------------------------------------------------------------------+
                                       |
-                                      |
+                                      ▼
       +---------------------------------------------------------------------+
       | STEP 6: Report Generation                                           |
 190   |   • PDF/HTML Output                                                 |
@@ -225,7 +225,7 @@ AI Model Scanner - Patent Tekeningen
       |  |  Frontend    |◄----►|  Database    |◄----►|   Cache      |    |
       |  +--------------+      +--------------+      +--------------+    |
       |         |                                                          |
-      |         |                                                          |
+      |         ▼                                                          |
 210   |  +--------------------------------------------------------------+ |
       |  |         AI Model Scanner Services                            | |
       |  |  • Multi-Framework Analyzer                                  | |
@@ -243,15 +243,15 @@ AI Model Scanner - Patent Tekeningen
       +---------------------------------------------------------------------+
 225   | FEATURE              | DataGuardian | OneTrust | TrustArc | IBM    |
       +----------------------+--------------+----------+----------+--------+
-      | Automated Bias       |      Y       |    N     |    N     |   W    |
-      | Multi-Framework      |      Y       |    N     |    N     |   W    |
-      | BSN Detection        |      Y       |    N     |    N     |   N    |
-230   | EU AI Act 2025       |      Y       |    W     |    W     |   W    |
+      | Automated Bias       |      ✓       |    ✗     |    ✗     |   ⚠    |
+      | Multi-Framework      |      ✓       |    ✗     |    ✗     |   ⚠    |
+      | BSN Detection        |      ✓       |    ✗     |    ✗     |   ✗    |
+230   | EU AI Act 2025       |      ✓       |    ⚠     |    ⚠     |   ⚠    |
       | Cost (Annual)        |   €2.5K-25K  | €50K-500K|€75K-400K |€100K+  |
       | Cost Savings         |   BASELINE   |   95%    |   96%    |  97%   |
       +---------------------------------------------------------------------+
       
-235   Legend: Y = Full Support, W = Partial Support, N = No Support
+235   Legend: ✓ = Full Support, ⚠ = Partial Support, ✗ = No Support
       
       
       FIGUUR 11: VALUE PROPOSITION
@@ -288,10 +288,10 @@ AI Model Scanner - Patent Tekeningen
       BSN FORMULE CORRECTIE:
       
       OUD (FOUT):
-         checksum = SUM(digit_i x (9-i)) mod 11  N INCORRECT
+         checksum = Σ(digit_i × (9-i)) mod 11  ✗ INCORRECT
 270   
       NIEUW (CORRECT):
-         checksum = (digit_0 x 9) + (digit_1 x 8) + ... - (digit_8 x 1) Y CORRECT
+         checksum = (digit_0 × 9) + (digit_1 × 8) + ... - (digit_8 × 1) ✓ CORRECT
          
       De laatste digit (digit_8) gebruikt factor 1, NIET factor (9-8)=1 via formule.
 275   Dit is het officiële Nederlandse BSN 11-proef algoritme.
