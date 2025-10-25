@@ -250,13 +250,18 @@ class AIModelScanner:
                     "location": "Compliance Assessment System"
                 })
 
+            # NOTE: Comprehensive EU AI Act coverage (Articles 4-94, 60-65%) requires actual model file upload
+            # Repository URL and path scanning use legacy compliance checks (18-20% coverage)
+            logging.info(f"scan_model() using legacy compliance checks for {model_source} - comprehensive coverage requires file upload")
+            
             try:
                 metrics = self._calculate_risk_metrics(scan_result["findings"])
                 scan_result.update(metrics)
                 
-                # Add AI Model specific compliance assessment
-                ai_compliance_metrics = self._calculate_ai_compliance_metrics(scan_result)
-                scan_result.update(ai_compliance_metrics)
+                # Legacy AI compliance metrics (only if advanced scanner didn't populate)
+                if not scan_result.get('ai_model_compliance'):
+                    ai_compliance_metrics = self._calculate_ai_compliance_metrics(scan_result)
+                    scan_result.update(ai_compliance_metrics)
                 
             except Exception as metrics_error:
                 logging.error(f"Error calculating risk metrics: {str(metrics_error)}")
