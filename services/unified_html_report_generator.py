@@ -1245,19 +1245,29 @@ class UnifiedHTMLReportGenerator:
             
             for title, phase_data in phases:
                 if phase_data:
-                    status = phase_data.get('status', phase_data.get('compliant', 'assessed'))
-                    findings_count = phase_data.get('findings_count', len(phase_data.get('findings', [])))
+                    # Determine status and display text
+                    is_compliant = phase_data.get('compliant', phase_data.get('is_compliant', False))
+                    is_applicable = phase_data.get('applicable', phase_data.get('is_applicable', True))
+                    compliance_pct = phase_data.get('compliance_percentage', 0)
                     
-                    if status in ['compliant', 'complete', True, 'passed']:
-                        icon, color = '✅', '#10b981'
-                    elif status in ['partial', 'in_progress']:
-                        icon, color = '⚠️', '#f59e0b'
+                    # Choose icon and display based on data available
+                    if compliance_pct > 0:
+                        if compliance_pct >= 80:
+                            icon, color, display = '✅', '#10b981', f'{compliance_pct}% Compliant'
+                        elif compliance_pct >= 50:
+                            icon, color, display = '⚠️', '#f59e0b', f'{compliance_pct}% Partial'
+                        else:
+                            icon, color, display = '🔍', '#ef4444', f'{compliance_pct}% Coverage'
+                    elif is_compliant:
+                        icon, color, display = '✅', '#10b981', 'Assessed'
+                    elif not is_applicable:
+                        icon, color, display = '➖', '#9ca3af', 'Not Applicable'
                     else:
-                        icon, color = '🔍', '#6366f1'
+                        icon, color, display = '🔍', '#6366f1', 'Analyzed'
                     
                     phase_cards += f"""
                     <div class="metric-card" style="border-left: 4px solid {color};">
-                        <div class="metric-value" style="font-size: 14px;">{icon} {findings_count} findings</div>
+                        <div class="metric-value" style="font-size: 14px;">{icon} {display}</div>
                         <div class="metric-label" style="font-size: 11px;">{title}</div>
                     </div>
                     """
