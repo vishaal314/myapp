@@ -1,0 +1,199 @@
+===============================================================================
+DEPLOYMENT PACKAGE: EU AI ACT Report Fix
+Date: October 25, 2025
+Version: 2.0 - Expanded Coverage (56.6% EU AI Act)
+===============================================================================
+
+PACKAGE CONTENTS:
+-------------------------------------------------------------------------------
+
+1. DEPLOYMENT SCRIPT (REQUIRED)
+   ✓ DEPLOYMENT_EU_AI_ACT_REPORT_FIX_2025-10-25.sh (15 KB, executable)
+   - Automated deployment script for dataguardianpro.nl
+   - Includes backup, code fixes, Docker rebuild, service restart
+   - Run with: ./DEPLOYMENT_EU_AI_ACT_REPORT_FIX_2025-10-25.sh
+
+2. DOCUMENTATION (REQUIRED)
+   ✓ DEPLOYMENT_README_2025-10-25.md
+   - Complete deployment instructions
+   - Testing procedures
+   - Rollback instructions
+   - Troubleshooting guide
+
+3. UPDATED CODE FILES (APPLIED BY SCRIPT)
+   ✓ services/unified_html_report_generator.py
+   - Fixed articles_covered dictionary extraction
+   - Fixed phase status display
+   - Fixed articles display formatting
+
+4. PATENT DOCUMENTS (OPTIONAL - FOR RVO.NL SUBMISSION)
+   Dutch Version:
+   ✓ patent_documents/CORRECTED_Patent_Conclusions_FINAL.txt
+   ✓ patent_documents/04_Patent_Conclusions_Conclusies_CORRECTED.pdf (14 KB)
+   
+   English Version:
+   ✓ patent_documents/CORRECTED_Patent_Conclusions_ENGLISH.txt
+   ✓ patent_documents/04_Patent_Conclusions_Claims_CORRECTED_ENGLISH.pdf (10 KB)
+   
+   Coverage Analysis:
+   ✓ patent_documents/EU_AI_ACT_COVERAGE_ANALYSIS.txt
+
+===============================================================================
+DEPLOYMENT INSTRUCTIONS
+===============================================================================
+
+QUICK START (3 steps):
+---------------------
+1. Upload deployment script to server:
+   scp DEPLOYMENT_EU_AI_ACT_REPORT_FIX_2025-10-25.sh root@dataguardianpro.nl:/root/
+
+2. SSH and run:
+   ssh root@dataguardianpro.nl
+   chmod +x /root/DEPLOYMENT_EU_AI_ACT_REPORT_FIX_2025-10-25.sh
+   /root/DEPLOYMENT_EU_AI_ACT_REPORT_FIX_2025-10-25.sh
+
+3. Verify:
+   - Test AI Model Scanner with repository URL
+   - Check report shows "64 articles (56.6% coverage)"
+   - Verify no errors in logs
+
+WHAT THE SCRIPT DOES:
+--------------------
+✓ Creates backup: /root/backups/deployment_YYYYMMDD_HHMMSS/
+✓ Applies code fixes to unified_html_report_generator.py
+✓ Rebuilds Docker containers with --no-cache
+✓ Restarts all services
+✓ Provides verification instructions
+
+===============================================================================
+BUGS FIXED
+===============================================================================
+
+BUG #1: "unhashable type: 'slice'" Error
+----------------------------------------
+BEFORE: Report generation crashed with error
+AFTER:  Reports generate successfully
+FIX:    Properly extract articles_checked list from dictionary
+
+BUG #2: Incorrect Articles Display
+-----------------------------------
+BEFORE: Articles Analyzed: 8 articles (total_articles_in_eu_ai_act, ...)
+AFTER:  Articles Analyzed: 64 articles (56.6% coverage): 4, 5, 8, 9, 10...
+FIX:    Extract actual article numbers from articles_covered['articles_checked']
+
+BUG #3: Misleading Phase Status
+--------------------------------
+BEFORE: All phases showed "🔍 0 findings"
+AFTER:  ✅ 100% Compliant, 🔍 Analyzed, ⚠️ 65% Partial (meaningful status)
+FIX:    Display status based on compliance_percentage and is_compliant flags
+
+===============================================================================
+PATENT UPDATES (FOR RVO.NL SUBMISSION)
+===============================================================================
+
+CORRECTED ARTICLE NUMBERS:
+-------------------------
+Claim 1:
+  OLD: "Articles 5, 19-24, and 51-55"
+  NEW: "64 articles (56.6% coverage) according to Articles 4-94"
+
+Claim 3:
+  OLD: "Articles 19-24 validator"
+  NEW: "Articles 8-27 validator (Art. 8-15: requirements; Art. 16-27: obligations)"
+  
+  OLD: "Articles 51-55 checker"
+  NEW: "Articles 51-56 checker including Codes of Practice (Art. 54-56)"
+
+SUBMISSION DETAILS:
+------------------
+Deadline:     December 29, 2025
+Application:  1045290
+Patent:       NL2025003
+Value:        €1.9M
+Coverage:     56.6% EU AI Act (64 of 113 articles)
+
+FILES FOR SUBMISSION:
+--------------------
+✓ 04_Patent_Conclusions_Conclusies_CORRECTED.pdf (Dutch - 14 KB)
+✓ 04_Patent_Conclusions_Claims_CORRECTED_ENGLISH.pdf (English - 10 KB)
+
+===============================================================================
+VERIFICATION CHECKLIST
+===============================================================================
+
+After deployment, verify:
+□ All Docker containers running (docker-compose ps)
+□ No errors in logs (docker-compose logs streamlit | grep -i error)
+□ AI Model Scanner accessible at https://dataguardianpro.nl
+□ Test scan with: https://github.com/Lightning-AI/pytorch-lightning
+□ Report displays "64 articles (56.6% coverage): 4, 5, 8, 9..."
+□ Phase status shows meaningful text (not "0 findings")
+□ No "unhashable type: 'slice'" errors
+
+===============================================================================
+ROLLBACK PROCEDURE
+===============================================================================
+
+If deployment fails:
+
+1. Find backup directory:
+   BACKUP_DIR=$(ls -td /root/backups/deployment_* | head -1)
+
+2. Restore files:
+   cp $BACKUP_DIR/unified_html_report_generator.py /root/DataGuardianPro/services/
+
+3. Restart services:
+   cd /root/DataGuardianPro
+   docker-compose down && docker-compose up -d
+
+===============================================================================
+SUPPORT & TROUBLESHOOTING
+===============================================================================
+
+LOGS LOCATION:
+-------------
+- Deployment backup: /root/backups/deployment_*/
+- Application logs: /root/DataGuardianPro/logs/
+- Docker logs: docker-compose logs --tail=100 streamlit
+
+COMMON ISSUES:
+-------------
+Issue: Services won't start
+Fix:   docker-compose logs --tail=100 streamlit
+
+Issue: Report shows old format
+Fix:   Clear browser cache or use incognito mode
+
+Issue: Database errors
+Fix:   docker-compose ps postgres (ensure running)
+
+===============================================================================
+FILES TO TRANSFER TO SERVER
+===============================================================================
+
+REQUIRED (for code deployment):
+  1. DEPLOYMENT_EU_AI_ACT_REPORT_FIX_2025-10-25.sh (15 KB)
+  2. DEPLOYMENT_README_2025-10-25.md (for reference)
+
+OPTIONAL (for patent submission to RVO.nl):
+  3. patent_documents/04_Patent_Conclusions_Conclusies_CORRECTED.pdf (14 KB)
+  4. patent_documents/04_Patent_Conclusions_Claims_CORRECTED_ENGLISH.pdf (10 KB)
+
+===============================================================================
+DEPLOYMENT STATUS
+===============================================================================
+
+Status: READY FOR DEPLOYMENT ✅
+
+The deployment script is self-contained and includes:
+✓ Automatic backup creation
+✓ All code fixes embedded in script
+✓ Docker rebuild with --no-cache
+✓ Service restart
+✓ Verification instructions
+
+Simply upload and run the script on dataguardianpro.nl server.
+
+===============================================================================
+END OF DEPLOYMENT PACKAGE
+===============================================================================
