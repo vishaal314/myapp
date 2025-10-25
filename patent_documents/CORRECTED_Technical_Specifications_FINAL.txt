@@ -93,9 +93,9 @@ SOC 2                               Security controls                        Ali
 
 COST AND VALUE METRICS
 Processing Cost per Model           Average cost per scan                    €0.10-€0.50
-Cost Savings vs OneTrust            Annual license comparison                95% savings
-Cost Savings vs TrustArc            Annual license comparison                96% savings
-Cost Savings vs IBM Watson          Annual license comparison                97% savings
+Cost Savings vs Systeem A            Annual license comparison                95% savings
+Cost Savings vs Systeem B            Annual license comparison                96% savings
+Cost Savings vs Systeem C          Annual license comparison                97% savings
 ROI Timeline                        Break-even vs manual assessment          <3 months
 
 MARKET POSITIONING

@@ -54,8 +54,8 @@ AI Model Scanner - Automated AI Compliance Assessment System
       Probleem met Bestaande Oplossingen
       
  50   Huidige compliance assessment methoden zijn voornamelijk handmatig,
-      tijdrovend, en kostbaar. Organisaties zoals OneTrust en TrustArc bieden
-      compliance software, maar deze systemen:
+      tijdrovend, en kostbaar. Commerciele compliance software oplossingen
+      zijn beschikbaar, maar deze systemen:
       
       a) Vereisen extensieve handmatige invoer en documentatie review;
  55   b) Ontberen geautomatiseerde technische analyse van model architectuur;

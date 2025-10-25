@@ -241,7 +241,7 @@ AI Model Scanner - Patent Tekeningen
       FIGUUR 10: COMPETITIVE ADVANTAGE MATRIX
       
       +---------------------------------------------------------------------+
-225   | FEATURE              | DataGuardian | OneTrust | TrustArc | IBM    |
+225   | FEATURE              | DataGuardian | Systeem A | Systeem B | Systeem C |
       +----------------------+--------------+----------+----------+--------+
       | Automated Bias       |      Y       |    N     |    N     |   W    |
       | Multi-Framework      |      Y       |    N     |    N     |   W    |
@@ -265,7 +265,7 @@ AI Model Scanner - Patent Tekeningen
       |  Netherlands Market:     EUR 23M (150,000 companies)                  |
       |                                                                     |
       |  Penalty Prevention:     Up to EUR 35M per violation               |
-      |  Cost Savings:           95% vs OneTrust/TrustArc                  |
+      |  Cost Savings:           95-97% vs commerciele oplossingen         |
 250   |  Processing Speed:       <30s (vs hours manually)                  |
 
 
