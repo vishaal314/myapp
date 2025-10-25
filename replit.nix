@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.poppler_utils
     pkgs.enscript
     pkgs.unzip
     pkgs.redis
