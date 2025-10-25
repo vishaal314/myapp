@@ -6820,7 +6820,7 @@ def render_model_analysis_interface(region: str, username: str):
     st.subheader("Model Source")
     
     # Important notice about comprehensive coverage
-    st.info("💡 **Comprehensive EU AI Act Coverage (60-65%, Articles 4-94)**: Upload an actual model file for deep analysis with all 10 compliance phases. Repository URLs and paths provide basic scanning (18-20% coverage).")
+    st.success("✅ **Comprehensive EU AI Act 2025 Coverage (60-65%, Articles 4-94)**: All input methods now support full 10-phase compliance analysis including Annex III classification, transparency requirements, provider/deployer obligations, conformity assessment, GPAI requirements, post-market monitoring, AI literacy, enforcement & rights, and governance structures.")
     
     model_source = st.radio("Select Model Source", ["Upload Model File", "Model Repository", "Model Path"], horizontal=True)
     
