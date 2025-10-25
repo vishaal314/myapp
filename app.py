@@ -6818,6 +6818,10 @@ def render_model_analysis_interface(region: str, username: str):
     
     # Model source selection
     st.subheader("Model Source")
+    
+    # Important notice about comprehensive coverage
+    st.info("💡 **Comprehensive EU AI Act Coverage (60-65%, Articles 4-94)**: Upload an actual model file for deep analysis with all 10 compliance phases. Repository URLs and paths provide basic scanning (18-20% coverage).")
+    
     model_source = st.radio("Select Model Source", ["Upload Model File", "Model Repository", "Model Path"], horizontal=True)
     
     # Always show file uploader to catch uploaded files regardless of radio selection
