@@ -275,22 +275,89 @@ class AIModelScanner:
                 temp_file_path = None
                 
                 if model_source in ["Repository URL", "Model Repository"]:
-                    # For repository: Create a metadata file that advanced scanner can analyze
-                    logging.info(f"Creating analysis context for repository: {scan_result.get('repository_url', 'unknown')}")
+                    # CRITICAL FIX: Clone repository and find actual model files for comprehensive analysis
+                    logging.info(f"Cloning repository for comprehensive analysis: {scan_result.get('repository_url', 'unknown')}")
                     
-                    # Create a temporary file with repository metadata for analysis
-                    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='_repo_metadata.json') as tmp:
-                        import json
-                        repo_metadata = {
-                            'source': 'repository',
-                            'url': scan_result.get('repository_url', ''),
-                            'files_count': scan_result.get('files_scanned', 0),
-                            'total_lines': scan_result.get('total_lines', 0),
-                            'license': scan_result.get('license_type', 'Unknown')
-                        }
-                        json.dump(repo_metadata, tmp)
-                        temp_file_path = tmp.name
-                        model_metadata['analysis_type'] = 'repository_metadata'
+                    try:
+                        import subprocess
+                        import shutil
+                        
+                        repo_url = scan_result.get('repository_url', '')
+                        if not repo_url:
+                            raise ValueError("Repository URL is empty")
+                        
+                        # Create temporary directory for cloning
+                        temp_repo_dir = tempfile.mkdtemp(prefix='ai_model_repo_')
+                        logging.info(f"Cloning repository to: {temp_repo_dir}")
+                        
+                        # Clone repository with depth=1 for faster cloning
+                        clone_cmd = ['git', 'clone', '--depth', '1', repo_url, temp_repo_dir]
+                        result = subprocess.run(clone_cmd, capture_output=True, text=True, timeout=60)
+                        
+                        if result.returncode != 0:
+                            logging.warning(f"Git clone failed: {result.stderr}")
+                            raise Exception(f"Failed to clone repository: {result.stderr}")
+                        
+                        logging.info(f"Repository cloned successfully to {temp_repo_dir}")
+                        
+                        # Find model files in repository (common AI model file extensions)
+                        model_extensions = ['.pt', '.pth', '.h5', '.keras', '.pkl', '.pickle', '.onnx', '.pb', '.tflite', '.safetensors', '.bin']
+                        model_files = []
+                        
+                        for root, dirs, files in os.walk(temp_repo_dir):
+                            # Skip .git directory
+                            if '.git' in root:
+                                continue
+                            for file in files:
+                                if any(file.lower().endswith(ext) for ext in model_extensions):
+                                    model_files.append(os.path.join(root, file))
+                        
+                        if model_files:
+                            # Use the first model file found (or largest if multiple)
+                            if len(model_files) > 1:
+                                # Sort by file size, use largest
+                                model_files.sort(key=lambda x: os.path.getsize(x), reverse=True)
+                            
+                            temp_file_path = model_files[0]
+                            model_metadata['analysis_type'] = 'repository_cloned_file'
+                            model_metadata['model_file_count'] = len(model_files)
+                            model_metadata['model_file_name'] = os.path.basename(temp_file_path)
+                            model_metadata['repository_path'] = temp_repo_dir  # Store for cleanup
+                            logging.info(f"Found {len(model_files)} model file(s), analyzing: {os.path.basename(temp_file_path)}")
+                        else:
+                            # No model files found - fall back to metadata analysis
+                            logging.warning(f"No model files found in repository, using metadata analysis")
+                            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='_repo_metadata.json') as tmp:
+                                import json
+                                repo_metadata = {
+                                    'source': 'repository_no_models',
+                                    'url': scan_result.get('repository_url', ''),
+                                    'files_count': scan_result.get('files_scanned', 0),
+                                    'total_lines': scan_result.get('total_lines', 0),
+                                    'license': scan_result.get('license_type', 'Unknown'),
+                                    'warning': 'No model files found in repository'
+                                }
+                                json.dump(repo_metadata, tmp)
+                                temp_file_path = tmp.name
+                                model_metadata['analysis_type'] = 'repository_metadata_fallback'
+                                model_metadata['repository_path'] = temp_repo_dir  # Store for cleanup
+                        
+                    except subprocess.TimeoutExpired:
+                        logging.error("Repository cloning timed out after 60 seconds")
+                        # Fall back to metadata analysis
+                        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='_repo_metadata.json') as tmp:
+                            import json
+                            json.dump({'source': 'repository_clone_timeout', 'url': repo_url}, tmp)
+                            temp_file_path = tmp.name
+                            model_metadata['analysis_type'] = 'repository_timeout'
+                    except Exception as clone_error:
+                        logging.error(f"Repository cloning failed: {clone_error}")
+                        # Fall back to metadata analysis
+                        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='_repo_metadata.json') as tmp:
+                            import json
+                            json.dump({'source': 'repository_clone_failed', 'error': str(clone_error)}, tmp)
+                            temp_file_path = tmp.name
+                            model_metadata['analysis_type'] = 'repository_clone_failed'
                 
                 elif model_source == "Model Path":
                     # For model path: Use the path directly if it exists
@@ -323,12 +390,25 @@ class AIModelScanner:
                     model_metadata=model_metadata
                 )
                 
-                # Clean up temporary file if created
-                if temp_file_path and model_source != "Model Path" and os.path.exists(temp_file_path):
-                    try:
-                        os.unlink(temp_file_path)
-                    except:
-                        pass
+                # Clean up temporary files and cloned repositories
+                if temp_file_path and model_source != "Model Path":
+                    # Clean up temp metadata file if created
+                    if 'metadata' in model_metadata.get('analysis_type', '') and os.path.exists(temp_file_path):
+                        try:
+                            os.unlink(temp_file_path)
+                        except:
+                            pass
+                    
+                    # Clean up cloned repository directory if exists
+                    if model_source in ["Repository URL", "Model Repository"]:
+                        repo_path = model_metadata.get('repository_path', '')
+                        if repo_path and os.path.exists(repo_path):
+                            try:
+                                import shutil
+                                shutil.rmtree(repo_path)
+                                logging.info(f"Cleaned up cloned repository: {repo_path}")
+                            except Exception as cleanup_error:
+                                logging.warning(f"Failed to cleanup repository: {cleanup_error}")
                 
                 # Merge comprehensive findings with existing findings
                 if comprehensive_results.get('findings'):
