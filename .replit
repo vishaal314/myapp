@@ -92,11 +92,11 @@ localPort = 40741
 externalPort = 6000
 
 [[ports]]
-localPort = 42247
-externalPort = 3002
+localPort = 41937
+externalPort = 5173
 
 [[ports]]
-localPort = 46545
-externalPort = 5173
+localPort = 42247
+externalPort = 3002
 
 [agent]

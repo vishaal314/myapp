@@ -518,14 +518,14 @@ class ImageScanner:
             total_score = (artifact_score + noise_score + compression_score + facial_inconsistency_score) / 4
             
             # Threshold for flagging potential deepfakes
-            if total_score >= 0.4:  # 40% confidence threshold
+            if total_score >= 0.20:  # 20% confidence threshold - optimized for deepfake detection
                 confidence = min(total_score, 0.95)  # Cap at 95%
                 
                 # Determine risk level based on score
-                if total_score >= 0.7:
+                if total_score >= 0.6:
                     risk_level = "Critical"
                     severity = "High likelihood"
-                elif total_score >= 0.5:
+                elif total_score >= 0.4:
                     risk_level = "High"
                     severity = "Moderate likelihood"
                 else:
@@ -534,13 +534,13 @@ class ImageScanner:
                 
                 # Build detailed analysis
                 indicators = []
-                if artifact_score >= 0.4:
+                if artifact_score >= 0.25:
                     indicators.append(f"Image artifacts detected (score: {artifact_score:.2f})")
-                if noise_score >= 0.4:
+                if noise_score >= 0.25:
                     indicators.append(f"Unusual noise patterns (score: {noise_score:.2f})")
-                if compression_score >= 0.4:
+                if compression_score >= 0.25:
                     indicators.append(f"Compression anomalies (score: {compression_score:.2f})")
-                if facial_inconsistency_score >= 0.4:
+                if facial_inconsistency_score >= 0.25:
                     indicators.append(f"Facial inconsistencies detected (score: {facial_inconsistency_score:.2f})")
                 
                 finding = {
@@ -585,19 +585,19 @@ class ImageScanner:
             # Analyze frequency distribution
             freq_std = np.std(magnitude_spectrum)
             freq_mean = np.mean(magnitude_spectrum)
-            if freq_std > 30 or freq_mean < 50:  # Unusual frequency patterns
+            if freq_std > 20 or freq_mean < 80:  # Unusual frequency patterns (lowered thresholds)
                 score += 0.3
             
             # 2. Check for checkerboard artifacts (common in upsampling)
             laplacian = cv2.Laplacian(gray, cv2.CV_64F)
             laplacian_var = laplacian.var()
-            if laplacian_var > 1000:  # High variance suggests artifacts
+            if laplacian_var > 300 or laplacian_var < 50:  # High or very low variance suggests artifacts
                 score += 0.25
             
             # 3. Edge coherence analysis
             edges = cv2.Canny(gray, 100, 200)
             edge_density = np.sum(edges > 0) / edges.size
-            if edge_density > 0.15 or edge_density < 0.02:  # Unusual edge patterns
+            if edge_density > 0.12 or edge_density < 0.03:  # Unusual edge patterns (more sensitive)
                 score += 0.2
             
             return min(score, 1.0)
@@ -653,7 +653,7 @@ class ImageScanner:
                         discontinuities += 1
             
             discontinuity_ratio = discontinuities / ((height // block_size) * (width // block_size))
-            if discontinuity_ratio > 0.3:  # High discontinuity
+            if discontinuity_ratio > 0.2 or discontinuity_ratio < 0.02:  # High or very low discontinuity
                 score += 0.4
             
             # 2. Double compression detection (re-compressed images)
@@ -668,7 +668,7 @@ class ImageScanner:
                     variances.append(np.var(region))
             
             var_std = np.std(variances)
-            if var_std > 1000:  # High variance between regions
+            if var_std > 800:  # High variance between regions (lowered threshold)
                 score += 0.3
             
             return min(score, 1.0)
@@ -682,12 +682,8 @@ class ImageScanner:
         try:
             score = 0.0
             
-            # Check if image likely contains faces
-            lower_filename = os.path.basename(image_path).lower()
-            face_keywords = ['face', 'person', 'people', 'portrait', 'selfie', 'profile', 'photo', 'headshot']
-            
-            if not any(term in lower_filename for term in face_keywords):
-                return 0.0  # No facial analysis needed
+            # FIXED: Analyze all images for facial inconsistencies, not just those with face-related filenames
+            # This ensures deepfakes are detected regardless of filename
             
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
@@ -705,7 +701,7 @@ class ImageScanner:
                     regions.append(np.mean(region))
             
             lighting_std = np.std(regions)
-            if lighting_std > 40:  # Inconsistent lighting
+            if lighting_std > 25 or lighting_std < 5:  # Inconsistent lighting or too uniform (lowered threshold)
                 score += 0.3
             
             # 2. Blurriness detection (deepfakes often have blur mismatches)
