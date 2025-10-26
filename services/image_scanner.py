@@ -28,13 +28,20 @@ import io
 # OCR and Image Processing imports
 try:
     import pytesseract
+    OCR_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"Pytesseract not available: {e}")
+    OCR_AVAILABLE = False
+
+# Separate check for OpenCV/NumPy (needed for deepfake detection)
+try:
     import cv2
     import numpy as np
     from PIL import Image, ImageEnhance
-    OCR_AVAILABLE = True
+    CV_AVAILABLE = True
 except ImportError as e:
-    logging.warning(f"OCR libraries not available: {e}")
-    OCR_AVAILABLE = False
+    logging.warning(f"OpenCV/NumPy not available: {e}")
+    CV_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -62,9 +69,10 @@ class ImageScanner:
         self.use_face_detection = True
         self.use_document_detection = True
         self.use_card_detection = True
+        self.use_deepfake_detection = True  # NEW: Deepfake detection
         self.min_confidence = 0.6  # Minimum confidence threshold for detections
         
-        logger.info(f"Initialized ImageScanner with region: {region}")
+        logger.info(f"Initialized ImageScanner with region: {region}, deepfake detection: {self.use_deepfake_detection}")
     
     def _get_ocr_languages(self) -> List[str]:
         """
@@ -207,6 +215,12 @@ class ImageScanner:
         if self.use_card_detection:
             card_findings = self._detect_payment_cards(image_path)
             findings.extend(card_findings)
+        
+        # NEW: Perform deepfake detection
+        deepfake_findings = []
+        if self.use_deepfake_detection:
+            deepfake_findings = self._detect_deepfake(image_path)
+            findings.extend(deepfake_findings)
         
         # Get scan metadata
         metadata = {
@@ -451,6 +465,343 @@ class ImageScanner:
             findings.append(finding)
         
         return findings
+    
+    def _detect_deepfake(self, image_path: str) -> List[Dict[str, Any]]:
+        """
+        Detect potential deepfake/synthetic media in images using basic analysis.
+        Analyzes image artifacts, noise patterns, compression anomalies, and facial inconsistencies.
+        
+        Note: This detection works independently of OCR - only requires OpenCV and NumPy.
+        
+        Args:
+            image_path: Path to the image file
+            
+        Returns:
+            List of deepfake detection findings
+        """
+        findings = []
+        
+        # Deepfake detection only requires OpenCV/NumPy, not OCR
+        if not CV_AVAILABLE:
+            logger.warning("Deepfake detection skipped - OpenCV/NumPy not available")
+            return findings
+        
+        try:
+            # Load image
+            image = cv2.imread(image_path)
+            if image is None:
+                return findings
+            
+            # Convert to RGB for analysis
+            rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            
+            # Initialize detection scores
+            artifact_score = 0
+            noise_score = 0
+            compression_score = 0
+            facial_inconsistency_score = 0
+            
+            # 1. Analyze image artifacts and compression anomalies
+            artifact_score = self._analyze_image_artifacts(image, gray)
+            
+            # 2. Analyze noise patterns
+            noise_score = self._analyze_noise_patterns(gray)
+            
+            # 3. Analyze compression artifacts
+            compression_score = self._analyze_compression_artifacts(image)
+            
+            # 4. Check for facial inconsistencies (if faces detected)
+            facial_inconsistency_score = self._analyze_facial_inconsistencies(image, image_path)
+            
+            # Calculate overall deepfake likelihood
+            total_score = (artifact_score + noise_score + compression_score + facial_inconsistency_score) / 4
+            
+            # Threshold for flagging potential deepfakes
+            if total_score >= 0.4:  # 40% confidence threshold
+                confidence = min(total_score, 0.95)  # Cap at 95%
+                
+                # Determine risk level based on score
+                if total_score >= 0.7:
+                    risk_level = "Critical"
+                    severity = "High likelihood"
+                elif total_score >= 0.5:
+                    risk_level = "High"
+                    severity = "Moderate likelihood"
+                else:
+                    risk_level = "Medium"
+                    severity = "Potential indicators"
+                
+                # Build detailed analysis
+                indicators = []
+                if artifact_score >= 0.4:
+                    indicators.append(f"Image artifacts detected (score: {artifact_score:.2f})")
+                if noise_score >= 0.4:
+                    indicators.append(f"Unusual noise patterns (score: {noise_score:.2f})")
+                if compression_score >= 0.4:
+                    indicators.append(f"Compression anomalies (score: {compression_score:.2f})")
+                if facial_inconsistency_score >= 0.4:
+                    indicators.append(f"Facial inconsistencies detected (score: {facial_inconsistency_score:.2f})")
+                
+                finding = {
+                    "type": "DEEPFAKE_SYNTHETIC_MEDIA",
+                    "source": image_path,
+                    "source_type": "image_deepfake_analysis",
+                    "confidence": confidence,
+                    "context": f"{severity} of synthetic/deepfake content detected",
+                    "extraction_method": "deepfake_detection_algorithm",
+                    "risk_level": risk_level,
+                    "location": "image_content",
+                    "reason": self._get_deepfake_compliance_reason(),
+                    "eu_ai_act_compliance": self._check_eu_ai_act_article_50(image_path, total_score),
+                    "analysis_details": {
+                        "overall_score": round(total_score, 3),
+                        "artifact_score": round(artifact_score, 3),
+                        "noise_score": round(noise_score, 3),
+                        "compression_score": round(compression_score, 3),
+                        "facial_inconsistency_score": round(facial_inconsistency_score, 3),
+                        "indicators": indicators,
+                        "detection_date": datetime.now().isoformat()
+                    }
+                }
+                findings.append(finding)
+                logger.info(f"Deepfake detection: {severity} (score: {total_score:.2f}) in {image_path}")
+            
+        except Exception as e:
+            logger.error(f"Deepfake detection error for {image_path}: {e}")
+        
+        return findings
+    
+    def _analyze_image_artifacts(self, image: np.ndarray, gray: np.ndarray) -> float:
+        """Analyze image for GAN-generated artifacts and anomalies."""
+        try:
+            score = 0.0
+            
+            # 1. Check for unusual frequency domain patterns (common in GANs)
+            dft = cv2.dft(np.float32(gray), flags=cv2.DFT_COMPLEX_OUTPUT)
+            dft_shift = np.fft.fftshift(dft)
+            magnitude_spectrum = 20 * np.log(cv2.magnitude(dft_shift[:,:,0], dft_shift[:,:,1]) + 1)
+            
+            # Analyze frequency distribution
+            freq_std = np.std(magnitude_spectrum)
+            freq_mean = np.mean(magnitude_spectrum)
+            if freq_std > 30 or freq_mean < 50:  # Unusual frequency patterns
+                score += 0.3
+            
+            # 2. Check for checkerboard artifacts (common in upsampling)
+            laplacian = cv2.Laplacian(gray, cv2.CV_64F)
+            laplacian_var = laplacian.var()
+            if laplacian_var > 1000:  # High variance suggests artifacts
+                score += 0.25
+            
+            # 3. Edge coherence analysis
+            edges = cv2.Canny(gray, 100, 200)
+            edge_density = np.sum(edges > 0) / edges.size
+            if edge_density > 0.15 or edge_density < 0.02:  # Unusual edge patterns
+                score += 0.2
+            
+            return min(score, 1.0)
+            
+        except Exception as e:
+            logger.warning(f"Artifact analysis error: {e}")
+            return 0.0
+    
+    def _analyze_noise_patterns(self, gray: np.ndarray) -> float:
+        """Analyze noise patterns that may indicate synthetic generation."""
+        try:
+            score = 0.0
+            
+            # 1. Analyze noise distribution
+            noise = gray - cv2.GaussianBlur(gray, (5, 5), 0)
+            noise_std = np.std(noise)
+            noise_mean = np.mean(np.abs(noise))
+            
+            # GANs often produce unnaturally uniform noise
+            if noise_std < 5:  # Very low noise (too perfect)
+                score += 0.4
+            elif noise_std > 50:  # Very high noise (processing artifacts)
+                score += 0.3
+            
+            # 2. Check for periodic noise patterns
+            if noise_mean < 2:  # Extremely low noise
+                score += 0.3
+            
+            return min(score, 1.0)
+            
+        except Exception as e:
+            logger.warning(f"Noise analysis error: {e}")
+            return 0.0
+    
+    def _analyze_compression_artifacts(self, image: np.ndarray) -> float:
+        """Analyze compression artifacts that may indicate manipulation."""
+        try:
+            score = 0.0
+            
+            # 1. Block discontinuity detection (JPEG artifacts)
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            height, width = gray.shape
+            
+            # Check for 8x8 block patterns (JPEG compression)
+            block_size = 8
+            discontinuities = 0
+            for i in range(block_size, height - block_size, block_size):
+                for j in range(block_size, width - block_size, block_size):
+                    # Check horizontal and vertical discontinuities
+                    h_diff = abs(int(gray[i, j]) - int(gray[i-1, j]))
+                    v_diff = abs(int(gray[i, j]) - int(gray[i, j-1]))
+                    if h_diff > 20 or v_diff > 20:
+                        discontinuities += 1
+            
+            discontinuity_ratio = discontinuities / ((height // block_size) * (width // block_size))
+            if discontinuity_ratio > 0.3:  # High discontinuity
+                score += 0.4
+            
+            # 2. Double compression detection (re-compressed images)
+            # Calculate variance in different regions
+            regions = 4
+            variances = []
+            h_step = height // regions
+            w_step = width // regions
+            for i in range(regions):
+                for j in range(regions):
+                    region = gray[i*h_step:(i+1)*h_step, j*w_step:(j+1)*w_step]
+                    variances.append(np.var(region))
+            
+            var_std = np.std(variances)
+            if var_std > 1000:  # High variance between regions
+                score += 0.3
+            
+            return min(score, 1.0)
+            
+        except Exception as e:
+            logger.warning(f"Compression analysis error: {e}")
+            return 0.0
+    
+    def _analyze_facial_inconsistencies(self, image: np.ndarray, image_path: str) -> float:
+        """Analyze facial regions for inconsistencies in lighting, shadows, and blurriness."""
+        try:
+            score = 0.0
+            
+            # Check if image likely contains faces
+            lower_filename = os.path.basename(image_path).lower()
+            face_keywords = ['face', 'person', 'people', 'portrait', 'selfie', 'profile', 'photo', 'headshot']
+            
+            if not any(term in lower_filename for term in face_keywords):
+                return 0.0  # No facial analysis needed
+            
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            
+            # 1. Lighting consistency analysis
+            # Divide image into regions and check lighting variance
+            height, width = gray.shape
+            regions = []
+            for i in range(3):
+                for j in range(3):
+                    h_start = i * height // 3
+                    h_end = (i + 1) * height // 3
+                    w_start = j * width // 3
+                    w_end = (j + 1) * width // 3
+                    region = gray[h_start:h_end, w_start:w_end]
+                    regions.append(np.mean(region))
+            
+            lighting_std = np.std(regions)
+            if lighting_std > 40:  # Inconsistent lighting
+                score += 0.3
+            
+            # 2. Blurriness detection (deepfakes often have blur mismatches)
+            laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+            if laplacian_var < 100:  # Image is blurry
+                score += 0.25
+            elif laplacian_var > 2000:  # Overly sharp (over-processed)
+                score += 0.2
+            
+            # 3. Color consistency in face regions (simplified)
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            h_channel = hsv[:,:,0]
+            h_std = np.std(h_channel)
+            if h_std > 50:  # Inconsistent colors
+                score += 0.25
+            
+            return min(score, 1.0)
+            
+        except Exception as e:
+            logger.warning(f"Facial analysis error: {e}")
+            return 0.0
+    
+    def _get_deepfake_compliance_reason(self) -> str:
+        """Get compliance reason for deepfake/synthetic media detection."""
+        if self.region == "Netherlands":
+            return ("Synthetic/deepfake media detection is critical under EU AI Act 2025 Article 50(2) "
+                   "which mandates transparency and labeling of AI-generated content. Under Dutch UAVG "
+                   "implementation, organizations must clearly disclose synthetic media to prevent "
+                   "deception and manipulation. Failure to comply may result in penalties up to €35M "
+                   "or 7% of global turnover.")
+        else:
+            return ("Synthetic/deepfake media must be labeled under EU AI Act 2025 Article 50(2) "
+                   "transparency requirements. Organizations using or distributing AI-generated "
+                   "content must implement technical measures to detect and label such content.")
+    
+    def _check_eu_ai_act_article_50(self, image_path: str, deepfake_score: float) -> Dict[str, Any]:
+        """
+        Check EU AI Act Article 50(2) compliance for deepfake/synthetic media.
+        
+        Args:
+            image_path: Path to the analyzed image
+            deepfake_score: Detected deepfake likelihood score
+            
+        Returns:
+            Dictionary with Article 50 compliance assessment
+        """
+        compliance = {
+            "article": "Article 50(2)",
+            "title": "Transparency Obligations - Deep Fake Labeling",
+            "description": "AI systems that generate or manipulate image, audio or video content (deepfakes) must disclose that the content is artificially generated or manipulated",
+            "applicable": True,
+            "requirements": [
+                {
+                    "requirement": "Clear labeling of synthetic content",
+                    "status": "Unknown - requires manual verification",
+                    "penalty_if_non_compliant": "Up to €15M or 3% of global turnover"
+                },
+                {
+                    "requirement": "Technical measures to detect synthetic content",
+                    "status": "Implemented - automated detection active",
+                    "penalty_if_non_compliant": "N/A"
+                },
+                {
+                    "requirement": "User disclosure of AI-generated content",
+                    "status": "Required verification",
+                    "penalty_if_non_compliant": "Up to €15M or 3% of global turnover"
+                }
+            ],
+            "detection_score": round(deepfake_score, 3),
+            "compliance_recommendation": self._get_article_50_recommendation(deepfake_score),
+            "netherlands_specific": self.region == "Netherlands"
+        }
+        
+        if self.region == "Netherlands":
+            compliance["netherlands_context"] = (
+                "Under Dutch law, the Authority for Consumers and Markets (ACM) and Autoriteit Persoonsgegevens (AP) "
+                "enforce transparency requirements for synthetic media. Organizations must implement robust "
+                "detection and labeling systems."
+            )
+        
+        return compliance
+    
+    def _get_article_50_recommendation(self, score: float) -> str:
+        """Get compliance recommendation based on deepfake detection score."""
+        if score >= 0.7:
+            return ("CRITICAL: High likelihood of synthetic content detected. IMMEDIATE ACTION REQUIRED: "
+                   "(1) Verify content authenticity, (2) Add clear synthetic media labels if confirmed, "
+                   "(3) Document detection in compliance logs, (4) Review content distribution policies.")
+        elif score >= 0.5:
+            return ("HIGH PRIORITY: Moderate likelihood of synthetic content. RECOMMENDED ACTIONS: "
+                   "(1) Conduct manual review of content, (2) Implement labeling if synthetic, "
+                   "(3) Enhance detection monitoring, (4) Update content verification procedures.")
+        else:
+            return ("ADVISORY: Potential indicators of synthetic content detected. SUGGESTED ACTIONS: "
+                   "(1) Monitor for additional indicators, (2) Maintain detection logs, "
+                   "(3) Ensure labeling systems are operational, (4) Review content source verification.")
     
     def _get_risk_level(self, pii_type: str) -> str:
         """

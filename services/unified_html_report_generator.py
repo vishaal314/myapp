@@ -640,8 +640,18 @@ class UnifiedHTMLReportGenerator:
         if not findings:
             return f"<p>✅ {t_report('no_issues_found', 'No issues found in the analysis.')}</p>"
         
+        # Separate deepfake findings from other findings
+        deepfake_findings = [f for f in findings if f.get('type') == 'DEEPFAKE_SYNTHETIC_MEDIA']
+        other_findings = [f for f in findings if f.get('type') != 'DEEPFAKE_SYNTHETIC_MEDIA']
+        
         findings_html = ""
-        for finding in findings:
+        
+        # Add deepfake findings section if present
+        if deepfake_findings:
+            findings_html += self._generate_deepfake_findings_section(deepfake_findings)
+        
+        # Add other findings
+        for finding in other_findings:
             # Handle both enhanced and original findings
             severity = finding.get('severity', finding.get('risk_level', 'Low')).lower()
             finding_type = finding.get('title', finding.get('type', finding.get('category', 'Unknown')))
@@ -693,6 +703,166 @@ class UnifiedHTMLReportGenerator:
             """
         
         return findings_html
+    
+    def _generate_deepfake_findings_section(self, deepfake_findings: List[Dict[str, Any]]) -> str:
+        """Generate special section for deepfake/synthetic media findings with EU AI Act compliance."""
+        if not deepfake_findings:
+            return ""
+        
+        section_html = f"""
+        <div class="deepfake-section" style="background: #fff3cd; border-left: 5px solid #ff6b6b; padding: 20px; margin: 20px 0; border-radius: 8px;">
+            <h3 style="color: #c92a2a; margin-top: 0;">
+                🤖 {t_report('deepfake_detection', 'Deepfake/Synthetic Media Detection')} 
+                <span style="font-size: 0.8em; color: #e67700;">(EU AI Act Article 50(2))</span>
+            </h3>
+            <p style="margin: 10px 0; font-size: 0.95em; color: #555;">
+                {t_report('deepfake_intro', 'Automated detection of potentially synthetic or AI-generated media requiring transparency labeling under EU AI Act 2025.')}
+            </p>
+        """
+        
+        for finding in deepfake_findings:
+            severity = finding.get('risk_level', 'Medium')
+            confidence = finding.get('confidence', 0)
+            context = finding.get('context', '')
+            source = finding.get('source', 'Unknown')
+            reason = finding.get('reason', '')
+            
+            # Extract analysis details
+            analysis_details = finding.get('analysis_details', {})
+            overall_score = analysis_details.get('overall_score', 0)
+            artifact_score = analysis_details.get('artifact_score', 0)
+            noise_score = analysis_details.get('noise_score', 0)
+            compression_score = analysis_details.get('compression_score', 0)
+            facial_score = analysis_details.get('facial_inconsistency_score', 0)
+            indicators = analysis_details.get('indicators', [])
+            
+            # Extract EU AI Act compliance details
+            eu_compliance = finding.get('eu_ai_act_compliance', {})
+            article = eu_compliance.get('article', 'Article 50(2)')
+            article_title = eu_compliance.get('title', 'Transparency Obligations')
+            requirements = eu_compliance.get('requirements', [])
+            recommendation = eu_compliance.get('compliance_recommendation', '')
+            
+            # Severity color
+            severity_colors = {
+                'Critical': '#c92a2a',
+                'High': '#e67700',
+                'Medium': '#f59f00',
+                'Low': '#37b24d'
+            }
+            severity_color = severity_colors.get(severity, '#868e96')
+            
+            section_html += f"""
+            <div class="deepfake-finding" style="background: white; border: 2px solid {severity_color}; padding: 20px; margin: 15px 0; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0; color: {severity_color};">
+                        🎭 Synthetic Media Detected
+                    </h4>
+                    <span style="background: {severity_color}; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9em;">
+                        {severity} Risk
+                    </span>
+                </div>
+                
+                <div style="margin: 15px 0;">
+                    <strong>{t_report('source_file', 'Source File')}:</strong> 
+                    <code style="background: #f8f9fa; padding: 2px 8px; border-radius: 4px;">{source}</code>
+                </div>
+                
+                <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                    <strong style="color: #495057;">📊 {t_report('detection_analysis', 'Detection Analysis')}:</strong>
+                    <p style="margin: 10px 0 5px 0;">{context}</p>
+                    <div style="margin-top: 10px;">
+                        <div style="margin: 5px 0;">
+                            <strong>{t_report('overall_likelihood', 'Overall Likelihood')}:</strong> 
+                            <span style="color: {severity_color}; font-weight: bold;">{overall_score:.1%}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <div>• Artifact Score: <strong>{artifact_score:.2f}</strong></div>
+                            <div>• Noise Patterns: <strong>{noise_score:.2f}</strong></div>
+                            <div>• Compression Anomalies: <strong>{compression_score:.2f}</strong></div>
+                            <div>• Facial Inconsistencies: <strong>{facial_score:.2f}</strong></div>
+                        </div>
+                    </div>
+                </div>
+                
+                {self._generate_deepfake_indicators_html(indicators)}
+                
+                <div style="margin: 20px 0; padding: 15px; background: #e7f5ff; border-left: 4px solid #1c7ed6; border-radius: 6px;">
+                    <h5 style="margin: 0 0 10px 0; color: #1864ab;">
+                        ⚖️ {article}: {article_title}
+                    </h5>
+                    <p style="margin: 10px 0; font-size: 0.9em; color: #495057;">{reason}</p>
+                    
+                    {self._generate_compliance_requirements_html(requirements)}
+                    
+                    <div style="margin: 15px 0; padding: 12px; background: #fff3bf; border-left: 4px solid #fab005; border-radius: 4px;">
+                        <strong style="color: #862e9c;">📋 {t_report('recommended_actions', 'Recommended Actions')}:</strong>
+                        <p style="margin: 8px 0 0 0; font-size: 0.9em;">{recommendation}</p>
+                    </div>
+                </div>
+            </div>
+            """
+        
+        section_html += "</div>"
+        return section_html
+    
+    def _generate_deepfake_indicators_html(self, indicators: List[str]) -> str:
+        """Generate HTML for deepfake detection indicators."""
+        if not indicators:
+            return ""
+        
+        indicators_html = """
+        <div style="margin: 15px 0;">
+            <strong>🔍 Detection Indicators:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+        """
+        
+        for indicator in indicators:
+            indicators_html += f"<li style='margin: 5px 0;'>{indicator}</li>"
+        
+        indicators_html += "</ul></div>"
+        return indicators_html
+    
+    def _generate_compliance_requirements_html(self, requirements: List[Dict[str, Any]]) -> str:
+        """Generate HTML for EU AI Act compliance requirements."""
+        if not requirements:
+            return ""
+        
+        req_html = """
+        <div style="margin: 15px 0;">
+            <strong>📜 Compliance Requirements:</strong>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr style="background: #f1f3f5;">
+                        <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">Requirement</th>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">Status</th>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">Penalty if Non-Compliant</th>
+                    </tr>
+                </thead>
+                <tbody>
+        """
+        
+        for req in requirements:
+            requirement_text = req.get('requirement', '')
+            status = req.get('status', 'Unknown')
+            penalty = req.get('penalty_if_non_compliant', 'N/A')
+            
+            status_color = '#37b24d' if 'implemented' in status.lower() else '#f59f00'
+            
+            req_html += f"""
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">{requirement_text}</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6; color: {status_color}; font-weight: bold;">{status}</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">{penalty}</td>
+                </tr>
+            """
+        
+        req_html += """
+                </tbody>
+            </table>
+        </div>
+        """
+        return req_html
     
     def _generate_scanner_specific_content(self, scan_result: Dict[str, Any]) -> str:
         """Generate scanner-specific content sections."""
