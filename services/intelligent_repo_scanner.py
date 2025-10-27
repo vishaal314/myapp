@@ -6,7 +6,7 @@ Wraps the standard repo scanner with enhanced features.
 """
 
 import logging
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class IntelligentRepoScanner:
         self.code_scanner = code_scanner
         logger.info("Initialized IntelligentRepoScanner with code scanner integration")
     
-    def scan(self, target, scan_mode="smart", max_files=200, **kwargs):
+    def scan(self, target, scan_mode="smart", max_files: Optional[int] = 200, **kwargs):
         """
         Scan a repository with intelligent processing.
         
@@ -62,3 +62,21 @@ class IntelligentRepoScanner:
                 "findings": [],
                 "scan_mode": scan_mode
             }
+    
+    def scan_repository_intelligent(self, repo_url, branch=None, scan_mode="smart", 
+                                   max_files=None, progress_callback=None):
+        """
+        Intelligent repository scanning method called by IntelligentScannerManager.
+        
+        Args:
+            repo_url: Repository URL to scan
+            branch: Git branch to scan (optional)
+            scan_mode: Scanning strategy (smart, fast, deep)
+            max_files: Maximum files to process
+            progress_callback: Progress reporting callback
+            
+        Returns:
+            Dictionary with scan results
+        """
+        return self.scan(repo_url, scan_mode=scan_mode, max_files=max_files, 
+                        branch=branch, progress_callback=progress_callback)
