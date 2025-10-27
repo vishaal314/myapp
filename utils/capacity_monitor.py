@@ -122,6 +122,10 @@ class CapacityMonitor:
         try:
             stats = self.scan_manager.get_system_stats()
             
+            # Ensure stats is a dict (handle None or invalid return values)
+            if not isinstance(stats, dict):
+                stats = {"active_tasks": 0, "queued_tasks": 0, "completed_tasks": 0}
+            
             # Add scan duration analysis
             long_running_scans = 0
             for task in self.scan_manager.tasks.values():
@@ -136,7 +140,7 @@ class CapacityMonitor:
                         long_running_scans += 1
             
             stats["long_running_scans"] = long_running_scans
-            stats["status"] = self._get_scan_status(stats["active_tasks"])
+            stats["status"] = self._get_scan_status(stats.get("active_tasks", 0))
             
             return stats
         except Exception as e:
