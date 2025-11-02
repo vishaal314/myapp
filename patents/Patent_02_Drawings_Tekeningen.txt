@@ -3,7 +3,7 @@ TEKENINGEN EN FORMULES (DRAWINGS AND FORMULAS)
 Intelligent Database Scanner - Patent Tekeningen
 ===============================================================================
 
-PAGINA 13 van 16**
+PAGINA 1 van 4
      
      ---
      
@@ -82,7 +82,7 @@ PAGINA 13 van 16**
      ---
      
      **
-PAGINA 14 van 16**
+PAGINA 2 van 4
      
 815  ## FIGUUR 3: ADAPTIVE SAMPLING STRATEGIES
      
@@ -204,7 +204,7 @@ PAGINA 14 van 16**
      ---
      
      **
-PAGINA 15 van 16**
+PAGINA 3 van 4
 935  
      ## FIGUUR 5: NETHERLANDS BSN VALIDATION
      
@@ -324,7 +324,7 @@ PAGINA 15 van 16**
      ---
      
      **
-PAGINA 16 van 16**
+PAGINA 4 van 4
      
 1055  ## FIGUUR 7: COMPETITIVE ADVANTAGE MATRIX
      

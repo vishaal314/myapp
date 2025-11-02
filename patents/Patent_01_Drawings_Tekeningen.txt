@@ -3,7 +3,7 @@ TEKENINGEN EN FORMULES (DRAWINGS AND FORMULAS)
 Predictive Compliance Engine - Patent Tekeningen
 ===============================================================================
 
-PAGINA 13 van 16
+PAGINA 1 van 4
   5  
      FIGUUR 1: SYSTEEM ARCHITECTUUR OVERZICHT
      
@@ -90,7 +90,7 @@ PAGINA 13 van 16
      VALIDATED ACCURACY: 85% (backtested over 1,000+ predictions)
      
  90  
-PAGINA 14 van 16
+PAGINA 2 van 4
      
      FIGUUR 3: EARLY WARNING DETECTION SYSTEM
      
@@ -191,7 +191,7 @@ PAGINA 14 van 16
         Adjusted score: 75.0 / 2.88 = 26.0 → HIGH RISK! 🔴
      
 190  
-PAGINA 15 van 16
+PAGINA 3 van 4
      
      FIGUUR 5: PROACTIVE INTERVENTION ENGINE
      
@@ -299,7 +299,7 @@ PAGINA 15 van 16
 295     ROI: €2.23M / €10K = 223× return! 🚀
      
      
-PAGINA 16 van 16
+PAGINA 4 van 4
      
      FIGUUR 7: MULTI-MODEL ARCHITECTURE
 300  

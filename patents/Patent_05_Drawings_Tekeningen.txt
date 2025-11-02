@@ -3,7 +3,7 @@ TEKENINGEN EN FORMULES (DRAWINGS AND FORMULAS)
 Netherlands GDPR Compliance Scanner - Patent Tekeningen
 ===============================================================================
 
-PAGINA 13 van 18
+PAGINA 1 van 6
   5  
      FIGUUR 1: SYSTEEM ARCHITECTUUR OVERZICHT
      
@@ -35,7 +35,7 @@ PAGINA 13 van 18
           +------------------+------------------+------------------+
      
  35  
-PAGINA 14 van 18
+PAGINA 2 van 6
      
      FIGUUR 3: OAUTH2 TOKEN REFRESH FLOW
      
@@ -101,7 +101,7 @@ PAGINA 14 van 18
             self._last_api_call_time = time.time()
      
 100  
-PAGINA 15 van 18
+PAGINA 3 van 6
      
      FIGUUR 5: NETHERLANDS SPECIALIZATION MODULE
      
@@ -143,7 +143,7 @@ PAGINA 15 van 18
         └─ Legal Framework: UAVG + GDPR combined
 140  
      
-PAGINA 16 van 18
+PAGINA 4 van 6
      
      FIGUUR 6: MULTI-CONNECTOR ARCHITECTURE
      
@@ -184,7 +184,7 @@ PAGINA 16 van 18
                 return self._execute_scan(scan_config)
 180  
      
-PAGINA 17 van 18
+PAGINA 5 van 6
      
      FIGUUR 7: EXACT ONLINE API ENDPOINTS
      
@@ -238,7 +238,7 @@ PAGINA 17 van 18
         }
      
      
-PAGINA 18 van 18
+PAGINA 6 van 6
 235  
      FIGUUR 8: COMPETITIVE ADVANTAGE MATRIX
      

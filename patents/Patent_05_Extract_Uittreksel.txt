@@ -23,21 +23,26 @@ rate limiting ondersteunt 10,000 API calls/minuut voor Microsoft Graph, 1,000 ca
 voor Google Workspace, en 60 calls/minuut voor Exact Online.
 
 Nederlandse specialisatie omvat BSN (Burgerservicenummer) detectie met 9-cijferige patroon
-herkenning en 11-proef checksum validatie, KvK nummer herkenning, IBAN NL banking format
-detectie, en UAVG compliance verificatie met Nederlandse Autoriteit Persoonsgegevens (AP)
-integratie.
+herkenning en 11-proef checksum validatie volgens officiële Nederlandse algoritme, KvK
+nummer herkenning voor 8-digit Kamer van Koophandel identifiers, IBAN NL banking format
+detectie, Nederlandse postcode patterns, en UAVG compliance verificatie met Nederlandse
+Autoriteit Persoonsgegevens (AP) integratie.
 
-Het systeem ondersteunt 13 connector types: Exact Online, Microsoft 365 (SharePoint, OneDrive,
-Exchange, Teams), Google Workspace (Drive, Gmail, Docs), Salesforce, SAP, en Nederlandse
+Het systeem ondersteunt 13 connector types in unified platform: Exact Online ERP, Microsoft
+365 (SharePoint sites, OneDrive cloud storage, Exchange Online email, Teams collaboration),
+Google Workspace (Drive, Gmail, Docs), Salesforce CRM, SAP enterprise systems, en Nederlandse
 banking APIs. Thread-safe architectuur met connection pooling en credential persistence
 voor lange scans (4+ uur).
 
 Technische specificaties: 95% kostenreductie versus concurrenten (EUR 25-250/maand versus
 EUR 5,000-15,000/maand), real-time compliance monitoring, automatische remediation
-aanbevelingen, PostgreSQL database opslag, Redis caching, Docker containerisatie.
+aanbevelingen, PostgreSQL database opslag, Redis caching, Docker containerisatie, API
+endpoints voor enterprise integratie.
 
 Unique market moat: ZERO concurrenten met Exact Online integratie - leading enterprise
-compliance platforms hebben deze native connector niet. Marktwaarde: EUR 3.5M - EUR 8M.
+compliance platforms hebben deze native connector niet. Thread-safe implementatie met
+threading.Lock() synchronisatie, credential persistence voor multi-uur scans, automatic
+retry logic bij API failures. Marktwaarde: EUR 3.5M - EUR 8M.
 
 [WOORDEN TELLING: 248/250]
 

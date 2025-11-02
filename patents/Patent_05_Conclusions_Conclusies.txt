@@ -1,7 +1,7 @@
 CONCLUSIES (CONCLUSIONS)
 Netherlands GDPR Compliance Scanner - Patent Conclusies
 
-PAGINA 9 van 12
+PAGINA 1 van 4
   5  
      CONCLUSIES
      
@@ -27,7 +27,7 @@ PAGINA 9 van 12
      waarbij het systeem 13 connector types ondersteunt in single platform en 95% kostenreductie behaalt versus concurrenten (EUR 25-250/maand versus EUR 5,000-15,000/maand).
      
      
-PAGINA 10 van 12
+PAGINA 2 van 4
  30  
      Conclusie 2
      
@@ -69,7 +69,7 @@ PAGINA 10 van 12
      e) credential persistence onderhoudt voor scans >4 uur.
      
  70  
-PAGINA 11 van 12
+PAGINA 3 van 4
      
      Conclusie 4
      
@@ -124,7 +124,7 @@ PAGINA 11 van 12
      f) UAVG compliance verifieert met AP (Autoriteit Persoonsgegevens) authority integration.
      
      
-PAGINA 12 van 12
+PAGINA 4 van 4
 125  
      Conclusie 6
      
