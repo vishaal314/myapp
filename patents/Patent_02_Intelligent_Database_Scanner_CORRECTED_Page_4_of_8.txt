@@ -1,0 +1,94 @@
+PAGINA 4 van 8**
+     
+     ---
+     
+125  ## B. PRIORITY-BASED TABLE SELECTION
+     
+     ### 1. Table Priority Scoring Algorithm
+     
+     ```python
+130  TABLE_PRIORITIES = {
+         # High priority - likely to contain sensitive data
+         'user': 3.0,
+         'customer': 3.0,
+         'employee': 3.0,
+135      'person': 3.0,
+         'people': 3.0,
+         'profile': 2.8,
+         'account': 2.8,
+         'contact': 2.5,
+140      'address': 2.5,
+         'phone': 2.5,
+         'email': 2.5,
+         'payment': 2.8,
+         'billing': 2.8,
+145      'order': 2.2,
+         'transaction': 2.5,
+         'invoice': 2.5,
+         'medical': 3.0,
+         'health': 3.0,
+150      'patient': 3.0,
+         'financial': 2.8,
+         'bank': 2.8,
+         'card': 2.5,
+         'credential': 2.8,
+155      'password': 2.8,
+         'token': 2.5,
+         
+         # Lower priority
+         'session': 2.0,
+160      'audit': 2.0,
+         'log': 1.5,
+         'config': 2.0,
+         'setting': 2.0,
+         'system': 1.2,
+165      'temp': 0.8,
+         'test': 0.5,
+         'backup': 1.0
+     }
+     
+170  def _calculate_table_priority(self, table_name: str, columns: List[Dict]) -> float:
+         """Calculate priority score for table."""
+         
+         base_score = 1.0
+         table_lower = table_name.lower()
+175      
+         # Check table name against priority keywords
+         for keyword, priority in self.TABLE_PRIORITIES.items():
+             if keyword in table_lower:
+                 base_score = max(base_score, priority)
+180      
+         # Boost score based on column names
+         column_boost = 0.0
+         for column in columns:
+             col_name = column['name'].lower()
+185          for keyword, priority in self.COLUMN_PRIORITIES.items():
+                 if keyword in col_name:
+                     column_boost = max(column_boost, priority * 0.3)
+         
+         return min(base_score + column_boost, 3.5)  # Cap at 3.5
+190  ```
+     
+     ### 2. Intelligent Table Selection
+     
+     ```python
+195  def _select_tables_intelligent(self, tables: List[Dict[str, Any]], 
+                                    strategy: Dict[str, Any]) -> List[Dict[str, Any]]:
+         """Select tables based on intelligent criteria."""
+         
+         # Sort tables by priority score (descending)
+200      sorted_tables = sorted(tables, 
+                               key=lambda t: t['priority_score'], 
+                               reverse=True)
+         
+         target_count = strategy['target_tables']
+205      selected_tables = sorted_tables[:target_count]
+         
+         logger.info(f"Selected {len(selected_tables)} tables (highest priority)")
+         logger.info(f"Priority range: {selected_tables[0]['priority_score']:.1f} - "
+                     f"{selected_tables[-1]['priority_score']:.1f}")
+210      
+         return selected_tables
+     ```
+     
+     **

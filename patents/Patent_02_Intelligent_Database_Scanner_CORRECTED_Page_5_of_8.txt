@@ -1,0 +1,64 @@
+PAGINA 5 van 8**
+215  
+     ---
+     
+     ## C. ADAPTIVE SAMPLING STRATEGIES
+     
+220  ### 1. Scan Mode Selection Logic
+     
+     ```python
+     def _select_scanning_strategy(self, schema_analysis: Dict[str, Any],
+                                   scan_mode: str, max_tables: Optional[int]) -> Dict[str, Any]:
+225      """Select optimal scanning strategy."""
+         
+         total_tables = schema_analysis['total_tables']
+         estimated_rows = schema_analysis['estimated_rows']
+         risk_level = schema_analysis['risk_level']
+230      
+         if scan_mode == "fast" or total_tables <= 10:
+             return {
+                 'type': "comprehensive",
+                 'target_tables': min(total_tables, 15),
+235              'sample_size_per_table': 100,
+                 'parallel_workers': 2,
+                 'max_scan_time': 300  # 5 minutes
+             }
+         
+240      elif scan_mode == "deep" or risk_level == "high":
+             return {
+                 'type': "priority_deep",
+                 'target_tables': min(max_tables or 75, total_tables),
+                 'sample_size_per_table': 500,
+245              'parallel_workers': 3,
+                 'max_scan_time': 300
+             }
+         
+         elif estimated_rows > 100000 or total_tables > 100:
+250          return {
+                 'type': "sampling",
+                 'target_tables': min(max_tables or 40, total_tables),
+                 'sample_size_per_table': 200,
+                 'parallel_workers': 3,
+255              'max_scan_time': 300
+             }
+         
+         else:  # smart mode (default)
+             if total_tables > 50:
+260              return {
+                     'type': "priority",
+                     'target_tables': min(max_tables or 50, total_tables),
+                     'sample_size_per_table': 300,
+                     'parallel_workers': 3,
+265                  'max_scan_time': 300
+                 }
+             else:
+                 return {
+                     'type': "comprehensive",
+270                  'target_tables': total_tables,
+                     'sample_size_per_table': 500,
+                     'parallel_workers': 2,
+                     'max_scan_time': 300
+                 }
+275  ```
+     
+     **

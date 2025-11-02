@@ -1,0 +1,42 @@
+PAGINA 15 van 18
+     
+     FIGUUR 5: NETHERLANDS SPECIALIZATION MODULE
+     
+     +-------------------------------------------------------------------------+
+105  |               NETHERLANDS DATA TYPE DETECTION ENGINE                    |
+     +-------------------------------------------------------------------------+
+     
+     BSN (Burgerservicenummer) Detection:
+        Pattern: \b\d{9}\b
+110     
+        Checksum Validation (11-proef):
+        checksum = (digit_0 × 9) + (digit_1 × 8) + (digit_2 × 7) +
+                   (digit_3 × 6) + (digit_4 × 5) + (digit_5 × 4) +
+                   (digit_6 × 3) + (digit_7 × 2) - (digit_8 × 1)
+115     
+        Valid if: checksum mod 11 == 0
+        
+        Example: BSN 111222333
+        = (1×9) + (1×8) + (1×7) + (2×6) + (2×5) + (2×4) + (3×3) + (3×2) - (3×1)
+120     = 9 + 8 + 7 + 12 + 10 + 8 + 9 + 6 - 3 = 66
+        66 mod 11 = 0 → VALID
+     
+     KvK (Kamer van Koophandel):
+        Pattern: \b\d{8}\b
+125     Format: 8-digit Chamber of Commerce number
+        Example: 12345678
+     
+     Dutch Banking (IBAN):
+        Pattern: NL\d{2}[A-Z]{4}\d{10}
+130     Example: NL91ABNA0417164300
+     
+     Dutch Phone Numbers:
+        Pattern: \+31\d{9}
+        Example: +31612345678
+135  
+     UAVG Compliance:
+        ├─ Data Residency: Netherlands/EU verification
+        ├─ AP Authority: Autoriteit Persoonsgegevens integration
+        └─ Legal Framework: UAVG + GDPR combined
+140  
+     

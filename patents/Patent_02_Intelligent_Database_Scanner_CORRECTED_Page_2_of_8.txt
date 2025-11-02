@@ -1,0 +1,30 @@
+PAGINA 2 van 8**
+     
+     ### Probleem met Bestaande Oplossingen
+     
+ 30  Huidige database scanning tools hebben ernstige beperkingen:
+     
+     a) **Beperkte Database Support**: OneTrust ondersteunt alleen PostgreSQL en MySQL (2 engines), TrustArc support is beperkt tot MySQL en SQL Server (2 engines);
+     
+     b) **Geen Priority-Based Scanning**: Scannen alle tabellen sequentieel zonder intelligence, resulterend in 2-4 uur scan tijd voor grote databases;
+ 35  
+     c) **Fixed Sampling**: Geen adaptive sampling strategies, gebruiken altijd volledige table scans of fixed sample sizes;
+     
+     d) **Geen Netherlands Specialization**: Missen BSN detection (9-digit + checksum validation), IBAN NL patterns, KvK numbers;
+     
+ 40  e) **Single-Threaded**: Geen parallel scanning capabilities, making scans 3× slower dan mogelijk;
+     
+     f) **No Schema Intelligence**: Geen table priority scoring based op naming patterns (user, customer, employee tables).
+     
+     **Kosten van Inefficiënte Scanning:**
+ 45  - Time wasted: 2-4 hours per database scan
+     - Resource costs: High CPU/memory usage during full table scans
+     - Compliance gaps: Limited database engine support (only 2 engines vs our 3)
+     
+     ---
+ 50  
+     ## SAMENVATTING VAN DE UITVINDING
+     
+     ### Doel van de Uitvinding
+     
+ 55  **

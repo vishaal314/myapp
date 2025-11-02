@@ -1,0 +1,122 @@
+PAGINA 14 van 16**
+     
+815  ## FIGUUR 3: ADAPTIVE SAMPLING STRATEGIES
+     
+     ```
+     +-------------------------------------------------------------------------+
+     |              SCAN MODE DECISION TREE                                    |
+820  +-------------------------------------------------------------------------+
+     
+     INPUT: total_tables, estimated_rows, risk_level, scan_mode
+     
+     scan_mode == "fast" OR total_tables ≤ 10?
+825     YES → COMPREHENSIVE MODE
+              ├─ target_tables: min(total_tables, 15)
+              ├─ sample_size: 100 rows
+              ├─ workers: 2
+              └─ type: "comprehensive"
+830  
+     scan_mode == "deep" OR risk_level == "high"?
+        YES → PRIORITY_DEEP MODE
+              ├─ target_tables: min(max_tables or 75, total_tables)
+              ├─ sample_size: 500 rows
+835           ├─ workers: 3
+              └─ type: "priority_deep"
+     
+     estimated_rows > 100,000 OR total_tables > 100?
+        YES → SAMPLING MODE
+840           ├─ target_tables: min(max_tables or 40, total_tables)
+              ├─ sample_size: 200 rows
+              ├─ workers: 3
+              └─ type: "sampling"
+     
+845  total_tables > 50?
+        YES → PRIORITY MODE (smart)
+              ├─ target_tables: min(max_tables or 50, total_tables)
+              ├─ sample_size: 300 rows
+              ├─ workers: 3
+850           └─ type: "priority"
+     
+     DEFAULT → COMPREHENSIVE MODE (smart)
+              ├─ target_tables: total_tables
+              ├─ sample_size: 500 rows
+855           ├─ workers: 2
+              └─ type: "comprehensive"
+     
+     +-------------------------------------------------------------------------+
+     |                      MODE COMPARISON                                    |
+860  +-------------------------------------------------------------------------+
+     
+     Mode         | Tables | Sample | Workers | Use Case
+     ------------ | ------ | ------ | ------- | ---------------------------
+     Fast         | ≤15    | 100    | 2       | Quick scan, small databases
+865  Smart        | ≤50    | 300    | 3       | Default, balanced approach
+     Deep         | ≤75    | 500    | 3       | Thorough scan, high-risk
+     Sampling     | ≤40    | 200    | 3       | Large databases (>100K rows)
+     
+     TIME SAVINGS: 60% reduction (4 hours → 1.6 hours) via parallel + smart sampling
+870  ```
+     
+     ---
+     
+     ## FIGUUR 4: PARALLEL SCANNING WORKFLOW
+875  
+     ```
+     +-------------------------------------------------------------------------+
+     |           PARALLEL TABLE SCANNING WITH CONNECTION POOLING               |
+     +-------------------------------------------------------------------------+
+880  
+     SETUP:
+        max_workers = 3  # Optimal for database connections
+        executor = ThreadPoolExecutor(max_workers=3)
+     
+885  TASK SUBMISSION:
+        future_to_table = {}
+        
+        for table in selected_tables:
+            future = executor.submit(
+890             _scan_single_table,
+                table,
+                connection_params,
+                sample_size
+            )
+895         future_to_table[future] = table
+     
+     PARALLEL PROCESSING:
+        
+        Worker 1                Worker 2                Worker 3
+900     ↓                      ↓                       ↓
+        Scan Table 1          Scan Table 2            Scan Table 3
+        (users)               (customers)             (transactions)
+        ↓                      ↓                       ↓
+        100-500 rows          100-500 rows            100-500 rows
+905     ↓                      ↓                       ↓
+        PII Detection         PII Detection           PII Detection
+        ↓                      ↓                       ↓
+        Return findings       Return findings         Return findings
+     
+910  RESULT AGGREGATION:
+        for future in as_completed(future_to_table):
+            try:
+                table = future_to_table[future]
+                findings = future.result(timeout=60)
+915             all_findings.extend(findings)
+                scanned_count += 1
+                
+                progress = 15 + int((scanned_count / total) × 80)
+                callback(progress, 100, f"Scanned {scanned_count}/{total}")
+920         
+            except TimeoutError:
+                tables_skipped += 1
+            except Exception as e:
+                logger.error(f"Error: {e}")
+925             tables_skipped += 1
+     
+     PERFORMANCE:
+        Sequential: 4.0 hours (1 table at a time)
+        Parallel (3 workers): 1.6 hours (60% faster) ✅
+930  ```
+     
+     ---
+     
+     **

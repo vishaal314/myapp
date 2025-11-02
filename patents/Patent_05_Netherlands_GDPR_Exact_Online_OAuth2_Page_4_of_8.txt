@@ -1,0 +1,43 @@
+PAGINA 4 van 8
+ 80  
+     1. OAuth2 Authenticatie Flow
+     
+     Stap 1 - Authorization Code Request:
+     GET https://start.exactonline.nl/api/oauth2/auth?
+ 85      client_id={CLIENT_ID}&
+         redirect_uri={REDIRECT_URI}&
+         response_type=code&
+         scope=read write
+     
+ 90  Stap 2 - Token Exchange:
+     POST https://start.exactonline.nl/api/oauth2/token
+     Body: {
+         "grant_type": "authorization_code",
+         "code": "{AUTH_CODE}",
+ 95      "client_id": "{CLIENT_ID}",
+         "client_secret": "{CLIENT_SECRET}",
+         "redirect_uri": "{REDIRECT_URI}"
+     }
+     
+100  Response: {
+         "access_token": "...",
+         "refresh_token": "...",
+         "expires_in": 3600
+     }
+105  
+     Stap 3 - Division/Company Enumeration:
+     GET https://start.exactonline.nl/api/v1/current/Me
+     GET https://start.exactonline.nl/api/v1/{division}/system/Divisions
+     
+110  2. Employee/HR Data Scanning
+     
+     Endpoint: /api/v1/{division}/hrm/Employees
+     PII Detectie:
+     - Employee full names (FirstName, LastName, MiddleName)
+115  - Employee IDs (EmployeeID field)
+     - Email addresses (Email field)
+     - Dutch BSN detection in custom fields
+     - Birth dates (BirthDate field)
+     - Phone numbers (Phone, Mobile fields)
+120  
+     

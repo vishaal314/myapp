@@ -1,0 +1,28 @@
+PAGINA 2 van 8
+     
+     Probleem met Bestaande Oplossingen
+     
+     Huidige compliance tools missen predictive capabilities:
+ 25  
+     a) Reactieve Monitoring: OneTrust, TrustArc monitoren alleen huidige compliance status, geen future forecasting;
+     
+     b) Geen Early Warning Signals: Kunnen niet detecteren dat compliance scores gaan dalen voordat violations optreden;
+     
+ 30  c) Subjectieve Risk Assessment: Handmatige beoordeling zonder objectieve trend analysis;
+     
+     d) Geen ML-Powered Forecasting: Bestaande tools gebruiken geen machine learning voor compliance prediction;
+     
+     e) Beperkte Nederlands Specialization: Missen Netherlands-specific risk multipliers (BSN 1.8×, healthcare 1.6×);
+ 35  
+     f) Geen Proactive Interventions: Geen time-to-action guidance voor preventieve maatregelen.
+     
+     Kosten van Reactieve Compliance:
+     - Average data breach cost: €4.45 million (IBM Security 2024)
+ 40  - GDPR fines Netherlands 2024: €15.7M totaal (AP Autoriteit Persoonsgegevens)
+     - Remediation costs: 10-15× hoger na violation versus proactive fixes
+     
+     SAMENVATTING VAN DE UITVINDING
+     
+ 45  Doel van de Uitvinding
+     
+     

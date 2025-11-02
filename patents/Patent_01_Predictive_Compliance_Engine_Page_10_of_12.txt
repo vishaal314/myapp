@@ -1,0 +1,44 @@
+PAGINA 10 van 12
+     
+     Conclusie 2
+     
+     Het systeem volgens conclusie 1, waarbij de time series forecasting engine:
+ 35  
+     a) validated scan data sanitization uitvoert met safe defaults (compliance_score: 75.0, findings: empty list, timestamp validation);
+     
+     b) np.polyfit() linear regression implementeert via:
+           x_days = (timestamps - timestamps[0]) / 86400
+ 40     coefficients = np.polyfit(x_days, scores, degree=1)
+        poly_function = np.poly1d(coefficients)
+        future_score = poly_function(forecast_days_from_start)
+        
+     c) confidence intervals berekent via residual standard deviation:
+ 45        residuals = actual_scores - predicted_scores
+        std_dev = np.std(residuals)
+        interval = (future_score - std_dev, future_score + std_dev)
+        
+     d) trend classification bepaalt via slope analysis:
+ 50     - slope > 2.0: ComplianceTrend.IMPROVING
+        - slope > -2.0: ComplianceTrend.STABLE
+        - slope > -5.0: ComplianceTrend.DETERIORATING
+        - slope ≤ -5.0: ComplianceTrend.CRITICAL.
+     
+ 55  Conclusie 3
+     
+     Het systeem volgens conclusie 1, waarbij het early warning detection system:
+     
+     a) 15+ signals monitort verdeeld over categorieën:
+ 60     - Compliance degradation (5 signals)
+        - Regulatory risk (5 signals)
+        - Operational risk (5 signals);
+     
+     b) quantitative threshold detection implementeert:
+ 65     - Increasing critical findings: +20% last 30 days
+        - Decreasing scan frequency: >2× normal interval
+        - Longer remediation times: +50% average time;
+     
+     c) historical comparison uitvoert (recent 30 scans versus previous 30 scans);
+ 70  
+     d) early warning triggers genereert bij threshold exceedance.
+     
+     

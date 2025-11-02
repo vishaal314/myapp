@@ -1,0 +1,79 @@
+PAGINA 13 van 16**
+     
+     ---
+     
+     ## FIGUUR 1: MULTI-ENGINE ARCHITECTURE
+740  
+     ```
+     +-------------------------------------------------------------------------+
+     |           INTELLIGENT DATABASE SCANNER PLATFORM                         |
+     |         3-Engine Support + Priority-Based + Parallel                    |
+745  +-------------------------------------------------------------------------+
+                                         |
+          +--------------+--------------+--------------+
+          | PostgreSQL   | MySQL        | MS SQL       |
+          | (psycopg2)   | (connector)  | (pyodbc)     |
+750       +--------------+--------------+--------------+
+          | Priority     | Parallel     | BSN          |
+          | Scoring      | Workers (3)  | Validation   |
+          +--------------+--------------+--------------+
+     ```
+755  
+     ---
+     
+     ## FIGUUR 2: PRIORITY SCORING ALGORITHM
+     
+760  ```
+     +-------------------------------------------------------------------------+
+     |              TABLE PRIORITY CALCULATION FORMULA                         |
+     +-------------------------------------------------------------------------+
+     
+765  STEP 1: Base Score from Table Name
+        base_score = 1.0
+        
+        for keyword in TABLE_PRIORITIES:
+            if keyword in table_name.lower():
+770             base_score = max(base_score, TABLE_PRIORITIES[keyword])
+     
+        Priority Keywords:
+           user, customer, employee, person → 3.0× (HIGHEST)
+           medical, health, patient → 3.0×
+775        payment, billing, financial, bank → 2.8×
+           transaction, invoice → 2.5×
+           contact, address, phone, email → 2.5×
+           credential, password → 2.8×
+           session, audit → 2.0×
+780        log, config → 1.5-2.0×
+           system → 1.2×
+           temp, test → 0.5-0.8× (LOWEST)
+     
+     STEP 2: Column Name Boost
+785     column_boost = 0.0
+        
+        for column in columns:
+            col_priority = COLUMN_PRIORITIES.get(column.lower(), 1.0)
+            column_boost = max(column_boost, col_priority × 0.3)
+790     
+        Column Keywords:
+           ssn, bsn, passport → 3.0×
+           medical, health, diagnosis → 3.0×
+           password, token, secret → 2.8×
+795        email, phone, bank → 2.5×
+           address, birth, dob → 2.2-2.8×
+     
+     STEP 3: Final Score
+        priority_score = min(base_score + column_boost, 3.5)
+800     
+        Capped at 3.5 to prevent over-prioritization
+     
+     EXAMPLE:
+        Table: "customer_profiles"
+805     Base: "customer" keyword → 3.0
+        Columns: ["id", "email", "phone", "address"]
+        Boost: email (2.5 × 0.3) = 0.75
+        Final: min(3.0 + 0.75, 3.5) = 3.5 → HIGHEST PRIORITY ✅
+     ```
+810  
+     ---
+     
+     **

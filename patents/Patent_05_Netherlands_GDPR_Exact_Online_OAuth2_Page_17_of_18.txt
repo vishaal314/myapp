@@ -1,0 +1,54 @@
+PAGINA 17 van 18
+     
+     FIGUUR 7: EXACT ONLINE API ENDPOINTS
+     
+185  +-------------------------------------------------------------------------+
+     |                  EXACT ONLINE API ENDPOINT MAPPING                      |
+     +-------------------------------------------------------------------------+
+     
+     Base URL: https://start.exactonline.nl/api/v1
+190  
+     Authentication:
+        GET  /api/oauth2/auth
+        POST /api/oauth2/token
+     
+195  Division Management:
+        GET /current/Me
+        GET /{division}/system/Divisions
+     
+     HR & Employee Data:
+200     GET /{division}/hrm/Employees
+        Response: {
+            "EmployeeID": "12345",
+            "FirstName": "Jan",
+            "LastName": "de Vries",
+205         "Email": "jan.devries@example.nl",
+            "BirthDate": "1985-03-15",
+            "Phone": "+31612345678",
+            "Mobile": "+31687654321"
+        }
+210  
+     CRM & Contacts:
+        GET /{division}/crm/Contacts
+        GET /{division}/crm/Accounts
+        Response: {
+215         "ContactID": "guid",
+            "FirstName": "Anna",
+            "LastName": "Jansen",
+            "Email": "anna@bedrijf.nl",
+            "AccountName": "Bedrijf BV",
+220         "ChamberOfCommerce": "12345678"  ← KvK Number
+        }
+     
+     Financial Records:
+        GET /{division}/read/financial/GLAccounts
+225     GET /{division}/salesinvoice/SalesInvoices
+        Response: {
+            "InvoiceID": "guid",
+            "DebtorName": "Klant BV",
+            "InvoiceToContactPerson": "Piet Bakker",
+230         "AmountDC": 1250.00,
+            "VATNumber": "NL123456789B01"
+        }
+     
+     

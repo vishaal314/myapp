@@ -1,0 +1,26 @@
+     BESCHRIJVING (DESCRIPTION)
+     Netherlands GDPR Compliance Scanner - Exact Online Integration with OAuth2 Automation
+     
+     PAGINA 1 van 8
+  5  
+     TITEL VAN DE UITVINDING
+     
+     Netherlands GDPR Compliance Scanner with Exact Online Integration, OAuth2 Automation, and Multi-System Privacy Discovery for Dutch SME Market
+     
+ 10  TECHNISCH GEBIED
+     
+     Deze uitvinding betreft een geautomatiseerd enterprise connector platform voor het scannen van persoonlijke gegevens (PII) en privacy compliance verificatie over meerdere zakelijke systemen, inclusief Exact Online (Nederlands ERP systeem), Microsoft 365 (SharePoint, OneDrive, Exchange, Teams), Google Workspace (Drive, Gmail, Docs), en andere enterprise applicaties. Het systeem implementeert geavanceerde OAuth2 token refresh mechanismen, enterprise-grade rate limiting (10,000 API calls/minuut voor Microsoft Graph), thread-safe architectuur, en Nederland-specifieke gegevenstype detectie inclusief BSN (Burgerservicenummer), KvK (Kamer van Koophandel) nummers, en UAVG compliance validatie.
+     
+     ACHTERGROND VAN DE UITVINDING
+ 15  
+     Stand van de Techniek
+     
+     Moderne organisaties gebruiken gemiddeld 15-30 verschillende SaaS applicaties en enterprise systemen voor bedrijfsvoering. Deze systemen bevatten persoonlijke gegevens (PII) verspreid over verschillende platforms:
+     
+ 20  1. ERP Systemen: Werknemersgegevens, salarisadministratie, klantinformatie, factuurgegevens
+     2. Cloud Productivity Suites: Documenten, emails, communicatie, gedeelde bestanden
+     3. CRM Systemen: Klantgegevens, contactinformatie, verkoop historie
+     4. HR Systemen: Personeelsdossiers, beoordelingen, medische informatie
+     5. Financiële Systemen: Bankgegevens, betalingsinformatie, belastingdocumenten
+ 25  
+     

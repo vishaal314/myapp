@@ -1,0 +1,80 @@
+PAGINA 6 van 8
+     
+300  2. Netherlands UAVG Compliance Forecasting
+     
+     def forecast_netherlands_compliance(self, scan_history: List[Dict[str, Any]]) -> Dict[str, Any]:
+         """
+         Forecast Netherlands UAVG compliance with AP-specific multipliers.
+305      """
+         
+         # Base prediction
+         base_prediction = self.predict_compliance_score(scan_history)
+         
+310      # Apply Netherlands multipliers
+         netherlands_factors = {
+             'bsn_detected': False,
+             'healthcare_sector': False,
+             'financial_sector': False,
+315          'cross_border_transfers': False
+         }
+         
+         # Detect Netherlands-specific risks
+         for scan in scan_history[-10:]:  # Recent scans
+320          findings = scan.get('findings', [])
+             
+             for finding in findings:
+                 if 'BSN' in finding.get('type', ''):
+                     netherlands_factors['bsn_detected'] = True
+325              if finding.get('category') == 'Healthcare':
+                     netherlands_factors['healthcare_sector'] = True
+                 if 'financial' in finding.get('type', '').lower():
+                     netherlands_factors['financial_sector'] = True
+                 if finding.get('international_transfer', False):
+330                  netherlands_factors['cross_border_transfers'] = True
+         
+         # Calculate adjusted risk score
+         risk_multiplier = 1.0
+         
+335      if netherlands_factors['bsn_detected']:
+             risk_multiplier = 1.8  # BSN = highest risk
+         if netherlands_factors['healthcare_sector']:
+             risk_multiplier = 1.6
+         if netherlands_factors['financial_sector']:
+340          risk_multiplier = 1.4
+         if netherlands_factors['cross_border_transfers']:
+             risk_multiplier = 1.2
+         
+         # Adjust future score prediction
+345      adjusted_future_score = base_prediction.future_score / risk_multiplier
+         adjusted_future_score = max(0.0, min(100.0, adjusted_future_score))
+         
+         return {
+             'base_future_score': base_prediction.future_score,
+350          'netherlands_multiplier': risk_multiplier,
+             'adjusted_future_score': adjusted_future_score,
+             'netherlands_factors': netherlands_factors,
+             'ap_compliance_level': self._get_ap_compliance_level(adjusted_future_score)
+         }
+355  
+     D. PROACTIVE INTERVENTION ENGINE
+     
+     1. Time-to-Action Calculation
+     
+360  def _calculate_time_to_action(self, future_score: float, trend: ComplianceTrend) -> str:
+         """
+         Calculate recommended time-to-action based on predicted score and trend.
+         """
+         
+365      if future_score < 40:
+             return "immediate"  # Critical - act now
+         elif future_score < 60:
+             if trend == ComplianceTrend.DETERIORATING:
+                 return "7_days"  # Urgent - week deadline
+370          else:
+                 return "30_days"  # Important - month deadline
+         elif future_score < 75:
+             return "30_days"   # Standard - month deadline
+         else:
+375          return "90_days"   # Low priority - quarter deadline
+     
+     

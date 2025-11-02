@@ -1,0 +1,41 @@
+PAGINA 7 van 8
+205  
+     2. Multi-Service Scanning
+     
+     Google Drive Scanning:
+     GET /drive/v3/files
+210  GET /drive/v3/files/{fileId}/export
+     
+     Gmail Scanning:
+     GET /gmail/v1/users/{userId}/messages
+     GET /gmail/v1/users/{userId}/messages/{id}
+215  
+     Google Docs Scanning:
+     GET /docs/v1/documents/{documentId}
+     
+     D. ADVANCED OAUTH2 TOKEN REFRESH ENGINE
+220  
+     1. Token Expiration Buffer System
+     
+     Token Management:
+     - Seed tokens from credentials (access_token, refresh_token)
+225  - Set expiration: datetime.now() + timedelta(seconds=expires_in)
+     - Pre-emptive refresh: 5 minutes before expiration
+     
+     if 'expires_in' in credentials:
+         expires_seconds = int(credentials['expires_in'])
+230      self.token_expires = datetime.now() + timedelta(seconds=expires_seconds)
+     
+     Check if token needs refresh (5-minute buffer)
+     time_until_expiry = self.token_expires - datetime.now()
+     if time_until_expiry.total_seconds() < 300:  # 5 minutes
+235      self._refresh_token()
+     
+     2. Automatic Retry Logic
+     
+     HTTP Status Handling:
+240  - 401 Unauthorized → Refresh token + retry (max 3 attempts)
+     - 429 Too Many Requests → Exponential backoff + retry
+     - 500-503 Server Errors → Linear backoff + retry
+     
+     
