@@ -13,7 +13,7 @@ Priority-Based Table Selection, Adaptive Sampling Strategies, and Netherlands BS
 SAMENVATTING (247 WOORDEN)
 
 Een intelligent database scanning systeem dat 3 database engines ondersteunt (PostgreSQL,
-MySQL, Microsoft SQL Server) - 50% meer dan concurrenten OneTrust en TrustArc (beide 2 engines).
+MySQL, Microsoft SQL Server) - 50% meer dan leading enterprise compliance platforms (2 engines).
 Het systeem implementeert priority-based table selection, adaptive sampling strategies, en
 parallel scanning voor 60% tijdsbesparing (4 uur → 1.6 uur).
 

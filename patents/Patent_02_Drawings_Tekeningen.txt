@@ -333,7 +333,7 @@ PAGINA 16 van 16**
      |                     DATABASE SCANNER COMPARISON                         |
 1060  +-------------------------------------------------------------------------+
      
-     Feature                  | DataGuardian | OneTrust | TrustArc | Manual
+     Feature                  | DataGuardian | Leading compliance platform | Enterprise compliance suite | Manual
                               | Pro          |          |          | 
      -------------------------|--------------|----------|----------|--------
 1065  PostgreSQL Support       | ✅ YES       | ✅ YES   | ✅ YES   | ⚠️ Custom
@@ -388,7 +388,7 @@ PAGINA 16 van 16**
      
 1115  Schema intelligence analyzer berekent risk_level: high (risk_score > 10), medium (risk_score > 5), low (risk_score ≤ 5), waar risk_score = (high_priority_tables × 3) + (medium_priority_tables × 1.5). Scan coverage metrics: (tables_scanned / tables_discovered) × 100.
      
-     Competitor gap: OneTrust/TrustArc support only 2 engines (PostgreSQL and MySQL), no parallel scanning, no BSN checksum validation, 50% fewer engines than DataGuardian Pro.
+     Competitor gap: Leading compliance platform/Enterprise compliance suite support only 2 engines (PostgreSQL and MySQL), no parallel scanning, no BSN checksum validation, 50% fewer engines than DataGuardian Pro.
      
      **[WOORDEN TELLING: 248/250]**
 1120  

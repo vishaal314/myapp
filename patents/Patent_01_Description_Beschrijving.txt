@@ -24,7 +24,7 @@ PAGINA 2 van 8
      
      Huidige compliance tools missen predictive capabilities:
  25  
-     a) Reactieve Monitoring: OneTrust, TrustArc monitoren alleen huidige compliance status, geen future forecasting;
+     a) Reactieve Monitoring: Leading compliance platform, Enterprise compliance suite monitoren alleen huidige compliance status, geen future forecasting;
      
      b) Geen Early Warning Signals: Kunnen niet detecteren dat compliance scores gaan dalen voordat violations optreden;
      
@@ -528,8 +528,8 @@ PAGINA 8 van 8
      
      Competitive Gap
      
-     - OneTrust: ❌ No ML forecasting, reactieve monitoring only
-525  - TrustArc: ❌ No predictive analytics, current status only
+     - Leading compliance platform: ❌ No ML forecasting, reactieve monitoring only
+525  - Enterprise compliance suite: ❌ No predictive analytics, current status only
      - DataGuardian Pro: ✅ 85% accuracy ML-powered forecasting
      
      EINDE BESCHRIJVING

@@ -248,7 +248,7 @@ PAGINA 18 van 18
      
      FEATURE COMPARISON:
      
-                               DataGuardian | OneTrust | BigID | TrustArc
+                               DataGuardian | Leading compliance platform | Privacy management tool | Enterprise compliance suite
 245                            Pro          |          |       |
      Exact Online Connector    ✅ YES       | ❌ NO    | ❌ NO | ❌ NO
      Microsoft 365 Connector   ✅ YES       | ✅ YES   | ✅ YES| ✅ YES
@@ -312,7 +312,7 @@ Netherlands specialization module biedt BSN detectie met 9-cijferige patroon her
 
 Multi-connector ondersteuning: Microsoft 365 (SharePoint, OneDrive, Exchange, Teams), Google Workspace (Drive, Gmail, Docs), SAP ERP, Salesforce CRM, Dutch Banking APIs (Rabobank, ING, ABN AMRO).
 
-Technische specificaties: Thread-safe rate limiting met threading.Lock(), credential persistence voor lange scans, automatic retry voor API failures. Competitive advantage: geen enkele concurrent (OneTrust, BigID, TrustArc) biedt Exact Online connector. 95% kostenreductie: EUR 25-250/maand versus EUR 5,000-15,000/maand enterprise pricing.
+Technische specificaties: Thread-safe rate limiting met threading.Lock(), credential persistence voor lange scans, automatic retry voor API failures. Competitive advantage: geen enkele concurrent (Leading compliance platform, Privacy management tool, Enterprise compliance suite) biedt Exact Online connector. 95% kostenreductie: EUR 25-250/maand versus EUR 5,000-15,000/maand enterprise pricing.
 
 [WOORDEN TELLING: 247/250]
 

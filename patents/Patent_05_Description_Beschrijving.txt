@@ -32,7 +32,7 @@ PAGINA 2 van 8
      
      Huidige enterprise privacy compliance tools:
      
-     a) Ontbrekende Exact Online Integratie: Geen enkele concurrent (OneTrust, BigID, TrustArc) biedt native Exact Online connector, ondanks 900,000+ Nederlandse zakelijke gebruikers (60% SME markt share);
+     a) Ontbrekende Exact Online Integratie: Geen enkele leading compliance platform biedt native Exact Online connector, ondanks 900,000+ Nederlandse zakelijke gebruikers (60% SME markt share);
  35  
      b) Handmatige Configuratie Vereist: Extensieve setup tijd (40-80 uur) voor elke connector per systeem;
      
@@ -42,7 +42,7 @@ PAGINA 2 van 8
      
      e) Geen Nederlandse Specialisatie: Mist BSN detectie, KvK nummer validatie, Nederlandse banking formats (IBAN NL), en UAVG compliance;
      
-     f) Hoge Kosten: OneTrust enterprise connectors: EUR 5,000-15,000/maand; BigID: EUR 8,000-20,000/maand; TrustArc: EUR 6,000-18,000/maand.
+     f) Hoge Kosten: Enterprise connectors kosten EUR 5,000-20,000/maand voor vergelijkbare multi-systeem scanning.
  45  
      Voor Nederlandse MKB bedrijven die Exact Online gebruiken (900,000+ organisaties), bestaat er geen enkele oplossing die geautomatiseerde PII discovery biedt binnen hun ERP systeem.
      
@@ -289,9 +289,9 @@ PAGINA 8 van 8
      
      Competitor Gap
      
-285  - OneTrust: ❌ NO Exact Online connector
-     - BigID: ❌ NO Exact Online connector
-     - TrustArc: ❌ NO Exact Online connector
+285  - Leading compliance platform: ❌ NO Exact Online connector
+     - Privacy management tool: ❌ NO Exact Online connector
+     - Enterprise compliance suite: ❌ NO Exact Online connector
      - DataGuardian Pro: ✅ ONLY tool with Exact Online
      
 290  ROI

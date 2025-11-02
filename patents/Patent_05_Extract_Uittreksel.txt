@@ -36,8 +36,8 @@ Technische specificaties: 95% kostenreductie versus concurrenten (EUR 25-250/maa
 EUR 5,000-15,000/maand), real-time compliance monitoring, automatische remediation
 aanbevelingen, PostgreSQL database opslag, Redis caching, Docker containerisatie.
 
-Unique market moat: ZERO concurrenten met Exact Online integratie (OneTrust, BigID, TrustArc
-hebben dit niet). Marktwaarde: EUR 3.5M - EUR 8M.
+Unique market moat: ZERO concurrenten met Exact Online integratie - leading enterprise
+compliance platforms hebben deze native connector niet. Marktwaarde: EUR 3.5M - EUR 8M.
 
 [WOORDEN TELLING: 248/250]
 

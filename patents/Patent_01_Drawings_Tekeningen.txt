@@ -372,7 +372,7 @@ PAGINA 16 van 16
      |                     MARKET POSITIONING MATRIX                           |
      +-------------------------------------------------------------------------+
      
-370                            DataGuardian | OneTrust | TrustArc | Manual
+370                            DataGuardian | Leading compliance platform | Enterprise compliance suite | Manual
                                Pro          |          |          | Process
      ML Forecasting            ✅ 85%       | ❌ NO    | ❌ NO    | ❌ NO
      Early Warning Signals     ✅ 15+       | ❌ NO    | ❌ NO    | ⚠️ Basic

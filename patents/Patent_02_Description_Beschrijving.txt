@@ -30,7 +30,7 @@ PAGINA 2 van 8**
      
  30  Huidige database scanning tools hebben ernstige beperkingen:
      
-     a) **Beperkte Database Support**: OneTrust ondersteunt alleen PostgreSQL en MySQL (2 engines), TrustArc support is beperkt tot MySQL en SQL Server (2 engines);
+     a) **Beperkte Database Support**: Leading compliance platform ondersteunt alleen PostgreSQL en MySQL (2 engines), Enterprise compliance suite support is beperkt tot MySQL en SQL Server (2 engines);
      
      b) **Geen Priority-Based Scanning**: Scannen alle tabellen sequentieel zonder intelligence, resulterend in 2-4 uur scan tijd voor grote databases;
  35  
@@ -509,14 +509,14 @@ PAGINA 8 van 8**
      ### ROI Verified
      
      - **Time Savings**: 60% faster (4 hours → 1.6 hours) via parallel scanning
-505  - **Database Coverage**: 3 enterprise engines (PostgreSQL, MySQL, SQL Server) - 50% more than OneTrust/TrustArc (2 engines)
+505  - **Database Coverage**: 3 enterprise engines (PostgreSQL, MySQL, SQL Server) - 50% more than Leading compliance platform/Enterprise compliance suite (2 engines)
      - **Accuracy**: Priority-based selection finds 95% of PII in 50% of tables
      - **Netherlands Specialization**: BSN checksum validation (competitors lack this)
      
      ### Competitive Gap
 510  
-     - OneTrust: ❌ Only 2 database engines, no parallel scanning, no BSN validation
-     - TrustArc: ❌ Only 2 database engines, sequential scanning only
+     - Leading compliance platform: ❌ Only 2 database engines, no parallel scanning, no BSN validation
+     - Enterprise compliance suite: ❌ Only 2 database engines, sequential scanning only
      - **DataGuardian Pro**: ✅ 3 engines + parallel + adaptive + BSN validation
      
 515  ---
