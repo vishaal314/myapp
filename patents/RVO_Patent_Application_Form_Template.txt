@@ -1,0 +1,439 @@
+===============================================================================
+AANVRAAG OM OCTROOI (PATENT APPLICATION FORM)
+Octrooicentrum Nederland - Rijksdienst voor Ondernemend Nederland (RVO.nl)
+===============================================================================
+
+INSTRUCTIES: Vul alle velden in en converteer naar PDF voordat u indient.
+Voor online indiening: gebruik https://mijnoctrooi.rvo.nl
+Voor papieren indiening: stuur naar Postbus 93144, 2509 AC Den Haag
+
+===============================================================================
+SECTIE 1: TYPE AANVRAAG
+===============================================================================
+
+☐ Nederlandse octrooiaanvraag (Dutch patent application)
+☐ Internationale octrooiaanvraag (International patent application)
+☐ Europese octrooiaanvraag (European patent application)
+
+Aantal patenten in deze aanvraag: [_______]
+
+===============================================================================
+SECTIE 2: GEGEVENS AANVRAGER(S) (APPLICANT INFORMATION)
+===============================================================================
+
+Deze sectie invullen voor ELKE aanvrager (herhaal indien meerdere aanvragers):
+
+AANVRAGER 1:
+
+Type aanvrager:
+☐ Natuurlijk persoon (Individual)
+☐ Rechtspersoon/Bedrijf (Company/Legal entity)
+
+Volledige naam: _______________________________________________________________
+
+Geboortedatum (indien natuurlijk persoon): ____________________________________
+
+Adres: ________________________________________________________________________
+
+Postcode: ______________________  Plaats: ____________________________________
+
+Land: _________________________________________________________________________
+
+Land van herkomst: ____________________________________________________________
+
+Telefoonnummer: _______________________________________________________________
+
+E-mailadres: __________________________________________________________________
+
+KvK nummer (indien van toepassing): ___________________________________________
+
+AANVRAGER 2 (indien van toepassing):
+
+Type aanvrager:
+☐ Natuurlijk persoon (Individual)
+☐ Rechtspersoon/Bedrijf (Company/Legal entity)
+
+Volledige naam: _______________________________________________________________
+
+Geboortedatum (indien natuurlijk persoon): ____________________________________
+
+Adres: ________________________________________________________________________
+
+Postcode: ______________________  Plaats: ____________________________________
+
+Land: _________________________________________________________________________
+
+Land van herkomst: ____________________________________________________________
+
+Telefoonnummer: _______________________________________________________________
+
+E-mailadres: __________________________________________________________________
+
+KvK nummer (indien van toepassing): ___________________________________________
+
+===============================================================================
+SECTIE 3: GEGEVENS UITVINDER(S) (INVENTOR INFORMATION)
+===============================================================================
+
+☐ De aanvrager(s) is/zijn tevens de uitvinder(s)
+☐ De uitvinder(s) is/zijn anders dan de aanvrager(s) (invullen hieronder)
+
+UITVINDER 1:
+
+Volledige naam: _______________________________________________________________
+
+Adres: ________________________________________________________________________
+
+Postcode: ______________________  Plaats: ____________________________________
+
+Land: _________________________________________________________________________
+
+UITVINDER 2 (indien van toepassing):
+
+Volledige naam: _______________________________________________________________
+
+Adres: ________________________________________________________________________
+
+Postcode: ______________________  Plaats: ____________________________________
+
+Land: _________________________________________________________________________
+
+UITVINDER 3 (indien van toepassing):
+
+Volledige naam: _______________________________________________________________
+
+Adres: ________________________________________________________________________
+
+Postcode: ______________________  Plaats: ____________________________________
+
+Land: _________________________________________________________________________
+
+===============================================================================
+SECTIE 4: GEMACHTIGDE/OCTROOIGEMACHTIGDE (PATENT ATTORNEY/REPRESENTATIVE)
+===============================================================================
+
+☐ Geen gemachtigde (No representative)
+☐ Gemachtigde ingeschakeld (Representative appointed - invullen hieronder)
+
+Naam gemachtigde: _____________________________________________________________
+
+Naam kantoor: _________________________________________________________________
+
+Registratienummer (indien Nederlands octrooigemachtigde): ____________________
+
+Adres: ________________________________________________________________________
+
+Postcode: ______________________  Plaats: ____________________________________
+
+Land: _________________________________________________________________________
+
+Telefoonnummer: _______________________________________________________________
+
+E-mailadres: __________________________________________________________________
+
+Referentienummer gemachtigde: _________________________________________________
+
+☐ Machtiging bijgevoegd (Power of attorney attached)
+
+===============================================================================
+SECTIE 5: TITEL VAN DE UITVINDING (TITLE OF INVENTION)
+===============================================================================
+
+Korte, technische titel (max 100 karakters):
+
+_______________________________________________________________________________
+
+_______________________________________________________________________________
+
+===============================================================================
+SECTIE 6: TECHNISCH GEBIED (TECHNICAL FIELD)
+===============================================================================
+
+Internationale Patent Classificatie (IPC) code(s) indien bekend:
+
+_______________________________________________________________________________
+
+Hoofdcategorie uitvinding:
+☐ Software/IT
+☐ Mechanical Engineering
+☐ Electrical Engineering
+☐ Chemistry
+☐ Biotechnology
+☐ Medical/Pharmaceutical
+☐ Anders: ___________________________________________________________________
+
+===============================================================================
+SECTIE 7: VOORRANGSCLAIM (PRIORITY CLAIM)
+===============================================================================
+
+☐ Geen voorrangsclaim (No priority claim)
+☐ Voorrangsclaim (Priority claim - invullen hieronder)
+
+EERDERE AANVRAAG 1:
+
+Datum eerdere aanvraag: _______________________________________________________
+
+Land van eerdere aanvraag: ____________________________________________________
+
+Nummer eerdere aanvraag: ______________________________________________________
+
+☐ Prioriteitsdocument bijgevoegd
+
+EERDERE AANVRAAG 2 (indien van toepassing):
+
+Datum eerdere aanvraag: _______________________________________________________
+
+Land van eerdere aanvraag: ____________________________________________________
+
+Nummer eerdere aanvraag: ______________________________________________________
+
+☐ Prioriteitsdocument bijgevoegd
+
+===============================================================================
+SECTIE 8: BIJGEVOEGDE DOCUMENTEN (ATTACHED DOCUMENTS)
+===============================================================================
+
+VERPLICHTE DOCUMENTEN (MANDATORY):
+
+☐ Beschrijving (Description) - _______ pagina's
+☐ Conclusies (Claims) - _______ pagina's  
+☐ Uittreksel (Abstract) - max 250 woorden
+☐ Tekeningen (Drawings) - _______ pagina's (indien van toepassing)
+
+OPTIONELE DOCUMENTEN (OPTIONAL):
+
+☐ Volmacht/Machtiging (Power of Attorney)
+☐ Overdrachtsakte (Assignment document) - indien aanvrager ≠ uitvinder
+☐ Prioriteitsdocument(en) (Priority document(s))
+☐ Biologisch materiaal depot informatie (Biological material deposit info)
+☐ Sequentielijst (Sequence listing) - voor biotechnologie uitvindingen
+☐ Anders: ___________________________________________________________________
+
+===============================================================================
+SECTIE 9: TAAL DOCUMENTEN (LANGUAGE OF DOCUMENTS)
+===============================================================================
+
+Beschrijving (Description):
+☐ Nederlands
+☐ Engels (English) - Nederlandse vertaling binnen 3 maanden
+
+Conclusies (Claims):
+☐ Nederlands (VERPLICHT - MANDATORY)
+
+Uittreksel (Abstract):
+☐ Nederlands
+☐ Engels
+
+Tekeningen (Drawings):
+☐ Taalvrij / Language-neutral
+
+===============================================================================
+SECTIE 10: VERZOEKEN (REQUESTS)
+===============================================================================
+
+☐ Verzoek tot onmiddellijk onderzoek naar de stand van de techniek
+   (Request for immediate state-of-the-art search)
+   
+   LET OP: Dit verzoek kan ook binnen 13 maanden na indiening worden gedaan.
+   Kosten: zie actuele tarieventabel op www.rvo.nl
+
+☐ Verzoek tot versnelde behandeling (Accelerated examination request)
+   Reden: ___________________________________________________________________
+
+☐ Verzoek tot geheimhouding gedurende extra periode
+   (Request for extended confidentiality period)
+
+===============================================================================
+SECTIE 11: BETALING (PAYMENT)
+===============================================================================
+
+Indieningstaks (Filing fee):
+☐ €120 (papieren indiening / paper filing)
+☐ €80 (online filing via eOLF)
+
+Betaalmethode (Payment method):
+☐ Bankoverschrijving (Bank transfer)
+☐ Depositorekening bij RVO.nl (Deposit account)
+
+BANKGEGEVENS RVO.NL:
+Bank: ING Bank
+IBAN: NL41 INGB 0705 0012 96
+BIC/SWIFT: INGBNL2A
+Ten name van: Rijksdienst voor Ondernemend Nederland
+Onder vermelding van: [UW NAAM] + "Patent Application Fee"
+
+Depositorekening nummer (indien van toepassing): ______________________________
+
+Betaaldatum: __________________________________________________________________
+
+Betalingsreferentie: __________________________________________________________
+
+===============================================================================
+SECTIE 12: CORRESPONDENTIEADRES (CORRESPONDENCE ADDRESS)
+===============================================================================
+
+Alle correspondentie sturen naar:
+
+☐ Aanvrager (adres zoals opgegeven in Sectie 2)
+☐ Gemachtigde (adres zoals opgegeven in Sectie 4)
+☐ Anders adres (invullen hieronder):
+
+   Naam: _____________________________________________________________________
+   
+   Adres: ____________________________________________________________________
+   
+   Postcode: ______________________  Plaats: ________________________________
+   
+   Land: _____________________________________________________________________
+   
+   Telefoonnummer: ___________________________________________________________
+   
+   E-mailadres: ______________________________________________________________
+
+===============================================================================
+SECTIE 13: AANVULLENDE INFORMATIE (ADDITIONAL INFORMATION)
+===============================================================================
+
+Bijzondere opmerkingen of verzoeken:
+
+_______________________________________________________________________________
+
+_______________________________________________________________________________
+
+_______________________________________________________________________________
+
+_______________________________________________________________________________
+
+_______________________________________________________________________________
+
+===============================================================================
+SECTIE 14: VERKLARING EN ONDERTEKENING (DECLARATION AND SIGNATURE)
+===============================================================================
+
+Ik/Wij verklaar(en) dat:
+- De informatie in dit formulier naar waarheid is ingevuld
+- Ik/wij gerechtigd ben/zijn om deze octrooiaanvraag in te dienen
+- De uitvinding nieuw is en niet eerder openbaar is gemaakt (behoudens
+  voorrangsclaim)
+- Alle bijgevoegde documenten compleet en correct zijn
+
+HANDTEKENING AANVRAGER 1:
+
+Naam: _________________________________________________________________________
+
+Functie/Hoedanigheid: _________________________________________________________
+
+Datum: ________________________________________________________________________
+
+Handtekening: _________________________________________________________________
+
+
+HANDTEKENING AANVRAGER 2 (indien van toepassing):
+
+Naam: _________________________________________________________________________
+
+Functie/Hoedanigheid: _________________________________________________________
+
+Datum: ________________________________________________________________________
+
+Handtekening: _________________________________________________________________
+
+
+HANDTEKENING GEMACHTIGDE (indien van toepassing):
+
+Naam: _________________________________________________________________________
+
+Registratienummer: ____________________________________________________________
+
+Datum: ________________________________________________________________________
+
+Handtekening: _________________________________________________________________
+
+===============================================================================
+SECTIE 15: CHECKLIST VOOR INDIENING (SUBMISSION CHECKLIST)
+===============================================================================
+
+Voor indiening, controleer dat u heeft:
+
+DOCUMENTEN:
+☐ Dit ingevulde aanvraagformulier
+☐ Beschrijving (Description) - correct geformatteerd
+☐ Conclusies (Claims) in het Nederlands - correct geformatteerd
+☐ Uittreksel (Abstract) - max 250 woorden
+☐ Tekeningen (Drawings) - indien noodzakelijk, correct genummerd
+☐ Volmacht (indien gemachtigde gebruikt)
+☐ Prioriteitsdocument (indien voorrangsclaim)
+☐ Overdrachtsakte (indien aanvrager ≠ uitvinder)
+
+FORMATTERING:
+☐ A4 papier formaat
+☐ Zwarte letters, duidelijk leesbaar
+☐ Regelafstand 1½
+☐ Marges: boven/rechts/onder 2cm, links 2.5cm
+☐ Paginanummering: bovenaan in het midden (Arabische cijfers)
+☐ Regelnummering: elke 5e regel, rechts van linkermarge
+☐ Conclusies beginnen op nieuw blad
+☐ Uittreksel begint op nieuw blad
+☐ Tekeningen: duidelijk gescheiden en genummerd (1/3, 2/3, 3/3)
+
+BETALING:
+☐ Indieningstaks betaald (€120 papier / €80 online)
+☐ Betalingsbewijs bijgevoegd (bij papieren indiening)
+
+INDIENING:
+☐ Online via https://mijnoctrooi.rvo.nl (AANBEVOLEN), of
+☐ Per post naar: Postbus 93144, 2509 AC Den Haag, of
+☐ Persoonlijk: Prinses Beatrixlaan 2, 2595 AL Den Haag (ma-vr 9:00-17:00)
+
+===============================================================================
+BELANGRIJK - NA INDIENING (IMPORTANT - AFTER FILING)
+===============================================================================
+
+U ontvangt binnen 1 maand:
+- Ontvangstbevestiging met aanvraagnummer en indieningsdatum
+- Eventuele vormgebrekenbrief (3 maanden termijn om te herstellen)
+
+Binnen 13 maanden na indiening:
+- Verzoek indienen voor "Onderzoek naar de stand van de techniek" (VERPLICHT)
+- Extra kosten van toepassing
+
+Na 18 maanden:
+- Uw octrooiaanvraag wordt openbaar gemaakt
+
+Maximale octrooibescherming: 20 jaar vanaf indieningsdatum
+
+===============================================================================
+CONTACT INFORMATIE RVO.NL
+===============================================================================
+
+Octrooicentrum Nederland
+Rijksdienst voor Ondernemend Nederland
+
+Postadres:
+Postbus 93144
+2509 AC Den Haag
+
+Bezoekadres:
+Prinses Beatrixlaan 2
+2595 AL Den Haag
+
+Telefoon: +31 (0)88 042 40 02 (kies optie 1)
+E-mail: octrooicentrum@rvo.nl
+Website: www.rvo.nl/octrooien
+
+Openingstijden: ma-vr 08:30-17:00 uur (CET)
+
+Online Portal: https://mijnoctrooi.rvo.nl
+
+===============================================================================
+EINDE AANVRAAGFORMULIER
+===============================================================================
+
+NOTITIES:
+- Dit formulier is een template. Converteer naar PDF voor officiële indiening.
+- Voor meest actuele versie: download via https://mijnoctrooi.rvo.nl
+- Overweeg professionele hulp van octrooigemachtigde voor complexe aanvragen
+- Bewaar kopieën van alle ingediende documenten
+
+Versie: 2025
+Bron: RVO.nl officiële vereisten
