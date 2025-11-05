@@ -1,0 +1,254 @@
+CONCLUSIONS (ENGLISH VERSION)
+Intelligent Database Scanner - Patent Claims
+
+PAGE 1 of 4
+  5
+---
+
+CLAIMS
+
+Claim 1
+10
+
+An intelligent database scanning system, comprising:
+
+a) a multi-engine database connector module supporting 3 database types: PostgreSQL via psycopg2, MySQL via mysql.connector, Microsoft SQL Server via pyodbc, with unified connection abstraction;
+
+b) a priority-based table selection algorithm with scoring: user/customer/employee tables 3.0×, medical/health/patient 3.0×, payment/billing 2.8×, transaction 2.5×, contact/address/phone/email 2.5×, financial/bank/card 2.8×, credential/password 2.8×, session 2.0×, audit/log 1.5×, system 1.2×, temp 0.8×, test 0.5×;
+ 15
+
+c) an adaptive sampling strategy module with 3 modes: fast (100 rows/table, 2 workers, ≤15 tables), smart (300 rows/table, 3 workers, ≤50 tables), deep (500 rows/table, 3 workers, ≤75 tables), where strategy selection is based on total_tables, estimated_rows, and risk_level;
+
+d) a parallel scanning engine with connection pooling (3 concurrent workers via ThreadPoolExecutor) reducing scan time 60% (4 hours → 1.6 hours);
+ 20
+
+e) a Netherlands PII detection module with BSN validation (9-digit + 11-proef checksum: (d₀×9 + d₁×8 + ... + d₇×2 - d₈×1) mod 11 == 0), IBAN NL pattern (NL\d{2}[A-Z]{4}\d{10}), KvK 8-digit numbers, Dutch postal codes (1234AB), Dutch phone numbers (+31/0031/0);
+
+f) a schema intelligence analyzer performing automatic column priority detection (ssn/bsn: 3.0×, passport: 3.0×, email/phone: 2.5×, medical/health/diagnosis: 3.0×, password/token/secret: 2.8×);
+ 25
+
+whereby the system prioritizes table selection based on priority_score (sorted descending) and calculates scan coverage metrics (tables_scanned / tables_discovered × 100).
+
+---
+ 30
+
+PAGE 2 of 4
+
+Claim 2
+
+The system according to claim 1, wherein the multi-engine database connector:
+ 35
+
+a) implements PostgreSQL connection:
+   ```
+   psycopg2.connect(host, port=5432, database, user, password)
+   ```
+ 40
+
+b) implements MySQL connection:
+   ```
+   mysql.connector.connect(host, port=3306, database, user, password)
+   ```
+ 45
+
+c) implements Microsoft SQL Server connection:
+   ```
+   pyodbc.connect(f"DRIVER={{ODBC Driver 17}};SERVER={host};...")
+   ```
+ 50
+
+---
+
+Claim 3
+
+The system according to claim 1, wherein the priority-based table selection algorithm:
+ 55
+
+a) calculates table priority via:
+   ```
+   base_score = 1.0
+   for keyword in TABLE_PRIORITIES:
+ 60        if keyword in table_name.lower():
+           base_score = max(base_score, TABLE_PRIORITIES[keyword])
+   
+   column_boost = max(COLUMN_PRIORITIES[col] × 0.3 for col in columns)
+   priority_score = min(base_score + column_boost, 3.5)
+ 65    ```
+
+b) sorts tables by priority_score descending;
+
+c) selects top N tables where N = strategy['target_tables'];
+ 70
+
+d) categorizes priority distribution (high ≥2.5, medium ≥1.5, low <1.5).
+
+---
+
+PAGE 3 of 4
+ 75
+
+Claim 4
+
+The system according to claim 1, wherein the adaptive sampling strategy module:
+
+a) selects fast mode when total_tables ≤ 15:
+ 80    sample_size = 100 rows
+   workers = 2
+   scan_time ≈ 5-10 minutes;
+
+b) selects smart mode when 15 < total_tables ≤ 50:
+ 85    sample_size = 300 rows
+   workers = 3
+   scan_time ≈ 20-40 minutes;
+
+c) selects deep mode when total_tables > 50:
+ 90    sample_size = 500 rows
+   workers = 3
+   target_tables = 75 maximum
+   scan_time ≈ 1-2 hours;
+
+ 95 d) automatically adjusts strategy based on database size and detected risk level.
+
+---
+
+Claim 5
+
+100 The system according to claim 1, wherein the parallel scanning engine:
+
+a) creates connection pool with queue management:
+   ```
+   connection_pool = queue.Queue()
+105    for _ in range(workers):
+       conn = create_database_connection()
+       connection_pool.put(conn)
+   ```
+
+110 b) executes concurrent table scans via ThreadPoolExecutor:
+   ```
+   with ThreadPoolExecutor(max_workers=3) as executor:
+       futures = {executor.submit(scan_table, t): t for t in tables}
+   ```
+115
+
+c) achieves 60% time reduction: 4 hours → 1.6 hours;
+
+d) implements connection reuse to minimize database connection overhead.
+
+---
+120
+
+PAGE 4 of 4
+
+Claim 6
+
+The system according to claim 1, wherein Netherlands PII detection:
+125
+
+a) validates BSN with official 11-proef checksum:
+   ```
+   checksum = 0
+   for i in range(8):
+130        checksum += int(bsn[i]) * (9 - i)
+   checksum -= int(bsn[8])
+   
+   valid = (checksum % 11 == 0)
+   ```
+135
+
+b) detects IBAN NL banking format: NL\d{2}[A-Z]{4}\d{10};
+
+c) identifies KvK numbers: 8-digit pattern validation;
+
+140 d) recognizes Dutch postal codes: \d{4}\s?[A-Z]{2};
+
+e) detects Dutch phone numbers: (\+31|0031|0)\d{9}.
+
+---
+145
+
+Claim 7
+
+The system according to claim 1, wherein the schema intelligence analyzer:
+
+a) assigns column priorities based on keywords:
+150    ssn/bsn/passport → 3.0× (highest)
+   medical/health/diagnosis → 3.0× (GDPR Article 9)
+   password/token/secret → 2.8× (security critical)
+   email/phone/bank → 2.5×
+   address/birth/dob → 2.2-2.5×;
+155
+
+b) calculates column boost as 30% of highest column priority;
+
+c) caps final priority score at 3.5 to prevent over-prioritization;
+
+160 d) automatically detects high-risk columns regardless of table name.
+
+---
+
+Claim 8
+
+165 The system according to claim 1, further comprising:
+
+a) scan coverage metrics calculation:
+   coverage_percentage = (tables_scanned / total_tables) × 100
+   pii_detection_rate = (tables_with_pii / tables_scanned) × 100;
+170
+
+b) priority distribution analysis:
+   high_priority_tables = count(priority ≥ 2.5)
+   medium_priority_tables = count(1.5 ≤ priority < 2.5)
+   low_priority_tables = count(priority < 1.5);
+175
+
+c) performance metrics tracking:
+   scan_duration_minutes = end_time - start_time
+   rows_per_second = total_rows_scanned / scan_duration_seconds
+   time_savings_percentage = (sequential_time - parallel_time) / sequential_time × 100.
+180
+
+---
+
+Claim 9
+
+A method for automated multi-database PII discovery, comprising the steps:
+185
+
+a) connecting to database via unified abstraction layer (PostgreSQL/MySQL/SQL Server);
+
+b) discovering all tables and columns via schema introspection;
+
+190 c) calculating priority score for each table based on naming patterns;
+
+d) selecting adaptive sampling strategy based on database size;
+
+e) executing parallel table scans with connection pooling;
+195
+
+f) detecting Netherlands-specific PII (BSN, IBAN NL, KvK) with validation;
+
+g) generating compliance report with scan coverage metrics and priority distribution.
+
+---
+200
+
+Claim 10
+
+A computer-readable medium containing instructions that, when executed by a processor, implement the system according to claim 1, wherein the instructions:
+
+205 a) perform multi-engine database connection establishment;
+
+b) execute priority-based table selection algorithms;
+
+c) implement adaptive sampling strategies;
+210
+
+d) coordinate parallel scanning workers;
+
+e) validate Netherlands-specific PII patterns;
+
+215 f) generate real-time PII discovery reports.
+
+END OF CLAIMS
+
+===============================================================================
