@@ -948,6 +948,73 @@ class DBScanner:
         
         return patterns
     
+    def _create_connection(self, connection_params: Dict[str, Any]):
+        """
+        Create a fresh database connection without mutating self.connection.
+        Used by IntelligentDBScanner for schema analysis.
+        
+        Args:
+            connection_params: Dictionary with keys: type, host, port, database, user, password
+            
+        Returns:
+            Database connection object or None if connection fails
+        """
+        db_type_raw = connection_params.get('type', '')
+        if isinstance(db_type_raw, dict):
+            logger.error(f"Invalid connection_params: 'type' should be a string, got dict: {db_type_raw}")
+            return None
+        db_type = db_type_raw.lower() if db_type_raw else ''
+        
+        try:
+            if db_type == 'postgres' or db_type == 'postgresql':
+                if not POSTGRES_AVAILABLE or not psycopg2:
+                    logger.error("PostgreSQL driver not available")
+                    return None
+                
+                return psycopg2.connect(
+                    host=connection_params.get('host'),
+                    port=connection_params.get('port', 5432),
+                    database=connection_params.get('database'),
+                    user=connection_params.get('user'),
+                    password=connection_params.get('password')
+                )
+            
+            elif db_type == 'mysql':
+                if not MYSQL_AVAILABLE or not mysql or not mysql.connector:
+                    logger.error("MySQL driver not available")
+                    return None
+                
+                return mysql.connector.connect(
+                    host=connection_params.get('host'),
+                    port=connection_params.get('port', 3306),
+                    database=connection_params.get('database'),
+                    user=connection_params.get('user'),
+                    password=connection_params.get('password')
+                )
+            
+            elif db_type in ['sqlserver', 'mssql']:
+                if not PYODBC_AVAILABLE or not pyodbc:
+                    logger.error("SQL Server driver (pyodbc) not available")
+                    return None
+                
+                conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={connection_params.get('host')},{connection_params.get('port', 1433)};DATABASE={connection_params.get('database')};UID={connection_params.get('user')};PWD={connection_params.get('password')}"
+                return pyodbc.connect(conn_str)
+            
+            elif db_type == 'sqlite':
+                if not SQLITE_AVAILABLE or not sqlite3:
+                    logger.error("SQLite driver not available")
+                    return None
+                
+                return sqlite3.connect(connection_params.get('database', ':memory:'))
+            
+            else:
+                logger.error(f"Unsupported database type: {db_type}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error creating connection to {db_type}: {str(e)}")
+            return None
+    
     def connect_to_database(self, connection_params: Dict[str, Any]) -> bool:
         """
         Connect to a database with support for local and cloud databases.

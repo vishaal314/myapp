@@ -218,7 +218,7 @@ class IntelligentDBScanner:
                     'row_count': row_count,
                     'columns': columns,
                     'priority_score': priority_score,
-                    'column_priorities': [self._calculate_column_priority(col) for col in columns]
+                    'column_priorities': [self._calculate_column_priority(col['name'] if isinstance(col, dict) else col) for col in columns]
                 }
                 
                 analysis['tables'].append(table_data)
@@ -246,7 +246,9 @@ class IntelligentDBScanner:
             connection.close()
             
         except Exception as e:
+            import traceback
             logger.error(f"Error analyzing database schema: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
         
         return analysis
 
