@@ -354,13 +354,37 @@ class IntelligentDBScanner:
         risk_level = schema_analysis['risk_level']
         
         # Determine strategy based on analysis
-        if scan_mode == "fast" or total_tables <= 10:
+        # Explicit scan mode takes precedence over auto-detection
+        if scan_mode == "fast":
             strategy_type = "comprehensive"
             target_tables = min(total_tables, 15)
             sample_size = 100
             workers = 2
             
-        elif scan_mode == "deep" or risk_level == "high":
+        elif scan_mode == "smart":
+            if total_tables > 50:
+                strategy_type = "priority"
+                target_tables = min(max_tables or self.MAX_TABLES_DEFAULT, total_tables)
+            else:
+                strategy_type = "comprehensive"
+                target_tables = total_tables
+            sample_size = 300
+            workers = 3
+            
+        elif scan_mode == "deep":
+            strategy_type = "priority_deep"
+            target_tables = min(max_tables or 75, total_tables)
+            sample_size = 500
+            workers = 3
+            
+        # Auto-detection based on database characteristics (when no explicit scan_mode)
+        elif total_tables <= 10:
+            strategy_type = "comprehensive"
+            target_tables = min(total_tables, 15)
+            sample_size = 100
+            workers = 2
+            
+        elif risk_level == "high":
             strategy_type = "priority_deep"
             target_tables = min(max_tables or 75, total_tables)
             sample_size = 500
@@ -372,17 +396,11 @@ class IntelligentDBScanner:
             sample_size = 200
             workers = 3
             
-        else:  # smart mode
-            if total_tables > 50:
-                strategy_type = "priority"
-                target_tables = min(max_tables or self.MAX_TABLES_DEFAULT, total_tables)
-                sample_size = 300
-                workers = 3
-            else:
-                strategy_type = "comprehensive"
-                target_tables = total_tables
-                sample_size = 500
-                workers = 2
+        else:  # default smart mode
+            strategy_type = "comprehensive"
+            target_tables = total_tables
+            sample_size = 300
+            workers = 3
         
         return {
             'type': strategy_type,
@@ -519,26 +537,43 @@ class IntelligentDBScanner:
             table_name = table['name']
             row_count = table['row_count']
             
-            # Determine sampling strategy based on table size
-            if row_count <= sample_size:
-                # Scan all rows for small tables
-                result = self.db_scanner.scan_table(connection_params, table_name, limit=row_count)
-            else:
-                # Use statistical sampling for large tables
-                result = self.db_scanner.scan_table(connection_params, table_name, limit=sample_size)
+            # Create a fresh connection for this scan
+            connection = self.db_scanner._create_connection(connection_params)
+            if not connection:
+                logger.warning(f"Failed to create connection for table {table_name}")
+                return None
             
-            # Extract findings from result
-            findings = []
-            rows_analyzed = 0
+            # Temporarily set the connection and sample size
+            old_connection = self.db_scanner.connection
+            old_sample_rows = getattr(self.db_scanner, 'max_sample_rows', 100)
+            old_db_type = self.db_scanner.db_type
             
-            if isinstance(result, dict):
-                findings = result.get('findings', [])
-                rows_analyzed = result.get('rows_scanned', sample_size)
-            elif isinstance(result, list):
-                findings = result
-                rows_analyzed = sample_size
+            self.db_scanner.connection = connection
+            self.db_scanner.max_sample_rows = min(sample_size, row_count)
+            self.db_scanner.db_type = connection_params.get('type', 'postgres')
             
-            return findings, rows_analyzed
+            try:
+                # Scan the table
+                result = self.db_scanner.scan_table(table_name)
+                
+                # Extract findings from result
+                findings = []
+                rows_analyzed = 0
+                
+                if isinstance(result, dict):
+                    findings = result.get('findings', [])
+                    rows_analyzed = result.get('metadata', {}).get('rows_sampled', sample_size)
+                elif isinstance(result, list):
+                    findings = result
+                    rows_analyzed = sample_size
+                
+                return findings, rows_analyzed
+            finally:
+                # Clean up: close the temporary connection and restore old state
+                connection.close()
+                self.db_scanner.connection = old_connection
+                self.db_scanner.max_sample_rows = old_sample_rows
+                self.db_scanner.db_type = old_db_type
                 
         except Exception as e:
             logger.warning(f"Error scanning table {table['name']}: {str(e)}")

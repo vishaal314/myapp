@@ -253,7 +253,7 @@ def test_patent_claim_3_scan_modes(connection_params):
             
             # Verify sample size from strategy
             strategy = scan_results.get('scanning_strategy', {})
-            actual_sample = strategy.get('sample_size', 0)
+            actual_sample = strategy.get('sample_size_per_table', 0)
             expected_sample = expected_config[mode]['sample_size']
             
             sample_match = actual_sample == expected_sample
