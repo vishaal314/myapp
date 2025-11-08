@@ -54,6 +54,8 @@ python-docx = ">=0.8.11"
 openpyxl = ">=3.1.0"
 xlrd = ">=2.0.1"
 python-magic = ">=0.4.27"
+pymysql = "^1.1.2"
+pymssql = "^2.3.9"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.4.0"
