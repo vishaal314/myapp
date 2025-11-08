@@ -260,16 +260,17 @@ def main():
         print("\n✓ PostgreSQL connection detected (DATABASE_URL)")
         
         # Parse connection string
-        # Format: postgresql://user:password@host:port/database
+        # Format: postgresql://user:password@host:port/database or postgresql://user:password@host/database
         if db_url.startswith('postgresql://') or db_url.startswith('postgres://'):
             import re
-            match = re.match(r'postgres(?:ql)?://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)', db_url)
+            # Handle optional port and URL parameters in database name
+            match = re.match(r'postgres(?:ql)?://([^:]+):([^@]+)@([^:/]+)(?::(\d+))?/([^?]+)', db_url)
             if match:
                 user, password, host, port, database = match.groups()
                 pg_params = {
                     'type': 'postgres',
                     'host': host,
-                    'port': int(port),
+                    'port': int(port) if port else 5432,
                     'database': database,
                     'user': user,
                     'password': password
