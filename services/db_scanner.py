@@ -996,14 +996,14 @@ class DBScanner:
                     return None
                 
                 # Prefer PyMySQL (pure Python, more stable)
+                # NOTE: Use tuple cursor (default) for data retrieval - scanner expects tuples
                 if PYMYSQL_AVAILABLE and pymysql:
                     return pymysql.connect(
                         host=connection_params.get('host'),
                         port=int(connection_params.get('port', 3306)),
                         database=connection_params.get('database'),
                         user=connection_params.get('user'),
-                        password=connection_params.get('password'),
-                        cursorclass=pymysql.cursors.DictCursor
+                        password=connection_params.get('password')
                     )
                 elif MYSQL_CONNECTOR_AVAILABLE and mysql and mysql.connector:
                     return mysql.connector.connect(
@@ -1182,6 +1182,7 @@ class DBScanner:
                 # Prefer PyMySQL (pure Python, more stable in Replit environment)
                 if PYMYSQL_AVAILABLE and pymysql:
                     # PyMySQL has slightly different parameter names
+                    # NOTE: Do NOT use DictCursor for main connection - scanner expects tuple results
                     pymysql_params = {
                         'host': host,
                         'port': int(port),
@@ -1189,7 +1190,6 @@ class DBScanner:
                         'user': user,
                         'password': password,
                         'connect_timeout': self.query_timeout_seconds,
-                        'cursorclass': pymysql.cursors.DictCursor,
                     }
                     
                     # Handle SSL for PyMySQL (Railway requires SSL)
