@@ -207,7 +207,9 @@ class IntelligentDBScanner:
             
             for table_info in tables_info:
                 table_name = table_info['name']
-                row_count = table_info.get('row_count', 0)
+                # Convert row_count to int (PyMySQL DictCursor may return strings)
+                row_count_raw = table_info.get('row_count', 0)
+                row_count = int(row_count_raw) if row_count_raw is not None else 0
                 columns = table_info.get('columns', [])
                 
                 # Calculate table priority
@@ -302,7 +304,13 @@ class IntelligentDBScanner:
                 """)
                 
                 for row in cursor.fetchall():
-                    table_name, row_count = row
+                    # Handle both tuple and dict cursor types
+                    if isinstance(row, dict):
+                        # MySQL information_schema uses uppercase column names
+                        table_name = row.get('TABLE_NAME') or row.get('table_name')
+                        row_count = row.get('TABLE_ROWS') or row.get('table_rows') or 0
+                    else:
+                        table_name, row_count = row
                     
                     cursor.execute("""
                         SELECT column_name, data_type
@@ -311,7 +319,15 @@ class IntelligentDBScanner:
                         ORDER BY ordinal_position
                     """, (table_name,))
                     
-                    columns = [{'name': col[0], 'type': col[1]} for col in cursor.fetchall()]
+                    columns = []
+                    for col in cursor.fetchall():
+                        if isinstance(col, dict):
+                            # MySQL information_schema uses uppercase column names
+                            col_name = col.get('COLUMN_NAME') or col.get('column_name')
+                            col_type = col.get('DATA_TYPE') or col.get('data_type')
+                            columns.append({'name': col_name, 'type': col_type})
+                        else:
+                            columns.append({'name': col[0], 'type': col[1]})
                     
                     tables_info.append({
                         'name': table_name,

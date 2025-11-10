@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.mariadb
     pkgs.poppler_utils
     pkgs.enscript
     pkgs.unzip

@@ -33,12 +33,23 @@ except ImportError:
 
 try:
     import mysql.connector
-    MYSQL_AVAILABLE = True
+    MYSQL_CONNECTOR_AVAILABLE = True
 except ImportError:
     class MockMySQL:
         connector = None
     mysql = MockMySQL()
-    MYSQL_AVAILABLE = False
+    MYSQL_CONNECTOR_AVAILABLE = False
+
+try:
+    import pymysql
+    import pymysql.cursors
+    PYMYSQL_AVAILABLE = True
+except ImportError:
+    pymysql = None
+    PYMYSQL_AVAILABLE = False
+
+# Prefer PyMySQL for MySQL connections (more stable in Replit environment)
+MYSQL_AVAILABLE = PYMYSQL_AVAILABLE or MYSQL_CONNECTOR_AVAILABLE
 
 try:
     import sqlite3
@@ -980,17 +991,31 @@ class DBScanner:
                 )
             
             elif db_type == 'mysql':
-                if not MYSQL_AVAILABLE or not mysql or not mysql.connector:
+                if not MYSQL_AVAILABLE:
                     logger.error("MySQL driver not available")
                     return None
                 
-                return mysql.connector.connect(
-                    host=connection_params.get('host'),
-                    port=connection_params.get('port', 3306),
-                    database=connection_params.get('database'),
-                    user=connection_params.get('user'),
-                    password=connection_params.get('password')
-                )
+                # Prefer PyMySQL (pure Python, more stable)
+                if PYMYSQL_AVAILABLE and pymysql:
+                    return pymysql.connect(
+                        host=connection_params.get('host'),
+                        port=int(connection_params.get('port', 3306)),
+                        database=connection_params.get('database'),
+                        user=connection_params.get('user'),
+                        password=connection_params.get('password'),
+                        cursorclass=pymysql.cursors.DictCursor
+                    )
+                elif MYSQL_CONNECTOR_AVAILABLE and mysql and mysql.connector:
+                    return mysql.connector.connect(
+                        host=connection_params.get('host'),
+                        port=connection_params.get('port', 3306),
+                        database=connection_params.get('database'),
+                        user=connection_params.get('user'),
+                        password=connection_params.get('password')
+                    )
+                else:
+                    logger.error("No MySQL driver available")
+                    return None
             
             elif db_type in ['sqlserver', 'mssql']:
                 if not PYODBC_AVAILABLE or not pyodbc:
@@ -1154,21 +1179,51 @@ class DBScanner:
                         logger.info("Auto-enabled SSL for cloud MySQL connection")
                 
                 # Connect to database with SSL support
-                connection_params_final = {
-                    'host': host,
-                    'port': port,
-                    'database': database,
-                    'user': user,
-                    'password': password,
-                    'connection_timeout': self.query_timeout_seconds,
-                    **ssl_params
-                }
-                
-                if MYSQL_AVAILABLE and mysql and mysql.connector:
+                # Prefer PyMySQL (pure Python, more stable in Replit environment)
+                if PYMYSQL_AVAILABLE and pymysql:
+                    # PyMySQL has slightly different parameter names
+                    pymysql_params = {
+                        'host': host,
+                        'port': int(port),
+                        'database': database,
+                        'user': user,
+                        'password': password,
+                        'connect_timeout': self.query_timeout_seconds,
+                        'cursorclass': pymysql.cursors.DictCursor,
+                    }
+                    
+                    # Handle SSL for PyMySQL (Railway requires SSL)
+                    if ssl_params.get('ssl_disabled') == False or self._is_cloud_host(host):
+                        pymysql_params['ssl'] = {
+                            'ca': ssl_params.get('ssl_ca'),
+                            'cert': ssl_params.get('ssl_cert'),
+                            'key': ssl_params.get('ssl_key')
+                        }
+                        # Remove None values
+                        pymysql_params['ssl'] = {k: v for k, v in pymysql_params['ssl'].items() if v}
+                        if not pymysql_params['ssl']:
+                            # Empty SSL dict means verify with default CA bundle
+                            pymysql_params['ssl'] = {}
+                    
+                    self.connection = pymysql.connect(**pymysql_params)
+                    logger.info(f"MySQL connection established via PyMySQL with SSL: {bool(ssl_params)}")
+                    
+                elif MYSQL_CONNECTOR_AVAILABLE and mysql and mysql.connector:
+                    # Fallback to mysql.connector (may have glibc issues)
+                    connection_params_final = {
+                        'host': host,
+                        'port': port,
+                        'database': database,
+                        'user': user,
+                        'password': password,
+                        'connection_timeout': self.query_timeout_seconds,
+                        **ssl_params
+                    }
                     self.connection = mysql.connector.connect(**connection_params_final)
+                    logger.info(f"MySQL connection established via mysql.connector with SSL: {bool(ssl_params)}")
                 else:
                     raise Exception("MySQL connector not available")
-                logger.info(f"MySQL connection established with SSL: {bool(ssl_params)}")
+
                 
             elif db_type == 'sqlite':
                 if not SQLITE_AVAILABLE:
