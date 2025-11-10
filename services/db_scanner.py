@@ -65,6 +65,16 @@ except ImportError:
     pyodbc = None
     PYODBC_AVAILABLE = False
 
+try:
+    import pymssql
+    PYMSSQL_AVAILABLE = True
+except ImportError:
+    pymssql = None
+    PYMSSQL_AVAILABLE = False
+
+# SQL Server available if either pyodbc or pymssql is present
+SQLSERVER_AVAILABLE = PYODBC_AVAILABLE or PYMSSQL_AVAILABLE
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -93,7 +103,7 @@ class DBScanner:
             self.supported_db_types.append("mysql")
         if SQLITE_AVAILABLE:
             self.supported_db_types.append("sqlite")
-        if PYODBC_AVAILABLE:
+        if SQLSERVER_AVAILABLE:
             self.supported_db_types.append("sqlserver")
             
         # PII detection patterns
@@ -804,8 +814,8 @@ class DBScanner:
     
     def _connect_azure_sql_database_style(self, server: str, port: int, database: str, username: str, password: str, ssl_mode: str) -> bool:
         """Connect to Azure SQL Database using Azure-style parameters."""
-        if not PYODBC_AVAILABLE:
-            logger.error("pyodbc driver not available for Azure SQL Database")
+        if not SQLSERVER_AVAILABLE:
+            logger.error("SQL Server driver not available for Azure SQL Database (install pyodbc or pymssql)")
             return False
         
         try:
@@ -828,26 +838,45 @@ class DBScanner:
                 f"Connection Timeout=30;"
             )
             
-            # Try ODBC Driver 17, fallback to 18 if available - with proper import guards
-            try:
-                if pyodbc is not None:
+            # Prefer pymssql (pure Python) for Azure SQL, fallback to pyodbc
+            if PYMSSQL_AVAILABLE and pymssql:
+                # Use pymssql for Azure SQL Database
+                logger.info("Using pymssql for Azure SQL Database connection")
+                # Remove tcp: prefix and port from server for pymssql
+                pymssql_server = server.replace('tcp:', '')
+                self.connection = pymssql.connect(
+                    server=pymssql_server,
+                    port=str(port),
+                    user=username,
+                    password=password,
+                    database=database,
+                    tds_version='7.4',
+                    timeout=30
+                )
+                self.db_type = 'sqlserver'
+                logger.info(f"Successfully connected to Azure SQL Database via pymssql: {server}/{database}")
+                return True
+            elif PYODBC_AVAILABLE and pyodbc:
+                # Try ODBC Driver 17, fallback to 18 if available - with proper import guards
+                logger.info("Using pyodbc for Azure SQL Database connection")
+                try:
                     self.connection = pyodbc.connect(connection_string)
-                else:
-                    raise Exception("pyodbc driver not available")
-            except Exception as e:
-                if pyodbc is not None and "ODBC Driver 17" in str(e):
-                    # Try ODBC Driver 18
-                    connection_string_18 = connection_string.replace(
-                        "ODBC Driver 17 for SQL Server", 
-                        "ODBC Driver 18 for SQL Server"
-                    )
-                    self.connection = pyodbc.connect(connection_string_18)
-                else:
-                    raise e
-            
-            self.db_type = 'sqlserver'
-            logger.info(f"Successfully connected to Azure SQL Database: {server}/{database}")
-            return True
+                except Exception as e:
+                    if "ODBC Driver 17" in str(e):
+                        # Try ODBC Driver 18
+                        connection_string_18 = connection_string.replace(
+                            "ODBC Driver 17 for SQL Server", 
+                            "ODBC Driver 18 for SQL Server"
+                        )
+                        self.connection = pyodbc.connect(connection_string_18)
+                    else:
+                        raise e
+                
+                self.db_type = 'sqlserver'
+                logger.info(f"Successfully connected to Azure SQL Database via pyodbc: {server}/{database}")
+                return True
+            else:
+                raise Exception("No SQL Server driver available")
             
         except Exception as e:
             logger.error(f"Azure SQL Database connection failed: {str(e)}")
@@ -1018,12 +1047,29 @@ class DBScanner:
                     return None
             
             elif db_type in ['sqlserver', 'mssql']:
-                if not PYODBC_AVAILABLE or not pyodbc:
-                    logger.error("SQL Server driver (pyodbc) not available")
+                if not SQLSERVER_AVAILABLE:
+                    logger.error("SQL Server driver not available (install pyodbc or pymssql)")
                     return None
                 
-                conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={connection_params.get('host')},{connection_params.get('port', 1433)};DATABASE={connection_params.get('database')};UID={connection_params.get('user')};PWD={connection_params.get('password')}"
-                return pyodbc.connect(conn_str)
+                # Prefer pymssql (pure Python, no ODBC dependency) over pyodbc
+                if PYMSSQL_AVAILABLE and pymssql:
+                    logger.info("Using pymssql for SQL Server connection")
+                    return pymssql.connect(
+                        server=str(connection_params.get('host')),
+                        port=str(connection_params.get('port', 1433)),
+                        user=str(connection_params.get('user')),
+                        password=str(connection_params.get('password')),
+                        database=str(connection_params.get('database')),
+                        tds_version='7.4',
+                        timeout=30
+                    )
+                elif PYODBC_AVAILABLE and pyodbc:
+                    logger.info("Using pyodbc for SQL Server connection")
+                    conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={connection_params.get('host')},{connection_params.get('port', 1433)};DATABASE={connection_params.get('database')};UID={connection_params.get('user')};PWD={connection_params.get('password')}"
+                    return pyodbc.connect(conn_str)
+                else:
+                    logger.error("No SQL Server driver available")
+                    return None
             
             elif db_type == 'sqlite':
                 if not SQLITE_AVAILABLE or not sqlite3:
