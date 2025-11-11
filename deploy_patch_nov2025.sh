@@ -81,6 +81,7 @@ create_patch() {
         "services/predictive_compliance_engine.py"
         "services/dpia_scanner.py"
         "services/intelligent_db_scanner.py"
+        "services/enterprise_connector_scanner.py"
         "utils/pii_detection.py"
         "utils/netherlands_uavg_compliance.py"
         "utils/netherlands_gdpr.py"
