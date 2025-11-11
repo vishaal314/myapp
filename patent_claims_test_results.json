@@ -1,0 +1,20 @@
+{
+  "test_date": "2025-11-11T18:42:09.124671",
+  "patent_1": {
+    "claim_1_time_series": true
+  },
+  "patent_4": {
+    "claim_1_gdpr_article_35": true,
+    "claim_2_five_step_wizard": true,
+    "claim_3_risk_calculation": false,
+    "claim_4_bilingual": true,
+    "claim_5_report_generation": true,
+    "claim_6_category_scoring": true,
+    "claim_7_time_savings": true
+  },
+  "summary": {
+    "patent_1_verified": "1/1",
+    "patent_4_verified": "6/7",
+    "overall_rate": "87.5%"
+  }
+}
