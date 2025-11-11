@@ -1,0 +1,43 @@
+{
+  "test_date": "2025-11-11T18:59:57.607821",
+  "verification_rate": "95.2%",
+  "total_tests": 21,
+  "passed_tests": 20,
+  "results_by_category": {
+    "translation_files": {
+      "english_loaded": true,
+      "dutch_loaded": true,
+      "section_netherlands_regulatory": true,
+      "section_dpia": true,
+      "section_ai_act": true
+    },
+    "dutch_language": {},
+    "netherlands_pii": {
+      "bsn_detection": true,
+      "phone_detection": true,
+      "postal_detection": true,
+      "email_detection": false
+    },
+    "uavg_compliance": {
+      "detection_working": true,
+      "ap_guidelines": true
+    },
+    "report_generation": {
+      "dutch_support": true,
+      "uavg_references": true,
+      "dutch_certificates": true
+    },
+    "ui_components": {
+      "language_switcher": true,
+      "dutch_flag": true,
+      "dutch_in_i18n": true,
+      "Netherlands GDPR module": true,
+      "UAVG compliance module": true,
+      "Dutch pricing config": true,
+      "AI Act calculator": true
+    }
+  },
+  "gaps": [
+    "Email detection not finding .nl addresses"
+  ]
+}
