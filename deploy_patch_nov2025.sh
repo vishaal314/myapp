@@ -130,38 +130,25 @@ CRITICAL CHANGES:
 
 DEPLOYMENT PROCEDURE:
 
-1. BACKUP (CRITICAL):
-   cd /opt/dataguardian
-   mkdir -p backups
-   tar -czf backups/backup_$(date +%Y%m%d_%H%M%S).tar.gz \
-       --exclude='backups' --exclude='*.pyc' --exclude='__pycache__' .
-
-2. STOP SERVICES:
+1. STOP SERVICES:
    docker-compose down
 
-3. APPLY PATCH:
+2. APPLY PATCH:
    rsync -av --exclude='*.pyc' /tmp/dataguardian_patch_*/ /opt/dataguardian/
 
-4. SET ENVIRONMENT:
+3. SET ENVIRONMENT:
    echo "DISABLE_RLS=true" >> /opt/dataguardian/.env
 
-5. REBUILD DOCKER (cache-busted):
+4. REBUILD DOCKER (cache-busted):
    cd /opt/dataguardian
    docker-compose build --no-cache
 
-6. START SERVICES:
+5. START SERVICES:
    docker-compose up -d
 
-7. VERIFY:
+6. VERIFY:
    docker-compose ps
    docker-compose logs -f
-
-ROLLBACK (if needed):
-   cd /opt/dataguardian
-   docker-compose down
-   rm -rf *
-   tar -xzf backups/backup_TIMESTAMP.tar.gz
-   docker-compose up -d
 
 VERIFICATION CHECKLIST:
 [ ] Web app accessible at https://dataguardianpro.nl
@@ -234,32 +221,8 @@ apply_patch() {
         exit 1
     fi
     
-    # Step 1: Create backup
-    log_info "STEP 1: Creating backup..."
-    mkdir -p "${DEPLOYMENT_PATH}/backups"
-    BACKUP_FILE="${DEPLOYMENT_PATH}/backups/backup_${TIMESTAMP}.tar.gz"
-    
-    cd "${DEPLOYMENT_PATH}"
-    tar -czf "${BACKUP_FILE}" \
-        --exclude='backups' \
-        --exclude='*.pyc' \
-        --exclude='__pycache__' \
-        --exclude='.git' \
-        --exclude='dump.rdb' \
-        --exclude='venv' \
-        --exclude='node_modules' \
-        . 2>/dev/null || log_warning "Backup had some warnings (non-critical)"
-    
-    if [ -f "${BACKUP_FILE}" ]; then
-        BACKUP_SIZE=$(du -h "${BACKUP_FILE}" | cut -f1)
-        log_success "Backup created: ${BACKUP_FILE} (${BACKUP_SIZE})"
-    else
-        log_error "Failed to create backup"
-        exit 1
-    fi
-    
-    # Step 2: Stop services
-    log_info "STEP 2: Stopping services..."
+    # Step 1: Stop services
+    log_info "STEP 1: Stopping services..."
     cd "${DEPLOYMENT_PATH}"
     if [ -f "docker-compose.yml" ]; then
         docker-compose down || log_warning "Services may not have been running"
@@ -268,8 +231,8 @@ apply_patch() {
         log_warning "docker-compose.yml not found, skipping service stop"
     fi
     
-    # Step 3: Apply patch files
-    log_info "STEP 3: Applying patch files..."
+    # Step 2: Apply patch files
+    log_info "STEP 2: Applying patch files..."
     
     # Get the directory where this script is located (should be in extracted patch)
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -284,8 +247,8 @@ apply_patch() {
     
     log_success "Files synchronized from patch"
     
-    # Step 4: Set environment variables
-    log_info "STEP 4: Configuring environment..."
+    # Step 3: Set environment variables
+    log_info "STEP 3: Configuring environment..."
     if [ -f "${DEPLOYMENT_PATH}/.env" ]; then
         if ! grep -q "DISABLE_RLS" "${DEPLOYMENT_PATH}/.env"; then
             echo "" >> "${DEPLOYMENT_PATH}/.env"
@@ -299,8 +262,8 @@ apply_patch() {
         log_warning ".env file not found - you may need to create it manually"
     fi
     
-    # Step 5: Rebuild Docker images
-    log_info "STEP 5: Rebuilding Docker images (--no-cache)..."
+    # Step 4: Rebuild Docker images
+    log_info "STEP 4: Rebuilding Docker images (--no-cache)..."
     cd "${DEPLOYMENT_PATH}"
     if [ -f "docker-compose.yml" ]; then
         log_warning "This may take 2-5 minutes..."
@@ -316,8 +279,8 @@ apply_patch() {
         log_warning "docker-compose.yml not found, skipping Docker rebuild"
     fi
     
-    # Step 6: Start services
-    log_info "STEP 6: Starting services..."
+    # Step 5: Start services
+    log_info "STEP 5: Starting services..."
     cd "${DEPLOYMENT_PATH}"
     if [ -f "docker-compose.yml" ]; then
         docker-compose up -d
@@ -329,8 +292,8 @@ apply_patch() {
         log_warning "docker-compose.yml not found, skipping service start"
     fi
     
-    # Step 7: Verification
-    log_info "STEP 7: Running verification checks..."
+    # Step 6: Verification
+    log_info "STEP 6: Running verification checks..."
     echo ""
     
     # Check container status
@@ -368,7 +331,6 @@ apply_patch() {
     echo "============================================================"
     echo ""
     log_info "SUMMARY:"
-    echo "  ✅ Backup created: ${BACKUP_FILE}"
     echo "  ✅ Services stopped and restarted"
     echo "  ✅ Patch files applied"
     echo "  ✅ DISABLE_RLS=true configured"
@@ -395,13 +357,6 @@ apply_patch() {
     echo "5. Review logs:"
     echo "   cd ${DEPLOYMENT_PATH}"
     echo "   docker-compose logs -f"
-    echo ""
-    log_info "ROLLBACK (if needed):"
-    echo "   cd ${DEPLOYMENT_PATH}"
-    echo "   docker-compose down"
-    echo "   rm -rf *"
-    echo "   tar -xzf ${BACKUP_FILE}"
-    echo "   docker-compose up -d --build"
     echo ""
     echo "============================================================"
     log_success "Deployment completed! 🎉"
