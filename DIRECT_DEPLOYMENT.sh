@@ -10,7 +10,7 @@ echo "DataGuardian Pro - Direct Deployment"
 echo "=============================================="
 echo ""
 
-PATCH_FILE="dataguardian_patch_nov2025_20251111_221928.tar.gz"
+PATCH_FILE=$(ls -t dataguardian_patch_nov2025_*.tar.gz | head -1)
 SERVER="root@dataguardianpro.nl"
 REMOTE_PATH="/tmp"
 INSTALL_PATH="/opt/dataguardian"
