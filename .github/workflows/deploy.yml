@@ -1,175 +1,132 @@
-name: Deploy DataGuardian Pro to VPS
+name: CI/CD Pipeline - GitHub → Docker Hub → External Server
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-
-env:
-  SERVER_HOST: 45.81.35.202
-  SERVER_USER: root
-  DOMAIN_NAME: vishaalnoord7.retzor.com
-  APP_PORT: 5000
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
-    
-    - name: Run tests
-      run: |
-        pytest tests/ --cov=. --cov-report=xml || echo "Tests completed"
-    
-    - name: Code quality check
-      run: |
-        python -m py_compile app.py
-        echo "Code quality check passed"
-
   build:
-    needs: test
+    name: Build and Push to Docker Hub
     runs-on: ubuntu-latest
+    
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Free up disk space
-      run: |
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /opt/ghc
-        sudo rm -rf "/usr/local/share/boost"
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        docker system prune -af
-    
-    - name: Build and compress Docker image
-      run: |
-        docker build -t dataguardian-pro:latest .
-        docker save dataguardian-pro:latest | gzip > dataguardian-pro.tar.gz
-    
-    - name: Upload Docker image artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: docker-image
-        path: dataguardian-pro.tar.gz
-        retention-days: 1
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/myapp:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/myapp:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/myapp:latest
+          cache-to: type=inline
+      
+      - name: Image successfully pushed
+        run: |
+          echo "✅ Docker image pushed to Docker Hub"
+          echo "Image: ${{ secrets.DOCKERHUB_USERNAME }}/myapp:latest"
+          echo "Tag: ${{ github.sha }}"
 
   deploy:
-    needs: [test, build]
+    name: Deploy to External Server
+    needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: http://45.81.35.202
+    
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Download Docker image artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: docker-image
-    
-    - name: Deploy to VPS
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ env.SERVER_HOST }}
-        username: ${{ env.SERVER_USER }}
-        password: ${{ secrets.SERVER_PASSWORD }}
-        port: 22
-        script: |
-          # Create application directory
-          mkdir -p /opt/dataguardian-pro/{logs,data,cache,reports,backups,ssl}
-          cd /opt/dataguardian-pro
-          
-          # Stop existing services
-          docker-compose down || echo "No existing services to stop"
-          
-          # Aggressive cleanup to free space
-          docker system prune -af --volumes || echo "Docker cleanup completed"
-          
-          # Remove unused packages and clean package cache
-          apt autoremove -y || echo "Package cleanup completed"
-          apt autoclean || echo "Package cache cleanup completed"
-          
-          # Clear temporary files
-          rm -rf /tmp/* || echo "Temp cleanup completed"
-          
-          # Show disk usage
-          df -h
-    
-    - name: Copy files to server
-      uses: appleboy/scp-action@v0.1.4
-      with:
-        host: ${{ env.SERVER_HOST }}
-        username: ${{ env.SERVER_USER }}
-        password: ${{ secrets.SERVER_PASSWORD }}
-        port: 22
-        source: "dataguardian-pro.tar.gz,docker-compose.prod.yml,deploy.sh,nginx.conf"
-        target: /opt/dataguardian-pro/
-    
-    - name: Load and start services
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ env.SERVER_HOST }}
-        username: ${{ env.SERVER_USER }}
-        password: ${{ secrets.SERVER_PASSWORD }}
-        port: 22
-        script: |
-          cd /opt/dataguardian-pro
-          
-          # Load Docker image (decompress first)
-          gunzip dataguardian-pro.tar.gz
-          docker load < dataguardian-pro.tar
-          
-          # Clean up tar file immediately to save space
-          rm -f dataguardian-pro.tar
-          
-          # Make deployment script executable
-          chmod +x deploy.sh
-          
-          # Run deployment (but skip the docker-compose part as we'll do it manually)
-          SKIP_COMPOSE=true ./deploy.sh production
-          
-          # Start services with explicit environment variables
-          export DB_USER=dataguardian_pro
-          export DB_PASSWORD=dataguardian_secure_pass_2025
-          docker-compose -f docker-compose.prod.yml up -d
-          
-          # Wait for services to start
-          sleep 30
-          
-          # Check service health
-          curl -f http://localhost:5000 || echo "Service health check completed"
-          
-          # Verify services are running
-          docker ps -a
-          docker logs dataguardian-pro --tail=20 || echo "No logs available yet"
-          
-          # Show final disk usage
-          df -h
-          
-          # Clean up deployment files
-          rm -f dataguardian-pro.tar*
-
-  notify:
-    needs: [deploy]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-    - name: Deployment notification
-      run: |
-        if [ "${{ needs.deploy.result }}" == "success" ]; then
-          echo "✅ DataGuardian Pro deployed successfully to https://${{ env.DOMAIN_NAME }}"
-        else
-          echo "❌ Deployment failed. Check logs for details."
-        fi
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "=============================================="
+            echo "🚀 Starting Deployment"
+            echo "=============================================="
+            
+            # Navigate to app directory
+            echo "📁 Navigating to app directory..."
+            cd ${{ secrets.APP_DIR }}
+            
+            # Pull latest Docker image from Docker Hub
+            echo "📥 Pulling latest image from Docker Hub..."
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/myapp:latest
+            
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to pull Docker image"
+              exit 1
+            fi
+            
+            # Stop existing container
+            echo "🛑 Stopping existing container..."
+            docker stop myapp 2>/dev/null || echo "No container named 'myapp' running"
+            docker rm myapp 2>/dev/null || echo "No container named 'myapp' to remove"
+            
+            # Run new container
+            echo "🚀 Starting new container..."
+            docker run -d \
+              --name myapp \
+              --restart unless-stopped \
+              -p 80:5000 \
+              -v ${{ secrets.APP_DIR }}:/data \
+              -e ENVIRONMENT=production \
+              -e PYTHONUNBUFFERED=1 \
+              ${{ secrets.DOCKERHUB_USERNAME }}/myapp:latest
+            
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to start container"
+              docker logs myapp 2>/dev/null
+              exit 1
+            fi
+            
+            # Wait for container to start
+            echo "⏳ Waiting for container to start..."
+            sleep 10
+            
+            # Verify container is running
+            echo "✅ Verifying deployment..."
+            if docker ps | grep -q myapp; then
+              echo "=============================================="
+              echo "✅ DEPLOYMENT SUCCESSFUL!"
+              echo "=============================================="
+              echo "Container Status:"
+              docker ps | grep myapp
+              echo ""
+              echo "Recent Logs:"
+              docker logs myapp --tail=20
+              echo ""
+              echo "Application URL: http://${{ secrets.SSH_HOST }}"
+              echo "=============================================="
+            else
+              echo "=============================================="
+              echo "❌ DEPLOYMENT FAILED!"
+              echo "=============================================="
+              echo "Container is not running. Logs:"
+              docker logs myapp 2>/dev/null
+              exit 1
+            fi
+            
+            # Cleanup old images
+            echo "🧹 Cleaning up old Docker images..."
+            docker image prune -af || echo "Cleanup completed"
+            
+            echo "✅ Deployment complete!"
