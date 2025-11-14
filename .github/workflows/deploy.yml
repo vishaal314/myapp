@@ -86,7 +86,7 @@ jobs:
             docker run -d \
               --name myapp \
               --restart unless-stopped \
-              -p 80:5000 \
+              -p 5000:5000 \
               -v ${{ secrets.APP_DIR }}:/data \
               -e ENVIRONMENT=production \
               -e PYTHONUNBUFFERED=1 \
