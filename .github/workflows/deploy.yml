@@ -90,6 +90,12 @@ jobs:
               -v ${{ secrets.APP_DIR }}:/data \
               -e ENVIRONMENT=production \
               -e PYTHONUNBUFFERED=1 \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              -e DATAGUARDIAN_MASTER_KEY="${{ secrets.DATAGUARDIAN_MASTER_KEY }}" \
+              -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+              -e STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              -e DISABLE_RLS=true \
               ${{ secrets.DOCKERHUB_USERNAME }}/myapp:latest
             
             if [ $? -ne 0 ]; then
