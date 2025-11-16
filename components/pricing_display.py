@@ -189,32 +189,74 @@ def get_tier_key_features(tier: PricingTier) -> List[str]:
             "Basic PII scanning",
             "GDPR compliance reports", 
             "Netherlands BSN detection",
-            "Email support"
+            "Email support",
+            "200 scans/month",
+            "20 data sources"
+        ],
+        PricingTier.PROFESSIONAL: [
+            "350 scans/month",
+            "35 data sources",
+            "Advanced scanning",
+            "Compliance automation",
+            "Priority email & phone support",
+            "Compliance certificates"
         ],
         PricingTier.GROWTH: [
             "Enterprise data connectors",
             "Microsoft 365 integration",
             "Exact Online connector",
             "Compliance certificates",
-            "Priority support"
+            "750 scans/month",
+            "75 data sources"
         ],
         PricingTier.SCALE: [
+            "Unlimited scans & data sources",
             "Advanced AI scanning",
             "EU AI Act compliance",
             "Custom integrations",
             "DPIA automation",
-            "Dedicated support manager"
+            "Dedicated support team 24/7"
+        ],
+        PricingTier.SALESFORCE_PREMIUM: [
+            "Salesforce CRM connector",
+            "Netherlands BSN/KvK detection in CRM",
+            "Advanced CRM field mapping",
+            "Dedicated compliance team",
+            "Unlimited scans & sources",
+            "Priority support"
+        ],
+        PricingTier.SAP_ENTERPRISE: [
+            "SAP ERP connector (HR/Finance)",
+            "BSN detection in SAP modules",
+            "ERP data governance",
+            "20 SAP consulting hours included",
+            "Unlimited scans & sources",
+            "Dedicated team 24/7"
         ],
         PricingTier.ENTERPRISE: [
+            "Salesforce + SAP connectors",
+            "Dutch Banking PSD2 integration",
             "White-label deployment",
-            "API access",
-            "Custom development",
-            "24/7 support",
+            "API access & Custom development",
+            "24/7 executive partnership",
             "Unlimited everything"
+        ],
+        PricingTier.GOVERNMENT: [
+            "On-premises deployment",
+            "Source code access",
+            "Custom development",
+            "Government compliance",
+            "Unlimited everything",
+            "Enterprise support"
         ]
     }
     
-    return feature_mapping.get(tier, [])
+    return feature_mapping.get(tier, [
+        "Contact sales for details",
+        "Full compliance features",
+        "Priority support",
+        "Custom configuration"
+    ])
 
 def get_tier_premium_features(tier: PricingTier) -> List[str]:
     """Get premium features for enterprise connector tiers"""
@@ -243,6 +285,8 @@ def get_tier_premium_features(tier: PricingTier) -> List[str]:
 
 def show_competitive_comparison():
     """Show competitive pricing comparison"""
+    from utils.i18n import _
+    
     st.markdown("## 💡 Why DataGuardian Pro?")
     st.markdown("**Save 85-90% compared to international competitors**")
     
