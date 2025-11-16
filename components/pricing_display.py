@@ -53,9 +53,9 @@ def show_pricing_cards(billing_cycle: BillingCycle):
     
     st.markdown("## Choose Your Plan")
     
-    # Standard tiers (now including premium connectors)
-    cols = st.columns(3) if len([PricingTier.STARTUP, PricingTier.PROFESSIONAL, PricingTier.GROWTH, PricingTier.SCALE, PricingTier.SALESFORCE_PREMIUM, PricingTier.SAP_ENTERPRISE, PricingTier.ENTERPRISE]) > 4 else st.columns(4)
+    # Standard tiers - 4 columns for 4 main tiers
     tiers = [PricingTier.STARTUP, PricingTier.PROFESSIONAL, PricingTier.GROWTH, PricingTier.SCALE]
+    cols = st.columns(len(tiers))
     
     # Premium connector tiers (displayed separately for prominence)
     premium_tiers = [PricingTier.SALESFORCE_PREMIUM, PricingTier.SAP_ENTERPRISE, PricingTier.ENTERPRISE]
