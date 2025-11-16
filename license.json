@@ -11,16 +11,16 @@
     {
       "limit_type": "scans_per_month",
       "limit_value": 99999,
-      "current_usage": 13,
+      "current_usage": 0,
       "reset_period": "monthly",
-      "last_reset": "2025-10-02T21:41:20.227797"
+      "last_reset": "2025-11-16T11:32:15.546618"
     },
     {
       "limit_type": "concurrent_users",
       "limit_value": 999,
       "current_usage": 0,
       "reset_period": "daily",
-      "last_reset": "2025-10-27T22:23:14.668054"
+      "last_reset": "2025-11-16T11:32:15.548244"
     }
   ],
   "allowed_features": [
