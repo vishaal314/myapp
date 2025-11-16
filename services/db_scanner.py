@@ -1567,7 +1567,8 @@ class DBScanner:
                     "context": f"Column name suggests {pii_type} data",
                     "detection_method": "column_name_analysis",
                     "risk_level": self._get_risk_level(pii_type),
-                    "reason": self._get_reason(pii_type, "column_name")
+                    "reason": self._get_reason(pii_type, "column_name"),
+                    "gdpr_articles": self._get_gdpr_articles(pii_type)
                 }
                 findings.append(finding)
         
@@ -1625,7 +1626,8 @@ class DBScanner:
                     "detection_method": "data_pattern_analysis",
                     "risk_level": self._get_risk_level(pii_type),
                     "match_percentage": match_percentage,
-                    "reason": self._get_reason(pii_type, "data_content")
+                    "reason": self._get_reason(pii_type, "data_content"),
+                    "gdpr_articles": self._get_gdpr_articles(pii_type)
                 }
                 findings.append(finding)
         
@@ -1719,6 +1721,51 @@ class DBScanner:
             return f"{base_reason} {context}{region_context}"
         
         return f"{base_reason} {context}"
+    
+    def _get_gdpr_articles(self, pii_type: str) -> List[str]:
+        """
+        Map PII types to relevant GDPR articles.
+        
+        Args:
+            pii_type: The type of PII found
+            
+        Returns:
+            List of applicable GDPR articles
+        """
+        # All PII requires lawful basis
+        articles = ["Article 6"]
+        
+        # Article 9: Special categories of personal data
+        article_9_types = [
+            "MEDICAL", "BIOMETRIC", "GENETIC", "RELIGION", 
+            "ETHNICITY", "POLITICAL", "UNION", "SEXUAL_ORIENTATION"
+        ]
+        if pii_type in article_9_types:
+            articles.append("Article 9")
+            articles.append("Article 35")  # DPIA required for special categories
+        
+        # Article 15: Right of access (all personal data)
+        articles.append("Article 15")
+        
+        # Article 17: Right to erasure (all personal data)
+        articles.append("Article 17")
+        
+        # Article 25: Data protection by design (all data processing)
+        if pii_type in article_9_types or pii_type in ["PASSWORD", "CREDIT_CARD", "SSN", "FINANCIAL"]:
+            articles.append("Article 25")
+        
+        # Article 30: Records of processing activities
+        articles.append("Article 30")
+        
+        # Article 32: Security of processing (especially sensitive data)
+        if pii_type in article_9_types or pii_type in ["PASSWORD", "CREDIT_CARD", "SSN", "FINANCIAL", "BIOMETRIC"]:
+            articles.append("Article 32")
+        
+        # Article 33: Breach notification (sensitive/high-risk data)
+        if pii_type in article_9_types or pii_type in ["PASSWORD", "CREDIT_CARD", "SSN", "FINANCIAL"]:
+            articles.append("Article 33")
+        
+        return articles
     
     def scan_table(self, table_name: str) -> Dict[str, Any]:
         """
