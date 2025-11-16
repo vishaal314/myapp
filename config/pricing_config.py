@@ -448,11 +448,12 @@ class PricingConfig:
         
         competitor_costs = {
             PricingTier.STARTUP.value: {"onetrust": 6000, "privacera": 4500, "basic_tools": 3000},
+            PricingTier.PROFESSIONAL.value: {"onetrust_pro": 12000, "bigid_essentials": 9500, "mid_tools": 8000},
             PricingTier.GROWTH.value: {"onetrust": 19500, "bigid_starter": 15000, "mid_tier": 12000},
             PricingTier.SCALE.value: {"onetrust": 29000, "bigid": 45000, "varonis": 38000},
-            PricingTier.SALESFORCE_PREMIUM.value: {"onetrust_salesforce": 38000, "salesforce_shield": 25000, "crm_compliance_stack": 42000},  # NEW: Salesforce-specific competitors
-            PricingTier.SAP_ENTERPRISE.value: {"sap_grc": 42000, "onetrust_sap": 50000, "erp_compliance_suite": 65000},  # NEW: SAP-specific competitors
-            PricingTier.ENTERPRISE.value: {"onetrust_enterprise": 65000, "bigid_full_stack": 85000, "varonis_enterprise": 75000},  # Updated with premium connectors
+            PricingTier.SALESFORCE_PREMIUM.value: {"onetrust_salesforce": 38000, "salesforce_shield": 25000, "crm_compliance_stack": 42000},
+            PricingTier.SAP_ENTERPRISE.value: {"sap_grc": 42000, "onetrust_sap": 50000, "erp_compliance_suite": 65000},
+            PricingTier.ENTERPRISE.value: {"onetrust_enterprise": 65000, "bigid_full_stack": 85000, "varonis_enterprise": 75000},
             PricingTier.GOVERNMENT.value: {"enterprise_deployment": 180000, "government_suite": 200000}
         }
         

@@ -310,6 +310,8 @@ class LicenseIntegration:
                 'professional': PricingTier.PROFESSIONAL,
                 'growth': PricingTier.GROWTH,
                 'scale': PricingTier.SCALE,
+                'salesforce_premium': PricingTier.SALESFORCE_PREMIUM,
+                'sap_enterprise': PricingTier.SAP_ENTERPRISE,
                 'enterprise': PricingTier.ENTERPRISE,
                 'ultimate': PricingTier.ENTERPRISE,
                 'government': PricingTier.GOVERNMENT
