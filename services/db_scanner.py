@@ -1724,16 +1724,19 @@ class DBScanner:
     
     def _get_gdpr_articles(self, pii_type: str) -> List[str]:
         """
-        Map PII types to relevant GDPR articles.
+        Map PII types to relevant GDPR articles (comprehensive coverage).
         
         Args:
             pii_type: The type of PII found
             
         Returns:
-            List of applicable GDPR articles
+            List of applicable GDPR articles and UAVG references
         """
-        # All PII requires lawful basis
-        articles = ["Article 6"]
+        # Foundation: All PII requires lawful basis
+        articles = ["GDPR Article 5", "GDPR Article 6"]
+        
+        # Article 7: Consent (if consent is the legal basis)
+        articles.append("GDPR Article 7")
         
         # Article 9: Special categories of personal data
         article_9_types = [
@@ -1741,29 +1744,75 @@ class DBScanner:
             "ETHNICITY", "POLITICAL", "UNION", "SEXUAL_ORIENTATION"
         ]
         if pii_type in article_9_types:
-            articles.append("Article 9")
-            articles.append("Article 35")  # DPIA required for special categories
+            articles.append("GDPR Article 9")
+            articles.append("GDPR Article 35")  # DPIA required for special categories
         
-        # Article 15: Right of access (all personal data)
-        articles.append("Article 15")
+        # Article 10: Criminal conviction data
+        if pii_type in ["CRIMINAL", "CONVICTION"]:
+            articles.append("GDPR Article 10")
         
-        # Article 17: Right to erasure (all personal data)
-        articles.append("Article 17")
+        # Articles 12-14: Information obligations
+        articles.extend(["GDPR Article 12", "GDPR Article 13", "GDPR Article 14"])
         
-        # Article 25: Data protection by design (all data processing)
+        # Data subject rights (Articles 15-22)
+        articles.extend([
+            "GDPR Article 15",  # Right of access
+            "GDPR Article 16",  # Right to rectification
+            "GDPR Article 17",  # Right to erasure
+            "GDPR Article 18",  # Right to restriction
+            "GDPR Article 20",  # Right to data portability
+            "GDPR Article 21",  # Right to object
+        ])
+        
+        # Article 22: Automated decision-making (if profiling data)
+        if pii_type in ["CREDIT_CARD", "FINANCIAL", "SSN", "BIOMETRIC"]:
+            articles.append("GDPR Article 22")
+        
+        # Controller obligations (Articles 24-37)
+        articles.append("GDPR Article 24")  # Responsibility of controller
+        
+        # Article 25: Data protection by design (sensitive data)
         if pii_type in article_9_types or pii_type in ["PASSWORD", "CREDIT_CARD", "SSN", "FINANCIAL"]:
-            articles.append("Article 25")
+            articles.append("GDPR Article 25")
+        
+        # Article 28: Processor (if third-party processing)
+        articles.append("GDPR Article 28")
         
         # Article 30: Records of processing activities
-        articles.append("Article 30")
+        articles.append("GDPR Article 30")
         
         # Article 32: Security of processing (especially sensitive data)
         if pii_type in article_9_types or pii_type in ["PASSWORD", "CREDIT_CARD", "SSN", "FINANCIAL", "BIOMETRIC"]:
-            articles.append("Article 32")
+            articles.append("GDPR Article 32")
         
         # Article 33: Breach notification (sensitive/high-risk data)
         if pii_type in article_9_types or pii_type in ["PASSWORD", "CREDIT_CARD", "SSN", "FINANCIAL"]:
-            articles.append("Article 33")
+            articles.extend(["GDPR Article 33", "GDPR Article 34"])
+        
+        # Articles 44-49: International transfers (if EU data)
+        if self.region == "Netherlands":
+            articles.extend([
+                "GDPR Article 44",  # General principle for transfers
+                "GDPR Article 46",  # Appropriate safeguards
+            ])
+        
+        # Netherlands-specific UAVG articles
+        if self.region == "Netherlands":
+            # BSN special protection
+            if pii_type in ["SSN", "ID_NUMBER"]:
+                articles.extend(["UAVG Article 24", "UAVG Article 46"])
+            
+            # Children's data (under 16)
+            if pii_type in ["DOB", "AGE"]:
+                articles.append("UAVG Article 5")
+            
+            # Health data
+            if pii_type == "MEDICAL":
+                articles.append("UAVG Article 30")
+            
+            # Automated decision-making
+            if pii_type in ["CREDIT_CARD", "FINANCIAL", "BIOMETRIC"]:
+                articles.extend(["UAVG Article 40", "UAVG Article 41"])
         
         return articles
     
