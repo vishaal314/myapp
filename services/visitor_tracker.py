@@ -301,7 +301,8 @@ class VisitorTracker:
                 FROM visitor_events
                 WHERE timestamp >= %s
             """, (since,))
-            total_visitors = cursor.fetchone()['total_visitors']
+            result = cursor.fetchone()
+            total_visitors = result['total_visitors'] if result else 0
             
             # Total page views
             cursor.execute("""
@@ -309,7 +310,8 @@ class VisitorTracker:
                 FROM visitor_events
                 WHERE timestamp >= %s AND event_type = 'page_view'
             """, (since,))
-            total_pageviews = cursor.fetchone()['total_pageviews']
+            result = cursor.fetchone()
+            total_pageviews = result['total_pageviews'] if result else 0
             
             # Login attempts
             cursor.execute("""
@@ -371,13 +373,13 @@ class VisitorTracker:
                 'period_days': days,
                 'total_visitors': total_visitors,
                 'total_pageviews': total_pageviews,
-                'login_success': login_stats['login_success'] or 0,
-                'login_failure': login_stats['login_failure'] or 0,
-                'registration_success': registration_stats['registration_success'] or 0,
-                'registration_failure': registration_stats['registration_failure'] or 0,
-                'top_pages': [dict(p) for p in top_pages],
-                'top_referrers': [dict(r) for r in top_referrers],
-                'countries': [dict(c) for c in countries]
+                'login_success': (login_stats['login_success'] if login_stats else 0) or 0,
+                'login_failure': (login_stats['login_failure'] if login_stats else 0) or 0,
+                'registration_success': (registration_stats['registration_success'] if registration_stats else 0) or 0,
+                'registration_failure': (registration_stats['registration_failure'] if registration_stats else 0) or 0,
+                'top_pages': [dict(p) for p in top_pages] if top_pages else [],
+                'top_referrers': [dict(r) for r in top_referrers] if top_referrers else [],
+                'countries': [dict(c) for c in countries] if countries else []
             }
             
         except Exception as e:
