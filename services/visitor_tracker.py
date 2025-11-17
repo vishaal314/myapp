@@ -38,6 +38,15 @@ class VisitorEventType(Enum):
     PASSWORD_RESET_REQUEST = "password_reset_request"
     SESSION_START = "session_start"
     SESSION_END = "session_end"
+    
+    # Revenue Tracking Events (GDPR-compliant, no PII)
+    PRICING_PAGE_VIEW = "pricing_page_view"
+    TRIAL_STARTED = "trial_started"
+    TRIAL_CONVERTED = "trial_converted"
+    SCANNER_EXECUTED = "scanner_executed"
+    SUBSCRIPTION_UPGRADED = "subscription_upgraded"
+    SUBSCRIPTION_DOWNGRADED = "subscription_downgraded"
+    SUBSCRIPTION_CANCELLED = "subscription_cancelled"
 
 @dataclass
 class VisitorEvent:

@@ -308,3 +308,228 @@ def track_session_start():
         
     except Exception as e:
         logger.debug(f"Failed to track session start: {e}")
+
+
+# ============================================================================
+# Revenue Tracking Functions (GDPR-Compliant)
+# ============================================================================
+
+def track_pricing_page_view(tier_viewed: str, page_path: str = "/pricing"):
+    """
+    Track pricing page view with tier interest (GDPR-compliant)
+    
+    Args:
+        tier_viewed: Pricing tier name (e.g., "Startup", "Enterprise")
+        page_path: URL path (default: /pricing)
+    
+    Example:
+        track_pricing_page_view("Professional", "/pricing")
+    """
+    try:
+        tracker = get_visitor_tracker()
+        session_id = get_session_id()
+        ip_address = get_client_ip_from_streamlit()
+        
+        tracker.track_event(
+            session_id=session_id,
+            event_type=VisitorEventType.PRICING_PAGE_VIEW,
+            page_path=page_path,
+            ip_address=ip_address,
+            details={
+                'tier_viewed': tier_viewed,
+                'timestamp': datetime.now().isoformat()
+            },
+            success=True
+        )
+        
+        logger.debug(f"📊 Pricing page viewed: {tier_viewed}")
+        
+    except Exception as e:
+        logger.debug(f"Failed to track pricing page view: {e}")
+
+
+def track_trial_started(tier: str, duration_days: int = 14, user_id: Optional[str] = None):
+    """
+    Track trial signup (GDPR-compliant, no PII)
+    
+    Args:
+        tier: Pricing tier for trial (e.g., "Professional")
+        duration_days: Trial duration in days (default: 14)
+        user_id: Optional anonymized user ID (will be hashed)
+    
+    Example:
+        track_trial_started("Professional", 14, user_id)
+    """
+    try:
+        tracker = get_visitor_tracker()
+        session_id = get_session_id()
+        ip_address = get_client_ip_from_streamlit()
+        
+        # Hash user_id if provided (GDPR compliance)
+        hashed_user_id = None
+        if user_id:
+            hashed_user_id = hashlib.sha256(str(user_id).encode()).hexdigest()[:16]
+        
+        tracker.track_event(
+            session_id=session_id,
+            event_type=VisitorEventType.TRIAL_STARTED,
+            page_path="/trial/signup",
+            ip_address=ip_address,
+            user_id=hashed_user_id,
+            username=None,  # Never store username (GDPR)
+            details={
+                'tier': tier,
+                'duration_days': duration_days,
+                'trial_start': datetime.now().isoformat()
+            },
+            success=True
+        )
+        
+        logger.info(f"🎯 Trial started: {tier} ({duration_days} days)")
+        
+    except Exception as e:
+        logger.debug(f"Failed to track trial start: {e}")
+
+
+def track_trial_converted(tier: str, mrr: float, user_id: Optional[str] = None):
+    """
+    Track trial-to-paid conversion (GDPR-compliant, no PII)
+    
+    Args:
+        tier: Pricing tier converted to (e.g., "Professional")
+        mrr: Monthly recurring revenue in EUR (e.g., 99.0)
+        user_id: Optional anonymized user ID (will be hashed)
+    
+    Example:
+        track_trial_converted("Professional", 99.0, user_id)
+    """
+    try:
+        tracker = get_visitor_tracker()
+        session_id = get_session_id()
+        ip_address = get_client_ip_from_streamlit()
+        
+        # Hash user_id if provided (GDPR compliance)
+        hashed_user_id = None
+        if user_id:
+            hashed_user_id = hashlib.sha256(str(user_id).encode()).hexdigest()[:16]
+        
+        tracker.track_event(
+            session_id=session_id,
+            event_type=VisitorEventType.TRIAL_CONVERTED,
+            page_path="/subscription/activated",
+            ip_address=ip_address,
+            user_id=hashed_user_id,
+            username=None,  # Never store username (GDPR)
+            details={
+                'tier': tier,
+                'mrr': mrr,
+                'conversion_date': datetime.now().isoformat()
+            },
+            success=True
+        )
+        
+        logger.info(f"💰 Trial converted: {tier} (€{mrr}/month)")
+        
+    except Exception as e:
+        logger.debug(f"Failed to track trial conversion: {e}")
+
+
+def track_scanner_executed(scanner_type: str, success: bool = True, 
+                           findings_count: int = 0, user_id: Optional[str] = None):
+    """
+    Track scanner execution for feature usage analytics (GDPR-compliant)
+    
+    Args:
+        scanner_type: Type of scanner (e.g., "database", "code", "ai_model")
+        success: Whether scan succeeded
+        findings_count: Number of findings (optional)
+        user_id: Optional anonymized user ID (will be hashed)
+    
+    Example:
+        track_scanner_executed("database", True, 42, user_id)
+    """
+    try:
+        tracker = get_visitor_tracker()
+        session_id = get_session_id()
+        ip_address = get_client_ip_from_streamlit()
+        
+        # Hash user_id if provided (GDPR compliance)
+        hashed_user_id = None
+        if user_id:
+            hashed_user_id = hashlib.sha256(str(user_id).encode()).hexdigest()[:16]
+        
+        tracker.track_event(
+            session_id=session_id,
+            event_type=VisitorEventType.SCANNER_EXECUTED,
+            page_path=f"/scanner/{scanner_type}",
+            ip_address=ip_address,
+            user_id=hashed_user_id,
+            username=None,  # Never store username (GDPR)
+            details={
+                'scanner_type': scanner_type,
+                'findings_count': findings_count,
+                'execution_time': datetime.now().isoformat()
+            },
+            success=success
+        )
+        
+        logger.debug(f"🔍 Scanner executed: {scanner_type} (success={success}, findings={findings_count})")
+        
+    except Exception as e:
+        logger.debug(f"Failed to track scanner execution: {e}")
+
+
+def track_subscription_change(action: str, from_tier: str, to_tier: str, 
+                              mrr_change: float, user_id: Optional[str] = None):
+    """
+    Track subscription upgrades, downgrades, or cancellations (GDPR-compliant)
+    
+    Args:
+        action: Action type ("upgraded", "downgraded", "cancelled")
+        from_tier: Previous tier (e.g., "Startup")
+        to_tier: New tier (e.g., "Professional")
+        mrr_change: MRR change in EUR (positive for upgrade, negative for downgrade)
+        user_id: Optional anonymized user ID (will be hashed)
+    
+    Example:
+        track_subscription_change("upgraded", "Startup", "Professional", 40.0, user_id)
+    """
+    try:
+        tracker = get_visitor_tracker()
+        session_id = get_session_id()
+        ip_address = get_client_ip_from_streamlit()
+        
+        # Hash user_id if provided (GDPR compliance)
+        hashed_user_id = None
+        if user_id:
+            hashed_user_id = hashlib.sha256(str(user_id).encode()).hexdigest()[:16]
+        
+        # Determine event type
+        event_type_map = {
+            "upgraded": VisitorEventType.SUBSCRIPTION_UPGRADED,
+            "downgraded": VisitorEventType.SUBSCRIPTION_DOWNGRADED,
+            "cancelled": VisitorEventType.SUBSCRIPTION_CANCELLED
+        }
+        event_type = event_type_map.get(action, VisitorEventType.SUBSCRIPTION_UPGRADED)
+        
+        tracker.track_event(
+            session_id=session_id,
+            event_type=event_type,
+            page_path="/subscription/change",
+            ip_address=ip_address,
+            user_id=hashed_user_id,
+            username=None,  # Never store username (GDPR)
+            details={
+                'action': action,
+                'from_tier': from_tier,
+                'to_tier': to_tier,
+                'mrr_change': mrr_change,
+                'change_date': datetime.now().isoformat()
+            },
+            success=True
+        )
+        
+        logger.info(f"📈 Subscription {action}: {from_tier} → {to_tier} (€{mrr_change:+.2f})")
+        
+    except Exception as e:
+        logger.debug(f"Failed to track subscription change: {e}")
