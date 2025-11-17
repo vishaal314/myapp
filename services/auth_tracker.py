@@ -136,21 +136,22 @@ def authenticate_with_tracking(username: str, password: str) -> Optional[Dict[st
         logger.error(f"❌ Login error for {username}: {e}")
         return None
 
-def create_user_with_tracking(username: str, email: str, password: str, 
-                             role: str = "user") -> Optional[Dict[str, Any]]:
+def create_user_with_tracking(username: str, password: str, role: str, 
+                             email: str) -> tuple:
     """
     Create user and track the attempt (success or failure)
     
     This is a wrapper around services.auth.create_user() that adds tracking
+    Maintains the original signature: (username, password, role, email) -> Tuple[bool, str]
     
     Args:
         username: Username
-        email: Email address
         password: Password
         role: User role
+        email: Email address
         
     Returns:
-        User dict if successful, None if failed
+        Tuple of (success, message)
     """
     tracker = get_visitor_tracker()
     session_id = get_session_id()
@@ -172,17 +173,16 @@ def create_user_with_tracking(username: str, email: str, password: str,
         )
         
         # Attempt user creation using original function
-        user = _auth_create_user(username, email, password, role)
+        success, message = _auth_create_user(username, password, role, email)
         
-        if user:
+        if success:
             # Track successful registration
             tracker.track_event(
                 session_id=session_id,
                 event_type=VisitorEventType.REGISTRATION_SUCCESS,
                 page_path="/register",
                 ip_address=ip_address,
-                user_id=user.get('user_id'),
-                username=user.get('username'),
+                username=username,
                 details={
                     'email': email,
                     'role': role
@@ -190,7 +190,7 @@ def create_user_with_tracking(username: str, email: str, password: str,
                 success=True
             )
             logger.info(f"✅ User registered successfully: {username}")
-            return user
+            return (True, message)
         else:
             # Track failed registration
             tracker.track_event(
@@ -203,10 +203,10 @@ def create_user_with_tracking(username: str, email: str, password: str,
                     'email': email
                 },
                 success=False,
-                error_message="User creation failed"
+                error_message=message
             )
             logger.warning(f"❌ User registration failed: {username}")
-            return None
+            return (False, message)
             
     except Exception as e:
         # Track failed registration due to error
@@ -223,7 +223,7 @@ def create_user_with_tracking(username: str, email: str, password: str,
             error_message=str(e)
         )
         logger.error(f"❌ User registration error for {username}: {e}")
-        return None
+        return (False, str(e))
 
 def track_page_view(page_path: str = "/", referrer: Optional[str] = None):
     """

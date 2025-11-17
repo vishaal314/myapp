@@ -4,12 +4,18 @@ Extracted from app.py to improve modularity while preserving exact UI behavior
 """
 import streamlit as st
 import logging
-from services.auth import authenticate, is_authenticated, logout, create_user, validate_email
+from services.auth import is_authenticated, logout, validate_email
+from services.auth import create_user as _create_user_original, authenticate as _authenticate_original
+from services.auth_tracker import authenticate_with_tracking, create_user_with_tracking, track_logout
 from services.stripe_payment import display_payment_button, handle_payment_callback, SCAN_PRICES, verify_payment
 from services.subscription_manager import display_subscription_plans, SubscriptionManager
 from utils.i18n import initialize, language_selector, get_text, set_language, LANGUAGES, _translations
 
 logger = logging.getLogger(__name__)
+
+# Use tracking wrappers by default
+authenticate = authenticate_with_tracking
+create_user = create_user_with_tracking
 
 # Define translation function
 def _(key, default=None):
