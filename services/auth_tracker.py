@@ -7,6 +7,8 @@ This module wraps existing authentication functions to add GDPR-compliant tracki
 
 import logging
 import uuid
+import hashlib
+from datetime import datetime
 from typing import Optional, Dict, Any
 from services.visitor_tracker import get_visitor_tracker, VisitorEventType
 from services.auth import authenticate as _auth_authenticate, create_user as _auth_create_user
@@ -86,32 +88,33 @@ def authenticate_with_tracking(username: str, password: str) -> Optional[Dict[st
         user = _auth_authenticate(username, password)
         
         if user:
-            # Track successful login
+            # Track successful login - NO PII in details (GDPR-compliant)
             tracker.track_event(
                 session_id=session_id,
                 event_type=VisitorEventType.LOGIN_SUCCESS,
                 page_path="/login",
                 ip_address=ip_address,
-                user_id=user.get('user_id'),
-                username=user.get('username'),
+                user_id=hashlib.sha256(str(user.get('user_id', '')).encode()).hexdigest()[:16],  # Anonymized user_id
+                username=None,  # Don't store username in events table
                 details={
                     'method': 'password',
-                    'role': user.get('role', 'unknown')
+                    'role': user.get('role', 'unknown'),
+                    'timestamp': datetime.now().isoformat()
                 },
                 success=True
             )
             logger.info(f"✅ Login successful: {username}")
             return user
         else:
-            # Track failed login
+            # Track failed login - NO PII (GDPR-compliant)
             tracker.track_event(
                 session_id=session_id,
                 event_type=VisitorEventType.LOGIN_FAILURE,
                 page_path="/login",
                 ip_address=ip_address,
                 details={
-                    'attempted_username': username,
-                    'method': 'password'
+                    'method': 'password',
+                    'attempt_time': datetime.now().isoformat()
                 },
                 success=False,
                 error_message="Invalid credentials"
@@ -120,18 +123,18 @@ def authenticate_with_tracking(username: str, password: str) -> Optional[Dict[st
             return None
             
     except Exception as e:
-        # Track failed login due to error
+        # Track failed login due to error - NO PII (GDPR-compliant)
         tracker.track_event(
             session_id=session_id,
             event_type=VisitorEventType.LOGIN_FAILURE,
             page_path="/login",
             ip_address=ip_address,
             details={
-                'attempted_username': username,
-                'method': 'password'
+                'method': 'password',
+                'error_type': type(e).__name__
             },
             success=False,
-            error_message=str(e)
+            error_message="Authentication error"
         )
         logger.error(f"❌ Login error for {username}: {e}")
         return None
@@ -158,16 +161,16 @@ def create_user_with_tracking(username: str, password: str, role: str,
     ip_address = get_client_ip_from_streamlit()
     
     try:
-        # Track registration started
+        # Track registration started - NO PII in details (GDPR-compliant)
         tracker.track_event(
             session_id=session_id,
             event_type=VisitorEventType.REGISTRATION_STARTED,
             page_path="/register",
             ip_address=ip_address,
             details={
-                'username': username,
-                'email': email,
-                'role': role
+                'role': role,
+                'method': 'signup_form',
+                'timestamp': datetime.now().isoformat()
             },
             success=True
         )
@@ -176,51 +179,54 @@ def create_user_with_tracking(username: str, password: str, role: str,
         success, message = _auth_create_user(username, password, role, email)
         
         if success:
-            # Track successful registration
+            # Track successful registration - NO PII (GDPR-compliant)
             tracker.track_event(
                 session_id=session_id,
                 event_type=VisitorEventType.REGISTRATION_SUCCESS,
                 page_path="/register",
                 ip_address=ip_address,
-                username=username,
+                user_id=None,  # Don't store user_id for registration events
+                username=None,  # Don't store username
                 details={
-                    'email': email,
-                    'role': role
+                    'role': role,
+                    'method': 'signup_form',
+                    'timestamp': datetime.now().isoformat()
                 },
                 success=True
             )
             logger.info(f"✅ User registered successfully: {username}")
             return (True, message)
         else:
-            # Track failed registration
+            # Track failed registration - NO PII (GDPR-compliant)
             tracker.track_event(
                 session_id=session_id,
                 event_type=VisitorEventType.REGISTRATION_FAILURE,
                 page_path="/register",
                 ip_address=ip_address,
                 details={
-                    'username': username,
-                    'email': email
+                    'role': role,
+                    'method': 'signup_form',
+                    'failure_reason': 'validation_error'
                 },
                 success=False,
-                error_message=message
+                error_message="Registration validation failed"
             )
             logger.warning(f"❌ User registration failed: {username}")
             return (False, message)
             
     except Exception as e:
-        # Track failed registration due to error
+        # Track failed registration due to error - NO PII (GDPR-compliant)
         tracker.track_event(
             session_id=session_id,
             event_type=VisitorEventType.REGISTRATION_FAILURE,
             page_path="/register",
             ip_address=ip_address,
             details={
-                'username': username,
-                'email': email
+                'role': role,
+                'error_type': type(e).__name__
             },
             success=False,
-            error_message=str(e)
+            error_message="Registration system error"
         )
         logger.error(f"❌ User registration error for {username}: {e}")
         return (False, str(e))
