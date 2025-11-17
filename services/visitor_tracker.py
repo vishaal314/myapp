@@ -207,17 +207,13 @@ class VisitorTracker:
         # This prevents accidental PII leakage from tracking calls
         username = None  # Always None regardless of what was passed
         
-        # GDPR ENFORCEMENT: Hash or null user_id to prevent PII storage
-        # Even if caller sends raw user_id, backend enforces anonymization
+        # GDPR ENFORCEMENT: ALWAYS hash user_id to prevent PII storage
+        # Defensive programming: Never trust caller, always anonymize
+        # This guarantees NO raw identifiers can reach database
         if user_id:
-            # Check if already looks like a hash (16-char hex)
-            if len(str(user_id)) == 16 and all(c in '0123456789abcdef' for c in str(user_id).lower()):
-                # Already hashed, use as-is
-                anonymized_user_id = user_id
-            else:
-                # Hash it to ensure anonymization (defensive programming)
-                anonymized_user_id = hashlib.sha256(str(user_id).encode()).hexdigest()[:16]
-                logger.debug(f"🔒 GDPR: Auto-hashed user_id for compliance")
+            # UNCONDITIONALLY hash to ensure complete anonymization
+            # Even if caller claims it's already hashed, hash it again for safety
+            anonymized_user_id = hashlib.sha256(str(user_id).encode()).hexdigest()[:16]
         else:
             anonymized_user_id = None
         
