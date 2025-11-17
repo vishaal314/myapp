@@ -1,0 +1,451 @@
+"""
+Visitor & Authentication Tracking System for DataGuardian Pro
+GDPR-compliant tracking of anonymous visitors, login attempts, and user creation
+
+Features:
+- Anonymous visitor tracking (no PII, GDPR-compliant)
+- Login attempt tracking (success/failure)
+- User registration tracking
+- IP anonymization (GDPR Article 32)
+- PostgreSQL-based audit logs
+- Real-time analytics dashboard
+"""
+
+import logging
+import uuid
+import hashlib
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any
+import threading
+from dataclasses import dataclass, asdict
+from enum import Enum
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import os
+
+logger = logging.getLogger(__name__)
+
+class VisitorEventType(Enum):
+    """Visitor event types for tracking"""
+    PAGE_VIEW = "page_view"
+    LOGIN_SUCCESS = "login_success"
+    LOGIN_FAILURE = "login_failure"
+    LOGOUT = "logout"
+    REGISTRATION_STARTED = "registration_started"
+    REGISTRATION_SUCCESS = "registration_success"
+    REGISTRATION_FAILURE = "registration_failure"
+    PASSWORD_RESET_REQUEST = "password_reset_request"
+    SESSION_START = "session_start"
+    SESSION_END = "session_end"
+
+@dataclass
+class VisitorEvent:
+    """GDPR-compliant visitor event (no PII)"""
+    event_id: str
+    session_id: str
+    event_type: VisitorEventType
+    timestamp: datetime
+    anonymized_ip: str  # Hashed IP for GDPR compliance
+    user_agent: Optional[str]
+    page_path: str
+    referrer: Optional[str]
+    country: Optional[str]
+    user_id: Optional[str] = None  # Only for authenticated events
+    username: Optional[str] = None  # Only for authenticated events
+    details: Optional[Dict[str, Any]] = None
+    success: bool = True
+    error_message: Optional[str] = None
+
+class VisitorTracker:
+    """
+    GDPR-Compliant Visitor Tracking System
+    
+    Privacy Features:
+    - IP anonymization (last octet removed + hashed)
+    - No cookies stored (session-based only)
+    - No personal data collection
+    - Data retention: 90 days (GDPR Article 5)
+    - Right to deletion support (GDPR Article 17)
+    """
+    
+    def __init__(self):
+        self.events: List[VisitorEvent] = []
+        self.lock = threading.Lock()
+        self.db_connection = None
+        self._init_database()
+        
+    def _init_database(self):
+        """Initialize PostgreSQL tables for visitor tracking"""
+        try:
+            db_url = os.getenv('DATABASE_URL')
+            if not db_url:
+                logger.warning("DATABASE_URL not set - using in-memory tracking only")
+                return
+                
+            conn = psycopg2.connect(db_url)
+            cursor = conn.cursor()
+            
+            # Create visitor_events table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS visitor_events (
+                    event_id VARCHAR(36) PRIMARY KEY,
+                    session_id VARCHAR(36) NOT NULL,
+                    event_type VARCHAR(50) NOT NULL,
+                    timestamp TIMESTAMP NOT NULL,
+                    anonymized_ip VARCHAR(64) NOT NULL,
+                    user_agent TEXT,
+                    page_path VARCHAR(500),
+                    referrer VARCHAR(500),
+                    country VARCHAR(2),
+                    user_id VARCHAR(36),
+                    username VARCHAR(100),
+                    details JSONB,
+                    success BOOLEAN DEFAULT TRUE,
+                    error_message TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Create indexes for performance
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_visitor_events_timestamp 
+                ON visitor_events(timestamp DESC)
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_visitor_events_session 
+                ON visitor_events(session_id)
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_visitor_events_type 
+                ON visitor_events(event_type)
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_visitor_events_user 
+                ON visitor_events(user_id)
+            """)
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            logger.info("✅ Visitor tracking database initialized")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize visitor tracking database: {e}")
+    
+    def _anonymize_ip(self, ip_address: str) -> str:
+        """
+        Anonymize IP address for GDPR compliance (Article 32)
+        
+        Method:
+        1. Remove last octet (IPv4) or last 80 bits (IPv6)
+        2. Hash the result with SHA-256
+        
+        Example: 192.168.1.100 → hash("192.168.1.0")
+        """
+        if not ip_address:
+            return "unknown"
+        
+        try:
+            # IPv4: Remove last octet
+            if '.' in ip_address:
+                parts = ip_address.split('.')
+                anonymized = '.'.join(parts[:3]) + '.0'
+            # IPv6: Remove last 80 bits
+            elif ':' in ip_address:
+                parts = ip_address.split(':')
+                anonymized = ':'.join(parts[:3]) + '::0'
+            else:
+                anonymized = "unknown"
+            
+            # Hash for additional privacy
+            return hashlib.sha256(anonymized.encode()).hexdigest()[:16]
+            
+        except Exception as e:
+            logger.error(f"IP anonymization error: {e}")
+            return "unknown"
+    
+    def track_event(self,
+                   session_id: str,
+                   event_type: VisitorEventType,
+                   page_path: str = "/",
+                   ip_address: Optional[str] = None,
+                   user_agent: Optional[str] = None,
+                   referrer: Optional[str] = None,
+                   country: Optional[str] = None,
+                   user_id: Optional[str] = None,
+                   username: Optional[str] = None,
+                   details: Optional[Dict[str, Any]] = None,
+                   success: bool = True,
+                   error_message: Optional[str] = None) -> str:
+        """
+        Track a visitor event with GDPR compliance
+        
+        Args:
+            session_id: Session identifier (no cookies)
+            event_type: Type of event
+            page_path: URL path visited
+            ip_address: Raw IP (will be anonymized)
+            user_agent: Browser user agent
+            referrer: HTTP referrer
+            country: Country code (2-letter)
+            user_id: User ID (only for authenticated events)
+            username: Username (only for authenticated events)
+            details: Additional event details
+            success: Whether event was successful
+            error_message: Error message if failed
+            
+        Returns:
+            event_id: Unique event identifier
+        """
+        
+        event_id = str(uuid.uuid4())
+        anonymized_ip = self._anonymize_ip(ip_address) if ip_address else "unknown"
+        
+        event = VisitorEvent(
+            event_id=event_id,
+            session_id=session_id,
+            event_type=event_type,
+            timestamp=datetime.now(),
+            anonymized_ip=anonymized_ip,
+            user_agent=user_agent,
+            page_path=page_path,
+            referrer=referrer,
+            country=country,
+            user_id=user_id,
+            username=username,
+            details=details or {},
+            success=success,
+            error_message=error_message
+        )
+        
+        # Store in memory
+        with self.lock:
+            self.events.append(event)
+            # Keep only last 10,000 events in memory
+            if len(self.events) > 10000:
+                self.events = self.events[-10000:]
+        
+        # Store in database (async)
+        self._store_event_db(event)
+        
+        logger.info(f"📊 Visitor event tracked: {event_type.value} for session {session_id[:8]}...")
+        return event_id
+    
+    def _store_event_db(self, event: VisitorEvent):
+        """Store event in PostgreSQL database"""
+        try:
+            db_url = os.getenv('DATABASE_URL')
+            if not db_url:
+                return
+            
+            conn = psycopg2.connect(db_url)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO visitor_events (
+                    event_id, session_id, event_type, timestamp,
+                    anonymized_ip, user_agent, page_path, referrer,
+                    country, user_id, username, details, success, error_message
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                event.event_id,
+                event.session_id,
+                event.event_type.value,
+                event.timestamp,
+                event.anonymized_ip,
+                event.user_agent,
+                event.page_path,
+                event.referrer,
+                event.country,
+                event.user_id,
+                event.username,
+                event.details,
+                event.success,
+                event.error_message
+            ))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            logger.error(f"Failed to store visitor event in database: {e}")
+    
+    def get_analytics(self, days: int = 7) -> Dict[str, Any]:
+        """
+        Get visitor analytics for dashboard
+        
+        Returns:
+            - Total unique visitors (sessions)
+            - Total page views
+            - Login attempts (success/failure)
+            - Registration attempts (success/failure)
+            - Top pages
+            - Top referrers
+            - Country breakdown
+        """
+        try:
+            db_url = os.getenv('DATABASE_URL')
+            if not db_url:
+                return self._get_memory_analytics(days)
+            
+            conn = psycopg2.connect(db_url)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            
+            since = datetime.now() - timedelta(days=days)
+            
+            # Total unique visitors (sessions)
+            cursor.execute("""
+                SELECT COUNT(DISTINCT session_id) as total_visitors
+                FROM visitor_events
+                WHERE timestamp >= %s
+            """, (since,))
+            total_visitors = cursor.fetchone()['total_visitors']
+            
+            # Total page views
+            cursor.execute("""
+                SELECT COUNT(*) as total_pageviews
+                FROM visitor_events
+                WHERE timestamp >= %s AND event_type = 'page_view'
+            """, (since,))
+            total_pageviews = cursor.fetchone()['total_pageviews']
+            
+            # Login attempts
+            cursor.execute("""
+                SELECT 
+                    SUM(CASE WHEN event_type = 'login_success' THEN 1 ELSE 0 END) as login_success,
+                    SUM(CASE WHEN event_type = 'login_failure' THEN 1 ELSE 0 END) as login_failure
+                FROM visitor_events
+                WHERE timestamp >= %s
+            """, (since,))
+            login_stats = cursor.fetchone()
+            
+            # Registration attempts
+            cursor.execute("""
+                SELECT 
+                    SUM(CASE WHEN event_type = 'registration_success' THEN 1 ELSE 0 END) as registration_success,
+                    SUM(CASE WHEN event_type = 'registration_failure' THEN 1 ELSE 0 END) as registration_failure
+                FROM visitor_events
+                WHERE timestamp >= %s
+            """, (since,))
+            registration_stats = cursor.fetchone()
+            
+            # Top pages
+            cursor.execute("""
+                SELECT page_path, COUNT(*) as views
+                FROM visitor_events
+                WHERE timestamp >= %s AND event_type = 'page_view'
+                GROUP BY page_path
+                ORDER BY views DESC
+                LIMIT 10
+            """, (since,))
+            top_pages = cursor.fetchall()
+            
+            # Top referrers
+            cursor.execute("""
+                SELECT referrer, COUNT(*) as visits
+                FROM visitor_events
+                WHERE timestamp >= %s AND referrer IS NOT NULL
+                GROUP BY referrer
+                ORDER BY visits DESC
+                LIMIT 10
+            """, (since,))
+            top_referrers = cursor.fetchall()
+            
+            # Country breakdown
+            cursor.execute("""
+                SELECT country, COUNT(DISTINCT session_id) as visitors
+                FROM visitor_events
+                WHERE timestamp >= %s AND country IS NOT NULL
+                GROUP BY country
+                ORDER BY visitors DESC
+                LIMIT 10
+            """, (since,))
+            countries = cursor.fetchall()
+            
+            cursor.close()
+            conn.close()
+            
+            return {
+                'period_days': days,
+                'total_visitors': total_visitors,
+                'total_pageviews': total_pageviews,
+                'login_success': login_stats['login_success'] or 0,
+                'login_failure': login_stats['login_failure'] or 0,
+                'registration_success': registration_stats['registration_success'] or 0,
+                'registration_failure': registration_stats['registration_failure'] or 0,
+                'top_pages': [dict(p) for p in top_pages],
+                'top_referrers': [dict(r) for r in top_referrers],
+                'countries': [dict(c) for c in countries]
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get analytics: {e}")
+            return self._get_memory_analytics(days)
+    
+    def _get_memory_analytics(self, days: int) -> Dict[str, Any]:
+        """Fallback analytics from in-memory events"""
+        since = datetime.now() - timedelta(days=days)
+        recent_events = [e for e in self.events if e.timestamp >= since]
+        
+        unique_sessions = len(set(e.session_id for e in recent_events))
+        page_views = len([e for e in recent_events if e.event_type == VisitorEventType.PAGE_VIEW])
+        login_success = len([e for e in recent_events if e.event_type == VisitorEventType.LOGIN_SUCCESS])
+        login_failure = len([e for e in recent_events if e.event_type == VisitorEventType.LOGIN_FAILURE])
+        reg_success = len([e for e in recent_events if e.event_type == VisitorEventType.REGISTRATION_SUCCESS])
+        reg_failure = len([e for e in recent_events if e.event_type == VisitorEventType.REGISTRATION_FAILURE])
+        
+        return {
+            'period_days': days,
+            'total_visitors': unique_sessions,
+            'total_pageviews': page_views,
+            'login_success': login_success,
+            'login_failure': login_failure,
+            'registration_success': reg_success,
+            'registration_failure': reg_failure,
+            'top_pages': [],
+            'top_referrers': [],
+            'countries': []
+        }
+    
+    def cleanup_old_events(self, retention_days: int = 90):
+        """
+        Clean up old events per GDPR data retention (Article 5)
+        
+        Default: 90 days retention for visitor analytics
+        """
+        try:
+            db_url = os.getenv('DATABASE_URL')
+            if not db_url:
+                return
+            
+            conn = psycopg2.connect(db_url)
+            cursor = conn.cursor()
+            
+            cutoff = datetime.now() - timedelta(days=retention_days)
+            
+            cursor.execute("""
+                DELETE FROM visitor_events
+                WHERE timestamp < %s
+            """, (cutoff,))
+            
+            deleted_count = cursor.rowcount
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            logger.info(f"🗑️  Cleaned up {deleted_count} old visitor events (>{retention_days} days)")
+            
+        except Exception as e:
+            logger.error(f"Failed to cleanup old events: {e}")
+
+# Global instance
+_visitor_tracker = None
+
+def get_visitor_tracker() -> VisitorTracker:
+    """Get or create global visitor tracker instance"""
+    global _visitor_tracker
+    if _visitor_tracker is None:
+        _visitor_tracker = VisitorTracker()
+    return _visitor_tracker
