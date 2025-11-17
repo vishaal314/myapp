@@ -14,6 +14,7 @@ Features:
 import logging
 import uuid
 import hashlib
+import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import threading
@@ -242,6 +243,9 @@ class VisitorTracker:
             conn = psycopg2.connect(db_url)
             cursor = conn.cursor()
             
+            # Convert details dict to JSON string for PostgreSQL
+            details_json = json.dumps(event.details) if event.details else '{}'
+            
             cursor.execute("""
                 INSERT INTO visitor_events (
                     event_id, session_id, event_type, timestamp,
@@ -260,7 +264,7 @@ class VisitorTracker:
                 event.country,
                 event.user_id,
                 event.username,
-                event.details,
+                details_json,  # Use JSON string instead of dict
                 event.success,
                 event.error_message
             ))
