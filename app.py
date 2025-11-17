@@ -1049,6 +1049,14 @@ def render_landing_page():
 def render_authenticated_interface():
     """Render the main authenticated user interface with performance optimization"""
     
+    # Track anonymous page view (GDPR-compliant with IP anonymization)
+    try:
+        from services.auth_tracker import track_page_view
+        current_page = st.session_state.get('navigation', 'dashboard')
+        track_page_view(page_path=f"/{current_page}")
+    except Exception:
+        pass  # Silent fail - tracking is optional
+    
     username = st.session_state.get('username', 'User')
     user_role = st.session_state.get('user_role', 'user')
     
@@ -1108,6 +1116,16 @@ def render_authenticated_interface():
         
         # Logout
         if st.button(_('sidebar.sign_out', 'Logout')):
+            # Track logout event
+            try:
+                from services.auth_tracker import track_logout
+                track_logout(
+                    user_id=st.session_state.get('user_id', username),
+                    username=username
+                )
+            except Exception:
+                pass  # Silent fail - tracking is optional
+            
             for key in ['authenticated', 'username', 'user_role']:
                 if key in st.session_state:
                     del st.session_state[key]
@@ -11996,9 +12014,30 @@ def render_log_dashboard():
         st.write("Scanner log dashboard is temporarily unavailable.")
 
 def render_admin_page():
-    """Render admin page"""
+    """Render admin page with visitor analytics"""
     st.title("👥 Admin Panel")
-    st.info("User management, system monitoring, and administrative controls.")
+    
+    # Create tabs for different admin functions
+    tab1, tab2, tab3 = st.tabs(["👥 User Management", "📊 Visitor Analytics", "⚙️ System Settings"])
+    
+    with tab1:
+        st.info("User management and administrative controls.")
+        st.markdown("### User Management")
+        st.write("User creation, role management, and access control features coming soon.")
+    
+    with tab2:
+        # Import and render visitor analytics dashboard
+        try:
+            from components.visitor_analytics_dashboard import render_visitor_analytics_dashboard
+            render_visitor_analytics_dashboard()
+        except Exception as e:
+            st.error(f"Failed to load visitor analytics: {e}")
+            st.info("Visitor tracking system is initializing. Please refresh the page.")
+    
+    with tab3:
+        st.info("System configuration and monitoring.")
+        st.markdown("### System Settings")
+        st.write("Application configuration and monitoring features coming soon.")
 
 def render_safe_mode():
     """Render safe mode interface when components fail"""
