@@ -192,11 +192,18 @@ def render_visitor_analytics_dashboard():
         
         events_data = []
         for event in recent_events[:20]:
+            # GDPR Compliance: Never display raw usernames
+            # Show anonymized user_id (hashed) or "Anonymous"
+            user_display = 'Anonymous'
+            if event.user_id:
+                # Show truncated hash for authenticated events
+                user_display = f"User-{event.user_id[:8]}"
+            
             events_data.append({
                 'Time': event.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                 'Event': event.event_type.value.replace('_', ' ').title(),
                 'Page': event.page_path,
-                'User': event.username or 'Anonymous',
+                'User': user_display,  # GDPR-compliant: no raw usernames
                 'Status': '✅ Success' if event.success else '❌ Failed'
             })
         

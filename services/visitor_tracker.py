@@ -203,6 +203,36 @@ class VisitorTracker:
         event_id = str(uuid.uuid4())
         anonymized_ip = self._anonymize_ip(ip_address) if ip_address else "unknown"
         
+        # GDPR ENFORCEMENT: Force username to None (never store PII)
+        # This prevents accidental PII leakage from tracking calls
+        username = None  # Always None regardless of what was passed
+        
+        # GDPR ENFORCEMENT: Hash or null user_id to prevent PII storage
+        # Even if caller sends raw user_id, backend enforces anonymization
+        if user_id:
+            # Check if already looks like a hash (16-char hex)
+            if len(str(user_id)) == 16 and all(c in '0123456789abcdef' for c in str(user_id).lower()):
+                # Already hashed, use as-is
+                anonymized_user_id = user_id
+            else:
+                # Hash it to ensure anonymization (defensive programming)
+                anonymized_user_id = hashlib.sha256(str(user_id).encode()).hexdigest()[:16]
+                logger.debug(f"🔒 GDPR: Auto-hashed user_id for compliance")
+        else:
+            anonymized_user_id = None
+        
+        # GDPR ENFORCEMENT: Sanitize details to prevent PII leakage
+        # Remove any keys that might contain PII
+        if details:
+            sanitized_details = {}
+            blocked_keys = ['username', 'email', 'attempted_username', 'user_email', 'name', 'password']
+            for key, value in details.items():
+                if key.lower() not in blocked_keys:
+                    sanitized_details[key] = value
+                else:
+                    logger.warning(f"🔒 GDPR: Blocked PII field '{key}' from visitor_events.details")
+            details = sanitized_details
+        
         event = VisitorEvent(
             event_id=event_id,
             session_id=session_id,
@@ -213,8 +243,8 @@ class VisitorTracker:
             page_path=page_path,
             referrer=referrer,
             country=country,
-            user_id=user_id,
-            username=username,
+            user_id=anonymized_user_id,  # Always hashed (enforced above)
+            username=username,  # Always None (enforced above)
             details=details or {},
             success=success,
             error_message=error_message

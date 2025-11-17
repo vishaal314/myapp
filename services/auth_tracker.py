@@ -258,24 +258,31 @@ def track_page_view(page_path: str = "/", referrer: Optional[str] = None):
 
 def track_logout(user_id: str, username: str):
     """
-    Track user logout event
+    Track user logout event (GDPR-compliant, no PII stored)
     
     Args:
-        user_id: User ID
-        username: Username
+        user_id: User ID (will be hashed before storage)
+        username: Username (used for logging only, NOT stored)
     """
     try:
         tracker = get_visitor_tracker()
         session_id = get_session_id()
         ip_address = get_client_ip_from_streamlit()
         
+        # Hash user_id for anonymization (GDPR compliance)
+        hashed_user_id = hashlib.sha256(str(user_id).encode()).hexdigest()[:16]
+        
         tracker.track_event(
             session_id=session_id,
             event_type=VisitorEventType.LOGOUT,
             page_path="/logout",
             ip_address=ip_address,
-            user_id=user_id,
-            username=username,
+            user_id=hashed_user_id,  # Hashed, not raw user_id
+            username=None,  # Never store username (GDPR)
+            details={
+                'method': 'manual_logout',
+                'timestamp': datetime.now().isoformat()
+            },
             success=True
         )
         
