@@ -11,6 +11,7 @@ import streamlit as st
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 from services.stripe_payment import calculate_vat, validate_email
+from services.auth_tracker import track_trial_started, track_subscription_change
 
 # Subscription plans with EUR pricing
 SUBSCRIPTION_PLANS = {
@@ -236,6 +237,14 @@ class SubscriptionManager:
                     "plan_id": plan_id,
                     "country_code": country_code
                 }
+            )
+            
+            # Track trial started (revenue tracking)
+            user_id = st.session_state.get("user_id", customer_id)
+            track_trial_started(
+                tier=plan_id,
+                duration_days=14,  # Default trial duration
+                user_id=user_id
             )
             
             return {

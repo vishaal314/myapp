@@ -7,6 +7,7 @@ import streamlit as st
 from typing import Dict, Any, Optional, List
 from config.pricing_config import get_pricing_config, PricingTier, BillingCycle
 from services.license_integration import LicenseIntegration
+from services.auth_tracker import track_pricing_page_view
 
 def show_pricing_page():
     """Display the main pricing page"""
@@ -387,6 +388,9 @@ def handle_tier_selection(tier: PricingTier, billing_cycle: BillingCycle):
     """Handle when user selects a pricing tier"""
     config = get_pricing_config()
     pricing = config.get_tier_pricing(tier, billing_cycle)
+    
+    # Track pricing page view (revenue tracking)
+    track_pricing_page_view(tier.value, page_path="/pricing")
     
     st.session_state['selected_tier'] = tier.value
     st.session_state['selected_billing'] = billing_cycle.value

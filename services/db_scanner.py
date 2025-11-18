@@ -1985,6 +1985,20 @@ class DBScanner:
         except Exception as e:
             logger.warning(f"Cost savings integration failed: {e}")
         
+        # Track scanner execution (revenue tracking)
+        try:
+            from services.auth_tracker import track_scanner_executed
+            import streamlit as st
+            user_id = st.session_state.get("user_id", None) if hasattr(st, 'session_state') else None
+            track_scanner_executed(
+                scanner_type="database",
+                success=len(errors) == 0,
+                findings_count=len(all_findings),
+                user_id=user_id
+            )
+        except Exception as e:
+            logger.debug(f"Scanner tracking failed: {e}")
+        
         return results
     
     def _calculate_risk_score(self, findings: List[Dict[str, Any]]) -> Dict[str, Any]:

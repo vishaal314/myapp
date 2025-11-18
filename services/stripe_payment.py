@@ -6,6 +6,7 @@ import secrets
 import hashlib
 import time
 from typing import Dict, Any, Optional
+from services.auth_tracker import track_trial_converted
 
 # Initialize Stripe with proper validation
 def initialize_stripe():
@@ -507,6 +508,19 @@ def handle_payment_callback(results_aggregator) -> None:
         
         if payment_details["status"] == "succeeded":
             st.success(f"Payment of ${payment_details['amount']:.2f} successful for {payment_details['scan_type']}!")
+            
+            # Track trial converted (revenue tracking)
+            user_id = st.session_state.get("user_id", None)
+            scan_type = payment_details.get("scan_type", "unknown")
+            amount = payment_details.get("amount", 0)
+            
+            # Track conversion for subscription payments
+            if "subscription" in scan_type.lower() or amount >= 20:  # Subscription threshold
+                track_trial_converted(
+                    tier=scan_type,
+                    mrr=amount,
+                    user_id=user_id
+                )
             
             # Log the payment success audit event
             try:
