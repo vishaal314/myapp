@@ -7,12 +7,25 @@ import os
 import sys
 import time
 from datetime import datetime
+import pytest
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from services.db_scanner import DBScanner
 from services.intelligent_db_scanner import IntelligentDBScanner
+
+@pytest.fixture
+def connection_params():
+    """Pytest fixture for database connection parameters"""
+    return {
+        'type': 'postgres',
+        'host': os.getenv('PGHOST'),
+        'port': int(os.getenv('PGPORT', 5432)),
+        'database': os.getenv('PGDATABASE'),
+        'user': os.getenv('PGUSER'),
+        'password': os.getenv('PGPASSWORD')
+    }
 
 def print_header(title):
     print("\n" + "=" * 80)
