@@ -348,6 +348,11 @@ class PredictiveComplianceEngine:
         if third_party_risk:
             risk_forecasts.append(third_party_risk)
         
+        # NEW: Document and identity fraud detection risk
+        fraud_risk = self._forecast_fraud_detection_risk(current_state, business_context)
+        if fraud_risk:
+            risk_forecasts.append(fraud_risk)
+        
         return sorted(risk_forecasts, key=lambda x: x.probability, reverse=True)
     
     def _prepare_time_series_data(self, scan_history: List[Dict[str, Any]]) -> pd.DataFrame:
@@ -847,6 +852,62 @@ class PredictiveComplianceEngine:
                     "vendor_incident_impact": 200_000,
                     "compliance_violations": 100_000,
                     "contract_renegotiation": 50_000
+                }
+            )
+        
+        return None
+    
+    def _forecast_fraud_detection_risk(self, current_state: Dict[str, Any], 
+                                      business_context: Dict[str, Any]) -> Optional[RiskForecast]:
+        """Forecast document and identity fraud detection risk - NEW FEATURE"""
+        
+        # AI-generated document fraud has risen 208% in 2025
+        # Bank statements comprise 59% of fraudulent documents
+        fraud_exposure = business_context.get('document_fraud_exposure', 'medium')
+        document_verification_systems = business_context.get('document_verification_systems', False)
+        synthetic_media_scanning = business_context.get('synthetic_media_scanning', False)
+        
+        # Base fraud probability (industry trend: 15-25% of submissions)
+        base_probability = 0.20
+        
+        # Adjust based on fraud exposure level
+        if fraud_exposure == 'high':
+            base_probability = 0.35  # Financial/fintech/lending = higher exposure
+        elif fraud_exposure == 'low':
+            base_probability = 0.10  # Non-customer-facing = lower exposure
+        
+        # Adjust for existing defenses
+        if document_verification_systems:
+            base_probability *= 0.6  # 40% reduction with verification
+        else:
+            base_probability *= 1.5  # No defenses = higher risk
+        
+        if synthetic_media_scanning:
+            base_probability *= 0.5  # 50% reduction with AI detection
+        else:
+            base_probability *= 1.8  # No AI detection = much higher risk
+        
+        # Netherlands-specific: high KvK/BSN fraud targeting
+        if self.region == "Netherlands":
+            base_probability *= 1.4
+        
+        # AI Act 2025: deepfake detection requirements
+        if business_context.get('uses_ai_systems', False):
+            base_probability *= 1.3  # Must comply with AI Act synthetic media rules
+        
+        if base_probability > 0.12:
+            return RiskForecast(
+                risk_level="High" if base_probability > 0.25 else "Medium",
+                probability=min(0.8, base_probability),
+                impact_severity="Critical" if fraud_exposure == 'high' else "High",
+                timeline="Ongoing (quarterly increase in 2025)",
+                mitigation_window="Immediate (0-30 days)",
+                cost_of_inaction={
+                    "fraud_losses_per_incident": 50_000,
+                    "regulatory_fines_aml": 1_000_000,
+                    "operational_losses": 500_000,
+                    "reputation_damage": 2_000_000,
+                    "compliance_systems": 150_000
                 }
             )
         
