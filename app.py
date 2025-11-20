@@ -5828,21 +5828,23 @@ def render_enterprise_connector_interface(region: str, username: str):
     st.info(leadership_text)
     
     # Competitive advantage callout
-    with st.expander(_('scan.enterprise_competitive_advantage_title', "🚀 Why Enterprise Connectors Matter for Netherlands Market")):
+    with st.expander(_('scan.enterprise_competitive_advantage_title', "⚡ Connect Your Business Systems - Scan Automatically")):
         st.markdown(_('scan.enterprise_competitive_advantage_content', """
-        **Critical for €25K MRR Achievement:**
-        - **Microsoft 365**: 85% of Dutch businesses use SharePoint/OneDrive
-        - **Exact Online**: 60% Netherlands SME market share - unique competitive advantage
-        - **Google Workspace**: 40% modern business adoption rate
+        **Save Time & Reduce Risk:**
         
-        **Without Connectors**: Manual file uploads don't scale for enterprise deals (€2K-15K)
-        **With Connectors**: Automated scanning enables OneTrust/BigID competitive positioning at 95% cost savings
+        Instead of manually uploading files one-by-one, connect your business systems once and scan automatically:
         
-        **Netherlands Specialization:**
-        - Native BSN detection with official "11 test" validation
-        - KvK number verification integration
-        - Dutch banking system integration (PSD2 APIs)
-        - Complete UAVG compliance analysis
+        - **Microsoft 365** - Scan SharePoint, OneDrive, Teams automatically
+        - **Exact Online** - Scan customer data, invoices, financial records instantly
+        - **Google Workspace** - Scan Drive, Docs, Sheets with one click
+        
+        **Why This Matters to You:**
+        - ✅ **Save 10+ hours per month** - No more manual file exports
+        - ✅ **Stay compliant automatically** - Continuous monitoring, not one-time checks
+        - ✅ **Find hidden PII** - Scan data you didn't even know existed
+        - ✅ **Netherlands-ready** - Detects BSN, KvK, IBAN automatically
+        
+        **Perfect for Dutch businesses** using popular systems like Exact Online, Microsoft 365, and Dutch banking platforms.
         """))
     
     # Create tabs for different connector types
