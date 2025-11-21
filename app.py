@@ -3858,6 +3858,7 @@ def execute_document_scan(region, username, uploaded_files):
     try:
         from services.blob_scanner import BlobScanner
         from utils.activity_tracker import track_scan_started, track_scan_completed, track_scan_failed, ScannerType
+        from components.document_fraud_detection_display import render_fraud_summary_for_batch, render_fraud_warning_banner
         
         # Get session information
         session_id = st.session_state.get('session_id', str(uuid.uuid4()))
@@ -3888,7 +3889,8 @@ def execute_document_scan(region, username, uploaded_files):
             "scan_type": "Document Scanner", 
             "timestamp": datetime.now().isoformat(),
             "findings": [],
-            "files_scanned": 0
+            "files_scanned": 0,
+            "document_results": []
         }
         
         for i, file in enumerate(uploaded_files):
@@ -3903,6 +3905,7 @@ def execute_document_scan(region, username, uploaded_files):
             # Scan document
             doc_results = scanner.scan_file(tmp_path)
             scan_results["findings"].extend(doc_results.get("findings", []))
+            scan_results["document_results"].append(doc_results)
             scan_results["files_scanned"] += 1
         
         # Calculate scan metrics
@@ -3961,7 +3964,15 @@ def execute_document_scan(region, username, uploaded_files):
         except Exception as store_error:
             logger.error(f"Document Scanner: FAILED to store scan result in aggregator: {store_error}")
         
+        # Display fraud warnings if detected
+        render_fraud_warning_banner(scan_results)
+        
+        # Display standard scan results
         display_scan_results(scan_results)
+        
+        # Display AI fraud detection analysis
+        render_fraud_summary_for_batch(scan_results)
+        
         st.success("✅ Document scan completed!")
         
     except Exception as e:
