@@ -2,6 +2,8 @@ import os
 import tempfile
 import re
 import logging
+from collections import Counter
+from statistics import mean, stdev
 
 # Import centralized logging
 try:
@@ -217,6 +219,13 @@ class BlobScanner:
                 print(f"AI Act violations detection failed: {str(e)}")
                 ai_act_violations = []
             
+            # AI Fraud Detection - NEW
+            try:
+                ai_fraud_analysis = self._detect_ai_generated_documents(file_path, text, file_type)
+            except Exception as e:
+                logger.error(f"AI fraud detection failed: {str(e)}")
+                ai_fraud_analysis = None
+            
             # Combine all findings
             all_compliance_findings = []
             if gdpr_compliance and 'findings' in gdpr_compliance:
@@ -284,7 +293,8 @@ class BlobScanner:
                     'violations': ai_act_violations,
                     'recommendations': ai_act_report.get('recommendations', [])
                 },
-                'all_compliance_findings': all_compliance_findings
+                'all_compliance_findings': all_compliance_findings,
+                'fraud_analysis': ai_fraud_analysis or {}
             }
             
             return result
@@ -1185,6 +1195,253 @@ class BlobScanner:
             logger.warning(f"Cost savings integration failed: {e}")
         
         return scan_results
+    
+    # ============================================================================
+    # AI FRAUD DETECTION METHODS - NEW
+    # ============================================================================
+    
+    def _detect_ai_generated_documents(
+        self, 
+        file_path: str, 
+        text: str, 
+        file_type: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Detect if document is AI-generated using multiple detection methods.
+        
+        Args:
+            file_path: Path to the document
+            text: Extracted text content
+            file_type: Type of document (PDF, DOCX, etc.)
+        
+        Returns:
+            Dict with fraud analysis OR None if low risk
+        """
+        if not text or len(text) < 100:
+            return None
+        
+        try:
+            # Run all detection methods
+            chatgpt_score = self._analyze_chatgpt_patterns(text)
+            statistical_score = self._analyze_statistical_anomalies(text)
+            metadata_score = self._analyze_metadata_fraud(file_path)
+            
+            # Calculate combined fraud score
+            fraud_indicators = [
+                {'type': 'chatgpt_patterns', 'score': chatgpt_score['score'], 'details': chatgpt_score['details']},
+                {'type': 'statistical_anomalies', 'score': statistical_score['score'], 'details': statistical_score['details']},
+                {'type': 'metadata_fraud', 'score': metadata_score['score'], 'details': metadata_score['details']}
+            ]
+            
+            # Weighted scoring: 40% ChatGPT, 35% Statistical, 25% Metadata
+            ai_generated_risk = (
+                chatgpt_score['score'] * 0.40 +
+                statistical_score['score'] * 0.35 +
+                metadata_score['score'] * 0.25
+            )
+            
+            # Confidence is average of all scores
+            confidence = mean([chatgpt_score['score'], statistical_score['score'], metadata_score['score']]) * 100
+            
+            # Below 30% risk threshold - don't flag
+            if ai_generated_risk < 0.30:
+                return None
+            
+            # Determine risk level
+            if ai_generated_risk >= 0.75:
+                risk_level = 'Critical'
+            elif ai_generated_risk >= 0.60:
+                risk_level = 'High'
+            elif ai_generated_risk >= 0.40:
+                risk_level = 'Medium'
+            else:
+                risk_level = 'Low'
+            
+            # Guess AI model
+            ai_model = self._guess_ai_model(chatgpt_score, statistical_score)
+            
+            # Generate recommendations
+            recommendations = self._generate_fraud_recommendations(risk_level, fraud_indicators)
+            
+            # Netherlands-specific multiplier
+            if self.region == "Netherlands":
+                # Flag if document contains sensitive data + AI-generated
+                has_sensitive = any(
+                    indicator['type'] in ['chatgpt_patterns', 'metadata_fraud'] 
+                    for indicator in fraud_indicators if indicator['score'] > 0.6
+                )
+                if has_sensitive:
+                    ai_generated_risk = min(ai_generated_risk * 1.4, 1.0)
+            
+            return {
+                'ai_generated_risk': round(ai_generated_risk, 2),
+                'confidence': round(confidence, 1),
+                'ai_model': ai_model,
+                'risk_level': risk_level,
+                'fraud_indicators': fraud_indicators,
+                'recommendations': recommendations
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in AI fraud detection: {str(e)}")
+            return None
+    
+    def _analyze_chatgpt_patterns(self, text: str) -> Dict[str, Any]:
+        """Detect ChatGPT-specific writing patterns"""
+        chatgpt_patterns = [
+            r'\b(Furthermore|Moreover|In conclusion|As previously mentioned|It is important to note)\b',
+            r'(\?|!)\s+[A-Z]',  # Perfect punctuation
+            r'\b(the fact that|it is clear that|it appears that)\b',
+            r'\b(Additionally|Consequently|However|Therefore|Thus)\b',
+        ]
+        
+        pattern_count = sum(len(re.findall(pattern, text, re.IGNORECASE)) for pattern in chatgpt_patterns)
+        total_words = len(text.split())
+        
+        # High pattern frequency = likely AI
+        pattern_density = pattern_count / max(total_words, 1)
+        
+        # Check for contractions (humans use them, AI avoids)
+        contractions = len(re.findall(r"\b(can't|won't|don't|isn't|aren't|wasn't)\b", text, re.IGNORECASE))
+        contraction_density = contractions / max(total_words, 1)
+        
+        # Score: high patterns + low contractions = AI
+        score = min(0.5 * pattern_density + 0.5 * (1 - min(contraction_density * 10, 1)), 1.0)
+        
+        details = f"Pattern density: {pattern_density:.3f}, Contractions: {contractions}/{total_words}"
+        return {'score': score, 'details': details}
+    
+    def _analyze_statistical_anomalies(self, text: str) -> Dict[str, Any]:
+        """Detect statistical anomalies in text"""
+        sentences = re.split(r'[.!?]+', text)
+        sentences = [s.strip() for s in sentences if s.strip()]
+        
+        if len(sentences) < 5:
+            return {'score': 0.0, 'details': 'Too few sentences for analysis'}
+        
+        # Sentence length analysis
+        sentence_lengths = [len(s.split()) for s in sentences]
+        
+        # Low variance = AI (consistent sentences)
+        # High variance = Human (varied sentences)
+        try:
+            length_stdev = stdev(sentence_lengths) if len(sentence_lengths) > 1 else 0
+            avg_length = mean(sentence_lengths)
+            length_variance_score = 1.0 - min(length_stdev / max(avg_length, 1), 1.0)
+        except:
+            length_variance_score = 0.0
+        
+        # Word frequency - AI generates common words, humans use varied vocabulary
+        words = re.findall(r'\b\w+\b', text.lower())
+        if len(words) > 20:
+            word_freq = Counter(words)
+            top_10_freq = sum(count for word, count in word_freq.most_common(10)) / len(words)
+            vocab_score = min(top_10_freq * 2, 1.0)  # Higher = more repetitive = AI
+        else:
+            vocab_score = 0.0
+        
+        # Combined statistical score
+        score = (length_variance_score * 0.5 + vocab_score * 0.5)
+        details = f"Sentence variance: {length_variance_score:.3f}, Vocab repetition: {vocab_score:.3f}"
+        return {'score': score, 'details': details}
+    
+    def _analyze_metadata_fraud(self, file_path: str) -> Dict[str, Any]:
+        """Detect suspicious metadata patterns"""
+        score = 0.0
+        details_list = []
+        
+        try:
+            if file_path.endswith('.pdf'):
+                try:
+                    with open(file_path, 'rb') as f:
+                        pdf_reader = PyPDF2.PdfReader(f)
+                        if pdf_reader.metadata:
+                            metadata = pdf_reader.metadata
+                            
+                            # Check creator vs producer mismatch
+                            creator = metadata.get('/Creator', '').lower()
+                            producer = metadata.get('/Producer', '').lower()
+                            
+                            if creator and producer and creator != producer:
+                                score += 0.2
+                                details_list.append(f"Creator/Producer mismatch: {creator} vs {producer}")
+                            
+                            # Check for suspicious producer
+                            if producer and any(x in producer for x in ['photoshop', 'gimp', 'paint']):
+                                score += 0.3
+                                details_list.append(f"Suspicious producer: {producer}")
+                except:
+                    pass
+            
+            # File timestamp analysis
+            try:
+                import time
+                file_stat = os.stat(file_path)
+                creation_time = file_stat.st_ctime
+                mod_time = file_stat.st_mtime
+                current_time = time.time()
+                
+                # File modified very recently but created much earlier
+                creation_age = (current_time - creation_time) / 86400
+                mod_age = (current_time - mod_time) / 86400
+                
+                if creation_age > 30 and mod_age < 1:
+                    score += 0.2
+                    details_list.append(f"Recent modification: {int(mod_age)} days old vs {int(creation_age)} created")
+            except:
+                pass
+            
+            score = min(score, 1.0)
+            details = " | ".join(details_list) if details_list else "No metadata anomalies detected"
+            
+        except Exception as e:
+            logger.warning(f"Metadata analysis failed: {str(e)}")
+            details = f"Metadata analysis error: {str(e)}"
+        
+        return {'score': score, 'details': details}
+    
+    def _guess_ai_model(self, chatgpt_score: Dict, statistical_score: Dict) -> str:
+        """Guess which AI model generated document"""
+        chatgpt_patterns = ['furthermore', 'in conclusion', 'as a whole', 'it is important']
+        
+        # If ChatGPT patterns strongly present, likely ChatGPT
+        if chatgpt_score['score'] > 0.6:
+            return 'GPT-4/GPT-3.5'
+        
+        # If statistical anomalies high but patterns low, might be other model
+        if statistical_score['score'] > 0.5:
+            return 'Claude/Gemini'
+        
+        return 'Unknown AI Model'
+    
+    def _generate_fraud_recommendations(self, risk_level: str, fraud_indicators: List[Dict]) -> List[str]:
+        """Generate remediation recommendations"""
+        recommendations = []
+        
+        if risk_level in ['High', 'Critical']:
+            recommendations.append('Request original document directly from sender')
+            recommendations.append('Verify authenticity through independent communication channel')
+            
+            # Check which indicators are strongest
+            for indicator in fraud_indicators:
+                if indicator['score'] > 0.7:
+                    if 'chatgpt' in indicator['type']:
+                        recommendations.append('Verify document was not generated by AI language model')
+                    elif 'statistical' in indicator['type']:
+                        recommendations.append('Check for unusual writing patterns or consistency')
+                    elif 'metadata' in indicator['type']:
+                        recommendations.append('Examine document edit history and timestamps')
+            
+            recommendations.append('Consider requesting notarized or digitally signed version')
+        
+        elif risk_level == 'Medium':
+            recommendations.append('Request confirmation of document authenticity from sender')
+            recommendations.append('Review document creation and modification dates')
+        
+        if self.region == "Netherlands":
+            recommendations.append('Ensure compliance with UAVG document verification requirements')
+        
+        return recommendations[:5]  # Return top 5 recommendations
 
 # Create an alias for compatibility
 def create_document_scanner(region: str = "Netherlands") -> BlobScanner:
